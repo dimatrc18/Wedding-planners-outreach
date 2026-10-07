@@ -5,13 +5,19 @@ import { LAKE_TOWNS, LAKE_VENUES } from './constants.js';
 /** 0-100. Higher = contact sooner. Explainable: returns the parts too. */
 export function priorityScore(p) {
   const parts = [];
-  const add = (pts, why) => { if (pts) parts.push({ pts, why }); };
-  add({ planner: 40, venue: 30, concierge_hotel: 30, photographer: 20 }[p.type || 'planner'] || 25, `type: ${p.type || 'planner'}`);
+  const add = (pts, why) => { if (pts) parts.push({ pts, why, label: why }); };
+  const normType = p.type === 'wedding_planner' ? 'planner' : (p.type || 'planner');
+  add({ planner: 40, venue: 30, concierge_hotel: 30, photographer: 20 }[normType] || 25, `type: ${normType}`);
   const rating = +p.rating || 0;
   if (rating >= 4.8) add(10, `rating ${rating}`); else if (rating >= 4.5) add(5, `rating ${rating}`);
   const reviews = +p.verified_reviews_count || 0;
   if (reviews) add(Math.min(20, Math.round(6 * Math.log2(1 + reviews))), `${reviews} reviews`);
+  const venuesCount = Array.isArray(p.key_venues) ? p.key_venues.length : 0;
+  if (venuesCount >= 2) add(12, `${venuesCount} luxury venues`);
+  else if (venuesCount === 1) add(8, `1 luxury venue (${p.key_venues[0]})`);
   add({ boutique_local: 15, international: 8, high_volume_uk_us: 5 }[p.segment] || 0, p.segment ? `segment: ${p.segment}` : '');
+  if ((p.location || '').trim()) add(5, `location: ${p.location}`);
+  if ((p.contact_name || '').trim()) add(4, `contact: ${p.contact_name}`);
   const tags = (p.tags || []).map((t) => String(t).toLowerCase());
   if (tags.includes('tier1') || tags.includes('low_priority')) add(-25, 'tier 1/2 agency (saturated)');
   if (tags.includes('unverified')) add(-10, 'unverified');

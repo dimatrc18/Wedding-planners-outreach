@@ -26,10 +26,12 @@ export interface CandidatePageInput {
   agencyHint?: string;
 }
 
+export const MIN_FIT_SCORE = 65;
+
 export interface LeadFilterResult {
   qualified: boolean;
   rejectReason: string | null;
-  stage: 'passed' | 'directory_blocked' | 'not_wedding_planner' | 'budget_or_non_luxury' | 'outside_region' | 'no_valid_email' | 'no_mx' | 'duplicate';
+  stage: 'passed' | 'directory_blocked' | 'not_wedding_planner' | 'budget_or_non_luxury' | 'outside_region' | 'no_valid_email' | 'no_mx' | 'duplicate' | 'below_min_score';
   prospect: Record<string, any> | null;
   signals: {
     venues: string[];
@@ -94,10 +96,12 @@ export async function evaluateLeadCandidate(
   candidate: CandidatePageInput,
   options: {
     existingProspects?: any[];
+    minScore?: number;
     mxResolver?: (domain: string) => Promise<'mx_ok' | 'no_mx' | 'unknown'>;
     aiHookExtractor?: (input: { agency: string; language: string; page: string }) => Promise<any>;
   } = {},
 ): Promise<LeadFilterResult> {
+  const minScore = options.minScore ?? MIN_FIT_SCORE;
   const finalUrl = candidate.finalUrl || candidate.url;
   const parsed = core.parseProfileUrl(finalUrl);
   const siteDomain = core.domainOf(parsed.website || finalUrl);
@@ -196,9 +200,8 @@ export async function evaluateLeadCandidate(
     phone: extracted.phones[0] || '',
     whatsapp: extracted.whatsapp || '',
     website: finalUrl,
-    instagram_handle: extracted.instagram[0] || '',
     location: extracted.towns[0] || 'Lake Como / Northern Italy',
-    type: 'wedding_planner',
+    type: 'planner',
     segment: lang === 'it' ? 'boutique_local' : 'international',
     language: lang === 'it' ? 'it' : 'en',
     source: 'batch_discovery',
@@ -209,17 +212,18 @@ export async function evaluateLeadCandidate(
     hook_confidence: null,
     hook_needs_review: true,
     hook_source_url: finalUrl,
-    status: 'new',
+    status: 'researching',
   };
 
   // Stage 5: Deduplication against existing CRM prospects
   const existing = options.existingProspects || [];
   const dupes = core.findDuplicates(baseProspect, existing);
   if (dupes.length > 0) {
+    const firstDupe = dupes[0]?.prospect || dupes[0];
     return {
       qualified: false,
       stage: 'duplicate',
-      rejectReason: `Duplicate of existing CRM prospect "${dupes[0].prospect.agency_name}" (${dupes[0].reasons.join(', ')})`,
+      rejectReason: `Duplicate of existing CRM prospect "${firstDupe?.agency_name || 'existing'}"`,
       prospect: null,
       signals: { venues: extracted.venues, towns: extracted.towns, luxurySignals, emails: usableEmails, mxStatus },
     };
@@ -255,12 +259,22 @@ export async function evaluateLeadCandidate(
         }
       }
     } catch (err) {
-      // Guardrail rejected malformed AI response; keep lead in 'new' status for manual hook review
       baseProspect.notes = `AI hook skipped by guardrail: ${(err as Error).message}`;
     }
   }
 
   baseProspect.priority_score = core.priorityScore(baseProspect).score;
+
+  // Stage 7: Minimum Fit Score Gate (default 65/100)
+  if (baseProspect.priority_score < minScore) {
+    return {
+      qualified: false,
+      stage: 'below_min_score',
+      rejectReason: `Fit score ${baseProspect.priority_score}/100 is below the ${minScore}/100 minimum cutoff`,
+      prospect: null,
+      signals: { venues: baseProspect.key_venues, towns: extracted.towns, luxurySignals, emails: usableEmails, mxStatus },
+    };
+  }
 
   return {
     qualified: true,
@@ -352,10 +366,10 @@ async function fetchCandidateWithContactPages(url: string): Promise<CandidatePag
 }
 
 async function runSelfTest() {
-  console.log('Running DOROGO Lead Discovery 6-Stage Filter Self-Test...\n');
-  const fixtures: { label: string; input: CandidatePageInput }[] = [
+  console.log(`Running DOROGO Lead Discovery 7-Stage Filter Self-Test (Min Fit Score: ${MIN_FIT_SCORE}/100)...\n`);
+  const fixtures: { label: string; input: CandidatePageInput; mockAi?: any }[] = [
     {
-      label: '1. Luxury Lake Como Planner (Should PASS)',
+      label: '1. Luxury Lake Como Planner (Should PASS ≥ 65/100)',
       input: {
         url: 'https://atelierlarioweddings.it',
         html: `<!doctype html><html lang="it"><head><title>Atelier Lario | Destination Wedding Planner Lake Como</title></head>
@@ -363,8 +377,18 @@ async function runSelfTest() {
             <h1>Bespoke Destination Weddings on Lake Como & Milan</h1>
             <p>We design multi-day luxury weddings at Villa Balbiano, Villa d'Este in Cernobbio, and Villa del Balbianello in Tremezzina.</p>
             <p>Featured in Vogue Italia. Contact founder Sofia Conti at <a href="mailto:sofia@atelierlarioweddings.it">sofia@atelierlarioweddings.it</a> or +39 031 555 0192.</p>
-            <a href="https://instagram.com/atelierlarioweddings">Instagram</a>
           </body></html>`,
+      },
+      mockAi: {
+        hook: "Your multi-day celebrations at Villa Balbiano and Villa d'Este caught our eye.",
+        hook_type: 'venue',
+        confidence: 'high',
+        evidence: "multi-day luxury weddings at Villa Balbiano, Villa d'Este in Cernobbio",
+        language_detected: 'en',
+        segment_guess: 'international',
+        weddings_per_year_guess: 15,
+        key_venues: ['Villa Balbiano', "Villa d'Este", 'Villa del Balbianello'],
+        contact_name: 'Sofia Conti',
       },
     },
     {
@@ -390,6 +414,15 @@ async function runSelfTest() {
           <body>We exclusively plan weddings at masserie in Ostuni, Lecce and Bari. Contact: hello@apuliaweddingsonly.com</body></html>`,
       },
     },
+    {
+      label: '5. Low Fit Score < 65/100 — Generic Site with No Venues/Hook (Should REJECT: below_min_score)',
+      input: {
+        url: 'https://genericmilanevents.com',
+        html: `<html lang="en"><head><title>Generic Events</title></head>
+          <body>We do wedding events in Lombardy. Email: info@genericmilanevents.com</body></html>`,
+      },
+      mockAi: null,
+    },
   ];
 
   const accepted: any[] = [];
@@ -397,22 +430,12 @@ async function runSelfTest() {
     const res = await evaluateLeadCandidate(f.input, {
       existingProspects: accepted,
       mxResolver: async () => 'mx_ok',
-      aiHookExtractor: async () => ({
-        hook: "Your multi-day celebrations at Villa Balbiano and Villa d'Este caught our eye.",
-        hook_type: 'venue',
-        confidence: 'high',
-        evidence: "multi-day luxury weddings at Villa Balbiano, Villa d'Este in Cernobbio",
-        language_detected: 'en',
-        segment_guess: 'international',
-        weddings_per_year_guess: 15,
-        key_venues: ['Villa Balbiano', "Villa d'Este", 'Villa del Balbianello'],
-        contact_name: 'Sofia Conti',
-      }),
+      aiHookExtractor: f.mockAi !== undefined ? async () => f.mockAi : undefined,
     });
     if (res.qualified && res.prospect) accepted.push(res.prospect);
     console.log(`${res.qualified ? '✅ PASS' : '⛔ REJECT'} · ${f.label}`);
     if (res.qualified && res.prospect) {
-      console.log(`   → Agency: ${res.prospect.agency_name} | Email: ${res.prospect.email} | Score: ${res.prospect.priority_score} | Status: ${res.prospect.status}`);
+      console.log(`   → Agency: ${res.prospect.agency_name} | Email: ${res.prospect.email} | Score: ${res.prospect.priority_score}/100 | Status: ${res.prospect.status}`);
       console.log(`   → Venues: ${res.prospect.key_venues.join(', ')}`);
       console.log(`   → Verified Hook (${res.prospect.hook_confidence}): "${res.prospect.personalization_hook}"\n`);
     } else {
@@ -457,7 +480,7 @@ async function main() {
       });
       if (res.qualified && res.prospect) {
         accepted.push(res.prospect);
-        console.log(`✅ [PASS] ${res.prospect.agency_name} (${res.prospect.email}) · score ${res.prospect.priority_score}`);
+        console.log(`✅ [PASS] ${res.prospect.agency_name} (${res.prospect.email}) · score ${res.prospect.priority_score}/100`);
       } else {
         rejected.push({ url, stage: res.stage, reason: res.rejectReason });
         console.log(`⛔ [SKIP:${res.stage}] ${url} — ${res.rejectReason}`);
@@ -470,12 +493,12 @@ async function main() {
 
   const cols = [
     'agency_name', 'contact_name', 'role', 'email', 'email_status', 'phone', 'whatsapp',
-    'website', 'instagram_handle', 'location', 'type', 'segment', 'language', 'source',
+    'website', 'location', 'type', 'segment', 'language', 'source',
     'source_detail', 'priority_score', 'status', 'personalization_hook', 'hook_type',
   ];
   const csv = core.toCSV(accepted, cols);
   fs.writeFileSync(path.resolve(outFile), csv, 'utf8');
-  console.log(`\nDone: ${accepted.length} qualified leads written to ${outFile} (${rejected.length} rejected).`);
+  console.log(`\nDone: ${accepted.length} qualified leads (score ≥ ${MIN_FIT_SCORE}/100) written to ${outFile} (${rejected.length} rejected).`);
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {

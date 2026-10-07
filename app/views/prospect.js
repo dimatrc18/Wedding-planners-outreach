@@ -76,7 +76,7 @@ export function render(el, id) {
     <div class="page-head">
       <div class="stack" style="gap:6px"><a class="small" href="#pipeline">← Pipeline</a><h1>${esc(p.agency_name)}</h1>
         <div class="row">${p.contact_name ? `<span class="muted">${esc(p.contact_name)}${p.role ? `, ${esc(p.role)}` : ''}</span>` : ''}
-          <span class="score ${sc.score >= 60 ? 'hi' : ''}" title="${attr(sc.parts.map((x) => `${x.pts > 0 ? '+' : ''}${x.pts} ${x.why}`).join('\n'))}">Priority ${sc.score}</span>
+          <span class="score ${sc.score >= 65 ? 'hi' : 'low'}" title="${attr(sc.parts.map((x) => `${x.pts > 0 ? '+' : ''}${x.pts} ${x.why}`).join('\n'))}">Fit ${sc.score}/100</span>
           <span class="chip">${esc(p.type)}</span>${p.segment ? `<span class="chip">${esc(p.segment.replace(/_/g, ' '))}</span>` : ''}<span class="chip">${esc(p.language.toUpperCase())}</span>
           ${p.do_not_contact ? '<span class="chip bad">Do not contact</span>' : ''}${p.email_status && p.email_status !== 'unknown' ? `<span class="chip ${p.email_status === 'mx_ok' ? 'ok' : ['no_mx', 'bounced', 'invalid'].includes(p.email_status) ? 'bad' : ''}">email ${esc(p.email_status.replace('_', ' '))}</span>` : ''}</div>
       </div>
@@ -103,8 +103,8 @@ export function render(el, id) {
     <div class="split">
       <div class="stack lg">
         <section class="card stack">
-          <div class="section-head"><h2>Research</h2><span class="hint">Public pages only.</span></div>
-          <div class="row nowrap"><input type="url" id="research-url" placeholder="Paste website URL" value="${attr(p.website || '')}" aria-label="Website URL"><button class="btn" data-act="research">${icon('search', 16)} Research</button></div>
+          <div class="section-head"><h2>Research</h2><span class="hint">Public pages only · Leave URL blank to auto-search by agency name.</span></div>
+          <div class="row nowrap"><input type="url" id="research-url" placeholder="Paste website URL (or leave blank to auto-find)" value="${attr(p.website || '')}" aria-label="Website URL"><button class="btn primary" data-act="research">${icon('search', 16)} 🤖 Research</button></div>
           <div id="research-out">${researchResult ? researchHtml(researchResult, p) : ''}</div>
           <div class="row">${p.website ? `<a class="small" href="${attr(p.website)}" target="_blank" rel="noopener">${icon('external', 14)} Website</a>` : ''}
             ${p.email ? `<button class="btn ghost sm" data-act="verify">Check email (MX)</button>` : ''}</div>
@@ -254,7 +254,7 @@ export function render(el, id) {
     const out = el.querySelector('#research-out');
     out.innerHTML = '<p class="small muted">Reading the public website…</p>';
     try {
-      researchResult = await api('enrich', { url, prospect_id: p.id, agency_name: p.agency_name });
+      researchResult = await api('enrich', { url, prospect_id: p.id, agency_name: p.agency_name, location: p.location || '' });
       out.innerHTML = researchHtml(researchResult, p);
     } catch (e) { out.innerHTML = `<p class="small" style="color:var(--bad)">${esc(e.message)}</p>`; }
   }

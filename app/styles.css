@@ -175,8 +175,9 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--g
 .chip.outline { background: transparent; border: 1px solid var(--line-strong); }
 .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; background: var(--ink-3); }
 .dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.bad { background: var(--bad); } .dot.gold { background: var(--gold); }
-.score { display: inline-grid; place-items: center; min-width: 30px; height: 22px; padding: 0 6px; border-radius: 6px; font-size: .74rem; font-weight: 700; background: var(--surface-2); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.score { display: inline-grid; place-items: center; min-width: 44px; height: 22px; padding: 0 7px; border-radius: 6px; font-size: .73rem; font-weight: 700; background: var(--surface-2); color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .score.hi { background: var(--gold-soft); color: var(--gold-ink); }
+.score.low { background: var(--warn-soft); color: var(--warn); }
 
 /* Approval queue */
 .queue { display: flex; flex-direction: column; gap: 12px; }
@@ -266,6 +267,8 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--g
 .pcard-foot { display: flex; flex-direction: column; gap: 7px; padding-top: 4px; border-top: 1px solid var(--line); }
 .pcard-next { display: flex; flex-direction: column; gap: 1px; font-size: .76rem; }
 .next-txt { color: var(--ink); font-weight: 500; }
+.next-txt.bad-txt { color: var(--bad); font-weight: 600; }
+.pcard.low-score { border-style: dashed; }
 .pcard-actions { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
 .btn.gold-btn { background: var(--gold-soft); border-color: var(--gold); color: var(--gold-ink); font-weight: 600; }
 .icon-btn.sm { width: 24px; height: 24px; }

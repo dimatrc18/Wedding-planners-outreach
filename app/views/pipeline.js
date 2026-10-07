@@ -1,11 +1,12 @@
-// Pipeline: Kid-friendly 5-Step Journey Funnel + Interactive Flow, 5-Column Board, and Quick-Edit Cards.
+// Pipeline: Kid-friendly 5-Step Journey Funnel + AI Research (65/100 gate), 5-Column Board, and Quick-Edit Cards.
 import * as core from '../../supabase/functions/_shared/core/index.js';
-import { S, update, startDemo } from '../store.js';
+import { S, update, remove, api, startDemo } from '../store.js';
 import { buildDemoData } from '../demo.js';
-import { esc, attr, icon, ago, fmtDate, pct, plural, toast, download, dialog } from '../ui.js';
+import { esc, attr, icon, ago, fmtDate, pct, plural, toast, download, dialog, confirmDialog } from '../ui.js';
 import * as A from '../actions.js';
 
 const KEY = 'dorogo-pipeline-v2';
+const MIN_FIT_SCORE = 65;
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
 const save = (f) => { try { localStorage.setItem(KEY, JSON.stringify(f)); } catch { /* storage blocked */ } };
 
@@ -23,20 +24,20 @@ const TYPE = {
 
 // Plain-English labels for every internal stage key so there is zero jargon
 const PLAIN_STAGE = {
-  researching: 'Needs Info (To Check)',
-  ready: 'Ready for Email 1',
-  t1_sent: 'Email 1 Sent (Intro)',
-  t3_sent: 'Email 2 Sent (Follow-up)',
-  t4_sent: 'Email 3 Sent (Final note)',
-  replied: 'Replied!',
-  rate_card_sent: 'Rate Card Sent',
-  in_conversation: 'Talking / In Conversation',
-  quote_requested: 'Quote Requested',
-  fam_offered: 'Complimentary Ride Offered',
-  partner_won: 'Partner Won',
-  nurture: 'Contact Next Season',
-  lost: 'Not a Fit / Declined',
-  do_not_contact: 'Do Not Contact',
+  researching: '1. Needs Info (To Check)',
+  ready: '2. Ready for Email 1',
+  t1_sent: '3a. Email 1 Sent (Intro)',
+  t3_sent: '3b. Email 2 Sent (Follow-up)',
+  t4_sent: '3c. Email 3 Sent (Final note)',
+  replied: '4a. Replied!',
+  rate_card_sent: '4b. Rate Card Sent',
+  in_conversation: '4c. Talking / In Conversation',
+  quote_requested: '4d. Quote Requested',
+  fam_offered: '4e. Trial Ride Offered',
+  partner_won: '5. Partner Won 🎉',
+  nurture: 'Paused · Next Season',
+  lost: 'Closed · Not a Fit',
+  do_not_contact: 'Closed · Do Not Contact',
 };
 
 const plainStage = (st) => PLAIN_STAGE[st] || core.stageLabel(st);
@@ -65,6 +66,9 @@ const PLAIN_NODE_LABEL = {
   'Active Cadence (T1–T3)': 'Waiting for Reply (Email 1–2)',
   'Cadence Done (T4)': 'Finished 3 Emails',
   'FAM Offered': 'Trial Ride Offered',
+  'High Priority (60+)': 'High Fit (65+/100)',
+  'Medium Priority (40–59)': 'Medium Fit (40–64/100)',
+  'Low Priority (<40)': 'Low Fit (<40/100)',
 };
 
 const friendlyNodeLabel = (label) => PLAIN_NODE_LABEL[label] || label;
@@ -86,7 +90,7 @@ const FRIENDLY_COL_TITLE = {
   language: { step: 'LANGUAGE', title: 'Language' },
   hook_type: { step: 'NOTE', title: 'Personal Note Type' },
   variant: { step: 'SUBJECT', title: 'Email Subject Tested' },
-  priority_tier: { step: 'FIT', title: 'Fit Score Tier' },
+  priority_tier: { step: 'FIT', title: 'Fit Score Tier (/100)' },
 };
 
 // The 5-Step Journey buckets that a 16-year-old understands at a glance
@@ -95,7 +99,7 @@ const JOURNEY_STEPS = [
     key: 'researching',
     num: '1',
     label: 'To Check',
-    sub: 'Add email & personal note',
+    sub: 'Find email & 1-line note',
     tone: 'muted',
     dropStage: 'researching',
     match: (p) => p.status === 'researching',
@@ -104,7 +108,7 @@ const JOURNEY_STEPS = [
     key: 'ready',
     num: '2',
     label: 'Ready to Email',
-    sub: 'Approved for Email 1',
+    sub: 'Approved · drafts Email 1',
     tone: 'gold',
     dropStage: 'ready',
     match: (p) => p.status === 'ready',
@@ -157,7 +161,7 @@ const PRESET_HELP = {
     label: '📧 Email → Reply → Deal',
     desc: 'Shows how leads move from your first email to a reply and a confirmed partnership.',
   },
-   territory: {
+  territory: {
     label: '📍 By Town & Fit Score',
     desc: 'Shows where your leads are located (Como, Bellagio, Milan…) and how well they fit DOROGO.',
   },
@@ -184,11 +188,26 @@ const pathSession = {
   previewSample: true,
   customizeCols: false,
   detailedBoard: false,
+  researchingIds: new Set(),
+  batchRunning: false,
+  batchStatus: '',
   undoStack: [],
   redoStack: [],
 };
 
 function nextAction(p, touchesList, settings) {
+  const hasEmail = !!(p.email && String(p.email).trim());
+  const hasHook = !!(p.personalization_hook && String(p.personalization_hook).trim());
+  // Detect a prospect that was accidentally moved to T1/T3/T4 without an email address or sent touch
+  if (['t1_sent', 't2_sent', 't3_sent', 't4_sent'].includes(p.status) && !hasEmail) {
+    return {
+      text: '⚠️ Marked "Email Sent" but has no email address!',
+      at: null,
+      canDraft: false,
+      needsInfo: true,
+      brokenStage: true,
+    };
+  }
   const st = core.sequenceState(p, touchesList, settings);
   if (st.active && st.step) {
     const friendlyStep = st.step.key === 'T1_intro'
@@ -200,19 +219,22 @@ function nextAction(p, touchesList, settings) {
           : st.step.label;
     return {
       text: st.pending
-        ? `${friendlyStep}: ${st.pending.state === 'draft' ? 'draft ready to approve' : 'scheduled to send'}`
+        ? `${friendlyStep}: ${st.pending.state === 'draft' ? 'draft waiting in Today' : 'scheduled to send'}`
         : st.blocked === 'no_email'
-          ? 'Missing email address'
-          : `Next: ${friendlyStep}`,
+          ? '⚠️ Missing email address'
+          : !hasHook && st.step.key === 'T1_intro'
+            ? '⚠️ Missing 1-line personal note'
+            : `Next up: ${friendlyStep}`,
       at: st.pending?.scheduled_at || st.dueAt,
-      canDraft: !st.pending && !st.blocked,
+      canDraft: !st.pending && !st.blocked && (hasHook || st.step.key !== 'T1_intro'),
       hasPendingDraft: !!st.pending,
+      needsInfo: Boolean(st.blocked === 'no_email' || (!hasHook && st.step.key === 'T1_intro')),
     };
   }
   if (p.status === 'researching') {
     const probs = A.readinessProblems(p);
     return {
-      text: probs.length ? `Needs: ${probs.join(' + ').toLowerCase()}` : 'Info complete — ready to approve!',
+      text: probs.length ? `Needs: ${probs.join(' + ').toLowerCase()}` : '✓ Info complete — ready for Email 1!',
       at: null,
       canDraft: false,
       needsInfo: probs.length > 0,
@@ -222,12 +244,12 @@ function nextAction(p, touchesList, settings) {
   if (['replied', 'rate_card_sent', 'in_conversation', 'quote_requested', 'fam_offered'].includes(p.status)) {
     return {
       text: p.status === 'replied'
-        ? 'They replied — send Rate Card or answer'
+        ? '💬 They replied — send Rate Card or answer'
         : p.status === 'rate_card_sent'
-          ? 'Rate card sent — follow up on dates'
+          ? '📄 Rate card sent — follow up on dates'
           : p.status === 'quote_requested'
-            ? 'Quote requested — confirm booking'
-            : 'Active conversation',
+            ? '💶 Quote requested — confirm booking'
+            : '💬 Active conversation',
       at: null,
       canDraft: false,
       isEngaged: true,
@@ -262,29 +284,36 @@ function card(p, { touchesByP, settings, showStageSelect = true } = {}) {
   const na = nextAction(p, pTouches, settings || S.settings);
   const pr = core.priorityScore(p);
   const sc = pr.score;
+  const isQualifiedScore = sc >= MIN_FIT_SCORE;
   const scoreTip = pr.parts?.length
-    ? `Fit Score ${sc}/100: ${pr.parts.map((x) => `${x.label} (${x.pts > 0 ? '+' : ''}${x.pts})`).join(', ')}`
+    ? `Fit Score ${sc}/100 (${isQualifiedScore ? 'Qualifies ≥ 65/100' : 'Below 65/100 cutoff — run AI Research to verify'}): ${pr.parts.map((x) => `${x.label || x.why} (${x.pts > 0 ? '+' : ''}${x.pts})`).join(', ')}`
     : `Fit Score ${sc}/100`;
 
   const hasEmail = !!(p.email && String(p.email).trim());
   const hasHook = !!(p.personalization_hook && String(p.personalization_hook).trim());
   const cleanWeb = (p.website || '').replace(/^https?:\/\/(www\.)?/i, '').replace(/\/.*$/, '');
   const webHref = p.website ? (/^https?:\/\//i.test(p.website) ? p.website : `https://${p.website}`) : '';
+  const isResearchingNow = pathSession.researchingIds.has(p.id);
 
   let quickBtn = '';
-  if (na.needsInfo) {
-    quickBtn = `<button class="btn sm gold-btn" data-quick-edit="${attr(p.id)}">+ Add Missing Info</button>`;
+  if (isResearchingNow) {
+    quickBtn = `<button class="btn sm gold-btn" disabled>⏳ Researching…</button>`;
+  } else if (na.needsInfo) {
+    quickBtn = `<div class="row" style="gap:5px">
+      <button class="btn sm primary" data-ai-research="${attr(p.id)}" title="Automatically find website, email, and 1-line personal note">🤖 AI Research</button>
+      <button class="btn sm gold-btn" data-quick-edit="${attr(p.id)}">✏️ Fill Info</button>
+    </div>`;
   } else if (na.canMarkReady) {
-    quickBtn = `<button class="btn sm primary" data-mark-ready="${attr(p.id)}">✓ Approve & Mark Ready</button>`;
+    quickBtn = `<button class="btn sm primary" data-mark-ready="${attr(p.id)}">✓ Approve & Draft Email 1</button>`;
   } else if (na.canDraft) {
     quickBtn = `<button class="btn sm primary" data-draft-next="${attr(p.id)}">✉️ Draft Email</button>`;
   } else if (na.hasPendingDraft) {
-    quickBtn = `<a class="btn sm" href="#today" data-stop-card>👀 Review Draft</a>`;
+    quickBtn = `<a class="btn sm primary" href="#today" data-stop-card>👀 Review & Send Draft</a>`;
   } else if (na.isEngaged) {
     quickBtn = `<button class="btn sm primary" data-open="${attr(p.id)}">💬 Open & Reply</button>`;
   }
 
-  return `<div class="pcard" draggable="true" data-id="${attr(p.id)}" tabindex="0" role="button" aria-label="${attr(p.agency_name)}">
+  return `<div class="pcard ${!isQualifiedScore ? 'low-score' : ''}" draggable="true" data-id="${attr(p.id)}" tabindex="0" role="button" aria-label="${attr(p.agency_name)}">
     <div class="pcard-top">
       <div class="pcard-title-wrap">
         <span class="name">${esc(p.agency_name)}</span>
@@ -296,7 +325,7 @@ function card(p, { touchesByP, settings, showStageSelect = true } = {}) {
         </div>
       </div>
       <div class="row" style="gap:4px">
-        <span class="score ${sc >= 60 ? 'hi' : ''}" data-tip="${attr(scoreTip)}">★ ${sc}</span>
+        <span class="score ${isQualifiedScore ? 'hi' : 'low'}" data-tip="${attr(scoreTip)}">${sc}/100</span>
         <button class="icon-btn sm" data-quick-edit="${attr(p.id)}" title="Quick edit contact info & note" aria-label="Quick edit ${attr(p.agency_name)}">${icon('edit', 14)}</button>
       </div>
     </div>
@@ -304,20 +333,20 @@ function card(p, { touchesByP, settings, showStageSelect = true } = {}) {
     <div class="pcard-facts">
       <div class="pcard-fact">
         <span class="fact-lbl">Contact:</span>
-        ${p.contact_name ? `<b>${esc(p.contact_name)}</b>` : '<span class="muted">Team / Unknown</span>'}
+        ${p.contact_name ? `<b>${esc(p.contact_name)}</b>` : '<span class="muted">Team</span>'}
         ${hasEmail
           ? `<span class="fact-email" title="${attr(p.email)}">· ${esc(p.email)}</span>`
-          : `<span class="chip warn" data-quick-edit="${attr(p.id)}">⚠️ Add email</span>`}
+          : `<span class="chip warn" data-quick-edit="${attr(p.id)}">⚠️ No email yet</span>`}
       </div>
       ${cleanWeb ? `<div class="pcard-fact">
         <span class="fact-lbl">Website:</span>
         <a href="${attr(webHref)}" target="_blank" rel="noopener" data-stop-card class="fact-link">${esc(cleanWeb)} ↗</a>
-      </div>` : ''}
+      </div>` : `<div class="pcard-fact"><span class="fact-lbl">Website:</span><span class="muted">Not set (AI Research can find it)</span></div>`}
       <div class="pcard-fact hook-row">
-        <span class="fact-lbl">Note:</span>
+        <span class="fact-lbl">Email 1 Opener:</span>
         ${hasHook
           ? `<span class="hook">“${esc(p.personalization_hook)}”</span>`
-          : `<span class="chip warn" data-quick-edit="${attr(p.id)}">⚠️ Add 1-line personal note</span>`}
+          : `<span class="chip warn" data-quick-edit="${attr(p.id)}">⚠️ Missing 1-line note</span>`}
       </div>
     </div>
 
@@ -325,8 +354,8 @@ function card(p, { touchesByP, settings, showStageSelect = true } = {}) {
 
     <div class="pcard-foot">
       <div class="pcard-next">
-        ${na.text ? `<span class="next-txt">${esc(na.text)}${na.at ? ` · <b>${esc(fmtDate(na.at))}</b>` : ''}</span>` : ''}
-        <span class="muted small">${last ? `Last activity ${esc(ago(last))}` : 'Not contacted yet'}</span>
+        ${na.text ? `<span class="next-txt ${na.brokenStage ? 'bad-txt' : ''}">${esc(na.text)}${na.at ? ` · <b>${esc(fmtDate(na.at))}</b>` : ''}</span>` : ''}
+        <span class="muted small">${last ? `Last email activity ${esc(ago(last))}` : 'No emails sent yet'}</span>
       </div>
       <div class="pcard-actions">
         ${quickBtn}
@@ -361,6 +390,7 @@ export function render(el) {
     tag: '',
     view: 'flow',
     hideClosed: false,
+    onlyHighFit: false,
     sort: 'score',
     preset: defaultPreset.key,
     steps: [...defaultPreset.steps],
@@ -414,6 +444,7 @@ export function render(el) {
 
   function matchesFilters(p, hiddenStages) {
     if (hiddenStages.includes(p.status)) return false;
+    if (f.onlyHighFit && core.priorityScore(p).score < MIN_FIT_SCORE) return false;
     if (f.q) {
       const q = f.q.toLowerCase();
       if (![p.agency_name, p.contact_name, p.email, p.location, p.notes, p.personalization_hook].some((x) => (x || '').toLowerCase().includes(q))) return false;
@@ -431,13 +462,13 @@ export function render(el) {
     const src = activeData().prospects;
     const hidden = f.hideClosed ? ['lost', 'do_not_contact'] : [];
     if (src.length > 0 && src.filter((p) => matchesFilters(p, hidden)).length === 0) {
-      f.q = ''; f.type = ''; f.segment = ''; f.location = ''; f.language = ''; f.tag = '';
+      f.q = ''; f.type = ''; f.segment = ''; f.location = ''; f.language = ''; f.tag = ''; f.onlyHighFit = false;
       save(f);
     }
   }
 
   function hasActiveFilters() {
-    return Boolean(f.q || f.type || f.segment || f.location || f.language || f.tag);
+    return Boolean(f.q || f.type || f.segment || f.location || f.language || f.tag || f.onlyHighFit);
   }
 
   let lastFlow = null;
@@ -447,14 +478,27 @@ export function render(el) {
     el.querySelectorAll('.path-link.hover, .path-node.hover').forEach((x) => x.classList.remove('hover'));
   };
 
-  function renderJourneyBar(list) {
+  function renderJourneyBar(list, data) {
+    const missingInfoCount = data.prospects.filter((p) =>
+      ['researching', 't1_sent'].includes(p.status) && (!p.email || !p.personalization_hook)
+    ).length;
+    const lowFitCount = data.prospects.filter((p) => core.priorityScore(p).score < MIN_FIT_SCORE).length;
+
     return `<div class="journey-strip" role="region" aria-label="5-Step Outreach Journey">
       <div class="journey-head">
         <div>
           <span class="journey-title">How Your Outreach Works (5 Simple Steps)</span>
           <span class="muted small"> · Click any step to filter leads, or drag a card onto a step to move it</span>
         </div>
-        ${stageFilter !== 'all' ? `<button class="btn ghost sm" data-stage-filter="all">${icon('x', 13)} Show all ${list.length} leads</button>` : ''}
+        <div class="row" style="gap:8px">
+          ${missingInfoCount > 0 ? `<button class="btn sm primary" data-act="batch-ai-research" ${pathSession.batchRunning ? 'disabled' : ''}>
+            ${pathSession.batchRunning ? `⏳ ${esc(pathSession.batchStatus || 'Researching…')}` : `🤖 Auto-Research ${missingInfoCount} Leads (Find Emails & Notes)`}
+          </button>` : ''}
+          ${lowFitCount > 0 && !data.isSample ? `<button class="btn sm ghost" data-act="purge-low-fit" title="Delete leads scoring below ${MIN_FIT_SCORE}/100">
+            🧹 Remove ${lowFitCount} leads &lt; ${MIN_FIT_SCORE}/100
+          </button>` : ''}
+          ${stageFilter !== 'all' ? `<button class="btn ghost sm" data-stage-filter="all">${icon('x', 13)} Show all ${list.length} leads</button>` : ''}
+        </div>
       </div>
       <div class="journey-steps">
         ${JOURNEY_STEPS.map((st, idx) => {
@@ -487,7 +531,7 @@ export function render(el) {
     el.innerHTML = `
     <div class="page-head">
       <div>
-        <div class="label eyebrow">${list.length} of ${data.prospects.length} partners & leads${data.isSample ? ' · interactive sample preview' : ''}</div>
+        <div class="label eyebrow">${list.length} of ${data.prospects.length} partners & leads${data.isSample ? ' · interactive sample preview' : ''} · Target Fit ≥ ${MIN_FIT_SCORE}/100</div>
         <h1>Partner Pipeline</h1>
       </div>
       <div class="row">
@@ -510,7 +554,7 @@ export function render(el) {
       <a class="btn sm primary" href="#add">${icon('plus', 14)} Add real leads</a>
     </div>` : ''}
 
-    ${renderJourneyBar(list)}
+    ${renderJourneyBar(list, data)}
 
     <div class="filters">
       <input type="search" id="f-q" placeholder="🔍 Search agency, person, email, villa, town…" value="${attr(f.q)}" aria-label="Search">
@@ -519,6 +563,7 @@ export function render(el) {
       <select id="f-segment" aria-label="Segment"><option value="">All agency sizes</option>${Object.entries(SEG).map(([k, v]) => `<option value="${k}" ${f.segment === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
       <select id="f-language" aria-label="Language"><option value="">All languages</option>${['en', 'it', 'de', 'fr'].map((l) => `<option value="${l}" ${f.language === l ? 'selected' : ''}>${l.toUpperCase()}</option>`).join('')}</select>
       ${tags.length ? `<select id="f-tag" aria-label="Tag"><option value="">All tags</option>${tags.map((t) => `<option ${f.tag === t ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>` : ''}
+      <label class="check small" title="Hide leads scoring below 65/100"><input type="checkbox" id="f-highfit" ${f.onlyHighFit ? 'checked' : ''}> Only ≥ ${MIN_FIT_SCORE}/100 Fit</label>
       <label class="check small"><input type="checkbox" id="f-closed" ${f.hideClosed ? 'checked' : ''}> Hide Declined</label>
       ${hasActiveFilters() || stageFilter !== 'all' ? `<button class="btn ghost sm" data-act="reset-filters">${icon('x', 14)} Reset filters</button>` : ''}
     </div>
@@ -685,15 +730,18 @@ export function render(el) {
 
       <section class="path-inspector" aria-label="Lead cards">
         <div class="path-inspector-head">
-          <div class="row">
-            <h2>${hasSel || stageFilter !== 'all' ? 'Matching Partner Leads' : 'All Partner Leads'} <span class="muted small">(${inspectorList.length})</span></h2>
-            ${hasSel || stageFilter !== 'all' ? `<button class="btn ghost sm" data-act="path-clear-selection">Show all (${list.length})</button>` : ''}
+          <div>
+            <div class="row">
+              <h2>${hasSel || stageFilter !== 'all' ? 'Matching Partner Leads' : 'Partner Leads in Pipeline'} <span class="muted small">(${inspectorList.length})</span></h2>
+              ${hasSel || stageFilter !== 'all' ? `<button class="btn ghost sm" data-act="path-clear-selection">Show all (${list.length})</button>` : ''}
+            </div>
+            <div class="small muted">Each card shows the partner's Fit Score out of 100 (target ≥ ${MIN_FIT_SCORE}/100), contact info, and the next action.</div>
           </div>
           <div class="row">
             <label class="row small muted" style="gap:6px">
               <span>Sort by</span>
               <select id="f-sort" aria-label="Sort prospects" style="width:auto;padding:4px 8px;font-size:.8rem">
-                <option value="score" ${f.sort === 'score' ? 'selected' : ''}>★ Best Fit Score</option>
+                <option value="score" ${f.sort === 'score' ? 'selected' : ''}>★ Best Fit Score (/100)</option>
                 <option value="last" ${f.sort === 'last' ? 'selected' : ''}>🕒 Recent Activity</option>
                 <option value="stage" ${f.sort === 'stage' ? 'selected' : ''}>📊 Pipeline Step</option>
                 <option value="name" ${f.sort === 'name' ? 'selected' : ''}>🔤 Agency Name (A–Z)</option>
@@ -714,11 +762,10 @@ export function render(el) {
     const filteredList = stageFilter === 'all' ? list : list.filter((p) => sgObj.match(p));
 
     if (!detailedBoard) {
-      // Clean 5-Column Simple Board (fits comfortably on screen!)
       const cols = f.hideClosed ? JOURNEY_STEPS.slice(0, 5) : JOURNEY_STEPS;
       return `<div class="stack">
         <div class="row between">
-          <span class="small muted">💡 Drag any lead card from one column to the next, or use the buttons on each card.</span>
+          <span class="small muted">💡 Drag any lead card from one column to the next, or click <b>🤖 AI Research</b> / <b>✓ Approve & Draft Email 1</b> on a card.</span>
           <button class="btn ghost sm" data-act="toggle-board-detail">Show all 13 detailed stages</button>
         </div>
         <div class="board-wrap">
@@ -765,12 +812,12 @@ export function render(el) {
     };
     const rows = [...filteredList].sort(sorters[f.sort] || sorters.score);
     const th = (k, label, cls = '') => `<th class="${cls}"><button class="btn ghost sm" data-sort="${k}" style="padding:0;text-transform:inherit;letter-spacing:inherit;font-size:inherit;color:${f.sort === k ? 'var(--ink)' : 'inherit'}">${label}</button></th>`;
-    return `<div class="card flush table-wrap"><table><thead><tr>${th('score', 'Fit Score')}${th('name', 'Agency')}<th>Contact Person</th><th>Email</th><th>Town</th><th>Personal Note (Hook)</th>${th('stage', 'Current Step')}${th('last', 'Last Activity')}<th>Next Step</th><th>Actions</th></tr></thead><tbody>
+    return `<div class="card flush table-wrap"><table><thead><tr>${th('score', 'Fit Score')}${th('name', 'Agency')}<th>Contact Person</th><th>Email</th><th>Town</th><th>Email 1 Opener (Hook)</th>${th('stage', 'Current Step')}${th('last', 'Last Activity')}<th>Next Step</th><th>Actions</th></tr></thead><tbody>
       ${rows.map((p) => {
         const na = nextAction(p, touchesByP.get(p.id) || [], data.settings);
         const sc = core.priorityScore(p).score;
         return `<tr class="clickable" data-open="${attr(p.id)}" tabindex="0" role="button" aria-label="${attr(p.agency_name)}">
-          <td><span class="score ${sc >= 60 ? 'hi' : ''}">★ ${sc}</span></td>
+          <td><span class="score ${sc >= MIN_FIT_SCORE ? 'hi' : 'low'}">${sc}/100</span></td>
           <td><b>${esc(p.agency_name)}</b><div class="small muted">${esc(TYPE[p.type] || p.type || 'Planner')}</div></td>
           <td>${esc(p.contact_name || '—')}</td>
           <td class="small">${p.email ? esc(p.email) : '<span class="chip warn">Missing email</span>'}</td>
@@ -779,25 +826,162 @@ export function render(el) {
           <td><span class="chip">${esc(plainStage(p.status))}</span></td>
           <td class="small">${esc(ago(p.last_touch_at))}</td>
           <td class="small muted">${esc(na.text)}</td>
-          <td><button class="btn ghost sm" data-quick-edit="${attr(p.id)}">${icon('edit', 13)} Edit</button></td>
+          <td>
+            <div class="row" style="gap:4px">
+              ${!p.email || !p.personalization_hook ? `<button class="btn sm primary" data-ai-research="${attr(p.id)}">🤖 AI</button>` : ''}
+              <button class="btn ghost sm" data-quick-edit="${attr(p.id)}">${icon('edit', 13)} Edit</button>
+            </div>
+          </td>
         </tr>`;
       }).join('')}
       </tbody></table></div>`;
   }
 
-  function openQuickEditModal(prospectId) {
+  async function researchSingleProspect(prospectId, { silent = false } = {}) {
+    const data = activeData();
+    const p = data.prospects.find((x) => x.id === prospectId);
+    if (!p) return null;
+    if (data.isSample) {
+      toast('Switch to your live account to run AI website research.');
+      return null;
+    }
+    pathSession.researchingIds.add(p.id);
+    paint();
+    try {
+      const r = await api('enrich', {
+        url: p.website || '',
+        agency_name: p.agency_name,
+        location: p.location || '',
+        segment: p.segment || '',
+        type: p.type || 'planner',
+        rating: p.rating,
+        verified_reviews_count: p.verified_reviews_count,
+        prospect_id: p.id,
+      });
+      const s = r.suggestions || {};
+      const patch = {};
+      if (s.website && !p.website) patch.website = s.website;
+      if (s.email && !p.email) { patch.email = s.email; patch.email_status = s.email_status || 'unknown'; }
+      if (s.phone && !p.phone) patch.phone = s.phone;
+      if (s.whatsapp && !p.whatsapp) patch.whatsapp = s.whatsapp;
+      if (s.contact_name && !p.contact_name) patch.contact_name = s.contact_name;
+      if (s.location && !p.location) patch.location = s.location;
+      if (s.language && !p.language) patch.language = s.language;
+      if (s.segment && !p.segment) patch.segment = s.segment;
+      if (s.key_venues?.length) patch.key_venues = [...new Set([...(p.key_venues || []), ...s.key_venues])];
+      if (s.personalization_hook && !p.personalization_hook) {
+        patch.personalization_hook = s.personalization_hook;
+        patch.hook_type = s.hook_type || 'venue';
+        patch.hook_confidence = s.hook_confidence || 'high';
+        patch.hook_needs_review = false;
+        patch.hook_source_url = s.hook_source_url || s.website || p.website;
+      }
+      const mergedProspect = { ...p, ...patch };
+      const newScore = core.priorityScore(mergedProspect).score;
+      patch.priority_score = newScore;
+
+      // If it now has email + hook and meets the 65/100 threshold, mark Ready and draft Email 1!
+      const nowReady = Boolean(mergedProspect.email && mergedProspect.personalization_hook && newScore >= MIN_FIT_SCORE);
+      if (nowReady && ['researching', 't1_sent'].includes(p.status) && A.touchesOf(p.id).length === 0) {
+        patch.status = 'ready';
+      }
+
+      if (Object.keys(patch).length > 0) {
+        await update('prospects', p.id, patch);
+      }
+
+      const updatedP = S.prospects.find((x) => x.id === p.id) || mergedProspect;
+      if (updatedP.status === 'ready' && A.touchesOf(p.id).length === 0) {
+        await A.draftNextStep(updatedP);
+      }
+
+      if (!silent) {
+        if (nowReady) {
+          toast(`✓ ${p.agency_name} researched (${newScore}/100) → Ready & Email 1 drafted!`);
+        } else if (mergedProspect.email) {
+          toast(`Found email (${mergedProspect.email}) · Score ${newScore}/100`);
+        } else {
+          toast(`Website checked for ${p.agency_name}, but no public email found on site.`, 'error');
+        }
+      }
+      return { prospect: updatedP, score: newScore, nowReady };
+    } catch (err) {
+      if (!silent) toast(`${p.agency_name}: ${err.message}`, 'error');
+      return { prospect: p, score: core.priorityScore(p).score, error: err.message };
+    } finally {
+      pathSession.researchingIds.delete(p.id);
+      paint();
+    }
+  }
+
+  async function runBatchAiResearch() {
+    const data = activeData();
+    if (data.isSample || pathSession.batchRunning) return;
+    const targets = data.prospects.filter((p) =>
+      ['researching', 't1_sent'].includes(p.status) && (!p.email || !p.personalization_hook)
+    );
+    if (!targets.length) {
+      toast('All leads already have emails and personal notes!');
+      return;
+    }
+    pathSession.batchRunning = true;
+    let readyCount = 0;
+    let foundEmails = 0;
+    try {
+      for (let i = 0; i < targets.length; i++) {
+        const p = targets[i];
+        pathSession.batchStatus = `Researching ${i + 1}/${targets.length}: ${p.agency_name}…`;
+        paint();
+        const res = await researchSingleProspect(p.id, { silent: true });
+        if (res?.nowReady) readyCount++;
+        if (res?.prospect?.email) foundEmails++;
+      }
+      const lowRemaining = S.prospects.filter((p) => core.priorityScore(p).score < MIN_FIT_SCORE).length;
+      toast(`✓ AI Research finished: ${foundEmails} emails found, ${readyCount} moved to Ready for Email 1!${lowRemaining ? ` (${lowRemaining} leads scored < ${MIN_FIT_SCORE}/100)` : ''}`);
+    } finally {
+      pathSession.batchRunning = false;
+      pathSession.batchStatus = '';
+      paint();
+    }
+  }
+
+  async function purgeLowFitProspects() {
+    const low = S.prospects.filter((p) => core.priorityScore(p).score < MIN_FIT_SCORE);
+    if (!low.length) return;
+    const ok = await confirmDialog({
+      title: `Remove ${low.length} leads below ${MIN_FIT_SCORE}/100?`,
+      body: `This will permanently delete ${low.length} leads scoring under ${MIN_FIT_SCORE}/100 (${low.slice(0, 5).map((p) => `${p.agency_name} · ${core.priorityScore(p).score}/100`).join(', ')}${low.length > 5 ? '…' : ''}). Tip: Run "🤖 Auto-Research" first if you haven't checked their websites yet!`,
+      okText: `Delete ${low.length} low-fit leads`,
+      danger: true,
+    });
+    if (!ok) return;
+    for (const p of low) {
+      await remove('prospects', p.id);
+    }
+    toast(`Removed ${low.length} leads below ${MIN_FIT_SCORE}/100`);
+    paint();
+  }
+
+  function openQuickEditModal(prospectId, reasonBanner = '') {
     const data = activeData();
     const p = data.prospects.find((x) => x.id === prospectId);
     if (!p) return;
+    const sc = core.priorityScore(p).score;
     dialog({
-      title: `Complete Info · ${p.agency_name}`,
+      title: `Complete Info · ${p.agency_name} (${sc}/100)`,
       body: `<form id="qe-form" class="stack">
-        <p class="small muted">Collect the key info needed so DOROGO can personalize Email 1 and track this partner.</p>
+        ${reasonBanner ? `<div class="banner" style="margin-bottom:4px">
+          <span>⚠️ <b>Why couldn't we move ${esc(p.agency_name)} to Email 1 yet?</b><br>${esc(reasonBanner)}</span>
+        </div>` : `<p class="small muted">Fill in the email and 1-line opener below, or click <b>🤖 Auto-Find with AI</b> to pull them from their website automatically.</p>`}
+        ${!data.isSample ? `<div class="row between" style="background:var(--surface-2);padding:10px 12px;border-radius:8px;border:1px solid var(--line)">
+          <span class="small"><b>Want AI to find their website, email &amp; villas automatically?</b></span>
+          <button type="button" class="btn sm primary" id="qe-ai-btn">🤖 Auto-Find with AI</button>
+        </div>` : ''}
         <div class="grid-2">
           <label class="field"><span>Agency / Company Name *</span><input name="agency_name" required value="${attr(p.agency_name || '')}"></label>
           <label class="field"><span>Contact Person Name</span><input name="contact_name" placeholder="e.g. Sofia Rossi" value="${attr(p.contact_name || '')}"></label>
           <label class="field"><span>Email Address *</span><input name="email" type="email" placeholder="name@agency.it" value="${attr(p.email || '')}"></label>
-          <label class="field"><span>Website</span><input name="website" placeholder="https://…" value="${attr(p.website || '')}"></label>
+          <label class="field"><span>Website URL</span><input name="website" placeholder="https://…" value="${attr(p.website || '')}"></label>
           <label class="field"><span>Town / Location</span><input name="location" placeholder="e.g. Como, Bellagio, Milan" value="${attr(p.location || '')}"></label>
           <label class="field"><span>Partner Type</span>
             <select name="type">
@@ -806,7 +990,7 @@ export function render(el) {
           </label>
         </div>
         <label class="field">
-          <span>1-Line Personal Note (Used as the opening line of Email 1) *</span>
+          <span>1-Line Personal Note (Used as the first sentence of Email 1) *</span>
           <textarea name="personalization_hook" rows="2" placeholder="e.g. Your recent wedding celebration at Villa del Balbianello caught our eye.">${esc(p.personalization_hook || '')}</textarea>
         </label>
         <label class="field">
@@ -818,7 +1002,7 @@ export function render(el) {
           <div class="row gap">
             <button type="button" class="btn ghost" data-close>Cancel</button>
             <button type="submit" class="btn" data-save-mode="save">Save</button>
-            ${p.status === 'researching' ? '<button type="submit" class="btn primary" data-save-mode="ready">✓ Save & Mark Ready for Email 1</button>' : ''}
+            <button type="submit" class="btn primary" data-save-mode="ready">✓ Save, Mark Ready &amp; Draft Email 1</button>
           </div>
         </div>
       </form>`,
@@ -826,6 +1010,30 @@ export function render(el) {
         let mode = 'save';
         dlg.querySelectorAll('[data-save-mode]').forEach((btn) => {
           btn.addEventListener('click', () => { mode = btn.dataset.saveMode; });
+        });
+        dlg.querySelector('#qe-ai-btn')?.addEventListener('click', async (ev) => {
+          const btn = ev.currentTarget;
+          btn.disabled = true;
+          btn.textContent = '⏳ Searching website…';
+          const form = dlg.querySelector('#qe-form');
+          const webVal = form.elements.website.value.trim();
+          const nameVal = form.elements.agency_name.value.trim();
+          const locVal = form.elements.location.value.trim();
+          try {
+            const r = await api('enrich', { url: webVal, agency_name: nameVal, location: locVal, prospect_id: p.id });
+            const s = r.suggestions || {};
+            if (s.website) form.elements.website.value = s.website;
+            if (s.email) form.elements.email.value = s.email;
+            if (s.contact_name) form.elements.contact_name.value = s.contact_name;
+            if (s.location && !form.elements.location.value) form.elements.location.value = s.location;
+            if (s.personalization_hook) form.elements.personalization_hook.value = s.personalization_hook;
+            toast(s.email ? `Found ${s.email} (${r.score || sc}/100)!` : 'Website found — check fields below');
+          } catch (err) {
+            toast(err.message, 'error');
+          } finally {
+            btn.disabled = false;
+            btn.textContent = '🤖 Auto-Find with AI';
+          }
         });
         dlg.querySelector('#qe-form')?.addEventListener('submit', async (ev) => {
           ev.preventDefault();
@@ -848,6 +1056,7 @@ export function render(el) {
             }
             patch.status = 'ready';
           }
+          patch.priority_score = core.priorityScore({ ...p, ...patch }).score;
           if (data.isSample) {
             Object.assign(p, patch);
             toast(mode === 'ready' ? `${p.agency_name} → Ready for Email 1` : 'Saved (sample preview)');
@@ -857,7 +1066,13 @@ export function render(el) {
           }
           try {
             await update('prospects', p.id, patch);
-            toast(mode === 'ready' ? `${p.agency_name} → Ready for Email 1` : 'Saved');
+            if (mode === 'ready') {
+              const updatedP = S.prospects.find((x) => x.id === p.id) || { ...p, ...patch };
+              await A.draftNextStep(updatedP);
+              toast(`✓ ${p.agency_name} marked Ready & Email 1 drafted!`);
+            } else {
+              toast('Saved');
+            }
             close(true);
             paint();
           } catch (err) {
@@ -872,6 +1087,7 @@ export function render(el) {
     const data = activeData();
     const p = data.prospects.find((x) => x.id === prospectId);
     if (!p || !toStage || p.status === toStage) return;
+
     if (data.isSample) {
       p.status = toStage;
       p.updated_at = new Date().toISOString();
@@ -879,14 +1095,77 @@ export function render(el) {
       paint();
       return;
     }
-    if (toStage === 'ready') {
+
+    // Guardrail 1: Never allow moving to Ready or Email 1/2/3 Sent if the lead is missing an email address or personal note!
+    if (['ready', 't1_sent', 't3_sent', 't4_sent'].includes(toStage)) {
       const probs = A.readinessProblems(p);
       if (probs.length) {
-        toast(`Needs info before Email 1: ${probs.join(', ')}`, 'error');
-        openQuickEditModal(p.id);
+        paint(); // Reset the select dropdown back to current status
+        openQuickEditModal(
+          p.id,
+          `${p.agency_name} is missing: ${probs.join(' and ')}. Changing the dropdown to "${plainStage(toStage)}" cannot send an email without an email address and opening line.`
+        );
         return;
       }
     }
+
+    // Guardrail 2: What happens if user moves to "Ready for Email 1"?
+    // -> Move to Ready AND automatically create the Email 1 draft right now!
+    if (toStage === 'ready') {
+      try {
+        await A.setStatus(p, 'ready');
+        const updatedP = S.prospects.find((x) => x.id === p.id) || { ...p, status: 'ready' };
+        await A.draftNextStep(updatedP);
+        toast(`✓ ${p.agency_name} → Ready & Email 1 drafted! Review it in Today.`);
+        paint();
+      } catch (err) {
+        toast(err.message, 'error');
+      }
+      return;
+    }
+
+    // Guardrail 3: What happens if user picks "Email 1 Sent (T1)" when no T1 email was sent yet?
+    // Explain the difference clearly: Draft & Send Email 1 now vs. Record that you already sent it outside the app.
+    const existingTouches = A.touchesOf(p.id);
+    const hasSentT1 = existingTouches.some((t) => t.direction === 'out' && t.state === 'sent' && t.step_name === 'T1_intro');
+    if (toStage === 't1_sent' && !hasSentT1) {
+      paint(); // Keep dropdown on current value until they choose
+      dialog({
+        title: `Email 1 for ${p.agency_name}`,
+        body: `<div class="stack">
+          <p class="small">Setting the stage to <b>“Email 1 Sent”</b> tells the CRM that Email 1 has <i>already</i> been sent, and starts the 4-day timer for Email 2.</p>
+          <p class="small"><b>What would you like to do?</b></p>
+          <div class="stack" style="gap:8px;margin-top:4px">
+            <button class="btn primary" id="dlg-draft-t1">✉️ Create &amp; Review Email 1 Draft Now (Recommended)</button>
+            <button class="btn" id="dlg-log-t1">✓ I already sent Email 1 myself outside the app (Start 4-day timer for Email 2)</button>
+            <button class="btn ghost" data-close>Cancel</button>
+          </div>
+        </div>`,
+        onMount: (dlg, close) => {
+          dlg.querySelector('#dlg-draft-t1')?.addEventListener('click', async () => {
+            close(true);
+            await A.setStatus(p, 'ready');
+            const updatedP = S.prospects.find((x) => x.id === p.id) || { ...p, status: 'ready' };
+            await A.draftNextStep(updatedP);
+            toast(`✓ Email 1 drafted for ${p.agency_name}! Opening Today queue…`);
+            location.hash = 'today';
+          });
+          dlg.querySelector('#dlg-log-t1')?.addEventListener('click', async () => {
+            close(true);
+            await A.logOutbound(p, {
+              channel: 'email',
+              step_name: 'T1_intro',
+              subject: 'Logged external Email 1',
+              body: '(Marked as sent outside the app)',
+            });
+            toast(`${p.agency_name} marked as Email 1 Sent · Email 2 will be due in 4 days.`);
+            paint();
+          });
+        },
+      });
+      return;
+    }
+
     try {
       await A.setStatus(p, toStage);
       toast(`${p.agency_name} → ${plainStage(toStage)}`);
@@ -912,7 +1191,7 @@ export function render(el) {
       body: `<div class="stack">
         <div class="row between">
           <span class="chip gold">${esc(plainStage(p.status))}</span>
-          <span class="score ${sc >= 60 ? 'hi' : ''}">★ Fit Score ${sc}</span>
+          <span class="score ${sc >= MIN_FIT_SCORE ? 'hi' : 'low'}">${sc}/100 Fit</span>
         </div>
         ${p.personalization_hook ? `<p class="small"><b>Opening Note (Hook):</b> “${esc(p.personalization_hook)}”</p>` : ''}
         <div class="small muted">${[p.contact_name, p.email, p.location, SEG[p.segment] || p.segment].filter(Boolean).map(esc).join(' · ')}</div>
@@ -1043,6 +1322,7 @@ export function render(el) {
     }
     const id = e.target.id;
     if (id === 'f-closed') f.hideClosed = e.target.checked;
+    else if (id === 'f-highfit') f.onlyHighFit = e.target.checked;
     else if (id === 'f-sort') f.sort = e.target.value;
     else if (id && id.startsWith('f-') && id !== 'f-q') f[id.slice(2)] = e.target.value;
     else return;
@@ -1052,6 +1332,13 @@ export function render(el) {
   el.addEventListener('click', async (e) => {
     if (e.target.closest('[data-stage-select]') || e.target.closest('[data-step-col]') || e.target.closest('[data-stop-card]')) return;
     removeTip();
+
+    const aiBtn = e.target.closest('[data-ai-research]');
+    if (aiBtn) {
+      e.stopPropagation();
+      await researchSingleProspect(aiBtn.dataset.aiResearch);
+      return;
+    }
 
     const qe = e.target.closest('[data-quick-edit]');
     if (qe) {
@@ -1099,6 +1386,14 @@ export function render(el) {
     }
 
     const act = e.target.closest('[data-act]')?.dataset.act;
+    if (act === 'batch-ai-research') {
+      await runBatchAiResearch();
+      return;
+    }
+    if (act === 'purge-low-fit') {
+      await purgeLowFitProspects();
+      return;
+    }
     if (act === 'toggle-customize') {
       customizeCols = !customizeCols;
       return paint();
@@ -1133,7 +1428,7 @@ export function render(el) {
       return persist();
     }
     if (act === 'reset-filters') {
-      f.q = ''; f.type = ''; f.segment = ''; f.location = ''; f.language = ''; f.tag = '';
+      f.q = ''; f.type = ''; f.segment = ''; f.location = ''; f.language = ''; f.tag = ''; f.onlyHighFit = false;
       selectedPath = {};
       stageFilter = 'all';
       return persist();
