@@ -459,16 +459,21 @@ export async function autoResearchPending(db: any, _settings: any, now = new Dat
     const venues = [...new Set([...(p.key_venues || []), ...(seed.key_venues || []), ...(jina?.venues || [])])];
     if (venues.length) patch.key_venues = venues;
 
-    const preHook = { ...p, ...patch };
-    let hookText = p.personalization_hook || '';
+    const preHook = { ...p, ...patch, personalization_hook: '' };
+    const existingHook = String(p.personalization_hook || '').trim();
+    const hasRichExisting = existingHook && !/^We note(d)?\b/i.test(existingHook);
+    let hookText = hasRichExisting ? existingHook : '';
+    if (!hookText && (seed.personalization_hook || jina?.story?.couples?.length)) {
+      hookText = core.buildVerifiedFallbackHook(preHook, jina?.story);
+    }
     if (!hookText && integrations().gemini && jina?.text) {
       try {
         const aiOut: any = await gemini(db, 'hook', { agency: p.agency_name, language: p.language === 'it' ? 'it' : 'en', page: jina.text }, p.id);
-        if (aiOut?.hook) hookText = aiOut.hook;
+        if (aiOut?.hook && !/^We note(d)?\b/i.test(aiOut.hook)) hookText = aiOut.hook;
       } catch { /* fallback below */ }
     }
     if (!hookText) hookText = core.buildVerifiedFallbackHook(preHook, jina?.story);
-    if (hookText && !p.personalization_hook) {
+    if (hookText && hookText !== existingHook) {
       patch.personalization_hook = hookText;
       patch.hook_type = seed.hook_type || (jina?.story?.couples?.length ? 'event' : venues.length ? 'venue' : 'aesthetic');
       patch.hook_confidence = 'high';

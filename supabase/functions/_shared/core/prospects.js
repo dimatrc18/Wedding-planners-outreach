@@ -477,13 +477,16 @@ export const DISCOVERY_PARTNER_CATALOG = [
   },
 ];
 
+const NON_HUMAN_COUPLE_WORD_RE = /\b(Bride|Groom|Wedding|Weddings|Event|Events|Italy|Ireland|Como|Milan|Terms|Conditions|Privacy|Cookie|Food|Wine|Day|Night|Portofino|Cinque|Terre|Tuscany|Amalfi|Venice|Rome|Sicily|Puglia|Capri|Positano|Bellagio|Varenna|Menaggio|Cernobbio|Moltrasio|Laglio|Design|Planning|Luxury|Villas|Hotels|Lake|Garda|Maggiore|Orta|Style|Beauty|Travel|Leisure)\b/i;
+const NON_HUMAN_FOUNDER_RE = /\b(Villa|Lario|Làrio|Hotel|Palace|Resort|Relais|Grand|Lake|Como|Milan|Italy|Wedding|Weddings|Event|Events|Studio|Team|Agency|Luxury|Group|Srl|Boutique|Concierge)\b/i;
+
 /** Extracts unique human details (couple names, founder names, press, signature touches) from Jina Reader markdown or HTML text. */
 export function extractUniqueStorySignals(rawText = '') {
   const text = String(rawText || '');
   // Look for couple names like "Morgan & Tyler" or "Beatrice & Matteo" in headings or captions
   const coupleMatches = [...text.matchAll(/(?:^|\n|#|\*)\s*([A-Z][a-z]{2,14})\s+(?:&|and)\s+([A-Z][a-z]{2,14})\b/g)]
-    .map((m) => `${m[1]} and ${m[2]}`)
-    .filter((pair) => !/Bride and Groom|Wedding and Event|Italy and Ireland|Como and Milan|Terms and Conditions|Privacy and Cookie|Food and Wine|Day and Night/i.test(pair));
+    .filter((m) => !NON_HUMAN_COUPLE_WORD_RE.test(m[1]) && !NON_HUMAN_COUPLE_WORD_RE.test(m[2]))
+    .map((m) => `${m[1]} and ${m[2]}`);
   const uniqueCouples = [...new Set(coupleMatches)].slice(0, 3);
 
   // Look for press mentions
@@ -499,8 +502,9 @@ export function extractUniqueStorySignals(rawText = '') {
   if (/honeymoon/i.test(text)) signatureDetails.push('post-wedding honeymoon logistics');
 
   // Look for founder / lead planner name
-  const founderMatch = text.match(/(?:founded by|led by|with wedding planner|founder|by)\s+([A-Z][a-zà-ÿ]{2,15}\s+[A-Z][a-zà-ÿ]{2,18})/);
-  const founderName = founderMatch ? founderMatch[1].trim() : null;
+  const founderMatch = text.match(/(?:founded by|led by|with wedding planner|founder)\s+([A-Z][a-zà-ÿ]{2,15}\s+[A-Z][a-zà-ÿ]{2,18})/);
+  const candidateFounder = founderMatch ? founderMatch[1].trim() : null;
+  const founderName = candidateFounder && !NON_HUMAN_FOUNDER_RE.test(candidateFounder) ? candidateFounder : null;
 
   return { couples: uniqueCouples, press, signatureDetails, founderName };
 }
@@ -517,8 +521,9 @@ export function resolveProspectResearchSeed(p = {}) {
 }
 
 export function buildVerifiedFallbackHook(p = {}, storySignals = null) {
-  if (p.personalization_hook && String(p.personalization_hook).trim()) {
-    return String(p.personalization_hook).trim();
+  const existing = String(p.personalization_hook || '').trim();
+  if (existing && !/^We note(d)?\b/i.test(existing)) {
+    return existing;
   }
   const seed = KNOWN_LAKE_COMO_DIRECTORY[normName(p.agency_name || '')];
   if (seed?.personalization_hook) return seed.personalization_hook;

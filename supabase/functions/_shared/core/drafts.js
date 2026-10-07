@@ -6,6 +6,7 @@ import { lintMessage } from './lint.js';
 
 export function firstName(contact = '') {
   const n = String(contact || '').trim().split(/\s+/)[0] || '';
+  if (/^(villa|hotel|grand|relais|palace|resort|team|events?|concierge|info|hello|office|studio|agency|wedding|weddings)$/i.test(n)) return '';
   return /^[\p{L}'’-]{2,}$/u.test(n) ? n : '';
 }
 
