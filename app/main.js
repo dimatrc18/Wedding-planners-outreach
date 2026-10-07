@@ -36,7 +36,7 @@ function parseHash() {
 function badgeCount() {
   if (!['live', 'demo'].includes(S.mode)) return 0;
   const d = todayData();
-  return d.drafts.length + d.replies.length + d.dms.length;
+  return d.drafts.length + d.replies.length;
 }
 
 function shell() {
