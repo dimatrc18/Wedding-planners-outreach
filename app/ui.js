@@ -103,7 +103,13 @@ const ICONS = {
   download: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
   upload: '<path d="M12 20V9M7 14l5-5 5 5M5 4h14"/>',
   flag: '<path d="M6 21V4M6 4h11l-2 4 2 4H6"/>',
+  flow: '<rect x="3" y="5" width="3.5" height="14" rx="1"/><rect x="10.5" y="4" width="3.5" height="8" rx="1"/><rect x="10.5" y="14" width="3.5" height="6" rx="1"/><rect x="18" y="4" width="3.5" height="5" rx="1"/><rect x="18" y="11" width="3.5" height="9" rx="1"/><path d="M6.5 9c2 0 2-2 4-2M6.5 15c2 0 2 2 4 2M14 7c2 0 2-1 4-1M14 10c2 0 2 5 4 5"/>',
+  undo: '<path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+  redo: '<path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/>',
+  arrowRight: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  node: '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M8 9l4 3-4 3M13 15h3"/>',
 };
+
 export const icon = (name, size = 18) => `<svg class="ico" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ''}</svg>`;
 
 // Debounce for search inputs and realtime bursts.

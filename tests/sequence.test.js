@@ -27,23 +27,31 @@ test('missing email blocks email steps', () => {
   assert.equal(st.blocked, 'no_email');
 });
 
-test('cadence offsets: T2 at day 3, T3 at day 8, T4 at day 14 after T1', () => {
+test('cadence offsets: T2 disabled by default (email-only T1 -> T3 day 8 -> T4 day 14), or T2 at day 3 when enabled', () => {
   const t1 = rome(2026, 10, 6);
-  let st = sequenceState(P({ status: 't1_sent' }), [sent('T1_intro', t1)], S, rome(2026, 10, 7));
+  // Default settings: T2_ig_dm is disabled, so after T1 the next step is T3_followup at day 8
+  let stDefault = sequenceState(P({ status: 't1_sent' }), [sent('T1_intro', t1)], S, rome(2026, 10, 7));
+  assert.equal(stDefault.step.key, 'T3_followup');
+  assert.equal(stDefault.dueAt.getTime(), t1.getTime() + 8 * 86400000);
+
+  // When T2_ig_dm is explicitly enabled in settings:
+  const SWithIg = { ...S, steps: S.steps.map((x) => (x.key === 'T2_ig_dm' ? { ...x, enabled: true } : x)) };
+  let st = sequenceState(P({ status: 't1_sent' }), [sent('T1_intro', t1)], SWithIg, rome(2026, 10, 7));
   assert.equal(st.step.key, 'T2_ig_dm');
   assert.equal(st.dueAt.getTime(), t1.getTime() + 3 * 86400000);
   assert.equal(st.isDue, false);
-  st = sequenceState(P({ status: 't2_sent' }), [sent('T1_intro', t1), sent('T2_ig_dm', rome(2026, 10, 9))], S, rome(2026, 10, 15));
+  st = sequenceState(P({ status: 't2_sent' }), [sent('T1_intro', t1), sent('T2_ig_dm', rome(2026, 10, 9))], SWithIg, rome(2026, 10, 15));
   assert.equal(st.step.key, 'T3_followup');
   assert.equal(st.dueAt.getTime(), t1.getTime() + 8 * 86400000);
   assert.equal(st.isDue, true);
-  st = sequenceState(P({ status: 't3_sent' }), [sent('T1_intro', t1), sent('T2_ig_dm', t1), sent('T3_followup', t1)], S, t1);
+  st = sequenceState(P({ status: 't3_sent' }), [sent('T1_intro', t1), sent('T2_ig_dm', t1), sent('T3_followup', t1)], SWithIg, t1);
   assert.equal(st.step.key, 'T4_breakup');
 });
 
 test('Instagram step is skipped when there is no handle', () => {
   const t1 = rome(2026, 10, 6);
-  const st = sequenceState(P({ status: 't1_sent', instagram_handle: '' }), [sent('T1_intro', t1)], S, t1);
+  const SWithIg = { ...S, steps: S.steps.map((x) => (x.key === 'T2_ig_dm' ? { ...x, enabled: true } : x)) };
+  const st = sequenceState(P({ status: 't1_sent', instagram_handle: '' }), [sent('T1_intro', t1)], SWithIg, t1);
   assert.equal(st.step.key, 'T3_followup');
 });
 

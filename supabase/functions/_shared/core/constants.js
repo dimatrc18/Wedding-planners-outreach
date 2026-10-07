@@ -41,7 +41,7 @@ export const STEP_STATUS = {
 
 export const DEFAULT_STEPS = [
   { key: 'T1_intro', label: 'Intro email', day: 0, channel: 'email', thread: false, require_approval: true, enabled: true },
-  { key: 'T2_ig_dm', label: 'Instagram DM', day: 3, channel: 'instagram_dm', thread: false, require_approval: true, enabled: true },
+  { key: 'T2_ig_dm', label: 'Instagram DM', day: 3, channel: 'instagram_dm', thread: false, require_approval: true, enabled: false },
   { key: 'T3_followup', label: 'Follow-up email', day: 8, channel: 'email', thread: true, require_approval: true, enabled: true },
   { key: 'T4_breakup', label: 'Breakup email', day: 14, channel: 'email', thread: true, require_approval: true, enabled: true },
 ];

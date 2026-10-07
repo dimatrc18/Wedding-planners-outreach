@@ -9,3 +9,5 @@ export * from './stats.js';
 export * from './prospects.js';
 export * from './ratecard.js';
 export * from './inbound.js';
+export * from './path.js';
+

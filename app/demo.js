@@ -45,7 +45,7 @@ const AGENCIES = [
 // status by index, with the sequence position to simulate
 const PLAN = [
   'partner_won', 'partner_won', 'quote_requested', 'in_conversation', 'rate_card_sent', 'rate_card_sent', 'fam_offered',
-  'lost', 'nurture', 'replied_wait', 'replied_wait', 't4_sent', 't3_sent', 't3_sent', 't2_sent', 't1_sent', 't1_sent', 'do_not_contact',
+  'lost', 'nurture', 'replied_wait', 'replied_wait', 't4_sent', 't3_sent', 't3_sent', 't1_sent', 't1_sent', 't1_sent', 'do_not_contact',
   'ready', 'ready', 'ready', 'ready', 'researching', 'researching', 'researching',
 ];
 
@@ -94,7 +94,6 @@ export function buildDemoData() {
     const t1 = sendTime(start);
     out(p, 'T1_intro', t1);
     const steps = cadence[plan] || (['do_not_contact'].includes(plan) ? 1 : (i % 3) + 1);
-    if (steps >= 2 && p.instagram_handle) out(p, 'T2_ig_dm', new Date(t1.getTime() + 3 * DAY + 3 * 3600000));
     if (steps >= 3) out(p, 'T3_followup', new Date(t1.getTime() + 8 * DAY));
     if (steps >= 4) out(p, 'T4_breakup', new Date(t1.getTime() + 14 * DAY));
     if (cadence[plan]) return; // still in the cadence, no reply yet
@@ -156,7 +155,6 @@ export function buildDemoData() {
     prospects.push(p);
     const t1 = sendTime(16 + (k % 6) * 6);
     out(p, 'T1_intro', t1);
-    if (p.instagram_handle) out(p, 'T2_ig_dm', new Date(t1.getTime() + 3 * DAY + 3 * 3600000));
     out(p, 'T3_followup', new Date(t1.getTime() + 8 * DAY));
     out(p, 'T4_breakup', new Date(t1.getTime() + 14 * DAY));
   }
@@ -166,11 +164,12 @@ export function buildDemoData() {
     const d = buildDraft({ prospect: p, key: 'T1_intro', templates });
     touches.push({ id: id(), prospect_id: p.id, direction: 'out', channel: 'email', step_name: 'T1_intro', state: 'draft', subject: d.subject, body: d.body, template_key: d.template_key, variant: d.variant, lint: d.lint, created_at: iso(Date.now() - 3600000) });
   }
-  // One T3 follow-up due and drafted, one Instagram DM ready to send by hand.
-  const t2 = prospects.find((x) => x.status === 't1_sent' && x.instagram_handle);
-  if (t2) {
-    const d = buildDraft({ prospect: t2, key: 'T2_ig_dm', templates });
-    touches.push({ id: id(), prospect_id: t2.id, direction: 'out', channel: 'instagram_dm', step_name: 'T2_ig_dm', state: 'draft', subject: '', body: d.body, template_key: d.template_key, lint: d.lint, created_at: iso(Date.now() - 7200000) });
+  // One T3 follow-up email due and drafted in the approval queue.
+  const t3Due = prospects.find((x) => x.status === 't1_sent');
+  if (t3Due) {
+    const t1Touch = touches.find((x) => x.prospect_id === t3Due.id && x.step_name === 'T1_intro');
+    const d = buildDraft({ prospect: t3Due, key: 'T3_followup', templates, threadSubject: t1Touch?.subject || '', step: { thread: true } });
+    touches.push({ id: id(), prospect_id: t3Due.id, direction: 'out', channel: 'email', step_name: 'T3_followup', state: 'draft', subject: d.subject, body: d.body, template_key: d.template_key, lint: d.lint, created_at: iso(Date.now() - 7200000) });
   }
   // Old conversations have moved on: only the two fresh replies are still waiting.
   const waiting = new Set(prospects.filter((x) => x.status === 'replied' || touches.some((t) => t.prospect_id === x.id && t.suggested_for)).map((x) => x.id));
