@@ -5,7 +5,19 @@ import { approveTouch, sendDigest } from '../_shared/jobs.ts';
 import { tg } from '../_shared/telegram.ts';
 
 Deno.serve((req) => handle(req, async () => {
+  const url = new URL(req.url);
   const secret = env('OUTREACH_TELEGRAM_SECRET');
+  if (req.method === 'GET' && secret && url.searchParams.get('register') === secret) {
+    const webhookUrl = `${env('SUPABASE_URL')}/functions/v1/outreach-telegram`;
+    const hookRes = await tg('setWebhook', { url: webhookUrl, secret_token: secret });
+    const db = admin();
+    const { data: row } = await db.from('outreach_settings').select('data').eq('id', 1).maybeSingle();
+    if (row?.data) {
+      const updated = { ...row.data, sender: { ...(row.data.sender || {}), name: 'Dmitri', display_name: 'Dmitri | DOROGO', email: 'dmitri@dorogo.eu', reply_to: 'dmitri@dorogo.eu' } };
+      await db.from('outreach_settings').upsert({ id: 1, data: updated });
+    }
+    return json({ ok: true, webhook: hookRes, sender: 'dmitri@dorogo.eu' });
+  }
   if (!secret || req.headers.get('X-Telegram-Bot-Api-Secret-Token') !== secret) return json({ error: 'forbidden' }, 403);
   const update = await req.json();
   const chatId = String(update.callback_query?.message?.chat?.id ?? update.message?.chat?.id ?? '');
