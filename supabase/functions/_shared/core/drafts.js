@@ -143,7 +143,8 @@ export function renderDorogoLuxuryHtmlEmail(textContent = '', { fromEmail = 'boo
 
   const signOff = isIt ? 'Un cordiale saluto,' : 'Warm regards,';
   const regionLine = isIt ? 'Milano &bull; Lago di Como &bull; Alpi' : 'Milan &bull; Lake Como &bull; Italian Alps';
-  const safeFrom = htmlEsc(fromEmail || 'booking@dorogo.eu');
+  const displayEmail = fromEmail ? fromEmail.replace(/^booking@/i, 'Booking@') : 'Booking@dorogo.eu';
+  const safeFrom = htmlEsc(displayEmail);
 
   return `<!DOCTYPE html>
 <html lang="${isIt ? 'it' : 'en'}">
@@ -163,24 +164,42 @@ export function renderDorogoLuxuryHtmlEmail(textContent = '', { fromEmail = 'boo
             </td>
           </tr>
           <tr>
-            <td style="padding: 0 0 16px 0; font-size: 15px; color: #18181b; line-height: 1.5;">
+            <td style="padding: 0 0 14px 0; font-size: 15px; color: #18181b; line-height: 1.5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
               ${signOff}<br>
               <strong style="font-weight: 600;">Dmitri</strong>
             </td>
           </tr>
           <tr>
-            <td style="padding-top: 14px; border-top: 1px solid #e2e8f0;">
-              <div style="font-weight: 600; color: #0f172a; letter-spacing: 0.5px; font-size: 12.5px; margin-bottom: 2px;">
-                DOROGO &bull; Private Transportation
-              </div>
-              <div style="font-size: 11.5px; color: #64748b; line-height: 1.5;">
-                Direct Dispatch: <a href="tel:+32456141497" style="color: #0f172a; font-weight: 600; text-decoration: none;">+32 456 14 14 97</a> &nbsp;&bull;&nbsp; <a href="mailto:${safeFrom}" style="color: #0f172a; text-decoration: none; font-weight: 500;">${safeFrom}</a>
-              </div>
-              <div style="color: #94a3b8; font-size: 10.5px; margin-top: 2px;">
-                ${regionLine}
-              </div>
-              ${optoutText ? `<div style="color: #94a3b8; font-size: 11px; margin-top: 12px;">${htmlEsc(optoutText)}</div>` : ''}
-              ${pixelUrl ? `<img src="${htmlEsc(pixelUrl)}" width="1" height="1" alt="" style="display:none">` : ''}
+            <td style="padding: 0;">
+              <table border="0" cellpadding="0" cellspacing="0" style="border-top: 1px solid #e4e4e7; width: 100%; max-width: 480px; padding-top: 14px; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                <tbody>
+                  <!-- Official Drawn Black Line Logo -->
+                  <tr>
+                    <td style="padding-bottom: 8px;">
+                      <img src="https://dorogo.eu/logo-black.png" alt="DOROGO" width="120" style="display: block; border: 0; max-width: 120px; height: auto;" />
+                    </td>
+                  </tr>
+                  <!-- Self-Hosted Icons & Contact Links (WhatsApp Link Only, No Digits) -->
+                  <tr>
+                    <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                      <div style="font-size: 11.5px; color: #52525b; line-height: 1.8;">
+                        <a href="https://wa.me/32456141497" target="_blank" style="color: #334155; font-weight: 400; text-decoration: none; margin-right: 16px; display: inline-block;">
+                          <img src="https://dorogo.eu/wa-black.png" width="12" height="12" alt="WA" style="vertical-align: -1.5px; margin-right: 4px; border: 0;" />WhatsApp
+                        </a>
+                        <span style="color: #cbd5e1; margin-right: 12px;">•</span>
+                        <a href="mailto:${safeFrom}" style="color: #334155; font-weight: 400; text-decoration: none; display: inline-block;">
+                          <img src="https://dorogo.eu/mail-black.png" width="12" height="12" alt="Mail" style="vertical-align: -1.5px; margin-right: 4px; border: 0;" />${safeFrom}
+                        </a>
+                      </div>
+                      <div style="color: #94a3b8; font-size: 10.5px; margin-top: 3px; font-weight: 400;">
+                        ${regionLine}
+                      </div>
+                      ${optoutText ? `<div style="color: #94a3b8; font-size: 11px; margin-top: 12px;">${htmlEsc(optoutText)}</div>` : ''}
+                      ${pixelUrl ? `<img src="${htmlEsc(pixelUrl)}" width="1" height="1" alt="" style="display:none">` : ''}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </td>
           </tr>
         </table>

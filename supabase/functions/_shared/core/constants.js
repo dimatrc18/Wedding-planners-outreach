@@ -50,14 +50,14 @@ export const SIGNATURE = `Warm regards,
 
 Dmitri
 DOROGO | Private Transportation
-Direct Dispatch: +32 456 14 14 97 • booking@dorogo.eu
+WhatsApp: wa.me/32456141497 • Booking@dorogo.eu
 Milan • Lake Como • Italian Alps`;
 
 export const SIGNATURE_IT = `Un cordiale saluto,
 
 Dmitri
 DOROGO | Private Transportation
-Direct Dispatch: +32 456 14 14 97 • booking@dorogo.eu
+WhatsApp: wa.me/32456141497 • Booking@dorogo.eu
 Milano • Lago di Como • Alpi`;
 
 export const OPTOUT = {
