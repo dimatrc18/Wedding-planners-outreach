@@ -17,7 +17,7 @@ export function render(el) {
     const s = S.settings;
     const t = tpls().find((x) => `${x.key}|${x.language}` === sel);
     el.innerHTML = `
-    <div class="page-head"><div><div class="label eyebrow">Default cadence: 14 days, 4 touches</div><h1>Sequence & templates</h1></div></div>
+    <div class="page-head"><div><div class="label eyebrow">Default cadence: 9 days, 3 emails (2+1 thread split)</div><h1>Sequence & templates</h1></div></div>
     <div class="stack lg">
       <section class="card stack">
         <div class="section-head"><h2>Cadence</h2><span class="hint">Day = days after the intro email. A reply at any point stops the cadence.</span></div>

@@ -27,25 +27,26 @@ test('missing email blocks email steps', () => {
   assert.equal(st.blocked, 'no_email');
 });
 
-test('cadence offsets: T2 disabled by default (email-only T1 -> T3 day 8 -> T4 day 14), or T2 at day 3 when enabled', () => {
+test('cadence offsets: T2 disabled by default (email-only T1 -> T3 day 4 -> T4 day 9), or T2 at day 2 when enabled', () => {
   const t1 = rome(2026, 10, 6);
-  // Default settings: T2_ig_dm is disabled, so after T1 the next step is T3_followup at day 8
+  // Default settings: T2_ig_dm is disabled, so after T1 the next step is T3_followup at day 4
   let stDefault = sequenceState(P({ status: 't1_sent' }), [sent('T1_intro', t1)], S, rome(2026, 10, 7));
   assert.equal(stDefault.step.key, 'T3_followup');
-  assert.equal(stDefault.dueAt.getTime(), t1.getTime() + 8 * 86400000);
+  assert.equal(stDefault.dueAt.getTime(), t1.getTime() + 4 * 86400000);
 
   // When T2_ig_dm is explicitly enabled in settings:
   const SWithIg = { ...S, steps: S.steps.map((x) => (x.key === 'T2_ig_dm' ? { ...x, enabled: true } : x)) };
   let st = sequenceState(P({ status: 't1_sent' }), [sent('T1_intro', t1)], SWithIg, rome(2026, 10, 7));
   assert.equal(st.step.key, 'T2_ig_dm');
-  assert.equal(st.dueAt.getTime(), t1.getTime() + 3 * 86400000);
+  assert.equal(st.dueAt.getTime(), t1.getTime() + 2 * 86400000);
   assert.equal(st.isDue, false);
-  st = sequenceState(P({ status: 't2_sent' }), [sent('T1_intro', t1), sent('T2_ig_dm', rome(2026, 10, 9))], SWithIg, rome(2026, 10, 15));
+  st = sequenceState(P({ status: 't2_sent' }), [sent('T1_intro', t1), sent('T2_ig_dm', rome(2026, 10, 8))], SWithIg, rome(2026, 10, 11));
   assert.equal(st.step.key, 'T3_followup');
-  assert.equal(st.dueAt.getTime(), t1.getTime() + 8 * 86400000);
+  assert.equal(st.dueAt.getTime(), t1.getTime() + 4 * 86400000);
   assert.equal(st.isDue, true);
   st = sequenceState(P({ status: 't3_sent' }), [sent('T1_intro', t1), sent('T2_ig_dm', t1), sent('T3_followup', t1)], SWithIg, t1);
   assert.equal(st.step.key, 'T4_breakup');
+  assert.equal(st.dueAt.getTime(), t1.getTime() + 9 * 86400000);
 });
 
 test('Instagram step is skipped when there is no handle', () => {
