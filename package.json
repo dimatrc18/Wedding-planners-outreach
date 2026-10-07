@@ -1,0 +1,11 @@
+{
+  "name": "dorogo-partner-outreach",
+  "private": true,
+  "type": "module",
+  "description": "DOROGO wedding-planner partner outreach CRM: static app + Supabase (Postgres, Edge Functions).",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "serve": "python3 -m http.server 8080"
+  },
+  "engines": { "node": ">=20" }
+}

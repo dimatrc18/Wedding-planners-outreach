@@ -2,88 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Wedding Planner Outreach</title>
-<style>
-:root{--bg:#f6f4f1;--fg:#23201e;--muted:#6f6862;--card:#fff;--line:#e2ddd7;--accent:#7a2e4d;--accent-fg:#fff}
-@media (prefers-color-scheme:dark){:root{--bg:#1b1819;--fg:#eee9e5;--muted:#a39b95;--card:#252122;--line:#3a3435;--accent:#d98aab;--accent-fg:#1b1819}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:15px system-ui,sans-serif;padding:32px 16px}
-main{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
-h1{margin:0;font-size:1.6rem}
-form,.row{display:flex;flex-wrap:wrap;gap:8px}
-input,select,button,textarea{font:inherit;padding:8px 10px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--fg);min-width:0}
-input{flex:1 1 150px}
-button{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);cursor:pointer}
-button.ghost{background:transparent;color:var(--muted);border-color:var(--line)}
-ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-li{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
-.n{display:flex;flex-direction:column;min-width:0}.n span{font-size:.85rem;color:var(--muted);overflow-wrap:anywhere}
-.msg{color:var(--muted);font-size:.9rem}
-[hidden]{display:none!important}
-</style>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#100F0E" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F5F3EF" media="(prefers-color-scheme: light)">
+<title>DOROGO Partner Outreach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="app/styles.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23191816'/%3E%3Ctext x='16' y='22' font-family='Georgia' font-size='17' fill='%239B7D50' text-anchor='middle'%3ED%3C/text%3E%3C/svg%3E">
 </head>
 <body>
-<main>
-  <h1>Wedding Planner Outreach</h1>
-  <p class="msg" id="msg"></p>
-
-  <form id="login" hidden>
-    <input id="email" type="email" placeholder="Your email" required>
-    <button type="submit">Email me a sign-in link</button>
-  </form>
-
-  <section id="app" hidden style="display:flex;flex-direction:column;gap:20px">
-    <div class="row" style="justify-content:space-between;align-items:center">
-      <span class="msg" id="who"></span><button class="ghost" id="out">Sign out</button>
-    </div>
-    <form id="add">
-      <input id="name" placeholder="Planner name" required>
-      <input id="studio" placeholder="Studio">
-      <input id="city" placeholder="City">
-      <input id="pemail" type="email" placeholder="Email">
-      <input id="insta" placeholder="Instagram">
-      <button type="submit">Add</button>
-    </form>
-    <ul id="list"></ul>
-  </section>
-</main>
+<div id="root"><div class="signin"><div class="box"><div class="skeleton" style="width:60%"></div><div class="skeleton"></div></div></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
-<script>
-const {SUPABASE_URL,SUPABASE_KEY}=window.APP_CONFIG;
-const $=id=>document.getElementById(id), msg=t=>$('msg').textContent=t||'';
-const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-if(SUPABASE_URL.includes('YOUR-PROJECT-REF')){msg('Set SUPABASE_URL in config.js to finish setup.');}
-else{
-const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const STATUSES=['new','contacted','replied','booked'];
-async function load(){
-  const {data,error}=await sb.from('planners').select('*').order('created_at',{ascending:false});
-  if(error){msg('Could not load: '+error.message+' (is your email on the allowed list?)');return;}
-  msg(data.length?data.length+' planners':'No planners yet. Add the first one above.');
-  $('list').innerHTML=data.map(p=>`<li><div class="n"><b>${esc(p.name)}</b><span>${esc([p.studio,p.city,p.email,p.instagram].filter(Boolean).join(' · '))}</span></div>
-    <div class="row"><select data-id="${p.id}">${STATUSES.map(s=>`<option ${s===p.status?'selected':''}>${s}</option>`).join('')}</select>
-    <button class="ghost" data-del="${p.id}" aria-label="Remove">✕</button></div></li>`).join('');
-}
-function show(session){
-  $('login').hidden=!!session; $('app').hidden=!session;
-  if(session){$('who').textContent=session.user.email;load();}
-}
-sb.auth.onAuthStateChange((_e,s)=>show(s));
-$('login').addEventListener('submit',async e=>{e.preventDefault();
-  const {error}=await sb.auth.signInWithOtp({email:$('email').value,options:{emailRedirectTo:location.href.split('#')[0]}});
-  msg(error?error.message:'Check your email for the sign-in link.');});
-$('out').onclick=()=>sb.auth.signOut();
-$('add').addEventListener('submit',async e=>{e.preventDefault();
-  const {error}=await sb.from('planners').insert({name:$('name').value,studio:$('studio').value||null,city:$('city').value||null,email:$('pemail').value||null,instagram:$('insta').value||null});
-  if(error)return msg('Could not save: '+error.message);e.target.reset();load();});
-$('list').addEventListener('change',async e=>{if(!e.target.dataset.id)return;
-  const {error}=await sb.from('planners').update({status:e.target.value}).eq('id',e.target.dataset.id);if(error)msg(error.message);});
-$('list').addEventListener('click',async e=>{const id=e.target.dataset.del;if(!id)return;
-  const {error}=await sb.from('planners').delete().eq('id',id);if(error)msg(error.message);else load();});
-sb.auth.getSession().then(({data})=>show(data.session));
-}
-</script>
+<script type="module" src="app/main.js"></script>
 </body>
 </html>
