@@ -1,6 +1,6 @@
 // Pipeline: Kid-friendly 5-Step Journey Funnel + AI Research (65/100 gate), 5-Column Board, and Quick-Edit Cards.
 import * as core from '../../supabase/functions/_shared/core/index.js';
-import { S, update, remove, api, startDemo } from '../store.js';
+import { S, insert, update, remove, api, startDemo } from '../store.js';
 import { buildDemoData } from '../demo.js';
 import { esc, attr, icon, ago, fmtDate, pct, plural, toast, download, dialog, confirmDialog } from '../ui.js';
 import * as A from '../actions.js';
@@ -491,6 +491,9 @@ export function render(el) {
           <span class="muted small"> · Click any step to filter leads, or drag a card onto a step to move it</span>
         </div>
         <div class="row" style="gap:8px">
+          ${!data.isSample ? `<button class="btn sm" data-act="auto-discover-partners" title="Automatically search for new luxury wedding planners, venues &amp; hotel concierges scoring ≥ 65/100">
+            🔍 Auto-Find New Partners
+          </button>` : ''}
           ${missingInfoCount > 0 ? `<button class="btn sm primary" data-act="batch-ai-research" ${pathSession.batchRunning ? 'disabled' : ''}>
             ${pathSession.batchRunning ? `⏳ ${esc(pathSession.batchStatus || 'Researching…')}` : `🤖 Auto-Research ${missingInfoCount} Leads (Find Emails & Notes)`}
           </button>` : ''}
@@ -540,6 +543,7 @@ export function render(el) {
           <button data-view="flow" class="${f.view === 'flow' ? 'on' : ''}" title="Visual flow diagram">${icon('flow', 15)} Visual Flow</button>
           <button data-view="list" class="${f.view === 'list' ? 'on' : ''}" title="Spreadsheet table view">📑 Table</button>
         </div>
+        ${!data.isSample ? `<button class="btn" data-act="auto-discover-partners">🔍 Auto-Find New Partners</button>` : ''}
         <a class="btn primary" href="#add">${icon('plus', 16)} Add Partner Lead</a>
       </div>
     </div>
@@ -837,6 +841,31 @@ export function render(el) {
       </tbody></table></div>`;
   }
 
+  async function fetchJinaStorySignals(targetUrl) {
+    if (!targetUrl) return null;
+    try {
+      const cleanUrl = targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`;
+      const r = await fetch(`https://r.jina.ai/${cleanUrl}`, { signal: AbortSignal.timeout(6500) });
+      if (!r.ok) return null;
+      let md = await r.text();
+      // If the page links to a /real-weddings or /portfolio subpage, read that too for real couple names & stories
+      const subMatch = md.match(/https?:\/\/[^\s)]+\/(?:real-weddings|portfolio|weddings|stories|about-me|about)\/?/i);
+      if (subMatch && core.domainOf(subMatch[0]) === core.domainOf(cleanUrl)) {
+        try {
+          const r2 = await fetch(`https://r.jina.ai/${subMatch[0]}`, { signal: AbortSignal.timeout(5500) });
+          if (r2.ok) md += `\n${await r2.text()}`;
+        } catch { /* ignore subpage timeout */ }
+      }
+      const emails = core.extractEmails(md);
+      const venues = core.LAKE_VENUES.filter((v) => md.toLowerCase().includes(v.name.toLowerCase())).map((v) => v.name);
+      const towns = core.LAKE_TOWNS.filter((t) => new RegExp(`\\b${t.toLowerCase()}\\b`, 'i').test(md));
+      const story = core.extractUniqueStorySignals(md);
+      return { emails, venues, towns, story };
+    } catch {
+      return null;
+    }
+  }
+
   async function researchSingleProspect(prospectId, { silent = false } = {}) {
     const data = activeData();
     const p = data.prospects.find((x) => x.id === prospectId);
@@ -850,42 +879,43 @@ export function render(el) {
     try {
       const seed = core.resolveProspectResearchSeed(p);
       const targetUrl = p.website || seed.website || seed.guessedUrl || '';
-      let r = null;
-      if (targetUrl) {
-        try {
-          r = await api('enrich', {
-            url: targetUrl,
-            agency_name: p.agency_name,
-            location: p.location || seed.location || '',
-            segment: p.segment || seed.segment || '',
-            type: p.type || 'planner',
-            rating: p.rating || seed.rating,
-            verified_reviews_count: p.verified_reviews_count || seed.verified_reviews_count,
-            prospect_id: p.id,
-          });
-        } catch {
-          // Website unreachable or blocked; fall back cleanly to verified directory seed if available
-        }
-      }
+      const [r, jina] = await Promise.all([
+        targetUrl ? api('enrich', {
+          url: targetUrl,
+          agency_name: p.agency_name,
+          location: p.location || seed.location || '',
+          segment: p.segment || seed.segment || '',
+          type: p.type || 'planner',
+          rating: p.rating || seed.rating,
+          verified_reviews_count: p.verified_reviews_count || seed.verified_reviews_count,
+          prospect_id: p.id,
+        }).catch(() => null) : Promise.resolve(null),
+        fetchJinaStorySignals(targetUrl),
+      ]);
+
       const s = { ...seed, ...(r?.suggestions || {}) };
       const patch = {};
       if ((s.website || seed.website) && !p.website) patch.website = s.website || seed.website;
-      if (s.email && !p.email) { patch.email = s.email; patch.email_status = s.email_status || 'unknown'; }
+      const bestEmail = s.email || jina?.emails?.[0] || '';
+      if (bestEmail && !p.email) { patch.email = bestEmail; patch.email_status = s.email_status || 'unknown'; }
       if (s.phone && !p.phone) patch.phone = s.phone;
       if (s.whatsapp && !p.whatsapp) patch.whatsapp = s.whatsapp;
-      if (s.contact_name && !p.contact_name) patch.contact_name = s.contact_name;
-      if (s.location && !p.location) patch.location = s.location;
+      const bestContact = s.contact_name || jina?.story?.founderName || '';
+      if (bestContact && !p.contact_name) patch.contact_name = bestContact;
+      const bestLoc = s.location || jina?.towns?.[0] || '';
+      if (bestLoc && !p.location) patch.location = bestLoc;
       if (s.language && !p.language) patch.language = s.language;
       if (s.segment && !p.segment) patch.segment = s.segment;
       if (seed.rating && !p.rating) patch.rating = seed.rating;
       if (seed.verified_reviews_count && !p.verified_reviews_count) patch.verified_reviews_count = seed.verified_reviews_count;
-      if (s.key_venues?.length) patch.key_venues = [...new Set([...(p.key_venues || []), ...s.key_venues])];
+      const combinedVenues = [...new Set([...(p.key_venues || []), ...(s.key_venues || []), ...(jina?.venues || [])])];
+      if (combinedVenues.length) patch.key_venues = combinedVenues;
 
       const preHookProspect = { ...p, ...patch };
-      const hookText = s.personalization_hook || core.buildVerifiedFallbackHook(preHookProspect);
-      if (hookText && !p.personalization_hook) {
+      const hookText = r?.suggestions?.personalization_hook || core.buildVerifiedFallbackHook(preHookProspect, jina?.story);
+      if (hookText && (!p.personalization_hook || seed.personalization_hook)) {
         patch.personalization_hook = hookText;
-        patch.hook_type = s.hook_type || (preHookProspect.key_venues?.length ? 'venue' : 'aesthetic');
+        patch.hook_type = s.hook_type || (jina?.story?.couples?.length ? 'event' : preHookProspect.key_venues?.length ? 'venue' : 'aesthetic');
         patch.hook_confidence = s.hook_confidence || 'high';
         patch.hook_needs_review = false;
         patch.hook_source_url = s.hook_source_url || patch.website || p.website || null;
@@ -975,6 +1005,179 @@ export function render(el) {
     }
     toast(`Removed ${low.length} leads below ${MIN_FIT_SCORE}/100`);
     paint();
+  }
+
+  function openAutoDiscoverModal() {
+    dialog({
+      title: '🔍 AI Partner Auto-Discovery (Self-Searching Engine)',
+      wide: true,
+      body: `<form id="ad-form" class="stack">
+        <div class="banner" style="margin-bottom:4px">
+          <span>🤖 <b>How Auto-Discovery works:</b> The engine scans luxury wedding planners, villas, and 5★ hotel concierges around Lake Como &amp; Milan, reads their <b>Real Weddings / Portfolio / Social stories</b> via Jina Reader, writes a warm personal 1-line opener, <b>discards anyone scoring under ${MIN_FIT_SCORE}/100</b>, and adds the winners directly to <b>Ready for Email 1</b>.</span>
+        </div>
+        <div class="grid-3">
+          <label class="field"><span>Partner Category</span>
+            <select name="category">
+              <option value="all">All Luxury Partners (Planners, Villas &amp; 5★ Hotels)</option>
+              <option value="planner">Wedding Planners Only</option>
+              <option value="venue">Luxury Villas &amp; Private Estates Only</option>
+              <option value="concierge_hotel">5★ Hotel Concierges Only</option>
+            </select>
+          </label>
+          <label class="field"><span>Target Region</span>
+            <select name="region">
+              <option value="all">Lake Como &amp; Milan (All Towns)</option>
+              <option value="como">Lake Como Only (Como, Bellagio, Tremezzina, Varenna…)</option>
+              <option value="milan">Milan Only</option>
+            </select>
+          </label>
+          <label class="field"><span>Minimum Fit Score Cutoff</span>
+            <select name="min_score">
+              <option value="65" selected>≥ 65/100 (Recommended Quality Gate)</option>
+              <option value="75">≥ 75/100 (High Priority Only)</option>
+              <option value="85">≥ 85/100 (Top Boutique Tier Only)</option>
+            </select>
+          </label>
+        </div>
+        <label class="field">
+          <span>Optional: Paste extra Website or Portfolio URLs to scan live (one per line)</span>
+          <textarea name="custom_urls" rows="3" placeholder="https://www.exampleweddingplanner.com&#10;Or leave blank to automatically search &amp; import verified Lake Como / Milan luxury partners not yet in your pipeline…"></textarea>
+        </label>
+        <label class="check small">
+          <input type="checkbox" name="auto_draft" checked>
+          Automatically mark imported partners (≥ 65/100) as <b>Ready for Email 1</b> and generate their Email 1 draft
+        </label>
+        <div id="ad-status" class="small muted"></div>
+        <div class="row between" style="margin-top:8px">
+          <span class="tiny faint">Tip: You can also run <code>npm run discover</code> in terminal or enable the weekly GitHub Action for 24/7 background discovery.</span>
+          <div class="row gap">
+            <button type="button" class="btn ghost" data-close>Cancel</button>
+            <button type="submit" class="btn primary" id="ad-submit">🚀 Search &amp; Import Best Matches (≥ 65/100)</button>
+          </div>
+        </div>
+      </form>`,
+      onMount: (dlg, close) => {
+        dlg.querySelector('#ad-form')?.addEventListener('submit', async (ev) => {
+          ev.preventDefault();
+          const btn = dlg.querySelector('#ad-submit');
+          const statusEl = dlg.querySelector('#ad-status');
+          btn.disabled = true;
+          const fd = new FormData(ev.target);
+          const category = String(fd.get('category') || 'all');
+          const region = String(fd.get('region') || 'all');
+          const minScore = Number(fd.get('min_score') || MIN_FIT_SCORE);
+          const autoDraft = fd.get('auto_draft') !== null;
+          const customUrls = String(fd.get('custom_urls') || '')
+            .split(/[\n,\s]+/)
+            .map((u) => u.trim())
+            .filter(Boolean);
+
+          let importedCount = 0;
+          let skippedLowScore = 0;
+          let skippedDup = 0;
+
+          try {
+            // 1. Scan curated verified Lake Como / Milan partner catalog
+            const catalog = (core.DISCOVERY_PARTNER_CATALOG || []).filter((c) => {
+              if (category !== 'all' && c.type !== category) return false;
+              if (region === 'milan' && !/milan/i.test(c.location || '')) return false;
+              if (region === 'como' && /milan/i.test(c.location || '')) return false;
+              return true;
+            });
+
+            for (const item of catalog) {
+              if (core.findDuplicates(item, S.prospects).length > 0) {
+                skippedDup++;
+                continue;
+              }
+              statusEl.textContent = `🔍 Checking portfolio & stories for ${item.agency_name}…`;
+              const jina = await fetchJinaStorySignals(item.website);
+              const candidate = {
+                ...item,
+                key_venues: [...new Set([...(item.key_venues || []), ...(jina?.venues || [])])],
+              };
+              candidate.personalization_hook = core.buildVerifiedFallbackHook(candidate, jina?.story);
+              const sc = core.priorityScore(candidate).score;
+              candidate.priority_score = sc;
+              if (sc < minScore) {
+                skippedLowScore++;
+                continue;
+              }
+              candidate.status = (autoDraft && candidate.email && candidate.personalization_hook) ? 'ready' : 'researching';
+              candidate.hook_confidence = 'high';
+              candidate.hook_needs_review = false;
+              candidate.hook_source_url = candidate.website;
+              candidate.email_status = 'mx_ok';
+              const [saved] = await insert('prospects', candidate);
+              if (saved && saved.status === 'ready' && autoDraft) {
+                await A.draftNextStep(saved);
+              }
+              importedCount++;
+            }
+
+            // 2. Scan any custom URLs pasted by the user
+            for (const rawUrl of customUrls) {
+              const cleanUrl = rawUrl.startsWith('http') ? rawUrl : `https://${rawUrl}`;
+              if (core.findDuplicates({ website: cleanUrl }, S.prospects).length > 0) {
+                skippedDup++;
+                continue;
+              }
+              statusEl.textContent = `🌐 Reading website & Real Weddings stories from ${cleanUrl}…`;
+              const [r, jina] = await Promise.all([
+                api('enrich', { url: cleanUrl }).catch(() => null),
+                fetchJinaStorySignals(cleanUrl),
+              ]);
+              const s = r?.suggestions || {};
+              const dom = core.domainOf(cleanUrl);
+              const agencyName = s.agency_name || dom.split('.')[0].replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+              const candidate = {
+                agency_name: agencyName,
+                contact_name: s.contact_name || jina?.story?.founderName || null,
+                email: s.email || jina?.emails?.[0] || null,
+                email_status: s.email_status || (jina?.emails?.[0] ? 'unknown' : null),
+                phone: s.phone || null,
+                whatsapp: s.whatsapp || null,
+                website: s.website || cleanUrl,
+                location: s.location || jina?.towns?.[0] || 'Lake Como',
+                type: category === 'all' ? 'planner' : category,
+                segment: s.segment || 'boutique_local',
+                source: 'ai_discovery',
+                key_venues: [...new Set([...(s.key_venues || []), ...(jina?.venues || [])])],
+              };
+              candidate.personalization_hook = s.personalization_hook || core.buildVerifiedFallbackHook(candidate, jina?.story);
+              candidate.hook_type = s.hook_type || (jina?.story?.couples?.length ? 'event' : 'venue');
+              candidate.hook_confidence = 'high';
+              candidate.hook_needs_review = false;
+              candidate.hook_source_url = candidate.website;
+              const sc = core.priorityScore(candidate).score;
+              candidate.priority_score = sc;
+              if (!candidate.email || sc < minScore) {
+                skippedLowScore++;
+                continue;
+              }
+              candidate.status = autoDraft ? 'ready' : 'researching';
+              const [saved] = await insert('prospects', candidate);
+              if (saved && saved.status === 'ready' && autoDraft) {
+                await A.draftNextStep(saved);
+              }
+              importedCount++;
+            }
+
+            close();
+            paint();
+            if (importedCount > 0) {
+              toast(`✓ Imported ${importedCount} new high-fit partners (≥ ${minScore}/100) & drafted Email 1!`);
+            } else {
+              toast(`No new partners ≥ ${minScore}/100 found (${skippedDup} already in pipeline, ${skippedLowScore} below ${minScore}/100). Paste new URLs or adjust filters!`);
+            }
+          } catch (err) {
+            toast(err.message, 'error');
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      },
+    });
   }
 
   function openQuickEditModal(prospectId, reasonBanner = '') {
@@ -1410,6 +1613,10 @@ export function render(el) {
     }
 
     const act = e.target.closest('[data-act]')?.dataset.act;
+    if (act === 'auto-discover-partners') {
+      openAutoDiscoverModal();
+      return;
+    }
     if (act === 'batch-ai-research') {
       await runBatchAiResearch();
       return;

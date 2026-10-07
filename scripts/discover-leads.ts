@@ -229,7 +229,12 @@ export async function evaluateLeadCandidate(
     };
   }
 
-  // Stage 6: Optional AI Hook Extraction + Strict Guardrail Validation
+  // Stage 6: Story/Social Signal Extraction + AI Hook Extraction + Strict Guardrail Validation
+  const storySignals = core.extractUniqueStorySignals(extracted.text);
+  if (storySignals.founderName && !baseProspect.contact_name) {
+    baseProspect.contact_name = storySignals.founderName;
+  }
+
   if (options.aiHookExtractor) {
     try {
       const rawAi = await options.aiHookExtractor({
@@ -263,6 +268,18 @@ export async function evaluateLeadCandidate(
     }
   }
 
+  // Fallback to verified story/venue hook if AI wasn't configured or returned empty, only when real venues/couples exist
+  if (!baseProspect.personalization_hook && (baseProspect.key_venues.length > 0 || storySignals.couples.length > 0)) {
+    const fbHook = core.buildVerifiedFallbackHook(baseProspect, storySignals);
+    if (fbHook) {
+      baseProspect.personalization_hook = fbHook;
+      baseProspect.hook_type = storySignals.couples.length > 0 ? 'event' : 'venue';
+      baseProspect.hook_confidence = 'high';
+      baseProspect.hook_needs_review = false;
+      if (mxStatus === 'mx_ok') baseProspect.status = 'ready';
+    }
+  }
+
   baseProspect.priority_score = core.priorityScore(baseProspect).score;
 
   // Stage 7: Minimum Fit Score Gate (default 65/100)
@@ -289,14 +306,14 @@ async function callGeminiHook(input: { agency: string; language: string; page: s
   const key = process.env.GEMINI_API_KEY;
   if (!key) return null;
   const model = process.env.OUTREACH_GEMINI_MODEL || 'gemini-2.5-flash';
-  const prompt = `You help DOROGO, a luxury chauffeur company in Milan, write the first line of a short email to a wedding planner.
+  const prompt = `You help DOROGO, a luxury chauffeur company in Milan, write a warm, familiar, human-sounding first line of a short email to a wedding planner or luxury partner.
 Agency: ${input.agency}
 Write the line in: ${input.language === 'it' ? 'Italian' : 'English'}
 
 Rules:
 - Use ONLY facts that appear in the PAGE TEXT below. Never invent venues, couples, dates, numbers or awards.
-- Reference one specific thing: a named villa or venue they worked at, a real wedding or event, a press feature, or a distinctive style choice.
-- One sentence, under 28 words, calm and direct. No flattery adjectives stacked together, no exclamation marks, no questions.
+- Prioritize the most human, specific detail on the page: a real couple's wedding story (e.g., "Morgan & Tyler"), a specific celebration detail (boat arrival, candlelit greenhouse dinner, honeymoon reservations), a recent portfolio/social story, or a named Lake Como villa they worked at.
+- One sentence, under 28 words, warm, calm, and familiar—like a local Lake Como colleague who genuinely read their portfolio. No exclamation marks, no questions, no em-dashes (—).
 - Do not use: "I hope this email finds you well", "seamless", "bespoke", "elevate", "top-notch", "certainly", "absolutely".
 - If the page has nothing specific, return an empty hook and confidence "low".
 
@@ -350,8 +367,8 @@ async function fetchCandidateWithContactPages(url: string): Promise<CandidatePag
     .filter((u: string | null): u is string => Boolean(u && core.domainOf(u) === core.domainOf(main.finalUrl)));
 
   const subpages = [...new Set(sameSite)]
-    .sort((a, b) => Number(/contact|contatti|about|chi-siamo|portfolio/i.test(b)) - Number(/contact|contatti|about|chi-siamo|portfolio/i.test(a)))
-    .slice(0, 2);
+    .sort((a, b) => Number(/real-weddings|portfolio|stories|contact|contatti|about|chi-siamo/i.test(b)) - Number(/real-weddings|portfolio|stories|contact|contatti|about|chi-siamo/i.test(a)))
+    .slice(0, 3);
 
   let combinedHtml = main.html;
   for (const sub of subpages) {
@@ -361,6 +378,15 @@ async function fetchCandidateWithContactPages(url: string): Promise<CandidatePag
     } catch {
       // Ignore unreachable subpage
     }
+  }
+  // Also enrich with Jina Reader (agent-reach web backend) to capture JS-rendered Real Weddings & Social widgets
+  try {
+    const jinaRes = await fetch(`https://r.jina.ai/${main.finalUrl}`, { signal: AbortSignal.timeout(7000) });
+    if (jinaRes.ok) {
+      combinedHtml += `\n<!-- JINA_READER -->\n<p>${await jinaRes.text()}</p>`;
+    }
+  } catch {
+    // Ignore Jina timeout
   }
   return { url, finalUrl: main.finalUrl, html: combinedHtml };
 }
