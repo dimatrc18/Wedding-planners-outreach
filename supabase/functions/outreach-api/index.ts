@@ -94,7 +94,7 @@ async function aiRedraft(db: any, body: any) {
   const notes = [`Agency: ${p.agency_name}`, p.contact_name && `Contact: ${p.contact_name}`, p.location && `Location: ${p.location}`,
     p.personalization_hook && `Hook (keep): ${p.personalization_hook}`, p.key_venues?.length && `Venues: ${p.key_venues.join(', ')}`, p.notes && `Notes: ${p.notes}`].filter(Boolean).join('\n');
   const out: any = await gemini(db, 'draft', { step: t.step_name, prospect: notes, draft: `Subject: ${t.subject || ''}\n\n${t.body}`, language: p.language }, p.id);
-  const subject = t.step_name === 'T1_intro' ? String(out.subject || t.subject) : t.subject;
+  const subject = ['T1_intro', 'T4_breakup'].includes(t.step_name) ? String(out.subject || t.subject) : t.subject;
   const lint = core.lintMessage({ subject, body: String(out.body || ''), channel: t.channel, step: t.step_name });
   const { data } = await db.from('touches').update({ subject, body: out.body, lint, ai_generated: true }).eq('id', t.id).select().single();
   return { touch: data };

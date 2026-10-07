@@ -31,14 +31,15 @@ function draftCard(t, i) {
       <a href="#prospect/${attr(p.id)}"><b>${esc(p.agency_name)}</b></a>
       ${p.contact_name ? `<span class="muted small">${esc(p.contact_name)}</span>` : ''}
       <span class="chip gold">${esc(stepLabel(t.step_name))}</span>
-      ${t.variant && t.step_name === 'T1_intro' ? `<span class="chip outline">Subject ${esc(t.variant)}</span>` : ''}
+      ${t.variant && ['T1_intro', 'T4_breakup'].includes(t.step_name) ? `<span class="chip outline">Subject ${esc(t.variant)}</span>` : ''}
       ${p.language !== 'en' ? `<span class="chip">${esc(p.language.toUpperCase())}</span>` : ''}
       ${t.ai_generated ? '<span class="chip">AI</span>' : ''}
+      ${inbound?.classification?.needs_human ? `<span class="chip bad" title="${attr(inbound.classification.escalation_reason || 'Needs human review')}">Needs human</span>` : ''}
       ${t.attach_rate_card ? '<span class="chip">+ rate card PDF</span>' : ''}
       <span class="grow"></span>
       <span class="score ${p.priority_score >= 60 ? 'hi' : ''}" title="Priority score">${core.priorityScore(p).score}</span>
     </div>
-    ${inbound ? `<div class="reply-quote small">${esc(core.stripQuoted(inbound.body || '').slice(0, 280))}</div>` : ''}
+    ${inbound ? `<div class="reply-quote small">${esc(core.stripQuoted(inbound.body || '').slice(0, 280))}${inbound.classification?.escalation_reason ? `<div class="tiny" style="color:var(--bad);margin-top:4px">⚠️ ${esc(inbound.classification.escalation_reason)}</div>` : ''}</div>` : ''}
     ${p.personalization_hook && p.hook_needs_review ? '<span class="chip warn">Hook flagged for review</span>' : ''}
     ${isEdit ? `
       ${t.channel === 'email' ? `<label class="field"><span>Subject</span><input type="text" id="ed-subject" value="${attr(t.subject || '')}"></label>` : ''}
@@ -137,7 +138,7 @@ export function render(el) {
         const late = now - new Date(t.replied_at || t.created_at) > 86400000;
         return `<div class="list-item" style="align-items:flex-start">
           <div class="t stack" style="gap:6px">
-            <div class="row"><a href="#prospect/${attr(p.id)}"><b>${esc(p.agency_name)}</b></a>${sentimentChip(t)}<span class="chip ${late ? 'warn' : ''}">${esc(ago(t.replied_at || t.created_at))}</span><span class="chip outline">${esc(t.channel)}</span></div>
+            <div class="row"><a href="#prospect/${attr(p.id)}"><b>${esc(p.agency_name)}</b></a>${sentimentChip(t)}${t.classification?.needs_human ? `<span class="chip bad" title="${attr(t.classification.escalation_reason || 'Needs human reply')}">Needs human</span>` : ''}<span class="chip ${late ? 'warn' : ''}">${esc(ago(t.replied_at || t.created_at))}</span><span class="chip outline">${esc(t.channel)}</span></div>
             <div class="reply-quote">${esc(core.stripQuoted(t.body || '').slice(0, 420))}</div>
             <div class="actions">${sugg ? `<button class="btn primary sm" data-act="goto-draft" data-id="${attr(sugg.id)}">${icon('reply', 15)} Review suggested reply</button>` : `<button class="btn sm" data-act="draft-reply" data-id="${attr(t.id)}">${icon('reply', 15)} Draft a reply</button>`}
               <button class="btn ghost sm" data-act="handled" data-id="${attr(t.id)}">Mark handled</button>
@@ -222,7 +223,8 @@ export function render(el) {
         case 'regen': {
           const p = A.prospectById(t.prospect_id);
           const t1 = A.touchesOf(p.id).find((x) => x.step_name === 'T1_intro' && x.subject && x.id !== t.id);
-          const dr = core.buildDraft({ prospect: p, key: t.template_key || t.step_name, templates: S.templates, threadSubject: t.step_name === 'T1_intro' ? '' : (t1?.subject || t.subject) });
+          const stepCfg = (S.settings.steps || core.DEFAULT_STEPS).find((s) => s.key === t.step_name);
+          const dr = core.buildDraft({ prospect: p, key: t.template_key || t.step_name, templates: S.templates, threadSubject: ['T1_intro', 'T4_breakup'].includes(t.step_name) ? '' : (t1?.subject || t.subject), step: stepCfg });
           if (dr) await A.saveDraft(t, { subject: dr.subject || t.subject, body: dr.body, ai_generated: false });
           toast('Rebuilt from the template');
           break;

@@ -56,7 +56,7 @@ export function render(el) {
     return `<div class="card stack">
       <div class="section-head"><h2>${esc(t.name || t.key)}</h2><span class="chip">v${t.version || 1}</span></div>
       <label class="field"><span>Name</span><input type="text" id="t-name" value="${attr(t.name || '')}"></label>
-      ${t.key !== 'T2_ig_dm' ? `<div class="fields"><label class="field"><span>Subject A</span><input type="text" id="t-sa" value="${attr(t.subject_a || '')}" placeholder="${t.kind === 'sequence' && t.key !== 'T1_intro' ? 'Empty: replies in the intro thread' : ''}"></label>
+      ${t.key !== 'T2_ig_dm' ? `<div class="fields"><label class="field"><span>Subject A</span><input type="text" id="t-sa" value="${attr(t.subject_a || '')}" placeholder="${t.kind === 'sequence' && t.key === 'T3_followup' ? 'Empty: replies in the intro thread' : ''}"></label>
         <label class="field"><span>Subject B (A/B test)</span><input type="text" id="t-sb" value="${attr(t.subject_b || '')}" placeholder="Leave empty for no test"></label></div>` : ''}
       <label class="field"><span>Body</span><textarea id="t-body" rows="14" class="mono" style="font-size:.84rem">${esc(t.body)}</textarea></label>
       <p class="tiny faint">Variables: ${vars.map((v) => `<code>{{${v}}}</code>`).join(' ')}</p>

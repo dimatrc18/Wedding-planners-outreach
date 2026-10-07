@@ -78,7 +78,55 @@ export function inboundEffects({ prospect, touches = [], cls, templates, setting
   const labels = {
     wants_rate_card: 'Wants the rate card', asks_pricing: 'Asks for prices', meeting_request: 'Wants a call',
     has_supplier: 'Has a supplier', not_now: 'Not now: nurture', referral_to_other: 'Points to a colleague',
+    specific_question: 'Asked a follow-up question',
   };
   out.summary = `${labels[cls.intent] || (cls.sentiment === 'negative' ? 'Not interested' : 'Replied')}.`;
   return out;
 }
+
+/**
+ * Find real inbound replies that have gone unanswered past `settings.human_escalation_hours` (default 2 hours).
+ * Returns [{ inbound, prospect, pendingDraft, hoursWaiting, needsHumanReason }]
+ */
+export function findUnansweredReplies({ prospects = [], touches = [], settings = {}, now = new Date(), notifiedIds = [] }) {
+  const s = withDefaults(settings);
+  const thresholdHours = Number(s.human_escalation_hours) > 0 ? Number(s.human_escalation_hours) : 2;
+  const seen = new Set(notifiedIds || []);
+  const pmap = new Map(prospects.map((p) => [p.id, p]));
+  const byProspect = new Map();
+  for (const t of touches) {
+    if (!byProspect.has(t.prospect_id)) byProspect.set(t.prospect_id, []);
+    byProspect.get(t.prospect_id).push(t);
+  }
+
+  const overdue = [];
+  for (const t of touches) {
+    if (t.direction !== 'in') continue;
+    if (['ooo', 'unsubscribe'].includes(t.reply_sentiment)) continue;
+    if (t.handled_at || seen.has(t.id)) continue;
+
+    const repliedAt = new Date(t.replied_at || t.created_at);
+    const hoursWaiting = (new Date(now).getTime() - repliedAt.getTime()) / 3600000;
+    if (hoursWaiting < thresholdHours) continue;
+
+    const list = byProspect.get(t.prospect_id) || [];
+    const answered = list.some(
+      (o) => o.direction === 'out' && o.state === 'sent' && new Date(o.sent_at || o.created_at) > repliedAt,
+    );
+    if (answered) continue;
+
+    const pendingDraft = list.find(
+      (o) => o.direction === 'out' && ['draft', 'approved'].includes(o.state) && (o.suggested_for === t.id || new Date(o.created_at) >= repliedAt),
+    ) || null;
+
+    overdue.push({
+      inbound: t,
+      prospect: pmap.get(t.prospect_id) || null,
+      pendingDraft,
+      hoursWaiting: Math.round(hoursWaiting * 10) / 10,
+      needsHumanReason: t.classification?.escalation_reason || (t.classification?.needs_human ? 'Flagged for human review' : null),
+    });
+  }
+  return overdue;
+}
+

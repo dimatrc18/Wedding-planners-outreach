@@ -118,7 +118,9 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
     }
     const thread = list.filter((x: any) => x.message_id && x.id !== t.id)
       .sort((a: any, b: any) => new Date(a.sent_at || a.replied_at || a.created_at).getTime() - new Date(b.sent_at || b.replied_at || b.created_at).getTime());
-    const threaded = t.step_name !== 'T1_intro' && thread.length > 0 && (t.step_name !== 'T2_ig_dm');
+    const stepCfg = (settings.steps || core.DEFAULT_STEPS).find((s: any) => s.key === t.step_name);
+    const shouldThread = stepCfg ? Boolean(stepCfg.thread) : !['T1_intro', 'T2_ig_dm', 'T4_breakup'].includes(t.step_name);
+    const threaded = shouldThread && thread.length > 0;
     const lastInbound = [...thread].reverse().find((x: any) => x.direction === 'in');
     const inReplyTo = threaded ? (lastInbound || thread[thread.length - 1]).message_id : null;
     try {
@@ -146,7 +148,19 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
   return { sent, results };
 }
 
-// ---------------- Inbox ----------------
+// ---------------- Inbox & Conversational AI ----------------
+function formatThreadHistory(list: any[]) {
+  return list
+    .filter((t: any) => (t.direction === 'out' && t.state === 'sent') || t.direction === 'in')
+    .slice(-6)
+    .map((t: any) => {
+      const who = t.direction === 'out' ? 'DOROGO (Dmitri)' : 'Planner';
+      const at = (t.sent_at || t.replied_at || t.created_at || '').slice(0, 16);
+      return `[${who} · ${at}]\n${core.stripQuoted(t.body || '').slice(0, 800)}`;
+    })
+    .join('\n\n---\n\n');
+}
+
 export async function applyInbound(db: any, p: any, list: any[], inbound: any, cls: any, settings: any, templates: any[], now: Date) {
   const fx: any = core.inboundEffects({ prospect: p, touches: list, cls, templates, settings, now, inbound });
   await db.from('prospects').update(fx.patch).eq('id', p.id);
@@ -156,12 +170,76 @@ export async function applyInbound(db: any, p: any, list: any[], inbound: any, c
     const { data: existing } = await db.from('opportunities').select('id').eq('prospect_id', p.id).neq('stage', 'lost').limit(1);
     if (!existing?.length) await db.from('opportunities').insert(fx.opportunity);
   }
-  if (fx.draft) await db.from('touches').insert(fx.draft);
-  await logEvent(db, 'reply_received', { sentiment: cls.sentiment, intent: cls.intent, summary: fx.summary }, p.id);
-  if (fx.alert || cls.sentiment === 'unsubscribe') {
-    const head = fx.alert ? '🟢 <b>Positive reply</b>' : '⛔ <b>Opt-out</b>';
-    await tgSend(`${head} from <b>${tgEscape(p.agency_name)}</b>\n${tgEscape(fx.summary)}\n\n<i>${tgEscape(core.stripQuoted(inbound.body || '').slice(0, 400))}</i>${fx.alert ? '\n\nAim to answer within 15 minutes.' : ''}`,
-      [[{ text: 'Open in app', url: appUrl(`prospect/${p.id}`) }]]);
+
+  // Conversational AI for ongoing partner conversations (e.g., questions after rate card or custom inquiries)
+  let needsHuman = Boolean(cls.needs_human);
+  let escalationReason: string | null = cls.escalation_reason || null;
+  const isOngoingConversation = ['replied', 'rate_card_sent', 'in_conversation', 'quote_requested', 'active_partner'].includes(p.status);
+  const needsConversationalDraft =
+    !['ooo', 'unsubscribe', 'negative'].includes(cls.sentiment) &&
+    (isOngoingConversation || !cls.intent || cls.intent === 'specific_question' || needsHuman);
+
+  if (needsConversationalDraft && integrations().gemini && fx.draft) {
+    try {
+      const aiReply: any = await gemini(
+        db,
+        'partner_reply',
+        {
+          agency: p.agency_name,
+          contact_name: p.contact_name || '',
+          language: p.language || 'en',
+          status: p.status,
+          thread_history: formatThreadHistory(list),
+          latest_reply: core.stripQuoted(inbound.body || '').slice(0, 3000),
+        },
+        p.id,
+      );
+      if (aiReply?.body) {
+        fx.draft.body = aiReply.body;
+        fx.draft.attach_rate_card = Boolean(aiReply.attach_rate_card || fx.draft.attach_rate_card);
+        fx.draft.lint = core.lintMessage({ subject: fx.draft.subject, body: fx.draft.body, channel: fx.draft.channel, step: fx.draft.step_name });
+        fx.draft.ai_generated = true;
+      }
+      if (aiReply?.needs_human) {
+        needsHuman = true;
+        escalationReason = aiReply.escalation_reason || escalationReason;
+      }
+    } catch (e) {
+      console.error('partner_reply AI failed', (e as Error).message);
+      needsHuman = true;
+      escalationReason = escalationReason || 'AI could not draft a verified answer; human reply needed';
+    }
+  }
+
+  if (needsHuman && inbound?.id) {
+    const updatedCls = { ...(inbound.classification || cls), needs_human: true, escalation_reason: escalationReason };
+    await db.from('touches').update({ classification: updatedCls }).eq('id', inbound.id);
+  }
+
+  let insertedDraft: any = null;
+  if (fx.draft) {
+    const { data: insDraft } = await db.from('touches').insert(fx.draft).select().single();
+    insertedDraft = insDraft || fx.draft;
+  }
+
+  await logEvent(db, 'reply_received', { sentiment: cls.sentiment, intent: cls.intent, summary: fx.summary, needs_human: needsHuman, escalation_reason: escalationReason }, p.id);
+
+  if (needsHuman || fx.alert || cls.sentiment === 'unsubscribe') {
+    const head = needsHuman
+      ? '🚨 <b>Human reply needed</b>'
+      : fx.alert
+        ? '🟢 <b>Positive reply</b>'
+        : '⛔ <b>Opt-out</b>';
+    const reasonLine = needsHuman && escalationReason ? `\n⚠️ <b>Why:</b> ${tgEscape(escalationReason)}` : '';
+    const draftLine = insertedDraft?.body ? `\n\n✍️ <b>AI Draft ready:</b>\n<i>${tgEscape(insertedDraft.body.slice(0, 350))}</i>` : '';
+    const buttons: any[] = [{ text: 'Open in app', url: appUrl(`prospect/${p.id}`) }];
+    if (insertedDraft?.id && !insertedDraft.lint?.errors?.length && !needsHuman) {
+      buttons.unshift({ text: '✅ Approve Reply', data: `approve:${insertedDraft.id}` });
+    }
+    await tgSend(
+      `${head} from <b>${tgEscape(p.agency_name)}</b>\n${tgEscape(fx.summary)}${reasonLine}\n\n💬 <i>"${tgEscape(core.stripQuoted(inbound.body || '').slice(0, 400))}"</i>${draftLine}${fx.alert || needsHuman ? '\n\nAim to answer within 15 minutes.' : ''}`,
+      [buttons],
+    );
   }
   return fx;
 }
@@ -207,7 +285,7 @@ export async function syncInbox(db: any, settings: any, now = new Date()) {
     if (cls.confidence === 'low' && integrations().gemini) {
       try {
         const ai: any = await gemini(db, 'classify', { body: core.stripQuoted(m.text).slice(0, 4000) }, p.id);
-        if (ai?.sentiment) cls = { ...cls, sentiment: ai.sentiment, intent: ai.intent || null, wedding_date: ai.wedding_date || null, ai_summary: ai.summary, confidence: 'medium', by: 'ai' };
+        if (ai?.sentiment) cls = { ...cls, sentiment: ai.sentiment, intent: ai.intent || null, wedding_date: ai.wedding_date || null, ai_summary: ai.summary, needs_human: Boolean(ai.needs_human), confidence: 'medium', by: 'ai' };
       } catch (e) { console.error(e); }
     }
     const row = {
@@ -222,6 +300,42 @@ export async function syncInbox(db: any, settings: any, now = new Date()) {
   }
   await setState(db, 'imap', { last_uid: fetched.lastUid, last_sync_at: now.toISOString(), last_error: null, last_count: stored });
   return { fetched: fetched.messages.length, stored, bounces };
+}
+
+// ---------------- Human Check-up / Unanswered Reply Escalation ----------------
+export async function checkUnansweredReplies(db: any, settings: any, now = new Date()) {
+  if (!integrations().telegram) return { escalated: 0, skipped: 'telegram_not_configured' };
+  const state: any = await getState(db, 'escalations');
+  const notifiedIds: string[] = Array.isArray(state?.notified_ids) ? state.notified_ids : [];
+  const { prospects, touches } = await loadAll(db);
+  const overdue = core.findUnansweredReplies({ prospects, touches, settings, now, notifiedIds });
+  if (!overdue.length) return { escalated: 0 };
+
+  const newlyNotified: string[] = [];
+  for (const item of overdue.slice(0, 10)) {
+    const p = item.prospect;
+    if (!p) continue;
+    const snippet = core.stripQuoted(item.inbound.body || '').slice(0, 350);
+    const reason = item.needsHumanReason
+      ? `\n⚠️ <b>Reason:</b> ${tgEscape(item.needsHumanReason)}`
+      : item.pendingDraft
+        ? `\n✍️ A draft reply is waiting for your approval.`
+        : `\n⚠️ No reply has been sent yet.`;
+    const buttons: any[] = [{ text: 'Open Conversation', url: appUrl(`prospect/${p.id}`) }];
+    if (item.pendingDraft?.id && item.pendingDraft.state === 'draft' && !item.pendingDraft.lint?.errors?.length && !item.needsHumanReason) {
+      buttons.unshift({ text: '✅ Approve AI Draft', data: `approve:${item.pendingDraft.id}` });
+    }
+    await tgSend(
+      `⏰ <b>Check-up: Partner reply waiting (${item.hoursWaiting}h)</b>\n<b>${tgEscape(p.agency_name)}</b> (${tgEscape(p.email || '')}) replied and hasn't received an answer yet.${reason}\n\n💬 <i>"${tgEscape(snippet)}"</i>`,
+      [buttons],
+    );
+    await logEvent(db, 'unanswered_reply_escalated', { touch_id: item.inbound.id, hours_waiting: item.hoursWaiting }, p.id, 'cron');
+    newlyNotified.push(item.inbound.id);
+  }
+
+  const mergedIds = [...new Set([...notifiedIds, ...newlyNotified])].slice(-500);
+  await setState(db, 'escalations', { notified_ids: mergedIds, last_checked_at: now.toISOString() });
+  return { escalated: newlyNotified.length };
 }
 
 // ---------------- Approve (Telegram, API) ----------------
@@ -281,3 +395,4 @@ export async function sendDigest(db: any, settings: any, now = new Date(), force
   await setState(db, 'digest', { last_date: today, sent_at: now.toISOString() });
   return { sent: true, drafts: d.drafts.length };
 }
+

@@ -56,7 +56,7 @@ export function buildDemoData() {
   const templates = DEFAULT_TEMPLATES.map((t) => ({ id: id(), active: true, ...t }));
   const out = (p, step, at, extra = {}) => {
     const t1 = touches.find((x) => x.prospect_id === p.id && x.step_name === 'T1_intro');
-    const d = buildDraft({ prospect: p, key: step, templates, threadSubject: t1 ? t1.subject : '', step: { thread: ['T3_followup', 'T4_breakup'].includes(step) } });
+    const d = buildDraft({ prospect: p, key: step, templates, threadSubject: t1 ? t1.subject : '', step: { thread: step === 'T3_followup' } });
     const row = {
       id: id(), prospect_id: p.id, direction: 'out', channel: d.channel, step_name: step, state: 'sent', subject: d.subject, body: d.body,
       template_key: d.template_key, variant: d.variant, lint: d.lint, sent_at: iso(at), created_at: iso(at - 3600000), approved_at: iso(at - 3600000),

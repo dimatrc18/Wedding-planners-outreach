@@ -43,7 +43,7 @@ export const DEFAULT_STEPS = [
   { key: 'T1_intro', label: 'Intro email', day: 0, channel: 'email', thread: false, require_approval: true, enabled: true },
   { key: 'T2_ig_dm', label: 'Instagram DM', day: 3, channel: 'instagram_dm', thread: false, require_approval: true, enabled: false },
   { key: 'T3_followup', label: 'Follow-up email', day: 8, channel: 'email', thread: true, require_approval: true, enabled: true },
-  { key: 'T4_breakup', label: 'Breakup email', day: 14, channel: 'email', thread: true, require_approval: true, enabled: true },
+  { key: 'T4_breakup', label: 'Breakup email (new thread)', day: 14, channel: 'email', thread: false, require_approval: true, enabled: true },
 ];
 
 export const SIGNATURE = `Warm regards,
@@ -81,6 +81,7 @@ export const DEFAULT_SETTINGS = {
   track_opens: false,
   stale_days: 10,
   ratecard_nudge_days: 5,
+  human_escalation_hours: 2,
   nurture_month_day: '10-01',
   targets: { open_rate: 0.5, positive_reply_rate: 0.10, positive_reply_rate_high: 0.15, ratecard_to_quote: 0.25, partners_won: 5, partners_won_high: 10 },
   avg_wedding_transport_value: 10000,

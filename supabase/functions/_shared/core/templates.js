@@ -40,14 +40,18 @@ May I send the rate card with net prices from Malpensa, Linate and Lugano to the
 {{optout}}`,
   },
   {
-    key: 'T4_breakup', language: 'en', kind: 'sequence', name: 'T4 Breakup email', subject_a: '', subject_b: '',
+    key: 'T4_breakup', language: 'en', kind: 'sequence', name: 'T4 Breakup email (new thread)',
+    subject_a: 'Transport file for {{agency}}',
+    subject_b: '2026 wedding transport · {{agency}}',
     body: `{{greeting}}
 
-I'll close the loop here so I don't crowd your inbox during planning season. If guest transport comes up for a wedding next year, the rate card is one reply away.
+I'll close the loop here so I don't crowd your inbox during planning season. If guest transport comes up for a Lake Como wedding next year, our 1-page partner rate card is one reply away.
 
-Wishing you a beautiful season.
+Wishing you a smooth season ahead.
 
-{{signature}}`,
+{{signature}}
+
+{{optout}}`,
   },
   // ---------------- Italian sequence ----------------
   {
@@ -85,14 +89,18 @@ Posso inviarvi la tariffa con i prezzi netti da Malpensa, Linate e Lugano verso 
 {{optout}}`,
   },
   {
-    key: 'T4_breakup', language: 'it', kind: 'sequence', name: 'T4 Email di chiusura', subject_a: '', subject_b: '',
+    key: 'T4_breakup', language: 'it', kind: 'sequence', name: 'T4 Email di chiusura (nuovo thread)',
+    subject_a: 'Riferimento transfer per {{agency}}',
+    subject_b: 'Transfer matrimoni 2026 · {{agency}}',
     body: `{{greeting}}
 
-Chiudo qui per non affollare la vostra casella durante la stagione. Se per un matrimonio del prossimo anno serviranno transfer per gli ospiti, la tariffa è a una risposta di distanza.
+Chiudo qui per non affollare la vostra casella durante la stagione. Se per un matrimonio del prossimo anno sul lago serviranno transfer per gli ospiti, la nostra tariffa partner è a una risposta di distanza.
 
 Buona stagione.
 
-{{signature}}`,
+{{signature}}
+
+{{optout}}`,
   },
   // ---------------- Replies (suggested after classification) ----------------
   {

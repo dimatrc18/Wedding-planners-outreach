@@ -51,6 +51,7 @@ export function render(el) {
           <label class="field"><span>Auto-pause above bounce rate</span><input type="number" id="bounce" min="0.5" max="20" step="0.5" value="${(s.bounce_pause_rate * 100).toFixed(1)}"></label>
           <label class="field"><span>Stale after (days)</span><input type="number" id="stale" min="2" value="${s.stale_days}"></label>
           <label class="field"><span>Rate card nudge after (days)</span><input type="number" id="nudge" min="2" value="${s.ratecard_nudge_days}"></label>
+          <label class="field"><span>Human check-up if reply unanswered (h)</span><input type="number" id="esc-hours" min="1" max="48" value="${s.human_escalation_hours || 2}"></label>
         </div>
         <label class="check small"><input type="checkbox" id="wu-on" ${s.warmup.enabled ? 'checked' : ''}> Warm-up on (start low, add a few sends each week)</label>
         <div class="row end"><button class="btn primary sm" data-act="save-pace">Save pace</button></div>
@@ -147,6 +148,7 @@ export function render(el) {
             season_mode: v('season').value, daily_cap: Math.max(1, +v('cap').value), bounce_pause_rate: Math.max(0.005, +v('bounce').value / 100),
             warmup: { enabled: v('wu-on').checked, start: Math.max(1, +v('wu-start').value), weekly_increment: Math.max(0, +v('wu-inc').value) },
             stale_days: Math.max(2, +v('stale').value), ratecard_nudge_days: Math.max(2, +v('nudge').value),
+            human_escalation_hours: Math.max(1, +v('esc-hours').value || 2),
           });
           toast('Pace saved'); paint(); break;
         case 'save-sender':
