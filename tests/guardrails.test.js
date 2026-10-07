@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {
   DEFAULT_STEPS,
   buildDraft,
+  renderDorogoLuxuryHtmlEmail,
+  lintMessage,
   validateHookOutput,
   validateClassifyOutput,
   validateDraftOutput,
@@ -36,6 +38,16 @@ test('2+1 thread split: T1 and T3 are in the same thread, T4 breakup starts a se
   assert.ok(!d4.subject.startsWith('Re:'), 'T4 uses its own fresh subject line, not Re:');
   assert.ok(d4.subject.includes('Villa Lario Events'), 'T4 merges {{agency}} into its fresh subject');
   assert.deepEqual(d4.lint.errors, []);
+
+  // Verify DOROGO Executive Email HTML template (Design 1 from dorogo-ai-concierge)
+  const html = renderDorogoLuxuryHtmlEmail(d1.body, { fromEmail: 'booking@dorogo.eu' });
+  assert.ok(html.includes('DOROGO &bull; Private Transportation'), 'Includes DOROGO executive dispatch footer');
+  assert.ok(html.includes('Milan &bull; Lake Como &bull; Italian Alps'), 'Includes regional line');
+  assert.ok(html.includes('+32 456 14 14 97'), 'Includes direct dispatch phone');
+
+  // Verify Concierge no-em-dash lint rule
+  const dashLint = lintMessage({ subject: 'Transfer', body: `Hi Elena,\n\nWe run Mercedes-Benz V-Class — always on standby.\n\n${SIGNATURE}`, channel: 'email' });
+  assert.ok(dashLint.warnings.some((w) => w.includes('em-dashes')), 'Flags em-dashes per Concierge writing rules');
 });
 
 test('validateHookOutput enforces verbatim page evidence, filters hallucinated venues, and sanitizes contact names', () => {

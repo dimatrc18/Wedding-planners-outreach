@@ -5,6 +5,7 @@ import MailComposer from 'npm:nodemailer@6.9.16/lib/mail-composer/index.js';
 import { ImapFlow } from 'npm:imapflow@1.0.171';
 import { simpleParser } from 'npm:mailparser@3.7.2';
 import { env } from './server.ts';
+import { renderDorogoLuxuryHtmlEmail } from './core/drafts.js';
 
 export function smtpConfig() {
   const port = +env('OUTREACH_SMTP_PORT', '465');
@@ -28,10 +29,9 @@ export async function verifySmtp() {
   return true;
 }
 
-const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
 /**
- * Build and send one message. Returns { messageId, raw }.
+ * Build and send one message using the DOROGO Executive Email template (Design 1 + plain-text fallback).
+ * Returns { messageId, raw }.
  * opts: { fromName, fromEmail, replyTo, to, subject, text, inReplyTo, references[], attachments[], pixelUrl }
  */
 export async function sendMail(opts: any) {
@@ -43,13 +43,13 @@ export async function sendMail(opts: any) {
     replyTo: opts.replyTo || opts.fromEmail,
     subject: opts.subject,
     text: opts.text,
+    html: opts.html || renderDorogoLuxuryHtmlEmail(opts.text, { fromEmail: opts.fromEmail, pixelUrl: opts.pixelUrl }),
     messageId,
     headers: { 'List-Unsubscribe': `<mailto:${opts.fromEmail}?subject=unsubscribe>` },
     attachments: opts.attachments || [],
   };
   if (opts.inReplyTo) mail.inReplyTo = opts.inReplyTo;
   if (opts.references?.length) mail.references = opts.references;
-  if (opts.pixelUrl) mail.html = `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5">${esc(opts.text).replace(/\n/g, '<br>')}</div><img src="${opts.pixelUrl}" width="1" height="1" alt="">`;
   const raw: Uint8Array = await new Promise((resolve, reject) =>
     new MailComposer(mail).compile().build((err: Error, msg: Uint8Array) => (err ? reject(err) : resolve(msg))));
   const t = nodemailer.createTransport(smtpConfig());

@@ -50,13 +50,15 @@ export const SIGNATURE = `Warm regards,
 
 Dmitri
 DOROGO | Private Transportation
-Direct Dispatch: +32 456 14 14 97 • booking@dorogo.eu`;
+Direct Dispatch: +32 456 14 14 97 • booking@dorogo.eu
+Milan • Lake Como • Italian Alps`;
 
 export const SIGNATURE_IT = `Un cordiale saluto,
 
 Dmitri
 DOROGO | Private Transportation
-Direct Dispatch: +32 456 14 14 97 • booking@dorogo.eu`;
+Direct Dispatch: +32 456 14 14 97 • booking@dorogo.eu
+Milano • Lago di Como • Alpi`;
 
 export const OPTOUT = {
   en: "If this isn't relevant to you, reply \"no\" and I won't write again.",

@@ -80,6 +80,7 @@ export function lintMessage({ subject = '', body = '', channel = 'email', step =
   }
   if (questions > 1) warnings.push(`${questions} questions; keep one clear ask`);
   if (/!/.test(core)) warnings.push('Exclamation marks read as salesy');
+  if (/—/.test(core)) warnings.push('Avoid em-dashes (—); use a comma, colon or period (Concierge style)');
   const links = (core.match(/https?:\/\/|www\./g) || []).length;
   if (links > 1) warnings.push('More than one link hurts deliverability');
   if (/dear (sir|madam)|to whom it may concern|gentile cliente/i.test(core)) warnings.push('Generic greeting; use their name');

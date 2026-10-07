@@ -78,3 +78,116 @@ export function buildDraft({ prospect, key, templates, threadSubject = '', step 
 }
 
 export const replyTemplateFor = (intent) => REPLY_FOR_INTENT[intent] || 'reply_generic';
+
+const htmlEsc = (s = '') =>
+  String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
+/**
+ * Ported from dorogo-ai-concierge/email.js (generateLuxuryHtmlEmail - Design 1):
+ * Wraps plain-text outreach/concierge copy in DOROGO's natural executive HTML email layout
+ * with clean 15px typography, automatic bullet formatting, personal sign-off, and the
+ * DOROGO Executive Dispatch Footer (Milan • Lake Como • Italian Alps).
+ */
+export function renderDorogoLuxuryHtmlEmail(textContent = '', { fromEmail = 'booking@dorogo.eu', pixelUrl = null } = {}) {
+  const raw = String(textContent || '').trim();
+  const isIt = /Un cordiale saluto|Buongiorno|rispondere "no"/i.test(raw);
+
+  // Separate opt-out line if present at the bottom
+  let optoutText = '';
+  let bodyWithoutOptout = raw;
+  for (const opt of [OPTOUT.en, OPTOUT.it]) {
+    if (bodyWithoutOptout.includes(opt)) {
+      optoutText = opt;
+      bodyWithoutOptout = bodyWithoutOptout.split(opt).join('').trim();
+    }
+  }
+
+  // Strip trailing signature block from body paragraphs since we render the styled Design 1 footer
+  let cleanText = bodyWithoutOptout
+    .replace(/(?:Warm regards|Kind regards|Best regards|Un cordiale saluto|Cordiali saluti),?[\s\S]*$/i, '')
+    .trim();
+
+  if (!cleanText && bodyWithoutOptout) cleanText = bodyWithoutOptout;
+
+  const paragraphs = cleanText.split(/\n\s*\n/);
+  const bodyHtml = paragraphs
+    .map((p) => {
+      const trimmed = p.trim();
+      if (!trimmed) return '';
+      if (trimmed.includes('• ') || trimmed.includes('- ') || /^\s*[a-c]\)\s+/m.test(trimmed)) {
+        const lines = trimmed.split('\n').map((l) => l.trim()).filter(Boolean);
+        const preLines = [];
+        const bulletLines = [];
+        for (const line of lines) {
+          if (/^(?:[•\-]|\w\))\s+/.test(line)) {
+            bulletLines.push(htmlEsc(line.replace(/^[•\-]\s*/, '')));
+          } else {
+            preLines.push(htmlEsc(line));
+          }
+        }
+        const preHtml = preLines.length
+          ? `<p style="color: #18181b; font-size: 15px; line-height: 1.65; margin: 0 0 12px 0;">${preLines.join('<br/>')}</p>`
+          : '';
+        const listHtml = bulletLines.length
+          ? `<ul style="color: #18181b; font-size: 15px; line-height: 1.65; margin: 0 0 16px 0; padding-left: 20px;">${bulletLines.map((b) => `<li style="margin-bottom: 6px;">${b}</li>`).join('')}</ul>`
+          : '';
+        return preHtml + listHtml;
+      }
+      return `<p style="color: #18181b; font-size: 15px; line-height: 1.65; margin: 0 0 16px 0;">${htmlEsc(trimmed).replace(/\n/g, '<br/>')}</p>`;
+    })
+    .join('');
+
+  const signOff = isIt ? 'Un cordiale saluto,' : 'Warm regards,';
+  const regionLine = isIt ? 'Milano &bull; Lago di Como &bull; Alpi' : 'Milan &bull; Lake Como &bull; Italian Alps';
+  const safeFrom = htmlEsc(fromEmail || 'booking@dorogo.eu');
+
+  return `<!DOCTYPE html>
+<html lang="${isIt ? 'it' : 'en'}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DOROGO | Private Transportation</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #18181b;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; margin: 0; padding: 24px 16px;">
+    <tr>
+      <td align="left" style="padding: 0;">
+        <table class="email-container" border="0" cellspacing="0" cellpadding="0" style="width: 100%; max-width: 620px;">
+          <tr>
+            <td style="padding: 0 0 16px 0; font-size: 15px; line-height: 1.65; color: #18181b;">
+              ${bodyHtml}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 0 0 16px 0; font-size: 15px; color: #18181b; line-height: 1.5;">
+              ${signOff}<br>
+              <strong style="font-weight: 600;">Dmitri</strong>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding-top: 14px; border-top: 1px solid #e2e8f0;">
+              <div style="font-weight: 600; color: #0f172a; letter-spacing: 0.5px; font-size: 12.5px; margin-bottom: 2px;">
+                DOROGO &bull; Private Transportation
+              </div>
+              <div style="font-size: 11.5px; color: #64748b; line-height: 1.5;">
+                Direct Dispatch: <a href="tel:+32456141497" style="color: #0f172a; font-weight: 600; text-decoration: none;">+32 456 14 14 97</a> &nbsp;&bull;&nbsp; <a href="mailto:${safeFrom}" style="color: #0f172a; text-decoration: none; font-weight: 500;">${safeFrom}</a>
+              </div>
+              <div style="color: #94a3b8; font-size: 10.5px; margin-top: 2px;">
+                ${regionLine}
+              </div>
+              ${optoutText ? `<div style="color: #94a3b8; font-size: 11px; margin-top: 12px;">${htmlEsc(optoutText)}</div>` : ''}
+              ${pixelUrl ? `<img src="${htmlEsc(pixelUrl)}" width="1" height="1" alt="" style="display:none">` : ''}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
