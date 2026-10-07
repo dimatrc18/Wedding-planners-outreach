@@ -88,7 +88,7 @@ export function render(el) {
     const subject = subjects[0]?.[1] || 'Re: (intro thread subject)';
     const l = core.lintMessage({ subject, body, channel, step: key });
     const lb = subjects[1] ? core.lintMessage({ subject: subjects[1][1], body, channel, step: key }) : null;
-    const htmlPreview = `<div style="background:#ffffff;border:1px solid var(--line);border-radius:8px;overflow:hidden">${core.renderDorogoLuxuryHtmlEmail(body, { fromEmail: S.settings?.sender?.email || 'booking@dorogo.eu' })}</div>`;
+    const htmlPreview = `<div style="background:#ffffff;border:1px solid var(--line);border-radius:8px;overflow:hidden">${core.renderDorogoLuxuryHtmlEmail(body, { fromEmail: S.settings?.sender?.email || 'dmitri@dorogo.eu' })}</div>`;
     box.innerHTML = `<div class="draft" style="background:var(--bg)">${subjects.map(([v, x]) => `<div class="subject">${subjects.length > 1 ? `<span class="chip outline">${v}</span> ` : ''}${esc(x)}</div>`).join('')}
       ${htmlPreview}
       <div class="lint">${[...new Set([...l.errors, ...(lb?.errors || [])])].map((e) => `<span class="e">${esc(e)}</span>`).join('')}${[...new Set([...l.warnings, ...(lb?.warnings || [])])].map((w) => `<span class="w">${esc(w)}</span>`).join('')}${!l.errors.length && !l.warnings.length ? '<span style="color:var(--ok)">Passes the copy-linter · DOROGO Executive Email Layout</span>' : ''}</div>

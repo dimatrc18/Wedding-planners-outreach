@@ -32,7 +32,7 @@ export function render(el) {
     const ig = h.integrations || {};
     const capToday = core.effectiveCap(s, new Date(), core.firstColdSend(S.touches));
     const m = core.computeMetrics(S.prospects, S.touches, S.opps);
-    const domain = (s.sender?.email || 'booking@dorogo.eu').split('@')[1];
+    const domain = (s.sender?.email || 'dmitri@dorogo.eu').split('@')[1];
     el.innerHTML = `
     <div class="page-head"><div><div class="label eyebrow">${esc(S.user?.email || '')}${isDemo() ? ' · demo' : ''}</div><h1>Settings</h1></div></div>
     <div class="stack lg">
@@ -61,7 +61,7 @@ export function render(el) {
         <div class="section-head"><h2>Sender</h2><span class="hint">The mailbox itself is set in the function secrets (see Mailbox)</span></div>
         <div class="fields">
           <label class="field"><span>From name</span><input type="text" id="from-name" value="${attr(s.sender?.display_name || 'Dmitri | DOROGO')}"></label>
-          <label class="field"><span>From address</span><input type="email" id="from-email" value="${attr(s.sender?.email || 'booking@dorogo.eu')}"></label>
+          <label class="field"><span>From address</span><input type="email" id="from-email" value="${attr(s.sender?.email || 'dmitri@dorogo.eu')}"></label>
           <label class="field"><span>Reply-to</span><input type="email" id="reply-to" value="${attr(s.sender?.reply_to || s.sender?.email || '')}"></label>
         </div>
         <label class="check small"><input type="checkbox" id="opens" ${s.track_opens ? 'checked' : ''}> Track opens with a pixel (adds an HTML part; less reliable and slightly worse for deliverability)</label>
@@ -93,7 +93,7 @@ export function render(el) {
         </div>
         <details style="padding:0 18px 16px"><summary class="small muted">How to connect (one-time, by the project owner)</summary>
           <pre class="mono" style="white-space:pre-wrap;background:var(--bg);padding:12px;border-radius:8px;overflow-x:auto">supabase secrets set --project-ref qjarhdrrbjeeqbhfgmnp \\
-  OUTREACH_SMTP_HOST=… OUTREACH_SMTP_PORT=465 OUTREACH_SMTP_USER=booking@dorogo.eu OUTREACH_SMTP_PASS=… \\
+  OUTREACH_SMTP_HOST=… OUTREACH_SMTP_PORT=465 OUTREACH_SMTP_USER=dmitri@dorogo.eu OUTREACH_SMTP_PASS=… \\
   OUTREACH_IMAP_HOST=… OUTREACH_IMAP_SENT_FOLDER=Sent \\
   GEMINI_API_KEY=… \\
   OUTREACH_TELEGRAM_BOT_TOKEN=… OUTREACH_TELEGRAM_CHAT_ID=… OUTREACH_TELEGRAM_SECRET=…
@@ -167,7 +167,7 @@ export function render(el) {
           toast(msg); S.health = await api('health').catch(() => S.health); paint(); break;
         }
         case 'health': S.health = await api('health'); paint(); toast('Status refreshed'); break;
-        case 'dns': dnsResult = await checkDomain((S.settings.sender?.email || 'booking@dorogo.eu').split('@')[1]); paint(); break;
+        case 'dns': dnsResult = await checkDomain((S.settings.sender?.email || 'dmitri@dorogo.eu').split('@')[1]); paint(); break;
         case 'csv': {
           const cols = ['agency_name', 'contact_name', 'role', 'email', 'email_status', 'phone', 'whatsapp', 'website', 'linkedin', 'location', 'type', 'segment', 'language', 'source', 'source_detail', 'rating', 'verified_reviews_count', 'review_source', 'priority_score', 'status', 'personalization_hook', 'hook_type', 'tags', 'notes', 'do_not_contact', 'unsubscribed_at', 'nurture_until', 'created_at', 'last_touch_at'];
           download(`dorogo_prospects_${new Date().toISOString().slice(0, 10)}.csv`, core.toCSV(S.prospects, cols), 'text/csv'); break;

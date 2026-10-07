@@ -91,7 +91,7 @@ const htmlEsc = (s = '') =>
  * with clean 15px typography, automatic bullet formatting, personal sign-off, and the
  * DOROGO Executive Dispatch Footer (Milan • Lake Como • Italian Alps).
  */
-export function renderDorogoLuxuryHtmlEmail(textContent = '', { fromEmail = 'booking@dorogo.eu', pixelUrl = null } = {}) {
+export function renderDorogoLuxuryHtmlEmail(textContent = '', { fromEmail = 'dmitri@dorogo.eu', pixelUrl = null } = {}) {
   const raw = String(textContent || '').trim();
   const isIt = /Un cordiale saluto|Buongiorno|rispondere "no"/i.test(raw);
 
@@ -142,7 +142,7 @@ export function renderDorogoLuxuryHtmlEmail(textContent = '', { fromEmail = 'boo
 
   const signOff = isIt ? 'Un cordiale saluto,' : 'Warm regards,';
   const regionLine = isIt ? 'Milano &bull; Lago di Como &bull; Alpi' : 'Milan &bull; Lake Como &bull; Italian Alps';
-  const displayEmail = fromEmail ? fromEmail.replace(/^booking@/i, 'Booking@') : 'Booking@dorogo.eu';
+  const displayEmail = fromEmail ? fromEmail.replace(/^booking@/i, 'Booking@') : 'dmitri@dorogo.eu';
   const safeFrom = htmlEsc(displayEmail);
 
   return `<!DOCTYPE html>

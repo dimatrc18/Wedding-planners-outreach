@@ -95,7 +95,7 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
   if (onlyTouchId) due = touches.filter((t: any) => t.id === onlyTouchId);
   due.sort((a: any, b: any) => new Date(a.scheduled_at || a.created_at).getTime() - new Date(b.scheduled_at || b.created_at).getTime());
 
-  const fromEmail = env('OUTREACH_FROM_EMAIL') || settings.sender?.email || 'booking@dorogo.eu';
+  const fromEmail = env('OUTREACH_FROM_EMAIL') || settings.sender?.email || 'dmitri@dorogo.eu';
   const fromName = settings.sender?.display_name || 'Dmitri | DOROGO';
   const results: any[] = [];
   let sent = 0;

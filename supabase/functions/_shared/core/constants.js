@@ -47,14 +47,14 @@ export const SIGNATURE = `Warm regards,
 
 Dmitri
 DOROGO | Private Transportation
-WhatsApp: wa.me/32456141497 • Booking@dorogo.eu
+WhatsApp: wa.me/32456141497 • dmitri@dorogo.eu
 Milan • Lake Como • Italian Alps`;
 
 export const SIGNATURE_IT = `Un cordiale saluto,
 
 Dmitri
 DOROGO | Private Transportation
-WhatsApp: wa.me/32456141497 • Booking@dorogo.eu
+WhatsApp: wa.me/32456141497 • dmitri@dorogo.eu
 Milano • Lago di Como • Alpi`;
 
 export const OPTOUT = {
@@ -76,7 +76,7 @@ export const DEFAULT_SETTINGS = {
   bounce_pause_rate: 0.03,
   bounce_min_sample: 15,
   steps: DEFAULT_STEPS,
-  sender: { name: 'Dmitri', email: 'booking@dorogo.eu', reply_to: 'booking@dorogo.eu' },
+  sender: { name: 'Dmitri', email: 'dmitri@dorogo.eu', reply_to: 'dmitri@dorogo.eu' },
   track_opens: false,
   stale_days: 10,
   ratecard_nudge_days: 5,
