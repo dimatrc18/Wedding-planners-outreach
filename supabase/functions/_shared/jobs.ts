@@ -394,3 +394,103 @@ export async function sendDigest(db: any, settings: any, now = new Date(), force
   return { sent: true, drafts: d.drafts.length };
 }
 
+// ---------------- Jina Reader (r.jina.ai) + Offline Background Auto-Research ----------------
+export async function fetchJinaSignals(rawUrl: string) {
+  if (!rawUrl) return null;
+  const cleanUrl = rawUrl.startsWith('http') ? rawUrl : `https://${rawUrl}`;
+  try {
+    const r = await fetch(`https://r.jina.ai/${cleanUrl}`, { signal: AbortSignal.timeout(7000) });
+    if (!r.ok) return null;
+    let md = await r.text();
+    const subMatch = md.match(/https?:\/\/[^\s)]+\/(?:real-weddings|portfolio|weddings|stories|about-me|about|contact|contatti)\/?/i);
+    if (subMatch && core.domainOf(subMatch[0]) === core.domainOf(cleanUrl)) {
+      try {
+        const r2 = await fetch(`https://r.jina.ai/${subMatch[0]}`, { signal: AbortSignal.timeout(5500) });
+        if (r2.ok) md += `\n${await r2.text()}`;
+      } catch { /* ignore subpage timeout */ }
+    }
+    const emails = core.extractEmails(md);
+    const venues = core.LAKE_VENUES.filter((v: any) => md.toLowerCase().includes(v.name.toLowerCase())).map((v: any) => v.name);
+    const towns = core.LAKE_TOWNS.filter((t: string) => new RegExp(`\\b${t.toLowerCase()}\\b`, 'i').test(md));
+    const story = core.extractUniqueStorySignals(md);
+    return { emails, venues, towns, story, text: md.slice(0, 14000) };
+  } catch {
+    return null;
+  }
+}
+
+export async function autoResearchPending(db: any, _settings: any, now = new Date()) {
+  const { data: prospects, error } = await db.from('prospects').select('*').eq('status', 'researching').limit(25);
+  if (error || !prospects?.length) return { researched: 0, promoted: 0 };
+
+  const st: any = (await getState(db, 'auto_research')) || {};
+  const checkedMap: Record<string, string> = st.checked || {};
+  const DAY = 86400000;
+
+  const queue = prospects.filter((p: any) => {
+    if (p.email && p.personalization_hook && (p.priority_score || 0) >= 65) return true;
+    const last = checkedMap[p.id];
+    if (last && now.getTime() - new Date(last).getTime() < DAY) return false;
+    return !p.email || !p.personalization_hook;
+  }).slice(0, 3);
+
+  let researched = 0;
+  let promoted = 0;
+
+  for (const p of queue) {
+    researched++;
+    checkedMap[p.id] = now.toISOString();
+    const seed: any = core.resolveProspectResearchSeed(p);
+    const targetUrl = p.website || seed.website || seed.guessedUrl || '';
+    const jina = targetUrl ? await fetchJinaSignals(targetUrl) : null;
+
+    const patch: Record<string, any> = {};
+    if (targetUrl && !p.website) patch.website = targetUrl;
+    const bestEmail = p.email || seed.email || jina?.emails?.[0] || '';
+    if (bestEmail && !p.email) { patch.email = bestEmail; patch.email_status = 'mx_ok'; }
+    const bestContact = p.contact_name || seed.contact_name || jina?.story?.founderName || '';
+    if (bestContact && !p.contact_name) patch.contact_name = bestContact;
+    const bestLoc = p.location || seed.location || jina?.towns?.[0] || '';
+    if (bestLoc && !p.location) patch.location = bestLoc;
+    if (seed.segment && !p.segment) patch.segment = seed.segment;
+    if (seed.rating && !p.rating) patch.rating = seed.rating;
+    if (seed.verified_reviews_count && !p.verified_reviews_count) patch.verified_reviews_count = seed.verified_reviews_count;
+
+    const venues = [...new Set([...(p.key_venues || []), ...(seed.key_venues || []), ...(jina?.venues || [])])];
+    if (venues.length) patch.key_venues = venues;
+
+    const preHook = { ...p, ...patch };
+    let hookText = p.personalization_hook || '';
+    if (!hookText && integrations().gemini && jina?.text) {
+      try {
+        const aiOut: any = await gemini(db, 'hook', { agency: p.agency_name, language: p.language === 'it' ? 'it' : 'en', page: jina.text }, p.id);
+        if (aiOut?.hook) hookText = aiOut.hook;
+      } catch { /* fallback below */ }
+    }
+    if (!hookText) hookText = core.buildVerifiedFallbackHook(preHook, jina?.story);
+    if (hookText && !p.personalization_hook) {
+      patch.personalization_hook = hookText;
+      patch.hook_type = seed.hook_type || (jina?.story?.couples?.length ? 'event' : venues.length ? 'venue' : 'aesthetic');
+      patch.hook_confidence = 'high';
+      patch.hook_needs_review = false;
+      patch.hook_source_url = targetUrl || null;
+    }
+
+    const merged = { ...p, ...patch };
+    const score = core.priorityScore(merged).score;
+    patch.priority_score = score;
+
+    if (merged.email && merged.personalization_hook && score >= 65) {
+      patch.status = 'ready';
+      promoted++;
+    }
+
+    if (Object.keys(patch).length > 0) {
+      await db.from('prospects').update(patch).eq('id', p.id);
+    }
+  }
+
+  await setState(db, 'auto_research', { checked: checkedMap, last_run_at: now.toISOString() });
+  return { researched, promoted };
+}
+

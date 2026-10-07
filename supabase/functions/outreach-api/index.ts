@@ -4,7 +4,7 @@ import * as core from '../_shared/core/index.js';
 import { handle, json, requireAllowedUser, loadSettings, integrations, getState, admin, HttpError, logEvent } from '../_shared/server.ts';
 import { verifySmtp } from '../_shared/mail.ts';
 import { gemini, checkHook } from '../_shared/ai.ts';
-import { draftDueSteps, sendDue, syncInbox, sendDigest, approveTouch } from '../_shared/jobs.ts';
+import { draftDueSteps, sendDue, syncInbox, sendDigest, approveTouch, fetchJinaSignals, autoResearchPending } from '../_shared/jobs.ts';
 
 const GIF = Uint8Array.from(atob('R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=='), (c) => c.charCodeAt(0));
 const UA = 'Mozilla/5.0 (compatible; DOROGO-partner-research/1.0; +https://dorogo.eu)';
@@ -78,10 +78,20 @@ async function enrich(db: any, body: any) {
   if (DIRECTORY_HOST_RE.test(core.domainOf(fromUrl.website))) {
     return { suggestions: {}, note: 'Listing sites are not fetched (their terms forbid it). Open the listing, copy the planner\'s own website, and paste that.', sources: [] };
   }
-  const main = await fetchPage(fromUrl.website);
+  const [main, jina] = await Promise.all([
+    fetchPage(fromUrl.website).catch(() => ({ html: '', finalUrl: fromUrl.website })),
+    fetchJinaSignals(fromUrl.website),
+  ]);
   const first: any = core.extractFromHtml(main.html, main.finalUrl);
   const sources = [main.finalUrl];
-  const merged: any = { ...first, emails: [...first.emails], phones: [...first.phones], venues: [...first.venues], towns: [...first.towns] };
+  const merged: any = {
+    ...first,
+    emails: [...new Set([...first.emails, ...(jina?.emails || [])])],
+    phones: [...first.phones],
+    venues: [...new Set([...first.venues, ...(jina?.venues || [])])],
+    towns: [...new Set([...first.towns, ...(jina?.towns || [])])],
+    text: `${first.text || ''}\n${jina?.text || ''}`,
+  };
   const sameSite = first.links.map((h: string) => { try { return new URL(h, main.finalUrl).toString(); } catch { return null; } })
     .filter((u: string | null) => u && core.domainOf(u) === core.domainOf(main.finalUrl));
   const pick = [...new Set(sameSite)].sort((a: any, b: any) => (/contact|contatti|about|chi-siamo/i.test(b) ? 1 : 0) - (/contact|contatti|about|chi-siamo/i.test(a) ? 1 : 0)).slice(0, 3);

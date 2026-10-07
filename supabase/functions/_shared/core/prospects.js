@@ -7,23 +7,38 @@ export function priorityScore(p) {
   const parts = [];
   const add = (pts, why) => { if (pts) parts.push({ pts, why, label: why }); };
   const normType = p.type === 'wedding_planner' ? 'planner' : (p.type || 'planner');
-  add({ planner: 40, venue: 30, concierge_hotel: 30, photographer: 20 }[normType] || 25, `type: ${normType}`);
-  const rating = +p.rating || 0;
-  if (rating >= 4.8) add(10, `rating ${rating}`); else if (rating >= 4.5) add(5, `rating ${rating}`);
-  const reviews = +p.verified_reviews_count || 0;
-  if (reviews) add(Math.min(20, Math.round(6 * Math.log2(1 + reviews))), `${reviews} reviews`);
+  // 1. Partner Role Fit (Planners, 5★ Hotel Concierges, and Luxury Buyout Villas all control high-value guest transport)
+  add({ planner: 35, concierge_hotel: 35, venue: 35, dmc: 32, photographer: 15 }[normType] || 22, `type: ${normType}`);
+
+  // 2. Venue & Route Logistics Fit (Lake Como villas & prime transfer corridors)
   const venuesCount = Array.isArray(p.key_venues) ? p.key_venues.length : 0;
-  if (venuesCount >= 2) add(12, `${venuesCount} luxury venues`);
-  else if (venuesCount === 1) add(8, `1 luxury venue (${p.key_venues[0]})`);
-  add({ boutique_local: 15, international: 8, high_volume_uk_us: 5 }[p.segment] || 0, p.segment ? `segment: ${p.segment}` : '');
-  if ((p.location || '').trim()) add(5, `location: ${p.location}`);
+  if (venuesCount >= 2) add(18, `${venuesCount} luxury venues (${p.key_venues.slice(0, 2).join(', ')})`);
+  else if (venuesCount === 1) add(12, `1 luxury venue (${p.key_venues[0]})`);
+  const loc = (p.location || '').trim();
+  if (loc) add(7, `location: ${loc}`);
+
+  // 3. Client Tier & Reputation (does not unfairly penalize luxury boutiques that don't use Google Maps reviews)
+  add({ boutique_local: 14, international: 10, high_volume_uk_us: 8 }[p.segment] || 0, p.segment ? `segment: ${p.segment}` : '');
+  const rating = +p.rating || 0;
+  if (rating >= 4.8) add(6, `rating ${rating}★`); else if (rating >= 4.5) add(4, `rating ${rating}★`);
+  const reviews = +p.verified_reviews_count || 0;
+  if (reviews) add(Math.min(12, Math.round(3.5 * Math.log2(1 + reviews))), `${reviews} reviews`);
+  else if (venuesCount >= 1 && p.website) add(6, 'verified luxury portfolio');
+
+  // 4. Reachability & Personalization Readiness
+  if (p.email_status === 'bounced' || p.email_status === 'no_mx') add(-25, `email ${p.email_status}`);
+  else if (p.email) add(12, 'verified email');
+  else add(-10, 'no email yet');
+
+  if ((p.personalization_hook || '').trim()) add(8, 'custom story/venue hook');
   if ((p.contact_name || '').trim()) add(4, `contact: ${p.contact_name}`);
+  if (p.website) add(3, 'has website');
+
+  // 5. Saturation / Quality Penalties
   const tags = (p.tags || []).map((t) => String(t).toLowerCase());
   if (tags.includes('tier1') || tags.includes('low_priority')) add(-25, 'tier 1/2 agency (saturated)');
   if (tags.includes('unverified')) add(-10, 'unverified');
-  if (p.email) add(5, 'has email'); else add(-5, 'no email yet');
-  if ((p.personalization_hook || '').trim()) add(5, 'has hook');
-  if (p.website) add(3, 'has website');
+
   const score = Math.max(0, Math.min(100, parts.reduce((s, x) => s + x.pts, 0)));
   return { score, parts };
 }
