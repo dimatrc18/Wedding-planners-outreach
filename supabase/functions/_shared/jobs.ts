@@ -420,24 +420,28 @@ export async function fetchJinaSignals(rawUrl: string) {
 }
 
 export async function autoResearchPending(db: any, _settings: any, now = new Date()) {
-  const { data: prospects, error } = await db.from('prospects').select('*').eq('status', 'researching').limit(25);
-  if (error || !prospects?.length) return { researched: 0, promoted: 0 };
+  const { data: allProspects, error } = await db.from('prospects').select('*');
+  if (error) return { researched: 0, promoted: 0, discovered: 0 };
+  const prospects = allProspects || [];
 
   const st: any = (await getState(db, 'auto_research')) || {};
   const checkedMap: Record<string, string> = st.checked || {};
   const DAY = 86400000;
 
+  // 1. Up to 10 researching leads per 10-min run (~15-20 Jina requests, right near the 20 RPM free cap = 1,440 leads/day)
   const queue = prospects.filter((p: any) => {
+    if (p.status !== 'researching') return false;
     if (p.email && p.personalization_hook && (p.priority_score || 0) >= 65) return true;
     const last = checkedMap[p.id];
     if (last && now.getTime() - new Date(last).getTime() < DAY) return false;
     return !p.email || !p.personalization_hook;
-  }).slice(0, 3);
+  }).slice(0, 10);
 
   let researched = 0;
   let promoted = 0;
+  let discovered = 0;
 
-  for (const p of queue) {
+  const processOne = async (p: any) => {
     researched++;
     checkedMap[p.id] = now.toISOString();
     const seed: any = core.resolveProspectResearchSeed(p);
@@ -493,9 +497,38 @@ export async function autoResearchPending(db: any, _settings: any, now = new Dat
     if (Object.keys(patch).length > 0) {
       await db.from('prospects').update(patch).eq('id', p.id);
     }
+  };
+
+  // Run in parallel waves of 3 so 10 leads finish in ~8-10 seconds without hitting Edge Function timeout
+  for (let i = 0; i < queue.length; i += 3) {
+    await Promise.all(queue.slice(i, i + 3).map(processOne));
+  }
+
+  // 2. If the researching queue is empty, auto-import up to 3 new verified luxury partners (>= 65/100) per run
+  if (queue.length === 0) {
+    const catalog = (core.DISCOVERY_PARTNER_CATALOG || []).filter((c: any) => core.findDuplicates(c, prospects).length === 0).slice(0, 3);
+    for (const item of catalog) {
+      const jina = await fetchJinaSignals(item.website);
+      const candidate: any = {
+        ...item,
+        key_venues: [...new Set([...(item.key_venues || []), ...(jina?.venues || [])])],
+      };
+      candidate.personalization_hook = core.buildVerifiedFallbackHook(candidate, jina?.story);
+      const sc = core.priorityScore(candidate).score;
+      if (sc >= 65 && candidate.email && candidate.personalization_hook) {
+        candidate.priority_score = sc;
+        candidate.status = 'ready';
+        candidate.hook_confidence = 'high';
+        candidate.hook_needs_review = false;
+        candidate.hook_source_url = candidate.website;
+        candidate.email_status = 'mx_ok';
+        const { error: insErr } = await db.from('prospects').insert(candidate);
+        if (!insErr) discovered++;
+      }
+    }
   }
 
   await setState(db, 'auto_research', { checked: checkedMap, last_run_at: now.toISOString() });
-  return { researched, promoted };
+  return { researched, promoted, discovered };
 }
 
