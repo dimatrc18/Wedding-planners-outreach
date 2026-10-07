@@ -6,8 +6,8 @@ import {
 } from '../supabase/functions/_shared/core/index.js';
 
 const rome = (y, m, d, hh = 10, mm = 0) => zonedTimeToUtc(y, m, d, hh, mm, 'Europe/Rome');
-const P = (o = {}) => ({ id: 'p1', status: 'ready', email: 'anna@studio.it', instagram_handle: 'studio', ...o });
-const sent = (step, at, extra = {}) => ({ prospect_id: 'p1', direction: 'out', step_name: step, state: 'sent', sent_at: at.toISOString(), channel: step === 'T2_ig_dm' ? 'instagram_dm' : 'email', ...extra });
+const P = (o = {}) => ({ id: 'p1', status: 'ready', email: 'anna@studio.it', ...o });
+const sent = (step, at, extra = {}) => ({ prospect_id: 'p1', direction: 'out', step_name: step, state: 'sent', sent_at: at.toISOString(), channel: 'email', ...extra });
 const S = { ...DEFAULT_SETTINGS, season_mode: 'normal' };
 
 test('T1 is due immediately for a Ready prospect', () => {
@@ -27,33 +27,25 @@ test('missing email blocks email steps', () => {
   assert.equal(st.blocked, 'no_email');
 });
 
-test('cadence offsets: T2 disabled by default (email-only T1 -> T3 day 4 -> T4 day 9), or T2 at day 2 when enabled', () => {
+test('cadence offsets: email-only T1 -> T3 day 4 -> T4 day 9, and legacy T2_ig_dm is stripped', () => {
   const t1 = rome(2026, 10, 6);
-  // Default settings: T2_ig_dm is disabled, so after T1 the next step is T3_followup at day 4
-  let stDefault = sequenceState(P({ status: 't1_sent' }), [sent('T1_intro', t1)], S, rome(2026, 10, 7));
-  assert.equal(stDefault.step.key, 'T3_followup');
-  assert.equal(stDefault.dueAt.getTime(), t1.getTime() + 4 * 86400000);
-
-  // When T2_ig_dm is explicitly enabled in settings:
-  const SWithIg = { ...S, steps: S.steps.map((x) => (x.key === 'T2_ig_dm' ? { ...x, enabled: true } : x)) };
-  let st = sequenceState(P({ status: 't1_sent' }), [sent('T1_intro', t1)], SWithIg, rome(2026, 10, 7));
-  assert.equal(st.step.key, 'T2_ig_dm');
-  assert.equal(st.dueAt.getTime(), t1.getTime() + 2 * 86400000);
-  assert.equal(st.isDue, false);
-  st = sequenceState(P({ status: 't2_sent' }), [sent('T1_intro', t1), sent('T2_ig_dm', rome(2026, 10, 8))], SWithIg, rome(2026, 10, 11));
+  let st = sequenceState(P({ status: 't1_sent' }), [sent('T1_intro', t1)], S, rome(2026, 10, 7));
   assert.equal(st.step.key, 'T3_followup');
   assert.equal(st.dueAt.getTime(), t1.getTime() + 4 * 86400000);
+  assert.equal(st.isDue, false);
+
+  st = sequenceState(P({ status: 't1_sent' }), [sent('T1_intro', t1)], S, rome(2026, 10, 11));
+  assert.equal(st.step.key, 'T3_followup');
   assert.equal(st.isDue, true);
-  st = sequenceState(P({ status: 't3_sent' }), [sent('T1_intro', t1), sent('T2_ig_dm', t1), sent('T3_followup', t1)], SWithIg, t1);
+
+  st = sequenceState(P({ status: 't3_sent' }), [sent('T1_intro', t1), sent('T3_followup', t1)], S, t1);
   assert.equal(st.step.key, 'T4_breakup');
   assert.equal(st.dueAt.getTime(), t1.getTime() + 9 * 86400000);
-});
 
-test('Instagram step is skipped when there is no handle', () => {
-  const t1 = rome(2026, 10, 6);
-  const SWithIg = { ...S, steps: S.steps.map((x) => (x.key === 'T2_ig_dm' ? { ...x, enabled: true } : x)) };
-  const st = sequenceState(P({ status: 't1_sent', instagram_handle: '' }), [sent('T1_intro', t1)], SWithIg, t1);
-  assert.equal(st.step.key, 'T3_followup');
+  // Even if legacy settings had T2_ig_dm in steps, withDefaults strips it automatically
+  const SWithLegacyIg = { ...S, steps: [...S.steps, { key: 'T2_ig_dm', label: 'Instagram DM', day: 3, channel: 'instagram_dm', enabled: true }] };
+  const stStripped = sequenceState(P({ status: 't1_sent' }), [sent('T1_intro', t1)], SWithLegacyIg, rome(2026, 10, 7));
+  assert.equal(stStripped.step.key, 'T3_followup');
 });
 
 test('a real reply stops the sequence; an out-of-office does not', () => {
@@ -142,9 +134,9 @@ test('approval scheduling and status moves', () => {
   const at = scheduleApproved({ channel: 'email', step_name: 'T1_intro' }, P(), S, [], { now, rng: () => 0 });
   assert.equal(localParts(at, 'Europe/Rome').dow, 2, 'Saturday approval goes out Tuesday');
   assert.equal(scheduleApproved({ channel: 'email', step_name: 'rate_card_delivery' }, P(), S, [], { now }).getTime(), now.getTime());
-  assert.equal(scheduleApproved({ channel: 'instagram_dm', step_name: 'T2_ig_dm' }, P(), S, [], { now }), null);
+  assert.equal(scheduleApproved({ channel: 'whatsapp', step_name: 'custom' }, P(), S, [], { now }), null);
   assert.equal(statusAfterSend('ready', 'T1_intro', FUNNEL_RANK), 't1_sent');
-  assert.equal(statusAfterSend('t2_sent', 'T3_followup', FUNNEL_RANK), 't3_sent');
+  assert.equal(statusAfterSend('t1_sent', 'T3_followup', FUNNEL_RANK), 't3_sent');
   assert.equal(statusAfterSend('replied', 'T3_followup', FUNNEL_RANK), 'replied', 'never backwards');
   assert.equal(statusAfterSend('replied', 'rate_card_delivery', FUNNEL_RANK), 'rate_card_sent');
 });

@@ -53,7 +53,6 @@ const STAGE_TONE = {
   rate_card_sent: 'gold',
   replied: 'gold',
   t1_sent: 'info',
-  t2_sent: 'info',
   t3_sent: 'info',
   t4_sent: 'info',
   ready: 'gold',
@@ -67,7 +66,6 @@ const t0 = (x) => (x ? new Date(x).getTime() : 0);
 
 const DRAFT_STEP_LABEL = {
   T1_intro: 'T1',
-  T2_ig_dm: 'T2',
   T3_followup: 'T3',
   T4_breakup: 'T4',
   rate_card_delivery: 'Rate Card',
@@ -77,7 +75,6 @@ const DRAFT_STEP_LABEL = {
 
 const STAGE_EVENT_FALLBACK = {
   t1_sent: { key: 'ev:t1', label: 'T1 Intro Sent', tone: 'info', band: 1, dropStage: 't1_sent', order: 10 },
-  t2_sent: { key: 'ev:t2', label: 'T2 IG DM Sent', tone: 'info', band: 1, dropStage: 't2_sent', order: 20 },
   t3_sent: { key: 'ev:t3', label: 'T3 Follow-up Sent', tone: 'info', band: 1, dropStage: 't3_sent', order: 30 },
   t4_sent: { key: 'ev:t4', label: 'T4 Breakup Sent', tone: 'info', band: 1, dropStage: 't4_sent', order: 40 },
   replied: { key: 'ev:rep_pos', label: 'Reply: Positive', tone: 'ok', band: 1, dropStage: 'replied', order: 50 },
@@ -119,7 +116,6 @@ export function prospectEventTrail(p, list = [], opps = []) {
   for (const t of sorted) {
     if (t.direction === 'out' && t.state === 'sent') {
       if (t.step_name === 'T1_intro') events.push({ key: 'ev:t1', label: 'T1 Intro Sent', tone: 'info', band: 1, dropStage: 't1_sent', order: 10 });
-      else if (t.step_name === 'T2_ig_dm') events.push({ key: 'ev:t2', label: 'T2 IG DM Sent', tone: 'info', band: 1, dropStage: 't2_sent', order: 20 });
       else if (t.step_name === 'T3_followup') events.push({ key: 'ev:t3', label: 'T3 Follow-up Sent', tone: 'info', band: 1, dropStage: 't3_sent', order: 30 });
       else if (t.step_name === 'T4_breakup') events.push({ key: 'ev:t4', label: 'T4 Breakup Sent', tone: 'info', band: 1, dropStage: 't4_sent', order: 40 });
       else if (t.step_name === 'rate_card_delivery') events.push({ key: 'ev:rc', label: 'Rate Card Sent', tone: 'gold', band: 1, dropStage: 'rate_card_sent', order: 60 });
@@ -210,7 +206,6 @@ export function classifyProspectStep(p, dimKey, ctx = {}) {
           : { key: 'step:ready', label: 'Ready for T1', tone: 'gold', band: 2, order: 6, dropStage: 'ready' };
       }
       if (p.status === 't1_sent') return { key: 'step:t1', label: 'T1 Intro Sent', tone: 'info', band: 1, order: 1, dropStage: 't1_sent' };
-      if (p.status === 't2_sent') return { key: 'step:t2', label: 'T2 IG DM Sent', tone: 'info', band: 1, order: 2, dropStage: 't2_sent' };
       if (p.status === 't3_sent') return { key: 'step:t3', label: 'T3 Follow-up Sent', tone: 'info', band: 1, order: 3, dropStage: 't3_sent' };
       if (p.status === 't4_sent') return { key: 'step:t4', label: 'T4 Breakup Sent', tone: 'info', band: 1, order: 4, dropStage: 't4_sent' };
 
@@ -218,7 +213,6 @@ export function classifyProspectStep(p, dimKey, ctx = {}) {
       const sentNames = new Set(sentCold.map((t) => t.step_name));
       if (sentNames.has('T4_breakup')) return { key: 'step:t4', label: 'T4 Breakup Sent', tone: 'info', band: 1, order: 4, dropStage: 't4_sent' };
       if (sentNames.has('T3_followup')) return { key: 'step:t3', label: 'T3 Follow-up Sent', tone: 'info', band: 1, order: 3, dropStage: 't3_sent' };
-      if (sentNames.has('T2_ig_dm')) return { key: 'step:t2', label: 'T2 IG DM Sent', tone: 'info', band: 1, order: 2, dropStage: 't2_sent' };
       return { key: 'step:t1', label: 'T1 Intro Sent', tone: 'info', band: 1, order: 1, dropStage: 't1_sent' };
     }
 
@@ -229,7 +223,7 @@ export function classifyProspectStep(p, dimKey, ctx = {}) {
       if (p.status === 'ready') {
         return { key: 'resp:queued', label: 'Queued for Approval', tone: 'gold', band: 2, order: 8, dropStage: 'ready' };
       }
-      if (['t1_sent', 't2_sent', 't3_sent'].includes(p.status)) {
+      if (['t1_sent', 't3_sent'].includes(p.status)) {
         return { key: 'resp:waiting', label: 'In Sequence (Waiting)', tone: 'info', band: 1, order: 4, dropStage: 't1_sent' };
       }
       if (p.status === 't4_sent') {

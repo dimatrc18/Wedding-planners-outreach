@@ -76,10 +76,10 @@ export function buildDemoData() {
     const plan = PLAN[i];
     const p = {
       id: id(), type, agency_name, contact_name, location, segment, language, rating, verified_reviews_count: reviews || null,
-      review_source: reviews ? 'matrimonio.com' : null, source: i % 3 ? 'matrimonio.com' : 'instagram',
+      review_source: reviews ? 'matrimonio.com' : null, source: i % 3 ? 'matrimonio.com' : 'website',
       email: plan === 'researching' ? '' : `${(contact_name.split(' ')[0] || 'info').toLowerCase()}@${slug}.test`,
       email_status: plan === 'researching' ? 'unknown' : 'mx_ok',
-      instagram_handle: i % 4 === 3 ? '' : slug, website: `https://${slug}.test`,
+      website: `https://${slug}.test`,
       personalization_hook: hook, hook_type, hook_confidence: hook ? (i % 5 === 0 ? 'medium' : 'high') : null, hook_needs_review: i === 20,
       key_venues: [], timezone: 'Europe/Rome', tags: ['demo'], notes: '', status: plan === 'replied_wait' ? 'replied' : plan,
       do_not_contact: plan === 'do_not_contact', created_at: iso(Date.now() - (40 - i) * DAY), updated_at: iso(Date.now()),
@@ -89,13 +89,13 @@ export function buildDemoData() {
     prospects.push(p);
 
     const start = 6 + (i % 5) * 4 + (i < 8 ? 14 : 0); // days ago T1 went out
-    const cadence = { t1_sent: 1, t2_sent: 2, t3_sent: 3, t4_sent: 4 };
+    const cadence = { t1_sent: 1, t3_sent: 3, t4_sent: 4 };
     if (['ready', 'researching'].includes(plan)) return;
     const t1 = sendTime(start);
     out(p, 'T1_intro', t1);
     const steps = cadence[plan] || (['do_not_contact'].includes(plan) ? 1 : (i % 3) + 1);
-    if (steps >= 3) out(p, 'T3_followup', new Date(t1.getTime() + 8 * DAY));
-    if (steps >= 4) out(p, 'T4_breakup', new Date(t1.getTime() + 14 * DAY));
+    if (steps >= 3) out(p, 'T3_followup', new Date(t1.getTime() + 4 * DAY));
+    if (steps >= 4) out(p, 'T4_breakup', new Date(t1.getTime() + 9 * DAY));
     if (cadence[plan]) return; // still in the cadence, no reply yet
     const replyAt = new Date(t1.getTime() + (steps * 3 + 1) * DAY + 5 * 3600000);
 
@@ -145,7 +145,7 @@ export function buildDemoData() {
     const p = {
       id: id(), type: 'planner', agency_name: name, contact_name: '', location: town, segment: k % 4 ? 'boutique_local' : 'international', language: lang,
       rating: 4.6 + (k % 5) / 10, verified_reviews_count: 5 + (k * 7) % 40, review_source: 'matrimonio.com', source: 'matrimonio.com',
-      email: `info@${slug}.test`, email_status: 'mx_ok', instagram_handle: k % 2 ? slug : '', website: `https://${slug}.test`,
+      email: `info@${slug}.test`, email_status: 'mx_ok', website: `https://${slug}.test`,
       personalization_hook: k % 6 === 0 ? '' : (lang === 'it' ? `Il vostro matrimonio a ${town} della scorsa stagione era curato con gusto.` : `Your wedding in ${town} last season was beautifully put together.`),
       hook_type: k % 6 === 0 ? null : 'event', key_venues: [], timezone: 'Europe/Rome', tags: ['demo'], notes: '',
       status: k % 5 === 0 ? 'lost' : 't4_sent', lost_reason: k % 5 === 0 ? 'no_response' : null,

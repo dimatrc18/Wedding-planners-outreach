@@ -8,11 +8,11 @@ import { stepLabel, sentimentChip } from './today.js';
 const FIELDS = [
   ['agency_name', 'Agency / business', 'text'], ['contact_name', 'Contact name', 'text'], ['role', 'Role', 'text'],
   ['email', 'Email', 'email'], ['phone', 'Phone', 'text'], ['whatsapp', 'WhatsApp', 'text'],
-  ['website', 'Website', 'url'], ['instagram_handle', 'Instagram handle', 'text'], ['linkedin', 'LinkedIn', 'url'],
+  ['website', 'Website', 'url'], ['linkedin', 'LinkedIn', 'url'],
   ['location', 'Location', 'text'], ['type', 'Type', 'select', ['planner', 'venue', 'photographer', 'concierge_hotel']],
   ['segment', 'Segment', 'select', ['', 'boutique_local', 'high_volume_uk_us', 'international']],
   ['language', 'Language', 'select', ['en', 'it', 'de', 'fr']], ['timezone', 'Time zone', 'text'],
-  ['source', 'Source', 'select', ['manual', 'matrimonio.com', 'instagram', 'wedding_wire', 'referral', 'website']],
+  ['source', 'Source', 'select', ['manual', 'matrimonio.com', 'wedding_wire', 'referral', 'website']],
   ['source_detail', 'Source detail', 'text'],
   ['rating', 'Rating', 'number'], ['verified_reviews_count', 'Verified reviews', 'number'], ['review_source', 'Review source', 'text'],
   ['avg_weddings_per_year_estimate', 'Weddings / year (est.)', 'number'], ['typical_guest_count', 'Typical guests', 'number'],
@@ -35,7 +35,6 @@ function readFields(root) {
     else if (def[2] === 'list') v = v ? v.split(',').map((x) => x.trim()).filter(Boolean) : [];
     else if (i.type === 'datetime-local' || i.type === 'date') v = v ? new Date(v).toISOString() : null;
     else if (v === '' && k !== 'agency_name') v = null;
-    if (k === 'instagram_handle' && v) v = core.normalizeHandle(v) || v;
     if (k === 'email' && v) v = v.toLowerCase();
     out[k] = v;
   });
@@ -50,7 +49,7 @@ function touchHtml(t) {
   const when = t.sent_at || t.replied_at || t.created_at;
   const long = (t.body || '').length > 500;
   return `<div class="tl ${t.direction} ${pending ? 'pending' : ''}">
-    <div class="head">${icon(t.channel === 'instagram_dm' ? 'ig' : t.channel === 'call' ? 'phone' : 'mail', 14)}<b>${t.direction === 'in' ? 'Reply' : esc(stepLabel(t.step_name))}</b>
+    <div class="head">${icon(t.channel === 'call' ? 'phone' : 'mail', 14)}<b>${t.direction === 'in' ? 'Reply' : esc(stepLabel(t.step_name))}</b>
       <span>${esc(t.channel.replace('_', ' '))}</span>${stateChip}${t.bounced ? '<span class="chip bad">Bounced</span>' : ''}${t.opened_at ? '<span class="chip">Opened</span>' : ''}
       ${t.variant && t.step_name === 'T1_intro' ? `<span class="chip outline">Subject ${esc(t.variant)}</span>` : ''}${sentimentChip(t)}
       <span class="grow"></span><span class="faint" title="${attr(fmtDateTime(when))}">${esc(ago(when))}</span></div>
@@ -88,7 +87,7 @@ export function render(el, id) {
       <button class="btn primary" data-act="next">${icon('sparkle', 16)} Draft next step</button>
       <button class="btn" data-act="ratecard">${icon('send', 16)} Send rate card</button>
       <button class="btn" data-act="log-reply">${icon('reply', 16)} Log a reply</button>
-      <button class="btn" data-act="log-touch">${icon('phone', 16)} Log call / DM / meeting</button>
+      <button class="btn" data-act="log-touch">${icon('phone', 16)} Log call / meeting</button>
       <button class="btn ghost" data-act="snooze">${icon('clock', 16)} Snooze</button>
       <button class="btn ghost" data-act="lost">Mark lost</button>
       ${p.do_not_contact ? '' : '<button class="btn ghost" data-act="dnc">Do not contact</button>'}
@@ -104,10 +103,10 @@ export function render(el, id) {
     <div class="split">
       <div class="stack lg">
         <section class="card stack">
-          <div class="section-head"><h2>Research</h2><span class="hint">Public pages only. Instagram is never fetched.</span></div>
-          <div class="row nowrap"><input type="url" id="research-url" placeholder="Paste website or Instagram URL" value="${attr(p.website || '')}" aria-label="Website or Instagram URL"><button class="btn" data-act="research">${icon('search', 16)} Research</button></div>
+          <div class="section-head"><h2>Research</h2><span class="hint">Public pages only.</span></div>
+          <div class="row nowrap"><input type="url" id="research-url" placeholder="Paste website URL" value="${attr(p.website || '')}" aria-label="Website URL"><button class="btn" data-act="research">${icon('search', 16)} Research</button></div>
           <div id="research-out">${researchResult ? researchHtml(researchResult, p) : ''}</div>
-          <div class="row">${p.website ? `<a class="small" href="${attr(p.website)}" target="_blank" rel="noopener">${icon('external', 14)} Website</a>` : ''}${p.instagram_handle ? `<a class="small" href="https://www.instagram.com/${attr(p.instagram_handle)}/" target="_blank" rel="noopener">${icon('ig', 14)} @${esc(p.instagram_handle)}</a>` : ''}
+          <div class="row">${p.website ? `<a class="small" href="${attr(p.website)}" target="_blank" rel="noopener">${icon('external', 14)} Website</a>` : ''}
             ${p.email ? `<button class="btn ghost sm" data-act="verify">Check email (MX)</button>` : ''}</div>
         </section>
 
@@ -278,7 +277,7 @@ export function render(el, id) {
 
 function researchHtml(r, p) {
   const s = r.suggestions || {};
-  const rows = Object.entries(s).filter(([k, v]) => v !== '' && v !== null && v !== undefined && !(Array.isArray(v) && !v.length) && !['hook_type', 'hook_confidence', 'hook_needs_review', 'hook_source_url', 'email_status', 'source'].includes(k));
+  const rows = Object.entries(s).filter(([k, v]) => v !== '' && v !== null && v !== undefined && !(Array.isArray(v) && !v.length) && !['hook_type', 'hook_confidence', 'hook_needs_review', 'hook_source_url', 'email_status', 'source', 'instagram_handle'].includes(k));
   return `<div class="stack" style="gap:8px">
     ${r.note ? `<p class="small muted">${esc(r.note)}</p>` : ''}
     ${rows.length ? `<div class="card flush list">${rows.map(([k, v]) => {
@@ -296,7 +295,7 @@ function researchHtml(r, p) {
 export async function logReplyDialog(p) {
   return dialog({
     title: `Log a reply from ${p.agency_name}`, wide: true,
-    body: `<div class="fields"><label class="field"><span>Channel</span><select id="lr-ch">${['email', 'instagram_dm', 'whatsapp', 'call', 'in_person', 'linkedin'].map((c) => `<option>${c}</option>`).join('')}</select></label>
+    body: `<div class="fields"><label class="field"><span>Channel</span><select id="lr-ch">${['email', 'whatsapp', 'call', 'in_person', 'linkedin'].map((c) => `<option>${c}</option>`).join('')}</select></label>
       <label class="field"><span>When</span><input type="datetime-local" id="lr-at" value="${toLocalInput(new Date())}"></label></div>
       <label class="field"><span>What they said</span><textarea id="lr-body" rows="6" placeholder="Paste the message, or write a short note of the call"></textarea></label>
       <div class="fields"><label class="field"><span>Sentiment</span><select id="lr-s">${core.SENTIMENTS.map((s) => `<option>${s}</option>`).join('')}</select></label>
@@ -326,8 +325,8 @@ export async function logReplyDialog(p) {
 export async function logTouchDialog(p) {
   return dialog({
     title: 'Log an outbound touch',
-    body: `<div class="fields"><label class="field"><span>Channel</span><select id="lt-ch">${['call', 'instagram_dm', 'whatsapp', 'email', 'in_person', 'linkedin'].map((c) => `<option>${c}</option>`).join('')}</select></label>
-      <label class="field"><span>Step</span><select id="lt-step">${['custom', 'T1_intro', 'T2_ig_dm', 'T3_followup', 'T4_breakup', 'rate_card_delivery'].map((s) => `<option value="${s}">${stepLabel(s)}</option>`).join('')}</select></label>
+    body: `<div class="fields"><label class="field"><span>Channel</span><select id="lt-ch">${['call', 'whatsapp', 'email', 'in_person', 'linkedin'].map((c) => `<option>${c}</option>`).join('')}</select></label>
+      <label class="field"><span>Step</span><select id="lt-step">${['custom', 'T1_intro', 'T3_followup', 'T4_breakup', 'rate_card_delivery'].map((s) => `<option value="${s}">${stepLabel(s)}</option>`).join('')}</select></label>
       <label class="field"><span>When</span><input type="datetime-local" id="lt-at" value="${toLocalInput(new Date())}"></label></div>
       <label class="field"><span>Subject (email)</span><input type="text" id="lt-subj"></label>
       <label class="field"><span>Notes or message</span><textarea id="lt-body" rows="5"></textarea></label>

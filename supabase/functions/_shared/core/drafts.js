@@ -70,8 +70,7 @@ export function buildDraft({ prospect, key, templates, threadSubject = '', step 
   const rawSubject = variant === 'B' ? t.subject_b : t.subject_a;
   let subject = threaded && threadSubject ? reSubject(threadSubject) : merge(rawSubject || '', vars);
   if (!subject && threaded) subject = reSubject(threadSubject);
-  const channel = key === 'T2_ig_dm' ? 'instagram_dm' : 'email';
-  if (channel !== 'email') subject = '';
+  const channel = 'email';
   const body = merge(t.body, vars);
   const lint = lintMessage({ subject, body, channel, step: key });
   return { subject, body, variant, template_id: t.id || null, template_key: t.key, attach_rate_card: !!t.attach_rate_card, channel, lint };

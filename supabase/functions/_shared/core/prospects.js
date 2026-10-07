@@ -17,7 +17,7 @@ export function priorityScore(p) {
   if (tags.includes('unverified')) add(-10, 'unverified');
   if (p.email) add(5, 'has email'); else add(-5, 'no email yet');
   if ((p.personalization_hook || '').trim()) add(5, 'has hook');
-  if (p.instagram_handle) add(3, 'has Instagram');
+  if (p.website) add(3, 'has website');
   const score = Math.max(0, Math.min(100, parts.reduce((s, x) => s + x.pts, 0)));
   return { score, parts };
 }

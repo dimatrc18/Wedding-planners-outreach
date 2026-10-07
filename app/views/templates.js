@@ -8,7 +8,7 @@ let sel = null; // `${key}|${language}`
 let previewId = null;
 
 export function render(el) {
-  const tpls = () => [...S.templates].sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'sequence' ? -1 : 1) || a.key.localeCompare(b.key) || a.language.localeCompare(b.language));
+  const tpls = () => [...S.templates].filter((x) => x.key !== 'T2_ig_dm').sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'sequence' ? -1 : 1) || a.key.localeCompare(b.key) || a.language.localeCompare(b.language));
   if (!sel) { const t = tpls()[0]; sel = t ? `${t.key}|${t.language}` : null; }
   const sample = () => S.prospects.find((p) => p.id === previewId) || S.prospects.find((p) => p.personalization_hook && p.contact_name) || S.prospects[0] ||
     { id: 'x', agency_name: 'Sample Planner', contact_name: 'Giulia Rossi', language: 'en', personalization_hook: 'Your September wedding at Villa Melzi was beautifully paced.' };
@@ -27,7 +27,7 @@ export function render(el) {
             <td><label class="switch"><input type="checkbox" data-step="${i}" data-k="enabled" ${st.enabled !== false ? 'checked' : ''}><span></span></label></td>
             <td><label class="switch" title="Off = drafts that pass the linter are approved and scheduled automatically"><input type="checkbox" data-step="${i}" data-k="require_approval" ${st.require_approval !== false ? 'checked' : ''} ${st.channel !== 'email' ? 'disabled' : ''}><span></span></label></td></tr>`).join('')}
         </tbody></table></div>
-        <p class="small muted">Approval stays on for every step until you switch it off here. Instagram DMs are always sent by hand.</p>
+        <p class="small muted">Approval stays on for every step until you switch it off here.</p>
         <div class="divider"></div>
         <div class="section-head"><h2>Send window</h2><span class="hint">In the recipient's time zone; Italian holidays and 7 December (Milan) are skipped.</span></div>
         <div class="row">${[1, 2, 3, 4, 5, 6, 7].map((d) => `<label class="check chip ${s.send_days.includes(d) ? 'gold' : 'outline'}" style="cursor:pointer"><input type="checkbox" data-day="${d}" ${s.send_days.includes(d) ? 'checked' : ''} style="display:none">${DAYS[d]}</label>`).join('')}</div>
@@ -56,8 +56,8 @@ export function render(el) {
     return `<div class="card stack">
       <div class="section-head"><h2>${esc(t.name || t.key)}</h2><span class="chip">v${t.version || 1}</span></div>
       <label class="field"><span>Name</span><input type="text" id="t-name" value="${attr(t.name || '')}"></label>
-      ${t.key !== 'T2_ig_dm' ? `<div class="fields"><label class="field"><span>Subject A</span><input type="text" id="t-sa" value="${attr(t.subject_a || '')}" placeholder="${t.kind === 'sequence' && t.key === 'T3_followup' ? 'Empty: replies in the intro thread' : ''}"></label>
-        <label class="field"><span>Subject B (A/B test)</span><input type="text" id="t-sb" value="${attr(t.subject_b || '')}" placeholder="Leave empty for no test"></label></div>` : ''}
+      <div class="fields"><label class="field"><span>Subject A</span><input type="text" id="t-sa" value="${attr(t.subject_a || '')}" placeholder="${t.kind === 'sequence' && t.key === 'T3_followup' ? 'Empty: replies in the intro thread' : ''}"></label>
+        <label class="field"><span>Subject B (A/B test)</span><input type="text" id="t-sb" value="${attr(t.subject_b || '')}" placeholder="Leave empty for no test"></label></div>
       <label class="field"><span>Body</span><textarea id="t-body" rows="14" class="mono" style="font-size:.84rem">${esc(t.body)}</textarea></label>
       <p class="tiny faint">Variables: ${vars.map((v) => `<code>{{${v}}}</code>`).join(' ')}</p>
       <label class="check small"><input type="checkbox" id="t-attach" ${t.attach_rate_card ? 'checked' : ''}> Attach the rate card PDF</label>
@@ -82,19 +82,17 @@ export function render(el) {
     const c = current();
     const p = sample();
     const vars = core.buildVars(p);
-    const channel = key === 'T2_ig_dm' ? 'instagram_dm' : 'email';
+    const channel = 'email';
     const body = core.merge(c.body, vars);
     const subjects = [['A', c.subject_a], ['B', c.subject_b]].filter(([, x]) => x).map(([v, x]) => [v, core.merge(x, vars)]);
-    const subject = subjects[0]?.[1] || (channel === 'email' ? 'Re: (intro thread subject)' : '');
+    const subject = subjects[0]?.[1] || 'Re: (intro thread subject)';
     const l = core.lintMessage({ subject, body, channel, step: key });
     const lb = subjects[1] ? core.lintMessage({ subject: subjects[1][1], body, channel, step: key }) : null;
-    const htmlPreview = channel === 'email'
-      ? `<div style="background:#ffffff;border:1px solid var(--line);border-radius:8px;overflow:hidden">${core.renderDorogoLuxuryHtmlEmail(body, { fromEmail: S.settings?.sender?.email || 'booking@dorogo.eu' })}</div>`
-      : `<div class="body" style="background:var(--surface)">${esc(body)}</div>`;
+    const htmlPreview = `<div style="background:#ffffff;border:1px solid var(--line);border-radius:8px;overflow:hidden">${core.renderDorogoLuxuryHtmlEmail(body, { fromEmail: S.settings?.sender?.email || 'booking@dorogo.eu' })}</div>`;
     box.innerHTML = `<div class="draft" style="background:var(--bg)">${subjects.map(([v, x]) => `<div class="subject">${subjects.length > 1 ? `<span class="chip outline">${v}</span> ` : ''}${esc(x)}</div>`).join('')}
       ${htmlPreview}
       <div class="lint">${[...new Set([...l.errors, ...(lb?.errors || [])])].map((e) => `<span class="e">${esc(e)}</span>`).join('')}${[...new Set([...l.warnings, ...(lb?.warnings || [])])].map((w) => `<span class="w">${esc(w)}</span>`).join('')}${!l.errors.length && !l.warnings.length ? '<span style="color:var(--ok)">Passes the copy-linter · DOROGO Executive Email Layout</span>' : ''}</div>
-      <span class="hint">${l.words} words without signature${key === 'T1_intro' ? ' · target under 120' : channel !== 'email' ? ' · target under 40' : ''}</span></div>`;
+      <span class="hint">${l.words} words without signature${key === 'T1_intro' ? ' · target under 120' : ''}</span></div>`;
   }
 
   paint();
@@ -118,7 +116,7 @@ export function render(el) {
       if (b.dataset.act === 'save-tpl') {
         const c = current();
         const [k] = sel.split('|');
-        const l = core.lintMessage({ subject: core.merge(c.subject_a, core.buildVars(sample())), body: core.merge(c.body, core.buildVars(sample())), channel: k === 'T2_ig_dm' ? 'instagram_dm' : 'email', step: k });
+        const l = core.lintMessage({ subject: core.merge(c.subject_a, core.buildVars(sample())), body: core.merge(c.body, core.buildVars(sample())), channel: 'email', step: k });
         const banned = l.errors.filter((x) => x.startsWith('Banned'));
         if (banned.length) return toast(banned[0], 'error');
         await upsertTemplate({ ...t, ...c, version: (t.version || 1) + 1 });

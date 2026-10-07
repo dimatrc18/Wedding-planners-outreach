@@ -24,10 +24,6 @@ May I send our 1-page rate card?
 {{optout}}`,
   },
   {
-    key: 'T2_ig_dm', language: 'en', kind: 'sequence', name: 'T2 Instagram DM', subject_a: '', subject_b: '',
-    body: `{{greeting}} Dmitri from DOROGO here. I emailed you about guest transfers for your Lake Como weddings: airport arrivals and late-night villa returns, with net rates for planners. Happy to send the 1-page rate card here if easier.`,
-  },
-  {
     key: 'T3_followup', language: 'en', kind: 'sequence', name: 'T3 Follow-up (late-night shuttle)', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
@@ -71,10 +67,6 @@ Posso inviarvi la nostra tariffa partner di una pagina?
 {{signature}}
 
 {{optout}}`,
-  },
-  {
-    key: 'T2_ig_dm', language: 'it', kind: 'sequence', name: 'T2 DM Instagram', subject_a: '', subject_b: '',
-    body: `{{greeting}} sono Dmitri di DOROGO. Vi ho scritto via email sui transfer ospiti per i matrimoni sul lago, con tariffe nette per i planner. Se preferite, vi invio qui la tariffa partner.`,
   },
   {
     key: 'T3_followup', language: 'it', kind: 'sequence', name: 'T3 Follow-up (navetta notturna)', subject_a: '', subject_b: '',

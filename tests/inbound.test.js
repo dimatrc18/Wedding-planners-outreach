@@ -6,14 +6,14 @@ const now = zonedTimeToUtc(2026, 10, 7, 10, 0, 'Europe/Rome');
 const prospect = { id: 'p1', agency_name: 'Perlee', contact_name: 'Anna Bianchi', email: 'anna@perlee.it', status: 't1_sent', language: 'en' };
 const touches = [
   { id: 't1', prospect_id: 'p1', direction: 'out', step_name: 'T1_intro', state: 'sent', channel: 'email', sent_at: '2026-10-06T08:00:00Z' },
-  { id: 't2', prospect_id: 'p1', direction: 'out', step_name: 'T2_ig_dm', state: 'draft', channel: 'instagram_dm' },
   { id: 't3', prospect_id: 'p1', direction: 'out', step_name: 'T3_followup', state: 'approved', channel: 'email', scheduled_at: '2026-10-14T08:00:00Z' },
+  { id: 't4', prospect_id: 'p1', direction: 'out', step_name: 'T4_breakup', state: 'draft', channel: 'email' },
 ];
 const run = (body) => inboundEffects({ prospect, touches, cls: classifyReply({ body }, now), settings: DEFAULT_SETTINGS, now, inbound: { id: 'in1', channel: 'email', subject: 'Re: Guest transport for your Lake Como weddings' } });
 
 test('positive reply: stop cadence, suggest the rate card reply, alert', () => {
   const e = run('Yes please, send it over.');
-  assert.deepEqual(e.skipIds.sort(), ['t2', 't3']);
+  assert.deepEqual(e.skipIds.sort(), ['t3', 't4']);
   assert.equal(e.patch.status, 'replied');
   assert.equal(e.alert, true);
   assert.equal(e.draft.step_name, 'rate_card_delivery');

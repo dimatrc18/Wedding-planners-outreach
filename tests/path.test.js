@@ -149,7 +149,6 @@ test('multi-step chained selection and invalid selection recovery', () => {
 test('stage mutations on prospects with historical touches immediately update entry, cadence_step, and response nodes', () => {
   const touches = [
     { id: 't1', prospect_id: 'p1', direction: 'out', state: 'sent', step_name: 'T1_intro', channel: 'email', sent_at: '2026-09-01T09:00:00Z' },
-    { id: 't2', prospect_id: 'p1', direction: 'out', state: 'sent', step_name: 'T2_ig_dm', channel: 'instagram_dm', sent_at: '2026-09-04T09:00:00Z' },
     { id: 't3', prospect_id: 'p1', direction: 'out', state: 'sent', step_name: 'T3_followup', channel: 'email', sent_at: '2026-09-09T09:00:00Z' },
     { id: 't4', prospect_id: 'p1', direction: 'out', state: 'sent', step_name: 'T4_breakup', channel: 'email', sent_at: '2026-09-15T09:00:00Z' },
   ];

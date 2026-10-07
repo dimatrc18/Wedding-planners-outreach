@@ -169,7 +169,7 @@ export function render(el) {
         case 'health': S.health = await api('health'); paint(); toast('Status refreshed'); break;
         case 'dns': dnsResult = await checkDomain((S.settings.sender?.email || 'booking@dorogo.eu').split('@')[1]); paint(); break;
         case 'csv': {
-          const cols = ['agency_name', 'contact_name', 'role', 'email', 'email_status', 'phone', 'whatsapp', 'website', 'instagram_handle', 'linkedin', 'location', 'type', 'segment', 'language', 'source', 'source_detail', 'rating', 'verified_reviews_count', 'review_source', 'priority_score', 'status', 'personalization_hook', 'hook_type', 'tags', 'notes', 'do_not_contact', 'unsubscribed_at', 'nurture_until', 'created_at', 'last_touch_at'];
+          const cols = ['agency_name', 'contact_name', 'role', 'email', 'email_status', 'phone', 'whatsapp', 'website', 'linkedin', 'location', 'type', 'segment', 'language', 'source', 'source_detail', 'rating', 'verified_reviews_count', 'review_source', 'priority_score', 'status', 'personalization_hook', 'hook_type', 'tags', 'notes', 'do_not_contact', 'unsubscribed_at', 'nurture_until', 'created_at', 'last_touch_at'];
           download(`dorogo_prospects_${new Date().toISOString().slice(0, 10)}.csv`, core.toCSV(S.prospects, cols), 'text/csv'); break;
         }
         case 'json':

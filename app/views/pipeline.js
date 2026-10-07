@@ -160,7 +160,7 @@ export function render(el) {
     if (hiddenStages.includes(p.status)) return false;
     if (f.q) {
       const q = f.q.toLowerCase();
-      if (![p.agency_name, p.contact_name, p.email, p.instagram_handle, p.location, p.notes].some((x) => (x || '').toLowerCase().includes(q))) return false;
+      if (![p.agency_name, p.contact_name, p.email, p.location, p.notes].some((x) => (x || '').toLowerCase().includes(q))) return false;
     }
     if (f.type && p.type !== f.type) return false;
     if (f.segment && p.segment !== f.segment) return false;
@@ -692,7 +692,7 @@ export function render(el) {
       return;
     }
     if (act === 'export-csv' && lastFlow) {
-      const cols = ['agency_name', 'contact_name', 'email', 'instagram_handle', 'location', 'segment', 'type', 'language', 'status', 'priority_score'];
+      const cols = ['agency_name', 'contact_name', 'email', 'website', 'location', 'segment', 'type', 'language', 'status', 'priority_score'];
       download(`dorogo_pipeline_path_${new Date().toISOString().slice(0, 10)}.csv`, core.toCSV(lastFlow.matchedProspects, cols), 'text/csv');
       return;
     }

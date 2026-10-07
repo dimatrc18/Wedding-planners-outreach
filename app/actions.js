@@ -54,7 +54,7 @@ export async function draftNextStep(p) {
 export async function draftReply(p, key, inbound = null) {
   const lastSubject = [...touchesOf(p.id)].reverse().find((t) => t.subject)?.subject || '';
   const row = draftRow(p, key, null, { threadSubject: inbound?.subject || lastSubject, step_name: key === 'rate_card_delivery' ? 'rate_card_delivery' : 'reply', suggested_for: inbound?.id || null });
-  if (!p.email) row.channel = inbound?.channel || 'instagram_dm';
+  if (!p.email) row.channel = inbound?.channel || 'email';
   await insert('touches', row);
   return row;
 }
@@ -92,7 +92,7 @@ export async function snooze(t, days = 3) {
   await update('touches', t.id, { state: 'skipped', error: `Snoozed until ${until.slice(0, 10)}` });
 }
 
-/** Sent outside the app (Instagram DM, own mail client, WhatsApp): record it as sent. */
+/** Sent outside the app (own mail client, WhatsApp): record it as sent. */
 export async function markSent(t) {
   const p = prospectById(t.prospect_id);
   const at = nowIso();
@@ -125,7 +125,7 @@ export async function logOutbound(p, { channel, subject = '', body = '', step_na
   log('touch_logged', { channel, step_name }, p.id);
 }
 
-/** A reply that arrived anywhere (pasted from Instagram, WhatsApp, a call note, or an email the sync missed). */
+/** A reply that arrived anywhere (pasted from WhatsApp, a call note, or an email the sync missed). */
 export async function logInbound(p, { channel = 'email', subject = '', body = '', cls, at = nowIso() }) {
   const [row] = await insert('touches', {
     prospect_id: p.id, direction: 'in', channel, step_name: 'reply', state: 'received', subject, body, replied_at: at,
@@ -191,7 +191,6 @@ export function todayData(now = new Date()) {
   for (const t of S.touches) { if (!byP.has(t.prospect_id)) byP.set(t.prospect_id, []); byP.get(t.prospect_id).push(t); }
   const P = new Map(S.prospects.map((p) => [p.id, p]));
   const drafts = S.touches.filter((t) => t.direction === 'out' && t.state === 'draft' && t.channel === 'email' && P.has(t.prospect_id));
-  const dms = S.touches.filter((t) => t.direction === 'out' && ['draft', 'approved'].includes(t.state) && t.channel !== 'email' && P.has(t.prospect_id));
   const scheduled = S.touches.filter((t) => t.direction === 'out' && t.state === 'approved' && t.channel === 'email' && P.has(t.prospect_id))
     .sort((a, b) => new Date(a.scheduled_at || 0) - new Date(b.scheduled_at || 0));
   const failed = S.touches.filter((t) => t.direction === 'out' && t.state === 'failed');
@@ -225,5 +224,5 @@ export function todayData(now = new Date()) {
   }
   const research = S.prospects.filter((p) => p.status === 'researching').sort((a, b) => core.priorityScore(b).score - core.priorityScore(a).score);
   const readyNoDraft = S.prospects.filter((p) => p.status === 'ready' && !(byP.get(p.id) || []).some((t) => t.direction === 'out'));
-  return { drafts, dms, scheduled, failed, replies, due, reminders, research, readyNoDraft };
+  return { drafts, scheduled, failed, replies, due, reminders, research, readyNoDraft };
 }

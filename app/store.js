@@ -23,10 +23,13 @@ const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xx
 
 // Rebuild the shared cache in place so views keep their references.
 function setData(d) {
-  S.prospects = d.prospects || [];
-  S.touches = (d.touches || []).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  S.prospects = (d.prospects || []).map((p) => (p.status === 't2_sent' ? { ...p, status: 't1_sent' } : p));
+  S.touches = (d.touches || [])
+    .filter((t) => t.step_name !== 'T2_ig_dm' && t.channel !== 'instagram_dm')
+    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
   S.opps = d.opps || [];
-  S.templates = d.templates && d.templates.length ? d.templates : DEFAULT_TEMPLATES.map((t) => ({ id: uuid(), active: true, ...t }));
+  const rawTemplates = d.templates && d.templates.length ? d.templates : DEFAULT_TEMPLATES.map((t) => ({ id: uuid(), active: true, ...t }));
+  S.templates = rawTemplates.filter((t) => t.key !== 'T2_ig_dm');
   S.events = d.events || [];
   S.settings = withDefaults(d.settings || {});
 }

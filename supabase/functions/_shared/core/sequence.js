@@ -4,10 +4,16 @@
 import { DEFAULT_SETTINGS, DEFAULT_STEPS, SEQUENCE_STAGES } from './constants.js';
 import { localParts, zonedTimeToUtc, localDateKey, isItalianHoliday, parseHHMM, daysBetween, addDays, ymd } from './time.js';
 
-export const COLD_STEPS = ['T1_intro', 'T2_ig_dm', 'T3_followup', 'T4_breakup'];
+export const COLD_STEPS = ['T1_intro', 'T3_followup', 'T4_breakup'];
 const PENDING_STATES = ['draft', 'approved'];
 
-export const withDefaults = (s) => ({ ...DEFAULT_SETTINGS, ...(s || {}), warmup: { ...DEFAULT_SETTINGS.warmup, ...((s || {}).warmup || {}) } });
+export const withDefaults = (s) => {
+  const merged = { ...DEFAULT_SETTINGS, ...(s || {}), warmup: { ...DEFAULT_SETTINGS.warmup, ...((s || {}).warmup || {}) } };
+  const rawSteps = Array.isArray(s?.steps) && s.steps.length ? s.steps : DEFAULT_STEPS;
+  merged.steps = rawSteps.filter((st) => st && st.key !== 'T2_ig_dm' && st.channel !== 'instagram_dm');
+  if (!merged.steps.length) merged.steps = DEFAULT_STEPS;
+  return merged;
+};
 
 export function isBlocked(p) {
   return !!(p.do_not_contact || p.unsubscribed_at || p.status === 'do_not_contact');
@@ -45,7 +51,6 @@ export function sequenceState(prospect, touches = [], settings = DEFAULT_SETTING
   for (const step of steps) {
     const ts = outs.filter((t) => t.step_name === step.key);
     if (ts.some((t) => t.state === 'sent' || t.state === 'skipped')) continue;
-    if (step.channel === 'instagram_dm' && !prospect.instagram_handle) continue; // nothing to DM: skip the step
     const pending = ts.find((t) => PENDING_STATES.includes(t.state)) || null;
     if (step.channel === 'email' && !prospect.email) {
       return { active: true, step, pending, blocked: 'no_email', dueAt: null, isDue: false };
@@ -177,7 +182,7 @@ export function nurtureDate(now = new Date(), settings = DEFAULT_SETTINGS, given
 /**
  * Send time for a touch that was just approved.
  * Cold emails get the next free slot in the send window; replies to a planner go out right away;
- * manual channels (Instagram, WhatsApp, calls) get no send time because a person sends them.
+ * manual channels (WhatsApp, calls) get no send time because a person sends them.
  */
 export function scheduleApproved(touch, prospect, settings, taken = [], { now = new Date(), firstSendAt = null, rng } = {}) {
   if (touch.channel !== 'email') return null;
@@ -202,7 +207,7 @@ export function firstColdSend(touches) {
 
 // Status a prospect moves to after a step is sent; never moves a prospect backwards in the funnel.
 export function statusAfterSend(current, stepName, rank) {
-  const map = { T1_intro: 't1_sent', T2_ig_dm: 't2_sent', T3_followup: 't3_sent', T4_breakup: 't4_sent', rate_card_delivery: 'rate_card_sent' };
+  const map = { T1_intro: 't1_sent', T3_followup: 't3_sent', T4_breakup: 't4_sent', rate_card_delivery: 'rate_card_sent' };
   const next = map[stepName];
   if (!next) return current;
   return (rank[next] ?? 0) > (rank[current] ?? 0) || (COLD_STEPS.includes(stepName) && SEQUENCE_STAGES.includes(current)) ? next : current;

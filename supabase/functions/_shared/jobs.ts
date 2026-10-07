@@ -119,7 +119,7 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
     const thread = list.filter((x: any) => x.message_id && x.id !== t.id)
       .sort((a: any, b: any) => new Date(a.sent_at || a.replied_at || a.created_at).getTime() - new Date(b.sent_at || b.replied_at || b.created_at).getTime());
     const stepCfg = (settings.steps || core.DEFAULT_STEPS).find((s: any) => s.key === t.step_name);
-    const shouldThread = stepCfg ? Boolean(stepCfg.thread) : !['T1_intro', 'T2_ig_dm', 'T4_breakup'].includes(t.step_name);
+    const shouldThread = stepCfg ? Boolean(stepCfg.thread) : !['T1_intro', 'T4_breakup'].includes(t.step_name);
     const threaded = shouldThread && thread.length > 0;
     const lastInbound = [...thread].reverse().find((x: any) => x.direction === 'in');
     const inReplyTo = threaded ? (lastInbound || thread[thread.length - 1]).message_id : null;
@@ -360,7 +360,6 @@ export async function buildDigest(db: any, settings: any, now = new Date()) {
   const by = group(touches);
   const pmap = new Map(prospects.map((p: any) => [p.id, p]));
   const drafts = touches.filter((t: any) => t.direction === 'out' && t.state === 'draft');
-  const dms = touches.filter((t: any) => t.channel === 'instagram_dm' && t.direction === 'out' && t.state === 'approved');
   const waiting = touches.filter((t: any) => core.isRealReply(t) && !t.handled_at && !(by.get(t.prospect_id) || []).some((o: any) => o.direction === 'out' && o.state === 'sent' && new Date(o.sent_at) > new Date(t.replied_at || t.created_at)));
   const late = waiting.filter((t: any) => core.daysBetween(t.replied_at || t.created_at, now) >= 1);
   const quotes = opps.filter((o: any) => o.stage === 'quote_sent' && o.quote_sent_at && core.daysBetween(o.quote_sent_at, now) >= 3);
@@ -370,7 +369,6 @@ export async function buildDigest(db: any, settings: any, now = new Date()) {
     `<b>DOROGO outreach · ${core.localDateKey(now, settings.timezone)}</b>`,
     settings.kill_switch ? '⛔ Kill switch is ON. Nothing is sending.' : '',
     `✍️ ${drafts.length} draft${drafts.length === 1 ? '' : 's'} to approve`,
-    `📷 ${dms.length} Instagram DM${dms.length === 1 ? '' : 's'} to send by hand`,
     `💬 ${waiting.length} repl${waiting.length === 1 ? 'y' : 'ies'} waiting${late.length ? ` (${late.length} over 24 h: ${late.slice(0, 4).map((t: any) => name(t.prospect_id)).join(', ')})` : ''}`,
     quotes.length ? `📄 ${quotes.length} quote${quotes.length === 1 ? '' : 's'} awaiting an answer` : '',
     nurture.length ? `🌱 ${nurture.length} nurture lead${nurture.length === 1 ? '' : 's'} due again: ${nurture.slice(0, 4).map((p: any) => tgEscape(p.agency_name)).join(', ')}` : '',

@@ -5,7 +5,6 @@ export const STAGES = [
   { key: 'researching', label: 'Researching' },
   { key: 'ready', label: 'Ready to Contact' },
   { key: 't1_sent', label: 'T1 Sent' },
-  { key: 't2_sent', label: 'T2 IG DM Sent' },
   { key: 't3_sent', label: 'T3 Follow-up Sent' },
   { key: 't4_sent', label: 'T4 Breakup Sent' },
   { key: 'replied', label: 'Replied' },
@@ -22,18 +21,17 @@ export const STAGE_KEYS = STAGES.map((s) => s.key);
 export const stageLabel = (k) => (STAGES.find((s) => s.key === k) || { label: k }).label;
 
 // Stages in which the automated cadence may still produce the next step.
-export const SEQUENCE_STAGES = ['ready', 't1_sent', 't2_sent', 't3_sent'];
+export const SEQUENCE_STAGES = ['ready', 't1_sent', 't3_sent'];
 
 // Funnel order, used to answer "did this prospect reach at least stage X?".
 export const FUNNEL_RANK = {
-  researching: 0, ready: 1, t1_sent: 2, t2_sent: 2, t3_sent: 2, t4_sent: 2,
+  researching: 0, ready: 1, t1_sent: 2, t3_sent: 2, t4_sent: 2,
   replied: 3, rate_card_sent: 4, in_conversation: 5, quote_requested: 6, fam_offered: 7, partner_won: 8,
   lost: -1, nurture: -1, do_not_contact: -1,
 };
 
 export const STEP_STATUS = {
   T1_intro: 't1_sent',
-  T2_ig_dm: 't2_sent',
   T3_followup: 't3_sent',
   T4_breakup: 't4_sent',
   rate_card_delivery: 'rate_card_sent',
@@ -41,7 +39,6 @@ export const STEP_STATUS = {
 
 export const DEFAULT_STEPS = [
   { key: 'T1_intro', label: 'Intro email', day: 0, channel: 'email', thread: false, require_approval: true, enabled: true },
-  { key: 'T2_ig_dm', label: 'Instagram DM', day: 2, channel: 'instagram_dm', thread: false, require_approval: true, enabled: false },
   { key: 'T3_followup', label: 'Follow-up email', day: 4, channel: 'email', thread: true, require_approval: true, enabled: true },
   { key: 'T4_breakup', label: 'Breakup email (new thread)', day: 9, channel: 'email', thread: false, require_approval: true, enabled: true },
 ];
@@ -120,7 +117,7 @@ export const LAKE_VENUES = [
   { name: 'Filario', town: 'Lezzeno' },
 ];
 
-export const CHANNELS = ['email', 'instagram_dm', 'whatsapp', 'call', 'in_person', 'linkedin'];
+export const CHANNELS = ['email', 'whatsapp', 'call', 'in_person', 'linkedin'];
 export const SENTIMENTS = ['positive', 'neutral', 'negative', 'ooo', 'unsubscribe'];
 export const INTENTS = ['wants_rate_card', 'asks_pricing', 'has_supplier', 'not_now', 'referral_to_other', 'meeting_request'];
 export const LOST_REASONS = ['has_supplier', 'no_response', 'price', 'not_a_fit', 'not_now', 'other'];

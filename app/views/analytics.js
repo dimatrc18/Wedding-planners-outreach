@@ -8,7 +8,7 @@ const DIM_LABEL = {
   variant: 'Subject line (T1)', reply_step: 'Touch that got the reply', segment: 'Segment', language: 'Language', type: 'Prospect type',
   hook_type: 'Hook type', location: 'Location', weekday: 'T1 send day', hour: 'T1 send hour (Rome)', reply_channel: 'Reply channel',
 };
-const STEP = { T1_intro: 'T1 intro email', T2_ig_dm: 'T2 Instagram DM', T3_followup: 'T3 follow-up', T4_breakup: 'T4 breakup' };
+const STEP = { T1_intro: 'T1 intro email', T3_followup: 'T3 follow-up', T4_breakup: 'T4 breakup' };
 
 function ciCell(ci, target) {
   if (!ci.n) return '<span class="faint">no data</span>';

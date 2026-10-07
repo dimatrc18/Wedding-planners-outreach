@@ -58,9 +58,9 @@ export function lintMessage({ subject = '', body = '', channel = 'email', step =
   if (/\b[VES][- ]Class\b|\bClasse [VES]\b/.test(full) && !/Mercedes-Benz/.test(full)) warnings.push('Name the car in full: "Mercedes-Benz V-Class"');
   if (/\bMercedes(?!-Benz)\s+[VES][- ]Class/i.test(full) || /\bMercedes Benz\b/.test(full)) warnings.push('Write "Mercedes-Benz" with the hyphen');
 
-  if (channel === 'instagram_dm' || channel === 'whatsapp') {
-    if (words > 60) errors.push(`DM is ${words} words; keep it under 40`);
-    else if (words > 40) warnings.push(`DM is ${words} words; aim for under 40`);
+  if (channel === 'whatsapp') {
+    if (words > 60) errors.push(`Message is ${words} words; keep it under 40`);
+    else if (words > 40) warnings.push(`Message is ${words} words; aim for under 40`);
   } else if (channel === 'email') {
     if (step === 'T1_intro') {
       if (words > 150) errors.push(`First email is ${words} words; keep it under 120`);

@@ -5,7 +5,7 @@ import { esc, attr, icon, ago, fmtDateTime, pct, plural, toast, copyText, confir
 import * as A from '../actions.js';
 
 const STEP_LABEL = {
-  T1_intro: 'T1 intro', T2_ig_dm: 'T2 Instagram', T3_followup: 'T3 follow-up', T4_breakup: 'T4 breakup',
+  T1_intro: 'T1 intro', T3_followup: 'T3 follow-up', T4_breakup: 'T4 breakup',
   rate_card_delivery: 'Rate card', reply: 'Reply', ratecard_nudge: 'Rate card nudge', fam_followup: 'FAM follow-up', custom: 'Custom',
 };
 export const stepLabel = (k) => STEP_LABEL[k] || k;
@@ -57,29 +57,6 @@ function draftCard(t, i) {
       <span class="grow"></span>
       <span class="hint">${lint.words} words</span>
     </div>`}
-  </article>`;
-}
-
-function dmCard(t) {
-  const p = A.prospectById(t.prospect_id);
-  const lint = A.lintOf(t);
-  const handle = p.instagram_handle;
-  return `<article class="draft" data-dm="${attr(t.id)}">
-    <div class="who"><a href="#prospect/${attr(p.id)}"><b>${esc(p.agency_name)}</b></a>
-      ${handle ? `<span class="muted small">@${esc(handle)}</span>` : ''}<span class="chip gold">${esc(stepLabel(t.step_name))}</span>
-      ${t.channel !== 'instagram_dm' ? `<span class="chip">${esc(t.channel)}</span>` : ''}</div>
-    ${editing === t.id ? `<textarea class="body-edit" id="ed-body" style="min-height:120px">${esc(t.body)}</textarea>
-      <div class="actions"><button class="btn primary" data-act="save" data-id="${attr(t.id)}">Save</button><button class="btn ghost" data-act="cancel">Cancel</button></div>`
-    : `<div class="body">${esc(t.body)}</div>`}
-    ${lintHtml(lint)}
-    <div class="actions">
-      <button class="btn" data-act="copy" data-id="${attr(t.id)}">${icon('copy', 16)} Copy text</button>
-      ${handle ? `<a class="btn" href="https://ig.me/m/${attr(handle)}" target="_blank" rel="noopener">${icon('ig', 16)} Open DM</a>
-      <a class="btn ghost" href="https://www.instagram.com/${attr(handle)}/" target="_blank" rel="noopener">Profile</a>` : ''}
-      <button class="btn primary" data-act="mark-sent" data-id="${attr(t.id)}" ${lint.errors.length ? 'disabled' : ''}>${icon('check', 16)} Mark as sent</button>
-      <button class="btn ghost" data-act="edit" data-id="${attr(t.id)}">Edit</button>
-      <button class="btn ghost" data-act="skip" data-id="${attr(t.id)}">Skip</button>
-    </div>
   </article>`;
 }
 
@@ -151,9 +128,6 @@ export function render(el) {
         <div class="row">${clean.length > 1 ? `<button class="btn sm" data-act="approve-clean">Approve ${clean.length} with no warnings</button>` : ''}<span class="hint">J/K move · A approve · E edit · S skip</span></div></div>
       ${drafts.length ? `<div class="queue">${drafts.map(draftCard).join('')}</div>` : `<div class="empty">${dueUndrafted ? `${plural(dueUndrafted, 'step is', 'steps are')} due. <button class="btn sm primary" data-act="gen">Draft them now</button>` : 'Nothing to approve. New drafts appear here when a step falls due.'}</div>`}
     </section>
-
-    ${d.dms.length ? `<section class="section"><div class="section-head"><h2>Instagram DMs to send <span class="count">${d.dms.length}</span></h2><span class="hint">Sent by hand from your account. Nothing is automated on Instagram.</span></div>
-      <div class="queue">${d.dms.map(dmCard).join('')}</div></section>` : ''}
 
     ${d.scheduled.length ? `<section class="section"><div class="section-head"><h2>Scheduled <span class="count">${d.scheduled.length}</span></h2><span class="hint">Send window ${esc(S.settings.window_start)} to ${esc(S.settings.window_end)}, ${esc(S.settings.send_days.map((x) => ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][x]).join(' '))}</span></div>
       <div class="card flush list">${d.scheduled.map((t) => {

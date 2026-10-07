@@ -31,19 +31,16 @@ async function mxCheck(domain: string) {
 
 async function enrich(db: any, body: any) {
   const raw = String(body.url || '').trim();
-  if (!raw) throw new HttpError(400, 'Paste a website or Instagram URL');
+  if (!raw) throw new HttpError(400, 'Paste a website URL');
   const fromUrl: any = core.parseProfileUrl(raw);
-  if (fromUrl.instagram_handle) {
-    return { suggestions: { instagram_handle: fromUrl.instagram_handle, source: 'instagram' }, note: 'Instagram is not fetched, to keep the account safe. Paste the planner\'s own website to find an email and a hook.', sources: [] };
-  }
-  if (!fromUrl.website) throw new HttpError(400, 'That does not look like a URL');
+  if (!fromUrl.website) throw new HttpError(400, 'Paste the planner\'s own website URL');
   if (/matrimonio\.com|weddingwire|zankyou|hitched\./i.test(fromUrl.website)) {
     return { suggestions: {}, note: 'Listing sites are not fetched (their terms forbid it). Open the listing, copy the planner\'s own website, and paste that.', sources: [] };
   }
   const main = await fetchPage(fromUrl.website);
   const first: any = core.extractFromHtml(main.html, main.finalUrl);
   const sources = [main.finalUrl];
-  const merged: any = { ...first, emails: [...first.emails], instagram: [...first.instagram], phones: [...first.phones], venues: [...first.venues], towns: [...first.towns] };
+  const merged: any = { ...first, emails: [...first.emails], phones: [...first.phones], venues: [...first.venues], towns: [...first.towns] };
   const sameSite = first.links.map((h: string) => { try { return new URL(h, main.finalUrl).toString(); } catch { return null; } })
     .filter((u: string | null) => u && core.domainOf(u) === core.domainOf(main.finalUrl));
   const pick = [...new Set(sameSite)].sort((a: any, b: any) => (/contact|contatti/i.test(b) ? 1 : 0) - (/contact|contatti/i.test(a) ? 1 : 0)).slice(0, 3);
@@ -52,7 +49,7 @@ async function enrich(db: any, body: any) {
       const pg = await fetchPage(u);
       const x: any = core.extractFromHtml(pg.html, pg.finalUrl);
       sources.push(pg.finalUrl);
-      for (const k of ['emails', 'instagram', 'phones', 'venues', 'towns']) merged[k] = [...new Set([...merged[k], ...x[k]])];
+      for (const k of ['emails', 'phones', 'venues', 'towns']) merged[k] = [...new Set([...merged[k], ...x[k]])];
       if (!merged.whatsapp && x.whatsapp) merged.whatsapp = x.whatsapp;
       merged.text += `\n${x.text}`;
     } catch { /* a missing contact page is fine */ }
@@ -70,7 +67,7 @@ async function enrich(db: any, body: any) {
   }
   const lang = ai?.language_detected || (['en', 'it', 'de', 'fr'].includes(merged.lang) ? merged.lang : null);
   const suggestions: any = {
-    website: main.finalUrl, email, email_status, instagram_handle: merged.instagram[0] || '',
+    website: main.finalUrl, email, email_status,
     phone: merged.phones[0] || '', whatsapp: merged.whatsapp || '', language: lang,
     key_venues: [...new Set([...(merged.venues || []), ...((ai?.key_venues || []).filter((v: string) => merged.text.toLowerCase().includes(String(v).toLowerCase())))])],
     location: merged.towns[0] || '',
@@ -80,7 +77,7 @@ async function enrich(db: any, body: any) {
   if (ai?.weddings_per_year_guess) suggestions.avg_weddings_per_year_estimate = ai.weddings_per_year_guess;
   if (ai?.contact_name && merged.text.includes(ai.contact_name)) suggestions.contact_name = ai.contact_name;
   return {
-    suggestions, alternatives: { emails, instagram: merged.instagram, phones: merged.phones, towns: merged.towns },
+    suggestions, alternatives: { emails, phones: merged.phones, towns: merged.towns },
     evidence: ai ? { quote: ai.evidence, found_on_page: ai.evidence_found } : null,
     title: merged.title, description: merged.description, sources,
     note: !integrations().gemini ? 'Contact details found. Add GEMINI_API_KEY to also draft a personal hook.' : aiError ? `Hook not drafted: ${aiError}` : (ai && !ai.hook ? 'Nothing specific enough on the site for a hook. Write one by hand.' : ''),
