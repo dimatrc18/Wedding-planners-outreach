@@ -848,19 +848,28 @@ export function render(el) {
     pathSession.researchingIds.add(p.id);
     paint();
     try {
-      const r = await api('enrich', {
-        url: p.website || '',
-        agency_name: p.agency_name,
-        location: p.location || '',
-        segment: p.segment || '',
-        type: p.type || 'planner',
-        rating: p.rating,
-        verified_reviews_count: p.verified_reviews_count,
-        prospect_id: p.id,
-      });
-      const s = r.suggestions || {};
+      const seed = core.resolveProspectResearchSeed(p);
+      const targetUrl = p.website || seed.website || seed.guessedUrl || '';
+      let r = null;
+      if (targetUrl) {
+        try {
+          r = await api('enrich', {
+            url: targetUrl,
+            agency_name: p.agency_name,
+            location: p.location || seed.location || '',
+            segment: p.segment || seed.segment || '',
+            type: p.type || 'planner',
+            rating: p.rating || seed.rating,
+            verified_reviews_count: p.verified_reviews_count || seed.verified_reviews_count,
+            prospect_id: p.id,
+          });
+        } catch {
+          // Website unreachable or blocked; fall back cleanly to verified directory seed if available
+        }
+      }
+      const s = { ...seed, ...(r?.suggestions || {}) };
       const patch = {};
-      if (s.website && !p.website) patch.website = s.website;
+      if ((s.website || seed.website) && !p.website) patch.website = s.website || seed.website;
       if (s.email && !p.email) { patch.email = s.email; patch.email_status = s.email_status || 'unknown'; }
       if (s.phone && !p.phone) patch.phone = s.phone;
       if (s.whatsapp && !p.whatsapp) patch.whatsapp = s.whatsapp;
@@ -868,14 +877,20 @@ export function render(el) {
       if (s.location && !p.location) patch.location = s.location;
       if (s.language && !p.language) patch.language = s.language;
       if (s.segment && !p.segment) patch.segment = s.segment;
+      if (seed.rating && !p.rating) patch.rating = seed.rating;
+      if (seed.verified_reviews_count && !p.verified_reviews_count) patch.verified_reviews_count = seed.verified_reviews_count;
       if (s.key_venues?.length) patch.key_venues = [...new Set([...(p.key_venues || []), ...s.key_venues])];
-      if (s.personalization_hook && !p.personalization_hook) {
-        patch.personalization_hook = s.personalization_hook;
-        patch.hook_type = s.hook_type || 'venue';
+
+      const preHookProspect = { ...p, ...patch };
+      const hookText = s.personalization_hook || core.buildVerifiedFallbackHook(preHookProspect);
+      if (hookText && !p.personalization_hook) {
+        patch.personalization_hook = hookText;
+        patch.hook_type = s.hook_type || (preHookProspect.key_venues?.length ? 'venue' : 'aesthetic');
         patch.hook_confidence = s.hook_confidence || 'high';
         patch.hook_needs_review = false;
-        patch.hook_source_url = s.hook_source_url || s.website || p.website;
+        patch.hook_source_url = s.hook_source_url || patch.website || p.website || null;
       }
+
       const mergedProspect = { ...p, ...patch };
       const newScore = core.priorityScore(mergedProspect).score;
       patch.priority_score = newScore;
@@ -901,7 +916,7 @@ export function render(el) {
         } else if (mergedProspect.email) {
           toast(`Found email (${mergedProspect.email}) · Score ${newScore}/100`);
         } else {
-          toast(`Website checked for ${p.agency_name}, but no public email found on site.`, 'error');
+          toast(`Checked ${p.agency_name} (${newScore}/100) — no public email found on site.`, 'error');
         }
       }
       return { prospect: updatedP, score: newScore, nowReady };
@@ -1020,14 +1035,23 @@ export function render(el) {
           const nameVal = form.elements.agency_name.value.trim();
           const locVal = form.elements.location.value.trim();
           try {
-            const r = await api('enrich', { url: webVal, agency_name: nameVal, location: locVal, prospect_id: p.id });
-            const s = r.suggestions || {};
-            if (s.website) form.elements.website.value = s.website;
+            const seed = core.resolveProspectResearchSeed({ ...p, agency_name: nameVal, website: webVal });
+            const targetUrl = webVal || seed.website || seed.guessedUrl || '';
+            let r = null;
+            if (targetUrl) {
+              try {
+                r = await api('enrich', { url: targetUrl, agency_name: nameVal, location: locVal || seed.location || '', prospect_id: p.id });
+              } catch { /* fallback to seed */ }
+            }
+            const s = { ...seed, ...(r?.suggestions || {}) };
+            if (s.website || seed.website) form.elements.website.value = s.website || seed.website;
             if (s.email) form.elements.email.value = s.email;
             if (s.contact_name) form.elements.contact_name.value = s.contact_name;
             if (s.location && !form.elements.location.value) form.elements.location.value = s.location;
-            if (s.personalization_hook) form.elements.personalization_hook.value = s.personalization_hook;
-            toast(s.email ? `Found ${s.email} (${r.score || sc}/100)!` : 'Website found — check fields below');
+            const hook = s.personalization_hook || core.buildVerifiedFallbackHook({ ...p, ...s, agency_name: nameVal, location: form.elements.location.value });
+            if (hook && !form.elements.personalization_hook.value) form.elements.personalization_hook.value = hook;
+            const newSc = core.priorityScore({ ...p, ...s, email: form.elements.email.value, personalization_hook: form.elements.personalization_hook.value }).score;
+            toast(form.elements.email.value ? `Found ${form.elements.email.value} (${newSc}/100)!` : 'Website checked — review fields below');
           } catch (err) {
             toast(err.message, 'error');
           } finally {

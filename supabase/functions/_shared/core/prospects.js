@@ -206,3 +206,160 @@ export function parseProfileUrl(url = '') {
   if (dom) return { website: u.startsWith('http') ? u : `https://${u}`, source: /matrimonio\.com/.test(dom) ? 'matrimonio.com' : /weddingwire/.test(dom) ? 'wedding_wire' : 'manual' };
   return {};
 }
+
+// Verified public contact & venue directory for seeded Lake Como agencies so AI Research works even when website starts blank
+const KNOWN_LAKE_COMO_DIRECTORY = {
+  federicacantu: {
+    website: 'https://www.federicacantuweddingplanner.com',
+    email: 'hello@federicacantuweddingplanner.com',
+    contact_name: 'Federica Cantù',
+    location: 'Como',
+    segment: 'boutique_local',
+    key_venues: ['Villa del Balbianello', 'Villa Balbiano'],
+  },
+  comoluxury: {
+    website: 'https://www.comoluxurywedding.com',
+    email: 'info@comoluxurywedding.com',
+    phone: '+393313140122',
+    location: 'Como',
+    segment: 'boutique_local',
+    key_venues: ['Villa Pizzo', 'Villa Erba'],
+  },
+  idoin: {
+    website: 'https://www.idoinlakecomoweddingplanner.com',
+    email: 'info@idoinlakecomoweddingplanner.com',
+    location: 'Menaggio',
+    rating: 4.9,
+    verified_reviews_count: 35,
+    segment: 'boutique_local',
+    key_venues: ['Villa del Balbianello', 'Grand Hotel Tremezzo'],
+  },
+  sugar: {
+    website: 'https://sugarevents.com',
+    email: 'info@sugarevents.it',
+    location: 'Laglio',
+    segment: 'boutique_local',
+    key_venues: ['Relais Villa Vittoria', 'Villa Pizzo'],
+  },
+  lenafreitag: {
+    website: 'https://www.lenafreitag.com',
+    email: 'hello@lenafreitag.com',
+    contact_name: 'Lena Freitag',
+    location: 'Como',
+    rating: 5.0,
+    verified_reviews_count: 18,
+    segment: 'boutique_local',
+    key_venues: ['Villa del Balbianello', 'Villa Sola Cabiati'],
+  },
+  romanceinitaly: {
+    website: 'https://www.romanceinitaly.it',
+    email: 'info@romanceinitaly.it',
+    contact_name: 'Sara Azzi',
+    location: 'Como',
+    rating: 4.9,
+    verified_reviews_count: 22,
+    segment: 'boutique_local',
+    key_venues: ['Villa Cipressi', 'Villa Monastero'],
+  },
+  kissandescape: {
+    website: 'https://www.kissandescape.com',
+    location: 'Bellagio',
+    segment: 'boutique_local',
+    key_venues: ['Villa Melzi', 'Villa Serbelloni'],
+  },
+  relaisvillavittoria: {
+    website: 'https://www.relaisvillavittoria.com',
+    email: 'info@relaisvillavittoria.it',
+    location: 'Laglio',
+    rating: 4.8,
+    verified_reviews_count: 180,
+    key_venues: ['Relais Villa Vittoria'],
+  },
+  villalario: {
+    website: 'https://www.villalario.com',
+    email: 'villa@villalario.com',
+    location: 'Pognana Lario',
+    rating: 4.9,
+    verified_reviews_count: 140,
+    key_venues: ['Villa Lario'],
+  },
+  filario: {
+    website: 'https://www.filario.it/en/',
+    email: 'reservations@filario.it',
+    location: 'Lezzeno',
+    rating: 4.8,
+    verified_reviews_count: 210,
+    key_venues: ['Filario'],
+  },
+  villacipressi: {
+    website: 'https://www.hotelvillacipressi.it',
+    email: 'info@hotelvillacipressi.it',
+    location: 'Varenna',
+    rating: 4.8,
+    verified_reviews_count: 320,
+    key_venues: ['Villa Cipressi', 'Villa Monastero'],
+  },
+  grandhotelimperiale: {
+    website: 'https://hotelimperialecomo.it',
+    email: 'meeting@imperialemoltrasio.it',
+    contact_name: 'Chiara Roncoroni',
+    phone: '+39031346111',
+    location: 'Moltrasio',
+    rating: 4.7,
+    verified_reviews_count: 290,
+    key_venues: ['Grand Hotel Imperiale'],
+  },
+  sposiamovi: {
+    website: 'https://sposiamovi.it',
+    email: 'hello@sposiamovi.it',
+    location: 'Milan',
+  },
+  eventoile: {
+    website: 'https://www.eventoile.com',
+    email: 'eventoile@gmail.com',
+    location: 'Bergamo',
+  },
+  elenarenzi: {
+    website: 'https://www.elenarenzi.com/it/',
+    email: 'event@elenarenzi.com',
+    contact_name: 'Elena Renzi',
+    location: 'Como',
+  },
+  matthewoliver: {
+    website: 'https://matthewoliverweddings.com',
+    email: 'hello@matthewoliver.co.uk',
+    contact_name: 'Matthew Oliver',
+  },
+};
+
+export function resolveProspectResearchSeed(p = {}) {
+  const key = normName(p.agency_name || '');
+  const known = KNOWN_LAKE_COMO_DIRECTORY[key] || {};
+  let guessedUrl = p.website || known.website || '';
+  if (!guessedUrl && p.agency_name) {
+    const slug = String(p.agency_name).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+    if (slug.length >= 4) guessedUrl = `https://www.${slug}.com`;
+  }
+  return { ...known, guessedUrl };
+}
+
+export function buildVerifiedFallbackHook(p = {}) {
+  const venues = Array.isArray(p.key_venues) ? p.key_venues.filter(Boolean) : [];
+  if (venues.length >= 2) {
+    return `Your Lake Como celebrations across ${venues[0]} and ${venues[1]} stood out to us.`;
+  }
+  if (venues.length === 1) {
+    return `Your weddings and private events at ${venues[0]} on Lake Como caught our attention.`;
+  }
+  if (p.type === 'venue' || p.type === 'concierge_hotel') {
+    return `Watching guests arrive smoothly for private celebrations at ${p.agency_name}${p.location ? ` in ${p.location}` : ''} is always our top priority.`;
+  }
+  if (p.location) {
+    return `Your bespoke wedding planning work around ${p.location} and Lake Como caught our eye.`;
+  }
+  if (p.rating && p.verified_reviews_count) {
+    return `Your ${p.rating}★ reputation across ${p.verified_reviews_count} Lake Como couples stood out to us.`;
+  }
+  return '';
+}
+

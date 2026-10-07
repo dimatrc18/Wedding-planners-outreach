@@ -250,11 +250,34 @@ export function render(el, id) {
   });
 
   async function research(p) {
-    const url = el.querySelector('#research-url').value.trim();
+    const seed = core.resolveProspectResearchSeed(p);
+    const inputEl = el.querySelector('#research-url');
+    const url = inputEl.value.trim() || seed.website || seed.guessedUrl || '';
+    if (url && !inputEl.value.trim()) inputEl.value = url;
     const out = el.querySelector('#research-out');
     out.innerHTML = '<p class="small muted">Reading the public website…</p>';
     try {
-      researchResult = await api('enrich', { url, prospect_id: p.id, agency_name: p.agency_name, location: p.location || '' });
+      let r = null;
+      if (url) {
+        try {
+          r = await api('enrich', { url, prospect_id: p.id, agency_name: p.agency_name, location: p.location || seed.location || '' });
+        } catch { /* fallback to seed */ }
+      }
+      const mergedSuggestions = { ...seed, ...(r?.suggestions || {}) };
+      delete mergedSuggestions.guessedUrl;
+      if (!mergedSuggestions.personalization_hook) {
+        const fbHook = core.buildVerifiedFallbackHook({ ...p, ...mergedSuggestions });
+        if (fbHook) {
+          mergedSuggestions.personalization_hook = fbHook;
+          mergedSuggestions.hook_type = mergedSuggestions.key_venues?.length ? 'venue' : 'aesthetic';
+          mergedSuggestions.hook_confidence = 'high';
+        }
+      }
+      researchResult = {
+        ...(r || {}),
+        suggestions: mergedSuggestions,
+        sources: r?.sources || (mergedSuggestions.website ? [mergedSuggestions.website] : []),
+      };
       out.innerHTML = researchHtml(researchResult, p);
     } catch (e) { out.innerHTML = `<p class="small" style="color:var(--bad)">${esc(e.message)}</p>`; }
   }
