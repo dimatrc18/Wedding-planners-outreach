@@ -107,7 +107,7 @@ Buon lavoro e buona stagione.
     key: 'rate_card_delivery', language: 'en', kind: 'reply', name: 'Rate card delivery (attach PDF)', subject_a: '', subject_b: '', attach_rate_card: true,
     body: `{{greeting}}
 
-Here is our 1-page partner rate card for 2026, attached.
+Here is our 1-page partner rate card, attached.
 
 It covers fixed net rates from Malpensa, Linate and Lugano to the lake, hourly service, and the late-night villa shuttle. You can either include our confidential net rates directly in your client offer with your own markup, or work with us on a 5% referral commission where we bill the couple directly.
 
@@ -119,7 +119,7 @@ If you have a date and venue in mind, send them with the guest count and I'll dr
     key: 'rate_card_delivery', language: 'it', kind: 'reply', name: 'Invio tariffa (PDF allegato)', subject_a: '', subject_b: '', attach_rate_card: true,
     body: `{{greeting}}
 
-In allegato la nostra tariffa partner 2026, in una pagina.
+In allegato la nostra tariffa partner, in una pagina.
 
 Contiene le tariffe nette fisse da Malpensa, Linate e Lugano verso il lago, il servizio orario e la navetta notturna dalle ville. Potete inserire le nostre tariffe nette riservate direttamente nella vostra offerta agli sposi, oppure lavorare con noi con una commissione del 5% sulle prenotazioni segnalate, dove fatturiamo direttamente agli sposi.
 

@@ -119,5 +119,5 @@ export const LAKE_VENUES = [
 
 export const CHANNELS = ['email', 'whatsapp', 'call', 'in_person', 'linkedin'];
 export const SENTIMENTS = ['positive', 'neutral', 'negative', 'ooo', 'unsubscribe'];
-export const INTENTS = ['wants_rate_card', 'asks_pricing', 'has_supplier', 'not_now', 'referral_to_other', 'meeting_request'];
+export const INTENTS = ['wants_rate_card', 'asks_pricing', 'has_supplier', 'not_now', 'referral_to_other', 'meeting_request', 'specific_question'];
 export const LOST_REASONS = ['has_supplier', 'no_response', 'price', 'not_a_fit', 'not_now', 'other'];

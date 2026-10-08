@@ -20,12 +20,13 @@ export function greeting(prospect) {
 }
 
 export function shortAgencyName(raw = '', lang = 'en') {
-  const s = String(raw || '')
-    .trim()
+  const clean = String(raw || '').trim().replace(/\s*\(Test\)\s*$/i, '').trim();
+  const s = clean
     .replace(/\s+(Events?\s*&\s*Concierge|Private\s+Events?|Wedding\s+Planners?|Wedding\s+Planning|Weddings?\s*&\s*Events?|Weddings?|Events?|S\.?r\.?l\.?)$/i, '')
     .trim();
   if (!s) return lang === 'it' ? 'il vostro studio' : 'your team';
-  return s.length > 32 ? s.slice(0, 32).trim() : s;
+  const chosen = /^(my\s+italian|exclusive\s+italy|italian\s+wedding|the\s+lake\s+como|lake\s+como)$/i.test(s) ? clean : s;
+  return chosen.length > 34 ? chosen.slice(0, 34).trim() : chosen;
 }
 
 function stableHashIndex(seed = '', modulo = 4) {
@@ -76,7 +77,7 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
         service_pitch:
           'Supportiamo i team concierge ed eventi sul Lago di Como, a Milano e nelle Alpi con un unico dispatcher su WhatsApp e una flotta privata di Mercedes-Benz Classe S, Classe V, Classe E, minibus executive e pullman fino a 50 posti: dai transfer aeroportuali VIP ai viaggi verso Venezia o St. Moritz, fino alle navette notturne per gli eventi.',
         cta_line:
-          'Potete includere le nostre tariffe nette riservate direttamente nella vostra offerta, oppure operare con commissione concierge del 5%. Posso inviarvi il nostro listino partner 2026 di una pagina?',
+          'Potete includere le nostre tariffe nette riservate direttamente nella vostra offerta, oppure operare con commissione concierge del 5%. Posso inviarvi il nostro listino partner di una pagina?',
       };
     }
     const itPlannerSubjectsA = [
@@ -97,7 +98,7 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
     ];
     const itPlannerCtas = [
       'Potete includere le nostre tariffe nette riservate direttamente nel vostro preventivo agli sposi, oppure lavorare con commissione del 5%. Posso inviarvi il listino partner di una pagina e un esempio del portale ospiti?',
-      'Potete inserire il servizio direttamente nella vostra offerta con tariffe nette riservate, o lavorare con commissione del 5%. Vi fa comodo ricevere la nostra scheda partner 2026 di una pagina?',
+      'Potete inserire il servizio direttamente nella vostra offerta con tariffe nette riservate, o lavorare con commissione del 5%. Vi fa comodo ricevere la nostra scheda partner di una pagina?',
     ];
     return {
       subject_line_a: itPlannerSubjectsA[idx],
@@ -115,7 +116,7 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
     ];
     const venueCtas = [
       'You can either include our confidential net rates directly in your venue offer, or work on a 5% referral commission. May I send over our 1-page partner rate card for your events team?',
-      'Properties either include our transport package directly in their client offer at confidential net rates, or work on a 5% commission. Would it be useful if I sent our 1-page 2026 partner rate card for your files?',
+      'Properties either include our transport package directly in their client offer at confidential net rates, or work on a 5% commission. Would it be useful if I sent our 1-page partner rate card for your files?',
     ];
     return {
       subject_line_a: `Wedding guest logistics at ${agencyShort}`,
@@ -135,7 +136,7 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       subject_line_b: `${venueOrLoc} guest & event transfers · ${agencyShort}`,
       service_pitch: hotelPitches[idx % hotelPitches.length],
       cta_line:
-        'You can either include our confidential net rates directly in your event offer, or work on a 5% concierge commission. May I send over our 1-page 2026 partner rate card for your desk?',
+        'You can either include our confidential net rates directly in your event offer, or work on a 5% concierge commission. May I send over our 1-page partner rate card for your desk?',
     };
   }
 
@@ -159,7 +160,7 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
   ];
   const plannerCtas = [
     'You can either include our confidential net rates directly in your client offer, or work on a 5% referral commission. May I send over our 1-page partner rate card and a sample guest portal link?',
-    'Planners either include our confidential net rates directly in their client offer with their own markup, or work on a 5% referral commission. Would it be useful if I sent over our 1-page 2026 partner rate card?',
+    'Planners either include our confidential net rates directly in their client offer with their own markup, or work on a 5% referral commission. Would it be useful if I sent over our 1-page partner rate card?',
     'You can bundle our transport package directly into your client offer at confidential net rates, or work on a 5% commission. May I send our 1-page partner rate card for your files?',
     'We offer confidential net rates you can include directly in your client offer, or a 5% referral commission. May I send over our 1-page partner rate card and a quick look at the guest portal?',
   ];

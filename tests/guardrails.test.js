@@ -195,3 +195,47 @@ test('findUnansweredReplies flags real replies waiting longer than human_escalat
   });
   assert.equal(secondPass.length, 0);
 });
+
+test('partner rate card CTAs across planner, venue, and hotel drafts do not contain hardcoded year 2026 and partner_reply sanitizes filler', () => {
+  const types = ['planner', 'venue', 'concierge_hotel'];
+  const langs = ['en', 'it'];
+  for (const type of types) {
+    for (const language of langs) {
+      for (let i = 0; i < 4; i++) {
+        const d = buildDraft({
+          prospect: {
+            id: `p-${type}-${language}-${i}`,
+            agency_name: `Studio ${i}`,
+            type,
+            language,
+            location: 'Cernobbio',
+            personalization_hook: 'For weddings at Villa Erba, we can take the guest transport workload off your plate.',
+          },
+          key: 'T1_intro',
+        });
+        assert.doesNotMatch(d.body, /2026/, `T1_intro for ${type}/${language}/${i} must not include hardcoded year 2026`);
+      }
+      const rc = buildDraft({
+        prospect: { id: `rc-${type}-${language}`, agency_name: 'Studio', type, language },
+        key: 'rate_card_delivery',
+        threadSubject: 'Guest transport',
+      });
+      assert.doesNotMatch(rc.body, /2026/, `rate_card_delivery (${language}) must not include hardcoded year 2026`);
+    }
+  }
+
+  const sanitized = validatePartnerReplyOutput({
+    can_answer_confidently: true,
+    needs_human: false,
+    escalation_reason: null,
+    body: `Hi Elena,\n\nCertainly, our V-Class — with seamless radar tracking! — is €320 net from Malpensa to Bellagio.\n\n${SIGNATURE}`,
+    attach_rate_card: true,
+  });
+  assert.equal(sanitized.can_answer_confidently, true);
+  assert.equal(sanitized.needs_human, false);
+  assert.deepEqual(sanitized.lint.errors, []);
+  assert.deepEqual(sanitized.lint.warnings, []);
+  assert.match(sanitized.body, /Mercedes-Benz V-Class/);
+  assert.doesNotMatch(sanitized.body, /—|!|\bCertainly\b|\bseamless\b/i);
+});
+

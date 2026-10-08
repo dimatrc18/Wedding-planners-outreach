@@ -4,7 +4,7 @@ import * as core from '../_shared/core/index.js';
 import { handle, json, requireAllowedUser, loadSettings, integrations, getState, admin, HttpError, logEvent } from '../_shared/server.ts';
 import { verifySmtp } from '../_shared/mail.ts';
 import { gemini, checkHook } from '../_shared/ai.ts';
-import { draftDueSteps, sendDue, syncInbox, sendDigest, approveTouch, fetchJinaSignals, autoResearchPending } from '../_shared/jobs.ts';
+import { draftDueSteps, sendDue, syncInbox, sendDigest, approveTouch, fetchJinaSignals, autoResearchPending, loadAll, classifyInboundMessage, applyInbound, formatThreadHistory } from '../_shared/jobs.ts';
 
 const GIF = Uint8Array.from(atob('R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=='), (c) => c.charCodeAt(0));
 const UA = 'Mozilla/5.0 (compatible; DOROGO-partner-research/1.0; +https://dorogo.eu)';
@@ -169,6 +169,32 @@ async function aiRedraft(db: any, body: any) {
   if (!integrations().gemini) throw new HttpError(400, 'Add GEMINI_API_KEY to use AI drafting');
   const { data: t } = await db.from('touches').select('*').eq('id', body.touch_id).single();
   const { data: p } = await db.from('prospects').select('*').eq('id', t.prospect_id).single();
+  if (['reply', 'rate_card_delivery'].includes(t.step_name)) {
+    const { data: allTouches } = await db.from('touches').select('*').eq('prospect_id', p.id).order('created_at');
+    const list = (allTouches || []).filter((x: any) => x.id !== t.id);
+    const lastIn = [...list].reverse().find((x: any) => x.direction === 'in');
+    const out: any = await gemini(
+      db,
+      'partner_reply',
+      {
+        agency: p.agency_name,
+        contact_name: p.contact_name || '',
+        language: p.language || 'en',
+        status: p.status,
+        thread_history: formatThreadHistory(list),
+        latest_reply: core.stripQuoted(lastIn?.body || t.body || '').slice(0, 3000),
+      },
+      p.id,
+    );
+    const lint = core.lintMessage({ subject: t.subject, body: String(out.body || ''), channel: t.channel, step: t.step_name });
+    const { data } = await db
+      .from('touches')
+      .update({ body: out.body, attach_rate_card: Boolean(out.attach_rate_card || t.attach_rate_card), lint, ai_generated: true })
+      .eq('id', t.id)
+      .select()
+      .single();
+    return { touch: data, ai_reply: out };
+  }
   const notes = [`Agency: ${p.agency_name}`, p.contact_name && `Contact: ${p.contact_name}`, p.location && `Location: ${p.location}`,
     p.personalization_hook && `Hook (keep): ${p.personalization_hook}`, p.key_venues?.length && `Venues: ${p.key_venues.join(', ')}`, p.notes && `Notes: ${p.notes}`].filter(Boolean).join('\n');
   const out: any = await gemini(db, 'draft', { step: t.step_name, prospect: notes, draft: `Subject: ${t.subject || ''}\n\n${t.body}`, language: p.language }, p.id);
@@ -176,6 +202,111 @@ async function aiRedraft(db: any, body: any) {
   const lint = core.lintMessage({ subject, body: String(out.body || ''), channel: t.channel, step: t.step_name });
   const { data } = await db.from('touches').update({ subject, body: out.body, lint, ai_generated: true }).eq('id', t.id).select().single();
   return { touch: data };
+}
+
+async function simulateInbound(db: any, settings: any, body: any, now = new Date()) {
+  const { prospects, touches, templates } = await loadAll(db);
+  let p = body.prospect_id
+    ? prospects.find((x: any) => x.id === body.prospect_id)
+    : body.agency_name
+      ? prospects.find((x: any) => x.agency_name.toLowerCase().includes(String(body.agency_name).toLowerCase()))
+      : null;
+  if (!p && body.prospect) {
+    p = { id: null, status: 't1_sent', language: 'en', type: 'planner', ...body.prospect };
+  }
+  if (!p) throw new HttpError(404, 'Prospect not found');
+
+  const pTouches = p.id ? touches.filter((t: any) => t.prospect_id === p.id) : [];
+  let outbound = [...pTouches].reverse().find((t: any) => t.direction === 'out' && ['sent', 'approved', 'draft'].includes(t.state));
+  if (!outbound) {
+    const built: any = core.buildDraft({ prospect: p, key: body.step || 'T1_intro', templates });
+    outbound = {
+      id: 'sim-out-1',
+      prospect_id: p.id,
+      direction: 'out',
+      state: 'sent',
+      channel: 'email',
+      step_name: body.step || 'T1_intro',
+      subject: built?.subject || `Guest transport partner · ${p.agency_name}`,
+      body: built?.body || '',
+      sent_at: new Date(now.getTime() - 3600000).toISOString(),
+    };
+  }
+  const threadList = pTouches.length ? pTouches : [outbound];
+  const simThread = threadList.map((t: any) =>
+    t.id === outbound.id ? { ...t, state: 'sent', sent_at: t.sent_at || new Date(now.getTime() - 3600000).toISOString() } : t,
+  );
+  if (Array.isArray(body.extra_history)) {
+    for (const h of body.extra_history) simThread.push(h);
+  }
+
+  const inboundSubject = body.subject || `Re: ${outbound.subject}`;
+  const inboundBody = String(body.reply_body || body.text || '').trim();
+  if (!inboundBody) throw new HttpError(400, 'reply_body is required');
+
+  const cls = await classifyInboundMessage(
+    db,
+    { from: p.email || 'planner@example.com', subject: inboundSubject, body: inboundBody },
+    p.id || null,
+    now,
+  );
+
+  const inboundRow = {
+    id: null,
+    prospect_id: p.id,
+    channel: 'email',
+    direction: 'in',
+    state: 'received',
+    step_name: 'reply',
+    subject: inboundSubject,
+    body: inboundBody,
+    replied_at: now.toISOString(),
+    from_address: p.email || 'planner@example.com',
+    reply_sentiment: cls.sentiment,
+    reply_intent: cls.intent,
+    classification: cls,
+  };
+
+  const simProspect = ['researching', 'ready'].includes(p.status) ? { ...p, status: 't1_sent' } : p;
+  const fx = await applyInbound(db, simProspect, simThread, inboundRow, cls, settings, templates, now, { dryRun: !body.persist });
+
+  return {
+    prospect: {
+      id: p.id,
+      agency_name: p.agency_name,
+      contact_name: p.contact_name,
+      type: p.type,
+      location: p.location,
+      language: p.language,
+      key_venues: p.key_venues,
+      status_before: simProspect.status,
+      status_after: fx.patch?.status || simProspect.status,
+    },
+    outbound_email: {
+      step: outbound.step_name,
+      subject: outbound.subject,
+      body: outbound.body,
+    },
+    planner_reply: {
+      subject: inboundSubject,
+      body: inboundBody,
+    },
+    classification: cls,
+    ai_reply: fx.draft
+      ? {
+          subject: fx.draft.subject,
+          body: fx.draft.body,
+          attach_rate_card: fx.draft.attach_rate_card,
+          ai_generated: fx.draft.ai_generated || false,
+          can_answer_confidently: fx.ai_reply?.can_answer_confidently ?? !fx.needs_human,
+          needs_human: fx.needs_human,
+          escalation_reason: fx.escalation_reason,
+          lint: fx.draft.lint,
+        }
+      : null,
+    opportunity_created: fx.opportunity || null,
+    summary: fx.summary,
+  };
 }
 
 Deno.serve((req) => handle(req, async () => {
@@ -205,6 +336,8 @@ Deno.serve((req) => handle(req, async () => {
     }
     case 'ai_redraft':
       return json(await aiRedraft(db, body));
+    case 'simulate_inbound':
+      return json(await simulateInbound(db, settings, body, now));
     case 'run_tick':
       return json(await draftDueSteps(db, settings, now));
     case 'run_send':
@@ -214,7 +347,7 @@ Deno.serve((req) => handle(req, async () => {
     case 'digest_now':
       return json(await sendDigest(db, settings, now, true));
     case 'classify':
-      return json(core.classifyReply({ body: body.text || '', subject: body.subject || '' }, now));
+      return json(await classifyInboundMessage(db, { body: body.text || '', subject: body.subject || '' }, body.prospect_id || null, now));
     case 'log':
       await logEvent(db, body.event || 'note', body.detail || {}, body.prospect_id || null, user.email);
       return json({ ok: true });

@@ -152,9 +152,9 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
 }
 
 // ---------------- Inbox & Conversational AI ----------------
-function formatThreadHistory(list: any[]) {
+export function formatThreadHistory(list: any[]) {
   return list
-    .filter((t: any) => (t.direction === 'out' && t.state === 'sent') || t.direction === 'in')
+    .filter((t: any) => (t.direction === 'out' && ['sent', 'approved', 'draft'].includes(t.state)) || t.direction === 'in')
     .slice(-6)
     .map((t: any) => {
       const who = t.direction === 'out' ? 'DOROGO (Dmitri)' : 'Planner';
@@ -164,23 +164,70 @@ function formatThreadHistory(list: any[]) {
     .join('\n\n---\n\n');
 }
 
-export async function applyInbound(db: any, p: any, list: any[], inbound: any, cls: any, settings: any, templates: any[], now: Date) {
-  const fx: any = core.inboundEffects({ prospect: p, touches: list, cls, templates, settings, now, inbound });
-  await db.from('prospects').update(fx.patch).eq('id', p.id);
-  if (fx.skipIds.length) await db.from('touches').update({ state: 'skipped', error: 'Stopped: planner replied' }).in('id', fx.skipIds);
-  for (const r of fx.reschedule) await db.from('touches').update({ scheduled_at: r.scheduled_at }).eq('id', r.id);
-  if (fx.opportunity) {
-    const { data: existing } = await db.from('opportunities').select('id').eq('prospect_id', p.id).neq('stage', 'lost').limit(1);
-    if (!existing?.length) await db.from('opportunities').insert(fx.opportunity);
+export async function classifyInboundMessage(
+  db: any,
+  msg: { from?: string; subject?: string; body?: string; autoSubmitted?: string },
+  prospect_id: string | null = null,
+  now = new Date(),
+  { useAi = false }: { useAi?: boolean } = {},
+) {
+  let cls: any = core.classifyReply({ from: msg.from || '', subject: msg.subject || '', body: msg.body || '' }, now);
+  if (/auto-(replied|generated)/i.test(msg.autoSubmitted || '') && cls.sentiment !== 'ooo') {
+    cls = { ...cls, sentiment: 'ooo', intent: null, ooo_until: new Date(now.getTime() + 7 * 86400000).toISOString() };
   }
+  const cleanText = core.stripQuoted(msg.body || '').trim();
+  const shouldAskAi =
+    useAi &&
+    !cls.bounce &&
+    !['ooo', 'unsubscribe'].includes(cls.sentiment) &&
+    cleanText.length > 0 &&
+    cls.confidence === 'low';
 
-  // Conversational AI for ongoing partner conversations (e.g., questions after rate card or custom inquiries)
+  if (shouldAskAi && integrations().gemini) {
+    try {
+      const ai: any = await gemini(db, 'classify', { body: cleanText.slice(0, 4000) }, prospect_id);
+      if (ai?.sentiment) {
+        cls = {
+          ...cls,
+          sentiment: ai.sentiment,
+          intent: cls.intent || ai.intent || null,
+          wedding_date: ai.wedding_date || cls.wedding_date || null,
+          ai_summary: ai.summary,
+          needs_human: Boolean(ai.needs_human),
+          confidence: 'medium',
+          by: 'ai',
+        };
+      }
+    } catch (e) {
+      console.error('classify AI error:', (e as Error).message);
+    }
+  }
+  return cls;
+}
+
+export async function applyInbound(
+  db: any,
+  p: any,
+  list: any[],
+  inbound: any,
+  cls: any,
+  settings: any,
+  templates: any[],
+  now: Date,
+  { dryRun = false }: { dryRun?: boolean } = {},
+) {
+  const fx: any = core.inboundEffects({ prospect: p, touches: list, cls, templates, settings, now, inbound });
+
+  // Conversational AI for partner replies and challenging questions (single unified Gemini call)
   let needsHuman = Boolean(cls.needs_human);
   let escalationReason: string | null = cls.escalation_reason || null;
+  let aiReplyMeta: any = null;
+  const cleanReply = core.stripQuoted(inbound.body || '').trim();
   const isOngoingConversation = ['replied', 'rate_card_sent', 'in_conversation', 'quote_requested', 'active_partner'].includes(p.status);
   const needsConversationalDraft =
-    !['ooo', 'unsubscribe', 'negative'].includes(cls.sentiment) &&
-    (isOngoingConversation || !cls.intent || cls.intent === 'specific_question' || needsHuman);
+    !['ooo', 'unsubscribe'].includes(cls.sentiment) &&
+    Boolean(fx.draft) &&
+    (isOngoingConversation || !cls.intent || cls.intent === 'specific_question' || needsHuman || /\?/.test(cleanReply) || core.wordCount(cleanReply) >= 8);
 
   if (needsConversationalDraft && integrations().gemini && fx.draft) {
     try {
@@ -193,20 +240,54 @@ export async function applyInbound(db: any, p: any, list: any[], inbound: any, c
           language: p.language || 'en',
           status: p.status,
           thread_history: formatThreadHistory(list),
-          latest_reply: core.stripQuoted(inbound.body || '').slice(0, 3000),
+          latest_reply: cleanReply.slice(0, 3000),
         },
-        p.id,
+        p.id || null,
       );
+      aiReplyMeta = aiReply;
       if (aiReply?.body) {
         fx.draft.body = aiReply.body;
         fx.draft.attach_rate_card = Boolean(aiReply.attach_rate_card || fx.draft.attach_rate_card);
         fx.draft.lint = core.lintMessage({ subject: fx.draft.subject, body: fx.draft.body, channel: fx.draft.channel, step: fx.draft.step_name });
         fx.draft.ai_generated = true;
       }
-      if (aiReply?.needs_human) {
-        needsHuman = true;
-        escalationReason = aiReply.escalation_reason || escalationReason;
+      // Enrich classification metadata from the unified partner_reply response
+      const ruleIntent = cls.intent && cls.intent !== 'specific_question' ? cls.intent : null;
+      if (aiReply?.intent || ruleIntent) {
+        cls.intent = ruleIntent || aiReply.intent || cls.intent;
       }
+      if (aiReply?.sentiment && !['ooo', 'unsubscribe'].includes(cls.sentiment)) {
+        cls.sentiment =
+          aiReply.sentiment === 'negative' && cls.intent && cls.intent !== 'has_supplier'
+            ? 'neutral'
+            : aiReply.sentiment;
+      }
+      if (aiReply?.wedding_date) cls.wedding_date = aiReply.wedding_date;
+      if (aiReply?.summary) cls.ai_summary = aiReply.summary;
+      cls.by = 'ai';
+      cls.confidence = 'high';
+
+      const rank = core.FUNNEL_RANK[p.status] ?? 0;
+      if (cls.intent === 'asks_pricing' && rank < core.FUNNEL_RANK.quote_requested) fx.patch.status = 'quote_requested';
+      if (cls.intent === 'meeting_request' && rank < core.FUNNEL_RANK.in_conversation) fx.patch.status = 'in_conversation';
+      if ((['asks_pricing', 'meeting_request'].includes(cls.intent) || cls.wedding_date) && !fx.opportunity) {
+        fx.opportunity = {
+          prospect_id: p.id,
+          stage: 'open',
+          model: p.partner_model || null,
+          wedding_date: cls.wedding_date || null,
+          title: `${p.agency_name}${cls.wedding_date ? ` · ${cls.wedding_date}` : ''}`,
+          notes: `Created from a reply (${cls.intent || 'wedding date'}).`,
+        };
+      } else if (fx.opportunity && cls.wedding_date && !fx.opportunity.wedding_date) {
+        fx.opportunity.wedding_date = cls.wedding_date;
+        fx.opportunity.title = `${p.agency_name} · ${cls.wedding_date}`;
+      }
+
+      needsHuman = Boolean(aiReply?.needs_human);
+      escalationReason = aiReply?.escalation_reason || (needsHuman ? escalationReason : null);
+      cls.needs_human = needsHuman;
+      cls.escalation_reason = escalationReason;
     } catch (e) {
       console.error('partner_reply AI failed', (e as Error).message);
       needsHuman = true;
@@ -214,9 +295,25 @@ export async function applyInbound(db: any, p: any, list: any[], inbound: any, c
     }
   }
 
-  if (needsHuman && inbound?.id) {
-    const updatedCls = { ...(inbound.classification || cls), needs_human: true, escalation_reason: escalationReason };
-    await db.from('touches').update({ classification: updatedCls }).eq('id', inbound.id);
+  fx.needs_human = needsHuman;
+  fx.escalation_reason = escalationReason;
+  fx.ai_reply = aiReplyMeta;
+
+  if (dryRun) {
+    return fx;
+  }
+
+  await db.from('prospects').update(fx.patch).eq('id', p.id);
+  if (fx.skipIds.length) await db.from('touches').update({ state: 'skipped', error: 'Stopped: planner replied' }).in('id', fx.skipIds);
+  for (const r of fx.reschedule) await db.from('touches').update({ scheduled_at: r.scheduled_at }).eq('id', r.id);
+  if (fx.opportunity) {
+    const { data: existing } = await db.from('opportunities').select('id').eq('prospect_id', p.id).neq('stage', 'lost').limit(1);
+    if (!existing?.length) await db.from('opportunities').insert(fx.opportunity);
+  }
+
+  if (inbound?.id) {
+    const updatedCls = { ...(inbound.classification || cls), needs_human: needsHuman, escalation_reason: escalationReason };
+    await db.from('touches').update({ reply_sentiment: cls.sentiment, reply_intent: cls.intent, classification: updatedCls }).eq('id', inbound.id);
   }
 
   let insertedDraft: any = null;
@@ -285,14 +382,12 @@ export async function syncInbox(db: any, settings: any, now = new Date()) {
     }
     const p: any = byEmail.get(m.from) || (viaThread && pById.get(viaThread.prospect_id));
     if (!p) continue; // mail from anyone who is not a prospect is never stored
-    let cls: any = core.classifyReply({ from: m.from, subject: m.subject, body: m.text }, now);
-    if (/auto-(replied|generated)/i.test(m.autoSubmitted) && cls.sentiment !== 'ooo') cls = { ...cls, sentiment: 'ooo', intent: null, ooo_until: new Date(now.getTime() + 7 * 86400000).toISOString() };
-    if (cls.confidence === 'low' && integrations().gemini) {
-      try {
-        const ai: any = await gemini(db, 'classify', { body: core.stripQuoted(m.text).slice(0, 4000) }, p.id);
-        if (ai?.sentiment) cls = { ...cls, sentiment: ai.sentiment, intent: ai.intent || null, wedding_date: ai.wedding_date || null, ai_summary: ai.summary, needs_human: Boolean(ai.needs_human), confidence: 'medium', by: 'ai' };
-      } catch (e) { console.error(e); }
-    }
+    const cls: any = await classifyInboundMessage(
+      db,
+      { from: m.from, subject: m.subject, body: m.text, autoSubmitted: m.autoSubmitted },
+      p.id,
+      now,
+    );
     const row = {
       prospect_id: p.id, channel: 'email', direction: 'in', state: 'received', step_name: 'reply', subject: m.subject, body: m.text,
       replied_at: m.date, message_id: m.messageId, in_reply_to: m.inReplyTo, from_address: m.from,

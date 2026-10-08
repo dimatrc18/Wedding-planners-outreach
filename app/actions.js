@@ -136,7 +136,15 @@ export async function logInbound(p, { channel = 'email', subject = '', body = ''
   if (fx.skipIds.length) await updateMany('touches', fx.skipIds, { state: 'skipped', error: 'Stopped: planner replied' });
   for (const r of fx.reschedule) await update('touches', r.id, { scheduled_at: r.scheduled_at });
   if (fx.opportunity && !oppsOf(p.id).some((o) => o.stage !== 'lost')) await insert('opps', fx.opportunity);
-  if (fx.draft) await insert('touches', fx.draft);
+  if (fx.draft) {
+    const [insDraft] = await insert('touches', fx.draft);
+    if (!isDemo() && S.health?.integrations?.gemini && insDraft?.id && (/\?/.test(body) || core.wordCount(body) >= 8 || cls.intent === 'specific_question')) {
+      try {
+        const r = await api('ai_redraft', { touch_id: insDraft.id });
+        if (r?.touch) Object.assign(insDraft, r.touch);
+      } catch { /* keep template fallback if AI redraft fails */ }
+    }
+  }
   log('reply_logged', { sentiment: cls.sentiment, intent: cls.intent, summary: fx.summary }, p.id);
   return fx;
 }

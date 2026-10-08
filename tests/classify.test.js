@@ -70,3 +70,14 @@ test('loose dates', () => {
   assert.equal(parseLooseDate('12 ottobre 2027', now).toISOString().slice(0, 10), '2027-10-12');
   assert.equal(parseLooseDate('3.1.', now).toISOString().slice(0, 10), '2027-01-03', 'past date rolls to next year');
 });
+
+test('challenging operational questions without pricing/rate-card keywords classify as specific_question', () => {
+  const q1 = c('How does your dispatcher handle boat pier delays at Villa del Balbianello when it rains?');
+  assert.equal(q1.intent, 'specific_question');
+  assert.equal(q1.sentiment, 'neutral');
+  assert.equal(q1.confidence, 'medium');
+
+  const q2 = c('My couples would never want SumUp links sent to their guests. How does your portal handle privacy under GDPR?');
+  assert.equal(q2.intent, 'specific_question');
+});
+

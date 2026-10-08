@@ -23,7 +23,7 @@ export const CONCIERGE_WRITING_RULES = `DOROGO CONCIERGE WRITING SKILLS (MANDATO
 5. STRICT "NO 4MATIC" & VEHICLE NAMING RULE: NEVER say "4MATIC" unless explicitly asked for "4MATIC", "4x4", or "AWD". Never say "Extra-Long" or "LWB". Strictly name: "Mercedes-Benz E-Class", "Mercedes-Benz V-Class", or "Mercedes-Benz S-Class" (and "16 to 50-seat minibuses and coaches" when discussing group shuttles).
 6. BANNED CHATBOT FILLER (NEVER USE): ${BANNED.map((b) => b.label).join(', ')}.
 7. NO EM-DASHES: Do not use em-dashes (—) as conversational punctuation. Use commas, colons, or periods.
-8. 25% DEPOSIT TRANSPARENCY (when quoting a specific wedding or transfer): State clearly: "A 25% deposit reserves the fleet, with the remaining balance due 7 days before the wedding." (Do NOT state this if you are only asking for missing route details or offering the rate card).
+8. 25% DEPOSIT & PAYMENT TERMS: ONLY mention our standard booking terms ("A 25% deposit reserves the fleet, with the remaining balance due 7 days before the wedding") when the partner explicitly asks about deposits, payment terms, or locking in a specific wedding date. Do NOT mention deposits when answering pure operational questions (such as gate access, GDPR, flight delays, or late-night shuttles).
 9. MISSING WEDDING DETAILS (when a planner asks for a quote without full details): Ask using clean structured labels:
    a) Wedding date & venue / hotel locations
    b) Approximate guest count & schedule
@@ -56,8 +56,8 @@ PAGE TEXT:
 ${o.page}`,
   },
   classify: {
-    version: 'classify-v2',
-    text: (o: { body: string }) => `Classify this reply from a wedding planner to an email from DOROGO (luxury wedding & event transport partner, Milan & Northern Italy) offering guest transport coordination and a 1-page partner rate card.
+    version: 'classify-v3',
+    text: (o: { body: string }) => `Classify this reply from a wedding planner, venue, or hotel concierge to an email from DOROGO (luxury wedding & event transport partner, Milan, Lake Como & Northern Italy) offering guest transport coordination and a 1-page partner rate card.
 Return JSON only:
 {"sentiment": "positive"|"neutral"|"negative"|"ooo"|"unsubscribe",
  "intent": "wants_rate_card"|"asks_pricing"|"has_supplier"|"not_now"|"referral_to_other"|"meeting_request"|"specific_question"|null,
@@ -66,8 +66,9 @@ Return JSON only:
  "needs_human": boolean}
 Rules:
 - Positive = they want the rate card, prices, guest portal info, a call, or ask a constructive question about working together.
+- If they challenge our reliability, raise an operational concern, or ask any question (even with a skeptical tone), set "intent" to "specific_question" (or "asks_pricing" / "has_supplier" if more specific) and only use "intent": null when they flatly decline with no question ("Not interested, thank you").
 - "Please stop" or "remove me" = unsubscribe.
-- Set "needs_human": true if they ask a custom question requiring a bespoke quote or human confirmation (e.g., specific date availability, custom multi-villa schedules, contract edits, or phone call scheduling).
+- Set "needs_human": true ONLY if they ask for something outside our standard rate card & verified facts that requires human confirmation (e.g., exact date availability check, custom quote for unlisted routes/minibuses/coaches, contract/deposit changes, or scheduling a phone/Zoom call).
 
 REPLY:
 ${o.body}`,
@@ -95,28 +96,38 @@ CURRENT DRAFT:
 ${o.draft}`,
   },
   partner_reply: {
-    version: 'partner-reply-v3-concierge',
+    version: 'partner-reply-v4-concierge',
     text: (o: { agency: string; contact_name?: string; language: string; status?: string; thread_history: string; latest_reply: string }) => `You are writing a reply on behalf of Dmitri, Executive Chauffeur Coordinator & Co-Founder of DOROGO Private Transportation (Milan, Lake Como, Northern Italy & the Alps), to a wedding planner, venue, or hotel concierge who replied in an ongoing conversation.
 
 Partner Agency / Property: ${o.agency}
 Contact Name: ${o.contact_name || 'Unknown'}
 Current Stage: ${o.status || 'replied'}
-Language: ${o.language === 'it' ? 'Italian' : 'English'}
+Default Language: ${o.language === 'it' ? 'Italian' : 'English'}
 
 ${CONCIERGE_WRITING_RULES}
 
 ${formatRateCardFactsForAi()}
 
 Execution Rules:
-1. ANSWER FIRST: Answer the partner's specific question in the opening sentence using ONLY the Verified Partner Facts above.
-2. ULTRA-CONCISE: Keep the reply under 85 words before the signature. No fluff, no em-dashes (—), no exclamation marks.
-3. NEVER INVENT: Never invent exact prices for unlisted routes or guarantee fleet availability for a specific date without human confirmation.
-4. HUMAN ESCALATION GATE: If the partner asks for custom route pricing not listed in the table, exact date availability, bespoke multi-day minibus quotes, or a phone call, set "can_answer_confidently": false, "needs_human": true, explain why in "escalation_reason", and write a calm, helpful holding draft acknowledging their specific request so Dmitri can confirm the exact numbers before sending.
-5. End with the exact signature below:
-${o.language === 'it' ? SIGNATURE_IT : SIGNATURE}
+1. GREETING & ANSWER FIRST: Start with a natural greeting line using their first name if known (e.g., "Hi Laura," or "Buongiorno Federica,", or "Hello," if unknown) followed by a blank line. Then address every specific question, challenge, or objection the partner raised right from the opening sentence using ONLY the Verified Partner Facts above.
+2. CONCISE & COMPLETE: Keep the reply between 50 and 130 words before the signature (never exceed 145 words). Answer all parts of their message clearly without fluff, em-dashes (—), or exclamation marks. Ask at most ONE question (?) in your entire reply so copy-lint passes with zero warnings.
+3. LANGUAGE & SIGNATURE MATCH: Write in the same language as LATEST PLANNER REPLY (if they wrote in Italian, reply in Italian and end with the Italian signature; if they wrote in English, reply in English and end with the English signature).
+   - English signature:
+${SIGNATURE}
+   - Italian signature:
+${SIGNATURE_IT}
+4. NEVER INVENT: Never invent exact Euro prices for unlisted routes (e.g., Bergamo BGY, Venice, St. Moritz, or 16–50 seat minibuses/coaches) and never guarantee fleet availability for a specific wedding date without human confirmation. You MAY quote exact listed net rates from the table (Malpensa/Linate/Milan/Lugano to Como/Tremezzina/Bellagio, hourly V-Class €90/h & S-Class €110/h, and the €450 flat net late-night V-Class villa shuttle).
+5. HUMAN ESCALATION GATE:
+   - Set "can_answer_confidently": true and "needs_human": false when the partner's questions/objections can be fully answered from the Verified Partner Facts above (e.g., how the Guest Transfer Portal works, narrow villa gates, flight delays, late-night shuttles, listed Malpensa/Linate/Como rates, 5% commission vs confidential net rates, fleet standards, or working alongside their existing supplier).
+   - Set "can_answer_confidently": false and "needs_human": true (with a clear "escalation_reason") ONLY when the partner asks for: (a) exact pricing on an unlisted route or 16–50 seat minibus/coach, (b) confirmed availability or a formal quote for a specific wedding date, (c) custom contract/deposit modifications, or (d) scheduling a phone/Zoom call. Even when "needs_human": true, still answer all of their operational questions and listed rates completely in the draft, and note that you are confirming the bespoke quote/availability or call time.
+6. RATE CARD ATTACHMENT: Set "attach_rate_card": true whenever they ask for rates, prices, the rate card, or how our partner pricing works.
 
 Return JSON only:
-{"can_answer_confidently": boolean,
+{"sentiment": "positive"|"neutral"|"negative",
+ "intent": "wants_rate_card"|"asks_pricing"|"has_supplier"|"not_now"|"referral_to_other"|"meeting_request"|"specific_question",
+ "wedding_date": "YYYY-MM-DD"|null,
+ "summary": "one short line in English summarizing their reply",
+ "can_answer_confidently": boolean,
  "needs_human": boolean,
  "escalation_reason": string|null,
  "body": string,
@@ -132,34 +143,67 @@ ${o.latest_reply}`,
 
 export const geminiModel = () => env('OUTREACH_GEMINI_MODEL', 'gemini-2.5-flash');
 
+const FALLBACK_MODELS = [
+  'gemini-2.5-flash',
+  'gemini-3.5-flash-lite',
+  'gemini-2.5-pro',
+  'gemini-3.5-flash-lite',
+  'gemini-2.5-flash',
+];
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export async function gemini(db: any, kind: keyof typeof PROMPTS, input: Record<string, any>, prospect_id: string | null = null) {
   const key = env('GEMINI_API_KEY');
   if (!key) return null;
   const p = PROMPTS[kind];
   const prompt = (p.text as (o: any) => string)(input);
-  const model = geminiModel();
+  const primary = geminiModel();
+  const candidates = [primary, ...FALLBACK_MODELS.filter((m, idx) => idx > 0 || m !== primary)];
+  let usedModel = primary;
   let rawOutput: any = null, validated: any = null, error: string | null = null;
-  try {
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: { temperature: kind === 'classify' ? 0 : 0.3, responseMimeType: 'application/json' },
-      }),
-    });
-    const j = await r.json();
-    if (!r.ok) throw new Error(j?.error?.message || `Gemini HTTP ${r.status}`);
-    const text = j?.candidates?.[0]?.content?.parts?.map((x: any) => x.text).join('') || '';
-    rawOutput = JSON.parse(text.replace(/^```json\s*|```$/g, ''));
-    validated = validateAiOutput(kind, rawOutput, input);
-  } catch (e) {
-    error = (e as Error).message;
+
+  for (let i = 0; i < candidates.length; i++) {
+    const model = candidates[i];
+    usedModel = model;
+    try {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { temperature: kind === 'classify' ? 0 : 0.25, responseMimeType: 'application/json' },
+        }),
+      });
+      const j = await r.json();
+      if (!r.ok) {
+        const msg = j?.error?.message || `Gemini HTTP ${r.status}`;
+        const isQuotaOrTransient = r.status === 429 || r.status === 503 || r.status === 404 || /quota|rate limit|overloaded|not found|no longer available/i.test(msg);
+        if (isQuotaOrTransient && i < candidates.length - 1) {
+          await sleep(1200 * (i + 1));
+          continue;
+        }
+        throw new Error(msg);
+      }
+      const text = j?.candidates?.[0]?.content?.parts?.map((x: any) => x.text).join('') || '';
+      rawOutput = JSON.parse(text.replace(/^```json\s*|```$/g, ''));
+      validated = validateAiOutput(kind, rawOutput, input);
+      error = null;
+      break;
+    } catch (e) {
+      error = (e as Error).message;
+      if (i < candidates.length - 1 && /quota|rate limit|429|503|not found|no longer available|overloaded/i.test(error)) {
+        await sleep(1200 * (i + 1));
+        continue;
+      }
+      break;
+    }
   }
+
   await db.from('ai_log').insert({
     kind,
     prompt_version: p.version,
-    model,
+    model: usedModel,
     prospect_id,
     input: { ...input, page: input.page ? `${String(input.page).slice(0, 2000)}…` : undefined },
     output: validated || rawOutput,

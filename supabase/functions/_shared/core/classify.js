@@ -167,12 +167,16 @@ export function classifyReply(msg = {}, now = new Date()) {
   if (hits.has_supplier && !hits.meeting_request && !/rate card|rates|tariff|send (it|over)|happy to (see|have a look)|keep (you|it) on file/i.test(text)) intent = 'has_supplier';
   if (hits.not_now && intent === 'asks_pricing' && !/\?/.test(text)) intent = 'not_now';
   if (negative && (intent === 'wants_rate_card') && !/\byes\b|\bplease\b/i.test(text)) intent = hits.not_now ? 'not_now' : null;
+  if (!intent && /\?/.test(text)) {
+    intent = 'specific_question';
+    matched.push('specific_question');
+  }
 
   let sentiment = 'neutral';
   if (['meeting_request', 'wants_rate_card', 'asks_pricing'].includes(intent)) sentiment = 'positive';
   else if (intent === 'has_supplier' || (negative && !intent)) sentiment = 'negative';
 
-  const out = { sentiment, intent, confidence: intent ? (matched.length > 2 ? 'medium' : 'high') : (negative ? 'medium' : 'low'), matched };
+  const out = { sentiment, intent, confidence: intent ? (intent === 'specific_question' || matched.length > 2 ? 'medium' : 'high') : (negative ? 'medium' : 'low'), matched };
   if (intent === 'not_now') {
     const named = monthMention(text, now);
     if (named) out.nurture_until = named.toISOString();

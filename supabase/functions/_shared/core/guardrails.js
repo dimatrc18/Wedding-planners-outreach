@@ -4,6 +4,7 @@
 
 import { BANNED, lintMessage, wordCount } from './lint.js';
 import { RATE_CARD } from './ratecard.js';
+import { SIGNATURE, SIGNATURE_IT } from './constants.js';
 
 const HOOK_TYPES = new Set(['venue', 'event', 'style', 'press', 'award', 'other']);
 const CONFIDENCE_LEVELS = new Set(['high', 'medium', 'low']);
@@ -150,16 +151,57 @@ export function validateDraftOutput(raw) {
   return { subject, body };
 }
 
+function cleanPartnerReplyBody(raw = '') {
+  let s = String(raw || '').trim();
+  if (!s) return '';
+  // Normalize em-dashes and exclamation marks in body text before signature
+  s = s.replace(/\s*—\s*/g, ', ');
+  s = s.replace(/!+/g, '.');
+  // Strip accidental banned filler phrases
+  s = s
+    .replace(/\b(certainly|definitely|absolutely),?\s*/gi, '')
+    .replace(/\brest assured(\s+that)?,?\s*/gi, '')
+    .replace(/\bgreat question[.,]?\s*/gi, '')
+    .replace(/\bthank(s| you) for reaching out[.,]?\s*/gi, '')
+    .replace(/\bhope (this|my|the) (e-?mail|message|note) finds you( well)?[.,]?\s*/gi, '')
+    .replace(/\bseamlessly\b/gi, 'smoothly')
+    .replace(/\bseamless\b/gi, 'smooth')
+    .replace(/\btop[- ]notch\b/gi, 'first-class')
+    .replace(/\bbespoke solutions?\b/gi, 'tailored logistics')
+    .replace(/\bsoluzioni su misura\b/gi, 'logistica dedicata')
+    .replace(/\bMercedes Benz\b/g, 'Mercedes-Benz');
+  if (/\b[VES][- ]Class\b|\bClasse [VES]\b/.test(s) && !/Mercedes-Benz/.test(s)) {
+    s = s.replace(/\b([VES][- ]Class|Classe [VES])\b/, 'Mercedes-Benz $1');
+  }
+  s = s.trim();
+  if (s && !/DOROGO\s*\|\s*Private Transportation|dmitri@dorogo\.eu|wa\.me\/32456141497/i.test(s)) {
+    const isIt = /\b(buongiorno|gentile|cordiali|saluti|tariffa|matrimoni|ospiti)\b/i.test(s);
+    s = `${s}\n\n${isIt ? SIGNATURE_IT : SIGNATURE}`;
+  }
+  return s;
+}
+
 export function validatePartnerReplyOutput(raw) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
     throw new Error('Guardrail: partner_reply output must be a JSON object');
   }
   const can_answer_confidently = Boolean(raw.can_answer_confidently);
-  const body = typeof raw.body === 'string' ? raw.body.trim() : '';
+  const body = cleanPartnerReplyBody(typeof raw.body === 'string' ? raw.body : '');
   const attach_rate_card = Boolean(raw.attach_rate_card);
   const escalation_reason =
     typeof raw.escalation_reason === 'string' && raw.escalation_reason.trim()
       ? raw.escalation_reason.trim().slice(0, 240)
+      : null;
+
+  const sentiment = SENTIMENTS.has(raw.sentiment) ? raw.sentiment : null;
+  const intent = INTENTS.has(raw.intent) ? raw.intent : null;
+  const wedding_date =
+    typeof raw.wedding_date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.wedding_date.trim())
+      ? raw.wedding_date.trim()
+      : null;
+  const summary =
+    typeof raw.summary === 'string' && raw.summary.trim()
+      ? raw.summary.trim().slice(0, 240)
       : null;
 
   const lint = body ? lintMessage({ subject: 'Re: DOROGO', body, channel: 'email', step: 'reply' }) : { errors: ['Empty body'], warnings: [] };
@@ -175,6 +217,10 @@ export function validatePartnerReplyOutput(raw) {
     body,
     attach_rate_card,
     lint,
+    ...(sentiment ? { sentiment } : {}),
+    ...(intent ? { intent } : {}),
+    ...(wedding_date ? { wedding_date } : {}),
+    ...(summary ? { summary } : {}),
   };
 }
 
@@ -198,17 +244,19 @@ export function formatRateCardFactsForAi() {
     .map((r) => `- ${r.label}: E-Class €${r.E} net | V-Class €${r.V} net | S-Class €${r.S} net`)
     .join('\n');
   return [
-    `DOROGO 2026 Verified Wedding & Event Partner Facts (dorogo.eu/weddings):`,
+    `DOROGO Verified Wedding & Event Partner Facts (dorogo.eu/weddings):`,
     `- Core Value Proposition: We take the entire guest transportation workload off the wedding planner's or venue's shoulders across a full 3-day wedding weekend (Friday arrival waves & welcome dinner, Saturday hotel clusters, water-taxi & private boat pier synchronization, 8-hour dedicated standby blocks, and continuous late-night villa return loops through the final departures, plus Sunday departures).`,
     `- Regions Covered: Lake Como, the Italian Lakes (Lake Maggiore, Lake Garda, Lake Orta, Lake Iseo), Milan (Malpensa MXP, Linate LIN, Bergamo BGY), Lugano, Zurich, Venice, Portofino, Tuscany, and the Italian & Swiss Alps (St. Moritz, Cortina, Bormio, Cervinia).`,
-    `- Self-Service Guest Transfer Portal (dorogo.eu/weddings/guest-portal): We provide a custom registration link for the couple's wedding website where guests enter their own flight numbers, get grouped into shared or private transfers, and pay directly via SumUp links (so the planner never has to manage flight spreadsheets or chase guest payments).`,
-    `- Fleet & Group Shuttles: Mercedes-Benz S-Class (VIP/bridal couple, up to 3 guests), Mercedes-Benz V-Class (up to 7 guests), Mercedes-Benz E-Class (up to 3 guests), plus 16 to 50-seat minibuses and coaches (compact minibuses for narrow lakeside roads and stone villa gates, and 50-seat luxury coaches for large hotel clusters). Full ZTL and historic villa gate permits included.`,
-    `- Single Dedicated Dispatcher: One operations lead on the planner's WhatsApp run-sheet managing live flight radar tracking, boat-pier handoffs, and real-time schedule changes.`,
+    `- Self-Service Guest Transfer Portal (dorogo.eu/weddings/guest-portal): We provide a custom registration link for the couple's wedding website. It supports two modes: (1) Planner/Couple-Hosted Mode where guests only enter their flight numbers and arrival times (no prices shown to guests, consolidated net invoice to planner/couple), or (2) Guest Direct-Pay Mode where guests book and pay via SumUp links. Guest data is strictly used for dispatch (never marketed to). For VIP guests who skip the portal, the planner can simply drop their flight screenshot to our WhatsApp dispatcher.`,
+    `- Fleet & Historic Villa Gate Access: Mercedes-Benz S-Class (VIP/bridal couple, up to 3 guests), Mercedes-Benz V-Class (up to 7 guests + 7 suitcases), Mercedes-Benz E-Class (up to 3 guests), plus 16 to 50-seat minibuses and coaches. Because 50-seat coaches cannot pass narrow historic gates (such as Villa Balbiano, Villa del Balbianello, or steep Cernobbio/Moltrasio lanes), we pair 50-seat coaches for main lakeside hotel transfers with compact 16 to 25-seat executive minibuses and Mercedes-Benz V-Class shuttles for narrow villa gates and ZTL zones (all ZTL and municipal permits included).`,
+    `- Single Dedicated Dispatcher & Water-Taxi Sync: One operations lead on the planner's WhatsApp run-sheet managing live flight radar tracking, boat-pier handoffs with private Riva/water-taxi captains (Cernobbio, Tremezzo, Bellagio, Lenno, Moltrasio, Varenna), and real-time schedule changes. If wind or rain cancels lake boats, our standby road fleet pivots immediately to door-to-door road transfers.`,
+    `- Flight Delays & No Late-Night Cutoff: Because we track every flight live on radar, chauffeur dispatch adjusts automatically to the new landing time at no extra charge, and the 60 minutes of complimentary airport wait time starts from actual touchdown (even on a 3-hour flight delay). For late-night villa shuttles, we assign shift-rotated chauffeurs and stay through the final late-night departures (no 2:00 AM or 3:00 AM cap) until the last guest is back at their hotel.`,
+    `- Fleet Standards (Direct Operations, Not a Broker): Black, unbranded vehicles, English- and Italian-speaking chauffeurs in dark suit and tie, full commercial NCC licensing and passenger insurance, briefed on the run-sheet 48 hours ahead, with a backup vehicle staged on the lake during peak Saturday wedding movements. We also work happily alongside a planner's existing local NCC as peak-weekend overflow or out-of-region fleet with zero exclusivity requirement.`,
     `- Fixed One-Way Net Routes (VAT 10% excluded, tolls & 60 min airport wait included):`,
     routes,
     `- Hourly disposal (minimum ${RATE_CARD.hourly.min_hours} hours): V-Class €${RATE_CARD.hourly.V}/h net, S-Class €${RATE_CARD.hourly.S}/h net.`,
     `- Late-Night Villa Return Shuttle (${RATE_CARD.late_night_shuttle.window}): €${RATE_CARD.late_night_shuttle.V} flat net per Mercedes-Benz V-Class on standby at the venue doing continuous loops to local hotels.`,
-    `- Partner Models: Model A = 5% referral/concierge commission (DOROGO bills couple/guests directly); Model B = Confidential net rates above that the planner/venue can include directly in their own client offer/proposal with their own markup (15–25%).`,
-    `- Booking Terms: 25% deposit locks the fleet; balance 7 days before the wedding.`,
+    `- Partner Models: Model A = 5% referral/concierge commission (DOROGO bills couple/guests directly and pays 5% commission on total transport value); Model B = Confidential net rates above that the planner/venue can include directly in their own client offer/proposal with their own markup (typically 15–25%+); net rates are strictly confidential and never shown to couples.`,
+    `- Booking Terms: Standard terms are a 25% deposit to lock the fleet, with the balance due 7 days before the wedding (if a partner requests custom deposit or payment terms for a large wedding buyout, state our standard 25% / 7-day terms clearly and note that you will review their requested payment schedule alongside the bespoke quote).`,
   ].join('\n');
 }

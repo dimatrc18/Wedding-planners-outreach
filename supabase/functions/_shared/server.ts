@@ -27,10 +27,17 @@ export function admin() {
   return createClient(env('SUPABASE_URL'), serviceKey(), { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
-// The caller must be a signed-in user whose email is in allowed_users.
+// The caller must be a signed-in user whose email is in allowed_users (or provide x-cron-secret / service_role key).
 export async function requireAllowedUser(req: Request) {
+  const cronSecret = env('OUTREACH_CRON_SECRET');
+  if (cronSecret && req.headers.get('x-cron-secret') === cronSecret) {
+    return { user: { email: 'dmitri@dorogo.eu' }, db: admin() };
+  }
   const token = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
   if (!token) throw new HttpError(401, 'Sign in first');
+  if (serviceKey() && token === serviceKey()) {
+    return { user: { email: 'dmitri@dorogo.eu' }, db: admin() };
+  }
   const r = await fetch(`${env('SUPABASE_URL')}/auth/v1/user`, { headers: { apikey: serviceKey(), Authorization: `Bearer ${token}` } });
   if (!r.ok) throw new HttpError(401, 'Session expired, sign in again');
   const user = await r.json();
