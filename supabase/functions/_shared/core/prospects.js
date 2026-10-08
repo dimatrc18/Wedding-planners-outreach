@@ -222,7 +222,7 @@ export function parseProfileUrl(url = '') {
   return {};
 }
 
-// Verified public contact & story directory for Lake Como agencies with simple, honest openings
+// Verified public contact & story directory for Lake Como agencies with luxury full-fleet openings
 const KNOWN_LAKE_COMO_DIRECTORY = {
   federicacantu: {
     website: 'https://www.federicacantuweddingplanner.com',
@@ -231,7 +231,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     location: 'Como',
     segment: 'boutique_local',
     key_venues: ['Villa del Balbianello', 'Villa Balbiano'],
-    personalization_hook: "I saw Morgan and Tyler's wedding on your site, and I know you likely already have a go-to driver for Villa del Balbianello and Villa Balbiano.",
+    personalization_hook: "Looking at Morgan and Tyler's wedding on your site, moving 70+ international guests across multiple hotels for Villa del Balbianello and Villa Balbiano takes more than a few local cars.",
     hook_type: 'event',
   },
   comoluxury: {
@@ -241,7 +241,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     location: 'Como',
     segment: 'boutique_local',
     key_venues: ['Villa Pizzo', 'Villa Erba'],
-    personalization_hook: "You likely already have a trusted local driver for your Cernobbio weddings at Villa Pizzo and Villa Erba.",
+    personalization_hook: "For multi-day weddings in Cernobbio at Villa Pizzo and Villa Erba, coordinating international guests across several hotels takes a dedicated event fleet rather than individual local cars.",
     hook_type: 'venue',
   },
   idoin: {
@@ -252,7 +252,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     verified_reviews_count: 35,
     segment: 'boutique_local',
     key_venues: ['Villa del Balbianello', 'Grand Hotel Tremezzo'],
-    personalization_hook: "You likely already have a regular transport partner for your weddings across Menaggio, Tremezzina and Villa del Balbianello.",
+    personalization_hook: "For multi-day celebrations across Menaggio, Tremezzina and Villa del Balbianello, moving guests between multiple lakeside hotels and boat piers takes a coordinated event fleet.",
     hook_type: 'event',
   },
   sugar: {
@@ -262,7 +262,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     location: 'Laglio',
     segment: 'boutique_local',
     key_venues: ['Relais Villa Vittoria', 'Villa Pizzo'],
-    personalization_hook: "You likely already have a go-to driver for the weddings you plan around Laglio and Villa Pizzo.",
+    personalization_hook: "For multi-day weddings around Laglio and Villa Pizzo, coordinating guests across several hotels and narrow villa gates takes a dedicated fleet rather than solo local drivers.",
     hook_type: 'event',
   },
   lenafreitag: {
@@ -274,7 +274,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     verified_reviews_count: 18,
     segment: 'boutique_local',
     key_venues: ['Villa del Balbianello', 'Villa Sola Cabiati'],
-    personalization_hook: "You likely already have a go-to driver for your weddings at Villa del Balbianello and Villa Sola Cabiati.",
+    personalization_hook: "For multi-day weddings at Villa del Balbianello and Villa Sola Cabiati, moving 50 to 150 guests across multiple Lake Como hotels takes more than a few local cars.",
     hook_type: 'style',
   },
   romanceinitaly: {
@@ -286,7 +286,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     verified_reviews_count: 22,
     segment: 'boutique_local',
     key_venues: ['Villa Cipressi', 'Villa Monastero'],
-    personalization_hook: "You probably already work with a local driver for your Varenna weddings at Villa Cipressi and Villa Monastero.",
+    personalization_hook: "For destination weddings in Varenna at Villa Cipressi and Villa Monastero, coordinating airport arrivals and late-night hotel shuttles takes a dedicated event fleet.",
     hook_type: 'venue',
   },
   kissandescape: {
@@ -294,7 +294,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     location: 'Bellagio',
     segment: 'boutique_local',
     key_venues: ['Villa Melzi', 'Villa Serbelloni'],
-    personalization_hook: "You likely already have a trusted driver for your Bellagio weddings at Villa Melzi and Villa Serbelloni.",
+    personalization_hook: "For multi-day celebrations in Bellagio at Villa Melzi and Villa Serbelloni, coordinating guests arriving from Malpensa and Linate across several hotels takes a dedicated wedding fleet.",
     hook_type: 'style',
   },
   relaisvillavittoria: {
@@ -304,7 +304,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     rating: 4.8,
     verified_reviews_count: 180,
     key_venues: ['Relais Villa Vittoria'],
-    personalization_hook: "You already have local drivers for Relais Villa Vittoria, though on busy Laglio weekends local taxis vanish after midnight.",
+    personalization_hook: "During full wedding weekends at Relais Villa Vittoria, guests staying across neighbouring Laglio and Cernobbio hotels need coordinated airport arrivals and late-night return shuttles.",
     hook_type: 'venue',
   },
   villalario: {
@@ -314,7 +314,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     rating: 4.9,
     verified_reviews_count: 140,
     key_venues: ['Villa Lario'],
-    personalization_hook: "You already have local drivers for Villa Lario, though on busy Pognana Lario weekends local taxis are impossible to find late at night.",
+    personalization_hook: "During full wedding buyouts at Villa Lario in Pognana Lario, guests staying in Como and Bellagio need dedicated late-night return shuttles long after local taxis stop running.",
     hook_type: 'venue',
   },
   filario: {
@@ -324,7 +324,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     rating: 4.8,
     verified_reviews_count: 210,
     key_venues: ['Filario'],
-    personalization_hook: "You already have local drivers for Filario, though on peak Lezzeno weekends one wedding can book out every car in town.",
+    personalization_hook: "During wedding weekends at Filario in Lezzeno, moving international guests between Malpensa, Bellagio and lakeside villas requires a dedicated multi-vehicle fleet.",
     hook_type: 'venue',
   },
   villacipressi: {
@@ -334,7 +334,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     rating: 4.8,
     verified_reviews_count: 320,
     key_venues: ['Villa Cipressi', 'Villa Monastero'],
-    personalization_hook: "You already have local drivers for Villa Cipressi, though on busy Varenna nights local taxis stop long before the wedding party ends.",
+    personalization_hook: "During multi-day weddings at Villa Cipressi in Varenna, guests flying into Malpensa and staying across the eastern shore need coordinated airport waves and late-night shuttles.",
     hook_type: 'venue',
   },
   grandhotelimperiale: {
@@ -346,7 +346,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     rating: 4.7,
     verified_reviews_count: 290,
     key_venues: ['Grand Hotel Imperiale'],
-    personalization_hook: "On peak wedding Saturdays in Moltrasio, even the best hotel concierge list runs short on vans and coaches at the exact same hour.",
+    personalization_hook: "During multi-day wedding weekends at Grand Hotel Imperiale in Moltrasio, coordinating 50 to 150 guests across airports, boat piers and villas requires a dedicated event fleet.",
     hook_type: 'venue',
   },
   sposiamovi: {
@@ -386,7 +386,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Villa del Balbianello', 'Villa Erba', 'Villa Pizzo'],
-    personalization_hook: "You likely already have a regular driver for your weddings at Villa del Balbianello, Villa Erba and Villa Pizzo.",
+    personalization_hook: "For multi-day weddings at Villa del Balbianello, Villa Erba and Villa Pizzo, moving 50 to 150 guests across multiple Lake Como hotels takes more than a few local cars.",
     hook_type: 'event',
     notes: 'Discovered via AI Partner Search (Real Weddings & Portfolio verified).',
   },
@@ -403,7 +403,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Villa Cipressi', 'Villa Melzi', 'Villa del Balbianello'],
-    personalization_hook: "You likely already have a trusted local driver for your Bellagio and Varenna weddings at Villa Melzi and Villa Cipressi.",
+    personalization_hook: "For destination weddings in Bellagio and Varenna at Villa Melzi and Villa Cipressi, coordinating international guests across several hotels takes a dedicated event fleet.",
     hook_type: 'event',
     notes: 'Discovered via AI Partner Search (Boutique Lake Como specialist).',
   },
@@ -420,26 +420,9 @@ export const DISCOVERY_PARTNER_CATALOG = [
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Villa del Balbianello', 'Villa Monastero', 'Villa Cipressi'],
-    personalization_hook: "You likely already have go-to drivers across Lake Como for your weddings at Villa del Balbianello and Villa Monastero.",
+    personalization_hook: "For multi-day Lake Como weddings at Villa del Balbianello and Villa Monastero, moving international guests across several towns and hotels takes a dedicated event fleet.",
     hook_type: 'event',
     notes: 'Discovered via AI Partner Search (Lake Como & Northern Italy lakes specialist).',
-  },
-  {
-    agency_name: 'Grand Hotel Tremezzo Events & Concierge',
-    contact_name: 'Events & Guest Relations Team',
-    email: 'info@grandhoteltremezzo.com',
-    website: 'https://www.grandhoteltremezzo.com/en/home/',
-    type: 'concierge_hotel',
-    segment: 'boutique_local',
-    location: 'Tremezzina',
-    rating: 4.9,
-    verified_reviews_count: 420,
-    review_source: 'google',
-    source: 'ai_discovery',
-    key_venues: ['Grand Hotel Tremezzo', 'Villa Sola Cabiati', 'Villa del Balbianello'],
-    personalization_hook: "On peak wedding weekends at Grand Hotel Tremezzo and Villa Sola Cabiati, house cars and local drivers book out fast at the exact same hour.",
-    hook_type: 'venue',
-    notes: 'Discovered via AI Partner Search (5-star hotel concierge & Villa Sola Cabiati events).',
   },
   {
     agency_name: 'Villa Passalacqua Private Events',
@@ -454,7 +437,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Villa Passalacqua'],
-    personalization_hook: "You already have preferred drivers at Passalacqua, though during full buyouts in Moltrasio narrow-gate shuttles and staggered airport runs pile up fast.",
+    personalization_hook: "During full wedding buyouts at Passalacqua in Moltrasio, coordinating staggered airport arrivals and narrow-gate villa shuttles requires a dedicated multi-vehicle fleet.",
     hook_type: 'venue',
     notes: 'Discovered via AI Partner Search (Moltrasio ultra-luxury villa buyout venue).',
   },
@@ -471,7 +454,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Villa Pizzo', 'Villa Balbiano'],
-    personalization_hook: "You probably already have a go-to driver for your weddings at Villa Pizzo and Villa Balbiano.",
+    personalization_hook: "For multi-day weddings at Villa Pizzo and Villa Balbiano, moving 50 to 150 international guests across multiple hotels takes a coordinated event fleet rather than solo local cars.",
     hook_type: 'style',
     notes: 'Discovered via AI Partner Search (Milan & Lake Como boutique wedding design).',
   },
@@ -541,29 +524,29 @@ export function buildVerifiedFallbackHook(p = {}, storySignals = null) {
 
   if (p.type === 'venue') {
     const place = venues[0] || p.agency_name || 'your property';
-    return `You already have local drivers for ${place}, though on peak wedding nights local taxis vanish long before the party ends.`;
+    return `During full wedding weekends at ${place}, guests staying across neighbouring hotels need coordinated airport arrivals and late-night return shuttles.`;
   }
   if (p.type === 'concierge_hotel') {
     const place = venues[0] || p.agency_name || 'your hotel';
-    return `On peak wedding Saturdays at ${place}, even the best local driver list books out at the exact same hour.`;
+    return `During multi-day wedding weekends at ${place}, coordinating 50 to 150 guests across airports, boat piers and villas requires a dedicated event fleet.`;
   }
   if (couples.length > 0 && venues.length > 0) {
-    return `I saw ${couples[0]}'s wedding at ${venues[0]} on your site, and I know you likely already have a go-to driver on the lake.`;
+    return `Looking at ${couples[0]}'s wedding at ${venues[0]} on your site, moving 50 to 150 international guests across multiple hotels takes more than a few local cars.`;
   }
   if (couples.length > 0) {
-    return `I saw ${couples[0]}'s wedding on your site, and I know you likely already have a regular transport partner.`;
+    return `Looking at ${couples[0]}'s wedding on your site, coordinating international guests across multiple hotels takes a dedicated event fleet rather than solo local cars.`;
   }
   if (press.length > 0 && venues.length > 0) {
-    return `You likely already have a trusted driver for your ${press[0]}-featured weddings at ${venues[0]}.`;
+    return `For your ${press[0]}-featured weddings at ${venues[0]}, moving 50 to 150 international guests across multiple hotels takes a dedicated event fleet.`;
   }
   if (venues.length >= 2) {
-    return `You likely already have a go-to driver for your weddings at ${venues[0]} and ${venues[1]}.`;
+    return `For multi-day weddings at ${venues[0]} and ${venues[1]}, moving 50 to 150 guests across multiple Lake Como hotels takes more than a few local cars.`;
   }
   if (venues.length === 1) {
-    return `You likely already have a go-to driver for your weddings at ${venues[0]}.`;
+    return `For multi-day weddings at ${venues[0]}, moving 50 to 150 guests across multiple Lake Como hotels takes more than a few local cars.`;
   }
   if (p.location) {
-    return `You likely already have a regular transport partner for the weddings you plan around ${p.location}.`;
+    return `For multi-day weddings around ${p.location}, coordinating international guests across several hotels takes a dedicated event fleet rather than individual local cars.`;
   }
   return '';
 }

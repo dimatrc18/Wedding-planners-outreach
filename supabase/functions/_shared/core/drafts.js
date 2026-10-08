@@ -62,43 +62,43 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
   if (lang === 'it') {
     if (type === 'venue') {
       return {
-        subject_line_a: `Flotta di supporto per gli eventi a ${agencyShort}`,
-        subject_line_b: `Rientri notturni a ${venueOrLoc} · ${agencyShort}`,
+        subject_line_a: `Flotta eventi per i matrimoni a ${agencyShort}`,
+        subject_line_b: `Trasferimenti ospiti a ${venueOrLoc} · ${agencyShort}`,
         service_pitch:
-          'Quando il vostro fornitore abituale è al completo o gli ospiti cercano un taxi dopo mezzanotte, copriamo noi gli arrivi da Malpensa e le navette notturne con Mercedes-Benz Classe V, Classe S e minibus da 16 a 50 posti.',
+          'Gestiamo l\'intera mobilità ospiti su più giorni con Mercedes-Benz Classe S, Classe V e minibus da 16 a 50 posti, un unico coordinatore WhatsApp e il nostro Portale Ospiti per raccogliere i voli.',
         cta_line:
-          'Vi è utile tenere in archivio il nostro listino di 1 pagina (tariffe nette o commissione 5%) per i weekend di punta?',
+          'Posso inviarvi il nostro listino partner di 1 pagina (tariffe nette per la vostra offerta o commissione 5%)?',
       };
     }
     if (type === 'concierge_hotel') {
       return {
-        subject_line_a: `Flotta di backup nei weekend di punta · ${agencyShort}`,
+        subject_line_a: `Flotta eventi e matrimoni · ${agencyShort}`,
         subject_line_b: `Transfer ospiti a ${venueOrLoc} · ${agencyShort}`,
         service_pitch:
-          'Quando le auto dell\'hotel e i driver locali sono tutti prenotati, interveniamo su richiesta con un unico referente WhatsApp e flotta Mercedes-Benz Classe S, Classe V e minibus da 16 a 50 posti.',
+          'Mettiamo a disposizione del vostro team una flotta dedicata di Mercedes-Benz Classe S, Classe V e minibus da 16 a 50 posti con un unico coordinatore WhatsApp per gli arrivi da Malpensa e le navette evento.',
         cta_line:
-          'Vi mando il listino partner di 1 pagina (tariffe nette o commissione 5%) da tenere al desk?',
+          'Posso inviarvi il nostro listino partner di 1 pagina (tariffe nette o commissione 5%)?',
       };
     }
     const itPlannerSubjectsA = [
-      `Secondo fornitore per i sabati di punta · ${agencyShort}`,
       `Matrimoni a ${venueOrLoc} · ${agencyShort}`,
-      `${agencyShort} · backup trasporti matrimoni`,
-      `Navette e rientri notturni · ${agencyShort}`,
+      `Flotta ospiti per i matrimoni di ${agencyShort}`,
+      `${agencyShort} · logistica ospiti Lago di Como`,
+      `Coordinamento transfer ospiti · ${agencyShort}`,
     ];
     const itPlannerSubjectsB = [
-      `Matrimoni a ${venueOrLoc} · ${agencyShort}`,
-      `Backup trasporti · ${agencyShort}`,
-      `Flotta di supporto · ${agencyShort}`,
-      `Navette a ${venueOrLoc} · ${agencyShort}`,
+      `Flotta matrimoni a ${venueOrLoc} · ${agencyShort}`,
+      `Logistica ospiti · ${agencyShort}`,
+      `Matrimoni sul Lago di Como · ${agencyShort}`,
+      `Navette e arrivi ospiti · ${agencyShort}`,
     ];
     const itPlannerPitches = [
-      'Quando gli ospiti sono divisi su cinque hotel diversi o il vostro NCC abituale finisce i mezzi nei sabati di punta, copriamo noi i transfer extra e i rientri notturni con Mercedes-Benz Classe V, Classe S e minibus da 16 a 50 posti.',
-      'Se il vostro fornitore principale è al completo o un volo a Malpensa ritarda di tre ore, gestiamo noi le chiamate degli ospiti e le navette con Mercedes-Benz Classe V, Classe S e minibus da 16 a 50 posti, così il vostro telefono resta libero durante la cerimonia.',
+      'Gestiamo flotte dedicate per matrimoni su più giorni tra Milano e il Lago di Como: Mercedes-Benz Classe S, Classe V e minibus da 16 a 50 posti, con un unico coordinatore WhatsApp e il nostro Portale Ospiti dove gli invitati inseriscono i propri voli senza mai chiamare il vostro telefono.',
+      'Coordiniamo l\'intera logistica ospiti dagli arrivi a Malpensa fino alle navette notturne dalle ville con Mercedes-Benz Classe S, Classe V e minibus da 16 a 50 posti, affiancati dal nostro Portale Ospiti e da un unico referente su WhatsApp.',
     ];
     const itPlannerCtas = [
-      'Vi è utile tenere in archivio il nostro listino di 1 pagina (tariffe nette o commissione 5%) per i weekend di punta?',
-      'Posso inviarvi la scheda partner di 1 pagina (tariffe nette o commissione 5%) come backup per l\'alta stagione?',
+      'Posso inviarvi il nostro listino partner di 1 pagina (tariffe nette da includere nella vostra offerta o commissione 5%)?',
+      'Vi fa piacere ricevere la nostra scheda partner di 1 pagina (tariffe nette o commissione 5%)?',
     ];
     return {
       subject_line_a: itPlannerSubjectsA[idx],
@@ -108,19 +108,19 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
     };
   }
 
-  // English honest, real-world angles: acknowledges they have a driver, solves real Saturday wedding pain points
+  // English luxury full-fleet positioning
   if (type === 'venue') {
     const venuePitches = [
-      'When your regular drivers are booked out or guests need a ride back to their hotels at 2:00 AM, we step in as your on-call backup with Mercedes-Benz V-Class, S-Class and 16 to 50-seat minibuses.',
-      'When guests arrive on delayed Malpensa flights or need late-night shuttles back to their hotels, our dispatcher handles the pickup calls and runs our Mercedes-Benz V-Class, S-Class and 16 to 50-seat minibuses.',
+      'We run dedicated wedding fleets across Milan and Lake Como: pairing Mercedes-Benz S-Class, V-Class and 16 to 50-seat minibuses with one WhatsApp coordinator and a Guest Transfer Portal so guests log their own flights and return shuttles.',
+      'Our team coordinates full-weekend guest transport from Malpensa arrivals through late-night villa return shuttles using Mercedes-Benz S-Class, V-Class and 16 to 50-seat minibuses under one dedicated WhatsApp dispatcher.',
     ];
     const venueCtas = [
-      'Worth keeping our 1-page rate card at the desk (net rates or 5% commission) for busy weekends?',
-      'Useful if I send our 1-page backup rate card (confidential net rates or 5% commission)?',
+      'May I send our 1-page partner rate card (confidential net rates for your offer, or 5% commission)?',
+      'Would you like our 1-page partner rate card (net rates for your offer, or 5% commission) for your files?',
     ];
     return {
-      subject_line_a: `Backup fleet for peak weekends · ${agencyShort}`,
-      subject_line_b: `Late-night guest shuttles · ${agencyShort}`,
+      subject_line_a: `Wedding guest fleet · ${agencyShort}`,
+      subject_line_b: `${venueOrLoc} guest transfers · ${agencyShort}`,
       service_pitch: venuePitches[idx % venuePitches.length],
       cta_line: venueCtas[idx % venueCtas.length],
     };
@@ -128,41 +128,41 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
 
   if (type === 'concierge_hotel') {
     const hotelPitches = [
-      'When your house cars and primary local drivers are full, we step in on WhatsApp with Mercedes-Benz S-Class, V-Class and 16 to 50-seat minibuses for airport runs and late-night wedding shuttles.',
-      'One WhatsApp message gives your desk reliable backup access to our Mercedes-Benz S-Class, V-Class and 16 to 50-seat minibuses whenever your regular drivers are fully booked.',
+      'We provide dedicated event fleets across Milan and Lake Como with Mercedes-Benz S-Class, V-Class and 16 to 50-seat minibuses managed by one WhatsApp coordinator for airport waves and villa shuttles.',
+      'Our dispatch desk coordinates Mercedes-Benz S-Class, V-Class and 16 to 50-seat minibuses across Milan and Lake Como for multi-day wedding groups and private villa transfers.',
     ];
     return {
-      subject_line_a: `Overflow fleet for peak Saturdays · ${agencyShort}`,
-      subject_line_b: `${venueOrLoc} backup transfers · ${agencyShort}`,
+      subject_line_a: `Wedding & event fleet · ${agencyShort}`,
+      subject_line_b: `${venueOrLoc} guest transfers · ${agencyShort}`,
       service_pitch: hotelPitches[idx % hotelPitches.length],
       cta_line:
-        'Worth keeping our 1-page partner rate card at the desk (net rates or 5% commission)?',
+        'May I send our 1-page partner rate card (confidential net rates or 5% commission)?',
     };
   }
 
   const plannerSubjectsA = [
-    `Backup fleet for peak Saturdays · ${agencyShort}`,
-    `Second transport partner · ${agencyShort}`,
-    `${agencyShort} · peak-weekend guest shuttles`,
-    `Late-night shuttles & overflow · ${agencyShort}`,
+    `${venueOrLoc} weddings · ${agencyShort}`,
+    `Guest transport fleet · ${agencyShort}`,
+    `${agencyShort} · Lake Como wedding fleet`,
+    `Multi-day wedding transport · ${agencyShort}`,
   ];
   const plannerSubjectsB = [
-    `${venueOrLoc} weddings · ${agencyShort}`,
-    `Peak-Saturday backup · ${agencyShort}`,
-    `Second fleet for ${venueOrLoc} · ${agencyShort}`,
-    `${venueOrLoc} late-night shuttles · ${agencyShort}`,
+    `Wedding fleet for ${venueOrLoc} · ${agencyShort}`,
+    `Lake Como guest dispatch · ${agencyShort}`,
+    `${venueOrLoc} guest shuttles · ${agencyShort}`,
+    `Private wedding fleet · ${agencyShort}`,
   ];
   const plannerPitches = [
-    'When guests book five different hotels instead of one room block, or your main supplier runs short on Mercedes-Benz V-Classes and 16 to 50-seat minibuses on a busy Saturday, we cover the extra shuttles and late-night returns.',
-    'When your primary driver is full on a peak Saturday, our dispatcher handles the extra Mercedes-Benz V-Class, S-Class and 16 to 50-seat minibus runs directly so no lost guest or driver is calling your phone during the ceremony.',
-    'Where we usually help planners first is the tricky legs their main supplier cannot stretch to cover: delayed Malpensa arrivals and post-midnight villa returns when local taxis are gone, using our Mercedes-Benz V-Class, S-Class and 16 to 50-seat minibuses.',
-    'When a 50-seat bus cannot fit a narrow villa gate or your main supplier is fully booked on a July Saturday, we step in as your second fleet with staged Mercedes-Benz V-Classes, S-Classes and 16 to 50-seat minibuses.',
+    'We run dedicated wedding fleets across Milan and Lake Como: pairing Mercedes-Benz S-Class, V-Class and 16 to 50-seat minibuses with one WhatsApp coordinator and a Guest Transfer Portal so guests log their own flights and never call your phone.',
+    'We coordinate multi-day wedding fleets across Milan and Lake Como using Mercedes-Benz S-Class, V-Class and 16 to 50-seat minibuses, with a Guest Transfer Portal and one dedicated WhatsApp dispatcher handling every airport arrival and late-night villa return.',
+    'Instead of piecing together individual cars, we deploy a single coordinated fleet of Mercedes-Benz S-Class, V-Class and 16 to 50-seat minibuses with a Guest Transfer Portal and one WhatsApp coordinator from Malpensa arrivals through the final late-night villa shuttles.',
+    'We handle full-weekend wedding transport across Milan and Lake Como with staged Mercedes-Benz V-Classes, S-Classes and 16 to 50-seat minibuses for narrow villa gates, plus a Guest Transfer Portal so no lost guest or driver ever calls your phone.',
   ];
   const plannerCtas = [
-    'Worth keeping our 1-page rate card on file (net rates or 5% commission) as backup for peak weekends?',
-    'Useful if I send our 1-page backup rate card (net rates for your offer, or 5% commission)?',
-    'Open to keeping our 1-page rate card on hand (net rates or 5% commission) for busy Saturdays?',
-    'May I send our 1-page rate card (net rates or 5% commission) in case your main driver is ever full?',
+    'May I send our 1-page partner rate card (confidential net rates for your offer, or 5% commission)?',
+    'Would you like our 1-page partner rate card (net rates for your offer, or 5% commission)?',
+    'Shall I send over our 1-page partner rate card (confidential net rates or 5% commission)?',
+    'May I share our 1-page partner rate card and Guest Portal link (net rates or 5% commission)?',
   ];
 
   return {

@@ -27,7 +27,7 @@ test('missing email blocks email steps', () => {
   assert.equal(st.blocked, 'no_email');
 });
 
-test('cadence offsets: email-only T1 -> T3 day 4 -> T4 day 9, and legacy T2_ig_dm is stripped', () => {
+test('cadence offsets: email-only T1 -> T3 day 4 (T4 disabled by default), and legacy T2_ig_dm is stripped', () => {
   const t1 = rome(2026, 10, 6);
   let st = sequenceState(P({ status: 't1_sent' }), [sent('T1_intro', t1)], S, rome(2026, 10, 7));
   assert.equal(st.step.key, 'T3_followup');
@@ -38,9 +38,10 @@ test('cadence offsets: email-only T1 -> T3 day 4 -> T4 day 9, and legacy T2_ig_d
   assert.equal(st.step.key, 'T3_followup');
   assert.equal(st.isDue, true);
 
+  // By default T4_breakup is disabled, so sequence completes after T3_followup
   st = sequenceState(P({ status: 't3_sent' }), [sent('T1_intro', t1), sent('T3_followup', t1)], S, t1);
-  assert.equal(st.step.key, 'T4_breakup');
-  assert.equal(st.dueAt.getTime(), t1.getTime() + 9 * 86400000);
+  assert.equal(st.active, false);
+  assert.equal(st.reason, 'completed');
 
   // Even if legacy settings had T2_ig_dm in steps, withDefaults strips it automatically
   const SWithLegacyIg = { ...S, steps: [...S.steps, { key: 'T2_ig_dm', label: 'Instagram DM', day: 3, channel: 'instagram_dm', enabled: true }] };

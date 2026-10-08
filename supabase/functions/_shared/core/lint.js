@@ -19,6 +19,8 @@ export const BANNED = [
   { re: /\b(spero che (questa|la presente) (e-?mail|mail|lettera) (la|vi|ti) trovi bene)\b/i, label: '"Spero che questa email vi trovi bene"' },
   { re: /\bnon esit(i|ate|are) a contattar/i, label: '"Non esitate a contattarci"' },
   { re: /\bsoluzioni su misura\b/i, label: '"soluzioni su misura"' },
+  { re: /\b(airport transfer is on us|pickup on us|transfer on us|for free|complimentary transfer|complimentary airport|free transfer|free pickup|offerto da noi|transfer gratuito)\b/i, label: 'Free/complimentary service offer (luxury brand rule)' },
+  { re: /\b(test us|try us|give us a try|testarci|metterci alla prova)\b/i, label: '"test us / try us" (luxury authority rule)' },
 ];
 
 const VEHICLE_BANNED = [

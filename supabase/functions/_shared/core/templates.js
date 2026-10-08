@@ -22,24 +22,24 @@ export const DEFAULT_TEMPLATES = [
 {{optout}}`,
   },
   {
-    key: 'T3_followup', language: 'en', kind: 'sequence', name: 'T3 Follow-up (Guest Transfer Portal)', subject_a: '', subject_b: '',
+    key: 'T3_followup', language: 'en', kind: 'sequence', name: 'T3 Follow-up (Recent 70-Guest Wedding & Portal)', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
-Quick follow-up: even if you already have a regular driver on the lake, you can test us on a single late-night villa shuttle or peak-Saturday overflow.
+Following up briefly: last week on Lake Como we coordinated 12 Mercedes-Benz V-Class vans across a 70-guest wedding, handling every airport arrival, flight change and late-night villa shuttle through our Guest Transfer Portal with zero guest calls to the planner.
 
-Worth sending our 1-page rate card and Guest Portal link (net rates or 5% commission)?
+May I send our 1-page partner rate card (net rates for your offer, or 5% commission)?
 
 {{signature}}
 
 {{optout}}`,
   },
   {
-    key: 'T4_breakup', language: 'en', kind: 'sequence', name: 'T4 Breakup email (new thread)',
+    key: 'T4_breakup', language: 'en', kind: 'sequence', name: 'T4 Final note (disabled)',
     subject_a: '{{agency}} · private transport on Lake Como & Northern Italy',
-    subject_b: 'Airport transfer on your next Milan site visit · {{agency}}',
+    subject_b: 'Wedding fleet & guest dispatch · {{agency}}',
     body: `{{greeting}}
 
-Last note from me. Next time you fly into Malpensa or Linate for site visits, message me on WhatsApp and your airport transfer is on us.
+Last note from me so I do not crowd your inbox. Whenever you are planning guest transport for an upcoming Lake Como or Milan wedding, send the venue and guest count on WhatsApp (+32 456 14 14 97) for a tailored fleet plan and net quote.
 
 Wishing you a calm, successful season.
 
@@ -65,24 +65,24 @@ Wishing you a calm, successful season.
 {{optout}}`,
   },
   {
-    key: 'T3_followup', language: 'it', kind: 'sequence', name: 'T3 Follow-up (Portale Ospiti)', subject_a: '', subject_b: '',
+    key: 'T3_followup', language: 'it', kind: 'sequence', name: 'T3 Follow-up (Matrimonio 70 Ospiti & Portale)', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
-Un rapido follow-up: anche se avete già un fornitore abituale, potete testarci su una singola navetta notturna o nei weekend di punta.
+Un rapido aggiornamento: la scorsa settimana sul Lago di Como abbiamo coordinato 12 Mercedes-Benz Classe V per un matrimonio di 70 ospiti, gestendo arrivi aeroportuali, cambi volo e navette notturne tramite il nostro Portale Ospiti senza una sola chiamata agli organizzatori.
 
-Vi mando il listino di 1 pagina e il link del Portale Ospiti (tariffe nette o commissione 5%)?
+Posso inviarvi il nostro listino partner di 1 pagina (tariffe nette o commissione 5%)?
 
 {{signature}}
 
 {{optout}}`,
   },
   {
-    key: 'T4_breakup', language: 'it', kind: 'sequence', name: 'T4 Email di chiusura (nuovo thread)',
+    key: 'T4_breakup', language: 'it', kind: 'sequence', name: 'T4 Email di chiusura (disattivata)',
     subject_a: '{{agency}} · logistica trasporti Lago di Como e Nord Italia',
-    subject_b: 'Transfer per i vostri prossimi sopralluoghi · {{agency}}',
+    subject_b: 'Flotta eventi e coordinamento ospiti · {{agency}}',
     body: `{{greeting}}
 
-Chiudo qui per non affollare la vostra casella. Al vostro prossimo sopralluogo su Milano o Como, scrivetemi su WhatsApp e il transfer aeroportuale sarà offerto da noi.
+Chiudo qui per non affollare la vostra casella. Quando pianificherete i trasferimenti ospiti per un prossimo matrimonio sul Lago di Como o a Milano, scrivetemi data e location su WhatsApp (+32 456 14 14 97) per ricevere il piano flotta e le tariffe nette.
 
 Buona stagione.
 
@@ -130,10 +130,12 @@ Happy to speak. I am free {{slot_1}} or {{slot_2}}, or send a time that suits yo
 {{signature}}`,
   },
   {
-    key: 'reply_has_supplier', language: 'en', kind: 'reply', name: 'Reply: already has a supplier', subject_a: '', subject_b: '',
+    key: 'reply_has_supplier', language: 'en', kind: 'reply', name: 'Reply: already has a supplier', subject_a: '', subject_b: '', attach_rate_card: true,
     body: `{{greeting}}
 
-Understood. Keep our 1-page rate card on file for peak Saturdays when your main driver is full, or if you ever want to test us on a single late-night villa shuttle.
+Understood, local drivers are great for individual cars. Where studios bring us in is for multi-hotel weddings of 50 to 150+ guests that require 10+ coordinated Mercedes-Benz V-Classes, 16 to 50-seat minibuses and our Guest Transfer Portal under one dispatcher.
+
+I have attached our 1-page partner rate card for your files whenever a full-fleet production comes up.
 
 {{signature}}`,
   },

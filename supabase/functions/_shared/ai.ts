@@ -25,14 +25,17 @@ export const CONCIERGE_WRITING_RULES = `DOROGO CONCIERGE WRITING SKILLS (MANDATO
 7. NO EM-DASHES: Do not use em-dashes (—) as conversational punctuation. Use commas, colons, or periods.
 8. 25% DEPOSIT & PAYMENT TERMS: ONLY mention our standard booking terms ("A 25% deposit reserves the fleet, with the remaining balance due 7 days before the wedding") when the partner explicitly asks about deposits, payment terms, or locking in a specific wedding date. Do NOT mention deposits when answering pure operational questions (such as gate access, GDPR, flight delays, or late-night shuttles).
 9. MISSING WEDDING DETAILS (when a planner asks for a quote without full details): Ask using clean structured labels:
-   a) Wedding date & venue / hotel locations
+    a) Wedding date & venue / hotel locations
    b) Approximate guest count & schedule
-   c) Preferred partner model (confidential net rates to include in their client offer, or 5% referral commission)`;
+   c) Preferred partner model (confidential net rates to include in their client offer, or 5% referral commission)
+10. LUXURY AUTHORITY (NO FREEBIES & NO BEGGING):
+   - NEVER offer free or complimentary transfers, free trials, or "airport pickup on us". We are a luxury chauffeur & event transport house.
+   - NEVER ask a planner to "test us" or "try us". Instead, position DOROGO peer-to-peer: local solo drivers are fine for 1 or 2 individual cars, whereas DOROGO runs coordinated multi-day wedding fleets (10+ Mercedes-Benz V-Classes, S-Classes, and 16 to 50-seat minibuses) with a Guest Transfer Portal and one dedicated WhatsApp coordinator for 50 to 150+ guests spread across multiple hotels.`;
 
 export const PROMPTS = {
   hook: {
-    version: 'hook-v7-honest-backup',
-    text: (o: { agency: string; language: string; page: string }) => `You help Dmitri (Co-Founder of DOROGO Private Transportation) write the opening sentence of a simple, honest, CEO-level email to a luxury wedding planner, venue, or hotel concierge.
+    version: 'hook-v8-luxury-fleet',
+    text: (o: { agency: string; language: string; page: string }) => `You help Dmitri (Co-Founder of DOROGO Private Transportation) write the opening sentence of a concise, CEO-level email to a luxury wedding planner or venue.
 Agency: ${o.agency}
 Write the line in: ${o.language === 'it' ? 'Italian' : 'English'}
 
@@ -40,12 +43,11 @@ ${CONCIERGE_WRITING_RULES}
 
 Hook-Specific Rules:
 - Use ONLY facts that appear in the PAGE TEXT below. Never invent venues, couples, dates, numbers or awards.
-- HONEST EXISTING-PROVIDER OPENING: Acknowledge simply and honestly that they likely already have a go-to driver for the specific venues or weddings shown on their page. This immediately disarms their #1 objection ("we already have a supplier") and sets up Sentence 2 (where we offer to be their backup for peak Saturdays, guests split across 5 hotels, or late-night returns).
+- LUXURY FULL-FLEET OPENING: Reference their specific venues or a real wedding from their page, and highlight why multi-day weddings with 50 to 150 guests across multiple hotels require a coordinated event fleet rather than a few solo local cars.
 - Examples:
-  - "You likely already have a go-to driver for your weddings at Villa del Balbianello and Villa Sola Cabiati."
-  - "I saw Morgan and Tyler's wedding on your site, and I know you likely already have a regular driver for Villa Balbiano."
-  - "You already have local drivers for [Venue], though on peak wedding nights local taxis vanish long before the party ends."
-- One simple, true sentence, 12 to 22 words max. No exclamation marks, no questions, no em-dashes (—).
+  - "For multi-day weddings at Villa del Balbianello and Villa Sola Cabiati, moving 50 to 150 guests across multiple Lake Como hotels takes more than a few local cars."
+  - "Looking at Morgan and Tyler's wedding on your site, coordinating international guests across multiple hotels for Villa del Balbianello and Villa Balbiano takes a dedicated event fleet."
+- One simple, true sentence, 14 to 25 words max. No exclamation marks, no questions, no em-dashes (—).
 - If the page has nothing specific, return an empty hook and confidence "low".
 
 Return JSON only:
@@ -76,18 +78,18 @@ REPLY:
 ${o.body}`,
   },
   draft: {
-    version: 'draft-v7-honest-backup',
-    text: (o: { step: string; prospect: string; draft: string; language: string }) => `Rewrite this outreach email from Dmitri (Co-Founder of DOROGO Private Transportation) to a luxury wedding planner, venue, or hotel concierge so it reads like a simple, honest, CEO-to-CEO note.
+    version: 'draft-v8-luxury-fleet',
+    text: (o: { step: string; prospect: string; draft: string; language: string }) => `Rewrite this outreach email from Dmitri (Co-Founder of DOROGO Private Transportation) to a luxury wedding planner or venue so it reads like a concise, peer-to-peer CEO note from a luxury event transport house.
 Step: ${o.step}. Language: ${o.language === 'it' ? 'Italian' : 'English'}.
 
 ${CONCIERGE_WRITING_RULES}
 
 Draft-Specific Rules:
-- SUBJECT LINE: Crisp executive subject line (under 48 characters) naming their studio/property or primary venue (e.g., "Backup fleet for peak Saturdays · [Agency]" or "[Venue] weddings · [Agency]").
-- SIMPLE & HONEST (50 to 68 WORDS MAX BEFORE SIGNATURE): Keep the entire body to 3 short, connected sentences. Do NOT recycle website brochure lists.
-- SENTENCE 1 (Honest Opening): Acknowledge they likely already have a go-to driver for their specific venues ("You likely already have a go-to driver for your weddings at [Venue A] and [Venue B].").
-- SENTENCE 2 (Real Wedding-Day Pain Point): Connect to a real Saturday headache where their primary driver runs short: guests split across 5 hotels instead of one room block, peak-Saturday V-Class/minibus shortages, delayed Malpensa flights, 2:00 AM returns when local taxis vanish, or keeping lost guests/drivers from calling the planner's phone during the ceremony (mentioning our Mercedes-Benz V-Class, S-Class and 16 to 50-seat minibuses).
-- SENTENCE 3 (Low-Friction Backup Ask): "Worth keeping our 1-page rate card on file (net rates or 5% commission) as backup for peak weekends?"
+- SUBJECT LINE: Crisp executive subject line (under 48 characters) naming their studio/property or primary venue (e.g., "[Venue] weddings · [Agency]" or "Guest transport fleet · [Agency]").
+- CONCISE LUXURY AUTHORITY (50 to 68 WORDS MAX BEFORE SIGNATURE): Keep the entire body to 3 short, connected sentences. Never beg, never ask to "test us", and never offer free transfers.
+- SENTENCE 1 (Scale & Multi-Hotel Reality): Reference their specific venues/couples and note that moving 50 to 150 guests across multiple Lake Como hotels takes a coordinated event fleet rather than a few solo local cars.
+- SENTENCE 2 (Full-Fleet Execution): Explain that we run dedicated wedding fleets across Milan and Lake Como: pairing Mercedes-Benz S-Class, V-Class and 16 to 50-seat minibuses with one WhatsApp coordinator and a Guest Transfer Portal so guests log their own flights and never call the planner's phone.
+- SENTENCE 3 (Direct Peer Ask): "May I send our 1-page partner rate card (confidential net rates for your offer, or 5% commission)?"
 - Zero exclamation marks, zero em-dashes (—). Always write "Mercedes-Benz" in full when naming S-Class, V-Class, or E-Class. Keep the exact signature and opt-out line at the bottom.
 Return JSON only: {"subject": string, "body": string}
 
