@@ -15,7 +15,7 @@ export const DEFAULT_TEMPLATES = [
 
 We run a private fleet of Mercedes-Benz V-Class, E-Class and S-Class vehicles between Milan, Malpensa and Lake Como, mostly looking after staggered airport arrivals and the late-night returns from the villas after midnight.
 
-If you ever need a reliable backup on the lake, may I send over our 1-page partner rate card?
+If you're open to a dedicated transport partner on the lake this season, may I send over our 1-page partner rate card?
 
 {{signature}}
 
@@ -29,7 +29,7 @@ Quick follow-up on the part of the night that usually causes the most stress on 
 
 We keep a dedicated Mercedes-Benz V-Class on standby outside the villa from midnight until 4 am so guests can leave whenever they are ready.
 
-Would it be useful to have our 2026 net rate sheet on file just in case?
+Would it be useful to have our 2026 partner rate sheet on file for your upcoming weddings?
 
 {{signature}}
 
@@ -41,7 +41,7 @@ Would it be useful to have our 2026 net rate sheet on file just in case?
     subject_b: 'Lake Como chauffeur contact · {{agency}}',
     body: `{{greeting}}
 
-I will leave this here so I do not crowd your inbox while you are busy planning. If you ever get stuck with a last-minute airport transfer or a late-night villa shuttle on Lake Como, my WhatsApp and our 1-page rate card are one reply away.
+I will leave this here so I do not crowd your inbox while you are busy planning. If you ever need a private airport transfer or a late-night villa shuttle on Lake Como, my WhatsApp and our 1-page partner rate card are one reply away.
 
 Wishing you a calm season ahead.
 
@@ -60,7 +60,7 @@ Wishing you a calm season ahead.
 
 Operiamo tra Milano, Malpensa e il Lago di Como con una flotta privata di Mercedes-Benz Classe V, Classe E e Classe S, seguendo soprattutto gli arrivi scaglionati in aeroporto e i rientri notturni dalle ville dopo mezzanotte.
 
-Se vi fa comodo avere un contatto affidabile di supporto sul lago, posso inviarvi la nostra tariffa partner di una pagina?
+Se valutate un partner dedicato per i transfer sul lago in questa stagione, posso inviarvi la nostra tariffa partner di una pagina?
 
 {{signature}}
 
@@ -74,7 +74,7 @@ Un breve messaggio sulla parte della serata più delicata da gestire sul lago: r
 
 Teniamo una Mercedes-Benz Classe V dedicata in attesa fuori dalla villa da mezzanotte alle 4 del mattino, così gli ospiti rientrano quando preferiscono.
 
-Vi fa comodo ricevere il foglio con le tariffe nette 2026 da tenere in archivio?
+Vi fa comodo ricevere il foglio con le tariffe partner 2026 per i vostri prossimi matrimoni?
 
 {{signature}}
 
