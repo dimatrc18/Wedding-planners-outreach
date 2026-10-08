@@ -152,14 +152,28 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
 }
 
 // ---------------- Inbox & Conversational AI ----------------
-export function formatThreadHistory(list: any[]) {
-  return list
-    .filter((t: any) => (t.direction === 'out' && ['sent', 'approved', 'draft'].includes(t.state)) || t.direction === 'in')
-    .slice(-6)
-    .map((t: any) => {
+export function formatThreadHistory(list: any[], excludeInboundId: string | null = null) {
+  const hasSentOut = list.some((t: any) => t.direction === 'out' && t.state === 'sent');
+  const filtered = list
+    .filter((t: any) => {
+      if (excludeInboundId && t.id === excludeInboundId) return false;
+      if (t.direction === 'in') return !t.bounced;
+      if (t.direction === 'out') return hasSentOut ? t.state === 'sent' : ['sent', 'approved', 'draft'].includes(t.state);
+      return false;
+    })
+    .sort(
+      (a: any, b: any) =>
+        new Date(a.sent_at || a.replied_at || a.created_at || 0).getTime() -
+        new Date(b.sent_at || b.replied_at || b.created_at || 0).getTime(),
+    );
+
+  return filtered
+    .slice(-12)
+    .map((t: any, idx: number) => {
       const who = t.direction === 'out' ? 'DOROGO (Dmitri)' : 'Planner';
       const at = (t.sent_at || t.replied_at || t.created_at || '').slice(0, 16);
-      return `[${who} · ${at}]\n${core.stripQuoted(t.body || '').slice(0, 800)}`;
+      const subj = idx === 0 && t.subject ? `Subject: ${t.subject}\n` : '';
+      return `[${who} · ${at}]\n${subj}${core.stripQuoted(t.body || '').slice(0, 1200)}`;
     })
     .join('\n\n---\n\n');
 }
@@ -239,7 +253,7 @@ export async function applyInbound(
           contact_name: p.contact_name || '',
           language: p.language || 'en',
           status: p.status,
-          thread_history: formatThreadHistory(list),
+          thread_history: formatThreadHistory(list, inbound?.id || null),
           latest_reply: cleanReply.slice(0, 3000),
         },
         p.id || null,
@@ -395,7 +409,9 @@ export async function syncInbox(db: any, settings: any, now = new Date()) {
     };
     const { data: ins, error } = await db.from('touches').insert(row).select().single();
     if (error) { if (error.code !== '23505') console.error(error.message); continue; }
-    await applyInbound(db, p, touches.filter((t: any) => t.prospect_id === p.id), ins, cls, settings, templates, now);
+    const fx = await applyInbound(db, p, touches.filter((t: any) => t.prospect_id === p.id), ins, cls, settings, templates, now);
+    touches.push(ins);
+    if (fx?.patch) Object.assign(p, fx.patch);
     stored++;
   }
   await setState(db, 'imap', { last_uid: fetched.lastUid, last_sync_at: now.toISOString(), last_error: null, last_count: stored });

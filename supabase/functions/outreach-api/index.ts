@@ -181,7 +181,7 @@ async function aiRedraft(db: any, body: any) {
         contact_name: p.contact_name || '',
         language: p.language || 'en',
         status: p.status,
-        thread_history: formatThreadHistory(list),
+        thread_history: formatThreadHistory(list, lastIn?.id || null),
         latest_reply: core.stripQuoted(lastIn?.body || t.body || '').slice(0, 3000),
       },
       p.id,
