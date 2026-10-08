@@ -12,10 +12,10 @@ export const RATE_CARD = {
     { key: 'lugano_como', label: 'Lugano → Lake Como', E: 170, V: 210, S: 280 },
   ],
   hourly: { V: 90, S: 110, min_hours: 3 },
-  late_night_shuttle: { V: 450, window: '00:00 to 04:00' },
+  late_night_shuttle: { V: 450, window: 'late-night block' },
   deposit: 0.25,
   balance_days_before: 7,
-  referral_commission: 0.12,
+  referral_commission: 0.05,
   planner_markup_range: [0.15, 0.25],
 };
 

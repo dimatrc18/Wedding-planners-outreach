@@ -105,6 +105,6 @@ test('rate card quote and commission', () => {
   const q = quoteNet([{ kind: 'route', route: 'mxp_bellagio', vehicle: 'V', qty: 4 }, { kind: 'shuttle', qty: 2 }, { kind: 'hourly', vehicle: 'S', hours: 2, qty: 1 }]);
   assert.equal(q.total, 4 * 320 + 2 * 450 + 3 * 110);
   assert.equal(q.deposit, Math.round(q.total * 0.25));
-  assert.equal(commissionFor(10000, 'referral_12'), 1200);
+  assert.equal(commissionFor(10000, 'referral_12'), 500);
   assert.equal(commissionFor(10000, 'net_whitelabel'), 0);
 });

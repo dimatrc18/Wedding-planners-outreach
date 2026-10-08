@@ -84,7 +84,7 @@ export const DEFAULT_SETTINGS = {
   nurture_month_day: '10-01',
   targets: { open_rate: 0.5, positive_reply_rate: 0.10, positive_reply_rate_high: 0.15, ratecard_to_quote: 0.25, partners_won: 5, partners_won_high: 10 },
   avg_wedding_transport_value: 10000,
-  commission_rate: 0.12,
+  commission_rate: 0.05,
 };
 
 // Lake Como towns used for coverage and for spotting place names in planner websites.

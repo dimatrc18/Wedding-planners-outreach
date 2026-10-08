@@ -33,12 +33,12 @@ export function render(el, _param, sub) {
     </div>
     <section class="section"><div class="section-head"><h2>Roster</h2></div>
       ${rows.length ? `<div class="card flush table-wrap"><table><thead><tr><th>Partner</th><th>Model</th><th class="num">Bookings</th><th>Next wedding</th><th class="num">Revenue</th><th class="num">Commission due</th><th>Re-engage</th></tr></thead><tbody>
-      ${rows.map((r) => `<tr class="clickable" data-open="${attr(r.p.id)}"><td><b>${esc(r.p.agency_name)}</b><div class="small muted">${esc(r.p.location || '')}</div></td><td>${r.p.partner_model === 'referral_12' ? 'A · 12% referral' : r.p.partner_model === 'net_whitelabel' ? 'B · Net' : '–'}</td>
+      ${rows.map((r) => `<tr class="clickable" data-open="${attr(r.p.id)}"><td><b>${esc(r.p.agency_name)}</b><div class="small muted">${esc(r.p.location || '')}</div></td><td>${r.p.partner_model === 'referral_12' ? 'A · 5% referral' : r.p.partner_model === 'net_whitelabel' ? 'B · Net / in offer' : '–'}</td>
         <td class="num">${r.won.length}</td><td>${r.upcoming[0] ? `${esc(fmtDate(r.upcoming[0].wedding_date, { year: 'numeric' }))} <span class="small muted">${esc(r.upcoming[0].venue || '')}</span>` : '–'}</td>
         <td class="num">${eur(r.revenue)}</td><td class="num">${eur(r.owed - r.paid)}</td><td class="small">${esc(fmtDate(r.p.reengage_at, { year: 'numeric' }))}</td></tr>`).join('')}</tbody></table></div>`
       : '<div class="empty">No partners yet. A prospect becomes a partner when you move it to Partner Won.</div>'}</section>
 
-    <section class="section"><div class="section-head"><h2>Commission ledger</h2><span class="hint">Model A pays 12% once the couple's balance is settled</span></div>
+    <section class="section"><div class="section-head"><h2>Commission ledger</h2><span class="hint">Model A pays 5% once the couple's balance is settled</span></div>
       ${ledger.length ? `<div class="card flush table-wrap"><table><thead><tr><th>Booking</th><th>Wedding</th><th class="num">Revenue</th><th class="num">Owed</th><th class="num">Paid</th><th></th></tr></thead><tbody>
       ${ledger.map((o) => { const due = (+o.commission_owed || 0) - (+o.commission_paid || 0); return `<tr><td><b>${esc(A.prospectById(o.prospect_id)?.agency_name || '')}</b><div class="small muted">${esc(o.title || '')}</div></td><td>${esc(fmtDate(o.wedding_date, { year: 'numeric' }))}</td><td class="num">${eur(o.actual_revenue)}</td><td class="num">${eur(o.commission_owed)}</td><td class="num">${eur(o.commission_paid)}</td>
         <td>${due > 0 ? `<button class="btn sm" data-pay="${attr(o.id)}">Mark ${eur(due)} paid</button>` : `<span class="chip ok">Paid${o.commission_paid_at ? ` ${esc(fmtDate(o.commission_paid_at))}` : ''}</span>`}</td></tr>`; }).join('')}</tbody></table></div>`

@@ -199,7 +199,7 @@ export function formatRateCardFactsForAi() {
     .join('\n');
   return [
     `DOROGO 2026 Verified Wedding & Event Partner Facts (dorogo.eu/weddings):`,
-    `- Core Value Proposition: We take the entire guest transportation workload off the wedding planner's or venue's shoulders across a full 3-day wedding weekend (Friday arrival waves & welcome dinner, Saturday hotel clusters, water-taxi & private boat pier synchronization, 8-hour dedicated standby blocks, and continuous 00:00–04:00 late-night villa return loops, plus Sunday departures).`,
+    `- Core Value Proposition: We take the entire guest transportation workload off the wedding planner's or venue's shoulders across a full 3-day wedding weekend (Friday arrival waves & welcome dinner, Saturday hotel clusters, water-taxi & private boat pier synchronization, 8-hour dedicated standby blocks, and continuous late-night villa return loops through the final departures, plus Sunday departures).`,
     `- Regions Covered: Lake Como, the Italian Lakes (Lake Maggiore, Lake Garda, Lake Orta, Lake Iseo), Milan (Malpensa MXP, Linate LIN, Bergamo BGY), Lugano, Zurich, Venice, Portofino, Tuscany, and the Italian & Swiss Alps (St. Moritz, Cortina, Bormio, Cervinia).`,
     `- Self-Service Guest Transfer Portal (dorogo.eu/weddings/guest-portal): We provide a custom registration link for the couple's wedding website where guests enter their own flight numbers, get grouped into shared or private transfers, and pay directly via SumUp links (so the planner never has to manage flight spreadsheets or chase guest payments).`,
     `- Fleet & Group Shuttles: Mercedes-Benz S-Class (VIP/bridal couple, up to 3 guests), Mercedes-Benz V-Class (up to 7 guests), Mercedes-Benz E-Class (up to 3 guests), plus 16 to 50-seat minibuses and coaches (compact minibuses for narrow lakeside roads and stone villa gates, and 50-seat luxury coaches for large hotel clusters). Full ZTL and historic villa gate permits included.`,
@@ -208,7 +208,7 @@ export function formatRateCardFactsForAi() {
     routes,
     `- Hourly disposal (minimum ${RATE_CARD.hourly.min_hours} hours): V-Class €${RATE_CARD.hourly.V}/h net, S-Class €${RATE_CARD.hourly.S}/h net.`,
     `- Late-Night Villa Return Shuttle (${RATE_CARD.late_night_shuttle.window}): €${RATE_CARD.late_night_shuttle.V} flat net per Mercedes-Benz V-Class on standby at the venue doing continuous loops to local hotels.`,
-    `- Partner Models: Model A = 12% referral commission (DOROGO bills couple/guests directly); Model B = Confidential net rates above (planner marks up 15–25% under their own brand).`,
+    `- Partner Models: Model A = 5% referral/concierge commission (DOROGO bills couple/guests directly); Model B = Confidential net rates above that the planner/venue can include directly in their own client offer/proposal with their own markup (15–25%).`,
     `- Booking Terms: 25% deposit locks the fleet; balance 7 days before the wedding.`,
   ].join('\n');
 }

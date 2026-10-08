@@ -115,7 +115,7 @@ export function render(el) {
 
     <section class="card stack"><div class="section-head"><h2>Revenue by planner</h2></div>
       ${perPlanner.length ? `<div class="table-wrap"><table><thead><tr><th>Planner</th><th>Model</th><th class="num">Bookings won</th><th class="num">Revenue</th><th class="num">Open pipeline</th><th class="num">Commission due</th></tr></thead><tbody>
-      ${perPlanner.map((r) => `<tr class="clickable" data-open="${attr(r.p.id)}"><td><b>${esc(r.p.agency_name)}</b></td><td>${r.p.partner_model === 'referral_12' ? 'A · 12%' : r.p.partner_model === 'net_whitelabel' ? 'B · net' : '–'}</td><td class="num">${r.bookings}</td><td class="num">${eur(r.revenue)}</td><td class="num">${eur(r.pipeline)}</td><td class="num">${eur(r.owed)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty small">No opportunities yet.</div>'}
+      ${perPlanner.map((r) => `<tr class="clickable" data-open="${attr(r.p.id)}"><td><b>${esc(r.p.agency_name)}</b></td><td>${r.p.partner_model === 'referral_12' ? 'A · 5%' : r.p.partner_model === 'net_whitelabel' ? 'B · net' : '–'}</td><td class="num">${r.bookings}</td><td class="num">${eur(r.revenue)}</td><td class="num">${eur(r.pipeline)}</td><td class="num">${eur(r.owed)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty small">No opportunities yet.</div>'}
     </section>
   </div>`;
 

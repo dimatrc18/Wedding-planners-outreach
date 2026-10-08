@@ -243,7 +243,7 @@ export function tractionVerdict(m, facts = [], settings = DEFAULT_SETTINGS) {
 
   const noHook = facts.filter(({ f, p }) => f.contacted && !(p.personalization_hook || '').trim()).length;
   if (noHook) suggestions.push(`${noHook} contacted planner${noHook === 1 ? '' : 's'} had no specific hook. Generic first lines cost replies.`);
-  if (m.replyRate.p !== null && n >= 10 && m.replyRate.p >= 0.15 && ci.p < tg.positive_reply_rate) suggestions.push('Planners reply but rarely say yes. Revisit the offer line (12% vs net rates) rather than the subject.');
+  if (m.replyRate.p !== null && n >= 10 && m.replyRate.p >= 0.15 && ci.p < tg.positive_reply_rate) suggestions.push('Planners reply but rarely say yes. Revisit the offer line (5% vs net rates) rather than the subject.');
   if (m.bounceRate.n >= 10 && m.bounceRate.p > 0.03) suggestions.push(`Bounce rate ${pct(m.bounceRate.p)}. Verify addresses before marking prospects Ready.`);
   if (m.rateCard >= 4 && m.ratecardToQuote.n && m.ratecardToQuote.p < tg.ratecard_to_quote) suggestions.push('Rate cards are going out but few turn into quotes. Offer a free FAM transfer after the rate card.');
   if (m.medianMyResponseHours !== null && m.medianMyResponseHours > 4) suggestions.push(`Your median response time is ${m.medianMyResponseHours.toFixed(1)} h. Aim for under 15 minutes on positive replies.`);

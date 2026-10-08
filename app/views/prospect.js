@@ -132,7 +132,7 @@ export function render(el, id) {
         <section class="card stack">
           <div class="section-head"><h2>Partnership & dates</h2></div>
           <div class="fields" id="dates">
-            <label class="field"><span>Partner model</span><select data-f="partner_model"><option value="">–</option><option value="referral_12" ${p.partner_model === 'referral_12' ? 'selected' : ''}>A · 12% referral</option><option value="net_whitelabel" ${p.partner_model === 'net_whitelabel' ? 'selected' : ''}>B · Net / white-label</option></select></label>
+            <label class="field"><span>Partner model</span><select data-f="partner_model"><option value="">–</option><option value="referral_12" ${p.partner_model === 'referral_12' ? 'selected' : ''}>A · 5% referral</option><option value="net_whitelabel" ${p.partner_model === 'net_whitelabel' ? 'selected' : ''}>B · Net / in offer</option></select></label>
             <label class="field"><span>FAM transfer</span><select data-f="fam_status"><option value="">–</option>${['offered', 'accepted', 'completed', 'declined'].map((o) => `<option ${p.fam_status === o ? 'selected' : ''}>${o}</option>`).join('')}</select></label>
             <label class="field"><span>FAM date</span><input type="datetime-local" data-f="fam_at" value="${toLocalInput(p.fam_at)}"></label>
             <label class="field"><span>Nurture until</span><input type="datetime-local" data-f="nurture_until" value="${toLocalInput(p.nurture_until)}"></label>
@@ -151,7 +151,7 @@ export function render(el, id) {
 
         <section class="section"><div class="section-head"><h2>Opportunities <span class="count">${opps.length}</span></h2><button class="btn sm" data-act="opp-new">${icon('plus', 15)} Add</button></div>
           ${opps.length ? `<div class="card flush list">${opps.map((o) => `<button class="list-item clickable" style="border:0;border-top:1px solid var(--line);background:none;width:100%;text-align:left" data-opp="${attr(o.id)}">
-            <div class="t"><b>${esc(o.title || 'Wedding')}</b><span class="small muted">${[o.wedding_date && fmtDate(o.wedding_date, { year: 'numeric' }), o.venue, o.guest_count && `${o.guest_count} guests`, o.model === 'referral_12' ? '12% referral' : o.model === 'net_whitelabel' ? 'net' : ''].filter(Boolean).map(esc).join(' · ')}</span></div>
+            <div class="t"><b>${esc(o.title || 'Wedding')}</b><span class="small muted">${[o.wedding_date && fmtDate(o.wedding_date, { year: 'numeric' }), o.venue, o.guest_count && `${o.guest_count} guests`, o.model === 'referral_12' ? '5% referral' : o.model === 'net_whitelabel' ? 'net' : ''].filter(Boolean).map(esc).join(' · ')}</span></div>
             <span class="chip ${o.stage === 'won' ? 'ok' : o.stage === 'lost' ? 'bad' : 'gold'}">${esc(o.stage)}</span><span class="num">${eur(o.actual_revenue ?? o.estimated_value)}</span></button>`).join('')}</div>` : '<div class="empty small">Created automatically when a planner asks for prices or a call.</div>'}
         </section>
 
@@ -370,7 +370,7 @@ export async function oppDialog(p, o) {
     body: `<div class="fields">
       <label class="field"><span>Title</span><input type="text" id="o-title" value="${attr(o?.title || `${p.agency_name} wedding`)}"></label>
       <label class="field"><span>Stage</span><select id="o-stage">${['open', 'quote_sent', 'won', 'lost'].map((s) => `<option ${o?.stage === s ? 'selected' : ''}>${s}</option>`).join('')}</select></label>
-      <label class="field"><span>Model</span><select id="o-model"><option value="">–</option><option value="referral_12" ${(o?.model || p.partner_model) === 'referral_12' ? 'selected' : ''}>A · 12% referral</option><option value="net_whitelabel" ${(o?.model || p.partner_model) === 'net_whitelabel' ? 'selected' : ''}>B · Net / white-label</option></select></label>
+      <label class="field"><span>Model</span><select id="o-model"><option value="">–</option><option value="referral_12" ${(o?.model || p.partner_model) === 'referral_12' ? 'selected' : ''}>A · 5% referral</option><option value="net_whitelabel" ${(o?.model || p.partner_model) === 'net_whitelabel' ? 'selected' : ''}>B · Net / in offer</option></select></label>
       <label class="field"><span>Wedding date</span><input type="date" id="o-date" value="${attr(o?.wedding_date || '')}"></label>
       <label class="field"><span>Venue</span><input type="text" id="o-venue" value="${attr(o?.venue || '')}"></label>
       <label class="field"><span>Guests</span><input type="number" id="o-guests" value="${attr(o?.guest_count ?? '')}"></label>
@@ -395,7 +395,7 @@ export async function oppDialog(p, o) {
           ${it.kind === 'route' ? `<select data-k="route">${core.RATE_CARD.routes.map((r) => `<option value="${r.key}" ${it.route === r.key ? 'selected' : ''}>${esc(r.label)}</option>`).join('')}</select>
             <select data-k="vehicle" style="width:auto">${['E', 'V', 'S'].map((v) => `<option ${it.vehicle === v ? 'selected' : ''}>${v}</option>`).join('')}</select>`
           : it.kind === 'hourly' ? `<span class="grow small">Hourly</span><select data-k="vehicle" style="width:auto">${['V', 'S'].map((v) => `<option ${it.vehicle === v ? 'selected' : ''}>${v}</option>`).join('')}</select><input type="number" data-k="hours" value="${it.hours || 3}" style="width:70px" aria-label="Hours">`
-          : '<span class="grow small">Late-night villa shuttle, V-Class 00:00 to 04:00</span>'}
+          : '<span class="grow small">Late-night villa shuttle, V-Class continuous loops</span>'}
           <input type="number" data-k="qty" value="${it.qty}" style="width:70px" aria-label="Quantity" min="0"></div>`).join('');
         const q = core.quoteNet(items);
         b.querySelector('#q-total').textContent = `${eur(q.total)} net · deposit ${eur(q.deposit)}`;

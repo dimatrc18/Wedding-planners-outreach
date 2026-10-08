@@ -109,7 +109,7 @@ Buon lavoro e buona stagione.
 
 Here is our 1-page partner rate card for 2026, attached.
 
-It covers fixed net rates from Malpensa, Linate and Lugano to the lake, hourly service, and the late-night villa shuttle. You can work with us on a 12% referral commission, where we bill the couple, or on net rates that you mark up under your own name.
+It covers fixed net rates from Malpensa, Linate and Lugano to the lake, hourly service, and the late-night villa shuttle. You can either include our confidential net rates directly in your client offer with your own markup, or work with us on a 5% referral commission where we bill the couple directly.
 
 If you have a date and venue in mind, send them with the guest count and I'll draft the transport plan.
 
@@ -121,7 +121,7 @@ If you have a date and venue in mind, send them with the guest count and I'll dr
 
 In allegato la nostra tariffa partner 2026, in una pagina.
 
-Contiene le tariffe nette fisse da Malpensa, Linate e Lugano verso il lago, il servizio orario e la navetta notturna dalle ville. Potete lavorare con noi con una commissione del 12% sulle prenotazioni segnalate, dove fatturiamo direttamente agli sposi, oppure con tariffe nette da rivendere con il vostro marchio.
+Contiene le tariffe nette fisse da Malpensa, Linate e Lugano verso il lago, il servizio orario e la navetta notturna dalle ville. Potete inserire le nostre tariffe nette riservate direttamente nella vostra offerta agli sposi, oppure lavorare con noi con una commissione del 5% sulle prenotazioni segnalate, dove fatturiamo direttamente agli sposi.
 
 Se avete già una data e una location, mandatemi anche il numero di ospiti e preparo il piano dei transfer.
 
@@ -131,7 +131,7 @@ Se avete già una data e una location, mandatemi anche il numero di ospiti e pre
     key: 'reply_asks_pricing', language: 'en', kind: 'reply', name: 'Reply: asks for prices', subject_a: '', subject_b: '', attach_rate_card: true,
     body: `{{greeting}}
 
-The rate card is attached. As a guide, a Mercedes-Benz V-Class from Malpensa to Como is €230 net, and to Bellagio €320. The late-night villa shuttle is €450 per V-Class, from midnight to 4 am.
+The rate card is attached. As a guide, a Mercedes-Benz V-Class from Malpensa to Como is €230 net, and to Bellagio €320. The late-night villa shuttle is €450 per V-Class for continuous return loops to local hotels.
 
 If you share the date, venue and guest count, I'll put together a full transport plan with a fixed price.
 
