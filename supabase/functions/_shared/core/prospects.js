@@ -222,7 +222,7 @@ export function parseProfileUrl(url = '') {
   return {};
 }
 
-// Verified public contact & story directory for Lake Como agencies with direct CEO-to-CEO opening pitches
+// Verified public contact & story directory for Lake Como agencies with CEO-short connected venue-bottleneck hooks
 const KNOWN_LAKE_COMO_DIRECTORY = {
   federicacantu: {
     website: 'https://www.federicacantuweddingplanner.com',
@@ -231,7 +231,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     location: 'Como',
     segment: 'boutique_local',
     key_venues: ['Villa del Balbianello', 'Villa Balbiano'],
-    personalization_hook: "I saw Morgan and Tyler's wedding on your site: for your celebrations at Villa del Balbianello and Villa Balbiano, we can take the entire guest transport coordination off your plate.",
+    personalization_hook: "I saw Morgan and Tyler's wedding on your site: at Villa del Balbianello and Villa Balbiano, narrow gates and boat piers quickly turn guest transport into a spreadsheet headache.",
     hook_type: 'event',
   },
   comoluxury: {
@@ -241,7 +241,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     location: 'Como',
     segment: 'boutique_local',
     key_venues: ['Villa Pizzo', 'Villa Erba'],
-    personalization_hook: "For your multi-day weddings at Villa Pizzo and Villa Erba in Cernobbio, our team can take the entire guest transport workload off your plate.",
+    personalization_hook: "At Cernobbio venues like Villa Pizzo and Villa Erba, narrow gates and ZTL zones quickly turn guest transport into a spreadsheet headache.",
     hook_type: 'venue',
   },
   idoin: {
@@ -252,7 +252,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     verified_reviews_count: 35,
     segment: 'boutique_local',
     key_venues: ['Villa del Balbianello', 'Grand Hotel Tremezzo'],
-    personalization_hook: "For the multi-day weddings you plan across Menaggio, Tremezzina and Villa del Balbianello, we can take the entire guest transport side off your shoulders.",
+    personalization_hook: "Weddings across Menaggio, Tremezzina and Villa del Balbianello usually mean hours of flight spreadsheets and late-night boat-pier shuttles.",
     hook_type: 'event',
   },
   sugar: {
@@ -262,7 +262,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     location: 'Laglio',
     segment: 'boutique_local',
     key_venues: ['Relais Villa Vittoria', 'Villa Pizzo'],
-    personalization_hook: "For the weddings you and SugarEvents produce in Laglio and at Villa Pizzo, we can take the entire guest transport coordination off your plate.",
+    personalization_hook: "At narrow-gate venues in Laglio and Villa Pizzo, big coaches cannot enter and guest flight spreadsheets pile up fast.",
     hook_type: 'event',
   },
   lenafreitag: {
@@ -274,7 +274,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     verified_reviews_count: 18,
     segment: 'boutique_local',
     key_venues: ['Villa del Balbianello', 'Villa Sola Cabiati'],
-    personalization_hook: "For your weddings at Villa Sola Cabiati and Villa del Balbianello, we can take the entire guest transport workload off your shoulders.",
+    personalization_hook: "Weddings at Villa del Balbianello and Villa Sola Cabiati usually mean flight spreadsheets and late-night boat-pier shuttles.",
     hook_type: 'style',
   },
   romanceinitaly: {
@@ -286,7 +286,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     verified_reviews_count: 22,
     segment: 'boutique_local',
     key_venues: ['Villa Cipressi', 'Villa Monastero'],
-    personalization_hook: "For the destination weddings you plan in Varenna at Villa Cipressi and Villa Monastero, we can take the entire guest transport side off your plate.",
+    personalization_hook: "Weddings in Varenna at Villa Cipressi and Villa Monastero usually mean flight spreadsheets and scarce late-night taxis.",
     hook_type: 'venue',
   },
   kissandescape: {
@@ -294,7 +294,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     location: 'Bellagio',
     segment: 'boutique_local',
     key_venues: ['Villa Melzi', 'Villa Serbelloni'],
-    personalization_hook: "For your weddings in Bellagio around Villa Melzi and Villa Serbelloni, our team can take the entire guest transport coordination off your plate.",
+    personalization_hook: "Weddings in Bellagio at Villa Melzi and Villa Serbelloni usually mean flight spreadsheets and late-night shuttle bottlenecks.",
     hook_type: 'style',
   },
   relaisvillavittoria: {
@@ -304,7 +304,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     rating: 4.8,
     verified_reviews_count: 180,
     key_venues: ['Relais Villa Vittoria'],
-    personalization_hook: "For weddings and private buyouts at Relais Villa Vittoria in Laglio, we can take the entire guest transport coordination off your events desk.",
+    personalization_hook: "During wedding buyouts at Relais Villa Vittoria in Laglio, guest flights and late-night shuttles quickly overload the events desk.",
     hook_type: 'venue',
   },
   villalario: {
@@ -314,7 +314,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     rating: 4.9,
     verified_reviews_count: 140,
     key_venues: ['Villa Lario'],
-    personalization_hook: "For full-estate wedding buyouts at Villa Lario in Pognana Lario, we can take the entire guest transport coordination off your events team.",
+    personalization_hook: "During wedding buyouts at Villa Lario in Pognana Lario, guest flights and late-night shuttles quickly overload the events team.",
     hook_type: 'venue',
   },
   filario: {
@@ -324,7 +324,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     rating: 4.8,
     verified_reviews_count: 210,
     key_venues: ['Filario'],
-    personalization_hook: "For weddings and private events at Filario in Lezzeno, we can take the entire guest transfer and shuttle coordination off your front desk.",
+    personalization_hook: "During private events at Filario in Lezzeno, guest airport arrivals and late-night shuttles quickly overload the front desk.",
     hook_type: 'venue',
   },
   villacipressi: {
@@ -334,7 +334,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     rating: 4.8,
     verified_reviews_count: 320,
     key_venues: ['Villa Cipressi', 'Villa Monastero'],
-    personalization_hook: "For weddings and private events at Villa Cipressi in Varenna, we can take the entire guest transport coordination off your events desk.",
+    personalization_hook: "For weddings at Villa Cipressi in Varenna, guest flights and late-night returns when local taxis stop quickly overload the events desk.",
     hook_type: 'venue',
   },
   grandhotelimperiale: {
@@ -346,7 +346,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     rating: 4.7,
     verified_reviews_count: 290,
     key_venues: ['Grand Hotel Imperiale'],
-    personalization_hook: "Whenever your desk at Grand Hotel Imperiale in Moltrasio needs overflow fleet capacity or wedding-shuttle coordination, our team is ready to step in.",
+    personalization_hook: "During peak wedding weekends at Grand Hotel Imperiale in Moltrasio, house cars fill up fast on airport and villa runs.",
     hook_type: 'venue',
   },
   sposiamovi: {
@@ -386,7 +386,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Villa del Balbianello', 'Villa Erba', 'Villa Pizzo'],
-    personalization_hook: "For your multi-day weddings at Villa del Balbianello, Villa Erba and Villa Pizzo, we can take the entire guest transport workload off your shoulders.",
+    personalization_hook: "Weddings at Villa del Balbianello and Villa Erba usually mean hours of flight spreadsheets and late-night pier shuttles.",
     hook_type: 'event',
     notes: 'Discovered via AI Partner Search (Real Weddings & Portfolio verified).',
   },
@@ -403,7 +403,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Villa Cipressi', 'Villa Melzi', 'Villa del Balbianello'],
-    personalization_hook: "For the weddings you plan in Bellagio and Varenna at Villa Cipressi and Villa Melzi, we can take the entire guest transport coordination off your plate.",
+    personalization_hook: "Weddings in Varenna and Bellagio at Villa Cipressi and Villa Melzi usually mean flight spreadsheets and scarce late-night taxis.",
     hook_type: 'event',
     notes: 'Discovered via AI Partner Search (Boutique Lake Como specialist).',
   },
@@ -420,7 +420,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Villa del Balbianello', 'Villa Monastero', 'Villa Cipressi'],
-    personalization_hook: "For the weddings you plan across Lake Como, Maggiore, Garda and Orta, we can take the entire guest transport workload off your shoulders.",
+    personalization_hook: "Weddings at Villa del Balbianello and Villa Monastero usually mean hours of flight spreadsheets and late-night pier shuttles.",
     hook_type: 'event',
     notes: 'Discovered via AI Partner Search (Lake Como & Northern Italy lakes specialist).',
   },
@@ -437,7 +437,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Grand Hotel Tremezzo', 'Villa Sola Cabiati', 'Villa del Balbianello'],
-    personalization_hook: "Whenever your desk at Grand Hotel Tremezzo and Villa Sola Cabiati needs wedding shuttles or overflow VIP fleet support, our team can step right in.",
+    personalization_hook: "During peak wedding weekends at Grand Hotel Tremezzo and Villa Sola Cabiati, house cars fill up fast on airport and villa runs.",
     hook_type: 'venue',
     notes: 'Discovered via AI Partner Search (5-star hotel concierge & Villa Sola Cabiati events).',
   },
@@ -454,7 +454,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Villa Passalacqua'],
-    personalization_hook: "For private wedding buyouts at Passalacqua in Moltrasio, we can take the entire guest transfer and late-night shuttle coordination off your events desk.",
+    personalization_hook: "During wedding buyouts at Passalacqua in Moltrasio, narrow gates, guest flights and late-night shuttles quickly overload the events desk.",
     hook_type: 'venue',
     notes: 'Discovered via AI Partner Search (Moltrasio ultra-luxury villa buyout venue).',
   },
@@ -471,7 +471,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Villa Pizzo', 'Villa Balbiano'],
-    personalization_hook: "For your weddings at Villa Pizzo and Villa Balbiano, we can take the entire guest transport side off your shoulders.",
+    personalization_hook: "At narrow-gate venues like Villa Pizzo and Villa Balbiano, 50-seat coaches cannot enter and guest flight spreadsheets pile up fast.",
     hook_type: 'style',
     notes: 'Discovered via AI Partner Search (Milan & Lake Como boutique wedding design).',
   },
@@ -521,6 +521,20 @@ export function resolveProspectResearchSeed(p = {}) {
   return { ...known, guessedUrl };
 }
 
+function venueBottleneckTail(venues = []) {
+  const joined = venues.join(' ').toLowerCase();
+  if (/balbiano|pizzo|passalacqua|vittoria/.test(joined)) {
+    return 'narrow gates and staggered flights quickly turn guest transport into a spreadsheet headache.';
+  }
+  if (/balbianello|sola cabiati|tremezzo/.test(joined)) {
+    return 'usually mean hours of flight spreadsheets and late-night boat-pier shuttles.';
+  }
+  if (/cipressi|monastero|melzi|serbelloni|varenna|bellagio/.test(joined)) {
+    return 'usually mean flight spreadsheets and scarce late-night return taxis.';
+  }
+  return 'usually mean hours of flight spreadsheets and late-night villa shuttles.';
+}
+
 export function buildVerifiedFallbackHook(p = {}, storySignals = null) {
   const existing = String(p.personalization_hook || '').trim();
   const isRoboticExisting = /^(We note(d)?\b|I was looking through your recent\b|I saw your recent\b|.*(stood out to us|caught our eye|caught our attention)\.?$)/i.test(existing);
@@ -530,6 +544,9 @@ export function buildVerifiedFallbackHook(p = {}, storySignals = null) {
   const seed = KNOWN_LAKE_COMO_DIRECTORY[normName(p.agency_name || '')];
   if (seed?.personalization_hook) return seed.personalization_hook;
 
+  const catalogMatch = DISCOVERY_PARTNER_CATALOG.find((c) => normName(c.agency_name) === normName(p.agency_name || ''));
+  if (catalogMatch?.personalization_hook) return catalogMatch.personalization_hook;
+
   const venues = (Array.isArray(p.key_venues) ? p.key_venues : [])
     .map((v) => String(v || '').trim())
     .filter((v) => v && !BROAD_REGION_NAME_RE.test(v));
@@ -538,29 +555,37 @@ export function buildVerifiedFallbackHook(p = {}, storySignals = null) {
 
   if (p.type === 'venue') {
     const place = venues[0] || p.agency_name || 'your property';
-    return `For weddings and private buyouts at ${place}, we can take the entire guest transport coordination off your events desk.`;
+    return `During wedding buyouts at ${place}, guest flights and late-night shuttles quickly overload the events desk.`;
   }
   if (p.type === 'concierge_hotel') {
     const place = venues[0] || p.agency_name || 'your hotel';
-    return `Whenever your desk at ${place} needs dedicated wedding shuttles or overflow VIP fleet support, our team is ready to step in.`;
+    return `During peak wedding weekends at ${place}, house cars fill up fast on airport and villa runs.`;
   }
   if (couples.length > 0 && venues.length > 0) {
-    return `I saw ${couples[0]}'s wedding at ${venues[0]} on your site: we can take the entire guest transport workload off your shoulders.`;
+    return `I saw ${couples[0]}'s wedding at ${venues[0]} on your site: multi-day celebrations there ${venueBottleneckTail(venues)}`;
   }
   if (couples.length > 0) {
-    return `I saw ${couples[0]}'s wedding on your site: we take the entire guest transport coordination off the planner's plate.`;
+    return `I saw ${couples[0]}'s wedding on your site: multi-day celebrations ${venueBottleneckTail(venues)}`;
   }
   if (press.length > 0 && venues.length > 0) {
-    return `For your ${press[0]}-featured weddings at venues like ${venues[0]}, we can take the entire guest transport side off your shoulders.`;
+    return `Your ${press[0]}-featured weddings at ${venues[0]} ${venueBottleneckTail(venues)}`;
   }
   if (venues.length >= 2) {
-    return `For your weddings at ${venues[0]} and ${venues[1]}, we can take the entire guest transport workload off your shoulders.`;
+    const tail = venueBottleneckTail(venues);
+    if (tail.startsWith('narrow gates')) {
+      return `At ${venues[0]} and ${venues[1]}, ${tail}`;
+    }
+    return `Weddings at ${venues[0]} and ${venues[1]} ${tail}`;
   }
   if (venues.length === 1) {
-    return `For your weddings at ${venues[0]}, our team can take the entire guest transport coordination off your plate.`;
+    const tail = venueBottleneckTail(venues);
+    if (tail.startsWith('narrow gates')) {
+      return `At ${venues[0]}, ${tail}`;
+    }
+    return `Weddings at ${venues[0]} ${tail}`;
   }
   if (p.location) {
-    return `For the destination weddings you plan across ${p.location} and Northern Italy, we can take the entire guest transport workload off your shoulders.`;
+    return `Destination weddings across ${p.location} usually mean hours of flight spreadsheets and late-night shuttle loops.`;
   }
   return '';
 }

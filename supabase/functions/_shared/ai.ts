@@ -31,8 +31,8 @@ export const CONCIERGE_WRITING_RULES = `DOROGO CONCIERGE WRITING SKILLS (MANDATO
 
 export const PROMPTS = {
   hook: {
-    version: 'hook-v5-ceo-direct',
-    text: (o: { agency: string; language: string; page: string }) => `You help Dmitri (Co-Founder of DOROGO Private Transportation) write the opening sentence of a direct, executive CEO-to-CEO email to a luxury wedding planner, venue, or hotel concierge.
+    version: 'hook-v6-ceo-connected',
+    text: (o: { agency: string; language: string; page: string }) => `You help Dmitri (Co-Founder of DOROGO Private Transportation) write the opening sentence of a CEO-level short email to a luxury wedding planner, venue, or hotel concierge.
 Agency: ${o.agency}
 Write the line in: ${o.language === 'it' ? 'Italian' : 'English'}
 
@@ -40,10 +40,13 @@ ${CONCIERGE_WRITING_RULES}
 
 Hook-Specific Rules:
 - Use ONLY facts that appear in the PAGE TEXT below. Never invent venues, couples, dates, numbers or awards.
-- WRITE DIRECTLY LIKE ONE CEO/FOUNDER MESSAGING ANOTHER: State why you are reaching out to them specifically (naming their verified venues, couple story, or property from the page) and immediately state the pitch: that we can take the entire guest transport coordination off their shoulders (or off their events desk).
-- Example structure: "I'm reaching out because you plan weddings at [Venue A] and [Venue B], and we can take the entire guest transport workload off your shoulders." OR "For multi-day weddings and buyouts at [Venue], our team can take the entire guest transport coordination off your events desk."
-- NEVER write broad philosophical commentary or filler observations (e.g., NEVER write "leaves very little margin for error", "takes serious behind-the-scenes logistics", "have a magic of their own", "stood out to us", or "caught our eye").
-- One crisp sentence, 16 to 28 words. No exclamation marks, no questions, no em-dashes (—).
+- CONNECTED VENUE-BOTTLENECK STRUCTURE: Name their verified venue(s) or couple story from the page AND connect it immediately to the concrete transport bottleneck at those venues (e.g., flight spreadsheets, narrow villa gates where 50-seat coaches cannot enter, late-night boat-pier shuttles, or scarce late-night taxis) so Sentence 2 ("We take that off your plate...") flows directly from Sentence 1.
+- Examples:
+  - "Weddings at Villa del Balbianello and Villa Sola Cabiati usually mean flight spreadsheets and late-night boat-pier shuttles."
+  - "At narrow-gate venues like Villa Pizzo and Villa Balbiano, 50-seat coaches cannot enter and guest flight spreadsheets pile up fast."
+  - "During wedding buyouts at [Venue], guest flights and late-night shuttles quickly overload the events desk."
+- NEVER write disconnected compliments or filler ("stood out to us", "caught our eye", "have a magic of their own").
+- One short sentence, 12 to 22 words max. No exclamation marks, no questions, no em-dashes (—).
 - If the page has nothing specific, return an empty hook and confidence "low".
 
 Return JSON only:
@@ -74,18 +77,18 @@ REPLY:
 ${o.body}`,
   },
   draft: {
-    version: 'draft-v5-ceo-direct',
-    text: (o: { step: string; prospect: string; draft: string; language: string }) => `Rewrite this outreach email from Dmitri (Co-Founder of DOROGO Private Transportation) to a luxury wedding planner, venue, or hotel concierge so it reads like a direct, no-fluff CEO-to-CEO message.
+    version: 'draft-v6-ceo-short',
+    text: (o: { step: string; prospect: string; draft: string; language: string }) => `Rewrite this outreach email from Dmitri (Co-Founder of DOROGO Private Transportation) to a luxury wedding planner, venue, or hotel concierge so it reads like a razor-sharp, CEO-level short message.
 Step: ${o.step}. Language: ${o.language === 'it' ? 'Italian' : 'English'}.
 
 ${CONCIERGE_WRITING_RULES}
 
 Draft-Specific Rules:
-- SUBJECT LINE: Write a crisp executive subject line (under 55 characters) naming their studio/property or primary venue/town (e.g., "Guest transport partner · [Agency]" or "[Venue] weddings · [Agency]").
-- ULTRA-CONCISE (50 to 70 WORDS BEFORE SIGNATURE): Busy planners read on their phones. Keep the entire body to 3 short paragraphs (1 sentence each, 50–70 words total before signature). Zero water, zero region lists, zero filler.
-- SENTENCE 1 (Direct Pitch): "For your weddings at [Venue A] and [Venue B], we can take the entire guest transport coordination off your plate."
-- SENTENCE 2 (Concrete Service): "We provide a private Guest Transfer Portal where guests log their own flights, one WhatsApp dispatcher on your run-sheet, and a Mercedes-Benz S-Class, V-Class and E-Class fleet plus 16 to 50-seat minibuses and coaches."
-- SENTENCE 3 (Commercial Model + Ask): "You can include our confidential net rates in your client offer or work on a 5% commission. May I send our 1-page rate card and guest portal demo?"
+- SUBJECT LINE: Crisp executive subject line (under 48 characters) naming their studio/property or primary venue (e.g., "Guest transport · [Agency]" or "[Venue] weddings · [Agency]").
+- CEO-LEVEL BREVITY (45 to 60 WORDS MAX BEFORE SIGNATURE): Keep the entire body to 3 short, connected sentences (1 sentence per paragraph, 45–60 words total before signature). Zero filler, zero repetition.
+- SENTENCE 1 (Connected Venue + Bottleneck): "Weddings at [Venue A] and [Venue B] usually mean flight spreadsheets and late-night pier shuttles." (or narrow-gate bus access / late-night taxi shortages).
+- SENTENCE 2 (Direct Solution): "We take that off your plate: guests log their own flights in our portal, and one WhatsApp dispatcher runs our Mercedes-Benz V-Class, S-Class and 16 to 50-seat minibuses."
+- SENTENCE 3 (1-Line Ask): "May I send our 1-page rate card and portal preview (net rates for your offer, or 5% commission)?"
 - Zero exclamation marks, zero em-dashes (—). Always write "Mercedes-Benz" in full when naming S-Class, V-Class, or E-Class. Keep the exact signature and opt-out line at the bottom.
 Return JSON only: {"subject": string, "body": string}
 
@@ -96,8 +99,8 @@ CURRENT DRAFT:
 ${o.draft}`,
   },
   partner_reply: {
-    version: 'partner-reply-v5-concise',
-    text: (o: { agency: string; contact_name?: string; language: string; status?: string; thread_history: string; latest_reply: string }) => `You are writing a reply on behalf of Dmitri, Co-Founder of DOROGO Private Transportation, to a wedding planner, venue, or hotel concierge.
+    version: 'partner-reply-v6-ceo-short',
+    text: (o: { agency: string; contact_name?: string; language: string; status?: string; thread_history: string; latest_reply: string }) => `You are writing a CEO-level concise reply on behalf of Dmitri, Co-Founder of DOROGO Private Transportation, to a wedding planner, venue, or hotel concierge.
 
 Partner Agency / Property: ${o.agency}
 Contact Name: ${o.contact_name || 'Unknown'}
@@ -109,7 +112,7 @@ ${CONCIERGE_WRITING_RULES}
 ${formatRateCardFactsForAi()}
 
 Execution Rules:
-1. STRAIGHT TO THE POINT (ZERO WATER): Start with a greeting ("Hi [Name]," or "Buongiorno [Name],"), then answer ONLY what they asked in 2 to 3 short sentences (35 to 65 words max before the signature). Do NOT pitch unrequested features or repeat marketing lists.
+1. CEO-LEVEL SHORT (25 TO 50 WORDS MAX BEFORE SIGNATURE): Start with a greeting ("Hi [Name]," or "Buongiorno [Name],"), then answer ONLY what they asked in 1 to 2 crisp sentences (25 to 50 words max before the signature). Zero filler, zero unrequested feature lists.
 2. ONE QUESTION MAX: Ask at most ONE short question (?) at the end if needed. Zero exclamation marks, zero em-dashes (—).
 3. LANGUAGE & SIGNATURE MATCH: Write in the same language as LATEST PLANNER REPLY and end with the matching signature:
    - English signature:
