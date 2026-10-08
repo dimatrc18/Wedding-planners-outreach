@@ -62,43 +62,43 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
   if (lang === 'it') {
     if (type === 'venue') {
       return {
-        subject_line_a: `Logistica ospiti a ${agencyShort}`,
-        subject_line_b: `Transfer matrimoni a ${venueOrLoc} · ${agencyShort}`,
+        subject_line_a: `Flotta di supporto per gli eventi a ${agencyShort}`,
+        subject_line_b: `Rientri notturni a ${venueOrLoc} · ${agencyShort}`,
         service_pitch:
-          'Lo togliamo noi al vostro desk: gli ospiti inseriscono i voli nel nostro Portale Ospiti e un unico dispatcher su WhatsApp coordina Mercedes-Benz Classe V, Classe S e minibus da 16 a 50 posti.',
+          'Quando il vostro fornitore abituale è al completo o gli ospiti cercano un taxi dopo mezzanotte, copriamo noi gli arrivi da Malpensa e le navette notturne con Mercedes-Benz Classe V, Classe S e minibus da 16 a 50 posti.',
         cta_line:
-          'Vi mando il listino partner di 1 pagina (tariffe nette o commissione 5%)?',
+          'Vi è utile tenere in archivio il nostro listino di 1 pagina (tariffe nette o commissione 5%) per i weekend di punta?',
       };
     }
     if (type === 'concierge_hotel') {
       return {
-        subject_line_a: `Flotta privata di supporto · ${agencyShort}`,
+        subject_line_a: `Flotta di backup nei weekend di punta · ${agencyShort}`,
         subject_line_b: `Transfer ospiti a ${venueOrLoc} · ${agencyShort}`,
         service_pitch:
-          'Affianchiamo il vostro concierge con un unico referente WhatsApp e flotta Mercedes-Benz Classe S, Classe V e minibus da 16 a 50 posti per aeroporti e navette eventi.',
+          'Quando le auto dell\'hotel e i driver locali sono tutti prenotati, interveniamo su richiesta con un unico referente WhatsApp e flotta Mercedes-Benz Classe S, Classe V e minibus da 16 a 50 posti.',
         cta_line:
-          'Vi mando il listino partner di 1 pagina (tariffe nette o commissione 5%)?',
+          'Vi mando il listino partner di 1 pagina (tariffe nette o commissione 5%) da tenere al desk?',
       };
     }
     const itPlannerSubjectsA = [
-      `Logistica ospiti · ${agencyShort}`,
+      `Secondo fornitore per i sabati di punta · ${agencyShort}`,
       `Matrimoni a ${venueOrLoc} · ${agencyShort}`,
-      `${agencyShort} · transfer matrimoni`,
-      `Gestione transfer ospiti · ${agencyShort}`,
+      `${agencyShort} · backup trasporti matrimoni`,
+      `Navette e rientri notturni · ${agencyShort}`,
     ];
     const itPlannerSubjectsB = [
       `Matrimoni a ${venueOrLoc} · ${agencyShort}`,
-      `Partner trasporti · ${agencyShort}`,
-      `Portale Ospiti e flotta · ${agencyShort}`,
+      `Backup trasporti · ${agencyShort}`,
+      `Flotta di supporto · ${agencyShort}`,
       `Navette a ${venueOrLoc} · ${agencyShort}`,
     ];
     const itPlannerPitches = [
-      'Lo togliamo noi dal vostro tavolo: gli invitati inseriscono i voli nel nostro Portale Ospiti e un unico dispatcher WhatsApp gestisce Mercedes-Benz Classe V, Classe S e minibus da 16 a 50 posti.',
-      'Azzeriamo i fogli Excel: il nostro Portale Ospiti raccoglie i voli e un unico referente WhatsApp coordina Mercedes-Benz Classe V, Classe S e minibus da 16 a 50 posti fino a fine festa.',
+      'Quando gli ospiti sono divisi su cinque hotel diversi o il vostro NCC abituale finisce i mezzi nei sabati di punta, copriamo noi i transfer extra e i rientri notturni con Mercedes-Benz Classe V, Classe S e minibus da 16 a 50 posti.',
+      'Se il vostro fornitore principale è al completo o un volo a Malpensa ritarda di tre ore, gestiamo noi le chiamate degli ospiti e le navette con Mercedes-Benz Classe V, Classe S e minibus da 16 a 50 posti, così il vostro telefono resta libero durante la cerimonia.',
     ];
     const itPlannerCtas = [
-      'Vi mando il listino di 1 pagina e il link del portale (tariffe nette o commissione 5%)?',
-      'Posso inviarvi la scheda partner di 1 pagina (tariffe nette per la vostra offerta o commissione 5%)?',
+      'Vi è utile tenere in archivio il nostro listino di 1 pagina (tariffe nette o commissione 5%) per i weekend di punta?',
+      'Posso inviarvi la scheda partner di 1 pagina (tariffe nette o commissione 5%) come backup per l\'alta stagione?',
     ];
     return {
       subject_line_a: itPlannerSubjectsA[idx],
@@ -108,19 +108,19 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
     };
   }
 
-  // English CEO-short angles: 1 connected bridge sentence + 1 short ask
+  // English honest, real-world angles: acknowledges they have a driver, solves real Saturday wedding pain points
   if (type === 'venue') {
     const venuePitches = [
-      'We take that off your desk: guests log their own flights in our portal, and one WhatsApp dispatcher runs our Mercedes-Benz V-Class, S-Class and 16 to 50-seat minibuses.',
-      'Instead of your team chasing flights and late-night taxis, our Guest Portal logs every arrival and one WhatsApp dispatcher runs our Mercedes-Benz V-Class, S-Class and 16 to 50-seat minibuses.',
+      'When your regular drivers are booked out or guests need a ride back to their hotels at 2:00 AM, we step in as your on-call backup with Mercedes-Benz V-Class, S-Class and 16 to 50-seat minibuses.',
+      'When guests arrive on delayed Malpensa flights or need late-night shuttles back to their hotels, our dispatcher handles the pickup calls and runs our Mercedes-Benz V-Class, S-Class and 16 to 50-seat minibuses.',
     ];
     const venueCtas = [
-      'May I send our 1-page rate card and portal link (net rates for your offer, or 5% commission)?',
-      'Open to seeing our 1-page partner rate card (confidential net rates or 5% commission)?',
+      'Worth keeping our 1-page rate card at the desk (net rates or 5% commission) for busy weekends?',
+      'Useful if I send our 1-page backup rate card (confidential net rates or 5% commission)?',
     ];
     return {
-      subject_line_a: `Guest logistics at ${agencyShort}`,
-      subject_line_b: `${venueOrLoc} transfers · ${agencyShort}`,
+      subject_line_a: `Backup fleet for peak weekends · ${agencyShort}`,
+      subject_line_b: `Late-night guest shuttles · ${agencyShort}`,
       service_pitch: venuePitches[idx % venuePitches.length],
       cta_line: venueCtas[idx % venueCtas.length],
     };
@@ -128,41 +128,41 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
 
   if (type === 'concierge_hotel') {
     const hotelPitches = [
-      'We step in on demand with one WhatsApp dispatcher and our Mercedes-Benz S-Class, V-Class and 16 to 50-seat minibuses for airport transfers and late-night wedding shuttles.',
-      'One WhatsApp message gives your desk instant overflow access to our Mercedes-Benz S-Class, V-Class and 16 to 50-seat minibuses for airport runs and event shuttles.',
+      'When your house cars and primary local drivers are full, we step in on WhatsApp with Mercedes-Benz S-Class, V-Class and 16 to 50-seat minibuses for airport runs and late-night wedding shuttles.',
+      'One WhatsApp message gives your desk reliable backup access to our Mercedes-Benz S-Class, V-Class and 16 to 50-seat minibuses whenever your regular drivers are fully booked.',
     ];
     return {
-      subject_line_a: `Overflow fleet support · ${agencyShort}`,
-      subject_line_b: `${venueOrLoc} transfers · ${agencyShort}`,
+      subject_line_a: `Overflow fleet for peak Saturdays · ${agencyShort}`,
+      subject_line_b: `${venueOrLoc} backup transfers · ${agencyShort}`,
       service_pitch: hotelPitches[idx % hotelPitches.length],
       cta_line:
-        'May I send our 1-page partner rate card (net rates for your offer, or 5% commission)?',
+        'Worth keeping our 1-page partner rate card at the desk (net rates or 5% commission)?',
     };
   }
 
   const plannerSubjectsA = [
-    `Guest transport · ${agencyShort}`,
-    `Zero flight spreadsheets · ${agencyShort}`,
-    `${agencyShort} · wedding guest logistics`,
-    `Guest transfers · ${agencyShort}`,
+    `Backup fleet for peak Saturdays · ${agencyShort}`,
+    `Second transport partner · ${agencyShort}`,
+    `${agencyShort} · peak-weekend guest shuttles`,
+    `Late-night shuttles & overflow · ${agencyShort}`,
   ];
   const plannerSubjectsB = [
     `${venueOrLoc} weddings · ${agencyShort}`,
-    `${venueOrLoc} guest logistics · ${agencyShort}`,
-    `Guest portal & fleet · ${agencyShort}`,
-    `${venueOrLoc} shuttles · ${agencyShort}`,
+    `Peak-Saturday backup · ${agencyShort}`,
+    `Second fleet for ${venueOrLoc} · ${agencyShort}`,
+    `${venueOrLoc} late-night shuttles · ${agencyShort}`,
   ];
   const plannerPitches = [
-    'We take that off your plate: guests log their own flights in our portal, and one WhatsApp dispatcher runs our Mercedes-Benz V-Class, S-Class and 16 to 50-seat minibuses.',
-    'Instead of your team chasing flight spreadsheets, our portal collects every guest arrival and one WhatsApp dispatcher runs our Mercedes-Benz V-Class, S-Class and 16 to 50-seat minibuses.',
-    'We replace the flight spreadsheets with a custom Guest Portal, while one WhatsApp dispatcher stages our Mercedes-Benz V-Class, S-Class and 16 to 50-seat minibuses until the party ends.',
-    'We take that workload off your shoulders: guests enter their own flights in our portal, and one WhatsApp dispatcher runs our Mercedes-Benz V-Class, S-Class and 16 to 50-seat minibuses.',
+    'When guests book five different hotels instead of one room block, or your main supplier runs short on Mercedes-Benz V-Classes and 16 to 50-seat minibuses on a busy Saturday, we cover the extra shuttles and late-night returns.',
+    'When your primary driver is full on a peak Saturday, our dispatcher handles the extra Mercedes-Benz V-Class, S-Class and 16 to 50-seat minibus runs directly so no lost guest or driver is calling your phone during the ceremony.',
+    'Where we usually help planners first is the tricky legs their main supplier cannot stretch to cover: delayed Malpensa arrivals and post-midnight villa returns when local taxis are gone, using our Mercedes-Benz V-Class, S-Class and 16 to 50-seat minibuses.',
+    'When a 50-seat bus cannot fit a narrow villa gate or your main supplier is fully booked on a July Saturday, we step in as your second fleet with staged Mercedes-Benz V-Classes, S-Classes and 16 to 50-seat minibuses.',
   ];
   const plannerCtas = [
-    'May I send our 1-page rate card and portal preview (net rates for your offer, or 5% commission)?',
-    'Open to our 1-page partner rate card and portal link (net rates or 5% commission)?',
-    'Worth sending our 1-page rate card and portal preview (net rates in your offer, or 5% commission)?',
-    'May I send over our 1-page rate card and guest portal link (net rates or 5% commission)?',
+    'Worth keeping our 1-page rate card on file (net rates or 5% commission) as backup for peak weekends?',
+    'Useful if I send our 1-page backup rate card (net rates for your offer, or 5% commission)?',
+    'Open to keeping our 1-page rate card on hand (net rates or 5% commission) for busy Saturdays?',
+    'May I send our 1-page rate card (net rates or 5% commission) in case your main driver is ever full?',
   ];
 
   return {

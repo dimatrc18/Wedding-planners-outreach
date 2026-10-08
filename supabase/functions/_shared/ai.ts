@@ -31,8 +31,8 @@ export const CONCIERGE_WRITING_RULES = `DOROGO CONCIERGE WRITING SKILLS (MANDATO
 
 export const PROMPTS = {
   hook: {
-    version: 'hook-v6-ceo-connected',
-    text: (o: { agency: string; language: string; page: string }) => `You help Dmitri (Co-Founder of DOROGO Private Transportation) write the opening sentence of a CEO-level short email to a luxury wedding planner, venue, or hotel concierge.
+    version: 'hook-v7-honest-backup',
+    text: (o: { agency: string; language: string; page: string }) => `You help Dmitri (Co-Founder of DOROGO Private Transportation) write the opening sentence of a simple, honest, CEO-level email to a luxury wedding planner, venue, or hotel concierge.
 Agency: ${o.agency}
 Write the line in: ${o.language === 'it' ? 'Italian' : 'English'}
 
@@ -40,13 +40,12 @@ ${CONCIERGE_WRITING_RULES}
 
 Hook-Specific Rules:
 - Use ONLY facts that appear in the PAGE TEXT below. Never invent venues, couples, dates, numbers or awards.
-- CONNECTED VENUE-BOTTLENECK STRUCTURE: Name their verified venue(s) or couple story from the page AND connect it immediately to the concrete transport bottleneck at those venues (e.g., flight spreadsheets, narrow villa gates where 50-seat coaches cannot enter, late-night boat-pier shuttles, or scarce late-night taxis) so Sentence 2 ("We take that off your plate...") flows directly from Sentence 1.
+- HONEST EXISTING-PROVIDER OPENING: Acknowledge simply and honestly that they likely already have a go-to driver for the specific venues or weddings shown on their page. This immediately disarms their #1 objection ("we already have a supplier") and sets up Sentence 2 (where we offer to be their backup for peak Saturdays, guests split across 5 hotels, or late-night returns).
 - Examples:
-  - "Weddings at Villa del Balbianello and Villa Sola Cabiati usually mean flight spreadsheets and late-night boat-pier shuttles."
-  - "At narrow-gate venues like Villa Pizzo and Villa Balbiano, 50-seat coaches cannot enter and guest flight spreadsheets pile up fast."
-  - "During wedding buyouts at [Venue], guest flights and late-night shuttles quickly overload the events desk."
-- NEVER write disconnected compliments or filler ("stood out to us", "caught our eye", "have a magic of their own").
-- One short sentence, 12 to 22 words max. No exclamation marks, no questions, no em-dashes (—).
+  - "You likely already have a go-to driver for your weddings at Villa del Balbianello and Villa Sola Cabiati."
+  - "I saw Morgan and Tyler's wedding on your site, and I know you likely already have a regular driver for Villa Balbiano."
+  - "You already have local drivers for [Venue], though on peak wedding nights local taxis vanish long before the party ends."
+- One simple, true sentence, 12 to 22 words max. No exclamation marks, no questions, no em-dashes (—).
 - If the page has nothing specific, return an empty hook and confidence "low".
 
 Return JSON only:
@@ -77,18 +76,18 @@ REPLY:
 ${o.body}`,
   },
   draft: {
-    version: 'draft-v6-ceo-short',
-    text: (o: { step: string; prospect: string; draft: string; language: string }) => `Rewrite this outreach email from Dmitri (Co-Founder of DOROGO Private Transportation) to a luxury wedding planner, venue, or hotel concierge so it reads like a razor-sharp, CEO-level short message.
+    version: 'draft-v7-honest-backup',
+    text: (o: { step: string; prospect: string; draft: string; language: string }) => `Rewrite this outreach email from Dmitri (Co-Founder of DOROGO Private Transportation) to a luxury wedding planner, venue, or hotel concierge so it reads like a simple, honest, CEO-to-CEO note.
 Step: ${o.step}. Language: ${o.language === 'it' ? 'Italian' : 'English'}.
 
 ${CONCIERGE_WRITING_RULES}
 
 Draft-Specific Rules:
-- SUBJECT LINE: Crisp executive subject line (under 48 characters) naming their studio/property or primary venue (e.g., "Guest transport · [Agency]" or "[Venue] weddings · [Agency]").
-- CEO-LEVEL BREVITY (45 to 60 WORDS MAX BEFORE SIGNATURE): Keep the entire body to 3 short, connected sentences (1 sentence per paragraph, 45–60 words total before signature). Zero filler, zero repetition.
-- SENTENCE 1 (Connected Venue + Bottleneck): "Weddings at [Venue A] and [Venue B] usually mean flight spreadsheets and late-night pier shuttles." (or narrow-gate bus access / late-night taxi shortages).
-- SENTENCE 2 (Direct Solution): "We take that off your plate: guests log their own flights in our portal, and one WhatsApp dispatcher runs our Mercedes-Benz V-Class, S-Class and 16 to 50-seat minibuses."
-- SENTENCE 3 (1-Line Ask): "May I send our 1-page rate card and portal preview (net rates for your offer, or 5% commission)?"
+- SUBJECT LINE: Crisp executive subject line (under 48 characters) naming their studio/property or primary venue (e.g., "Backup fleet for peak Saturdays · [Agency]" or "[Venue] weddings · [Agency]").
+- SIMPLE & HONEST (50 to 68 WORDS MAX BEFORE SIGNATURE): Keep the entire body to 3 short, connected sentences. Do NOT recycle website brochure lists.
+- SENTENCE 1 (Honest Opening): Acknowledge they likely already have a go-to driver for their specific venues ("You likely already have a go-to driver for your weddings at [Venue A] and [Venue B].").
+- SENTENCE 2 (Real Wedding-Day Pain Point): Connect to a real Saturday headache where their primary driver runs short: guests split across 5 hotels instead of one room block, peak-Saturday V-Class/minibus shortages, delayed Malpensa flights, 2:00 AM returns when local taxis vanish, or keeping lost guests/drivers from calling the planner's phone during the ceremony (mentioning our Mercedes-Benz V-Class, S-Class and 16 to 50-seat minibuses).
+- SENTENCE 3 (Low-Friction Backup Ask): "Worth keeping our 1-page rate card on file (net rates or 5% commission) as backup for peak weekends?"
 - Zero exclamation marks, zero em-dashes (—). Always write "Mercedes-Benz" in full when naming S-Class, V-Class, or E-Class. Keep the exact signature and opt-out line at the bottom.
 Return JSON only: {"subject": string, "body": string}
 
