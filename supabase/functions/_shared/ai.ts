@@ -31,8 +31,8 @@ export const CONCIERGE_WRITING_RULES = `DOROGO CONCIERGE WRITING SKILLS (MANDATO
 
 export const PROMPTS = {
   hook: {
-    version: 'hook-v4-human-concierge',
-    text: (o: { agency: string; language: string; page: string }) => `You help Dmitri at DOROGO Private Transportation write the opening sentence of a personal 1-to-1 email to a luxury wedding planner, venue, or hotel concierge.
+    version: 'hook-v5-ceo-direct',
+    text: (o: { agency: string; language: string; page: string }) => `You help Dmitri (Co-Founder of DOROGO Private Transportation) write the opening sentence of a direct, executive CEO-to-CEO email to a luxury wedding planner, venue, or hotel concierge.
 Agency: ${o.agency}
 Write the line in: ${o.language === 'it' ? 'Italian' : 'English'}
 
@@ -40,11 +40,10 @@ ${CONCIERGE_WRITING_RULES}
 
 Hook-Specific Rules:
 - Use ONLY facts that appear in the PAGE TEXT below. Never invent venues, couples, dates, numbers or awards.
-- Sound like a real local operations peer who genuinely understands the behind-the-scenes logistics of their specific weddings or venue (e.g., boat-access villas, narrow lakeside roads, multi-day buyouts, guests flying in from abroad, or coordinating transfers across multiple hotels).
-- DO NOT start every hook with the cliché formula "I was looking through your recent..." or "I saw your recent...". Vary your sentence structure naturally (e.g., start with the couple's celebration, the specific villa or town logistics, or the multi-day coordination involved).
-- NEVER use fake AI flattery clichés like "stood out to us", "caught our eye", "caught our attention", "we noted", "beautifully paced", or "felt warm and personal".
-- Reference one specific factual detail from the page: a named couple's wedding story, a named villa/venue they worked at, or a press feature.
-- One natural sentence, 14 to 26 words, calm and conversational. No exclamation marks, no questions, no em-dashes (—).
+- WRITE DIRECTLY LIKE ONE CEO/FOUNDER MESSAGING ANOTHER: State why you are reaching out to them specifically (naming their verified venues, couple story, or property from the page) and immediately state the pitch: that we can take the entire guest transport coordination off their shoulders (or off their events desk).
+- Example structure: "I'm reaching out because you plan weddings at [Venue A] and [Venue B], and we can take the entire guest transport workload off your shoulders." OR "For multi-day weddings and buyouts at [Venue], our team can take the entire guest transport coordination off your events desk."
+- NEVER write broad philosophical commentary or filler observations (e.g., NEVER write "leaves very little margin for error", "takes serious behind-the-scenes logistics", "have a magic of their own", "stood out to us", or "caught our eye").
+- One crisp sentence, 16 to 28 words. No exclamation marks, no questions, no em-dashes (—).
 - If the page has nothing specific, return an empty hook and confidence "low".
 
 Return JSON only:
@@ -74,17 +73,17 @@ REPLY:
 ${o.body}`,
   },
   draft: {
-    version: 'draft-v4-human-concierge',
-    text: (o: { step: string; prospect: string; draft: string; language: string }) => `Rewrite this outreach email from Dmitri at DOROGO Private Transportation to a luxury wedding planner, venue, or hotel concierge so it reads like a genuine, unscripted 1-to-1 note written specifically for this recipient.
+    version: 'draft-v5-ceo-direct',
+    text: (o: { step: string; prospect: string; draft: string; language: string }) => `Rewrite this outreach email from Dmitri (Co-Founder of DOROGO Private Transportation) to a luxury wedding planner, venue, or hotel concierge so it reads like a direct, no-fluff CEO-to-CEO message.
 Step: ${o.step}. Language: ${o.language === 'it' ? 'Italian' : 'English'}.
 
 ${CONCIERGE_WRITING_RULES}
 
 Draft-Specific Rules:
-- SUBJECT LINE: Write a natural, specific peer-to-peer subject line (under 58 characters) that includes the recipient's studio/property name or primary venue/town (e.g., "Guest logistics for [Agency]" or "[Venue] weddings · [Agency]"). Never use generic blast subjects.
-- CORE MESSAGE: Make clear that DOROGO takes the entire guest transportation workload off their shoulders across Lake Como, the Italian Lakes, Milan and the Alps (not just airport-to-hotel rides). Naturally weave in 2 or 3 operational details that fit this specific recipient (such as one dedicated WhatsApp dispatcher on their run-sheet, our private Guest Transfer Portal link for the couple's website so they don't have to chase flight spreadsheets, water-taxi pier handoffs, 16 to 30-seat executive minibuses for narrow villa gates, or standby return loops until 3:00 AM).
-- ZERO REPETITION: Ensure Paragraph 1 (the hook) and Paragraph 2 (how we help) do not repeat the same phrases or words.
-- Keep the partner models (12% referral commission or confidential net rates) and one low-friction ask (e.g., offering to send our 1-page partner rate card and sample guest portal link).
+- SUBJECT LINE: Write a crisp executive subject line (under 58 characters) naming their studio/property or primary venue/town (e.g., "Guest transport partner · [Agency]" or "[Venue] weddings · [Agency]").
+- PARAGRAPH 1 (Direct Pitch + Why You): State directly why you are reaching out (naming their specific venues/property from the notes) and the pitch: that we can take the entire guest transport workload off their shoulders. Zero broad philosophical observations.
+- PARAGRAPH 2 (Concrete Service Explanation): Explain clearly what our service includes across Lake Como, the Italian Lakes, Milan and the Alps: one dedicated WhatsApp dispatcher on their run-sheet, a private Guest Transfer Portal where guests log their own flights (so the planner never chases flight spreadsheets), water-taxi pier handoffs, and our Mercedes-Benz S-Class, V-Class and E-Class fleet plus 16 to 30-seat minibuses on standby until 3:00 AM.
+- PARAGRAPH 3 (Commercial Model + Ask): Mention our two partner models (12% referral commission or confidential net rates) and ask if you may send the 1-page partner rate card (and a sample guest portal link).
 - Keep the body under 115 words before the signature, zero exclamation marks, zero em-dashes (—). Always write "Mercedes-Benz" in full when naming S-Class, V-Class, or E-Class.
 - Use only facts in the recipient notes; invent nothing. Keep the exact signature and opt-out line at the bottom.
 Return JSON only: {"subject": string, "body": string}
