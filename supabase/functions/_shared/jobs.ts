@@ -72,10 +72,12 @@ export async function draftDueSteps(db: any, settings: any, now = new Date()) {
 
 // ---------------- Sending ----------------
 async function rateCardAttachment(db: any, settings: any) {
-  const path = settings.rate_card_path;
-  if (!path) throw new Error('Upload the rate card PDF in Settings first');
+  const path = settings.rate_card_path || 'rate-card/DOROGO_Wedding_Partner_Rate_Card_2026.pdf';
   const { data, error } = await db.storage.from('outreach').download(path);
-  if (error || !data) throw new Error(`Rate card not found in storage (${path})`);
+  if (error || !data) {
+    console.warn(`Rate card not found in storage (${path}), sending without PDF attachment`);
+    return null;
+  }
   return { filename: settings.rate_card_filename || 'DOROGO_Wedding_Partner_Rate_Card_2026.pdf', content: new Uint8Array(await data.arrayBuffer()), contentType: 'application/pdf' };
 }
 
@@ -124,7 +126,8 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
     const lastInbound = [...thread].reverse().find((x: any) => x.direction === 'in');
     const inReplyTo = threaded ? (lastInbound || thread[thread.length - 1]).message_id : null;
     try {
-      const attachments = t.attach_rate_card ? [await rateCardAttachment(db, settings)] : [];
+      const rcAtt = t.attach_rate_card ? await rateCardAttachment(db, settings) : null;
+      const attachments = rcAtt ? [rcAtt] : [];
       const pixelUrl = settings.track_opens ? `${env('SUPABASE_URL')}/functions/v1/outreach-api?open=${t.id}` : null;
       const { messageId, raw } = await sendMail({
         fromName, fromEmail, replyTo: settings.sender?.reply_to || fromEmail, to: p.email, subject: t.subject, text: t.body,
@@ -224,20 +227,22 @@ export async function applyInbound(db: any, p: any, list: any[], inbound: any, c
 
   await logEvent(db, 'reply_received', { sentiment: cls.sentiment, intent: cls.intent, summary: fx.summary, needs_human: needsHuman, escalation_reason: escalationReason }, p.id);
 
-  if (needsHuman || fx.alert || cls.sentiment === 'unsubscribe') {
+  if (cls.sentiment !== 'ooo') {
     const head = needsHuman
       ? '🚨 <b>Human reply needed</b>'
       : fx.alert
         ? '🟢 <b>Positive reply</b>'
-        : '⛔ <b>Opt-out</b>';
+        : cls.sentiment === 'unsubscribe'
+          ? '⛔ <b>Opt-out</b>'
+          : '💬 <b>New partner reply</b>';
     const reasonLine = needsHuman && escalationReason ? `\n⚠️ <b>Why:</b> ${tgEscape(escalationReason)}` : '';
     const draftLine = insertedDraft?.body ? `\n\n✍️ <b>AI Draft ready:</b>\n<i>${tgEscape(insertedDraft.body.slice(0, 350))}</i>` : '';
     const buttons: any[] = [{ text: 'Open in app', url: appUrl(`prospect/${p.id}`) }];
     if (insertedDraft?.id && !insertedDraft.lint?.errors?.length && !needsHuman) {
-      buttons.unshift({ text: '✅ Approve Reply', data: `approve:${insertedDraft.id}` });
+      buttons.unshift({ text: '✅ Approve & Send Reply', data: `approve:${insertedDraft.id}` });
     }
     await tgSend(
-      `${head} from <b>${tgEscape(p.agency_name)}</b>\n${tgEscape(fx.summary)}${reasonLine}\n\n💬 <i>"${tgEscape(core.stripQuoted(inbound.body || '').slice(0, 400))}"</i>${draftLine}${fx.alert || needsHuman ? '\n\nAim to answer within 15 minutes.' : ''}`,
+      `${head} from <b>${tgEscape(p.agency_name)}</b>\n${tgEscape(fx.summary)}${reasonLine}\n\n💬 <i>"${tgEscape(core.stripQuoted(inbound.body || '').slice(0, 400))}"</i>${draftLine}${cls.sentiment !== 'unsubscribe' ? '\n\nAim to answer within 15 minutes.' : ''}`,
       [buttons],
     );
   }
@@ -351,6 +356,11 @@ export async function approveTouch(db: any, touchId: string, settings: any, acto
   const at = core.scheduleApproved(t, p, settings, core.takenSlots(all || [], now), { now, firstSendAt: core.firstColdSend(all || []) });
   await db.from('touches').update({ state: 'approved', approved_by: actor, approved_at: now.toISOString(), scheduled_at: at ? at.toISOString() : null, lint }).eq('id', t.id);
   await logEvent(db, 'draft_approved', { touch_id: t.id, via: actor }, t.prospect_id, actor);
+  // If this is a reply to a planner (or due immediately), send it right away instead of waiting for next cron tick
+  if (integrations().smtp && (!core.COLD_STEPS.includes(t.step_name) || (at && at <= now))) {
+    const sendRes = await sendDue(db, settings, now, { onlyTouchId: t.id, actor });
+    if (sendRes.sent > 0) return { ok: true, sent_immediately: true, scheduled_at: now };
+  }
   return { ok: true, scheduled_at: at };
 }
 

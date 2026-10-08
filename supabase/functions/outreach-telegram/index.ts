@@ -29,7 +29,13 @@ Deno.serve((req) => handle(req, async () => {
     let text = '';
     if (action === 'approve') {
       const r: any = await approveTouch(db, id, settings, 'telegram');
-      text = r.ok ? (r.scheduled_at ? `Approved. Sends ${new Date(r.scheduled_at).toLocaleString('en-GB', { timeZone: 'Europe/Rome', weekday: 'short', hour: '2-digit', minute: '2-digit' })}` : 'Approved. Send it by hand.') : `Not approved: ${r.reason}`;
+      text = r.ok
+        ? (r.sent_immediately
+          ? '✅ Approved & sent immediately!'
+          : r.scheduled_at
+            ? `Approved. Sends ${new Date(r.scheduled_at).toLocaleString('en-GB', { timeZone: 'Europe/Rome', weekday: 'short', hour: '2-digit', minute: '2-digit' })}`
+            : 'Approved. Send it by hand.')
+        : `Not approved: ${r.reason}`;
     } else if (action === 'skip') {
       await db.from('touches').update({ state: 'skipped' }).eq('id', id).eq('state', 'draft');
       await logEvent(db, 'draft_skipped', { touch_id: id, via: 'telegram' }, null, 'telegram');
