@@ -7,17 +7,15 @@ export const DEFAULT_TEMPLATES = [
   // ---------------- English sequence ----------------
   {
     key: 'T1_intro', language: 'en', kind: 'sequence', name: 'T1 Intro email',
-    subject_a: 'Guest transport for your Lake Como weddings',
+    subject_a: 'Guest transport on Lake Como',
     subject_b: 'Late-night villa returns on Lake Como',
     body: `{{greeting}}
 
 {{hook}}
 
-Multi-day weddings on the lake share two transport headaches: guests landing at Malpensa on a dozen different flights, and the drive home from the villa after midnight, when there are no taxis left on the lake road.
+We run a private fleet of Mercedes-Benz V-Class, E-Class and S-Class vehicles between Milan, Malpensa and Lake Como, mostly looking after staggered airport arrivals and the late-night returns from the villas after midnight.
 
-DOROGO runs Mercedes-Benz V-Class, E-Class and S-Class from Milan. Planners work with us in one of two ways: a 12% referral commission, or confidential net rates you mark up under your own name.
-
-May I send our 1-page rate card?
+If you ever need a reliable backup on the lake, may I send over our 1-page partner rate card?
 
 {{signature}}
 
@@ -27,9 +25,11 @@ May I send our 1-page rate card?
     key: 'T3_followup', language: 'en', kind: 'sequence', name: 'T3 Follow-up (late-night shuttle)', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
-A short follow-up on the part of the night that is hardest to plan: getting guests home. Our late-night villa shuttle runs from midnight to 4 am with a Mercedes-Benz V-Class waiting at the venue, so guests leave when they choose, not when the last taxi does.
+Quick follow-up on the part of the night that usually causes the most stress on the lake: getting guests back to their hotels after midnight when local taxis stop running.
 
-May I send the rate card with net prices from Malpensa, Linate and Lugano to the lake?
+We keep a dedicated Mercedes-Benz V-Class on standby outside the villa from midnight until 4 am so guests can leave whenever they are ready.
+
+Would it be useful to have our 2026 net rate sheet on file just in case?
 
 {{signature}}
 
@@ -37,13 +37,13 @@ May I send the rate card with net prices from Malpensa, Linate and Lugano to the
   },
   {
     key: 'T4_breakup', language: 'en', kind: 'sequence', name: 'T4 Breakup email (new thread)',
-    subject_a: 'Transport file for {{agency}}',
-    subject_b: '2026 wedding transport · {{agency}}',
+    subject_a: 'Transport contact for {{agency}}',
+    subject_b: 'Lake Como chauffeur contact · {{agency}}',
     body: `{{greeting}}
 
-I'll close the loop here so I don't crowd your inbox during planning season. If guest transport comes up for a Lake Como wedding next year, our 1-page partner rate card is one reply away.
+I will leave this here so I do not crowd your inbox while you are busy planning. If you ever get stuck with a last-minute airport transfer or a late-night villa shuttle on Lake Como, my WhatsApp and our 1-page rate card are one reply away.
 
-Wishing you a smooth season ahead.
+Wishing you a calm season ahead.
 
 {{signature}}
 
@@ -52,17 +52,15 @@ Wishing you a smooth season ahead.
   // ---------------- Italian sequence ----------------
   {
     key: 'T1_intro', language: 'it', kind: 'sequence', name: 'T1 Email di presentazione',
-    subject_a: 'Transfer ospiti per i vostri matrimoni sul Lago di Como',
+    subject_a: 'Transfer ospiti sul Lago di Como',
     subject_b: 'Rientri notturni dalle ville sul lago',
     body: `{{greeting}}
 
 {{hook}}
 
-I matrimoni di più giorni sul lago hanno due nodi logistici: ospiti che atterrano a Malpensa su voli diversi e il rientro dalla villa dopo mezzanotte, quando sulla strada del lago non si trovano più taxi.
+Operiamo tra Milano, Malpensa e il Lago di Como con una flotta privata di Mercedes-Benz Classe V, Classe E e Classe S, seguendo soprattutto gli arrivi scaglionati in aeroporto e i rientri notturni dalle ville dopo mezzanotte.
 
-DOROGO opera da Milano con Mercedes-Benz Classe V, Classe E e Classe S. I planner lavorano con noi in due modi: una commissione del 12% sulle prenotazioni segnalate, oppure tariffe nette riservate da rivendere con il proprio marchio.
-
-Posso inviarvi la nostra tariffa partner di una pagina?
+Se vi fa comodo avere un contatto affidabile di supporto sul lago, posso inviarvi la nostra tariffa partner di una pagina?
 
 {{signature}}
 
@@ -72,9 +70,11 @@ Posso inviarvi la nostra tariffa partner di una pagina?
     key: 'T3_followup', language: 'it', kind: 'sequence', name: 'T3 Follow-up (navetta notturna)', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
-Un breve seguito sulla parte della serata più difficile da organizzare: riportare gli ospiti a casa. La nostra navetta notturna dalle ville funziona da mezzanotte alle 4, con una Mercedes-Benz Classe V in attesa alla location, così gli ospiti partono quando vogliono e non quando passa l'ultimo taxi.
+Un breve messaggio sulla parte della serata più delicata da gestire sul lago: riportare gli ospiti in hotel dopo mezzanotte, quando i taxi non si trovano più.
 
-Posso inviarvi la tariffa con i prezzi netti da Malpensa, Linate e Lugano verso il lago?
+Teniamo una Mercedes-Benz Classe V dedicata in attesa fuori dalla villa da mezzanotte alle 4 del mattino, così gli ospiti rientrano quando preferiscono.
+
+Vi fa comodo ricevere il foglio con le tariffe nette 2026 da tenere in archivio?
 
 {{signature}}
 
@@ -82,13 +82,13 @@ Posso inviarvi la tariffa con i prezzi netti da Malpensa, Linate e Lugano verso 
   },
   {
     key: 'T4_breakup', language: 'it', kind: 'sequence', name: 'T4 Email di chiusura (nuovo thread)',
-    subject_a: 'Riferimento transfer per {{agency}}',
-    subject_b: 'Transfer matrimoni 2026 · {{agency}}',
+    subject_a: 'Contatto transfer per {{agency}}',
+    subject_b: 'Transfer Lago di Como · {{agency}}',
     body: `{{greeting}}
 
-Chiudo qui per non affollare la vostra casella durante la stagione. Se per un matrimonio del prossimo anno sul lago serviranno transfer per gli ospiti, la nostra tariffa partner è a una risposta di distanza.
+Chiudo qui per non affollare la vostra casella durante i preparativi. Se durante la stagione dovesse servirvi un transfer dell'ultimo minuto da Malpensa o una navetta notturna da una villa sul lago, basta una risposta a questa mail o un messaggio su WhatsApp.
 
-Buona stagione.
+Buon lavoro e buona stagione.
 
 {{signature}}
 

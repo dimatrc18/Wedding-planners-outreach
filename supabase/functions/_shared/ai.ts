@@ -36,8 +36,10 @@ ${CONCIERGE_WRITING_RULES}
 
 Hook-Specific Rules:
 - Use ONLY facts that appear in the PAGE TEXT below. Never invent venues, couples, dates, numbers or awards.
-- Reference one specific thing: a named villa or venue they worked at, a real wedding or event, a press feature, or a distinctive style choice.
-- One sentence, under 26 words, calm and direct. No flattery adjectives stacked together, no exclamation marks, no questions, no em-dashes (—).
+- Write in first person ("I was looking through...", "I saw your recent weddings at...") as Dmitri, a local Lake Como & Milan peer.
+- NEVER use fake AI flattery clichés like "stood out to us", "caught our eye", "caught our attention", "we noted", or "felt warm and personal".
+- Reference one specific factual detail: a named couple's wedding story, a named Lake Como villa they worked at, or a press feature.
+- One short sentence, under 20 words, calm and direct. No exclamation marks, no questions, no em-dashes (—).
 - If the page has nothing specific, return an empty hook and confidence "low".
 
 Return JSON only:
