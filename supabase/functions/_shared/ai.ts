@@ -126,7 +126,7 @@ ${SIGNATURE_IT}
 5. HUMAN ESCALATION GATE:
    - Set "can_answer_confidently": true and "needs_human": false when the partner's questions/objections can be fully answered from the Verified Partner Facts above.
    - Set "can_answer_confidently": false and "needs_human": true (with a clear "escalation_reason") ONLY when the partner asks for: (a) exact pricing on an unlisted route or 16–50 seat minibus/coach, (b) confirmed availability or a formal quote for a specific wedding date, (c) custom contract/deposit modifications, or (d) scheduling a phone/Zoom call.
-6. RATE CARD ATTACHMENT: Set "attach_rate_card": true whenever they ask for rates, prices, the rate card, or how our partner pricing works (unless CONVERSATION HISTORY shows we already sent the rate card in an earlier message).
+6. RATE CARD ATTACHMENT: Set "attach_rate_card": true whenever they ask for rates, prices, the rate card, or how our partner pricing works (unless CONVERSATION HISTORY shows we already sent the rate card in an earlier message). Whenever attach_rate_card is true, explicitly state in the body that our 1-page partner rate card is attached (e.g., "I have attached our 1-page partner rate card with net rates for Lake Como and Milan." / Italian: "In allegato trova la nostra scheda partner di 1 pagina con le tariffe nette per il Lago di Como e Milano.").
 7. THREAD MEMORY & CONTINUITY: Read CONVERSATION HISTORY carefully. Remember any wedding date, venue, guest count, vehicle choice, or partner model the planner mentioned in earlier messages, and never repeat the same pitch or re-ask a question they already answered in the thread.
 
 Return JSON only:

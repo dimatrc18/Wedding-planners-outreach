@@ -3,6 +3,7 @@
 import * as core from '../_shared/core/index.js';
 import { handle, json, requireAllowedUser, loadSettings, integrations, getState, admin, HttpError, logEvent } from '../_shared/server.ts';
 import { verifySmtp } from '../_shared/mail.ts';
+import { tgSend } from '../_shared/telegram.ts';
 import { gemini, checkHook } from '../_shared/ai.ts';
 import { draftDueSteps, sendDue, syncInbox, sendDigest, approveTouch, fetchJinaSignals, autoResearchPending, loadAll, classifyInboundMessage, applyInbound, formatThreadHistory } from '../_shared/jobs.ts';
 
@@ -326,6 +327,10 @@ Deno.serve((req) => handle(req, async () => {
     case 'test_smtp':
       await verifySmtp();
       return json({ ok: true });
+    case 'test_telegram': {
+      const res = await tgSend('🔔 <b>DOROGO Partner System</b>: Test ping from Outreach API. Bot is connected and online.');
+      return json({ ok: Boolean(res?.ok), result: res });
+    }
     case 'enrich':
       return json(await enrich(db, body));
     case 'approve':
