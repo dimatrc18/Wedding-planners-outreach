@@ -34,8 +34,8 @@ export const CONCIERGE_WRITING_RULES = `DOROGO CONCIERGE WRITING SKILLS (MANDATO
 
 export const PROMPTS = {
   hook: {
-    version: 'hook-v8-luxury-fleet',
-    text: (o: { agency: string; language: string; page: string }) => `You help Dmitri (Co-Founder of DOROGO Private Transportation) write the opening sentence of a concise, CEO-level email to a luxury wedding planner or venue.
+    version: 'hook-v9-mece-intro',
+    text: (o: { agency: string; language: string; page: string }) => `You help Dmitri (Co-Founder of DOROGO Private Transportation) write the opening sentence of a concise, natural email to a luxury wedding planner or venue.
 Agency: ${o.agency}
 Write the line in: ${o.language === 'it' ? 'Italian' : 'English'}
 
@@ -43,11 +43,12 @@ ${CONCIERGE_WRITING_RULES}
 
 Hook-Specific Rules:
 - Use ONLY facts that appear in the PAGE TEXT below. Never invent venues, couples, dates, numbers or awards.
-- LUXURY FULL-FLEET OPENING: Reference their specific venues or a real wedding from their page, and highlight why multi-day weddings with 50 to 150 guests across multiple hotels require a coordinated event fleet rather than a few solo local cars.
+- VENUE ACCURACY: Villa del Balbianello is reached by boat or footpath from Lenno — never pair Villa del Balbianello with narrow gates, road access, or coach staging.
+- CLEAR IDENTITY & OBSERVATION: Introduce Dmitri from DOROGO (a private transport company covering Lake Como and Milan) and reference a real venue or wedding from their page.
 - Examples:
-  - "For multi-day weddings at Villa del Balbianello and Villa Sola Cabiati, moving 50 to 150 guests across multiple Lake Como hotels takes more than a few local cars."
-  - "Looking at Morgan and Tyler's wedding on your site, coordinating international guests across multiple hotels for Villa del Balbianello and Villa Balbiano takes a dedicated event fleet."
-- One simple, true sentence, 14 to 25 words max. No exclamation marks, no questions, no em-dashes (—).
+  - "I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan. I came across your weddings at Villa Balbiano and wanted to introduce ourselves."
+  - "I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan. I saw Morgan and Tyler's wedding on your site and wanted to introduce ourselves."
+- Keep it natural and conversational (18 to 32 words max). No exclamation marks, no questions, no em-dashes (—).
 - If the page has nothing specific, return an empty hook and confidence "low".
 
 Return JSON only:
@@ -78,19 +79,20 @@ REPLY:
 ${o.body}`,
   },
   draft: {
-    version: 'draft-v8-luxury-fleet',
-    text: (o: { step: string; prospect: string; draft: string; language: string }) => `Rewrite this outreach email from Dmitri (Co-Founder of DOROGO Private Transportation) to a luxury wedding planner or venue so it reads like a concise, peer-to-peer CEO note from a luxury event transport house.
+    version: 'draft-v9-mece-ab',
+    text: (o: { step: string; prospect: string; draft: string; language: string }) => `Rewrite this outreach email from Dmitri (Co-Founder of DOROGO Private Transportation) to a luxury wedding planner, hotel concierge, or venue so it reads like a natural, calm, peer-to-peer note.
 Step: ${o.step}. Language: ${o.language === 'it' ? 'Italian' : 'English'}.
 
 ${CONCIERGE_WRITING_RULES}
 
 Draft-Specific Rules:
-- SUBJECT LINE: Crisp executive subject line (under 48 characters) naming their studio/property or primary venue (e.g., "[Venue] weddings · [Agency]" or "Guest transport fleet · [Agency]").
-- CONCISE LUXURY AUTHORITY (50 to 68 WORDS MAX BEFORE SIGNATURE): Keep the entire body to 3 short, connected sentences. Never beg, never ask to "test us", and never offer free transfers.
-- SENTENCE 1 (Scale & Multi-Hotel Reality): Reference their specific venues/couples and note that moving 50 to 150 guests across multiple Lake Como hotels takes a coordinated event fleet rather than a few solo local cars.
-- SENTENCE 2 (Full-Fleet Execution): Explain that we run dedicated wedding fleets across Milan and Lake Como: pairing Mercedes-Benz S-Class, V-Class and 16 to 50-seat minibuses with one WhatsApp coordinator and a Guest Transfer Portal so guests log their own flights and never call the planner's phone.
-- SENTENCE 3 (Direct Peer Ask): "May I send our 1-page partner rate card (confidential net rates for your offer, or 5% commission)?"
-- Zero exclamation marks, zero em-dashes (—). Always write "Mercedes-Benz" in full when naming S-Class, V-Class, or E-Class. Keep the exact signature and opt-out line at the bottom.
+- SUBJECT LINE: Short, natural subject line (under 48 characters) with NO "·" separator and NO recipient company name tag (e.g., "Lake Como guest transport", "Transfers for your Villa Balbiano weddings", "Late returns after the reception", or "Guest transfers for your events team").
+- VENUE ACCURACY: Never pair Villa del Balbianello with narrow gates or coach access (it is reached by boat or footpath from Lenno).
+- CONCISE & NATURAL (55 to 90 WORDS MAX BEFORE SIGNATURE):
+  - State clearly who Dmitri and DOROGO are ("I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan").
+  - Explain simply what we do ("We do guest shuttles, airport pickups and late-night returns, with V-Classes, S-Classes and minibuses for larger groups. I'm not looking to replace anyone you work with, just to be an extra option when a date gets busy.").
+  - End with a simple, low-friction CTA: "Would it be useful if I sent our rates?" (or "Would it be useful if I sent our vehicle list and partner rates for your team to keep on file?" for hotels/venues). Do NOT put "net rates or 5% commission" in Email 1.
+- Zero exclamation marks, zero em-dashes (—). Keep the exact signature and opt-out line at the bottom.
 Return JSON only: {"subject": string, "body": string}
 
 RECIPIENT NOTES:

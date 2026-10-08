@@ -43,23 +43,15 @@ export const DEFAULT_STEPS = [
   { key: 'T4_breakup', label: 'Final note (disabled)', day: 9, channel: 'email', thread: false, require_approval: true, enabled: false },
 ];
 
-export const SIGNATURE = `Warm regards,
+export const SIGNATURE = `Dmitri
+DOROGO | dmitri@dorogo.eu | WhatsApp +32 456 141 497`;
 
-Dmitri
-DOROGO | Private Transportation
-WhatsApp: wa.me/32456141497 • dmitri@dorogo.eu
-Milan • Lake Como • Italian Alps`;
-
-export const SIGNATURE_IT = `Un cordiale saluto,
-
-Dmitri
-DOROGO | Private Transportation
-WhatsApp: wa.me/32456141497 • dmitri@dorogo.eu
-Milano • Lago di Como • Alpi`;
+export const SIGNATURE_IT = `Dmitri
+DOROGO | dmitri@dorogo.eu | WhatsApp +32 456 141 497`;
 
 export const OPTOUT = {
-  en: "If this isn't relevant to you, reply \"no\" and I won't write again.",
-  it: 'Se non è di vostro interesse, basta rispondere "no" e non vi scriverò più.',
+  en: "If transport isn't something you handle, no problem at all, just let me know.",
+  it: 'Se i trasporti non sono un servizio che gestite, nessun problema, basta farmelo sapere.',
 };
 
 export const DEFAULT_SETTINGS = {

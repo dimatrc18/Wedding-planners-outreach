@@ -29,13 +29,13 @@ const VEHICLE_BANNED = [
   { re: /\bLWB\b/, label: 'LWB' },
 ];
 
-const OPTOUT_RE = /reply "?no"?|rispondere "?no"?|unsubscribe|won't write again|non vi scriverò più/i;
+const OPTOUT_RE = /just let me know|basta farmelo sapere|won't follow up|reply "?no"?|rispondere "?no"?|unsubscribe|won't write again|non vi scriverò più/i;
 
 // Body text without signature and opt-out line, for word counts and question counting.
 export function coreText(body = '') {
   let t = String(body);
   for (const s of [SIGNATURE, SIGNATURE_IT, OPTOUT.en, OPTOUT.it]) t = t.split(s).join(' ');
-  t = t.replace(/^(warm regards|kind regards|best regards|un cordiale saluto|cordiali saluti),?[\s\S]*$/im, ' ');
+  t = t.replace(/^(warm regards|kind regards|best regards|un cordiale saluto|cordiali saluti|dmitri\s*\n\s*dorogo\b),?[\s\S]*$/im, ' ');
   return t.trim();
 }
 

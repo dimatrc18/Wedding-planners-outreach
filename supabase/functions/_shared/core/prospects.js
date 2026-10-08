@@ -222,7 +222,7 @@ export function parseProfileUrl(url = '') {
   return {};
 }
 
-// Verified public contact & story directory for Lake Como agencies with luxury full-fleet openings
+// Verified public contact & venue directory for Lake Como agencies (MECE Review compliant)
 const KNOWN_LAKE_COMO_DIRECTORY = {
   federicacantu: {
     website: 'https://www.federicacantuweddingplanner.com',
@@ -230,9 +230,9 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     contact_name: 'Federica Cantù',
     location: 'Como',
     segment: 'boutique_local',
-    key_venues: ['Villa del Balbianello', 'Villa Balbiano'],
-    personalization_hook: "Looking at Morgan and Tyler's wedding on your site, moving 70+ international guests across multiple hotels for Villa del Balbianello and Villa Balbiano takes more than a few local cars.",
-    hook_type: 'event',
+    key_venues: ['Villa Balbiano', 'Villa del Balbianello'],
+    personalization_hook: "I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan. I came across your weddings at Villa Balbiano and wanted to introduce ourselves.",
+    hook_type: 'venue',
   },
   comoluxury: {
     website: 'https://www.comoluxurywedding.com',
@@ -241,7 +241,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     location: 'Como',
     segment: 'boutique_local',
     key_venues: ['Villa Pizzo', 'Villa Erba'],
-    personalization_hook: "For multi-day weddings in Cernobbio at Villa Pizzo and Villa Erba, coordinating international guests across several hotels takes a dedicated event fleet rather than individual local cars.",
+    personalization_hook: "The hardest part of a Lake Como wedding's transport is often the end of the night: guests spread over several Cernobbio and Como hotels after Villa Pizzo or Villa Erba and taxis hard to find.",
     hook_type: 'venue',
   },
   idoin: {
@@ -251,9 +251,9 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     rating: 4.9,
     verified_reviews_count: 35,
     segment: 'boutique_local',
-    key_venues: ['Villa del Balbianello', 'Grand Hotel Tremezzo'],
-    personalization_hook: "For multi-day celebrations across Menaggio, Tremezzina and Villa del Balbianello, moving guests between multiple lakeside hotels and boat piers takes a coordinated event fleet.",
-    hook_type: 'event',
+    key_venues: ['Grand Hotel Tremezzo', 'Villa del Balbianello'],
+    personalization_hook: "I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan. I came across your weddings around Tremezzina and the Lenno boat pier for Villa del Balbianello and wanted to introduce ourselves.",
+    hook_type: 'venue',
   },
   sugar: {
     website: 'https://sugarevents.com',
@@ -261,9 +261,9 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     contact_name: 'Daniela Galimberti',
     location: 'Laglio',
     segment: 'boutique_local',
-    key_venues: ['Relais Villa Vittoria', 'Villa Pizzo'],
-    personalization_hook: "For multi-day weddings around Laglio and Villa Pizzo, coordinating guests across several hotels and narrow villa gates takes a dedicated fleet rather than solo local drivers.",
-    hook_type: 'event',
+    key_venues: ['Villa Pizzo', 'Relais Villa Vittoria'],
+    personalization_hook: "The hardest part of a Lake Como wedding's transport is often the end of the night: guests spread over several hotels around Laglio and Villa Pizzo and taxis hard to find.",
+    hook_type: 'venue',
   },
   lenafreitag: {
     website: 'https://www.lenafreitag.com',
@@ -273,9 +273,9 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     rating: 5.0,
     verified_reviews_count: 18,
     segment: 'boutique_local',
-    key_venues: ['Villa del Balbianello', 'Villa Sola Cabiati'],
-    personalization_hook: "For multi-day weddings at Villa del Balbianello and Villa Sola Cabiati, moving 50 to 150 guests across multiple Lake Como hotels takes more than a few local cars.",
-    hook_type: 'style',
+    key_venues: ['Villa Sola Cabiati', 'Villa del Balbianello'],
+    personalization_hook: "I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan. I came across your weddings at Villa Sola Cabiati and wanted to introduce ourselves.",
+    hook_type: 'venue',
   },
   romanceinitaly: {
     website: 'https://www.romanceinitaly.it',
@@ -286,7 +286,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     verified_reviews_count: 22,
     segment: 'boutique_local',
     key_venues: ['Villa Cipressi', 'Villa Monastero'],
-    personalization_hook: "For destination weddings in Varenna at Villa Cipressi and Villa Monastero, coordinating airport arrivals and late-night hotel shuttles takes a dedicated event fleet.",
+    personalization_hook: "The hardest part of a Lake Como wedding's transport is often the end of the night: guests spread over several Varenna hotels after Villa Cipressi or Villa Monastero and taxis hard to find.",
     hook_type: 'venue',
   },
   kissandescape: {
@@ -294,8 +294,8 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     location: 'Bellagio',
     segment: 'boutique_local',
     key_venues: ['Villa Melzi', 'Villa Serbelloni'],
-    personalization_hook: "For multi-day celebrations in Bellagio at Villa Melzi and Villa Serbelloni, coordinating guests arriving from Malpensa and Linate across several hotels takes a dedicated wedding fleet.",
-    hook_type: 'style',
+    personalization_hook: "I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan. I came across your weddings in Bellagio at Villa Melzi and wanted to introduce ourselves.",
+    hook_type: 'venue',
   },
   relaisvillavittoria: {
     website: 'https://www.relaisvillavittoria.com',
@@ -304,7 +304,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     rating: 4.8,
     verified_reviews_count: 180,
     key_venues: ['Relais Villa Vittoria'],
-    personalization_hook: "During full wedding weekends at Relais Villa Vittoria, guests staying across neighbouring Laglio and Cernobbio hotels need coordinated airport arrivals and late-night return shuttles.",
+    personalization_hook: "I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan.",
     hook_type: 'venue',
   },
   villalario: {
@@ -314,7 +314,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     rating: 4.9,
     verified_reviews_count: 140,
     key_venues: ['Villa Lario'],
-    personalization_hook: "During full wedding buyouts at Villa Lario in Pognana Lario, guests staying in Como and Bellagio need dedicated late-night return shuttles long after local taxis stop running.",
+    personalization_hook: "I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan.",
     hook_type: 'venue',
   },
   filario: {
@@ -324,7 +324,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     rating: 4.8,
     verified_reviews_count: 210,
     key_venues: ['Filario'],
-    personalization_hook: "During wedding weekends at Filario in Lezzeno, moving international guests between Malpensa, Bellagio and lakeside villas requires a dedicated multi-vehicle fleet.",
+    personalization_hook: "I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan.",
     hook_type: 'venue',
   },
   villacipressi: {
@@ -334,7 +334,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     rating: 4.8,
     verified_reviews_count: 320,
     key_venues: ['Villa Cipressi', 'Villa Monastero'],
-    personalization_hook: "During multi-day weddings at Villa Cipressi in Varenna, guests flying into Malpensa and staying across the eastern shore need coordinated airport waves and late-night shuttles.",
+    personalization_hook: "I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan.",
     hook_type: 'venue',
   },
   grandhotelimperiale: {
@@ -346,7 +346,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     rating: 4.7,
     verified_reviews_count: 290,
     key_venues: ['Grand Hotel Imperiale'],
-    personalization_hook: "During multi-day wedding weekends at Grand Hotel Imperiale in Moltrasio, coordinating 50 to 150 guests across airports, boat piers and villas requires a dedicated event fleet.",
+    personalization_hook: "I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan.",
     hook_type: 'venue',
   },
   sposiamovi: {
@@ -385,9 +385,9 @@ export const DISCOVERY_PARTNER_CATALOG = [
     verified_reviews_count: 48,
     review_source: 'google',
     source: 'ai_discovery',
-    key_venues: ['Villa del Balbianello', 'Villa Erba', 'Villa Pizzo'],
-    personalization_hook: "For multi-day weddings at Villa del Balbianello, Villa Erba and Villa Pizzo, moving 50 to 150 guests across multiple Lake Como hotels takes more than a few local cars.",
-    hook_type: 'event',
+    key_venues: ['Villa Erba', 'Villa Pizzo', 'Villa del Balbianello'],
+    personalization_hook: "I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan. I came across your weddings at Villa Erba and Villa Pizzo and wanted to introduce ourselves.",
+    hook_type: 'venue',
     notes: 'Discovered via AI Partner Search (Real Weddings & Portfolio verified).',
   },
   {
@@ -402,9 +402,9 @@ export const DISCOVERY_PARTNER_CATALOG = [
     verified_reviews_count: 34,
     review_source: 'google',
     source: 'ai_discovery',
-    key_venues: ['Villa Cipressi', 'Villa Melzi', 'Villa del Balbianello'],
-    personalization_hook: "For destination weddings in Bellagio and Varenna at Villa Melzi and Villa Cipressi, coordinating international guests across several hotels takes a dedicated event fleet.",
-    hook_type: 'event',
+    key_venues: ['Villa Melzi', 'Villa Cipressi', 'Villa del Balbianello'],
+    personalization_hook: "The hardest part of a Lake Como wedding's transport is often the end of the night: guests spread over several hotels around Bellagio and Varenna and taxis hard to find.",
+    hook_type: 'venue',
     notes: 'Discovered via AI Partner Search (Boutique Lake Como specialist).',
   },
   {
@@ -419,9 +419,9 @@ export const DISCOVERY_PARTNER_CATALOG = [
     verified_reviews_count: 52,
     review_source: 'google',
     source: 'ai_discovery',
-    key_venues: ['Villa del Balbianello', 'Villa Monastero', 'Villa Cipressi'],
-    personalization_hook: "For multi-day Lake Como weddings at Villa del Balbianello and Villa Monastero, moving international guests across several towns and hotels takes a dedicated event fleet.",
-    hook_type: 'event',
+    key_venues: ['Villa Monastero', 'Villa Cipressi', 'Villa del Balbianello'],
+    personalization_hook: "I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan. I came across your weddings at Villa Monastero and Villa Cipressi and wanted to introduce ourselves.",
+    hook_type: 'venue',
     notes: 'Discovered via AI Partner Search (Lake Como & Northern Italy lakes specialist).',
   },
   {
@@ -437,7 +437,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Villa Passalacqua'],
-    personalization_hook: "During full wedding buyouts at Passalacqua in Moltrasio, coordinating staggered airport arrivals and narrow-gate villa shuttles requires a dedicated multi-vehicle fleet.",
+    personalization_hook: "I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan.",
     hook_type: 'venue',
     notes: 'Discovered via AI Partner Search (Moltrasio ultra-luxury villa buyout venue).',
   },
@@ -453,9 +453,9 @@ export const DISCOVERY_PARTNER_CATALOG = [
     verified_reviews_count: 29,
     review_source: 'google',
     source: 'ai_discovery',
-    key_venues: ['Villa Pizzo', 'Villa Balbiano'],
-    personalization_hook: "For multi-day weddings at Villa Pizzo and Villa Balbiano, moving 50 to 150 international guests across multiple hotels takes a coordinated event fleet rather than solo local cars.",
-    hook_type: 'style',
+    key_venues: ['Villa Balbiano', 'Villa Pizzo'],
+    personalization_hook: "The hardest part of a Lake Como wedding's transport is often the end of the night: guests spread over several hotels after Villa Balbiano or Villa Pizzo and taxis hard to find.",
+    hook_type: 'venue',
     notes: 'Discovered via AI Partner Search (Milan & Lake Como boutique wedding design).',
   },
 ];
@@ -467,17 +467,14 @@ const BROAD_REGION_NAME_RE = /^(lake\s+como|lago\s+di\s+como|lake\s+maggiore|lak
 /** Extracts unique human details (couple names, founder names, press, signature touches) from Jina Reader markdown or HTML text. */
 export function extractUniqueStorySignals(rawText = '') {
   const text = String(rawText || '');
-  // Look for couple names like "Morgan & Tyler" or "Beatrice & Matteo" in headings or captions
   const coupleMatches = [...text.matchAll(/(?:^|\n|#|\*)\s*([A-Z][a-z]{2,14})\s+(?:&|and)\s+([A-Z][a-z]{2,14})\b/g)]
     .filter((m) => !NON_HUMAN_COUPLE_WORD_RE.test(m[1]) && !NON_HUMAN_COUPLE_WORD_RE.test(m[2]))
     .map((m) => `${m[1]} and ${m[2]}`);
   const uniqueCouples = [...new Set(coupleMatches)].slice(0, 3);
 
-  // Look for press mentions
   const press = ['Vogue', "Harper's Bazaar", 'Brides', 'Style Me Pretty', 'Over The Moon', 'Tatler', 'Martha Stewart', 'WedLuxe']
     .filter((pub) => new RegExp(`\\b${pub.replace(/\s+/g, '\\s+')}\\b`, 'i').test(text));
 
-  // Look for signature wedding details
   const signatureDetails = [];
   if (/multi[- ]day/i.test(text)) signatureDetails.push('multi-day celebrations');
   if (/riva\b|boat arrival|waterfront|private pier|water taxi/i.test(text)) signatureDetails.push('lakefront boat arrivals');
@@ -485,7 +482,6 @@ export function extractUniqueStorySignals(rawText = '') {
   if (/greenhouse|candlelit|al fresco/i.test(text)) signatureDetails.push('al fresco candlelit dinners');
   if (/honeymoon/i.test(text)) signatureDetails.push('post-wedding honeymoon logistics');
 
-  // Look for founder / lead planner name
   const founderMatch = text.match(/(?:founded by|led by|with wedding planner|founder)\s+([A-Z][a-zà-ÿ]{2,15}\s+[A-Z][a-zà-ÿ]{2,18})/);
   const candidateFounder = founderMatch ? founderMatch[1].trim() : null;
   const founderName = candidateFounder && !NON_HUMAN_FOUNDER_RE.test(candidateFounder) ? candidateFounder : null;
@@ -504,49 +500,49 @@ export function resolveProspectResearchSeed(p = {}) {
   return { ...known, guessedUrl };
 }
 
-export function buildVerifiedFallbackHook(p = {}, storySignals = null) {
+export function buildVerifiedFallbackHook(p = {}, storySignals = null, variantOverride = null) {
   const existing = String(p.personalization_hook || '').trim();
   const isRoboticExisting = /^(We note(d)?\b|I was looking through your recent\b|I saw your recent\b|.*(stood out to us|caught our eye|caught our attention)\.?$)/i.test(existing);
-  if (existing && !isRoboticExisting) {
+  if (existing && !isRoboticExisting && !variantOverride) {
     return existing;
   }
+
+  const venues = (Array.isArray(p.key_venues) ? p.key_venues : [])
+    .map((v) => String(v || '').trim())
+    .filter((v) => v && !BROAD_REGION_NAME_RE.test(v));
+  const preferredVenue = venues.find((v) => !/balbianello/i.test(v)) || venues[0] || p.location || 'Lake Como';
+
+  if (p.type === 'venue' || p.type === 'concierge_hotel') {
+    return p.language === 'it'
+      ? 'Sono Dmitri di DOROGO, società di trasporto privato attiva tra il Lago di Como e Milano.'
+      : "I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan.";
+  }
+
+  if (variantOverride === 'A') {
+    if (p.language === 'it') {
+      return `Sono Dmitri di DOROGO, società di trasporto privato attiva tra il Lago di Como e Milano. Ho visto i vostri matrimoni a ${preferredVenue} e volevo presentarci.`;
+    }
+    return `I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan. I came across your weddings at ${preferredVenue} and wanted to introduce ourselves.`;
+  }
+
+  if (variantOverride === 'B') {
+    if (p.language === 'it') {
+      return `Spesso la parte più delicata dei trasporti per un matrimonio sul Lago di Como è il fine serata: ospiti divisi su più hotel intorno a ${preferredVenue} e nessun taxi disponibile.`;
+    }
+    return `The hardest part of a Lake Como wedding's transport is often the end of the night: guests spread over several hotels around ${preferredVenue} and taxis hard to find.`;
+  }
+
   const seed = KNOWN_LAKE_COMO_DIRECTORY[normName(p.agency_name || '')];
   if (seed?.personalization_hook) return seed.personalization_hook;
 
   const catalogMatch = DISCOVERY_PARTNER_CATALOG.find((c) => normName(c.agency_name) === normName(p.agency_name || ''));
   if (catalogMatch?.personalization_hook) return catalogMatch.personalization_hook;
 
-  const venues = (Array.isArray(p.key_venues) ? p.key_venues : [])
-    .map((v) => String(v || '').trim())
-    .filter((v) => v && !BROAD_REGION_NAME_RE.test(v));
-  const couples = storySignals?.couples || [];
-  const press = storySignals?.press || [];
-
-  if (p.type === 'venue') {
-    const place = venues[0] || p.agency_name || 'your property';
-    return `During full wedding weekends at ${place}, guests staying across neighbouring hotels need coordinated airport arrivals and late-night return shuttles.`;
-  }
-  if (p.type === 'concierge_hotel') {
-    const place = venues[0] || p.agency_name || 'your hotel';
-    return `During multi-day wedding weekends at ${place}, coordinating 50 to 150 guests across airports, boat piers and villas requires a dedicated event fleet.`;
-  }
-  if (couples.length > 0 && venues.length > 0) {
-    return `Looking at ${couples[0]}'s wedding at ${venues[0]} on your site, moving 50 to 150 international guests across multiple hotels takes more than a few local cars.`;
-  }
-  if (couples.length > 0) {
-    return `Looking at ${couples[0]}'s wedding on your site, coordinating international guests across multiple hotels takes a dedicated event fleet rather than solo local cars.`;
-  }
-  if (press.length > 0 && venues.length > 0) {
-    return `For your ${press[0]}-featured weddings at ${venues[0]}, moving 50 to 150 international guests across multiple hotels takes a dedicated event fleet.`;
-  }
-  if (venues.length >= 2) {
-    return `For multi-day weddings at ${venues[0]} and ${venues[1]}, moving 50 to 150 guests across multiple Lake Como hotels takes more than a few local cars.`;
-  }
-  if (venues.length === 1) {
-    return `For multi-day weddings at ${venues[0]}, moving 50 to 150 guests across multiple Lake Como hotels takes more than a few local cars.`;
+  if (venues.length >= 1) {
+    return `I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan. I came across your weddings at ${preferredVenue} and wanted to introduce ourselves.`;
   }
   if (p.location) {
-    return `For multi-day weddings around ${p.location}, coordinating international guests across several hotels takes a dedicated event fleet rather than individual local cars.`;
+    return `I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan. I came across your weddings in ${p.location} and wanted to introduce ourselves.`;
   }
   return '';
 }

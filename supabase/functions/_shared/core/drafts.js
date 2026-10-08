@@ -48,128 +48,96 @@ function resolveVenueOrLocation(prospect = {}, agencyShort = '', lang = 'en') {
   const venues = (Array.isArray(prospect.key_venues) ? prospect.key_venues : [])
     .map((v) => String(v || '').trim())
     .filter((v) => v && !/^(lake\s+como|lago\s+di\s+como|italy|milan)$/i.test(v));
-  const distinctVenue = venues.find((v) => v.toLowerCase() !== normAgency && !normAgency.includes(v.toLowerCase()));
-  if (distinctVenue) return distinctVenue;
+  const distinctVenues = venues.filter((v) => v.toLowerCase() !== normAgency && !normAgency.includes(v.toLowerCase()));
+  const nonBalbianello = distinctVenues.find((v) => !/balbianello/i.test(v));
+  if (nonBalbianello) return nonBalbianello;
+  if (distinctVenues[0]) return distinctVenues[0];
   if (loc && loc.toLowerCase() !== normAgency) return loc;
   if (venues[0] && venues[0].toLowerCase() !== normAgency) return venues[0];
   return lang === 'it' ? 'Lago di Como' : 'Lake Como';
 }
 
-function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lang = 'en') {
+function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lang = 'en', variant = 'A') {
   const type = prospect.type === 'wedding_planner' ? 'planner' : (prospect.type || 'planner');
-  const idx = stableHashIndex(`${prospect.id || ''}:${prospect.agency_name || ''}`, 4);
+  const idx = stableHashIndex(`${prospect.id || ''}:${prospect.agency_name || ''}`, 2);
+  const hookText = String(prospect.personalization_hook || '');
+  const isHookVariantB = /^(The hardest part of a Lake Como wedding's transport|La parte più complessa dei trasporti)/i.test(hookText);
+  const effectiveVariant = isHookVariantB ? 'B' : (variant === 'B' ? 'B' : 'A');
 
   if (lang === 'it') {
-    if (type === 'venue') {
+    if (type === 'venue' || type === 'concierge_hotel') {
+      const targetVenue = agencyShort || venueOrLoc;
       return {
-        subject_line_a: `Flotta eventi per i matrimoni a ${agencyShort}`,
-        subject_line_b: `Trasferimenti ospiti a ${venueOrLoc} · ${agencyShort}`,
+        subject_line_a: 'Transfer ospiti per il vostro team eventi',
+        subject_line_b: 'Transfer aeroportuali e navette di gruppo',
         service_pitch:
-          'Gestiamo l\'intera mobilità ospiti su più giorni con Mercedes-Benz Classe S, Classe V e minibus da 16 a 50 posti, un unico coordinatore WhatsApp e il nostro Portale Ospiti per raccogliere i voli.',
+          `Forniamo transfer aeroportuali e trasporti di gruppo per gli ospiti dell'hotel e i matrimoni a ${targetVenue}, con Mercedes-Benz Classe V, Classe S e minibus. Possiamo coordinare le prenotazioni rapidamente via WhatsApp o email.`,
         cta_line:
-          'Posso inviarvi il nostro listino partner di 1 pagina (tariffe nette per la vostra offerta o commissione 5%)?',
+          'Vi sarebbe utile se vi inviassi l\'elenco veicoli e le tariffe partner da tenere in archivio per il vostro team?',
       };
     }
-    if (type === 'concierge_hotel') {
+
+    const hasSpecificVenueIt = venueOrLoc && !/^(lago di como|lake como|milano|italia)$/i.test(venueOrLoc);
+    const itSubjectsA = hasSpecificVenueIt
+      ? [`Transfer per i vostri matrimoni a ${venueOrLoc}`, 'Trasporti ospiti sul Lago di Como']
+      : ['Trasporti ospiti sul Lago di Como', 'Transfer ospiti per la stagione matrimoni'];
+
+    if (effectiveVariant === 'B') {
       return {
-        subject_line_a: `Flotta eventi e matrimoni · ${agencyShort}`,
-        subject_line_b: `Transfer ospiti a ${venueOrLoc} · ${agencyShort}`,
+        subject_line_a: itSubjectsA[idx],
+        subject_line_b: 'Rientri notturni dopo il ricevimento',
         service_pitch:
-          'Mettiamo a disposizione del vostro team una flotta dedicata di Mercedes-Benz Classe S, Classe V e minibus da 16 a 50 posti con un unico coordinatore WhatsApp per gli arrivi da Malpensa e le navette evento.',
+          'Sono Dmitri di DOROGO e ci occupiamo proprio di questa parte tra il Lago di Como e Milano, con Mercedes-Benz Classe V, Classe S e minibus.',
         cta_line:
-          'Posso inviarvi il nostro listino partner di 1 pagina (tariffe nette o commissione 5%)?',
+          'Se mai aveste bisogno di un supporto extra in una data intensa, vi sarebbe utile ricevere le nostre tariffe?',
       };
     }
-    const itPlannerSubjectsA = [
-      `Matrimoni a ${venueOrLoc} · ${agencyShort}`,
-      `Flotta ospiti per i matrimoni di ${agencyShort}`,
-      `${agencyShort} · logistica ospiti Lago di Como`,
-      `Coordinamento transfer ospiti · ${agencyShort}`,
-    ];
-    const itPlannerSubjectsB = [
-      `Flotta matrimoni a ${venueOrLoc} · ${agencyShort}`,
-      `Logistica ospiti · ${agencyShort}`,
-      `Matrimoni sul Lago di Como · ${agencyShort}`,
-      `Navette e arrivi ospiti · ${agencyShort}`,
-    ];
-    const itPlannerPitches = [
-      'Gestiamo flotte dedicate per matrimoni su più giorni tra Milano e il Lago di Como: Mercedes-Benz Classe S, Classe V e minibus da 16 a 50 posti, con un unico coordinatore WhatsApp e il nostro Portale Ospiti dove gli invitati inseriscono i propri voli senza mai chiamare il vostro telefono.',
-      'Coordiniamo l\'intera logistica ospiti dagli arrivi a Malpensa fino alle navette notturne dalle ville con Mercedes-Benz Classe S, Classe V e minibus da 16 a 50 posti, affiancati dal nostro Portale Ospiti e da un unico referente su WhatsApp.',
-    ];
-    const itPlannerCtas = [
-      'Posso inviarvi il nostro listino partner di 1 pagina (tariffe nette da includere nella vostra offerta o commissione 5%)?',
-      'Vi fa piacere ricevere la nostra scheda partner di 1 pagina (tariffe nette o commissione 5%)?',
-    ];
+
     return {
-      subject_line_a: itPlannerSubjectsA[idx],
-      subject_line_b: itPlannerSubjectsB[idx],
-      service_pitch: itPlannerPitches[idx % itPlannerPitches.length],
-      cta_line: itPlannerCtas[idx % itPlannerCtas.length],
+      subject_line_a: itSubjectsA[idx],
+      subject_line_b: 'Rientri notturni dopo il ricevimento',
+      service_pitch:
+        'Gestiamo navette ospiti, transfer aeroportuali e rientri notturni con Mercedes-Benz Classe V, Classe S e minibus per i gruppi più numerosi. Non cerchiamo di sostituire i vostri fornitori attuali, ma solo di essere un\'opzione in più quando una data si fa intensa.',
+      cta_line: 'Vi sarebbe utile se vi inviassi le nostre tariffe?',
     };
   }
 
-  // English luxury full-fleet positioning
-  if (type === 'venue') {
-    const venuePitches = [
-      'We run dedicated wedding fleets across Milan and Lake Como: pairing Mercedes-Benz S-Class, V-Class and 16 to 50-seat minibuses with one WhatsApp coordinator and a Guest Transfer Portal so guests log their own flights and return shuttles.',
-      'Our team coordinates full-weekend guest transport from Malpensa arrivals through late-night villa return shuttles using Mercedes-Benz S-Class, V-Class and 16 to 50-seat minibuses under one dedicated WhatsApp dispatcher.',
-    ];
-    const venueCtas = [
-      'May I send our 1-page partner rate card (confidential net rates for your offer, or 5% commission)?',
-      'Would you like our 1-page partner rate card (net rates for your offer, or 5% commission) for your files?',
-    ];
+  // English MECE Variant C: Hotels, Concierges & Venues
+  if (type === 'venue' || type === 'concierge_hotel') {
+    const targetVenue = agencyShort || venueOrLoc;
     return {
-      subject_line_a: `Wedding guest fleet · ${agencyShort}`,
-      subject_line_b: `${venueOrLoc} guest transfers · ${agencyShort}`,
-      service_pitch: venuePitches[idx % venuePitches.length],
-      cta_line: venueCtas[idx % venueCtas.length],
-    };
-  }
-
-  if (type === 'concierge_hotel') {
-    const hotelPitches = [
-      'We provide dedicated event fleets across Milan and Lake Como with Mercedes-Benz S-Class, V-Class and 16 to 50-seat minibuses managed by one WhatsApp coordinator for airport waves and villa shuttles.',
-      'Our dispatch desk coordinates Mercedes-Benz S-Class, V-Class and 16 to 50-seat minibuses across Milan and Lake Como for multi-day wedding groups and private villa transfers.',
-    ];
-    return {
-      subject_line_a: `Wedding & event fleet · ${agencyShort}`,
-      subject_line_b: `${venueOrLoc} guest transfers · ${agencyShort}`,
-      service_pitch: hotelPitches[idx % hotelPitches.length],
+      subject_line_a: 'Guest transfers for your events team',
+      subject_line_b: 'Airport transfers and group shuttles',
+      service_pitch:
+        `We provide airport transfers and group transport for hotel guests and wedding parties at ${targetVenue}, with V-Classes, S-Classes and minibuses. We can coordinate bookings quickly by WhatsApp or email.`,
       cta_line:
-        'May I send our 1-page partner rate card (confidential net rates or 5% commission)?',
+        'Would it be useful if I sent our vehicle list and partner rates for your team to keep on file?',
     };
   }
 
-  const plannerSubjectsA = [
-    `${venueOrLoc} weddings · ${agencyShort}`,
-    `Guest transport fleet · ${agencyShort}`,
-    `${agencyShort} · Lake Como wedding fleet`,
-    `Multi-day wedding transport · ${agencyShort}`,
-  ];
-  const plannerSubjectsB = [
-    `Wedding fleet for ${venueOrLoc} · ${agencyShort}`,
-    `Lake Como guest dispatch · ${agencyShort}`,
-    `${venueOrLoc} guest shuttles · ${agencyShort}`,
-    `Private wedding fleet · ${agencyShort}`,
-  ];
-  const plannerPitches = [
-    'We run dedicated wedding fleets across Milan and Lake Como: pairing Mercedes-Benz S-Class, V-Class and 16 to 50-seat minibuses with one WhatsApp coordinator and a Guest Transfer Portal so guests log their own flights and never call your phone.',
-    'We coordinate multi-day wedding fleets across Milan and Lake Como using Mercedes-Benz S-Class, V-Class and 16 to 50-seat minibuses, with a Guest Transfer Portal and one dedicated WhatsApp dispatcher handling every airport arrival and late-night villa return.',
-    'Instead of piecing together individual cars, we deploy a single coordinated fleet of Mercedes-Benz S-Class, V-Class and 16 to 50-seat minibuses with a Guest Transfer Portal and one WhatsApp coordinator from Malpensa arrivals through the final late-night villa shuttles.',
-    'We handle full-weekend wedding transport across Milan and Lake Como with staged Mercedes-Benz V-Classes, S-Classes and 16 to 50-seat minibuses for narrow villa gates, plus a Guest Transfer Portal so no lost guest or driver ever calls your phone.',
-  ];
-  const plannerCtas = [
-    'May I send our 1-page partner rate card (confidential net rates for your offer, or 5% commission)?',
-    'Would you like our 1-page partner rate card (net rates for your offer, or 5% commission)?',
-    'Shall I send over our 1-page partner rate card (confidential net rates or 5% commission)?',
-    'May I share our 1-page partner rate card and Guest Portal link (net rates or 5% commission)?',
-  ];
+  // English MECE Variant A (Introduction) vs Variant B (Late Returns After the Reception)
+  const hasSpecificVenue = venueOrLoc && !/^(lake como|lago di como|milan|italy)$/i.test(venueOrLoc);
+  const plannerSubjectsA = hasSpecificVenue
+    ? [`Transfers for your ${venueOrLoc} weddings`, 'Lake Como guest transport']
+    : ['Lake Como guest transport', 'Guest transport for the season'];
+
+  if (effectiveVariant === 'B') {
+    return {
+      subject_line_a: plannerSubjectsA[idx],
+      subject_line_b: 'Late returns after the reception',
+      service_pitch:
+        'I\'m Dmitri from DOROGO, and that\'s the part we cover across Lake Como and Milan, with V-Classes, S-Classes and minibuses.',
+      cta_line:
+        'If you ever need an extra hand on a busy date, would it be useful if I sent our rates?',
+    };
+  }
 
   return {
     subject_line_a: plannerSubjectsA[idx],
-    subject_line_b: plannerSubjectsB[idx],
-    service_pitch: plannerPitches[idx],
-    cta_line: plannerCtas[idx],
+    subject_line_b: 'Late returns after the reception',
+    service_pitch:
+      'We do guest shuttles, airport pickups and late-night returns, with V-Classes, S-Classes and minibuses for larger groups. I\'m not looking to replace anyone you work with, just to be an extra option when a date gets busy.',
+    cta_line: 'Would it be useful if I sent our rates?',
   };
 }
 
@@ -177,7 +145,8 @@ export function buildVars(prospect, extra = {}) {
   const lang = prospect.language === 'it' ? 'it' : 'en';
   const agency_short = shortAgencyName(prospect.agency_name, lang);
   const venue_or_location = resolveVenueOrLocation(prospect, agency_short, lang);
-  const tailored = buildTailoredCopy(prospect, agency_short, venue_or_location, lang);
+  const variant = extra.variant === 'B' ? 'B' : 'A';
+  const tailored = buildTailoredCopy(prospect, agency_short, venue_or_location, lang, variant);
   return {
     greeting: greeting(prospect),
     first_name: firstName(prospect.contact_name),
@@ -229,8 +198,16 @@ export function buildDraft({ prospect, key, templates, threadSubject = '', step 
   const lang = prospect.language === 'it' ? 'it' : 'en';
   const t = pickTemplate(templates, key, lang);
   if (!t) return null;
-  const variant = assignVariant(prospect.id, t);
-  const vars = buildVars(prospect, extraVars);
+  const hookText = String((extraVars && extraVars.hook) || prospect.personalization_hook || '');
+  const inferredHookVariant = /^(The hardest part of a Lake Como wedding's transport|La parte più complessa dei trasporti)/i.test(hookText)
+    ? 'B'
+    : /^(I'm Dmitri from DOROGO|Sono Dmitri di DOROGO)/i.test(hookText)
+      ? 'A'
+      : null;
+  const variant = extraVars.variant === 'A' || extraVars.variant === 'B'
+    ? extraVars.variant
+    : (inferredHookVariant || assignVariant(prospect.id, t));
+  const vars = buildVars(prospect, { variant, ...extraVars });
   const threaded = (step && step.thread) || t.kind === 'reply' || t.kind === 'nudge';
   const rawSubject = variant === 'B' ? t.subject_b : t.subject_a;
   let subject = threaded && threadSubject ? reSubject(threadSubject) : merge(rawSubject || '', vars);
@@ -258,7 +235,7 @@ const htmlEsc = (s = '') =>
  */
 export function renderDorogoLuxuryHtmlEmail(textContent = '', { fromEmail = 'dmitri@dorogo.eu', pixelUrl = null } = {}) {
   const raw = String(textContent || '').trim();
-  const isIt = /Un cordiale saluto|Buongiorno|rispondere "no"/i.test(raw);
+  const isIt = /Un cordiale saluto|Buongiorno|rispondere "no"|nessun problema, basta farmelo sapere/i.test(raw);
 
   // Separate opt-out line if present at the bottom
   let optoutText = '';
@@ -273,6 +250,7 @@ export function renderDorogoLuxuryHtmlEmail(textContent = '', { fromEmail = 'dmi
   // Strip trailing signature block from body paragraphs since we render the styled Design 1 footer
   let cleanText = bodyWithoutOptout
     .replace(/(?:Warm regards|Kind regards|Best regards|Un cordiale saluto|Cordiali saluti),?[\s\S]*$/i, '')
+    .replace(/\n*Dmitri\s*\n+DOROGO\s*\|\s*dmitri@dorogo\.eu[\s\S]*$/i, '')
     .trim();
 
   if (!cleanText && bodyWithoutOptout) cleanText = bodyWithoutOptout;

@@ -31,7 +31,7 @@ function draftCard(t, i) {
       <a href="#prospect/${attr(p.id)}"><b>${esc(p.agency_name)}</b></a>
       ${p.contact_name ? `<span class="muted small">${esc(p.contact_name)}</span>` : ''}
       <span class="chip gold">${esc(stepLabel(t.step_name))}</span>
-      ${t.variant && ['T1_intro', 'T4_breakup'].includes(t.step_name) ? `<span class="chip outline">Subject ${esc(t.variant)}</span>` : ''}
+      ${t.variant && ['T1_intro', 'T4_breakup'].includes(t.step_name) ? `<span class="chip outline">${t.step_name === 'T1_intro' ? (p.type === 'venue' || p.type === 'concierge_hotel' ? 'Variant C · Hotel/Venue' : (t.variant === 'B' ? 'Variant B · Late returns' : 'Variant A · Intro')) : `Subject ${esc(t.variant)}`}</span>` : ''}
       ${p.language !== 'en' ? `<span class="chip">${esc(p.language.toUpperCase())}</span>` : ''}
       ${t.ai_generated ? '<span class="chip">AI</span>' : ''}
       ${inbound?.classification?.needs_human ? `<span class="chip bad" title="${attr(inbound.classification.escalation_reason || 'Needs human review')}">Needs human</span>` : ''}
@@ -53,6 +53,7 @@ function draftCard(t, i) {
       <button class="btn ghost" data-act="skip" data-id="${attr(t.id)}">Skip <kbd>S</kbd></button>
       <button class="btn ghost" data-act="snooze" data-id="${attr(t.id)}">${icon('clock', 16)} Snooze 3 days</button>
       <button class="btn ghost" data-act="regen" data-id="${attr(t.id)}" title="Rebuild from the template">Rebuild</button>
+      ${t.step_name === 'T1_intro' && p.type !== 'venue' && p.type !== 'concierge_hotel' ? `<button class="btn ghost" data-act="toggle-variant" data-id="${attr(t.id)}" title="Switch between Variant A (Introduction) and Variant B (Late returns scenario)">Switch to Variant ${t.variant === 'B' ? 'A' : 'B'}</button>` : ''}
       ${!isDemo() && S.health?.integrations?.gemini ? `<button class="btn ghost" data-act="ai" data-id="${attr(t.id)}">${icon('sparkle', 16)} AI rewrite</button>` : ''}
       <span class="grow"></span>
       <span class="hint">${lint.words} words</span>
@@ -198,9 +199,21 @@ export function render(el) {
           const p = A.prospectById(t.prospect_id);
           const t1 = A.touchesOf(p.id).find((x) => x.step_name === 'T1_intro' && x.subject && x.id !== t.id);
           const stepCfg = (S.settings.steps || core.DEFAULT_STEPS).find((s) => s.key === t.step_name);
-          const dr = core.buildDraft({ prospect: p, key: t.template_key || t.step_name, templates: S.templates, threadSubject: ['T1_intro', 'T4_breakup'].includes(t.step_name) ? '' : (t1?.subject || t.subject), step: stepCfg });
-          if (dr) await A.saveDraft(t, { subject: dr.subject || t.subject, body: dr.body, ai_generated: false });
+          const dr = core.buildDraft({ prospect: p, key: t.template_key || t.step_name, templates: S.templates, threadSubject: ['T1_intro', 'T4_breakup'].includes(t.step_name) ? '' : (t1?.subject || t.subject), step: stepCfg, extraVars: t.variant ? { variant: t.variant } : {} });
+          if (dr) await A.saveDraft(t, { subject: dr.subject || t.subject, body: dr.body, variant: dr.variant || t.variant, ai_generated: false });
           toast('Rebuilt from the template');
+          break;
+        }
+        case 'toggle-variant': {
+          const p = A.prospectById(t.prospect_id);
+          const nextVar = t.variant === 'B' ? 'A' : 'B';
+          const newHook = core.buildVerifiedFallbackHook(p, null, nextVar);
+          await A.saveProspect(p.id, { personalization_hook: newHook });
+          const stepCfg = (S.settings.steps || core.DEFAULT_STEPS).find((s) => s.key === t.step_name);
+          const dr = core.buildDraft({ prospect: { ...p, personalization_hook: newHook }, key: t.template_key || t.step_name, templates: S.templates, step: stepCfg, extraVars: { variant: nextVar, hook: newHook } });
+          if (dr) await A.saveDraft(t, { subject: dr.subject, body: dr.body, variant: nextVar, ai_generated: false });
+          paint();
+          toast(`Switched to Variant ${nextVar} (${nextVar === 'B' ? 'Late returns scenario' : 'Introduction'})`);
           break;
         }
         case 'ai': toast('Rewriting…'); await api('ai_redraft', { touch_id: id }); toast('AI rewrite ready, check it before approving'); break;

@@ -22,12 +22,12 @@ export const DEFAULT_TEMPLATES = [
 {{optout}}`,
   },
   {
-    key: 'T3_followup', language: 'en', kind: 'sequence', name: 'T3 Follow-up (Recent 70-Guest Wedding & Portal)', subject_a: '', subject_b: '',
+    key: 'T3_followup', language: 'en', kind: 'sequence', name: 'T3 Follow-up (Day 4: Route & Vehicle Fit)', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
-Following up briefly: last week on Lake Como we coordinated 12 Mercedes-Benz V-Class vans across a 70-guest wedding, handling every airport arrival, flight change and late-night villa shuttle through our Guest Transfer Portal with zero guest calls to the planner.
+One detail worth adding for your {{venue}} weddings: alongside our V-Classes and S-Classes from Malpensa, we also run 16 to 50-seat minibuses for larger groups and a Guest Transfer Portal where guests enter their own flight times.
 
-May I send our 1-page partner rate card (net rates for your offer, or 5% commission)?
+If transport ever gets tight on an upcoming date, feel free to message me on WhatsApp or reply here.
 
 {{signature}}
 
@@ -35,11 +35,11 @@ May I send our 1-page partner rate card (net rates for your offer, or 5% commiss
   },
   {
     key: 'T4_breakup', language: 'en', kind: 'sequence', name: 'T4 Final note (disabled)',
-    subject_a: '{{agency}} · private transport on Lake Como & Northern Italy',
-    subject_b: 'Wedding fleet & guest dispatch · {{agency}}',
+    subject_a: '{{agency}} · private transport on Lake Como & Milan',
+    subject_b: 'Guest transfers for {{agency}}',
     body: `{{greeting}}
 
-Last note from me so I do not crowd your inbox. Whenever you are planning guest transport for an upcoming Lake Como or Milan wedding, send the venue and guest count on WhatsApp (+32 456 14 14 97) for a tailored fleet plan and net quote.
+Last note from me so I do not crowd your inbox. Whenever you need guest transport for a Lake Como or Milan date, feel free to message me on WhatsApp (+32 456 141 497) or reply here.
 
 Wishing you a calm, successful season.
 
@@ -65,12 +65,12 @@ Wishing you a calm, successful season.
 {{optout}}`,
   },
   {
-    key: 'T3_followup', language: 'it', kind: 'sequence', name: 'T3 Follow-up (Matrimonio 70 Ospiti & Portale)', subject_a: '', subject_b: '',
+    key: 'T3_followup', language: 'it', kind: 'sequence', name: 'T3 Follow-up (Giorno 4: Flotta e Portale)', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
-Un rapido aggiornamento: la scorsa settimana sul Lago di Como abbiamo coordinato 12 Mercedes-Benz Classe V per un matrimonio di 70 ospiti, gestendo arrivi aeroportuali, cambi volo e navette notturne tramite il nostro Portale Ospiti senza una sola chiamata agli organizzatori.
+Un dettaglio utile per i vostri matrimoni a {{venue}}: oltre a Mercedes-Benz Classe V e Classe S da Malpensa, disponiamo di minibus da 16 a 50 posti per i gruppi più numerosi e di un Portale Ospiti dove gli invitati inseriscono i propri orari di volo.
 
-Posso inviarvi il nostro listino partner di 1 pagina (tariffe nette o commissione 5%)?
+Se dovesse servirvi supporto su una data intensa, scrivetemi pure su WhatsApp o rispondete a questa mail.
 
 {{signature}}
 
@@ -78,11 +78,11 @@ Posso inviarvi il nostro listino partner di 1 pagina (tariffe nette o commission
   },
   {
     key: 'T4_breakup', language: 'it', kind: 'sequence', name: 'T4 Email di chiusura (disattivata)',
-    subject_a: '{{agency}} · logistica trasporti Lago di Como e Nord Italia',
-    subject_b: 'Flotta eventi e coordinamento ospiti · {{agency}}',
+    subject_a: '{{agency}} · trasporti privati Lago di Como e Milano',
+    subject_b: 'Transfer ospiti per {{agency}}',
     body: `{{greeting}}
 
-Chiudo qui per non affollare la vostra casella. Quando pianificherete i trasferimenti ospiti per un prossimo matrimonio sul Lago di Como o a Milano, scrivetemi data e location su WhatsApp (+32 456 14 14 97) per ricevere il piano flotta e le tariffe nette.
+Chiudo qui per non affollare la vostra casella. Quando vi servirà supporto per i trasferimenti ospiti sul Lago di Como o a Milano, scrivetemi pure su WhatsApp (+32 456 141 497) o rispondete qui.
 
 Buona stagione.
 
@@ -95,9 +95,9 @@ Buona stagione.
     key: 'rate_card_delivery', language: 'en', kind: 'reply', name: 'Rate card delivery (attach PDF)', subject_a: '', subject_b: '', attach_rate_card: true,
     body: `{{greeting}}
 
-Attached is our 1-page partner rate card (confidential net rates for your offer, or 5% commission) along with our Guest Portal preview.
+Attached is our 1-page partner rate card and vehicle list. We work either on confidential net rates that you can include in your client offer, or on a 5% partner commission.
 
-If you have an upcoming date and venue, send the guest count and I will draft the run-sheet quote.
+If you have an upcoming date and venue, send the guest count and I will put together a quote.
 
 {{signature}}`,
   },
@@ -105,9 +105,9 @@ If you have an upcoming date and venue, send the guest count and I will draft th
     key: 'rate_card_delivery', language: 'it', kind: 'reply', name: 'Invio tariffa (PDF allegato)', subject_a: '', subject_b: '', attach_rate_card: true,
     body: `{{greeting}}
 
-In allegato trovate il nostro listino partner di 1 pagina (tariffe nette riservate per la vostra offerta o commissione 5%).
+In allegato trovate il nostro listino partner di 1 pagina e la lista veicoli. Lavoriamo sia con tariffe nette riservate da includere nella vostra offerta, sia con una commissione partner del 5%.
 
-Se avete una data e una location in programma, scrivetemi il numero di ospiti e preparo il piano transfer.
+Se avete una data e una location in programma, scrivetemi il numero di ospiti e preparo il preventivo.
 
 {{signature}}`,
   },
@@ -115,9 +115,9 @@ Se avete una data e una location in programma, scrivetemi il numero di ospiti e 
     key: 'reply_asks_pricing', language: 'en', kind: 'reply', name: 'Reply: asks for prices', subject_a: '', subject_b: '', attach_rate_card: true,
     body: `{{greeting}}
 
-Our 1-page rate card is attached: a Mercedes-Benz V-Class from Malpensa to Como is €230 net (Bellagio €320 net), and the late-night villa shuttle is €450 net per V-Class.
+Our 1-page partner rate card is attached: a Mercedes-Benz V-Class from Malpensa to Como is €230 net (Bellagio €320 net), and our late-night villa shuttle is €450 net per V-Class (or we can work on a 5% partner commission).
 
-Share your date, venue and guest count whenever you want a fixed run-sheet quote.
+Share your date, venue and guest count whenever you want a fixed quote.
 
 {{signature}}`,
   },
@@ -125,7 +125,7 @@ Share your date, venue and guest count whenever you want a fixed run-sheet quote
     key: 'reply_meeting_request', language: 'en', kind: 'reply', name: 'Reply: wants a call', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
-Happy to speak. I am free {{slot_1}} or {{slot_2}}, or send a time that suits you on WhatsApp (+32 456 14 14 97).
+Happy to speak. I am free {{slot_1}} or {{slot_2}}, or send a time that suits you on WhatsApp (+32 456 141 497).
 
 {{signature}}`,
   },
@@ -133,9 +133,7 @@ Happy to speak. I am free {{slot_1}} or {{slot_2}}, or send a time that suits yo
     key: 'reply_has_supplier', language: 'en', kind: 'reply', name: 'Reply: already has a supplier', subject_a: '', subject_b: '', attach_rate_card: true,
     body: `{{greeting}}
 
-Understood, local drivers are great for individual cars. Where studios bring us in is for multi-hotel weddings of 50 to 150+ guests that require 10+ coordinated Mercedes-Benz V-Classes, 16 to 50-seat minibuses and our Guest Transfer Portal under one dispatcher.
-
-I have attached our 1-page partner rate card for your files whenever a full-fleet production comes up.
+Understood, we are not looking to replace anyone you work with. I have attached our 1-page partner rate card and vehicle list (V-Classes, S-Classes and 16 to 50-seat minibuses) in case you ever need extra vehicles on a busy date.
 
 {{signature}}`,
   },
@@ -143,7 +141,7 @@ I have attached our 1-page partner rate card for your files whenever a full-flee
     key: 'reply_not_now', language: 'en', kind: 'reply', name: 'Reply: not now / next season', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
-Understood. I will check back before next season, and if a wedding comes up sooner, just reply here.
+Understood. I will check back before next season, and if a date comes up sooner, just reply here.
 
 {{signature}}`,
   },
@@ -159,7 +157,7 @@ Thank you, I will write to {{referred_name}} directly and mention your note.
     key: 'ratecard_nudge', language: 'en', kind: 'nudge', name: 'Nudge: rate card sent, no answer', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
-Quick check that our 1-page rate card reached you. If an upcoming wedding needs guest transfers or a late-night shuttle, send me the date and venue for a fast quote.
+Quick check that our partner rate card reached you. If an upcoming wedding needs guest transfers or late-night returns, send me the date and venue for a quote.
 
 {{signature}}`,
   },

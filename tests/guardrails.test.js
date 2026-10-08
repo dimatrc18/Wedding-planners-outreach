@@ -239,3 +239,73 @@ test('partner rate card CTAs across planner, venue, and hotel drafts do not cont
   assert.doesNotMatch(sanitized.body, /—|!|\bCertainly\b|\bseamless\b/i);
 });
 
+test('MECE overhaul: Variant A (Intro), Variant B (Late returns), Variant C (Hotels/Venues), and Balbianello accuracy', async () => {
+  const { buildVerifiedFallbackHook } = await import('../supabase/functions/_shared/core/index.js');
+
+  const planner = {
+    id: 'planner-test-1',
+    agency_name: 'The Lake Como Wedding Planner',
+    contact_name: 'Aimee',
+    type: 'planner',
+    language: 'en',
+    location: 'Tremezzina',
+    key_venues: ['Villa del Balbianello', 'Villa Sola Cabiati'],
+  };
+
+  // Variant A: Introduction & Observation
+  const hookA = buildVerifiedFallbackHook(planner, null, 'A');
+  assert.match(hookA, /I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan/i);
+  assert.doesNotMatch(hookA, /Balbianello.*(narrow|gate|coach)/i);
+  const draftA = buildDraft({
+    prospect: { ...planner, personalization_hook: hookA },
+    key: 'T1_intro',
+    extraVars: { variant: 'A', hook: hookA },
+  });
+  assert.equal(draftA.variant, 'A');
+  assert.doesNotMatch(draftA.subject, /·/, 'Subject line must not contain the template · separator');
+  assert.match(draftA.body, /Would it be useful if I sent our rates\?/);
+  assert.doesNotMatch(draftA.body, /5% commission|net rates/i, 'Email 1 must not push commercial commission/net rates');
+  assert.match(draftA.body, /\+32 456 141 497/);
+  assert.match(draftA.body, /If transport isn't something you handle, no problem at all, just let me know\./);
+  assert.deepEqual(draftA.lint.errors, []);
+  assert.deepEqual(draftA.lint.warnings, []);
+
+  // Variant B: Late Returns After the Reception
+  const hookB = buildVerifiedFallbackHook(planner, null, 'B');
+  assert.match(hookB, /The hardest part of a Lake Como wedding's transport is often the end of the night/i);
+  const draftB = buildDraft({
+    prospect: { ...planner, personalization_hook: hookB },
+    key: 'T1_intro',
+    extraVars: { variant: 'B', hook: hookB },
+  });
+  assert.equal(draftB.variant, 'B');
+  assert.equal(draftB.subject, 'Late returns after the reception');
+  assert.match(draftB.body, /I'm Dmitri from DOROGO, and that's the part we cover across Lake Como and Milan/);
+  assert.match(draftB.body, /If you ever need an extra hand on a busy date, would it be useful if I sent our rates\?/);
+  assert.deepEqual(draftB.lint.errors, []);
+  assert.deepEqual(draftB.lint.warnings, []);
+
+  // Variant C: Hotels, Concierges & Venues
+  const hotel = {
+    id: 'hotel-test-1',
+    agency_name: 'Grand Hotel Tremezzo Events & Concierge',
+    contact_name: '',
+    type: 'concierge_hotel',
+    language: 'en',
+    location: 'Tremezzina',
+    key_venues: ['Grand Hotel Tremezzo', 'Villa Sola Cabiati'],
+  };
+  const hookC = buildVerifiedFallbackHook(hotel, null, 'A');
+  const draftC = buildDraft({
+    prospect: { ...hotel, personalization_hook: hookC },
+    key: 'T1_intro',
+    extraVars: { variant: 'A', hook: hookC },
+  });
+  assert.equal(draftC.subject, 'Guest transfers for your events team');
+  assert.match(draftC.body, /^Hello,/);
+  assert.match(draftC.body, /Would it be useful if I sent our vehicle list and partner rates for your team to keep on file\?/);
+  assert.deepEqual(draftC.lint.errors, []);
+  assert.deepEqual(draftC.lint.warnings, []);
+});
+
+

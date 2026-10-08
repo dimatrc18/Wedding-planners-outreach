@@ -102,8 +102,26 @@ export function render(el) {
         <details><summary class="small muted">Show as table</summary><div class="table-wrap"><table><thead><tr><th>Week of</th><th class="num">First contacts</th><th class="num">Replies</th><th class="num">Positive</th></tr></thead><tbody>${trend.map((r) => `<tr><td>${r.week.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</td><td class="num">${r.contacted}</td><td class="num">${r.replied}</td><td class="num">${r.positive}</td></tr>`).join('')}</tbody></table></div></details></section>
     </div>
 
-    <section class="card stack"><div class="section-head"><h2>A/B: intro subject line</h2>${pv !== null ? `<span class="chip ${pv < 0.1 ? 'gold' : 'outline'}">p = ${pv.toFixed(2)}${pv < 0.1 ? ', likely a real difference' : ', no clear winner yet'}</span>` : ''}</div>
-      ${breakdownTable(variants, (k) => `${k}${t1Subjects[k.slice(-1)] ? `: “${t1Subjects[k.slice(-1)]}”` : ''}`, tg.positive_reply_rate)}</section>
+    <section class="card stack"><div class="section-head"><h2>A/B Test: Variant A (Introduction) vs Variant B (Late returns scenario)</h2>${pv !== null ? `<span class="chip ${pv < 0.1 ? 'gold' : 'outline'}">p = ${pv.toFixed(2)}${pv < 0.1 ? ', likely a real difference' : ', no clear winner yet'}</span>` : ''}</div>
+      ${(() => {
+        const t1Touches = S.touches.filter((t) => t.step_name === 'T1_intro' && ['draft', 'approved', 'sent'].includes(t.state));
+        const byVar = { A: { draft: 0, approved: 0, sent: 0 }, B: { draft: 0, approved: 0, sent: 0 }, C: { draft: 0, approved: 0, sent: 0 } };
+        for (const t of t1Touches) {
+          const p = byP.get(t.prospect_id);
+          const vKey = p && (p.type === 'venue' || p.type === 'concierge_hotel') ? 'C' : (t.variant === 'B' ? 'B' : 'A');
+          byVar[vKey][t.state] = (byVar[vKey][t.state] || 0) + 1;
+        }
+        return `<div class="row" style="gap:10px;flex-wrap:wrap;margin-bottom:8px">
+          <span class="chip outline"><b>Variant A · Intro (Planners):</b> ${byVar.A.draft} draft · ${byVar.A.approved} approved · ${byVar.A.sent} sent</span>
+          <span class="chip outline"><b>Variant B · Late returns (Planners):</b> ${byVar.B.draft} draft · ${byVar.B.approved} approved · ${byVar.B.sent} sent</span>
+          <span class="chip outline"><b>Variant C · Hotel / Venue:</b> ${byVar.C.draft} draft · ${byVar.C.approved} approved · ${byVar.C.sent} sent</span>
+        </div>`;
+      })()}
+      ${breakdownTable(variants, (k) => {
+        const letter = k.slice(-1);
+        const label = letter === 'B' ? 'Variant B · Late returns scenario' : 'Variant A · Introduction / observation';
+        return `${label}${t1Subjects[letter] ? ` (“${t1Subjects[letter]}”)` : ''}`;
+      }, tg.positive_reply_rate)}</section>
 
     <section class="card stack"><div class="section-head"><h2>Which touch gets the reply?</h2><span class="hint">Reply credited to the last touch sent before it</span></div>
       <div class="table-wrap"><table><thead><tr><th>Step</th><th class="num">Prospects reached</th><th class="num">Replies after it</th><th>Reply rate</th></tr></thead><tbody>
