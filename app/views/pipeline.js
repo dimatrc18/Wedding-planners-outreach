@@ -643,7 +643,7 @@ export function render(el) {
             </div>` : ''}
           </div>
           <div class="path-legend">
-            <span><i class="dot" style="background:var(--info)"></i> Emailed (${m.contacted})</span>
+            <span><i class="dot" style="background:var(--path-info)"></i> Emailed (${m.contacted})</span>
             <span><i class="dot gold"></i> Replied / Ready (${m.replied} replied · ${pct(m.replyRate.p)})</span>
             <span><i class="dot ok"></i> Interested / Won (${m.won} won)</span>
           </div>

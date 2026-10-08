@@ -251,24 +251,37 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--g
 .filters select, .filters input { width: auto; min-width: 0; }
 .filters input[type=search] { flex: 1 1 220px; }
 
-/* Path Exploration (Flow Pipeline) */
+/* Path Exploration (Flow Pipeline) — Vibrant colors scoped strictly to the flow chart */
 .path-wrap { display: flex; flex-direction: column; gap: 16px; }
-.path-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow); }
+.path-card {
+  --path-info: #3B82F6;
+  --path-gold: #D97706;
+  --path-gold-soft: rgba(217, 119, 6, .12);
+  --path-ok: #10B981;
+  --path-warn: #F59E0B;
+  --path-bad: #EF4444;
+  --path-muted: #64748B;
+  --path-more: #6366F1;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow);
+}
 .path-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px; background: var(--surface-2); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
 .path-presets { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .path-preset-btn { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: var(--r-sm); border: 1px solid transparent; background: transparent; color: var(--ink-2); font-size: .82rem; font-weight: 500; cursor: pointer; }
 .path-preset-btn:hover { background: var(--surface); color: var(--ink); }
 .path-preset-btn.on { background: var(--surface); border-color: var(--line-strong); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
 .path-tools { display: flex; align-items: center; gap: 6px; }
-.path-reset-btn { border: 0; background: transparent; color: var(--info); font-weight: 600; font-size: .82rem; padding: 5px 9px; border-radius: var(--r-sm); cursor: pointer; }
+.path-reset-btn { border: 0; background: transparent; color: var(--path-info); font-weight: 600; font-size: .82rem; padding: 5px 9px; border-radius: var(--r-sm); cursor: pointer; }
 .path-reset-btn:hover { background: var(--surface); text-decoration: underline; }
 .path-subhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
 .path-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .path-title { font-size: 1rem; font-weight: 600; color: var(--ink); }
 .path-legend { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: .76rem; color: var(--ink-2); }
 .path-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.path-legend .dot { background: var(--path-info) !important; }
+.path-legend .dot.gold { background: var(--path-gold) !important; }
+.path-legend .dot.ok { background: var(--path-ok) !important; }
 .path-crumbs { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.path-crumb { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 99px; font-size: .76rem; font-weight: 600; background: var(--gold-soft); color: var(--gold-ink); border: 1px solid var(--gold); cursor: pointer; }
+.path-crumb { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 99px; font-size: .76rem; font-weight: 600; background: var(--path-gold-soft); color: var(--path-gold); border: 1px solid var(--path-gold); cursor: pointer; }
 .path-crumb:hover { filter: brightness(1.08); }
 .path-scroll { overflow-x: auto; padding: 16px 14px 18px; }
 .path-inner { min-width: max-content; }
@@ -277,7 +290,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--g
 .step-col-head:last-child { width: 214px; flex: 0 0 214px; padding-right: 0; }
 .step-meta { display: flex; align-items: center; gap: 6px; font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); padding-left: 2px; }
 .step-remove { margin-left: auto; border: 0; background: transparent; color: var(--ink-3); cursor: pointer; padding: 0 4px; border-radius: 4px; font-size: .82rem; line-height: 1; }
-.step-remove:hover { background: var(--surface-2); color: var(--bad); }
+.step-remove:hover { background: var(--surface-2); color: var(--path-bad); }
 .step-box-row { display: flex; align-items: center; gap: 8px; }
 .step-box { flex: 1; display: flex; align-items: center; gap: 7px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--r-sm); padding: 5px 9px; min-width: 0; }
 .step-box.static { background: var(--surface-2); border-color: var(--line); padding: 6px 10px; }
@@ -287,35 +300,36 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--g
 .step-arrow { color: var(--ink-3); flex: none; display: inline-grid; place-items: center; }
 
 .path-svg { display: block; user-select: none; overflow: visible; }
-.path-link { fill: var(--info); fill-opacity: .16; stroke: none; cursor: pointer; transition: fill-opacity .15s, fill .15s; }
-.path-link.tone-gold { fill: var(--gold); }
-.path-link.tone-ok { fill: var(--ok); }
-.path-link.tone-warn { fill: var(--warn); }
-.path-link.tone-bad { fill: var(--bad); }
-.path-link.tone-muted { fill: var(--ink-3); }
-.path-link.dim { fill-opacity: .04; }
-.path-link.hi { fill-opacity: .24; }
-.path-link:hover, .path-link.hover { fill-opacity: .42 !important; }
+.path-link { fill: var(--path-info); fill-opacity: .22; stroke: none; cursor: pointer; transition: fill-opacity .15s, fill .15s; }
+.path-link.tone-gold { fill: var(--path-gold); }
+.path-link.tone-ok { fill: var(--path-ok); }
+.path-link.tone-warn { fill: var(--path-warn); }
+.path-link.tone-bad { fill: var(--path-bad); }
+.path-link.tone-muted { fill: var(--path-muted); }
+.path-link.tone-more { fill: var(--path-more); }
+.path-link.dim { fill-opacity: .05; }
+.path-link.hi { fill-opacity: .32; }
+.path-link:hover, .path-link.hover { fill-opacity: .48 !important; }
 
 .path-node { cursor: pointer; outline: none; }
 .path-node .node-hit { fill: transparent; rx: 6px; transition: fill .12s, stroke .12s; }
-.path-node:hover .node-hit, .path-node.hover .node-hit, .path-node:focus-visible .node-hit { fill: var(--surface-2); fill-opacity: .65; }
-.path-node.selected .node-hit { fill: var(--gold-soft); stroke: var(--gold); stroke-width: 1.2px; }
-.is-dragging .path-node[data-drop-stage] .node-hit { stroke: var(--line-strong); stroke-width: 1.2px; stroke-dasharray: 4 2; }
-.path-node.drop-hover .node-hit { fill: var(--gold-soft); stroke: var(--gold) !important; stroke-width: 2px !important; stroke-dasharray: 4 2; }
+.path-node:hover .node-hit, .path-node.hover .node-hit, .path-node:focus-visible .node-hit { fill: rgba(59, 130, 246, .08); fill-opacity: 1; }
+.path-node.selected .node-hit { fill: var(--path-gold-soft); stroke: var(--path-gold); stroke-width: 1.2px; }
+.is-dragging .path-node[data-drop-stage] .node-hit { stroke: var(--path-info); stroke-width: 1.2px; stroke-dasharray: 4 2; }
+.path-node.drop-hover .node-hit { fill: var(--path-gold-soft); stroke: var(--path-gold) !important; stroke-width: 2px !important; stroke-dasharray: 4 2; }
 .path-node.dim { opacity: .42; }
 .path-node.dim.hover { opacity: .85; }
-.path-node .node-bar { fill: var(--info); transition: filter .15s; }
-.path-node.tone-gold .node-bar { fill: var(--gold); }
-.path-node.tone-ok .node-bar { fill: var(--ok); }
-.path-node.tone-warn .node-bar { fill: var(--warn); }
-.path-node.tone-bad .node-bar { fill: var(--bad); }
-.path-node.tone-muted .node-bar { fill: var(--ink-3); }
-.path-node.tone-more .node-bar { fill: var(--info); opacity: .75; }
+.path-node .node-bar { fill: var(--path-info); transition: filter .15s; }
+.path-node.tone-gold .node-bar { fill: var(--path-gold); }
+.path-node.tone-ok .node-bar { fill: var(--path-ok); }
+.path-node.tone-warn .node-bar { fill: var(--path-warn); }
+.path-node.tone-bad .node-bar { fill: var(--path-bad); }
+.path-node.tone-muted .node-bar { fill: var(--path-muted); }
+.path-node.tone-more .node-bar { fill: var(--path-more); opacity: .85; }
 .path-node:hover .node-bar, .path-node.hover .node-bar { filter: brightness(1.14); }
 .path-node .node-label { fill: var(--ink-2); font: 500 12.2px var(--sans); }
 .path-node.selected .node-label, .path-node.hover .node-label { fill: var(--ink); font-weight: 700; }
-.path-node.tone-more .node-label { fill: var(--info); font-weight: 700; }
+.path-node.tone-more .node-label { fill: var(--path-more); font-weight: 700; }
 .path-node .node-count { fill: var(--ink); font: 700 13.5px var(--sans); font-variant-numeric: tabular-nums; }
 .path-node .node-of { fill: var(--ink-2); font: 500 11.5px var(--sans); }
 .path-node .node-pct { fill: var(--ink-3); font: 500 11px var(--sans); }
