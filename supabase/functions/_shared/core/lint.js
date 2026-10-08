@@ -76,7 +76,7 @@ export function lintMessage({ subject = '', body = '', channel = 'email', step =
   const questions = (core.match(/\?/g) || []).length;
   if (step === 'T1_intro') {
     if (questions === 0) warnings.push('No call to action; ask "May I send our 1-page rate card?"');
-    if (/\b(call|zoom|video ?call|meeting|meet up|teams)\b/i.test(core)) warnings.push('First touch asks only for the rate card, not a call');
+    if (/\b(jump on a call|hop on a call|quick call|schedule a call|book a call|phone call|zoom|video ?call|meeting|meet up|teams)\b/i.test(core) || /\bcall\b[^.?]*\?/i.test(core)) warnings.push('First touch asks only for the rate card, not a call');
   }
   if (questions > 1) warnings.push(`${questions} questions; keep one clear ask`);
   if (/!/.test(core)) warnings.push('Exclamation marks read as salesy');
