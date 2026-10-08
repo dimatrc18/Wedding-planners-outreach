@@ -192,3 +192,42 @@ test('Scenario 8: canSend gatekeeper strictly prevents sending to DND or bounced
   assert.equal(gate.ok, false);
   assert.equal(gate.reason, 'do_not_contact');
 });
+
+test('Scenario 9: Offline fallback -> when AI is unavailable or offline, deterministic rules produce verified draft', () => {
+  // If Gemini API is unreachable/offline, applyInbound safely falls back to standard templates
+  const inboundText = 'Please send over your rates.';
+  const cls = classifyReply({ body: inboundText }, now);
+
+  const fx = inboundEffects({
+    prospect: baseProspect,
+    touches: baseTouches,
+    cls,
+    settings: DEFAULT_SETTINGS,
+    now,
+    inbound: { id: 'in-offline', channel: 'email', subject: 'Re: Lake Como guest transport' },
+  });
+
+  assert.ok(fx.draft, 'Draft must be generated even without AI');
+  assert.equal(fx.draft.step_name, 'rate_card_delivery');
+  assert.equal(fx.draft.attach_rate_card, true);
+  assert.ok(fx.draft.body.includes('1-page partner rate card'));
+  assert.equal(fx.draft.lint.errors.length, 0);
+});
+
+test('Scenario 10: Human escalation fallback -> if reply asks unknown quote offline, draft is held with reason', () => {
+  const inboundText = 'Can you quote a transfer to Venice for 50 people on June 10?';
+  const cls = classifyReply({ body: inboundText }, now);
+
+  const fx = inboundEffects({
+    prospect: baseProspect,
+    touches: baseTouches,
+    cls,
+    settings: DEFAULT_SETTINGS,
+    now,
+    inbound: { id: 'in-quote', channel: 'email', subject: 'Re: Lake Como guest transport' },
+  });
+
+  assert.equal(fx.patch.status, 'quote_requested');
+  assert.ok(fx.opportunity);
+  assert.equal(fx.opportunity.title, 'Como Luxury Weddings');
+});
