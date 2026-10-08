@@ -58,11 +58,17 @@ export function render(el) {
       </section>
 
       <section class="card stack">
-        <div class="section-head"><h2>Sender</h2><span class="hint">The mailbox itself is set in the function secrets (see Mailbox)</span></div>
+        <div class="section-head"><h2>Sender & email footer</h2><span class="hint">The mailbox itself is set in the function secrets (see Mailbox)</span></div>
         <div class="fields">
           <label class="field"><span>From name</span><input type="text" id="from-name" value="${attr(s.sender?.display_name || 'Dmitri | DOROGO')}"></label>
           <label class="field"><span>From address</span><input type="email" id="from-email" value="${attr(s.sender?.email || 'dmitri@dorogo.eu')}"></label>
           <label class="field"><span>Reply-to</span><input type="email" id="reply-to" value="${attr(s.sender?.reply_to || s.sender?.email || '')}"></label>
+          <label class="field"><span>HTML footer version (Light & Dark Mode)</span>
+            <select id="footer-style">
+              <option value="wordmark" ${(s.email_footer_style || 'wordmark') === 'wordmark' ? 'selected' : ''}>Version 1 · Adaptive Serif Wordmark (100% native Light & Dark Mode)</option>
+              <option value="badge" ${s.email_footer_style === 'badge' ? 'selected' : ''}>Version 2 · Drawn Graphic Logo + Warm-Ivory Badge</option>
+            </select>
+          </label>
         </div>
         <label class="check small"><input type="checkbox" id="opens" ${s.track_opens ? 'checked' : ''}> Track opens with a pixel (adds an HTML part; less reliable and slightly worse for deliverability)</label>
         <div class="row end"><button class="btn primary sm" data-act="save-sender">Save sender</button></div>
@@ -152,8 +158,12 @@ export function render(el) {
           });
           toast('Pace saved'); paint(); break;
         case 'save-sender':
-          await saveSettings({ sender: { display_name: v('from-name').value.trim(), email: v('from-email').value.trim(), reply_to: v('reply-to').value.trim() }, track_opens: v('opens').checked });
-          toast('Sender saved'); break;
+          await saveSettings({
+            sender: { display_name: v('from-name').value.trim(), email: v('from-email').value.trim(), reply_to: v('reply-to').value.trim() },
+            track_opens: v('opens').checked,
+            email_footer_style: v('footer-style').value,
+          });
+          toast('Sender & footer saved'); break;
         case 'upload': {
           const f = v('pdf').files[0]; if (!f) { toast('Choose the PDF first', 'error'); break; }
           if (f.type !== 'application/pdf') { toast('That is not a PDF', 'error'); break; }

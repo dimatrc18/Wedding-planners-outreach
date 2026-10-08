@@ -43,7 +43,7 @@ export async function sendMail(opts: any) {
     replyTo: opts.replyTo || opts.fromEmail,
     subject: opts.subject,
     text: opts.text,
-    html: opts.html || renderDorogoLuxuryHtmlEmail(opts.text, { fromEmail: opts.fromEmail, pixelUrl: opts.pixelUrl }),
+    html: opts.html || renderDorogoLuxuryHtmlEmail(opts.text, { fromEmail: opts.fromEmail, pixelUrl: opts.pixelUrl, footerStyle: opts.footerStyle || 'wordmark' }),
     messageId,
     headers: { 'List-Unsubscribe': `<mailto:${opts.fromEmail}?subject=unsubscribe>` },
     attachments: opts.attachments || [],

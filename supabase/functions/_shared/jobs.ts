@@ -132,6 +132,7 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
       const { messageId, raw } = await sendMail({
         fromName, fromEmail, replyTo: settings.sender?.reply_to || fromEmail, to: p.email, subject: t.subject, text: t.body,
         inReplyTo, references: threaded ? thread.map((x: any) => x.message_id).slice(-10) : [], attachments, pixelUrl,
+        footerStyle: settings.email_footer_style || 'wordmark',
       });
       const at = new Date().toISOString();
       await db.from('touches').update({ state: 'sent', sent_at: at, message_id: messageId, in_reply_to: inReplyTo, to_address: p.email, from_address: fromEmail, error: null, send_attempts: (t.send_attempts || 0) + 1 }).eq('id', t.id);

@@ -39,13 +39,16 @@ test('2+1 thread split: T1 and T3 are in the same thread, T4 breakup starts a se
   assert.ok(d4.subject.includes('Villa Lario Events'), 'T4 merges {{agency}} into its fresh subject');
   assert.deepEqual(d4.lint.errors, []);
 
-  // Verify DOROGO Executive Email HTML signature (from DOROGO_SIGNATURE_GUIDE.md)
-  const html = renderDorogoLuxuryHtmlEmail(d1.body, { fromEmail: 'booking@dorogo.eu' });
-  assert.ok(html.includes('https://dorogo.eu/logo-black.png'), 'Includes official drawn black line logo');
-  assert.ok(html.includes('https://dorogo.eu/wa-black.png'), 'Includes self-hosted WhatsApp icon');
-  assert.ok(html.includes('https://wa.me/32456141497'), 'Includes clickable WhatsApp link without raw phone digits');
-  assert.ok(html.includes('https://dorogo.eu/mail-black.png'), 'Includes self-hosted Mail icon');
-  assert.ok(html.includes('Milan &bull; Lake Como &bull; Italian Alps'), 'Includes regional line');
+  // Verify DOROGO Executive Email HTML signature (Version 1: Adaptive Wordmark & Version 2: Drawn Logo Badge)
+  const htmlV1 = renderDorogoLuxuryHtmlEmail(d1.body, { fromEmail: 'booking@dorogo.eu', footerStyle: 'wordmark' });
+  assert.ok(htmlV1.includes('PRIVATE TRANSFERS') && htmlV1.includes('dm-brand'), 'Version 1 includes adaptive serif wordmark');
+  assert.ok(htmlV1.includes('wa-dual.png'), 'Includes dual-mode WhatsApp icon');
+  assert.ok(htmlV1.includes('https://wa.me/32456141497'), 'Includes clickable WhatsApp link');
+  assert.ok(htmlV1.includes('mail-dual.png'), 'Includes dual-mode Mail icon');
+  assert.ok(htmlV1.includes('Milan &bull; Lake Como &bull; Italian Alps'), 'Includes regional line');
+
+  const htmlV2 = renderDorogoLuxuryHtmlEmail(d1.body, { fromEmail: 'booking@dorogo.eu', footerStyle: 'badge' });
+  assert.ok(htmlV2.includes('logo-badge.png') && htmlV2.includes('logo-white.png'), 'Version 2 includes warm-ivory badge logo and dark-mode white logo swap');
 
   // Verify Concierge no-em-dash lint rule
   const dashLint = lintMessage({ subject: 'Transfer', body: `Hi Elena,\n\nWe run Mercedes-Benz V-Class — always on standby.\n\n${SIGNATURE}`, channel: 'email' });

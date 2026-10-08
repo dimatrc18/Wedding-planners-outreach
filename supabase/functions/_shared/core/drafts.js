@@ -227,13 +227,19 @@ const htmlEsc = (s = '') =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 
+export const EMAIL_ASSETS_BASE = 'https://qjarhdrrbjeeqbhfgmnp.supabase.co/storage/v1/object/public/email-assets';
+
 /**
- * Ported from dorogo-ai-concierge/email.js (generateLuxuryHtmlEmail - Design 1):
- * Wraps plain-text outreach/concierge copy in DOROGO's natural executive HTML email layout
- * with clean 15px typography, automatic bullet formatting, personal sign-off, and the
- * DOROGO Executive Dispatch Footer (Milan • Lake Como • Italian Alps).
+ * Ported from dorogo-ai-concierge/email.js (generateLuxuryHtmlEmail):
+ * Wraps plain-text outreach/concierge copy in DOROGO's executive HTML email layout
+ * with dual-mode (Light Mode + Dark Mode) optimization and two selectable footer versions:
+ * - 'wordmark' (Version 1, default): Pure HTML luxury serif wordmark + hairline rule that natively inverts to crisp white in Gmail iOS / Apple Mail / Outlook Dark Mode with zero background box.
+ * - 'badge' (Version 2): Official drawn graphic logo with @media (prefers-color-scheme: dark) white logo swap + warm-ivory rounded badge fallback so Gmail iOS Dark Mode never renders black-on-black.
  */
-export function renderDorogoLuxuryHtmlEmail(textContent = '', { fromEmail = 'dmitri@dorogo.eu', pixelUrl = null } = {}) {
+export function renderDorogoLuxuryHtmlEmail(
+  textContent = '',
+  { fromEmail = 'dmitri@dorogo.eu', pixelUrl = null, footerStyle = 'wordmark' } = {}
+) {
   const raw = String(textContent || '').trim();
   const isIt = /Un cordiale saluto|Buongiorno|rispondere "no"|nessun problema, basta farmelo sapere/i.test(raw);
 
@@ -247,7 +253,7 @@ export function renderDorogoLuxuryHtmlEmail(textContent = '', { fromEmail = 'dmi
     }
   }
 
-  // Strip trailing signature block from body paragraphs since we render the styled Design 1 footer
+  // Strip trailing signature block from body paragraphs since we render the styled footer
   let cleanText = bodyWithoutOptout
     .replace(/(?:Warm regards|Kind regards|Best regards|Un cordiale saluto|Cordiali saluti),?[\s\S]*$/i, '')
     .replace(/\n*Dmitri\s*\n+DOROGO\s*\|\s*dmitri@dorogo\.eu[\s\S]*$/i, '')
@@ -272,14 +278,14 @@ export function renderDorogoLuxuryHtmlEmail(textContent = '', { fromEmail = 'dmi
           }
         }
         const preHtml = preLines.length
-          ? `<p style="color: #18181b; font-size: 15px; line-height: 1.65; margin: 0 0 12px 0;">${preLines.join('<br/>')}</p>`
+          ? `<p class="dm-text" style="color: #18181b; font-size: 15px; line-height: 1.65; margin: 0 0 12px 0;">${preLines.join('<br/>')}</p>`
           : '';
         const listHtml = bulletLines.length
-          ? `<ul style="color: #18181b; font-size: 15px; line-height: 1.65; margin: 0 0 16px 0; padding-left: 20px;">${bulletLines.map((b) => `<li style="margin-bottom: 6px;">${b}</li>`).join('')}</ul>`
+          ? `<ul class="dm-text" style="color: #18181b; font-size: 15px; line-height: 1.65; margin: 0 0 16px 0; padding-left: 20px;">${bulletLines.map((b) => `<li style="margin-bottom: 6px;">${b}</li>`).join('')}</ul>`
           : '';
         return preHtml + listHtml;
       }
-      return `<p style="color: #18181b; font-size: 15px; line-height: 1.65; margin: 0 0 16px 0;">${htmlEsc(trimmed).replace(/\n/g, '<br/>')}</p>`;
+      return `<p class="dm-text" style="color: #18181b; font-size: 15px; line-height: 1.65; margin: 0 0 16px 0;">${htmlEsc(trimmed).replace(/\n/g, '<br/>')}</p>`;
     })
     .join('');
 
@@ -288,55 +294,101 @@ export function renderDorogoLuxuryHtmlEmail(textContent = '', { fromEmail = 'dmi
   const displayEmail = fromEmail ? fromEmail.replace(/^booking@/i, 'Booking@') : 'dmitri@dorogo.eu';
   const safeFrom = htmlEsc(displayEmail);
 
+  // Version 1 ('wordmark'): Pure HTML Serif Lockup (auto-inverts to crisp white in Gmail iOS Dark Mode & Apple Mail Dark Mode)
+  const wordmarkBrandHtml = `
+    <table border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 10px;">
+      <tr>
+        <td align="left" style="padding: 0;">
+          <div class="dm-brand" style="font-family: 'Cormorant Garamond', 'Didot', 'Bodoni MT', Georgia, 'Times New Roman', serif; font-size: 23px; font-weight: 400; letter-spacing: 0.08em; color: #18181b; line-height: 1.05;">
+            DOROGO
+          </div>
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 3px;">
+            <tr>
+              <td width="46" style="width: 46px; padding-right: 7px; vertical-align: middle;">
+                <div class="dm-rule" style="border-top: 1px solid #52525b; width: 46px; height: 1px; line-height: 1px; font-size: 1px;">&nbsp;</div>
+              </td>
+              <td align="right" style="white-space: nowrap; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 6.5px; font-weight: 600; letter-spacing: 0.14em; color: #52525b; text-transform: uppercase;" class="dm-sub">
+                PRIVATE TRANSFERS
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>`;
+
+  // Version 2 ('badge'): Official Drawn Graphic Logo with Dark-Mode Swap + Warm-Ivory Badge for Gmail iOS Dark Mode
+  const badgeBrandHtml = `
+    <div style="padding-bottom: 10px;">
+      <img class="logo-light" src="${EMAIL_ASSETS_BASE}/logo-badge.png" alt="DOROGO Private Transfers" width="136" style="display: block; border: 0; max-width: 136px; height: auto;" />
+      <!--[if !mso]><!-->
+      <img class="logo-dark" src="${EMAIL_ASSETS_BASE}/logo-white.png" alt="DOROGO Private Transfers" width="120" style="display: none; border: 0; max-width: 120px; height: auto;" />
+      <!--<![endif]-->
+    </div>`;
+
+  const brandBlock = footerStyle === 'badge' ? badgeBrandHtml : wordmarkBrandHtml;
+
   return `<!DOCTYPE html>
-<html lang="${isIt ? 'it' : 'en'}">
+<html lang="${isIt ? 'it' : 'en'}" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <title>DOROGO | Private Transportation</title>
+  <style>
+    :root { color-scheme: light dark; supported-color-schemes: light dark; }
+    @media (prefers-color-scheme: dark) {
+      body, .dm-bg { background-color: #18181b !important; color: #f4f4f5 !important; }
+      .dm-text, .dm-brand, .dm-link { color: #f4f4f5 !important; }
+      .dm-sub { color: #d4d4d8 !important; }
+      .dm-muted { color: #a1a1aa !important; }
+      .dm-border { border-top-color: #3f3f46 !important; }
+      .dm-rule { border-top-color: #a1a1aa !important; }
+      .logo-light { display: none !important; }
+      .logo-dark { display: block !important; }
+    }
+  </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #18181b;">
-  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; margin: 0; padding: 24px 16px;">
+<body class="dm-bg" style="margin: 0; padding: 0; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #18181b;">
+  <table class="dm-bg" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; margin: 0; padding: 24px 16px;">
     <tr>
       <td align="left" style="padding: 0;">
         <table class="email-container" border="0" cellspacing="0" cellpadding="0" style="width: 100%; max-width: 620px;">
           <tr>
-            <td style="padding: 0 0 16px 0; font-size: 15px; line-height: 1.65; color: #18181b;">
+            <td class="dm-text" style="padding: 0 0 16px 0; font-size: 15px; line-height: 1.65; color: #18181b;">
               ${bodyHtml}
             </td>
           </tr>
           <tr>
-            <td style="padding: 0 0 14px 0; font-size: 15px; color: #18181b; line-height: 1.5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            <td class="dm-text" style="padding: 0 0 14px 0; font-size: 15px; color: #18181b; line-height: 1.5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
               ${signOff}<br>
               <strong style="font-weight: 600;">Dmitri</strong>
             </td>
           </tr>
           <tr>
             <td style="padding: 0;">
-              <table border="0" cellpadding="0" cellspacing="0" style="border-top: 1px solid #e4e4e7; width: 100%; max-width: 480px; padding-top: 14px; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+              <table class="dm-bg dm-border" border="0" cellpadding="0" cellspacing="0" style="border-top: 1px solid #e4e4e7; width: 100%; max-width: 480px; padding-top: 14px; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
                 <tbody>
-                  <!-- Official Drawn Black Line Logo -->
                   <tr>
-                    <td style="padding-bottom: 8px;">
-                      <img src="https://dorogo.eu/logo-black.png" alt="DOROGO" width="120" style="display: block; border: 0; max-width: 120px; height: auto;" />
+                    <td style="padding-bottom: 2px;">
+                      ${brandBlock}
                     </td>
                   </tr>
-                  <!-- Self-Hosted Icons & Contact Links (WhatsApp Link Only, No Digits) -->
                   <tr>
                     <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-                      <div style="font-size: 11.5px; color: #52525b; line-height: 1.8;">
-                        <a href="https://wa.me/32456141497" target="_blank" style="color: #334155; font-weight: 400; text-decoration: none; margin-right: 16px; display: inline-block;">
-                          <img src="https://dorogo.eu/wa-black.png" width="12" height="12" alt="WA" style="vertical-align: -1.5px; margin-right: 4px; border: 0;" />WhatsApp
+                      <div style="font-size: 12px; color: #18181b; line-height: 1.8;">
+                        <a class="dm-link" href="https://wa.me/32456141497" target="_blank" style="color: #18181b; font-weight: 500; text-decoration: none; margin-right: 12px; display: inline-block;">
+                          <img src="${EMAIL_ASSETS_BASE}/wa-dual.png" width="12" height="12" alt="WA" style="vertical-align: -1.5px; margin-right: 5px; border: 0;" />WhatsApp +32 456 141 497
                         </a>
-                        <span style="color: #cbd5e1; margin-right: 12px;">•</span>
-                        <a href="mailto:${safeFrom}" style="color: #334155; font-weight: 400; text-decoration: none; display: inline-block;">
-                          <img src="https://dorogo.eu/mail-black.png" width="12" height="12" alt="Mail" style="vertical-align: -1.5px; margin-right: 4px; border: 0;" />${safeFrom}
+                        <span class="dm-muted" style="color: #a1a1aa; margin-right: 12px;">&bull;</span>
+                        <a class="dm-link" href="mailto:${safeFrom}" style="color: #18181b; font-weight: 500; text-decoration: none; display: inline-block;">
+                          <img src="${EMAIL_ASSETS_BASE}/mail-dual.png" width="12" height="12" alt="Mail" style="vertical-align: -1.5px; margin-right: 5px; border: 0;" />${safeFrom}
                         </a>
                       </div>
-                      <div style="color: #94a3b8; font-size: 10.5px; margin-top: 3px; font-weight: 400;">
+                      <div class="dm-muted" style="color: #71717a; font-size: 11px; margin-top: 3px; font-weight: 400;">
                         ${regionLine}
                       </div>
-                      ${optoutText ? `<div style="color: #94a3b8; font-size: 11px; margin-top: 12px;">${htmlEsc(optoutText)}</div>` : ''}
+                      ${optoutText ? `<div class="dm-muted" style="color: #71717a; font-size: 11px; margin-top: 12px;">${htmlEsc(optoutText)}</div>` : ''}
                       ${pixelUrl ? `<img src="${htmlEsc(pixelUrl)}" width="1" height="1" alt="" style="display:none">` : ''}
                     </td>
                   </tr>
