@@ -81,12 +81,12 @@ Step: ${o.step}. Language: ${o.language === 'it' ? 'Italian' : 'English'}.
 ${CONCIERGE_WRITING_RULES}
 
 Draft-Specific Rules:
-- SUBJECT LINE: Write a crisp executive subject line (under 58 characters) naming their studio/property or primary venue/town (e.g., "Guest transport partner · [Agency]" or "[Venue] weddings · [Agency]").
-- PARAGRAPH 1 (Direct Pitch + Why You): State directly why you are reaching out (naming their specific venues/property from the notes) and the pitch: that we can take the entire guest transport workload off their shoulders. Zero broad philosophical observations.
-- PARAGRAPH 2 (Concrete Service Explanation): Explain clearly what our service includes across Lake Como, the Italian Lakes, Milan and the Alps: one dedicated WhatsApp dispatcher on their run-sheet, a private Guest Transfer Portal where guests log their own flights (so the planner never chases flight spreadsheets), water-taxi pier handoffs, and our Mercedes-Benz S-Class, V-Class and E-Class fleet plus 16 to 50-seat minibuses and coaches on standby through the final late-night departures.
-- PARAGRAPH 3 (Commercial Model + Ask): Mention that they can either include our confidential net rates directly in their client offer, or work on a 5% referral/concierge commission, and ask if you may send the 1-page partner rate card (and a sample guest portal link).
-- Keep the body under 115 words before the signature, zero exclamation marks, zero em-dashes (—). Always write "Mercedes-Benz" in full when naming S-Class, V-Class, or E-Class.
-- Use only facts in the recipient notes; invent nothing. Keep the exact signature and opt-out line at the bottom.
+- SUBJECT LINE: Write a crisp executive subject line (under 55 characters) naming their studio/property or primary venue/town (e.g., "Guest transport partner · [Agency]" or "[Venue] weddings · [Agency]").
+- ULTRA-CONCISE (50 to 70 WORDS BEFORE SIGNATURE): Busy planners read on their phones. Keep the entire body to 3 short paragraphs (1 sentence each, 50–70 words total before signature). Zero water, zero region lists, zero filler.
+- SENTENCE 1 (Direct Pitch): "For your weddings at [Venue A] and [Venue B], we can take the entire guest transport coordination off your plate."
+- SENTENCE 2 (Concrete Service): "We provide a private Guest Transfer Portal where guests log their own flights, one WhatsApp dispatcher on your run-sheet, and a Mercedes-Benz S-Class, V-Class and E-Class fleet plus 16 to 50-seat minibuses and coaches."
+- SENTENCE 3 (Commercial Model + Ask): "You can include our confidential net rates in your client offer or work on a 5% commission. May I send our 1-page rate card and guest portal demo?"
+- Zero exclamation marks, zero em-dashes (—). Always write "Mercedes-Benz" in full when naming S-Class, V-Class, or E-Class. Keep the exact signature and opt-out line at the bottom.
 Return JSON only: {"subject": string, "body": string}
 
 RECIPIENT NOTES:
@@ -96,8 +96,8 @@ CURRENT DRAFT:
 ${o.draft}`,
   },
   partner_reply: {
-    version: 'partner-reply-v4-concierge',
-    text: (o: { agency: string; contact_name?: string; language: string; status?: string; thread_history: string; latest_reply: string }) => `You are writing a reply on behalf of Dmitri, Executive Chauffeur Coordinator & Co-Founder of DOROGO Private Transportation (Milan, Lake Como, Northern Italy & the Alps), to a wedding planner, venue, or hotel concierge who replied in an ongoing conversation.
+    version: 'partner-reply-v5-concise',
+    text: (o: { agency: string; contact_name?: string; language: string; status?: string; thread_history: string; latest_reply: string }) => `You are writing a reply on behalf of Dmitri, Co-Founder of DOROGO Private Transportation, to a wedding planner, venue, or hotel concierge.
 
 Partner Agency / Property: ${o.agency}
 Contact Name: ${o.contact_name || 'Unknown'}
@@ -109,17 +109,17 @@ ${CONCIERGE_WRITING_RULES}
 ${formatRateCardFactsForAi()}
 
 Execution Rules:
-1. GREETING & ANSWER FIRST: Start with a natural greeting line using their first name if known (e.g., "Hi Laura," or "Buongiorno Federica,", or "Hello," if unknown) followed by a blank line. Then address every specific question, challenge, or objection the partner raised right from the opening sentence using ONLY the Verified Partner Facts above.
-2. CONCISE & COMPLETE: Keep the reply between 50 and 130 words before the signature (never exceed 145 words). Answer all parts of their message clearly without fluff, em-dashes (—), or exclamation marks. Ask at most ONE question (?) in your entire reply so copy-lint passes with zero warnings.
-3. LANGUAGE & SIGNATURE MATCH: Write in the same language as LATEST PLANNER REPLY (if they wrote in Italian, reply in Italian and end with the Italian signature; if they wrote in English, reply in English and end with the English signature).
+1. STRAIGHT TO THE POINT (ZERO WATER): Start with a greeting ("Hi [Name]," or "Buongiorno [Name],"), then answer ONLY what they asked in 2 to 3 short sentences (35 to 65 words max before the signature). Do NOT pitch unrequested features or repeat marketing lists.
+2. ONE QUESTION MAX: Ask at most ONE short question (?) at the end if needed. Zero exclamation marks, zero em-dashes (—).
+3. LANGUAGE & SIGNATURE MATCH: Write in the same language as LATEST PLANNER REPLY and end with the matching signature:
    - English signature:
 ${SIGNATURE}
    - Italian signature:
 ${SIGNATURE_IT}
-4. NEVER INVENT: Never invent exact Euro prices for unlisted routes (e.g., Bergamo BGY, Venice, St. Moritz, or 16–50 seat minibuses/coaches) and never guarantee fleet availability for a specific wedding date without human confirmation. You MAY quote exact listed net rates from the table (Malpensa/Linate/Milan/Lugano to Como/Tremezzina/Bellagio, hourly V-Class €90/h & S-Class €110/h, and the €450 flat net late-night V-Class villa shuttle).
+4. NEVER INVENT: Never invent Euro prices for unlisted routes (e.g., Bergamo BGY, Venice, St. Moritz, or 16–50 seat minibuses/coaches) and never guarantee fleet availability for a specific wedding date without human confirmation. Quote exact listed net rates when asked.
 5. HUMAN ESCALATION GATE:
-   - Set "can_answer_confidently": true and "needs_human": false when the partner's questions/objections can be fully answered from the Verified Partner Facts above (e.g., how the Guest Transfer Portal works, narrow villa gates, flight delays, late-night shuttles, listed Malpensa/Linate/Como rates, 5% commission vs confidential net rates, fleet standards, or working alongside their existing supplier).
-   - Set "can_answer_confidently": false and "needs_human": true (with a clear "escalation_reason") ONLY when the partner asks for: (a) exact pricing on an unlisted route or 16–50 seat minibus/coach, (b) confirmed availability or a formal quote for a specific wedding date, (c) custom contract/deposit modifications, or (d) scheduling a phone/Zoom call. Even when "needs_human": true, still answer all of their operational questions and listed rates completely in the draft, and note that you are confirming the bespoke quote/availability or call time.
+   - Set "can_answer_confidently": true and "needs_human": false when the partner's questions/objections can be fully answered from the Verified Partner Facts above.
+   - Set "can_answer_confidently": false and "needs_human": true (with a clear "escalation_reason") ONLY when the partner asks for: (a) exact pricing on an unlisted route or 16–50 seat minibus/coach, (b) confirmed availability or a formal quote for a specific wedding date, (c) custom contract/deposit modifications, or (d) scheduling a phone/Zoom call.
 6. RATE CARD ATTACHMENT: Set "attach_rate_card": true whenever they ask for rates, prices, the rate card, or how our partner pricing works.
 
 Return JSON only:

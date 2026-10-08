@@ -25,13 +25,9 @@ export const DEFAULT_TEMPLATES = [
     key: 'T3_followup', language: 'en', kind: 'sequence', name: 'T3 Follow-up (Guest Transfer Portal)', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
-One thing our partner planners tell us saves them the most hours before a wedding is our private Guest Transfer Portal.
+Quick note on how we save planners 15+ hours of spreadsheet work: we set up a private Guest Transfer Portal on the couple's website where guests enter their own flight numbers (either couple-hosted with no prices shown, or direct-pay via SumUp).
 
-You drop a custom link onto the couple's wedding website, guests enter their own flight details, and our team groups arrivals into shared or private Mercedes-Benz V-Class and E-Class transfers, tracks every flight on radar, and bills guests directly via SumUp. Your team never has to chase flight spreadsheets or guest payments.
-
-We also run 16 to 50-seat minibuses and coaches alongside our Mercedes-Benz fleet, so we can match compact minibuses to narrow lakeside villa gates and 50-seaters to main hotel transfers.
-
-Would it be helpful to see our 1-page partner rate card and how the portal works?
+Even if you already have a primary driver on the lake, you can test us on a single late-night villa shuttle or peak-Saturday overflow with our Mercedes-Benz V-Class fleet and 16 to 50-seat minibuses and coaches. May I send the portal demo and 1-page rate card?
 
 {{signature}}
 
@@ -43,9 +39,9 @@ Would it be helpful to see our 1-page partner rate card and how the portal works
     subject_b: 'Airport transfer on your next Milan site visit · {{agency}}',
     body: `{{greeting}}
 
-I will leave this here so I do not crowd your inbox while you are deep in planning.
+I will leave this here so I do not crowd your inbox.
 
-Next time you fly into Malpensa or Linate for a client venue visit, message me on WhatsApp and we will gladly host your airport transfer on us so you can experience our chauffeurs firsthand. Whenever you need a team to take over the guest transport logistics for a wedding weekend, we are one reply away.
+Next time you fly into Malpensa or Linate for a venue inspection, message me on WhatsApp and your airport transfer is on us so you can test our chauffeurs firsthand.
 
 Wishing you a calm, successful season.
 
@@ -74,13 +70,9 @@ Wishing you a calm, successful season.
     key: 'T3_followup', language: 'it', kind: 'sequence', name: 'T3 Follow-up (Portale Ospiti)', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
-Uno strumento che fa risparmiare decine di ore ai wedding planner con cui lavoriamo è il nostro Portale Ospiti dedicato.
+Un dettaglio pratico: attiviamo sul sito degli sposi un Portale Ospiti dedicato dove gli invitati inseriscono i propri voli (con conto unico allo studio o pagamento diretto SumUp), azzerando i fogli Excel.
 
-Inserite un link riservato sul sito degli sposi, gli ospiti registrano i propri voli in autonomia e il nostro team organizza i transfer in Mercedes-Benz Classe V e Classe E, monitora i voli sul radar e gestisce i singoli pagamenti tramite SumUp. Il vostro studio non deve più rincorrere fogli Excel con i voli o pagamenti degli invitati.
-
-Disponiamo inoltre di minibus e pullman da 16 a 50 posti, così da abbinare mezzi compatti per i viali stretti delle ville e pullman da 50 posti per gli spostamenti principali.
-
-Vi fa comodo ricevere la nostra tariffa partner di una pagina per vedere come funziona?
+Anche se avete già un fornitore abituale, potete testarci su una singola navetta notturna o nei weekend di punta con la nostra flotta Mercedes-Benz Classe V e minibus/pullman da 16 a 50 posti. Vi mando il link demo e la tariffa di 1 pagina?
 
 {{signature}}
 
@@ -92,9 +84,9 @@ Vi fa comodo ricevere la nostra tariffa partner di una pagina per vedere come fu
     subject_b: 'Transfer per i vostri prossimi sopralluoghi · {{agency}}',
     body: `{{greeting}}
 
-Chiudo qui per non affollare la vostra casella durante i preparativi.
+Chiudo qui per non affollare la vostra casella.
 
-La prossima volta che avete un sopralluogo con una coppia tra Milano, i laghi o le Alpi, scrivetemi su WhatsApp: saremo felici di offrirvi un transfer di prova per farvi conoscere di persona i nostri autisti. Quando vorrete delegare l'intera logistica trasporti di un matrimonio, siamo a un messaggio di distanza.
+Al vostro prossimo sopralluogo tra Milano e il Lago di Como, scrivetemi su WhatsApp: saremo felici di offrirvi il transfer per farvi provare di persona il nostro servizio.
 
 Buon lavoro e buona stagione.
 

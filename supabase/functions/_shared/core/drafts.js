@@ -65,9 +65,9 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
         subject_line_a: `Logistica ospiti per gli eventi a ${agencyShort}`,
         subject_line_b: `Transfer matrimoni a ${venueOrLoc} · ${agencyShort}`,
         service_pitch:
-          'Con DOROGO gestiamo l’intero piano trasporti tra gli aeroporti di Milano, il Lago di Como e le Alpi: un Portale Ospiti dedicato dove gli invitati registrano i propri voli, un unico referente su WhatsApp e la nostra flotta Mercedes-Benz Classe S, Classe V, Classe E con minibus e pullman da 16 a 50 posti per gli arrivi, i moli motoscafi e i rientri notturni a fine festa.',
+          'Attiviamo un Portale Ospiti dove gli invitati inseriscono i propri voli, con un unico dispatcher su WhatsApp e flotta Mercedes-Benz Classe S, Classe V, Classe E e minibus/pullman da 16 a 50 posti fino ai rientri notturni.',
         cta_line:
-          'Potete inserire le nostre tariffe nette riservate direttamente nella vostra offerta agli sposi, oppure lavorare con commissione del 5%. Posso inviarvi il nostro listino partner di una pagina?',
+          'Lavoriamo con tariffe nette da includere nella vostra offerta o commissione del 5%. Posso inviarvi la scheda partner di 1 pagina?',
       };
     }
     if (type === 'concierge_hotel') {
@@ -75,30 +75,30 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
         subject_line_a: `Flotta privata di supporto per ${agencyShort}`,
         subject_line_b: `Transfer ospiti ed eventi a ${venueOrLoc} · ${agencyShort}`,
         service_pitch:
-          'Supportiamo i team concierge ed eventi sul Lago di Como, a Milano e nelle Alpi con un unico dispatcher su WhatsApp e una flotta privata di Mercedes-Benz Classe S, Classe V, Classe E, minibus executive e pullman fino a 50 posti: dai transfer aeroportuali VIP ai viaggi verso Venezia o St. Moritz, fino alle navette notturne per gli eventi.',
+          'Supportiamo il vostro concierge con un unico dispatcher su WhatsApp e flotta Mercedes-Benz Classe S, Classe V, Classe E e minibus/pullman fino a 50 posti per aeroporti, Venezia, St. Moritz e navette eventi.',
         cta_line:
-          'Potete includere le nostre tariffe nette riservate direttamente nella vostra offerta, oppure operare con commissione concierge del 5%. Posso inviarvi il nostro listino partner di una pagina?',
+          'Offriamo tariffe nette da inserire nella vostra offerta o commissione del 5%. Posso inviarvi il listino partner di 1 pagina?',
       };
     }
     const itPlannerSubjectsA = [
       `Logistica trasporti ospiti per ${agencyShort}`,
       `Matrimoni a ${venueOrLoc} · logistica ospiti`,
-      `${agencyShort} · trasporti matrimoni Lago di Como e Nord Italia`,
-      `Gestione completa transfer ospiti · ${agencyShort}`,
+      `${agencyShort} · trasporti matrimoni Lago di Como`,
+      `Gestione transfer ospiti · ${agencyShort}`,
     ];
     const itPlannerSubjectsB = [
       `Matrimoni a ${venueOrLoc} · ${agencyShort}`,
       `Partner trasporti matrimoni · ${agencyShort}`,
-      `Flotta privata e Portale Ospiti per ${agencyShort}`,
-      `Transfer e navette notturne a ${venueOrLoc} · ${agencyShort}`,
+      `Flotta privata e Portale Ospiti · ${agencyShort}`,
+      `Transfer e navette a ${venueOrLoc} · ${agencyShort}`,
     ];
     const itPlannerPitches = [
-      'Con DOROGO gestiamo l’intero weekend tra Lago di Como, Maggiore, Garda, Milano e le Alpi: un unico dispatcher su WhatsApp sul vostro run-sheet, un Portale Ospiti dedicato dove gli invitati inseriscono i propri voli, coordinamento ai moli privati e la flotta Mercedes-Benz Classe S, Classe V, Classe E con minibus e pullman da 16 a 50 posti fino all’ultimo rientro notturno.',
-      'Invece di rincorrere fogli Excel con i voli o autisti locali, attiviamo sul sito degli sposi un Portale Ospiti dedicato e coordiniamo con un unico referente su WhatsApp la nostra flotta Mercedes-Benz Classe S, Classe V, Classe E, minibus executive e pullman fino a 50 posti dagli arrivi in aeroporto fino ai rientri notturni a fine evento.',
+      'Attiviamo sul sito degli sposi un Portale Ospiti dove gli invitati registrano i propri voli, con un unico dispatcher su WhatsApp e flotta Mercedes-Benz Classe S, Classe V, Classe E e minibus/pullman da 16 a 50 posti fino ai rientri notturni.',
+      'Con un unico referente su WhatsApp e un Portale Ospiti dedicato, gestiamo arrivi aeroportuali, moli motoscafi e navette notturne con Mercedes-Benz Classe S, Classe V, Classe E e minibus/pullman da 16 a 50 posti.',
     ];
     const itPlannerCtas = [
-      'Potete includere le nostre tariffe nette riservate direttamente nel vostro preventivo agli sposi, oppure lavorare con commissione del 5%. Posso inviarvi il listino partner di una pagina e un esempio del portale ospiti?',
-      'Potete inserire il servizio direttamente nella vostra offerta con tariffe nette riservate, o lavorare con commissione del 5%. Vi fa comodo ricevere la nostra scheda partner di una pagina?',
+      'Potete includere le nostre tariffe nette nella vostra offerta o lavorare con commissione del 5%. Posso inviarvi la scheda partner di 1 pagina?',
+      'Offriamo tariffe nette da inserire nel vostro preventivo o commissione del 5%. Vi mando il listino partner di 1 pagina e il link demo del portale?',
     ];
     return {
       subject_line_a: itPlannerSubjectsA[idx],
@@ -108,15 +108,15 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
     };
   }
 
-  // English tailored angles
+  // English tailored angles — ultra-concise, zero water
   if (type === 'venue') {
     const venuePitches = [
-      'At DOROGO, we handle the full wedding-weekend run-sheet across Milan, the airports, Lake Como and the Alps: one dedicated WhatsApp dispatcher, a custom Guest Transfer Portal where guests log their own flights, and our Mercedes-Benz S-Class, V-Class and E-Class fleet plus 16 to 50-seat minibuses and coaches for airport arrivals, boat-pier handoffs and late-night hotel return shuttles.',
-      'Instead of your events team juggling flight spreadsheets and late-night taxis, we provide a custom Guest Transfer Portal for the couple\'s website and one dedicated WhatsApp dispatcher managing our Mercedes-Benz S-Class, V-Class and E-Class fleet and 16 to 50-seat minibuses and coaches from Milan airport arrivals through the final late-night departures.',
+      'We set up a private Guest Transfer Portal where guests log their own flights, backed by one WhatsApp dispatcher and our Mercedes-Benz S-Class, V-Class and E-Class fleet plus 16 to 50-seat minibuses and coaches through the final late-night departures.',
+      'Instead of your team juggling flight spreadsheets and late-night taxis, one WhatsApp dispatcher coordinates our Guest Transfer Portal, Mercedes-Benz S-Class, V-Class and E-Class fleet, and 16 to 50-seat minibuses and coaches.',
     ];
     const venueCtas = [
-      'You can either include our confidential net rates directly in your venue offer, or work on a 5% referral commission. May I send over our 1-page partner rate card for your events team?',
-      'Properties either include our transport package directly in their client offer at confidential net rates, or work on a 5% commission. Would it be useful if I sent our 1-page partner rate card for your files?',
+      'You can include our confidential net rates in your venue offer or work on a 5% commission. May I send our 1-page partner rate card?',
+      'Properties either include our net rates in their client offer or take a 5% commission. May I send our 1-page partner rate card?',
     ];
     return {
       subject_line_a: `Wedding guest logistics at ${agencyShort}`,
@@ -128,15 +128,15 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
 
   if (type === 'concierge_hotel') {
     const hotelPitches = [
-      'At DOROGO, we support five-star concierge and event teams across Lake Como, Milan and the Alps with one dedicated WhatsApp dispatcher and a private fleet of Mercedes-Benz S-Class, V-Class and E-Class vehicles plus 16 to 50-seat minibuses and coaches, covering VIP airport arrivals, cross-region drives to Venice or St. Moritz, and late-night event shuttles.',
-      'Whether your desk needs VIP airport arrivals in a Mercedes-Benz S-Class, V-Class or E-Class, long-distance transfers to Venice or the Alps, or dedicated wedding shuttle loops through the final late-night departures with 16 to 50-seat minibuses and coaches and a single WhatsApp dispatcher, our fleet is ready on demand.',
+      'We support your desk with one WhatsApp dispatcher and a private fleet of Mercedes-Benz S-Class, V-Class and E-Class vehicles plus 16 to 50-seat minibuses and coaches for airport arrivals, long-distance transfers and late-night event shuttles.',
+      'From VIP airport arrivals in a Mercedes-Benz S-Class, V-Class or E-Class to wedding shuttle loops with 16 to 50-seat minibuses and coaches, our fleet and single WhatsApp dispatcher are ready on demand.',
     ];
     return {
       subject_line_a: `Private fleet support for ${agencyShort}`,
       subject_line_b: `${venueOrLoc} guest & event transfers · ${agencyShort}`,
       service_pitch: hotelPitches[idx % hotelPitches.length],
       cta_line:
-        'You can either include our confidential net rates directly in your event offer, or work on a 5% concierge commission. May I send over our 1-page partner rate card for your desk?',
+        'You can include our confidential net rates in your event offer or work on a 5% concierge commission. May I send our 1-page partner rate card?',
     };
   }
 
@@ -153,16 +153,16 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
     `${venueOrLoc} guest logistics · ${agencyShort}`,
   ];
   const plannerPitches = [
-    'At DOROGO, we run full wedding-weekend logistics across Lake Como, the Italian Lakes, Milan and the Alps: one dedicated WhatsApp dispatcher on your run-sheet, a private Guest Transfer Portal where guests log their own flights, water-taxi pier handoffs, and our Mercedes-Benz S-Class, V-Class and E-Class fleet plus 16 to 50-seat minibuses and coaches on standby through the final late-night departures.',
-    'Instead of your team chasing flight spreadsheets or local drivers, we set up a private Guest Transfer Portal on the couple\'s website so guests enter their own flight numbers, and one WhatsApp dispatcher coordinates our Mercedes-Benz S-Class, V-Class and E-Class fleet and 16 to 50-seat minibuses and coaches across Lake Como, Maggiore, Garda, Milan and Venice.',
-    'From Friday airport arrival waves to Sunday departures across Lake Como, Milan, Venice and the Alps, we assign one dedicated WhatsApp dispatcher to your run-sheet to manage our Mercedes-Benz V-Class, E-Class and S-Class fleet, 16 to 50-seat minibuses and coaches, private boat-pier sync, and continuous late-night return shuttles until the last guest is back.',
-    'Our operations team covers Lake Como, the Italian Lakes, Milan and the Alps end to end: a custom Guest Transfer Portal for the couple\'s website, live flight tracking, one WhatsApp dispatcher on your run-sheet, and a private fleet of Mercedes-Benz S-Class, V-Class and E-Class vehicles plus 16 to 50-seat minibuses and coaches on standby through the final late-night departures.',
+    'We provide a private Guest Transfer Portal where guests log their own flights, one WhatsApp dispatcher on your run-sheet, and a Mercedes-Benz S-Class, V-Class and E-Class fleet plus 16 to 50-seat minibuses and coaches through the final late-night departures.',
+    'Instead of chasing flight spreadsheets, we set up a Guest Transfer Portal on the couple\'s website and assign one WhatsApp dispatcher to run our Mercedes-Benz S-Class, V-Class and E-Class fleet plus 16 to 50-seat minibuses and coaches.',
+    'From airport arrivals and boat-pier handoffs to late-night villa shuttles, one WhatsApp dispatcher manages our Guest Transfer Portal, Mercedes-Benz V-Class, E-Class and S-Class fleet, and 16 to 50-seat minibuses and coaches.',
+    'We handle the full wedding transport run-sheet: a Guest Transfer Portal where guests enter their own flights, one WhatsApp dispatcher, and our Mercedes-Benz S-Class, V-Class and E-Class fleet plus 16 to 50-seat minibuses and coaches.',
   ];
   const plannerCtas = [
-    'You can either include our confidential net rates directly in your client offer, or work on a 5% referral commission. May I send over our 1-page partner rate card and a sample guest portal link?',
-    'Planners either include our confidential net rates directly in their client offer with their own markup, or work on a 5% referral commission. Would it be useful if I sent over our 1-page partner rate card?',
-    'You can bundle our transport package directly into your client offer at confidential net rates, or work on a 5% commission. May I send our 1-page partner rate card for your files?',
-    'We offer confidential net rates you can include directly in your client offer, or a 5% referral commission. May I send over our 1-page partner rate card and a quick look at the guest portal?',
+    'You can include our confidential net rates in your client offer or work on a 5% commission. May I send our 1-page rate card and guest portal demo?',
+    'Planners either include our net rates in their client offer or work on a 5% commission. May I send over our 1-page partner rate card?',
+    'You can bundle our net rates directly into your client offer or work on a 5% commission. May I send our 1-page partner rate card?',
+    'We offer confidential net rates you can include in your offer, or a 5% commission. May I send our 1-page rate card and guest portal link?',
   ];
 
   return {
