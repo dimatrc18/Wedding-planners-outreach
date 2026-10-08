@@ -7,29 +7,31 @@ export const DEFAULT_TEMPLATES = [
   // ---------------- English sequence ----------------
   {
     key: 'T1_intro', language: 'en', kind: 'sequence', name: 'T1 Intro email',
-    subject_a: 'Guest transport on Lake Como',
-    subject_b: 'Late-night villa returns on Lake Como',
+    subject_a: '{{subject_line_a}}',
+    subject_b: '{{subject_line_b}}',
     body: `{{greeting}}
 
 {{hook}}
 
-We run a private fleet of Mercedes-Benz V-Class, E-Class and S-Class vehicles between Milan, Malpensa and Lake Como, mostly looking after staggered airport arrivals and the late-night returns from the villas after midnight.
+{{service_pitch}}
 
-If you're open to a dedicated transport partner on the lake this season, may I send over our 1-page partner rate card?
+{{cta_line}}
 
 {{signature}}
 
 {{optout}}`,
   },
   {
-    key: 'T3_followup', language: 'en', kind: 'sequence', name: 'T3 Follow-up (late-night shuttle)', subject_a: '', subject_b: '',
+    key: 'T3_followup', language: 'en', kind: 'sequence', name: 'T3 Follow-up (Guest Transfer Portal)', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
-Quick follow-up on the part of the night that usually causes the most stress on the lake: getting guests back to their hotels after midnight when local taxis stop running.
+One thing our partner planners tell us saves them the most hours before a wedding is our private Guest Transfer Portal.
 
-We keep a dedicated Mercedes-Benz V-Class on standby outside the villa from midnight until 4 am so guests can leave whenever they are ready.
+You drop a custom link onto the couple's wedding website, guests enter their own flight details, and our team groups arrivals into shared or private Mercedes-Benz V-Class and E-Class transfers, tracks every flight on radar, and bills guests directly via SumUp. Your team never has to chase flight spreadsheets or guest payments.
 
-Would it be useful to have our 2026 partner rate sheet on file for your upcoming weddings?
+We also run 16 to 30-seat executive minibuses alongside our Mercedes-Benz fleet for narrow lakeside roads and stone villa gates where full-size coaches cannot pass.
+
+Would it be helpful to see our 1-page partner rate card and how the portal works?
 
 {{signature}}
 
@@ -37,13 +39,15 @@ Would it be useful to have our 2026 partner rate sheet on file for your upcoming
   },
   {
     key: 'T4_breakup', language: 'en', kind: 'sequence', name: 'T4 Breakup email (new thread)',
-    subject_a: 'Transport contact for {{agency}}',
-    subject_b: 'Lake Como chauffeur contact · {{agency}}',
+    subject_a: '{{agency}} · private transport on Lake Como & Northern Italy',
+    subject_b: 'Airport transfer on your next Milan site visit · {{agency}}',
     body: `{{greeting}}
 
-I will leave this here so I do not crowd your inbox while you are busy planning. If you ever need a private airport transfer or a late-night villa shuttle on Lake Como, my WhatsApp and our 1-page partner rate card are one reply away.
+I will leave this here so I do not crowd your inbox while you are deep in planning.
 
-Wishing you a calm season ahead.
+Next time you fly into Malpensa or Linate for a client venue visit, message me on WhatsApp and we will gladly host your airport transfer on us so you can experience our chauffeurs firsthand. Whenever you need a team to take over the guest transport logistics for a wedding weekend, we are one reply away.
+
+Wishing you a calm, successful season.
 
 {{signature}}
 
@@ -52,29 +56,31 @@ Wishing you a calm season ahead.
   // ---------------- Italian sequence ----------------
   {
     key: 'T1_intro', language: 'it', kind: 'sequence', name: 'T1 Email di presentazione',
-    subject_a: 'Transfer ospiti sul Lago di Como',
-    subject_b: 'Rientri notturni dalle ville sul lago',
+    subject_a: '{{subject_line_a}}',
+    subject_b: '{{subject_line_b}}',
     body: `{{greeting}}
 
 {{hook}}
 
-Operiamo tra Milano, Malpensa e il Lago di Como con una flotta privata di Mercedes-Benz Classe V, Classe E e Classe S, seguendo soprattutto gli arrivi scaglionati in aeroporto e i rientri notturni dalle ville dopo mezzanotte.
+{{service_pitch}}
 
-Se valutate un partner dedicato per i transfer sul lago in questa stagione, posso inviarvi la nostra tariffa partner di una pagina?
+{{cta_line}}
 
 {{signature}}
 
 {{optout}}`,
   },
   {
-    key: 'T3_followup', language: 'it', kind: 'sequence', name: 'T3 Follow-up (navetta notturna)', subject_a: '', subject_b: '',
+    key: 'T3_followup', language: 'it', kind: 'sequence', name: 'T3 Follow-up (Portale Ospiti)', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
-Un breve messaggio sulla parte della serata più delicata da gestire sul lago: riportare gli ospiti in hotel dopo mezzanotte, quando i taxi non si trovano più.
+Uno strumento che fa risparmiare decine di ore ai wedding planner con cui lavoriamo è il nostro Portale Ospiti dedicato.
 
-Teniamo una Mercedes-Benz Classe V dedicata in attesa fuori dalla villa da mezzanotte alle 4 del mattino, così gli ospiti rientrano quando preferiscono.
+Inserite un link riservato sul sito degli sposi, gli ospiti registrano i propri voli in autonomia e il nostro team organizza i transfer in Mercedes-Benz Classe V e Classe E, monitora i voli sul radar e gestisce i singoli pagamenti tramite SumUp. Il vostro studio non deve più rincorrere fogli Excel con i voli o pagamenti degli invitati.
 
-Vi fa comodo ricevere il foglio con le tariffe partner 2026 per i vostri prossimi matrimoni?
+Disponiamo inoltre di minibus executive da 16 a 30 posti per i viali storici e le strade strette del lago dove i pullman da 50 posti non passano.
+
+Vi fa comodo ricevere la nostra tariffa partner di una pagina per vedere come funziona?
 
 {{signature}}
 
@@ -82,11 +88,13 @@ Vi fa comodo ricevere il foglio con le tariffe partner 2026 per i vostri prossim
   },
   {
     key: 'T4_breakup', language: 'it', kind: 'sequence', name: 'T4 Email di chiusura (nuovo thread)',
-    subject_a: 'Contatto transfer per {{agency}}',
-    subject_b: 'Transfer Lago di Como · {{agency}}',
+    subject_a: '{{agency}} · logistica trasporti Lago di Como e Nord Italia',
+    subject_b: 'Transfer per i vostri prossimi sopralluoghi · {{agency}}',
     body: `{{greeting}}
 
-Chiudo qui per non affollare la vostra casella durante i preparativi. Se durante la stagione dovesse servirvi un transfer dell'ultimo minuto da Malpensa o una navetta notturna da una villa sul lago, basta una risposta a questa mail o un messaggio su WhatsApp.
+Chiudo qui per non affollare la vostra casella durante i preparativi.
+
+La prossima volta che avete un sopralluogo con una coppia tra Milano, i laghi o le Alpi, scrivetemi su WhatsApp: saremo felici di offrirvi un transfer di prova per farvi conoscere di persona i nostri autisti. Quando vorrete delegare l'intera logistica trasporti di un matrimonio, siamo a un messaggio di distanza.
 
 Buon lavoro e buona stagione.
 

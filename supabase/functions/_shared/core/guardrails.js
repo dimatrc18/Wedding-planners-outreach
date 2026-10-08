@@ -198,13 +198,17 @@ export function formatRateCardFactsForAi() {
     .map((r) => `- ${r.label}: E-Class €${r.E} net | V-Class €${r.V} net | S-Class €${r.S} net`)
     .join('\n');
   return [
-    `DOROGO 2026 Verified Partner Facts (Milan & Lake Como luxury chauffeur fleet):`,
-    `- Fleet: Mercedes-Benz V-Class (up to 7 guests), E-Class (up to 3 guests), S-Class (VIP/couple, up to 3 guests). All black, Wi-Fi, bottled water, English & Italian speaking chauffeurs in suit and tie.`,
+    `DOROGO 2026 Verified Wedding & Event Partner Facts (dorogo.eu/weddings):`,
+    `- Core Value Proposition: We take the entire guest transportation workload off the wedding planner's or venue's shoulders across a full 3-day wedding weekend (Friday arrival waves & welcome dinner, Saturday hotel clusters, water-taxi & private boat pier synchronization, 8-hour dedicated standby blocks, and continuous 00:00–04:00 late-night villa return loops, plus Sunday departures).`,
+    `- Regions Covered: Lake Como, the Italian Lakes (Lake Maggiore, Lake Garda, Lake Orta, Lake Iseo), Milan (Malpensa MXP, Linate LIN, Bergamo BGY), Lugano, Zurich, Venice, Portofino, Tuscany, and the Italian & Swiss Alps (St. Moritz, Cortina, Bormio, Cervinia).`,
+    `- Self-Service Guest Transfer Portal (dorogo.eu/weddings/guest-portal): We provide a custom registration link for the couple's wedding website where guests enter their own flight numbers, get grouped into shared or private transfers, and pay directly via SumUp links (so the planner never has to manage flight spreadsheets or chase guest payments).`,
+    `- Fleet & Narrow-Road Access: Mercedes-Benz S-Class (VIP/bridal couple, up to 3 guests), Mercedes-Benz V-Class (up to 7 guests), Mercedes-Benz E-Class (up to 3 guests), plus 16 to 30-seat executive minibuses specifically sized for narrow lakeside roads and historic villa stone gates where 50-seat coaches cannot pass. Full ZTL and historic villa gate permits included.`,
+    `- Single Dedicated Dispatcher: One operations lead on the planner's WhatsApp run-sheet managing live flight radar tracking, boat-pier handoffs, and real-time schedule changes.`,
     `- Fixed One-Way Net Routes (VAT 10% excluded, tolls & 60 min airport wait included):`,
     routes,
     `- Hourly disposal (minimum ${RATE_CARD.hourly.min_hours} hours): V-Class €${RATE_CARD.hourly.V}/h net, S-Class €${RATE_CARD.hourly.S}/h net.`,
     `- Late-Night Villa Return Shuttle (${RATE_CARD.late_night_shuttle.window}): €${RATE_CARD.late_night_shuttle.V} flat net per Mercedes-Benz V-Class on standby at the venue doing continuous loops to local hotels.`,
-    `- Partner Models: Model A = 12% referral commission (DOROGO bills couple directly); Model B = Confidential net rates above (planner marks up 15–25% under their own brand).`,
-    `- Booking Terms: 25% deposit locks the fleet; balance 7 days before the wedding; flight tracking and dedicated WhatsApp dispatch group on event day included.`,
+    `- Partner Models: Model A = 12% referral commission (DOROGO bills couple/guests directly); Model B = Confidential net rates above (planner marks up 15–25% under their own brand).`,
+    `- Booking Terms: 25% deposit locks the fleet; balance 7 days before the wedding.`,
   ].join('\n');
 }

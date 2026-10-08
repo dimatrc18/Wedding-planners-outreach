@@ -231,7 +231,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     location: 'Como',
     segment: 'boutique_local',
     key_venues: ['Villa del Balbianello', 'Villa Balbiano'],
-    personalization_hook: "I was reading through Morgan and Tyler's Lake Como wedding on your website.",
+    personalization_hook: "Morgan and Tyler's celebration on your site is a great example of how many moving pieces go into a multi-day Lake Como weekend.",
     hook_type: 'event',
   },
   comoluxury: {
@@ -241,7 +241,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     location: 'Como',
     segment: 'boutique_local',
     key_venues: ['Villa Pizzo', 'Villa Erba'],
-    personalization_hook: 'I saw your recent weddings at Villa Pizzo and Villa Erba around Cernobbio.',
+    personalization_hook: 'Producing multi-day celebrations at estates like Villa Pizzo and Villa Erba takes serious behind-the-scenes logistics around Cernobbio.',
     hook_type: 'venue',
   },
   idoin: {
@@ -252,7 +252,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     verified_reviews_count: 35,
     segment: 'boutique_local',
     key_venues: ['Villa del Balbianello', 'Grand Hotel Tremezzo'],
-    personalization_hook: 'I was looking through your recent weddings across Menaggio, Tremezzina and Villa del Balbianello.',
+    personalization_hook: 'Coordinating weddings across Menaggio, Tremezzina and boat-access venues like Villa del Balbianello means managing complex guest movements on both land and water.',
     hook_type: 'event',
   },
   sugar: {
@@ -262,7 +262,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     location: 'Laglio',
     segment: 'boutique_local',
     key_venues: ['Relais Villa Vittoria', 'Villa Pizzo'],
-    personalization_hook: 'I saw the multi-day weddings you and the SugarEvents team organise in Laglio and at Villa Pizzo.',
+    personalization_hook: 'Knowing how tight the Regina Vecchia road gets around Laglio and Villa Pizzo, I know how much coordination goes into the multi-day weddings your team produces.',
     hook_type: 'event',
   },
   lenafreitag: {
@@ -274,7 +274,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     verified_reviews_count: 18,
     segment: 'boutique_local',
     key_venues: ['Villa del Balbianello', 'Villa Sola Cabiati'],
-    personalization_hook: 'I was looking through your Lake Como weddings at Villa Sola Cabiati and Villa del Balbianello.',
+    personalization_hook: 'Bringing international couples together for multi-day celebrations at Villa Sola Cabiati and Villa del Balbianello leaves very little margin for error on guest timing.',
     hook_type: 'style',
   },
   romanceinitaly: {
@@ -286,7 +286,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     verified_reviews_count: 22,
     segment: 'boutique_local',
     key_venues: ['Villa Cipressi', 'Villa Monastero'],
-    personalization_hook: 'I saw your recent Varenna weddings at Villa Cipressi and Villa Monastero.',
+    personalization_hook: 'Hosting destination weddings in Varenna around Villa Cipressi and Villa Monastero is wonderful for guests, though getting everyone across from Malpensa and back after midnight is always a puzzle.',
     hook_type: 'venue',
   },
   kissandescape: {
@@ -294,7 +294,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     location: 'Bellagio',
     segment: 'boutique_local',
     key_venues: ['Villa Melzi', 'Villa Serbelloni'],
-    personalization_hook: 'I was looking through your Bellagio elopements and weddings around Villa Melzi.',
+    personalization_hook: 'Bellagio celebrations around Villa Melzi and Villa Serbelloni have a magic of their own, especially when guest transfers and ferry timings are planned down to the minute.',
     hook_type: 'style',
   },
   relaisvillavittoria: {
@@ -304,7 +304,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     rating: 4.8,
     verified_reviews_count: 180,
     key_venues: ['Relais Villa Vittoria'],
-    personalization_hook: 'Our chauffeurs drive the narrow Regina Vecchia road into Laglio for private events at Relais Villa Vittoria throughout the season.',
+    personalization_hook: 'Because the old lakeside road into Laglio is too narrow for full-size coaches, getting wedding guests in and out of Relais Villa Vittoria smoothly always comes down to the right vehicle mix.',
     hook_type: 'venue',
   },
   villalario: {
@@ -314,7 +314,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     rating: 4.9,
     verified_reviews_count: 140,
     key_venues: ['Villa Lario'],
-    personalization_hook: 'Our drivers regularly bring wedding guests along the eastern shore between Como and Pognana Lario for buyouts at Villa Lario.',
+    personalization_hook: 'Full-estate wedding buyouts along the eastern shore in Pognana Lario often mean guests arriving on staggered international flights and staying out well past midnight.',
     hook_type: 'venue',
   },
   filario: {
@@ -324,7 +324,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     rating: 4.8,
     verified_reviews_count: 210,
     key_venues: ['Filario'],
-    personalization_hook: 'Our chauffeurs run guest transfers between Malpensa, Bellagio and Filario in Lezzeno every week during the season.',
+    personalization_hook: 'With wedding guests splitting their time between Lezzeno, Bellagio and private boat piers on the lake, smooth ground transfers make a huge difference to the guest experience at Filario.',
     hook_type: 'venue',
   },
   villacipressi: {
@@ -334,7 +334,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     rating: 4.8,
     verified_reviews_count: 320,
     key_venues: ['Villa Cipressi', 'Villa Monastero'],
-    personalization_hook: 'We regularly drive wedding guests between Milan Malpensa and Varenna for celebrations at Villa Cipressi.',
+    personalization_hook: 'Varenna is one of our favourite corners of the lake, though we know how tricky late-night departures and staggered airport arrivals can be for wedding guests celebrating at Villa Cipressi.',
     hook_type: 'venue',
   },
   grandhotelimperiale: {
@@ -346,7 +346,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     rating: 4.7,
     verified_reviews_count: 290,
     key_venues: ['Grand Hotel Imperiale'],
-    personalization_hook: 'Our drivers are in Moltrasio for lakeside weddings and private events at Grand Hotel Imperiale every week.',
+    personalization_hook: 'Large lakeside weddings in Moltrasio often bring a wave of last-minute airport pickups and post-midnight hotel returns for your events and concierge desk.',
     hook_type: 'venue',
   },
   sposiamovi: {
@@ -386,7 +386,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Villa del Balbianello', 'Villa Erba', 'Villa Pizzo'],
-    personalization_hook: 'I was looking through your recent weddings at Villa del Balbianello and Villa Pizzo.',
+    personalization_hook: 'Your weddings at Villa del Balbianello, Villa Erba and Villa Pizzo bring guests in from all over the world, often across several hotels and boat piers.',
     hook_type: 'event',
     notes: 'Discovered via AI Partner Search (Real Weddings & Portfolio verified).',
   },
@@ -403,7 +403,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Villa Cipressi', 'Villa Melzi', 'Villa del Balbianello'],
-    personalization_hook: 'I saw your recent weddings around Bellagio and Varenna at Villa Cipressi and Villa Melzi.',
+    personalization_hook: 'Planning destination weddings across Bellagio and Varenna at venues like Villa Cipressi and Villa Melzi means balancing ferry schedules, airport waves and late-night returns.',
     hook_type: 'event',
     notes: 'Discovered via AI Partner Search (Boutique Lake Como specialist).',
   },
@@ -420,7 +420,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Villa del Balbianello', 'Villa Monastero', 'Villa Cipressi'],
-    personalization_hook: 'I was reading through your Lake Como wedding stories from Villa Monastero and Villa del Balbianello.',
+    personalization_hook: 'Since your team plans celebrations across Lake Como, Maggiore, Garda and Orta, you know firsthand how much time guest transport spreadsheets can eat up.',
     hook_type: 'event',
     notes: 'Discovered via AI Partner Search (Lake Como & Northern Italy lakes specialist).',
   },
@@ -437,7 +437,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Grand Hotel Tremezzo', 'Villa Sola Cabiati', 'Villa del Balbianello'],
-    personalization_hook: 'Our chauffeurs are in Tremezzina for private guest arrivals at Grand Hotel Tremezzo and Villa Sola Cabiati every week during the season.',
+    personalization_hook: 'Between private events at Villa Sola Cabiati and peak-season arrivals in Tremezzina, we know your concierge desk often juggles dozens of overlapping guest transfers at once.',
     hook_type: 'venue',
     notes: 'Discovered via AI Partner Search (5-star hotel concierge & Villa Sola Cabiati events).',
   },
@@ -454,7 +454,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Villa Passalacqua'],
-    personalization_hook: 'Our drivers are in Moltrasio for private buyouts and airport arrivals at Villa Passalacqua throughout the season.',
+    personalization_hook: 'Private buyouts at Passalacqua set an extraordinary bar for hospitality in Moltrasio, from the first airport pickup in Milan to the final late-night departure.',
     hook_type: 'venue',
     notes: 'Discovered via AI Partner Search (Moltrasio ultra-luxury villa buyout venue).',
   },
@@ -471,7 +471,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Villa Pizzo', 'Villa Balbiano'],
-    personalization_hook: 'I was looking through your recent weddings across Milan and Lake Como at Villa Pizzo.',
+    personalization_hook: 'Designing editorial multi-day weddings between Milan and Lake Como estates like Villa Pizzo and Villa Balbiano takes a huge amount of behind-the-scenes guest logistics.',
     hook_type: 'style',
     notes: 'Discovered via AI Partner Search (Milan & Lake Como boutique wedding design).',
   },
@@ -523,7 +523,7 @@ export function resolveProspectResearchSeed(p = {}) {
 
 export function buildVerifiedFallbackHook(p = {}, storySignals = null) {
   const existing = String(p.personalization_hook || '').trim();
-  const isRoboticExisting = /^(We note(d)?\b|.*(stood out to us|caught our eye|caught our attention)\.?$)/i.test(existing);
+  const isRoboticExisting = /^(We note(d)?\b|I was looking through your recent\b|I saw your recent\b|.*(stood out to us|caught our eye|caught our attention)\.?$)/i.test(existing);
   if (existing && !isRoboticExisting) {
     return existing;
   }
@@ -536,27 +536,31 @@ export function buildVerifiedFallbackHook(p = {}, storySignals = null) {
   const couples = storySignals?.couples || [];
   const press = storySignals?.press || [];
 
-  if (p.type === 'venue' || p.type === 'concierge_hotel') {
+  if (p.type === 'venue') {
     const place = venues[0] || p.agency_name || 'your property';
-    return `Our chauffeurs are in ${p.location || 'Lake Como'} for private guest arrivals at ${place} throughout the season.`;
+    return `Multi-day celebrations and private buyouts at ${place} always require careful guest transfer timing across ${p.location || 'Lake Como'}.`;
+  }
+  if (p.type === 'concierge_hotel') {
+    const place = venues[0] || p.agency_name || 'your hotel';
+    return `Between peak-season airport arrivals and private events around ${place}, we know how many overlapping guest transfers your concierge desk coordinates.`;
   }
   if (couples.length > 0 && venues.length > 0) {
-    return `I was looking through ${couples[0]}'s wedding at ${venues[0]} in your portfolio.`;
+    return `${couples[0]}'s celebration at ${venues[0]} on your site shows how many moving pieces go into a multi-day Lake Como weekend.`;
   }
   if (couples.length > 0) {
-    return `I was reading through ${couples[0]}'s Lake Como wedding story in your portfolio.`;
+    return `${couples[0]}'s wedding story in your portfolio is a great example of how much behind-the-scenes timing goes into a destination weekend.`;
   }
   if (press.length > 0 && venues.length > 0) {
-    return `I saw your ${press[0]}-featured weddings and your work at ${venues[0]}.`;
+    return `Your ${press[0]}-featured celebrations and your work at ${venues[0]} bring guests in from all over the world.`;
   }
   if (venues.length >= 2) {
-    return `I was looking through your recent Lake Como weddings at ${venues[0]} and ${venues[1]}.`;
+    return `Producing multi-day celebrations at estates like ${venues[0]} and ${venues[1]} leaves very little margin for error on guest timing.`;
   }
   if (venues.length === 1) {
-    return `I saw your recent Lake Como weddings at ${venues[0]}.`;
+    return `Coordinating destination weddings around ${venues[0]} means managing staggered airport arrivals, boat piers and late-night villa returns.`;
   }
   if (p.location) {
-    return `I was looking through your wedding portfolio around ${p.location} and Lake Como.`;
+    return `Coordinating multi-day destination weddings around ${p.location} and the Italian Lakes takes serious behind-the-scenes guest logistics.`;
   }
   return '';
 }

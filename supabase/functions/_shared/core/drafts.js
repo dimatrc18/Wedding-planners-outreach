@@ -19,15 +19,177 @@ export function greeting(prospect) {
   return f ? `Hi ${f},` : 'Hello,';
 }
 
+export function shortAgencyName(raw = '', lang = 'en') {
+  const s = String(raw || '')
+    .trim()
+    .replace(/\s+(Events?\s*&\s*Concierge|Private\s+Events?|Wedding\s+Planners?|Wedding\s+Planning|Weddings?\s*&\s*Events?|Weddings?|Events?|S\.?r\.?l\.?)$/i, '')
+    .trim();
+  if (!s) return lang === 'it' ? 'il vostro studio' : 'your team';
+  return s.length > 32 ? s.slice(0, 32).trim() : s;
+}
+
+function stableHashIndex(seed = '', modulo = 4) {
+  let h = 2166136261;
+  for (const c of String(seed || 'dorogo')) {
+    h ^= c.charCodeAt(0);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0) % modulo;
+}
+
+function resolveVenueOrLocation(prospect = {}, agencyShort = '', lang = 'en') {
+  const type = prospect.type === 'wedding_planner' ? 'planner' : (prospect.type || 'planner');
+  const loc = String(prospect.location || '').trim();
+  const normAgency = agencyShort.toLowerCase();
+  if ((type === 'venue' || type === 'concierge_hotel') && loc && loc.toLowerCase() !== normAgency) {
+    return loc;
+  }
+  const venues = (Array.isArray(prospect.key_venues) ? prospect.key_venues : [])
+    .map((v) => String(v || '').trim())
+    .filter((v) => v && !/^(lake\s+como|lago\s+di\s+como|italy|milan)$/i.test(v));
+  const distinctVenue = venues.find((v) => v.toLowerCase() !== normAgency && !normAgency.includes(v.toLowerCase()));
+  if (distinctVenue) return distinctVenue;
+  if (loc && loc.toLowerCase() !== normAgency) return loc;
+  if (venues[0] && venues[0].toLowerCase() !== normAgency) return venues[0];
+  return lang === 'it' ? 'Lago di Como' : 'Lake Como';
+}
+
+function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lang = 'en') {
+  const type = prospect.type === 'wedding_planner' ? 'planner' : (prospect.type || 'planner');
+  const idx = stableHashIndex(`${prospect.id || ''}:${prospect.agency_name || ''}`, 4);
+
+  if (lang === 'it') {
+    if (type === 'venue') {
+      return {
+        subject_line_a: `Logistica ospiti per gli eventi a ${agencyShort}`,
+        subject_line_b: `Transfer matrimoni a ${venueOrLoc} · ${agencyShort}`,
+        service_pitch:
+          'Quando una coppia sceglie la vostra dimora per un matrimonio su più giorni, prendiamo in carico l’intera logistica trasporti per alleggerire il vostro team eventi: arrivi dagli aeroporti di Milano, navette tra hotel e villa con flotta Mercedes-Benz Classe S, Classe V, Classe E e minibus executive per le strade strette del lago, coincidenze ai moli e rientri notturni fino alle 03:00.',
+        cta_line:
+          'Lavoriamo con le dimore sia con tariffe nette riservate sia con commissione del 12%. Posso inviarvi il nostro listino partner di una pagina?',
+      };
+    }
+    if (type === 'concierge_hotel') {
+      return {
+        subject_line_a: `Flotta privata di supporto per ${agencyShort}`,
+        subject_line_b: `Transfer ospiti ed eventi a ${venueOrLoc} · ${agencyShort}`,
+        service_pitch:
+          'Affianchiamo i team concierge ed eventi sul Lago di Como, a Milano e nelle Alpi come partner dedicato per assorbire i picchi di lavoro e la logistica dei matrimoni: transfer aeroportuali VIP in Mercedes-Benz Classe S, Classe V e Classe E, trasferimenti verso Venezia o St. Moritz e navette notturne con un unico referente su WhatsApp.',
+        cta_line:
+          'Operiamo con tariffe nette riservate o commissione concierge del 12%. Posso inviarvi il nostro listino partner 2026 di una pagina?',
+      };
+    }
+    const itPlannerSubjectsA = [
+      `Logistica trasporti ospiti per ${agencyShort}`,
+      `Matrimoni a ${venueOrLoc} · logistica ospiti`,
+      `${agencyShort} · trasporti matrimoni Lago di Como e Nord Italia`,
+      `Gestione completa transfer ospiti · ${agencyShort}`,
+    ];
+    const itPlannerSubjectsB = [
+      `Matrimoni a ${venueOrLoc} · ${agencyShort}`,
+      `Delegare la logistica trasporti (${venueOrLoc})`,
+      `Flotta privata e Portale Ospiti per ${agencyShort}`,
+      `Transfer e navette notturne a ${venueOrLoc} · ${agencyShort}`,
+    ];
+    const itPlannerPitches = [
+      'Con DOROGO togliamo l’intera gestione dei trasporti dalle vostre spalle tra Lago di Como, Maggiore, Garda, Milano e le Alpi. Un unico dispatcher sul vostro run-sheet coordina la nostra flotta Mercedes-Benz Classe S, Classe V, Classe E e i minibus executive per gli arrivi aeroportuali, i moli privati e i rientri notturni fino alle 03:00.',
+      'Ci occupiamo dell’intera regia trasporti per i matrimoni nel Nord Italia, così non dovete rincorrere fogli Excel con i voli o autisti locali. Oltre alla flotta Mercedes-Benz Classe S, Classe V, Classe E e ai minibus per i viali stretti delle ville, attiviamo un Portale Ospiti dedicato sul sito degli sposi dove gli invitati registrano i propri voli.',
+    ];
+    const itPlannerCtas = [
+      'I wedding planner lavorano con noi con commissione del 12% o tariffe nette riservate. Posso inviarvi il listino partner di una pagina e un esempio del portale ospiti?',
+      'Operiamo sia con tariffe nette riservate sia con commissione del 12%. Vi fa comodo ricevere la nostra scheda partner 2026 di una pagina?',
+    ];
+    return {
+      subject_line_a: itPlannerSubjectsA[idx],
+      subject_line_b: itPlannerSubjectsB[idx],
+      service_pitch: itPlannerPitches[idx % itPlannerPitches.length],
+      cta_line: itPlannerCtas[idx % itPlannerCtas.length],
+    };
+  }
+
+  // English tailored angles
+  if (type === 'venue') {
+    const venuePitches = [
+      'When couples book a multi-day celebration at your property, we take the entire guest transport coordination off your events desk across Milan, the airports and Northern Italy. One dedicated dispatcher manages our Mercedes-Benz S-Class, V-Class and E-Class fleet and compact executive minibuses for narrow lakeside roads, boat-pier handoffs and continuous return shuttles until 3:00 AM.',
+      'For full-estate buyouts and multi-day weddings, our team takes the entire ground transport run-sheet off your events desk across Lake Como, Milan and the Alps. We provide a custom Guest Transfer Portal where guests log their own flights, alongside our Mercedes-Benz S-Class, V-Class and E-Class fleet and 16 to 30-seat minibuses for narrow villa gates and late-night hotel loops.',
+    ];
+    const venueCtas = [
+      'We work with properties on either confidential net rates or a 12% referral commission. May I send over our 1-page partner rate card for your events team?',
+      'Properties partner with us on confidential net rates or a 12% commission. Would it be useful if I sent our 1-page 2026 partner rate card for your files?',
+    ];
+    return {
+      subject_line_a: `Wedding guest logistics at ${agencyShort}`,
+      subject_line_b: `${venueOrLoc} guest transfers · ${agencyShort}`,
+      service_pitch: venuePitches[idx % venuePitches.length],
+      cta_line: venueCtas[idx % venueCtas.length],
+    };
+  }
+
+  if (type === 'concierge_hotel') {
+    const hotelPitches = [
+      'We partner with five-star concierge and event desks across Lake Como, Milan and the Alps to take overflow and multi-day wedding transport off your plate. Whether your guests need VIP airport arrivals in a Mercedes-Benz S-Class, V-Class or E-Class, cross-region drives to Venice or St. Moritz, or late-night event shuttles with one dedicated WhatsApp dispatcher, our fleet steps right in.',
+      'Our team supports luxury hotel concierge and event desks across Lake Como, Milan and Northern Italy whenever in-house cars are booked or a multi-day buyout needs dedicated wedding shuttles. One WhatsApp dispatcher coordinates our Mercedes-Benz S-Class, V-Class and E-Class fleet and executive minibuses from airport arrivals through 3:00 AM villa returns.',
+    ];
+    return {
+      subject_line_a: `Private fleet support for ${agencyShort}`,
+      subject_line_b: `${venueOrLoc} guest & event transfers · ${agencyShort}`,
+      service_pitch: hotelPitches[idx % hotelPitches.length],
+      cta_line:
+        'We work on either confidential net rates or a 12% concierge commission. May I send over our 1-page 2026 partner rate card for your desk?',
+    };
+  }
+
+  const plannerSubjectsA = [
+    `Guest logistics for ${agencyShort}`,
+    `Taking guest transport off your plate · ${agencyShort}`,
+    `${agencyShort} · Lake Como & Northern Italy logistics`,
+    `Wedding guest coordination for ${agencyShort}`,
+  ];
+  const plannerSubjectsB = [
+    `${venueOrLoc} weddings · ${agencyShort}`,
+    `Guest transfers for your ${venueOrLoc} weddings`,
+    `Private fleet & guest portal · ${agencyShort}`,
+    `${venueOrLoc} guest logistics · ${agencyShort}`,
+  ];
+  const plannerPitches = [
+    'At DOROGO, we take the entire guest transportation workload off your shoulders across Lake Como, the Italian Lakes, Milan and the Alps. One dedicated WhatsApp dispatcher on your run-sheet coordinates our Mercedes-Benz S-Class, V-Class and E-Class fleet and executive minibuses across every airport wave, water-taxi pier handoff and 3:00 AM villa return loop.',
+    'Rather than just sending cars, we take the whole guest transport coordination off your plate across Lake Como, Maggiore, Garda, Milan and Venice. Alongside our Mercedes-Benz S-Class, V-Class and E-Class fleet and compact 16 to 30-seat minibuses for narrow villa gates, we set up a private Guest Transfer Portal on the couple\'s website so guests log their own flights.',
+    'Our team steps in to take the entire ground transport run-sheet off your shoulders from Friday arrivals to Sunday departures across Lake Como, Milan and Northern Italy. One dedicated dispatcher manages our Mercedes-Benz V-Class, E-Class and S-Class fleet and executive minibuses for airport waves, hotel clusters, boat-pier sync and standby shuttles until 3:00 AM.',
+    'We act as your dedicated transport operations team across Lake Como, the Italian Lakes, Milan and the Alps so you never have to chase flight spreadsheets or late-night drivers. We provide a custom Guest Transfer Portal for the couple\'s website, one WhatsApp dispatcher on your run-sheet, and a private Mercedes-Benz S-Class, V-Class and E-Class fleet plus executive minibuses until 3:00 AM.',
+  ];
+  const plannerCtas = [
+    'Planners work with us on either confidential net rates or a 12% referral commission. May I send over our 1-page partner rate card and a sample guest portal link?',
+    'We work on either a 12% referral commission or confidential net rates you can mark up. Would it be useful if I sent over our 1-page 2026 partner rate card?',
+    'Planners partner with us on confidential net rates or a 12% commission. May I send our 1-page partner rate card for your files?',
+    'We offer both confidential net rates and a 12% referral commission. May I send over our 1-page partner rate card and a quick look at the guest portal?',
+  ];
+
+  return {
+    subject_line_a: plannerSubjectsA[idx],
+    subject_line_b: plannerSubjectsB[idx],
+    service_pitch: plannerPitches[idx],
+    cta_line: plannerCtas[idx],
+  };
+}
+
 export function buildVars(prospect, extra = {}) {
   const lang = prospect.language === 'it' ? 'it' : 'en';
+  const agency_short = shortAgencyName(prospect.agency_name, lang);
+  const venue_or_location = resolveVenueOrLocation(prospect, agency_short, lang);
+  const tailored = buildTailoredCopy(prospect, agency_short, venue_or_location, lang);
   return {
     greeting: greeting(prospect),
     first_name: firstName(prospect.contact_name),
-    agency: prospect.agency_name || '',
+    agency: prospect.agency_name || agency_short,
+    agency_short,
+    venue_or_location,
+    subject_line_a: tailored.subject_line_a,
+    subject_line_b: tailored.subject_line_b,
+    service_pitch: tailored.service_pitch,
+    cta_line: tailored.cta_line,
     hook: (prospect.personalization_hook || '').trim(),
-    venue: (prospect.key_venues || [])[0] || '',
-    location: prospect.location || '',
+    venue: (prospect.key_venues || [])[0] || venue_or_location,
+    location: prospect.location || venue_or_location,
     signature: lang === 'it' ? SIGNATURE_IT : SIGNATURE,
     optout: OPTOUT[lang],
     sender_name: 'Dmitri',
