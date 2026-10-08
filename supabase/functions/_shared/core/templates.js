@@ -29,7 +29,7 @@ One thing our partner planners tell us saves them the most hours before a weddin
 
 You drop a custom link onto the couple's wedding website, guests enter their own flight details, and our team groups arrivals into shared or private Mercedes-Benz V-Class and E-Class transfers, tracks every flight on radar, and bills guests directly via SumUp. Your team never has to chase flight spreadsheets or guest payments.
 
-We also run 16 to 30-seat executive minibuses alongside our Mercedes-Benz fleet for narrow lakeside roads and stone villa gates where full-size coaches cannot pass.
+We also run 16 to 50-seat minibuses and coaches alongside our Mercedes-Benz fleet, so we can match compact minibuses to narrow lakeside villa gates and 50-seaters to main hotel transfers.
 
 Would it be helpful to see our 1-page partner rate card and how the portal works?
 
@@ -78,7 +78,7 @@ Uno strumento che fa risparmiare decine di ore ai wedding planner con cui lavori
 
 Inserite un link riservato sul sito degli sposi, gli ospiti registrano i propri voli in autonomia e il nostro team organizza i transfer in Mercedes-Benz Classe V e Classe E, monitora i voli sul radar e gestisce i singoli pagamenti tramite SumUp. Il vostro studio non deve più rincorrere fogli Excel con i voli o pagamenti degli invitati.
 
-Disponiamo inoltre di minibus executive da 16 a 30 posti per i viali storici e le strade strette del lago dove i pullman da 50 posti non passano.
+Disponiamo inoltre di minibus e pullman da 16 a 50 posti, così da abbinare mezzi compatti per i viali stretti delle ville e pullman da 50 posti per gli spostamenti principali.
 
 Vi fa comodo ricevere la nostra tariffa partner di una pagina per vedere come funziona?
 
