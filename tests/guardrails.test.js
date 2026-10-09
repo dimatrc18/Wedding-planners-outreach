@@ -268,8 +268,8 @@ test('MECE overhaul: Variant A (Intro), Variant B (Late returns), Variant C (Hot
   assert.doesNotMatch(draftA.subject, /·/, 'Subject line must not contain the template · separator');
   assert.match(draftA.body, /How does your team currently manage guest transfers and late-night villa returns/);
   assert.match(draftA.body, /would it be useful if I sent our 1-page overview and confidential rates\?/);
-  assert.doesNotMatch(draftA.body, /5% commission|net rates/i, 'Email 1 must not push commercial commission/net rates');
-  assert.match(draftA.body, /\+32 456 141 497/);
+  assert.match(draftA.body, /wa\.me\/32456141497/);
+  assert.doesNotMatch(draftA.body, /\+32 456 141 497/, 'Must not contain raw phone digits');
   assert.match(draftA.body, /If transport isn't something you handle, no problem at all, just let me know\./);
   assert.deepEqual(draftA.lint.errors, []);
   assert.deepEqual(draftA.lint.warnings, []);

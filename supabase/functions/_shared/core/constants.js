@@ -44,10 +44,10 @@ export const DEFAULT_STEPS = [
 ];
 
 export const SIGNATURE = `Dmitri
-DOROGO | dmitri@dorogo.eu | WhatsApp +32 456 141 497`;
+DOROGO | dmitri@dorogo.eu | WhatsApp: wa.me/32456141497`;
 
 export const SIGNATURE_IT = `Dmitri
-DOROGO | dmitri@dorogo.eu | WhatsApp +32 456 141 497`;
+DOROGO | dmitri@dorogo.eu | WhatsApp: wa.me/32456141497`;
 
 export const OPTOUT = {
   en: "If transport isn't something you handle, no problem at all, just let me know.",

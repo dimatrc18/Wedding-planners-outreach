@@ -39,7 +39,7 @@ If transport ever gets tight on an upcoming date, feel free to message me on Wha
     subject_b: 'Guest transport on Lake Como',
     body: `{{greeting}}
 
-Last note from me so I do not crowd your inbox. Whenever you need guest transport for a Lake Como or Milan date, feel free to message me on WhatsApp (+32 456 141 497) or reply here.
+Last note from me so I do not crowd your inbox. Whenever you need guest transport for a Lake Como or Milan date, feel free to message me on WhatsApp or reply here.
 
 Wishing you a calm, successful season.
 
@@ -82,7 +82,7 @@ Se dovesse servirvi supporto su una data intensa, scrivetemi pure su WhatsApp o 
     subject_b: 'Transfer ospiti Lago di Como',
     body: `{{greeting}}
 
-Chiudo qui per non affollare la vostra casella. Quando vi servirà supporto per i trasferimenti ospiti sul Lago di Como o a Milano, scrivetemi pure su WhatsApp (+32 456 141 497) o rispondete qui.
+Chiudo qui per non affollare la vostra casella. Quando vi servirà supporto per i trasferimenti ospiti sul Lago di Como o a Milano, scrivetemi pure su WhatsApp o rispondete qui.
 
 Buona stagione.
 
@@ -125,7 +125,7 @@ Share your date, venue and guest count whenever you want a fixed quote.
     key: 'reply_meeting_request', language: 'en', kind: 'reply', name: 'Reply: wants a call', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
-Happy to speak. I am free {{slot_1}} or {{slot_2}}, or send a time that suits you on WhatsApp (+32 456 141 497).
+Happy to speak. I am free {{slot_1}} or {{slot_2}}, or send a time that suits you on WhatsApp.
 
 {{signature}}`,
   },

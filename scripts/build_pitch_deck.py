@@ -19,6 +19,7 @@ html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DOROGO - Lake Como Wedding Partner Pitch Deck 2026/2027</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap');
@@ -264,47 +265,65 @@ html_content = f"""<!DOCTYPE html>
     line-height: 1.25;
   }}
 
-  /* Core Net Rates Table */
-  table.rates-table {{
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 7.5px;
+  /* Core Service Pillars (Replaces Fixed Price Table) */
+  .services-grid {{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5px;
     margin-bottom: 5px;
   }}
-  table.rates-table th {{
-    background: #f4f4f5;
-    color: #18181b;
-    font-weight: 700;
-    text-align: left;
-    padding: 3px 5px;
-    border-top: 1px solid #d4d4d8;
-    border-bottom: 1px solid #d4d4d8;
-    text-transform: uppercase;
-    font-size: 6.8px;
+  .service-card {{
+    border: 1px solid #e4e4e7;
+    border-radius: 3px;
+    padding: 5px 6px;
+    background: #fafafa;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }}
+  .service-card.highlight {{
+    background: #fffcf8;
+    border-color: #9B7D50;
+  }}
+  .service-header {{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2px;
+  }}
+  .service-tag {{
+    font-size: 6.2px;
+    font-weight: 800;
     letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9B7D50;
   }}
-  table.rates-table th.num, table.rates-table td.num {{
-    text-align: right;
+  .service-badge {{
+    font-size: 6px;
+    font-weight: 700;
+    padding: 1px 3px;
+    border-radius: 2px;
+    background: #18181b;
+    color: #ffffff;
+    text-transform: uppercase;
   }}
-  table.rates-table td {{
-    padding: 3px 5px;
-    border-bottom: 1px solid #f4f4f5;
-    color: #27272a;
+  .service-title {{
+    font-size: 8px;
+    font-weight: 800;
+    color: #09090b;
+    margin-bottom: 2px;
     line-height: 1.2;
   }}
-  table.rates-table tr:last-child td {{
-    border-bottom: 1px solid #e4e4e7;
+  .service-desc {{
+    font-size: 6.8px;
+    color: #3f3f46;
+    line-height: 1.35;
   }}
-  .zone-strong {{
-    font-weight: 700;
+  .service-desc strong {{
     color: #09090b;
   }}
-  .price-gold {{
-    color: #7A5C29;
-    font-weight: 800;
-  }}
 
-  /* Standby & Commercial Models (2 Columns) */
+  /* Operational Features & Partner Commercial Models */
   .grid-2col {{
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -423,32 +442,40 @@ html_content = f"""<!DOCTYPE html>
     </div>
     <div class="header-meta">
       <span class="badge-confidential">Partner Deck 2026 / 2027</span><br>
-      Confidential Net Trade Rates &bull; Wedding Concierge Desk
+      Confidential Partner Trade Overview &bull; Dedicated Wedding Concierge Desk
     </div>
   </div>
 
   <!-- Hero Section -->
   <div class="hero">
     <div class="hero-visual">
-      <img src="{img_hero}" alt="Mercedes-Benz V-Class by Lake Como">
-      <div class="hero-caption">Mercedes-Benz V-Class Chauffeur Service on Lake Como</div>
+      <img src="{img_hero}" alt="Mercedes-Benz V-Class on Lake Como">
+      <div class="hero-caption">Mercedes-Benz V-Class Fleet &bull; Grand Hotel Tremezzo Waterfront</div>
     </div>
     <div class="hero-text">
       <div>
-        <div class="hero-eyebrow">Zero Transport Stress For Your Studio</div>
-        <div class="hero-heading">Discreet Luxury Mobility for Lake Como Weddings</div>
+        <div class="hero-eyebrow">Lake Como Wedding Transport Logistics</div>
+        <div class="hero-heading">One Dedicated Fleet for Multi-Day Celebrations</div>
         <div class="hero-desc">
-          We handle airport transfers, guest waves, boat-pier connections, and late-night villa returns. One direct WhatsApp coordinator for your team; zero guest calls to your phone.
+          High-end guest logistics connecting Milan Malpensa, Linate, and Lugano to private villas across Bellagio, Tremezzina, and Varenna. We eliminate lost guests and midnight dispatch stress for luxury wedding planners.
         </div>
       </div>
       <div class="pillar-pills">
         <div class="pillar-pill">
-          <strong>Self-Service Guest Portal</strong>
-          Guests enter flight details directly
+          <strong>Airport Arrival Waves</strong>
+          Real-time flight radar tracking &amp; staged terminal pickups
         </div>
         <div class="pillar-pill">
-          <strong>Late-Night Villa Returns</strong>
-          Continuous night loops when taxis stop
+          <strong>Narrow Villa Access</strong>
+          Custom V-Class &amp; Sprinter routing for historic lakeside gates
+        </div>
+        <div class="pillar-pill">
+          <strong>Continuous Night Loops</strong>
+          Dedicated late-night return shuttles until the final guest is home
+        </div>
+        <div class="pillar-pill">
+          <strong>Self-Service Guest Portal</strong>
+          Live flight collection so no guest ever calls your phone
         </div>
       </div>
     </div>
@@ -456,110 +483,112 @@ html_content = f"""<!DOCTYPE html>
 
   <!-- Fleet Showcase -->
   <div class="section-head">
-    <span class="section-title">1. Dedicated Executive Fleet</span>
-    <span class="section-subtitle">Chauffeured Mercedes-Benz Fleet with Lake Como ZTL Permits</span>
+    <span class="section-title">1. Coordinated Wedding Fleet</span>
+    <span class="section-subtitle">Staged Black-Car Fleet &bull; Professional English &amp; Italian Speaking Chauffeurs</span>
   </div>
   <div class="fleet-row">
     <div class="fleet-card">
-      <img src="{img_boat}" class="fleet-thumb" alt="Mercedes V-Class">
+      <img class="fleet-thumb" src="{img_boat}" alt="Mercedes-Benz V-Class &amp; Riva Boat Sync">
       <div class="fleet-info">
         <div class="fleet-title-row">
-          <span class="fleet-name">Mercedes-Benz V-Class</span>
-          <span class="fleet-badge gold">Primary</span>
+          <span class="fleet-name">Mercedes-Benz V-Class Extra-Long</span>
+          <span class="fleet-badge gold">Primary Fleet</span>
         </div>
-        <div class="fleet-detail">Up to 7 guests &bull; Privacy glass &bull; Extra luggage space &bull; Lake Como pier access</div>
+        <div class="fleet-detail">7 passengers &bull; Luggage capacity for long-haul gowns &bull; Synced with boat piers</div>
       </div>
     </div>
     <div class="fleet-card">
-      <img src="{img_sprinter}" class="fleet-thumb" alt="Mercedes Sprinter 22 Seater">
+      <img class="fleet-thumb" src="{img_sprinter}" alt="Mercedes-Benz Sprinter">
       <div class="fleet-info">
         <div class="fleet-title-row">
-          <span class="fleet-name">Mercedes Sprinter (22 Seats)</span>
-          <span class="fleet-badge">Groups</span>
+          <span class="fleet-name">Executive Minibus (16-22 Seats)</span>
+          <span class="fleet-badge">Villa Gates</span>
         </div>
-        <div class="fleet-detail">22 passengers &bull; Executive leather seats &bull; Receptions &amp; hotel wave shuttles</div>
+        <div class="fleet-detail">Optimized for tight hairpin turns (Balbiano, Pizzo, Balbianello access roads)</div>
       </div>
     </div>
     <div class="fleet-card">
-      <img src="{img_coach}" class="fleet-thumb" alt="50 Seater Executive Coach">
+      <img class="fleet-thumb" src="{img_coach}" alt="Luxury Coach">
       <div class="fleet-info">
         <div class="fleet-title-row">
           <span class="fleet-name">Executive Coach (50 Seats)</span>
-          <span class="fleet-badge">Large Fleets</span>
+          <span class="fleet-badge">Large Groups</span>
         </div>
         <div class="fleet-detail">50 passengers &bull; Coordinated multi-vehicle convoys for 200+ guests</div>
       </div>
     </div>
   </div>
 
-  <!-- Rates Table -->
+  <!-- Core Service Capabilities Pillars (Replacing Fixed Price Table) -->
   <div class="section-head">
-    <span class="section-title">2. Confidential Partner Net Rates (EUR)</span>
-    <span class="section-subtitle">60 Min Complimentary Flight Wait &bull; Tolls, VAT &amp; Fuel Included</span>
+    <span class="section-title">2. Core Wedding Transport Capabilities</span>
+    <span class="section-subtitle">Tailored Turnkey Execution &bull; Confidential Net Rates or 5% Partner Commission Upon Itinerary</span>
   </div>
-  <table class="rates-table">
-    <thead>
-      <tr>
-        <th>Route / Destination Zone</th>
-        <th>Travel Time</th>
-        <th class="num">Mercedes E-Class</th>
-        <th class="num">Mercedes V-Class</th>
-        <th class="num">Minibuses (16-50 Seats)</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="zone-strong">Milan Malpensa (MXP)</span> &harr; Como City / Cernobbio / Moltrasio</td>
-        <td>~45 min</td>
-        <td class="num">&euro;180</td>
-        <td class="num price-gold">&euro;230</td>
-        <td class="num">On request</td>
-      </tr>
-      <tr>
-        <td><span class="zone-strong">Milan Malpensa (MXP)</span> &harr; Tremezzo / Menaggio / Bellagio</td>
-        <td>~75 min</td>
-        <td class="num">&euro;240</td>
-        <td class="num price-gold">&euro;320</td>
-        <td class="num">On request</td>
-      </tr>
-      <tr>
-        <td><span class="zone-strong">Milan Linate (LIN) / Milan Center</span> &harr; Lake Como (South)</td>
-        <td>~55 min</td>
-        <td class="num">&euro;190</td>
-        <td class="num price-gold">&euro;240</td>
-        <td class="num">On request</td>
-      </tr>
-      <tr>
-        <td><span class="zone-strong">Milan Linate (LIN) / Milan Center</span> &harr; Central Lake (Tremezzo / Bellagio)</td>
-        <td>~85 min</td>
-        <td class="num">&euro;220</td>
-        <td class="num price-gold">&euro;290</td>
-        <td class="num">On request</td>
-      </tr>
-      <tr>
-        <td><span class="zone-strong">Lugano Airport (LUG) / City</span> &harr; Lake Como</td>
-        <td>~40 min</td>
-        <td class="num">&euro;170</td>
-        <td class="num price-gold">&euro;210</td>
-        <td class="num">On request</td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="services-grid">
+    <div class="service-card highlight">
+      <div>
+        <div class="service-header">
+          <span class="service-tag">Airport &amp; Inter-City Waves</span>
+          <span class="service-badge">Flight Radar</span>
+        </div>
+        <div class="service-title">Coordinated Airport Transfers (MXP &bull; LIN &bull; BGY &bull; LUG)</div>
+        <div class="service-desc">
+          Automated live radar flight tracking with <strong>60 minutes complimentary wait time</strong>. Seamless greeting at arrival gates, luggage assistance for bridal apparel, and direct express routing to Lake Como hotels and private estates.
+        </div>
+      </div>
+    </div>
+    <div class="service-card">
+      <div>
+        <div class="service-header">
+          <span class="service-tag">Lakeside Precision</span>
+          <span class="service-badge">Pier Sync</span>
+        </div>
+        <div class="service-title">Narrow Villa Gate &amp; Boat Pier Synchronization</div>
+        <div class="service-desc">
+          Direct navigation through restricted ZTL zones, narrow lakeside lanes, and private villa alleys (Balbiano, Balbianello, Cassinella, Erba, Pizzo). Timed handoffs between vehicles and Venetian water taxis or private lake steamers.
+        </div>
+      </div>
+    </div>
+    <div class="service-card">
+      <div>
+        <div class="service-header">
+          <span class="service-tag">Evening Security</span>
+          <span class="service-badge">Continuous Standby</span>
+        </div>
+        <div class="service-title">Late-Night Villa Return Loops (Post-Reception)</div>
+        <div class="service-desc">
+          Guaranteed dedicated vehicles on standby from midnight to 5:00 AM. Solves Lake Como's acute night taxi shortage with scheduled or on-demand return loops shuttling guests safely back to their distributed hotels and Airbnbs.
+        </div>
+      </div>
+    </div>
+    <div class="service-card highlight">
+      <div>
+        <div class="service-header">
+          <span class="service-tag">Zero Planner Stress</span>
+          <span class="service-badge">Live Technology</span>
+        </div>
+        <div class="service-title">Guest Transfer Portal &amp; Dedicated WhatsApp Desk</div>
+        <div class="service-desc">
+          White-label guest booking portal where attendees submit their flights and hotel locations. One dedicated <strong>WhatsApp dispatcher desk</strong> monitors the entire weekend, ensuring zero lost guest calls to the planner.
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <!-- Standby & Partner Model -->
+  <!-- Operational Guarantees & Commercial Partnership Models -->
   <div class="grid-2col">
     <div class="panel-box">
-      <div class="panel-title">Standby &amp; Late-Night Villa Returns</div>
+      <div class="panel-title">Turnkey Itinerary Quoting &amp; Fleet Standby</div>
       <div class="panel-text">
-        &bull; <strong>Hourly at Disposal:</strong> V-Class <strong>&euro;90/h net</strong> &bull; S-Class <strong>&euro;110/h net</strong> (Min. 3h)<br>
-        &bull; <strong>Late-Night Return Package:</strong> <strong>&euro;450 net</strong> per V-Class dedicated night block. Solves the absence of night taxis on Lake Como with continuous hotel return loops.
+        &bull; <strong>Custom Event Quotes:</strong> Tailored package proposals calculated per guest count, venue itinerary, and vehicle rotation.<br>
+        &bull; <strong>Chauffeur at Disposal:</strong> Hourly standby for bridal party rehearsals, photo sessions, and lake excursions with premium Mercedes S-Class &amp; V-Class.
       </div>
     </div>
     <div class="panel-box featured">
-      <div class="panel-title gold">Partner Commercial Terms (Choose Per Event)</div>
+      <div class="panel-title gold">Partner Commercial Models (Choose Per Wedding)</div>
       <div class="panel-text">
-        &bull; <strong>Model A (Net Trade Rates):</strong> Bundle confidential net rates directly into your client proposals with your agency markup. DOROGO acts as your white-label fleet.<br>
-        &bull; <strong>Model B (5% Commission):</strong> DOROGO invoices couple/guests directly via portal &amp; remits <strong>5% commission</strong>.
+        &bull; <strong>Model A (Net Trade Rates):</strong> Confidential wholesale net rates provided for your client proposals with your agency markup. DOROGO operates as your white-label fleet.<br>
+        &bull; <strong>Model B (5% Commission):</strong> DOROGO handles guest bookings &amp; billing directly via portal and remits <strong>5% partner commission</strong> to your agency.
       </div>
     </div>
   </div>
@@ -597,8 +626,8 @@ html_content = f"""<!DOCTYPE html>
     </div>
     <div class="footer-contacts">
       <div class="footer-lead">Dmitri &bull; DOROGO Private Transportation</div>
-      Direct / WhatsApp: <strong>+32 456 14 14 97</strong><br>
-      Desk: <strong>dmitri@dorogo.eu</strong> &bull; <strong>dorogo.eu/weddings</strong>
+      Direct / WhatsApp Desk &bull; <strong>dmitri@dorogo.eu</strong><br>
+      Desk: <strong>dorogo.eu/weddings</strong> &bull; Milan &bull; Lake Como
     </div>
   </div>
 </div>
