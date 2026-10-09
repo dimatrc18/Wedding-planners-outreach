@@ -340,7 +340,7 @@ export function renderDorogoLuxuryHtmlEmail(
   <style>
     :root { color-scheme: light dark; supported-color-schemes: light dark; }
     @media (prefers-color-scheme: dark) {
-      body, .dm-bg { background-color: #18181b !important; color: #f4f4f5 !important; }
+      .email-body, .dm-bg { background-color: #18181b !important; color: #f4f4f5 !important; }
       .dm-text, .dm-brand, .dm-link { color: #f4f4f5 !important; }
       .dm-sub { color: #d4d4d8 !important; }
       .dm-muted { color: #a1a1aa !important; }
@@ -351,7 +351,7 @@ export function renderDorogoLuxuryHtmlEmail(
     }
   </style>
 </head>
-<body class="dm-bg" style="margin: 0; padding: 0; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #18181b;">
+<body class="email-body dm-bg" style="margin: 0; padding: 0; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #18181b;">
   <table class="dm-bg" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; margin: 0; padding: 24px 16px;">
     <tr>
       <td align="left" style="padding: 0;">
