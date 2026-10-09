@@ -38,9 +38,9 @@ export const STEP_STATUS = {
 };
 
 export const DEFAULT_STEPS = [
-  { key: 'T1_intro', label: 'Intro email', day: 0, channel: 'email', thread: false, require_approval: true, enabled: true },
-  { key: 'T3_followup', label: 'Follow-up email', day: 4, channel: 'email', thread: true, require_approval: true, enabled: true },
-  { key: 'T4_breakup', label: 'Final note (disabled)', day: 9, channel: 'email', thread: false, require_approval: true, enabled: false },
+  { key: 'T1_intro', label: 'Step 1 (Intro email)', day: 0, channel: 'email', thread: false, require_approval: true, enabled: true },
+  { key: 'T3_followup', label: 'Step 2 (Follow-up 1)', day: 4, channel: 'email', thread: true, require_approval: true, enabled: true },
+  { key: 'T4_breakup', label: 'Step 3 (Follow-up 2 · disabled)', day: 9, channel: 'email', thread: false, require_approval: true, enabled: false },
 ];
 
 export const SIGNATURE = `Dmitri

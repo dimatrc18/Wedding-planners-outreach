@@ -5,7 +5,7 @@ import { esc, attr, icon, ago, fmtDateTime, pct, plural, toast, copyText, confir
 import * as A from '../actions.js';
 
 const STEP_LABEL = {
-  T1_intro: 'T1 intro', T3_followup: 'T3 follow-up', T4_breakup: 'T4 breakup',
+  T1_intro: 'Step 1 (Intro)', T3_followup: 'Step 2 (Follow-up 1)', T4_breakup: 'Step 3 (Follow-up 2)',
   rate_card_delivery: 'Rate card', reply: 'Reply', ratecard_nudge: 'Rate card nudge', fam_followup: 'FAM follow-up', custom: 'Custom',
 };
 export const stepLabel = (k) => STEP_LABEL[k] || k;

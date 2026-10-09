@@ -21,8 +21,16 @@ export function render(el) {
     <div class="stack lg">
       <section class="card stack">
         <div class="section-head"><h2>Cadence</h2><span class="hint">Day = days after the intro email. A reply at any point stops the cadence.</span></div>
-        <div class="table-wrap"><table><thead><tr><th>Step</th><th>Channel</th><th class="num">Day</th><th>On</th><th>Needs approval</th></tr></thead><tbody>
-          ${s.steps.map((st, i) => `<tr><td><b>${esc(st.label)}</b> <span class="faint small">${esc(st.key)}</span></td><td>${esc(st.channel.replace('_', ' '))}${st.thread ? ' <span class="chip">same thread</span>' : ''}</td>
+        <div class="table-wrap"><table><thead><tr><th>Step</th><th>Channel</th><th>Thread</th><th class="num">Day</th><th>On</th><th>Needs approval</th></tr></thead><tbody>
+          ${s.steps.map((st, i) => `<tr><td><b>${esc(st.label)}</b> <span class="faint small">${esc(st.key)}</span></td><td>${esc(st.channel.replace('_', ' '))}</td>
+            <td>
+              ${i === 0
+                ? '<span class="chip outline">Initial thread</span>'
+                : `<select class="sm" data-step="${i}" data-k="thread" style="width:130px;padding:3px 8px;font-size:.82rem">
+                    <option value="true" ${st.thread !== false ? 'selected' : ''}>Same thread</option>
+                    <option value="false" ${st.thread === false ? 'selected' : ''}>New thread</option>
+                  </select>`}
+            </td>
             <td class="num"><input type="number" min="0" max="60" data-step="${i}" data-k="day" value="${st.day}" style="width:70px" ${i === 0 ? 'disabled' : ''} aria-label="Day"></td>
             <td><label class="switch"><input type="checkbox" data-step="${i}" data-k="enabled" ${st.enabled !== false ? 'checked' : ''}><span></span></label></td>
             <td><label class="switch" title="Off = drafts that pass the linter are approved and scheduled automatically"><input type="checkbox" data-step="${i}" data-k="require_approval" ${st.require_approval !== false ? 'checked' : ''} ${st.channel !== 'email' ? 'disabled' : ''}><span></span></label></td></tr>`).join('')}
@@ -103,7 +111,13 @@ export function render(el) {
     if (e.target.dataset.step !== undefined) {
       const i = +e.target.dataset.step; const k = e.target.dataset.k;
       const steps = S.settings.steps.map((x) => ({ ...x }));
-      steps[i][k] = e.target.type === 'checkbox' ? e.target.checked : +e.target.value;
+      if (e.target.type === 'checkbox') {
+        steps[i][k] = e.target.checked;
+      } else if (k === 'thread') {
+        steps[i][k] = e.target.value === 'true';
+      } else {
+        steps[i][k] = +e.target.value;
+      }
       await saveSettings({ steps }); toast('Cadence saved');
     }
   });

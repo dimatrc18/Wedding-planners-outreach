@@ -43,8 +43,8 @@ test('vehicle terms and length limits', () => {
   assert.ok(lintMessage({ subject: 's', body: longT1, channel: 'email', step: 'T1_intro' }).warnings.some((w) => w.includes('words')));
 });
 
-test('T1 must ask one question and not push for a call', () => {
-  const r = lintMessage({ subject: 's', body: 'Shall we book a call? Can I send the card?\nDmitri reply "no"', channel: 'email', step: 'T1_intro' });
+test('T1 must ask one or two focused questions and not push for a call', () => {
+  const r = lintMessage({ subject: 's', body: 'How do you do transport? Shall we book a call? Can I send the card?\nDmitri reply "no"', channel: 'email', step: 'T1_intro' });
   assert.ok(r.warnings.some((w) => w.includes('questions')));
   assert.ok(r.warnings.some((w) => w.includes('not a call')));
 });

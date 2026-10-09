@@ -36,7 +36,7 @@ test('2+1 thread split: T1 and T3 are in the same thread, T4 breakup starts a se
 
   assert.equal(d3.subject, `Re: ${d1.subject}`, 'T3 keeps Re: subject from T1');
   assert.ok(!d4.subject.startsWith('Re:'), 'T4 uses its own fresh subject line, not Re:');
-  assert.ok(d4.subject.includes('Villa Lario Events'), 'T4 merges {{agency}} into its fresh subject');
+  assert.match(d4.subject, /Lake Como & Milan private guest transport|Guest transport on Lake Como/, 'T4 uses clean unbranded subject');
   assert.deepEqual(d4.lint.errors, []);
 
   // Verify DOROGO Executive Email HTML signature (Version 1: Adaptive Wordmark & Version 2: Drawn Logo Badge)
@@ -266,7 +266,8 @@ test('MECE overhaul: Variant A (Intro), Variant B (Late returns), Variant C (Hot
   });
   assert.equal(draftA.variant, 'A');
   assert.doesNotMatch(draftA.subject, /·/, 'Subject line must not contain the template · separator');
-  assert.match(draftA.body, /Would it be useful if I sent our rates\?/);
+  assert.match(draftA.body, /How does your team currently manage guest transfers and late-night villa returns/);
+  assert.match(draftA.body, /would it be useful if I sent our 1-page overview and confidential rates\?/);
   assert.doesNotMatch(draftA.body, /5% commission|net rates/i, 'Email 1 must not push commercial commission/net rates');
   assert.match(draftA.body, /\+32 456 141 497/);
   assert.match(draftA.body, /If transport isn't something you handle, no problem at all, just let me know\./);
@@ -283,8 +284,8 @@ test('MECE overhaul: Variant A (Intro), Variant B (Late returns), Variant C (Hot
   });
   assert.equal(draftB.variant, 'B');
   assert.equal(draftB.subject, 'Late returns after the reception');
-  assert.match(draftB.body, /I'm Dmitri from DOROGO, and that's the part we cover across Lake Como and Milan/);
-  assert.match(draftB.body, /If you ever need an extra hand on a busy date, would it be useful if I sent our rates\?/);
+  assert.match(draftB.body, /How does your team currently manage late-night villa returns and guest shuttles/);
+  assert.match(draftB.body, /would it be useful if I sent our 1-page overview and confidential rates\?/);
   assert.deepEqual(draftB.lint.errors, []);
   assert.deepEqual(draftB.lint.warnings, []);
 
@@ -306,7 +307,8 @@ test('MECE overhaul: Variant A (Intro), Variant B (Late returns), Variant C (Hot
   });
   assert.equal(draftC.subject, 'Guest transfers for your events team');
   assert.match(draftC.body, /^Hello,/);
-  assert.match(draftC.body, /Would it be useful if I sent our vehicle list and partner rates for your team to keep on file\?/);
+  assert.match(draftC.body, /How does your concierge and events team currently handle guest airport transfers/);
+  assert.match(draftC.body, /would it be useful if I sent our 1-page overview and confidential partner rates\?/);
   assert.deepEqual(draftC.lint.errors, []);
   assert.deepEqual(draftC.lint.warnings, []);
 });

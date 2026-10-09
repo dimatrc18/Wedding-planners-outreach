@@ -87,9 +87,9 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
         subject_line_a: itSubjectsA[idx],
         subject_line_b: 'Rientri notturni dopo il ricevimento',
         service_pitch:
-          'Sono Dmitri di DOROGO e ci occupiamo proprio di questa parte tra il Lago di Como e Milano, con Mercedes-Benz Classe V, Classe S e minibus.',
+          'Come gestite attualmente i rientri notturni e le navette ospiti sul Lago di Como? Operiamo con una flotta executive Mercedes-Benz (Classe V, Classe S e minibus da 16 a 50 posti) con base tra il lago e Milano, e stiamo selezionando 2 o 3 agenzie con cui collaborare per questa stagione.',
         cta_line:
-          'Se mai aveste bisogno di un supporto extra in una data intensa, vi sarebbe utile ricevere le nostre tariffe?',
+          'Se siete aperti a valutare un partner di trasporto dedicato da tenere a disposizione per le date più intense, vi farebbe comodo dare un\'occhiata alla nostra presentazione e alle tariffe riservate?',
       };
     }
 
@@ -97,8 +97,9 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       subject_line_a: itSubjectsA[idx],
       subject_line_b: 'Rientri notturni dopo il ricevimento',
       service_pitch:
-        'Gestiamo navette ospiti, transfer aeroportuali e rientri notturni con Mercedes-Benz Classe V, Classe S e minibus per i gruppi più numerosi. Non cerchiamo di sostituire i vostri fornitori attuali, ma solo di essere un\'opzione in più quando una data si fa intensa.',
-      cta_line: 'Vi sarebbe utile se vi inviassi le nostre tariffe?',
+        'Come gestite attualmente i trasferimenti degli ospiti e i rientri notturni dalle ville sul Lago di Como? Operiamo con una flotta executive Mercedes-Benz (Classe V, Classe S e minibus da 16 a 50 posti) con base sul lago, e stiamo selezionando 2 o 3 agenzie con cui collaborare per questa stagione.',
+      cta_line:
+        'Se siete aperti a valutare un partner di trasporto dedicato per il vostro team, vi farebbe comodo dare un\'occhiata alla nostra presentazione e alle tariffe riservate?',
     };
   }
 
@@ -109,9 +110,9 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       subject_line_a: 'Guest transfers for your events team',
       subject_line_b: 'Airport transfers and group shuttles',
       service_pitch:
-        `We provide airport transfers and group transport for hotel guests and wedding parties at ${targetVenue}, with V-Classes, S-Classes and minibuses. We can coordinate bookings quickly by WhatsApp or email.`,
+        `How does your concierge and events team currently handle guest airport transfers and group shuttles around ${targetVenue}? We operate an executive Mercedes-Benz fleet (V-Class, S-Class and 16 to 50-seat minibuses) and partner directly with local venues to support their guest transport.`,
       cta_line:
-        'Would it be useful if I sent our vehicle list and partner rates for your team to keep on file?',
+        'If you are open to having an additional executive fleet partner on file, would it be useful if I sent our 1-page overview and confidential partner rates?',
     };
   }
 
@@ -126,9 +127,9 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       subject_line_a: plannerSubjectsA[idx],
       subject_line_b: 'Late returns after the reception',
       service_pitch:
-        'I\'m Dmitri from DOROGO, and that\'s the part we cover across Lake Como and Milan, with V-Classes, S-Classes and minibuses.',
+        'How does your team currently manage late-night villa returns and guest shuttles across Lake Como? We operate an executive Mercedes-Benz fleet (V-Class, S-Class, and 16 to 50-seat minibuses) based on the lake, and we are looking to partner with 2 or 3 additional studios for this season.',
       cta_line:
-        'If you ever need an extra hand on a busy date, would it be useful if I sent our rates?',
+        'If you are open to having an additional partner fleet on call for busy dates, would it be useful if I sent our 1-page overview and confidential rates?',
     };
   }
 
@@ -136,8 +137,9 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
     subject_line_a: plannerSubjectsA[idx],
     subject_line_b: 'Late returns after the reception',
     service_pitch:
-      'We do guest shuttles, airport pickups and late-night returns, with V-Classes, S-Classes and minibuses for larger groups. I\'m not looking to replace anyone you work with, just to be an extra option when a date gets busy.',
-    cta_line: 'Would it be useful if I sent our rates?',
+      'How does your team currently manage guest transfers and late-night villa returns across Lake Como? We operate an executive Mercedes-Benz fleet (V-Class, S-Class, and 16 to 50-seat minibuses) based on the lake, and we are looking to partner with 2 or 3 additional studios for this season.',
+    cta_line:
+      'If you are open to having an additional partner fleet on call, would it be useful if I sent our 1-page overview and confidential rates?',
   };
 }
 

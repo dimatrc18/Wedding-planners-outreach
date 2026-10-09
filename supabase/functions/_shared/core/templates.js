@@ -6,7 +6,7 @@
 export const DEFAULT_TEMPLATES = [
   // ---------------- English sequence ----------------
   {
-    key: 'T1_intro', language: 'en', kind: 'sequence', name: 'T1 Intro email',
+    key: 'T1_intro', language: 'en', kind: 'sequence', name: 'Step 1 (Intro email)',
     subject_a: '{{subject_line_a}}',
     subject_b: '{{subject_line_b}}',
     body: `{{greeting}}
@@ -22,7 +22,7 @@ export const DEFAULT_TEMPLATES = [
 {{optout}}`,
   },
   {
-    key: 'T3_followup', language: 'en', kind: 'sequence', name: 'T3 Follow-up (Day 4: Route & Vehicle Fit)', subject_a: '', subject_b: '',
+    key: 'T3_followup', language: 'en', kind: 'sequence', name: 'Step 2 (Follow-up 1: Route & Vehicle Fit)', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
 One detail worth adding for your {{venue}} weddings: alongside our V-Classes and S-Classes from Malpensa, we also run 16 to 50-seat minibuses for larger groups and a Guest Transfer Portal where guests enter their own flight times.
@@ -34,9 +34,9 @@ If transport ever gets tight on an upcoming date, feel free to message me on Wha
 {{optout}}`,
   },
   {
-    key: 'T4_breakup', language: 'en', kind: 'sequence', name: 'T4 Final note (disabled)',
-    subject_a: '{{agency}} · private transport on Lake Como & Milan',
-    subject_b: 'Guest transfers for {{agency}}',
+    key: 'T4_breakup', language: 'en', kind: 'sequence', name: 'Step 3 (Follow-up 2 · Final note)',
+    subject_a: 'Lake Como & Milan private guest transport',
+    subject_b: 'Guest transport on Lake Como',
     body: `{{greeting}}
 
 Last note from me so I do not crowd your inbox. Whenever you need guest transport for a Lake Como or Milan date, feel free to message me on WhatsApp (+32 456 141 497) or reply here.
@@ -49,7 +49,7 @@ Wishing you a calm, successful season.
   },
   // ---------------- Italian sequence ----------------
   {
-    key: 'T1_intro', language: 'it', kind: 'sequence', name: 'T1 Email di presentazione',
+    key: 'T1_intro', language: 'it', kind: 'sequence', name: 'Step 1 (Email di presentazione)',
     subject_a: '{{subject_line_a}}',
     subject_b: '{{subject_line_b}}',
     body: `{{greeting}}
@@ -65,7 +65,7 @@ Wishing you a calm, successful season.
 {{optout}}`,
   },
   {
-    key: 'T3_followup', language: 'it', kind: 'sequence', name: 'T3 Follow-up (Giorno 4: Flotta e Portale)', subject_a: '', subject_b: '',
+    key: 'T3_followup', language: 'it', kind: 'sequence', name: 'Step 2 (Follow-up 1: Flotta e Portale)', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
 Un dettaglio utile per i vostri matrimoni a {{venue}}: oltre a Mercedes-Benz Classe V e Classe S da Malpensa, disponiamo di minibus da 16 a 50 posti per i gruppi più numerosi e di un Portale Ospiti dove gli invitati inseriscono i propri orari di volo.
@@ -77,9 +77,9 @@ Se dovesse servirvi supporto su una data intensa, scrivetemi pure su WhatsApp o 
 {{optout}}`,
   },
   {
-    key: 'T4_breakup', language: 'it', kind: 'sequence', name: 'T4 Email di chiusura (disattivata)',
-    subject_a: '{{agency}} · trasporti privati Lago di Como e Milano',
-    subject_b: 'Transfer ospiti per {{agency}}',
+    key: 'T4_breakup', language: 'it', kind: 'sequence', name: 'Step 3 (Follow-up 2 · Chiusura)',
+    subject_a: 'Trasporti privati Lago di Como e Milano',
+    subject_b: 'Transfer ospiti Lago di Como',
     body: `{{greeting}}
 
 Chiudo qui per non affollare la vostra casella. Quando vi servirà supporto per i trasferimenti ospiti sul Lago di Como o a Milano, scrivetemi pure su WhatsApp (+32 456 141 497) o rispondete qui.
