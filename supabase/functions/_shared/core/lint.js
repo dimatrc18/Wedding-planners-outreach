@@ -1,7 +1,8 @@
 // Copy-linter for every outbound message (DOROGO brief, section 7).
 // errors block approval; warnings are shown on the card and can be overridden by a human.
 
-import { SIGNATURE, SIGNATURE_IT, OPTOUT } from './constants.js';
+import { SIGNATURE, SIGNATURE_IT, SIGNATURE_RU, OPTOUT } from './constants.js';
+
 
 export const BANNED = [
   { re: /hope (this|my|the) (e-?mail|message|note) finds you( well)?/i, label: '"I hope this email finds you well"' },
@@ -29,15 +30,16 @@ const VEHICLE_BANNED = [
   { re: /\bLWB\b/, label: 'LWB' },
 ];
 
-const OPTOUT_RE = /just let me know|basta farmelo sapere|won't follow up|reply "?no"?|rispondere "?no"?|unsubscribe|won't write again|non vi scriverò più/i;
+const OPTOUT_RE = /just let me know|basta farmelo sapere|дайте знать|никаких вопросов|won't follow up|reply "?no"?|rispondere "?no"?|unsubscribe|won't write again|non vi scriverò più/i;
 
 // Body text without signature and opt-out line, for word counts and question counting.
 export function coreText(body = '') {
   let t = String(body);
-  for (const s of [SIGNATURE, SIGNATURE_IT, OPTOUT.en, OPTOUT.it]) t = t.split(s).join(' ');
-  t = t.replace(/^(warm regards|kind regards|best regards|un cordiale saluto|cordiali saluti|dmitri\s*\n\s*dorogo\b),?[\s\S]*$/im, ' ');
+  for (const s of [SIGNATURE, SIGNATURE_IT, SIGNATURE_RU, OPTOUT.en, OPTOUT.it, OPTOUT.ru]) t = t.split(s).join(' ');
+  t = t.replace(/^(warm regards|kind regards|best regards|un cordiale saluto|cordiali saluti|с уважением|дмитрий|dmitri\s*\n\s*dorogo\b),?[\s\S]*$/im, ' ');
   return t.trim();
 }
+
 
 export const wordCount = (t) => (String(t).match(/[\p{L}\p{N}€][\p{L}\p{N}'’.,€%-]*/gu) || []).length;
 

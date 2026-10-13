@@ -265,8 +265,8 @@ test('MECE overhaul: Variant A (Intro), Variant B (Late returns), Variant C (Hot
   });
   assert.equal(draftA.variant, 'A');
   assert.doesNotMatch(draftA.subject, /·/, 'Subject line must not contain the template · separator');
-  assert.match(draftA.body, /How does your team manage guest transfers and villa returns on Lake Como\?/);
-  assert.match(draftA.body, /reply with your dates or message me on WhatsApp to see our confidential rates\./);
+  assert.match(draftA.body, /How does your team manage guest transfers and villa returns on Lake Como and across Northern Italy\?/);
+  assert.match(draftA.body, /If an upcoming date has tight guest logistics or late-night returns, send over your hotel list or guest counts\. I will map the vehicle circuits and share our confidential partner rates for your file\./);
   assert.match(draftA.body, /wa\.me\/32456141497/);
   assert.doesNotMatch(draftA.body, /\+32 456 141 497/, 'Must not contain raw phone digits');
   assert.match(draftA.body, /If transport isn't something you handle, no problem at all, just let me know\./);
@@ -283,8 +283,8 @@ test('MECE overhaul: Variant A (Intro), Variant B (Late returns), Variant C (Hot
   });
   assert.equal(draftB.variant, 'B');
   assert.equal(draftB.subject, 'Late returns after the reception');
-  assert.match(draftB.body, /How does your team handle late-night villa returns and shuttles on Lake Como\?/);
-  assert.match(draftB.body, /reply with your dates or message me on WhatsApp to see our confidential rates\./);
+  assert.match(draftB.body, /How does your team handle late-night villa returns and shuttles on Lake Como and across Northern Italy\?/);
+  assert.match(draftB.body, /If an upcoming date has tight guest logistics or late-night returns, send over your hotel list or guest counts\. I will map the vehicle circuits and share our confidential partner rates for your file\./);
   assert.deepEqual(draftB.lint.errors, []);
   assert.deepEqual(draftB.lint.warnings, []);
 

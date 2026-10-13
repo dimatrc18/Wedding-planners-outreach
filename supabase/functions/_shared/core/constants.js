@@ -49,9 +49,13 @@ DOROGO | dmitri@dorogo.eu | WhatsApp: wa.me/32456141497`;
 export const SIGNATURE_IT = `Dmitri
 DOROGO | dmitri@dorogo.eu | WhatsApp: wa.me/32456141497`;
 
+export const SIGNATURE_RU = `Дмитрий
+DOROGO | dmitri@dorogo.eu | WhatsApp: wa.me/32456141497`;
+
 export const OPTOUT = {
   en: "If transport isn't something you handle, no problem at all, just let me know.",
   it: 'Se i trasporti non sono un servizio che gestite, nessun problema, basta farmelo sapere.',
+  ru: 'Если вы не занимаетесь трансферами для гостей, просто дайте знать, никаких вопросов.',
 };
 
 export const DEFAULT_SETTINGS = {
@@ -79,14 +83,18 @@ export const DEFAULT_SETTINGS = {
   commission_rate: 0.05,
 };
 
-// Lake Como towns used for coverage and for spotting place names in planner websites.
+// Lake Como and Northern Italy towns used for coverage and spotting place names in planner websites.
 export const LAKE_TOWNS = [
   'Como', 'Cernobbio', 'Moltrasio', 'Laglio', 'Torno', 'Blevio', 'Carate Urio', 'Brienno',
   'Tremezzina', 'Tremezzo', 'Lenno', 'Ossuccio', 'Mezzegra', 'Menaggio', 'Bellagio', 'Lezzeno',
   'Nesso', 'Varenna', 'Bellano', 'Lecco', 'Gravedona', 'Domaso',
+  // Northern Italy prime corridors & lakes:
+  'Milan', 'Milano', 'Monza', 'Stresa', 'Baveno', 'Verbania', 'Orta San Giulio',
+  'Sirmione', 'Desenzano', 'Gardone Riviera', 'Brescia', 'Bergamo', 'Franciacorta',
+  'Verona', 'Venice', 'Venezia', 'Portofino', 'Santa Margherita Ligure',
 ];
 
-// Well-known Lake Como wedding venues with the town they sit in.
+// Well-known Lake Como and Northern Italy luxury wedding venues.
 export const LAKE_VENUES = [
   { name: 'Villa Balbiano', town: 'Ossuccio' },
   { name: 'Villa del Balbianello', town: 'Lenno' },
@@ -107,7 +115,22 @@ export const LAKE_VENUES = [
   { name: 'Villa Regina Teodolinda', town: 'Laglio' },
   { name: 'Relais Villa Vittoria', town: 'Laglio' },
   { name: 'Filario', town: 'Lezzeno' },
+  // Expanded Northern Italy luxury venues:
+  { name: 'Villa & Palazzo Aminta', town: 'Stresa' },
+  { name: 'Grand Hotel des Iles Borromees', town: 'Stresa' },
+  { name: 'Villa Crespi', town: 'Orta San Giulio' },
+  { name: 'Villa Feltrinelli', town: 'Gardone Riviera' },
+  { name: 'Lido Palace', town: 'Riva del Garda' },
+  { name: "L'Albereta", town: 'Franciacorta' },
+  { name: 'Four Seasons Hotel Milano', town: 'Milano' },
+  { name: 'Bulgari Hotel Milano', town: 'Milano' },
+  { name: 'Mandarin Oriental Milan', town: 'Milano' },
+  { name: 'Palazzo Parigi', town: 'Milano' },
+  { name: 'Aman Venice', town: 'Venezia' },
+  { name: 'Belmond Hotel Cipriani', town: 'Venezia' },
+  { name: 'Belmond Hotel Splendido', town: 'Portofino' },
 ];
+
 
 export const CHANNELS = ['email', 'whatsapp', 'call', 'in_person', 'linkedin'];
 export const SENTIMENTS = ['positive', 'neutral', 'negative', 'ooo', 'unsubscribe'];
@@ -127,4 +150,20 @@ export const MARKET_KEYS = MARKETS.map((m) => m.key);
 export const MARKET_FLAG = Object.fromEntries(MARKETS.map((m) => [m.key, m.flag]));
 export const marketFlag = (m) => MARKET_FLAG[String(m || '').toLowerCase()] || '🌐';
 export const marketLabel = (m) => (MARKETS.find((x) => x.key === String(m || '').toLowerCase()) || { label: m || 'Other' }).label;
+
+export const MARKET_TIMEZONES = {
+  kz: 'Asia/Almaty',
+  ae: 'Asia/Dubai',
+  uk: 'Europe/London',
+  us: 'America/New_York',
+  it: 'Europe/Rome',
+  other: 'Europe/Rome',
+};
+export const prospectTimezone = (marketOrProspect, defaultTz = 'Europe/Rome') => {
+  if (!marketOrProspect) return defaultTz;
+  if (typeof marketOrProspect === 'string') return MARKET_TIMEZONES[marketOrProspect.toLowerCase()] || defaultTz;
+  if (marketOrProspect.timezone) return marketOrProspect.timezone;
+  const m = marketOrProspect.market ? String(marketOrProspect.market).toLowerCase() : null;
+  return (m && MARKET_TIMEZONES[m]) || defaultTz;
+};
 

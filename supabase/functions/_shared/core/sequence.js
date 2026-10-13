@@ -1,8 +1,9 @@
 // Sequence engine: which step is next for a prospect, when it may be sent, and whether a send is allowed.
 // Every send path (browser "Send now", the cron sender, Telegram) goes through canSend().
 
-import { DEFAULT_SETTINGS, DEFAULT_STEPS, SEQUENCE_STAGES } from './constants.js';
+import { DEFAULT_SETTINGS, DEFAULT_STEPS, SEQUENCE_STAGES, prospectTimezone } from './constants.js';
 import { localParts, zonedTimeToUtc, localDateKey, isItalianHoliday, parseHHMM, daysBetween, addDays, ymd } from './time.js';
+import { inferMarket } from './prospects.js';
 
 export const COLD_STEPS = ['T1_intro', 'T3_followup', 'T4_breakup'];
 const PENDING_STATES = ['draft', 'approved'];
@@ -151,7 +152,8 @@ export function canSend(touch, prospect, touches, settings, ctx = {}) {
   const cap = effectiveCap(s, now, ctx.firstSendAt);
   if (cap === 0) return { ok: false, reason: 'season_paused' };
   if (touch.scheduled_at && new Date(touch.scheduled_at) > now) return { ok: false, reason: 'not_due' };
-  if (!inSendWindow(now, s, prospect.timezone || s.timezone)) return { ok: false, reason: 'outside_window' };
+  const tz = prospect.timezone || prospectTimezone(prospect.market || inferMarket(prospect), s.timezone);
+  if (!inSendWindow(now, s, tz)) return { ok: false, reason: 'outside_window' };
   if ((ctx.sentToday || 0) >= cap) return { ok: false, reason: 'daily_cap' };
   return { ok: true };
 }
@@ -188,7 +190,8 @@ export function scheduleApproved(touch, prospect, settings, taken = [], { now = 
   if (touch.channel !== 'email') return null;
   if (!COLD_STEPS.includes(touch.step_name)) return now;
   const s = withDefaults(settings);
-  return nextSendSlot(now, s, taken, { tz: prospect.timezone || s.timezone, firstSendAt, rng });
+  const tz = prospect.timezone || prospectTimezone(prospect.market || inferMarket(prospect), s.timezone);
+  return nextSendSlot(now, s, taken, { tz, firstSendAt, rng });
 }
 
 // Cold email send times already used (scheduled or sent), the input nextSendSlot needs.

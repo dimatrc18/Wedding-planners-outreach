@@ -140,4 +140,18 @@ test('approval scheduling and status moves', () => {
   assert.equal(statusAfterSend('t1_sent', 'T3_followup', FUNNEL_RANK), 't3_sent');
   assert.equal(statusAfterSend('replied', 'T3_followup', FUNNEL_RANK), 'replied', 'never backwards');
   assert.equal(statusAfterSend('replied', 'rate_card_delivery', FUNNEL_RANK), 'rate_card_sent');
+
+  // Timezone-aware scheduling: KZ lands in Almaty morning, UAE in Dubai morning, US in NY morning
+  const kzProspect = P({ market: 'kz', location: 'Almaty' });
+  const kzSend = scheduleApproved({ channel: 'email', step_name: 'T1_intro' }, kzProspect, S, [], { now, rng: () => 0 });
+  const kzLocal = localParts(kzSend, 'Asia/Almaty');
+  assert.equal(kzLocal.dow, 2, 'KZ Tuesday');
+  assert.equal(kzLocal.hh, 9, 'KZ lands at 09:00 local Almaty time');
+
+  const usProspect = P({ market: 'us', location: 'New York' });
+  const usSend = scheduleApproved({ channel: 'email', step_name: 'T1_intro' }, usProspect, S, [], { now, rng: () => 0 });
+  const usLocal = localParts(usSend, 'America/New_York');
+  assert.equal(usLocal.dow, 2, 'US Tuesday');
+  assert.equal(usLocal.hh, 9, 'US lands at 09:00 local New York time');
 });
+

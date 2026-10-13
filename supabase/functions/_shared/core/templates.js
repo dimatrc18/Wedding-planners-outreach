@@ -90,7 +90,61 @@ Buona stagione.
 
 {{optout}}`,
   },
+  // ---------------- Russian sequence (Kazakhstan & CIS) ----------------
+  {
+    key: 'T1_intro', language: 'ru', kind: 'sequence', name: 'Step 1 (Email знакомства)',
+    subject_a: '{{subject_line_a}}',
+    subject_b: '{{subject_line_b}}',
+    body: `{{greeting}}
+
+{{hook}}
+
+{{service_pitch}}
+
+{{cta_line}}
+
+{{signature}}
+
+{{optout}}`,
+  },
+  {
+    key: 'T3_followup', language: 'ru', kind: 'sequence', name: 'Step 2 (Follow-up 1: Автопарк и логистика)', subject_a: '', subject_b: '',
+    body: `{{greeting}}
+
+Полезная деталь для ваших свадеб в {{venue}}: помимо Mercedes-Benz V-Class и S-Class из Мальпенсы, мы предоставляем комфортабельные минибусы от 16 до 50 мест для больших групп и Guest Transfer Portal, куда гости сами вносят данные рейсов.
+
+Если на ближайших датах потребуется поддержка с транспортом, напишите мне в WhatsApp или ответьте на это письмо.
+
+{{signature}}
+
+{{optout}}`,
+  },
+  {
+    key: 'T4_breakup', language: 'ru', kind: 'sequence', name: 'Step 3 (Follow-up 2 · Финальное письмо)',
+    subject_a: 'Трансферы гостей: озеро Комо и Северная Италия',
+    subject_b: 'Трансферы гостей в Италии',
+    body: `{{greeting}}
+
+Пишу в последний раз, чтобы не перегружать вашу почту. Если для свадеб на озере Комо, в Милане или Северной Италии понадобится надежный транспорт для гостей, напишите мне в WhatsApp или ответьте на это письмо.
+
+Успешного и спокойного сезона.
+
+{{signature}}
+
+{{optout}}`,
+  },
   // ---------------- Replies (suggested after classification) ----------------
+  {
+    key: 'rate_card_delivery', language: 'ru', kind: 'reply', name: 'Отправка тарифов (PDF)', subject_a: '', subject_b: '', attach_rate_card: true,
+    body: `{{greeting}}
+
+Во вложении направляю наш одностраничный партнерский лист тарифов и автопарк. Мы работаем как по конфиденциальным нетто-тарифам для вашей сметы, так и с 5% партнерской комиссией.
+
+Если у вас запланирована дата и локация, пришлите ориентировочное число гостей, и я рассчитаю точный бюджет.
+
+{{signature}}`,
+  },
+
   {
     key: 'rate_card_delivery', language: 'en', kind: 'reply', name: 'Rate card delivery (attach PDF)', subject_a: '', subject_b: '', attach_rate_card: true,
     body: `{{greeting}}
