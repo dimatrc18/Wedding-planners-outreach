@@ -98,7 +98,7 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       subject_line_a: ruSubjectsA[idx],
       subject_line_b: 'Ночной разъезд гостей после свадебного ужина',
       service_pitch:
-        'Как ваша команда организует трансферы гостей и поездки по виллам на озере Комо и по Северной Италии? Мы работаем на собственном парке Mercedes-Benz V-Class и S-Class, а также координируем проверенные минибусы до 50 мест с персональным ведущим в WhatsApp для каждой свадьбы.',
+        'Как ваша команда организует трансферы гостей и поездки по виллам на озере Комо и по Северной Италии? Мы работаем на собственном парке Mercedes-Benz V-Class и S-Class, а также координируем проверенные минибусы до 50 мест с персональным ведущим в WhatsApp для каждой свадьбы. По текущей загрузке автопарка у нас забронировано 2 или 3 партнерских места на сезон 2027 года.',
       cta_line:
         'Если на предстоящих датах требуется четкая логистика гостей или ночной разъезд, пришлите список отелей или количество гостей. Я составлю схему шаттлов и отправлю наши партнерские тарифы.',
     };
@@ -137,7 +137,7 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       subject_line_a: itSubjectsA[idx],
       subject_line_b: 'Rientri notturni dopo il ricevimento',
       service_pitch:
-        'Come gestite i trasferimenti degli ospiti e i rientri notturni dalle ville sul Lago di Como e nel Nord Italia? Operiamo con Mercedes-Benz Classe V e Classe S di nostra proprietà sul lago, più partner di fiducia per minibus e pullman fino a 50 posti, con un referente unico via WhatsApp.',
+        'Come gestite i trasferimenti degli ospiti e i rientri notturni dalle ville sul Lago di Como e nel Nord Italia? Operiamo con Mercedes-Benz Classe V e Classe S di nostra proprietà sul lago, più partner di fiducia per minibus e pullman fino a 50 posti, con un referente unico via WhatsApp. In base alla capienza della nostra flotta, abbiamo 2 o 3 posti partner riservati per la stagione 2027.',
       cta_line:
         'Se avete un matrimonio con transfer complessi o rientri notturni dalle ville, inviatemi l\'elenco hotel o il numero di ospiti. Vi preparo il piano navette e il nostro listino riservato.',
     };
@@ -177,7 +177,7 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
     subject_line_a: plannerSubjectsA[idx],
     subject_line_b: 'Late returns after the reception',
     service_pitch:
-      'How does your team manage guest transfers and villa returns on Lake Como and across Northern Italy? We run our own Mercedes-Benz V-Class and S-Class fleet on the lake, alongside vetted partner minibuses up to 50 seats, with one dedicated coordinator on WhatsApp for every wedding.',
+      'How does your team manage guest transfers and villa returns on Lake Como and across Northern Italy? We operate our own Mercedes-Benz V-Class and S-Class fleet, vetted minibuses up to 50 seats, and a dedicated coordinator on WhatsApp. As fleet capacity allows, we have 2 or 3 partner spots reserved for the 2027 season.',
     cta_line:
       'If an upcoming date has tight guest logistics or late-night returns, send over your hotel list or guest counts. I will map the vehicle circuits and share our confidential partner rates for your file.',
   };
