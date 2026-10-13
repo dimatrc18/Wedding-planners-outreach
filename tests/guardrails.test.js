@@ -42,9 +42,8 @@ test('2+1 thread split: T1 and T3 are in the same thread, T4 breakup starts a se
   // Verify DOROGO Executive Email HTML signature (Version 1: Adaptive Wordmark & Version 2: Drawn Logo Badge)
   const htmlV1 = renderDorogoLuxuryHtmlEmail(d1.body, { fromEmail: 'booking@dorogo.eu', footerStyle: 'wordmark' });
   assert.ok(htmlV1.includes('PRIVATE TRANSFERS') && htmlV1.includes('dm-brand'), 'Version 1 includes adaptive serif wordmark');
-  assert.ok(htmlV1.includes('wa-dual.png'), 'Includes dual-mode WhatsApp icon');
   assert.ok(htmlV1.includes('https://wa.me/32456141497'), 'Includes clickable WhatsApp link');
-  assert.ok(htmlV1.includes('mail-dual.png'), 'Includes dual-mode Mail icon');
+  assert.ok(htmlV1.toLowerCase().includes('mailto:booking@dorogo.eu'), 'Includes Mail link');
   assert.ok(htmlV1.includes('Milan &bull; Lake Como &bull; Italian Alps'), 'Includes regional line');
 
   const htmlV2 = renderDorogoLuxuryHtmlEmail(d1.body, { fromEmail: 'booking@dorogo.eu', footerStyle: 'badge' });

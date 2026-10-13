@@ -380,11 +380,11 @@ export function renderDorogoLuxuryHtmlEmail(
                     <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
                       <div style="font-size: 12px; color: #18181b; line-height: 1.8;">
                         <a class="dm-link" href="https://wa.me/32456141497" target="_blank" style="color: #18181b; font-weight: 500; text-decoration: none; margin-right: 12px; display: inline-block;">
-                          <img src="${EMAIL_ASSETS_BASE}/wa-dual.png" width="12" height="12" alt="WA" style="vertical-align: -1.5px; margin-right: 5px; border: 0;" />WhatsApp
+                          WhatsApp
                         </a>
                         <span class="dm-muted" style="color: #a1a1aa; margin-right: 12px;">&bull;</span>
                         <a class="dm-link" href="mailto:${safeFrom}" style="color: #18181b; font-weight: 500; text-decoration: none; display: inline-block;">
-                          <img src="${EMAIL_ASSETS_BASE}/mail-dual.png" width="12" height="12" alt="Mail" style="vertical-align: -1.5px; margin-right: 5px; border: 0;" />${safeFrom}
+                          ${safeFrom}
                         </a>
                       </div>
                       <div class="dm-muted" style="color: #71717a; font-size: 11px; margin-top: 3px; font-weight: 400;">
