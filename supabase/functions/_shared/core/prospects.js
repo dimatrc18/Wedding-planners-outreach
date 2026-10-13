@@ -12,19 +12,23 @@ export function inferMarket(p = {}) {
   if (/^\+?1\b/.test(phone)) return 'us';
   if (/^\+?39/.test(phone)) return 'it';
 
+  const email = String(p.email || '').toLowerCase();
+  if (/@(mail\.ru|bk\.ru|inbox\.ru|list\.ru|yandex\.\w+|rambler\.ru|internet\.ru)$/.test(email)) return 'kz';
+
   const web = String(p.website || '').toLowerCase();
-  if (/\.kz(\/|$)/.test(web)) return 'kz';
+  if (/\.(kz|ru|by|uz|kg)(\/|$)/.test(web)) return 'kz';
   if (/\.ae(\/|$)/.test(web)) return 'ae';
   if (/\.co\.uk(\/|$)/.test(web) || /\.uk(\/|$)/.test(web)) return 'uk';
   if (/\.it(\/|$)/.test(web)) return 'it';
 
   const loc = String(p.location || '').toLowerCase();
-  if (/almaty|astana|kazakhstan/.test(loc)) return 'kz';
+  if (/almaty|astana|kazakhstan|moscow|russia|tashkent|bishkek|minsk/.test(loc)) return 'kz';
   if (/dubai|abu dhabi|uae|emirates|doha|qatar|riyadh|saudi/.test(loc)) return 'ae';
   if (/london|uk|united kingdom|manchester|surrey/.test(loc)) return 'uk';
   if (/usa|united states|new york|california|miami|los angeles|texas/.test(loc)) return 'us';
   if (/como|milano|milan|italia|italy|varenna|bellagio|lecco|cernobbio|laglio/.test(loc)) return 'it';
 
+  if (p.language === 'ru') return 'kz';
   if (p.segment === 'boutique_local' || p.language === 'it') return 'it';
   if (p.segment === 'high_volume_uk_us') return 'uk';
   return 'other';
@@ -61,8 +65,12 @@ export function priorityScore(p) {
 
   // 4. Reachability & Personalization Readiness
   if (p.email_status === 'bounced' || p.email_status === 'no_mx') add(-25, `email ${p.email_status}`);
-  else if (p.email) add(12, 'verified email');
-  else add(-10, 'no email yet');
+  else if (p.email) {
+    add(12, 'verified email');
+    if (FREEMAIL.test(domainOf(p.email))) {
+      add(-10, 'freemail address (gmail/yahoo)');
+    }
+  } else add(-10, 'no email yet');
 
   if ((p.personalization_hook || '').trim()) add(8, 'custom story/venue hook');
   if ((p.contact_name || '').trim()) add(4, `contact: ${p.contact_name}`);
