@@ -1,6 +1,34 @@
 // Prospect helpers: priority score, dedupe, CSV, and extraction of public contact data from a web page.
 
-import { LAKE_TOWNS, LAKE_VENUES } from './constants.js';
+import { LAKE_TOWNS, LAKE_VENUES, MARKET_KEYS } from './constants.js';
+
+/** Infer market code from country code, phone prefix, website TLD, or location. */
+export function inferMarket(p = {}) {
+  if (p.market && MARKET_KEYS.includes(p.market.toLowerCase())) return p.market.toLowerCase();
+  const phone = String(p.phone || p.whatsapp || '').trim();
+  if (/^\+?(77|76|71|72)/.test(phone) || /^\+7\b/.test(phone)) return 'kz';
+  if (/^\+?971/.test(phone)) return 'ae';
+  if (/^\+?44/.test(phone)) return 'uk';
+  if (/^\+?1\b/.test(phone)) return 'us';
+  if (/^\+?39/.test(phone)) return 'it';
+
+  const web = String(p.website || '').toLowerCase();
+  if (/\.kz(\/|$)/.test(web)) return 'kz';
+  if (/\.ae(\/|$)/.test(web)) return 'ae';
+  if (/\.co\.uk(\/|$)/.test(web) || /\.uk(\/|$)/.test(web)) return 'uk';
+  if (/\.it(\/|$)/.test(web)) return 'it';
+
+  const loc = String(p.location || '').toLowerCase();
+  if (/almaty|astana|kazakhstan/.test(loc)) return 'kz';
+  if (/dubai|abu dhabi|uae|emirates|doha|qatar|riyadh|saudi/.test(loc)) return 'ae';
+  if (/london|uk|united kingdom|manchester|surrey/.test(loc)) return 'uk';
+  if (/usa|united states|new york|california|miami|los angeles|texas/.test(loc)) return 'us';
+  if (/como|milano|milan|italia|italy|varenna|bellagio|lecco|cernobbio|laglio/.test(loc)) return 'it';
+
+  if (p.segment === 'boutique_local' || p.language === 'it') return 'it';
+  if (p.segment === 'high_volume_uk_us') return 'uk';
+  return 'other';
+}
 
 /** 0-100. Higher = contact sooner. Explainable: returns the parts too. */
 export function priorityScore(p) {
@@ -17,13 +45,19 @@ export function priorityScore(p) {
   const loc = (p.location || '').trim();
   if (loc) add(7, `location: ${loc}`);
 
-  // 3. Client Tier & Reputation (does not unfairly penalize luxury boutiques that don't use Google Maps reviews)
-  add({ boutique_local: 14, international: 10, high_volume_uk_us: 8 }[p.segment] || 0, p.segment ? `segment: ${p.segment}` : '');
+  // 3. Client Tier, Market & Reputation (balanced 50% international / 50% local)
+  const m = inferMarket(p);
+  if (m === 'kz' || m === 'ae') add(15, `high-spend market: ${m.toUpperCase()}`);
+  else if (m === 'uk' || m === 'us') add(12, `prime market: ${m.toUpperCase()}`);
+  else if (m === 'it') add(12, 'local market: IT');
+  else add({ boutique_local: 12, international: 12, high_volume_uk_us: 10 }[p.segment] || 6, p.segment ? `segment: ${p.segment}` : '');
+
   const rating = +p.rating || 0;
   if (rating >= 4.8) add(6, `rating ${rating}★`); else if (rating >= 4.5) add(4, `rating ${rating}★`);
   const reviews = +p.verified_reviews_count || 0;
   if (reviews) add(Math.min(12, Math.round(3.5 * Math.log2(1 + reviews))), `${reviews} reviews`);
   else if (venuesCount >= 1 && p.website) add(6, 'verified luxury portfolio');
+
 
   // 4. Reachability & Personalization Readiness
   if (p.email_status === 'bounced' || p.email_status === 'no_mx') add(-25, `email ${p.email_status}`);

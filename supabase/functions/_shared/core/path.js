@@ -1,10 +1,11 @@
 // Path exploration engine for the Pipeline view (GA4-style multi-step flow diagram).
 // Pure ESM with no external dependencies: shared by the browser app and Node tests.
 
-import { STAGES, STAGE_KEYS, FUNNEL_RANK, stageLabel } from './constants.js';
+import { STAGES, STAGE_KEYS, FUNNEL_RANK, stageLabel, marketFlag, marketLabel } from './constants.js';
 import { COLD_STEPS, isRealReply, isBlocked } from './sequence.js';
 import { groupTouches, prospectFacts } from './stats.js';
-import { priorityScore } from './prospects.js';
+import { priorityScore, inferMarket } from './prospects.js';
+
 
 export const PATH_DIMENSIONS = [
   { key: 'entry', label: 'Outreach entry', group: 'Journey' },
@@ -16,6 +17,7 @@ export const PATH_DIMENSIONS = [
   { key: 'touch_2', label: 'Event 2 (Step +1)', group: 'Event sequence' },
   { key: 'touch_3', label: 'Event 3 (Step +2)', group: 'Event sequence' },
   { key: 'touch_4', label: 'Event 4 (Outcome)', group: 'Event sequence' },
+  { key: 'market', label: 'Country / Market', group: 'Attributes' },
   { key: 'segment', label: 'Segment', group: 'Attributes' },
   { key: 'type', label: 'Prospect type', group: 'Attributes' },
   { key: 'location', label: 'Location / town', group: 'Attributes' },
@@ -24,6 +26,7 @@ export const PATH_DIMENSIONS = [
   { key: 'variant', label: 'Subject variant (T1)', group: 'Attributes' },
   { key: 'priority_tier', label: 'Priority tier', group: 'Attributes' },
 ];
+
 
 export const PATH_PRESETS = [
   { key: 'outreach', label: 'Outreach flow', steps: ['entry', 'cadence_step', 'response', 'stage'] },
@@ -326,7 +329,17 @@ export function classifyProspectStep(p, dimKey, ctx = {}) {
       };
     }
 
+    case 'market': {
+      const m = inferMarket(p);
+      const flag = marketFlag(m);
+      const lbl = marketLabel(m);
+      const order = { kz: 1, ae: 2, uk: 3, us: 4, it: 5, other: 6 };
+      const tone = { kz: 'ok', ae: 'ok', uk: 'info', us: 'info', it: 'gold', other: 'muted' };
+      return { key: `market:${m}`, label: `${flag} ${lbl}`, tone: tone[m] || 'info', band: 1, order: order[m] || 9 };
+    }
+
     case 'segment': {
+
       const k = p.segment || 'unassigned';
       const order = { boutique_local: 1, international: 2, high_volume_uk_us: 3, unassigned: 4 };
       const tone = { boutique_local: 'gold', international: 'info', high_volume_uk_us: 'ok', unassigned: 'muted' };

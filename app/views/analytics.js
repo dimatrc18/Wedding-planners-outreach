@@ -5,9 +5,11 @@ import { esc, attr, icon, eur, pct, download } from '../ui.js';
 import { rateMeter } from './today.js';
 
 const DIM_LABEL = {
+  market: 'Country / Target Market (50/50 Split)',
   variant: 'Subject line (T1)', reply_step: 'Touch that got the reply', segment: 'Segment', language: 'Language', type: 'Prospect type',
   hook_type: 'Hook type', location: 'Location', weekday: 'T1 send day', hour: 'T1 send hour (Rome)', reply_channel: 'Reply channel',
 };
+
 const STEP = { T1_intro: 'T1 intro email', T3_followup: 'T3 follow-up', T4_breakup: 'T4 breakup' };
 
 function ciCell(ci, target) {
@@ -128,8 +130,9 @@ export function render(el) {
       ${steps.map((r) => `<tr><td>${esc(STEP[r.key] || r.key)}</td><td class="num">${r.n}</td><td class="num">${r.replied}</td><td>${ciCell(r.replyRate)}</td></tr>`).join('')}</tbody></table></div></section>
 
     <div class="grid-2 wide">
-      ${['segment', 'language', 'hook_type', 'type', 'weekday', 'hour', 'location', 'reply_channel'].map((d) => `<section class="card stack"><div class="section-head"><h2>${esc(DIM_LABEL[d])}</h2></div>${breakdownTable(core.breakdown(m.facts, core.DIMENSIONS[d]), (k) => String(k).replace(/_/g, ' '), tg.positive_reply_rate)}</section>`).join('')}
+      ${['market', 'segment', 'language', 'hook_type', 'type', 'weekday', 'hour', 'location', 'reply_channel'].map((d) => `<section class="card stack"><div class="section-head"><h2>${esc(DIM_LABEL[d])}</h2></div>${breakdownTable(core.breakdown(m.facts, core.DIMENSIONS[d]), (k) => String(k).replace(/_/g, ' '), tg.positive_reply_rate)}</section>`).join('')}
     </div>
+
 
     <section class="card stack"><div class="section-head"><h2>Revenue by planner</h2></div>
       ${perPlanner.length ? `<div class="table-wrap"><table><thead><tr><th>Planner</th><th>Model</th><th class="num">Bookings won</th><th class="num">Revenue</th><th class="num">Open pipeline</th><th class="num">Commission due</th></tr></thead><tbody>

@@ -32,10 +32,12 @@ export function render(el, param) {
             <label class="field"><span>Email</span><input type="email" name="email"></label>
             <label class="field"><span>Website</span><input type="url" name="website"></label>
             <label class="field"><span>Location</span><input type="text" name="location" list="towns"></label>
+            <label class="field"><span>Target Market</span><select name="market"><option value="">Auto-detect</option>${core.MARKETS.map((m) => `<option value="${m.key}">${m.flag} ${esc(m.label)}</option>`).join('')}</select></label>
             <label class="field"><span>Type</span><select name="type"><option value="planner">Planner</option><option value="venue">Venue</option><option value="photographer">Photographer</option><option value="concierge_hotel">Hotel concierge</option></select></label>
             <label class="field"><span>Language</span><select name="language"><option value="en">EN</option><option value="it">IT</option><option value="de">DE</option><option value="fr">FR</option></select></label>
             <label class="field"><span>Source</span><select name="source"><option>manual</option><option>matrimonio.com</option><option>wedding_wire</option><option>referral</option><option>website</option></select></label>
           </div>
+
           <label class="field"><span>Personalization hook</span><textarea name="personalization_hook" rows="2" placeholder="One specific, true sentence about their work"></textarea></label>
           <div class="row end"><span id="dup" class="small" style="color:var(--warn)"></span><button class="btn primary" type="submit">Add prospect</button></div>
         </form>

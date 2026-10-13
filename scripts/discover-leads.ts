@@ -202,6 +202,7 @@ export async function evaluateLeadCandidate(
     website: finalUrl,
     location: extracted.towns[0] || 'Lake Como / Northern Italy',
     type: 'planner',
+    market: core.inferMarket({ website: finalUrl, phone: extracted.phones[0], whatsapp: extracted.whatsapp, location: extracted.towns[0], language: lang }),
     segment: lang === 'it' ? 'boutique_local' : 'international',
     language: lang === 'it' ? 'it' : 'en',
     source: 'batch_discovery',
@@ -214,6 +215,7 @@ export async function evaluateLeadCandidate(
     hook_source_url: finalUrl,
     status: 'researching',
   };
+
 
   // Stage 5: Deduplication against existing CRM prospects
   const existing = options.existingProspects || [];

@@ -30,6 +30,7 @@ function draftCard(t, i) {
     <div class="who">
       <a href="#prospect/${attr(p.id)}"><b>${esc(p.agency_name)}</b></a>
       ${p.contact_name ? `<span class="muted small">${esc(p.contact_name)}</span>` : ''}
+      <span class="chip" title="${esc(core.marketLabel(core.inferMarket(p)))}">${core.marketFlag(core.inferMarket(p))} ${(p.market || core.inferMarket(p)).toUpperCase()}</span>
       <span class="chip gold">${esc(stepLabel(t.step_name))}</span>
       ${t.variant && ['T1_intro', 'T4_breakup'].includes(t.step_name) ? `<span class="chip outline">${t.step_name === 'T1_intro' ? (p.type === 'venue' || p.type === 'concierge_hotel' ? 'Variant C · Hotel/Venue' : (t.variant === 'B' ? 'Variant B · Late returns' : 'Variant A · Intro')) : `Subject ${esc(t.variant)}`}</span>` : ''}
       ${p.language !== 'en' ? `<span class="chip">${esc(p.language.toUpperCase())}</span>` : ''}
@@ -39,6 +40,7 @@ function draftCard(t, i) {
       <span class="grow"></span>
       <span class="score ${p.priority_score >= 60 ? 'hi' : ''}" title="Priority score">${core.priorityScore(p).score}</span>
     </div>
+
     ${inbound ? `<div class="reply-quote small">${esc(core.stripQuoted(inbound.body || '').slice(0, 280))}${inbound.classification?.escalation_reason ? `<div class="tiny" style="color:var(--bad);margin-top:4px">⚠️ ${esc(inbound.classification.escalation_reason)}</div>` : ''}</div>` : ''}
     ${p.personalization_hook && p.hook_needs_review ? '<span class="chip warn">Hook flagged for review</span>' : ''}
     ${isEdit ? `

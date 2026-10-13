@@ -71,9 +71,9 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
         subject_line_a: 'Transfer ospiti per il vostro team eventi',
         subject_line_b: 'Transfer aeroportuali e navette di gruppo',
         service_pitch:
-          `Forniamo transfer aeroportuali e trasporti di gruppo per gli ospiti dell'hotel e i matrimoni a ${targetVenue}, con Mercedes-Benz Classe V, Classe S e minibus. Possiamo coordinare le prenotazioni rapidamente via WhatsApp o email.`,
+          `Gestiamo transfer aeroportuali e navette per gli ospiti degli hotel e delle ville a ${targetVenue}. Operiamo con Mercedes-Benz Classe V e Classe S di nostra proprietà, affiancate da partner selezionati per minibus e bus fino a 50 posti, con coordinamento diretto via WhatsApp.`,
         cta_line:
-          'Vi sarebbe utile se vi inviassi l\'elenco veicoli e le tariffe partner da tenere in archivio per il vostro team?',
+          'Se vi è utile avere una flotta di riferimento per la stagione, rispondetemi qui o su WhatsApp e vi condivido il listino riservato.',
       };
     }
 
@@ -87,9 +87,9 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
         subject_line_a: itSubjectsA[idx],
         subject_line_b: 'Rientri notturni dopo il ricevimento',
         service_pitch:
-          'Come gestite attualmente i rientri notturni e le navette ospiti sul Lago di Como? Operiamo con una flotta executive Mercedes-Benz (Classe V, Classe S e minibus da 16 a 50 posti) con base tra il lago e Milano, e stiamo selezionando 2 o 3 agenzie con cui collaborare per questa stagione.',
+          'Come gestite i rientri notturni e le navette ospiti sul Lago di Como? Operiamo con Mercedes-Benz Classe V e Classe S di nostra proprietà sul lago, più partner di fiducia per minibus e pullman fino a 50 posti, con un referente unico via WhatsApp.',
         cta_line:
-          'Se siete aperti a valutare un partner di trasporto dedicato da tenere a disposizione per le date più intense, vi farebbe comodo dare un\'occhiata alla nostra presentazione e alle tariffe riservate?',
+          'Se volete un partner affidabile per le date più intense, rispondetemi con le vostre date o scrivetemi su WhatsApp per ricevere il listino riservato.',
       };
     }
 
@@ -97,9 +97,9 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       subject_line_a: itSubjectsA[idx],
       subject_line_b: 'Rientri notturni dopo il ricevimento',
       service_pitch:
-        'Come gestite attualmente i trasferimenti degli ospiti e i rientri notturni dalle ville sul Lago di Como? Operiamo con una flotta executive Mercedes-Benz (Classe V, Classe S e minibus da 16 a 50 posti) con base sul lago, e stiamo selezionando 2 o 3 agenzie con cui collaborare per questa stagione.',
+        'Come gestite i trasferimenti degli ospiti e i rientri notturni dalle ville sul Lago di Como? Operiamo con Mercedes-Benz Classe V e Classe S di nostra proprietà sul lago, più partner di fiducia per minibus e pullman fino a 50 posti, con un referente unico via WhatsApp.',
       cta_line:
-        'Se siete aperti a valutare un partner di trasporto dedicato per il vostro team, vi farebbe comodo dare un\'occhiata alla nostra presentazione e alle tariffe riservate?',
+        'Se volete un partner affidabile per le date più intense, rispondetemi con le vostre date o scrivetemi su WhatsApp per ricevere il listino riservato.',
     };
   }
 
@@ -110,9 +110,9 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       subject_line_a: 'Guest transfers for your events team',
       subject_line_b: 'Airport transfers and group shuttles',
       service_pitch:
-        `How does your concierge and events team currently handle guest airport transfers and group shuttles around ${targetVenue}? We operate an executive Mercedes-Benz fleet (V-Class, S-Class and 16 to 50-seat minibuses) and partner directly with local venues to support their guest transport.`,
+        `How does your team handle airport runs and group shuttles around ${targetVenue}? We operate executive Mercedes-Benz V-Class and S-Class vehicles directly, plus vetted partner minibuses up to 50 seats for large wedding parties, with one dedicated lead on WhatsApp.`,
       cta_line:
-        'If you are open to having an additional executive fleet partner on file, would it be useful if I sent our 1-page overview and confidential partner rates?',
+        'Reply here or text me on WhatsApp and I will send our rate card and vehicle guide.',
     };
   }
 
@@ -127,9 +127,9 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       subject_line_a: plannerSubjectsA[idx],
       subject_line_b: 'Late returns after the reception',
       service_pitch:
-        'How does your team currently manage late-night villa returns and guest shuttles across Lake Como? We operate an executive Mercedes-Benz fleet (V-Class, S-Class, and 16 to 50-seat minibuses) based on the lake, and we are looking to partner with 2 or 3 additional studios for this season.',
+        'How does your team handle late-night villa returns and shuttles on Lake Como? We run our own Mercedes-Benz V-Class and S-Class fleet on the lake, alongside vetted partner minibuses up to 50 seats, with one dedicated coordinator on WhatsApp for every wedding.',
       cta_line:
-        'If you are open to having an additional partner fleet on call for busy dates, would it be useful if I sent our 1-page overview and confidential rates?',
+        'If you want a dependable fleet on call for peak dates, reply with your dates or message me on WhatsApp to see our confidential rates.',
     };
   }
 
@@ -137,11 +137,12 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
     subject_line_a: plannerSubjectsA[idx],
     subject_line_b: 'Late returns after the reception',
     service_pitch:
-      'How does your team currently manage guest transfers and late-night villa returns across Lake Como? We operate an executive Mercedes-Benz fleet (V-Class, S-Class, and 16 to 50-seat minibuses) based on the lake, and we are looking to partner with 2 or 3 additional studios for this season.',
+      'How does your team manage guest transfers and villa returns on Lake Como? We run our own Mercedes-Benz V-Class and S-Class fleet on the lake, alongside vetted partner minibuses up to 50 seats, with one dedicated coordinator on WhatsApp for every wedding.',
     cta_line:
-      'If you are open to having an additional partner fleet on call, would it be useful if I sent our 1-page overview and confidential rates?',
+      'If you want a dependable fleet on call for peak dates, reply with your dates or message me on WhatsApp to see our confidential rates.',
   };
 }
+
 
 export function buildVars(prospect, extra = {}) {
   const lang = prospect.language === 'it' ? 'it' : 'en';

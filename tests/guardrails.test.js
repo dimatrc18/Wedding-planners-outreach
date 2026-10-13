@@ -265,8 +265,8 @@ test('MECE overhaul: Variant A (Intro), Variant B (Late returns), Variant C (Hot
   });
   assert.equal(draftA.variant, 'A');
   assert.doesNotMatch(draftA.subject, /·/, 'Subject line must not contain the template · separator');
-  assert.match(draftA.body, /How does your team currently manage guest transfers and late-night villa returns/);
-  assert.match(draftA.body, /would it be useful if I sent our 1-page overview and confidential rates\?/);
+  assert.match(draftA.body, /How does your team manage guest transfers and villa returns on Lake Como\?/);
+  assert.match(draftA.body, /reply with your dates or message me on WhatsApp to see our confidential rates\./);
   assert.match(draftA.body, /wa\.me\/32456141497/);
   assert.doesNotMatch(draftA.body, /\+32 456 141 497/, 'Must not contain raw phone digits');
   assert.match(draftA.body, /If transport isn't something you handle, no problem at all, just let me know\./);
@@ -283,8 +283,8 @@ test('MECE overhaul: Variant A (Intro), Variant B (Late returns), Variant C (Hot
   });
   assert.equal(draftB.variant, 'B');
   assert.equal(draftB.subject, 'Late returns after the reception');
-  assert.match(draftB.body, /How does your team currently manage late-night villa returns and guest shuttles/);
-  assert.match(draftB.body, /would it be useful if I sent our 1-page overview and confidential rates\?/);
+  assert.match(draftB.body, /How does your team handle late-night villa returns and shuttles on Lake Como\?/);
+  assert.match(draftB.body, /reply with your dates or message me on WhatsApp to see our confidential rates\./);
   assert.deepEqual(draftB.lint.errors, []);
   assert.deepEqual(draftB.lint.warnings, []);
 
@@ -306,10 +306,11 @@ test('MECE overhaul: Variant A (Intro), Variant B (Late returns), Variant C (Hot
   });
   assert.equal(draftC.subject, 'Guest transfers for your events team');
   assert.match(draftC.body, /^Hello,/);
-  assert.match(draftC.body, /How does your concierge and events team currently handle guest airport transfers/);
-  assert.match(draftC.body, /would it be useful if I sent our 1-page overview and confidential partner rates\?/);
+  assert.match(draftC.body, /How does your team handle airport runs and group shuttles around/);
+  assert.match(draftC.body, /Reply here or text me on WhatsApp and I will send our rate card and vehicle guide\./);
   assert.deepEqual(draftC.lint.errors, []);
   assert.deepEqual(draftC.lint.warnings, []);
+
 });
 
 

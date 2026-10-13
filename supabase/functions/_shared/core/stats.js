@@ -1,8 +1,10 @@
 // Analytics with small-sample honesty: every rate carries a Wilson 95% interval.
 
-import { FUNNEL_RANK, DEFAULT_SETTINGS } from './constants.js';
+import { FUNNEL_RANK, DEFAULT_SETTINGS, marketFlag, marketLabel } from './constants.js';
 import { COLD_STEPS, isRealReply } from './sequence.js';
 import { localParts } from './time.js';
+import { inferMarket } from './prospects.js';
+
 
 export function wilson(k, n, z = 1.96) {
   if (!n) return { k, n, p: null, lo: 0, hi: 1 };
@@ -170,8 +172,13 @@ export function stepBreakdown(facts, touches) {
 }
 
 export const DIMENSIONS = {
+  market: ({ p }) => {
+    const m = inferMarket(p);
+    return `${marketFlag(m)} ${marketLabel(m)}`;
+  },
   variant: ({ f }) => (f.t1 ? `Subject ${f.t1.variant || 'A'}` : null),
   segment: ({ p }) => p.segment || 'unknown',
+
   language: ({ p }) => p.language || 'en',
   type: ({ p }) => p.type || 'planner',
   location: ({ p }) => p.location || 'other',

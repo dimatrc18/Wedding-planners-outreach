@@ -318,6 +318,7 @@ function card(p, { touchesByP, settings, showStageSelect = true } = {}) {
       <div class="pcard-title-wrap">
         <span class="name">${esc(p.agency_name)}</span>
         <div class="pcard-sub">
+          <span class="chip" title="${esc(core.marketLabel(core.inferMarket(p)))}">${core.marketFlag(core.inferMarket(p))} ${(p.market || core.inferMarket(p)).toUpperCase()}</span>
           ${p.location ? `<span>📍 ${esc(p.location)}</span>` : '<span class="muted">📍 No town</span>'}
           <span>· ${esc(TYPE[p.type] || p.type || 'Planner')}</span>
           ${p.language ? `<span class="chip">${esc((p.language || 'en').toUpperCase())}</span>` : ''}
@@ -328,6 +329,7 @@ function card(p, { touchesByP, settings, showStageSelect = true } = {}) {
         <span class="score ${isQualifiedScore ? 'hi' : 'low'}" data-tip="${attr(scoreTip)}">${sc}/100</span>
         <button class="icon-btn sm" data-quick-edit="${attr(p.id)}" title="Quick edit contact info & note" aria-label="Quick edit ${attr(p.agency_name)}">${icon('edit', 14)}</button>
       </div>
+
     </div>
 
     <div class="pcard-facts">
@@ -384,6 +386,7 @@ export function render(el) {
   const f = {
     q: '',
     type: '',
+    market: '',
     segment: '',
     location: '',
     language: '',
@@ -449,6 +452,10 @@ export function render(el) {
       const q = f.q.toLowerCase();
       if (![p.agency_name, p.contact_name, p.email, p.location, p.notes, p.personalization_hook].some((x) => (x || '').toLowerCase().includes(q))) return false;
     }
+    if (f.market) {
+      const pm = core.inferMarket(p);
+      if (pm !== f.market) return false;
+    }
     if (f.type && p.type !== f.type) return false;
     if (f.segment && p.segment !== f.segment) return false;
     if (f.location && p.location !== f.location) return false;
@@ -462,14 +469,15 @@ export function render(el) {
     const src = activeData().prospects;
     const hidden = f.hideClosed ? ['lost', 'do_not_contact'] : [];
     if (src.length > 0 && src.filter((p) => matchesFilters(p, hidden)).length === 0) {
-      f.q = ''; f.type = ''; f.segment = ''; f.location = ''; f.language = ''; f.tag = ''; f.onlyHighFit = false;
+      f.q = ''; f.market = ''; f.type = ''; f.segment = ''; f.location = ''; f.language = ''; f.tag = ''; f.onlyHighFit = false;
       save(f);
     }
   }
 
   function hasActiveFilters() {
-    return Boolean(f.q || f.type || f.segment || f.location || f.language || f.tag || f.onlyHighFit);
+    return Boolean(f.q || f.market || f.type || f.segment || f.location || f.language || f.tag || f.onlyHighFit);
   }
+
 
   let lastFlow = null;
   let tip = null;
@@ -562,8 +570,13 @@ export function render(el) {
 
     <div class="filters">
       <input type="search" id="f-q" placeholder="🔍 Search agency, person, email, villa, town…" value="${attr(f.q)}" aria-label="Search">
+      <select id="f-market" aria-label="Market / Country">
+        <option value="">🌍 All markets (50/50 Split)</option>
+        ${core.MARKETS.map((m) => `<option value="${m.key}" ${f.market === m.key ? 'selected' : ''}>${m.flag} ${esc(m.label)}</option>`).join('')}
+      </select>
       <select id="f-location" aria-label="Location"><option value="">📍 All towns</option>${locations.map((l) => `<option ${f.location === l ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>
       <select id="f-type" aria-label="Type"><option value="">All partner types</option>${Object.entries(TYPE).map(([k, v]) => `<option value="${k}" ${f.type === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
+
       <select id="f-segment" aria-label="Segment"><option value="">All agency sizes</option>${Object.entries(SEG).map(([k, v]) => `<option value="${k}" ${f.segment === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
       <select id="f-language" aria-label="Language"><option value="">All languages</option>${['en', 'it', 'de', 'fr'].map((l) => `<option value="${l}" ${f.language === l ? 'selected' : ''}>${l.toUpperCase()}</option>`).join('')}</select>
       ${tags.length ? `<select id="f-tag" aria-label="Tag"><option value="">All tags</option>${tags.map((t) => `<option ${f.tag === t ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>` : ''}
@@ -1199,14 +1212,20 @@ export function render(el) {
           <label class="field"><span>Agency / Company Name *</span><input name="agency_name" required value="${attr(p.agency_name || '')}"></label>
           <label class="field"><span>Contact Person Name</span><input name="contact_name" placeholder="e.g. Sofia Rossi" value="${attr(p.contact_name || '')}"></label>
           <label class="field"><span>Email Address *</span><input name="email" type="email" placeholder="name@agency.it" value="${attr(p.email || '')}"></label>
-          <label class="field"><span>Website URL</span><input name="website" placeholder="https://…" value="${attr(p.website || '')}"></label>
           <label class="field"><span>Town / Location</span><input name="location" placeholder="e.g. Como, Bellagio, Milan" value="${attr(p.location || '')}"></label>
+          <label class="field"><span>Target Market</span>
+            <select name="market">
+              <option value="">Auto-detect (${core.marketFlag(core.inferMarket(p))} ${core.marketLabel(core.inferMarket(p))})</option>
+              ${core.MARKETS.map((m) => `<option value="${m.key}" ${(p.market || core.inferMarket(p)) === m.key ? 'selected' : ''}>${m.flag} ${esc(m.label)}</option>`).join('')}
+            </select>
+          </label>
           <label class="field"><span>Partner Type</span>
             <select name="type">
               ${Object.entries(TYPE).map(([k, v]) => `<option value="${k}" ${p.type === k ? 'selected' : ''}>${v}</option>`).join('')}
             </select>
           </label>
         </div>
+
         <label class="field">
           <span>1-Line Personal Note (Used as the first sentence of Email 1) *</span>
           <textarea name="personalization_hook" rows="2" placeholder="e.g. Your recent wedding celebration at Villa del Balbianello caught our eye.">${esc(p.personalization_hook || '')}</textarea>
@@ -1269,13 +1288,14 @@ export function render(el) {
             agency_name: String(fd.get('agency_name') || '').trim(),
             contact_name: String(fd.get('contact_name') || '').trim(),
             email: String(fd.get('email') || '').trim(),
-            website: String(fd.get('website') || '').trim(),
             location: String(fd.get('location') || '').trim(),
+            market: String(fd.get('market') || '').trim() || core.inferMarket({ ...p, location: String(fd.get('location') || '') }),
             type: String(fd.get('type') || 'planner'),
             personalization_hook: String(fd.get('personalization_hook') || '').trim(),
             notes: String(fd.get('notes') || '').trim(),
             hook_needs_review: false,
           };
+
           if (mode === 'ready') {
             if (!patch.email || !patch.personalization_hook) {
               toast('Please fill in both Email and the 1-Line Personal Note to mark Ready', 'error');
@@ -1659,11 +1679,12 @@ export function render(el) {
       return persist();
     }
     if (act === 'reset-filters') {
-      f.q = ''; f.type = ''; f.segment = ''; f.location = ''; f.language = ''; f.tag = ''; f.onlyHighFit = false;
+      f.q = ''; f.market = ''; f.type = ''; f.segment = ''; f.location = ''; f.language = ''; f.tag = ''; f.onlyHighFit = false;
       selectedPath = {};
       stageFilter = 'all';
       return persist();
     }
+
     if (act === 'toggle-preview') {
       previewSample = !previewSample;
       selectedPath = {};

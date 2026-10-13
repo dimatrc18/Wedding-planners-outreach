@@ -113,3 +113,18 @@ export const CHANNELS = ['email', 'whatsapp', 'call', 'in_person', 'linkedin'];
 export const SENTIMENTS = ['positive', 'neutral', 'negative', 'ooo', 'unsubscribe'];
 export const INTENTS = ['wants_rate_card', 'asks_pricing', 'has_supplier', 'not_now', 'referral_to_other', 'meeting_request', 'specific_question'];
 export const LOST_REASONS = ['has_supplier', 'no_response', 'price', 'not_a_fit', 'not_now', 'other'];
+
+export const MARKETS = [
+  { key: 'kz', label: 'Kazakhstan & Central Asia', flag: '🇰🇿', tier: 'international', directCta: true },
+  { key: 'ae', label: 'UAE & Gulf (GCC)', flag: '🇦🇪', tier: 'international', directCta: true },
+  { key: 'uk', label: 'United Kingdom', flag: '🇬🇧', tier: 'international', directCta: true },
+  { key: 'us', label: 'United States', flag: '🇺🇸', tier: 'international', directCta: true },
+  { key: 'it', label: 'Italy (Local & Milan)', flag: '🇮🇹', tier: 'local', directCta: false },
+  { key: 'other', label: 'Other International', flag: '🌐', tier: 'international', directCta: true },
+];
+
+export const MARKET_KEYS = MARKETS.map((m) => m.key);
+export const MARKET_FLAG = Object.fromEntries(MARKETS.map((m) => [m.key, m.flag]));
+export const marketFlag = (m) => MARKET_FLAG[String(m || '').toLowerCase()] || '🌐';
+export const marketLabel = (m) => (MARKETS.find((x) => x.key === String(m || '').toLowerCase()) || { label: m || 'Other' }).label;
+
