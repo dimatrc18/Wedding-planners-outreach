@@ -30,8 +30,9 @@ export const MIN_FIT_SCORE = 65;
 
 export interface LeadFilterResult {
   qualified: boolean;
+  manualReview?: boolean;
   rejectReason: string | null;
-  stage: 'passed' | 'directory_blocked' | 'not_wedding_planner' | 'budget_or_non_luxury' | 'outside_region' | 'no_valid_email' | 'no_mx' | 'duplicate' | 'below_min_score';
+  stage: 'passed' | 'manual_review_needed' | 'directory_blocked' | 'not_wedding_planner' | 'budget_or_non_luxury' | 'outside_region' | 'no_valid_email' | 'no_mx' | 'duplicate' | 'below_min_score';
   prospect: Record<string, any> | null;
   signals: {
     venues: string[];
@@ -159,31 +160,6 @@ export async function evaluateLeadCandidate(
     };
   }
 
-  // Stage 4: Contact Email Hygiene & DNS MX Verification
-  const usableEmails = filterUsableEmails(extracted.emails, siteDomain);
-  const primaryEmail = usableEmails[0] || '';
-  if (!primaryEmail) {
-    return {
-      qualified: false,
-      stage: 'no_valid_email',
-      rejectReason: 'No usable business email found on page (or only noreply/PEC/directory addresses)',
-      prospect: null,
-      signals: { venues: extracted.venues, towns: extracted.towns, luxurySignals, emails: [], mxStatus: 'unknown' },
-    };
-  }
-
-  const mxResolver = options.mxResolver || checkDnsMx;
-  const mxStatus = await mxResolver(core.domainOf(primaryEmail));
-  if (mxStatus === 'no_mx') {
-    return {
-      qualified: false,
-      stage: 'no_mx',
-      rejectReason: `Email domain "${core.domainOf(primaryEmail)}" has no valid DNS MX records`,
-      prospect: null,
-      signals: { venues: extracted.venues, towns: extracted.towns, luxurySignals, emails: usableEmails, mxStatus },
-    };
-  }
-
   const agencyName =
     candidate.agencyHint ||
     extracted.site_name ||
@@ -191,6 +167,63 @@ export async function evaluateLeadCandidate(
     siteDomain;
 
   const lang = ['it', 'de', 'fr'].includes(extracted.lang) ? extracted.lang : 'en';
+
+  // Stage 4: Contact Email Hygiene & DNS MX Verification
+  const usableEmails = filterUsableEmails(extracted.emails, siteDomain);
+  const primaryEmail = usableEmails[0] || '';
+  const mxResolver = options.mxResolver || checkDnsMx;
+  const mxStatus = primaryEmail ? await mxResolver(core.domainOf(primaryEmail)) : 'unknown';
+
+  const isHighMatch = extracted.venues.length >= 1 || luxurySignals.length >= 2;
+
+  if (!primaryEmail || mxStatus === 'no_mx') {
+    if (isHighMatch) {
+      // High luxury match without direct working email -> Priority for Manual Outreach (Instagram DM, WhatsApp, phone)
+      const manualProspect: Record<string, any> = {
+        agency_name: agencyName.slice(0, 120),
+        contact_name: '',
+        role: 'Wedding Planner',
+        email: primaryEmail || '',
+        email_status: mxStatus,
+        phone: extracted.phones[0] || '',
+        whatsapp: extracted.whatsapp || '',
+        instagram: extracted.instagram?.[0] || '',
+        website: finalUrl,
+        location: extracted.towns[0] || 'Lake Como / Northern Italy',
+        type: 'planner',
+        market: core.inferMarket({ website: finalUrl, phone: extracted.phones[0], whatsapp: extracted.whatsapp, location: extracted.towns[0], language: lang }),
+        segment: lang === 'it' ? 'boutique_local' : 'international',
+        language: lang === 'it' ? 'it' : 'en',
+        source: 'manual_priority_review',
+        source_detail: finalUrl,
+        key_venues: extracted.venues,
+        personalization_hook: '',
+        hook_type: 'venue',
+        status: 'researching',
+        notes: `High match (${extracted.venues.length} venues, ${luxurySignals.length} luxury signals) missing verified email. Reach out manually via Instagram / WhatsApp.`,
+      };
+      manualProspect.priority_score = core.priorityScore(manualProspect).score;
+      return {
+        qualified: false,
+        manualReview: true,
+        stage: 'manual_review_needed',
+        rejectReason: `High luxury match (${extracted.venues.join(', ') || luxurySignals.join(', ')}) without verified email. Routed to Manual Review.`,
+        prospect: manualProspect,
+        signals: { venues: extracted.venues, towns: extracted.towns, luxurySignals, emails: usableEmails, mxStatus },
+      };
+    }
+
+    return {
+      qualified: false,
+      stage: !primaryEmail ? 'no_valid_email' : 'no_mx',
+      rejectReason: !primaryEmail
+        ? 'No usable business email found on page (or only noreply/PEC/directory addresses)'
+        : `Email domain "${core.domainOf(primaryEmail)}" has no valid DNS MX records`,
+      prospect: null,
+      signals: { venues: extracted.venues, towns: extracted.towns, luxurySignals, emails: usableEmails, mxStatus },
+    };
+  }
+
   const baseProspect: Record<string, any> = {
     agency_name: agencyName.slice(0, 120),
     contact_name: '',
@@ -496,6 +529,7 @@ async function main() {
     .filter((l) => l && !l.startsWith('#'));
 
   const accepted: any[] = [];
+  const manualReviewLeads: any[] = [];
   const rejected: { url: string; stage: string; reason: string | null }[] = [];
 
   for (const line of rawLines) {
@@ -503,12 +537,15 @@ async function main() {
     try {
       const page = await fetchCandidateWithContactPages(url);
       const res = await evaluateLeadCandidate(page, {
-        existingProspects: accepted,
+        existingProspects: [...accepted, ...manualReviewLeads],
         aiHookExtractor: process.env.GEMINI_API_KEY ? callGeminiHook : undefined,
       });
       if (res.qualified && res.prospect) {
         accepted.push(res.prospect);
         console.log(`✅ [PASS] ${res.prospect.agency_name} (${res.prospect.email}) · score ${res.prospect.priority_score}/100`);
+      } else if (res.manualReview && res.prospect) {
+        manualReviewLeads.push(res.prospect);
+        console.log(`⭐ [MANUAL REVIEW] ${res.prospect.agency_name} · score ${res.prospect.priority_score}/100 · ${res.rejectReason}`);
       } else {
         rejected.push({ url, stage: res.stage, reason: res.rejectReason });
         console.log(`⛔ [SKIP:${res.stage}] ${url} — ${res.rejectReason}`);
@@ -520,13 +557,21 @@ async function main() {
   }
 
   const cols = [
-    'agency_name', 'contact_name', 'role', 'email', 'email_status', 'phone', 'whatsapp',
+    'agency_name', 'contact_name', 'role', 'email', 'email_status', 'phone', 'whatsapp', 'instagram',
     'website', 'location', 'type', 'segment', 'language', 'source',
-    'source_detail', 'priority_score', 'status', 'personalization_hook', 'hook_type',
+    'source_detail', 'priority_score', 'status', 'personalization_hook', 'hook_type', 'notes',
   ];
   const csv = core.toCSV(accepted, cols);
   fs.writeFileSync(path.resolve(outFile), csv, 'utf8');
-  console.log(`\nDone: ${accepted.length} qualified leads (score ≥ ${MIN_FIT_SCORE}/100) written to ${outFile} (${rejected.length} rejected).`);
+
+  const manualOutFile = outFile.replace(/(\.csv)?$/i, '_manual_review.csv');
+  if (manualReviewLeads.length > 0) {
+    const manualCsv = core.toCSV(manualReviewLeads, cols);
+    fs.writeFileSync(path.resolve(manualOutFile), manualCsv, 'utf8');
+    console.log(`⭐ Saved ${manualReviewLeads.length} High-Match Manual Review leads to: ${manualOutFile}`);
+  }
+
+  console.log(`\nDone: ${accepted.length} automated leads written to ${outFile} | ${manualReviewLeads.length} manual review leads | ${rejected.length} rejected.`);
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
