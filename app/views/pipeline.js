@@ -1037,11 +1037,14 @@ export function render(el) {
               <option value="concierge_hotel">5★ Hotel Concierges Only</option>
             </select>
           </label>
-          <label class="field"><span>Target Region</span>
-            <select name="region">
-              <option value="all">Lake Como &amp; Milan (All Towns)</option>
-              <option value="como">Lake Como Only (Como, Bellagio, Tremezzina, Varenna…)</option>
-              <option value="milan">Milan Only</option>
+          <label class="field"><span>Target Market (50/50 Strategic Split)</span>
+            <select name="market">
+              <option value="all">🌍 Balanced 50% International / 50% Local</option>
+              <option value="kz">🇰🇿 Kazakhstan &amp; CIS (Russian)</option>
+              <option value="ae">🇦🇪 UAE &amp; Gulf GCC</option>
+              <option value="uk">🇬🇧 United Kingdom</option>
+              <option value="us">🇺🇸 United States</option>
+              <option value="it">🇮🇹 Italy (Local &amp; Milan)</option>
             </select>
           </label>
           <label class="field"><span>Minimum Fit Score Cutoff</span>
@@ -1077,7 +1080,7 @@ export function render(el) {
           btn.disabled = true;
           const fd = new FormData(ev.target);
           const category = String(fd.get('category') || 'all');
-          const region = String(fd.get('region') || 'all');
+          const market = String(fd.get('market') || 'all');
           const minScore = Number(fd.get('min_score') || MIN_FIT_SCORE);
           const autoDraft = fd.get('auto_draft') !== null;
           const customUrls = String(fd.get('custom_urls') || '')
@@ -1090,11 +1093,13 @@ export function render(el) {
           let skippedDup = 0;
 
           try {
-            // 1. Scan curated verified Lake Como / Milan partner catalog
+            // 1. Scan curated verified partner catalog (balanced 50% international / 50% local)
             const catalog = (core.DISCOVERY_PARTNER_CATALOG || []).filter((c) => {
               if (category !== 'all' && c.type !== category) return false;
-              if (region === 'milan' && !/milan/i.test(c.location || '')) return false;
-              if (region === 'como' && /milan/i.test(c.location || '')) return false;
+              if (market !== 'all') {
+                const cm = c.market || core.inferMarket(c);
+                if (cm !== market) return false;
+              }
               return true;
             });
 
