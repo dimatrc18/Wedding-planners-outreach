@@ -118,34 +118,7 @@ function renderView() {
   document.querySelectorAll('.nav-link').forEach((a) => a.classList.toggle('active', a.getAttribute('href') === `#${r.name}`));
   document.querySelectorAll('.tabbar a').forEach((a) => a.classList.toggle('active', a.getAttribute('href') === `#${r.name}`));
   
-  const topbar = `
-    <header class="app-topbar">
-      <div class="topbar-left">
-        <div class="topbar-mode-toggle" role="tablist" aria-label="Mode">
-          <a href="#today" class="mode-tab ${!isTools ? 'active' : ''}" role="tab" aria-selected="${!isTools}">
-            ${icon('mail', 15)}
-            <span>Partner Outreach</span>
-          </a>
-          <a href="#tools" class="mode-tab ${isTools ? 'active' : ''}" role="tab" aria-selected="${isTools}">
-            ${icon('sparkle', 15)}
-            <span>DOROGO Tools</span>
-            <span class="chip gold" style="font-size: .62rem; padding: 1px 6px;">NEW</span>
-          </a>
-        </div>
-      </div>
-      <div class="topbar-right">
-        ${isTools ? `
-          <a class="btn sm" href="#today">${icon('mail', 14)} Open Outreach CRM</a>
-          <a class="btn sm ghost" href="https://raiw.cc" target="_blank" rel="noopener">${icon('external', 13)} Cloud Web GUI</a>
-        ` : `
-          <a class="btn sm" href="#add">${icon('plus', 14)} Add prospects</a>
-          <a class="btn sm ghost" href="#tools">${icon('sparkle', 14)} DOROGO Tools</a>
-        `}
-      </div>
-    </header>
-  `;
-
-  el.innerHTML = topbar + banners() + '<div id="view-body"></div>';
+  el.innerHTML = banners() + '<div id="view-body"></div>';
   cleanup = route.view.render(el.querySelector('#view-body'), r.param, route.sub) || null;
   document.title = isTools ? 'DOROGO Tools · AI Watermark & Metadata Engine' : `${route.label} · DOROGO Partner Outreach`;
   window.scrollTo(0, prevScroll);
