@@ -3,7 +3,16 @@ import * as core from '../supabase/functions/_shared/core/index.js';
 import { S, insert, update, updateMany, remove, log, api, isDemo, nowIso } from './store.js';
 import { toast } from './ui.js';
 
-export const prospectById = (id) => S.prospects.find((p) => p.id === id);
+export const prospectById = (id) => S.prospects.find((p) => p.id === id) || {
+  id: id || 'unknown',
+  agency_name: 'Unknown Agency',
+  contact_name: '',
+  market: 'other',
+  language: 'en',
+  priority_score: 50,
+  type: 'planner',
+  status: 'researching',
+};
 export const touchesOf = (pid) => S.touches.filter((t) => t.prospect_id === pid);
 export const oppsOf = (pid) => S.opps.filter((o) => o.prospect_id === pid);
 export const smtpReady = () => !!S.health?.integrations?.smtp;

@@ -45,12 +45,29 @@ function shell() {
   const root = document.getElementById('root');
   const n = badgeCount();
   const r = parseHash();
+  const isTools = r.name === 'tools';
   const links = Object.entries(ROUTES).filter(([, v]) => !v.hidden);
   root.innerHTML = `<div class="app">
     <nav class="rail" aria-label="Main">
-      <div class="brand"><div class="mark">DOROGO</div><div class="sub">Partner outreach</div></div>
-      ${links.map(([k, v]) => `<a class="nav-link ${r.name === k ? 'active' : ''}" href="#${k}">${icon(v.icon)}<span>${esc(v.label)}</span>${k === 'today' && n ? `<span class="count">${n}</span>` : ''}</a>`).join('')}
-      <a class="nav-link" href="#add" style="margin-top:10px">${icon('plus')}<span>Add prospects</span></a>
+      <div class="brand">
+        <div class="mark">DOROGO</div>
+        <div class="sub">${isTools ? 'Creative & AI tools' : 'Partner outreach'}</div>
+      </div>
+      <div class="rail-mode-switch" role="tablist" aria-label="Mode">
+        <a href="#today" class="rail-mode-btn ${!isTools ? 'active' : ''}">${icon('mail', 14)}<span>Outreach</span></a>
+        <a href="#tools" class="rail-mode-btn ${isTools ? 'active' : ''}">${icon('sparkle', 14)}<span>Tools</span></a>
+      </div>
+      ${isTools ? `
+        <div class="label" style="padding: 10px 10px 4px; font-size: .68rem;">DOROGO TOOLS SUITE</div>
+        <a class="nav-link active" href="#tools">${icon('sparkle')}<span>AI Watermark & EXIF</span></a>
+        <a class="nav-link" href="#tools#ratecard">${icon('template')}<span>Rate Card & Assets</span></a>
+        <a class="nav-link" href="https://raiw.cc" target="_blank" rel="noopener">${icon('external')}<span>Cloud Web GUI</span></a>
+        <div class="divider" style="margin: 12px 10px;"></div>
+        <a class="nav-link" href="#today">${icon('mail')}<span>← Partner Outreach</span></a>
+      ` : `
+        ${links.map(([k, v]) => `<a class="nav-link ${r.name === k ? 'active' : ''}" href="#${k}">${icon(v.icon)}<span>${esc(v.label)}</span>${k === 'today' && n ? `<span class="count">${n}</span>` : ''}</a>`).join('')}
+        <a class="nav-link" href="#add" style="margin-top:10px">${icon('plus')}<span>Add prospects</span></a>
+      `}
       <div class="rail-foot">
         <span class="tiny faint">${esc(S.user?.email || '')}</span>
         ${isDemo() ? '<button class="btn sm" data-act="leave-demo">Leave demo</button>' : '<button class="btn sm ghost" data-act="sign-out">Sign out</button>'}
@@ -58,7 +75,13 @@ function shell() {
     </nav>
     <main class="main" id="view" tabindex="-1"></main>
     <nav class="tabbar" aria-label="Main">
-      ${['today', 'pipeline', 'analytics', 'partners', 'settings'].map((k) => `<a href="#${k}" class="${r.name === k ? 'active' : ''}">${icon(ROUTES[k].icon, 20)}<span>${k === 'settings' ? 'More' : ROUTES[k].label}</span>${k === 'today' && n ? `<span class="dot">${n}</span>` : ''}</a>`).join('')}
+      ${[
+        { k: 'today', label: 'Today', icon: 'today', dot: n },
+        { k: 'pipeline', label: 'Pipeline', icon: 'board' },
+        { k: 'tools', label: 'Tools', icon: 'sparkle' },
+        { k: 'partners', label: 'Partners', icon: 'partners' },
+        { k: 'settings', label: 'Settings', icon: 'settings' },
+      ].map((tab) => `<a href="#${tab.k}" class="${r.name === tab.k ? 'active' : ''}">${icon(tab.icon, 20)}<span>${esc(tab.label)}</span>${tab.dot ? `<span class="dot">${tab.dot}</span>` : ''}</a>`).join('')}
     </nav>
   </div>`;
   root.querySelector('[data-act="sign-out"]')?.addEventListener('click', () => signOut());
@@ -77,6 +100,7 @@ function renderView() {
   if (!['live', 'demo'].includes(S.mode)) return;
   const r = parseHash();
   const route = ROUTES[r.name];
+  const isTools = r.name === 'tools';
   if (current !== r.name || !document.getElementById('view')) shell();
   else {
     // keep nav badges fresh without rebuilding the shell
@@ -93,9 +117,37 @@ function renderView() {
   current = r.name;
   document.querySelectorAll('.nav-link').forEach((a) => a.classList.toggle('active', a.getAttribute('href') === `#${r.name}`));
   document.querySelectorAll('.tabbar a').forEach((a) => a.classList.toggle('active', a.getAttribute('href') === `#${r.name}`));
-  el.innerHTML = banners() + '<div id="view-body"></div>';
+  
+  const topbar = `
+    <header class="app-topbar">
+      <div class="topbar-left">
+        <div class="topbar-mode-toggle" role="tablist" aria-label="Mode">
+          <a href="#today" class="mode-tab ${!isTools ? 'active' : ''}" role="tab" aria-selected="${!isTools}">
+            ${icon('mail', 15)}
+            <span>Partner Outreach</span>
+          </a>
+          <a href="#tools" class="mode-tab ${isTools ? 'active' : ''}" role="tab" aria-selected="${isTools}">
+            ${icon('sparkle', 15)}
+            <span>DOROGO Tools</span>
+            <span class="chip gold" style="font-size: .62rem; padding: 1px 6px;">NEW</span>
+          </a>
+        </div>
+      </div>
+      <div class="topbar-right">
+        ${isTools ? `
+          <a class="btn sm" href="#today">${icon('mail', 14)} Open Outreach CRM</a>
+          <a class="btn sm ghost" href="https://raiw.cc" target="_blank" rel="noopener">${icon('external', 13)} Cloud Web GUI</a>
+        ` : `
+          <a class="btn sm" href="#add">${icon('plus', 14)} Add prospects</a>
+          <a class="btn sm ghost" href="#tools">${icon('sparkle', 14)} DOROGO Tools</a>
+        `}
+      </div>
+    </header>
+  `;
+
+  el.innerHTML = topbar + banners() + '<div id="view-body"></div>';
   cleanup = route.view.render(el.querySelector('#view-body'), r.param, route.sub) || null;
-  document.title = `${route.label} · DOROGO Partner Outreach`;
+  document.title = isTools ? 'DOROGO Tools · AI Watermark & Metadata Engine' : `${route.label} · DOROGO Partner Outreach`;
   window.scrollTo(0, prevScroll);
 }
 
