@@ -9,7 +9,7 @@ import * as add from './views/add.js';
 import * as templates from './views/templates.js';
 import * as analytics from './views/analytics.js';
 import * as partners from './views/partners.js';
-import * as tools from './views/tools.js';
+import * as tools from './views/tools.js?v=3.0';
 import * as settings from './views/settings.js';
 
 const ROUTES = {
