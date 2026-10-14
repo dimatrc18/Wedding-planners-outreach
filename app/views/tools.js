@@ -15,34 +15,110 @@ export function render(el) {
         <div>
           <div class="eyebrow">DOROGO Creative & Automation Suite</div>
           <h1>DOROGO Tools</h1>
-          <p class="small muted">Private AI watermark removal, C2PA provenance scrubbing, and luxury wedding rate card assets.</p>
+          <p class="small muted">AI watermark removal, C2PA provenance scrubbing, and luxury Lake Como wedding partner assets.</p>
         </div>
         <div class="row gap">
-          <a class="btn sm" href="#today">${icon('mail', 14)} Back to Outreach</a>
-          <a class="btn sm ghost" href="https://raiw.cc" target="_blank" rel="noopener">${icon('external', 14)} Open Cloud Web GUI</a>
+          <a class="btn sm" href="#today">${icon('mail', 14)} Back to Outreach CRM</a>
+          <a class="btn sm ghost" href="https://raiw.cc" target="_blank" rel="noopener">${icon('external', 14)} Open Cloud Web (raiw.cc)</a>
         </div>
       </div>
 
-      <!-- Two-Folder System Status Banner -->
-      <div class="banner demo" style="margin-bottom: 20px; background: var(--surface-2); border: 1px solid var(--line-strong);">
-        ${icon('sparkle')}
-        <div class="grow stack" style="gap: 2px;">
-          <div style="font-weight: 600; font-size: .84rem;">Two Separate Local Workspaces Configured</div>
-          <div class="small muted" style="line-height: 1.4;">
-            <b>1. Outreach CRM:</b> <code>/Users/User/Downloads/Wedding-planners-outreach</code> · 50/50 automated discovery & cadence<br>
-            <b>2. Tools Suite:</b> <code>/Users/User/Downloads/tools/remove-ai-watermarks</code> · Local AI neural watermark cleaner & C2PA stripper
+      <!-- 3-Pillar Capability Architecture (Matching raiw.cc core) -->
+      <div class="grid cols-3 gap-16" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px;">
+        <!-- Card 1: Visible Marks -->
+        <div class="card stack" style="border: 1px solid var(--line-strong); background: var(--surface); display: flex; flex-direction: column; justify-content: space-between; border-radius: var(--r); padding: 18px;">
+          <div>
+            <div class="row between" style="margin-bottom: 12px;">
+              <div class="row gap" style="align-items: center;">
+                <div style="background: rgba(168, 85, 247, 0.15); color: #c084fc; width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center;">
+                  ${icon('sparkle', 16)}
+                </div>
+                <span style="font-weight: 600; font-size: 1.05rem;">Visible marks</span>
+              </div>
+              <span class="chip ok" style="font-size: .72rem; font-weight: 700; background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3);">FREE</span>
+            </div>
+            <p class="small muted" style="line-height: 1.5; margin-bottom: 16px;">
+              The Gemini / Nano Banana sparkle plus the Doubao, Jimeng, Qwen, Kling, Tencent Yuanbao, RunningHub, Baidu and LiblibAI corner labels — painted out of the picture.
+            </p>
+          </div>
+          <div>
+            <div class="tiny faint" style="margin-bottom: 6px;">Supported: Local Mac CLI &amp; AI Chat</div>
+            <a class="btn sm ghost" href="#neural" style="width: 100%; justify-content: space-between; color: var(--gold); border: 1px solid var(--line);">
+              <span>Remove Gemini watermark</span>
+              <span>↓</span>
+            </a>
           </div>
         </div>
+
+        <!-- Card 2: Metadata -->
+        <div class="card stack" style="border: 1px solid var(--line-strong); background: var(--surface); display: flex; flex-direction: column; justify-content: space-between; border-radius: var(--r); padding: 18px;">
+          <div>
+            <div class="row between" style="margin-bottom: 12px;">
+              <div class="row gap" style="align-items: center;">
+                <div style="background: rgba(168, 85, 247, 0.15); color: #c084fc; width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center;">
+                  ${icon('doc', 16)}
+                </div>
+                <span style="font-weight: 600; font-size: 1.05rem;">Metadata</span>
+              </div>
+              <span class="chip ok" style="font-size: .72rem; font-weight: 700; background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3);">FREE</span>
+            </div>
+            <p class="small muted" style="line-height: 1.5; margin-bottom: 16px;">
+              C2PA Content Credentials, "Made with AI", China AIGC, generator EXIF/XMP — the tags platforms and social algorithms read to flag AI media.
+            </p>
+          </div>
+          <div>
+            <div class="tiny faint" style="margin-bottom: 6px;">Supported: 100% In-Browser &amp; CLI</div>
+            <a class="btn sm ghost" href="#cleaner" style="width: 100%; justify-content: space-between; color: var(--ok); border: 1px solid var(--line);">
+              <span>Strip AI metadata</span>
+              <span>↓</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Card 3: Hidden in Pixels -->
+        <div class="card stack" style="border: 1px solid var(--line-strong); background: var(--surface); display: flex; flex-direction: column; justify-content: space-between; border-radius: var(--r); padding: 18px;">
+          <div>
+            <div class="row between" style="margin-bottom: 12px;">
+              <div class="row gap" style="align-items: center;">
+                <div style="background: rgba(168, 85, 247, 0.15); color: #c084fc; width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center;">
+                  <span style="font-size: 16px; line-height: 1;">≈</span>
+                </div>
+                <span style="font-weight: 600; font-size: 1.05rem;">Hidden in the pixels</span>
+              </div>
+              <span class="chip" style="font-size: .72rem; font-weight: 700; background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3);">From $1.49</span>
+            </div>
+            <p class="small muted" style="line-height: 1.5; margin-bottom: 16px;">
+              SynthID and similar deep latent watermarks. Needs an NVIDIA CUDA GPU pass that regenerates the image through diffusion, then restores faces.
+            </p>
+          </div>
+          <div>
+            <div class="tiny faint" style="margin-bottom: 6px;">Requires Cloud NVIDIA CUDA GPU Cluster</div>
+            <a class="btn sm ghost" href="https://raiw.cc" target="_blank" rel="noopener" style="width: 100%; justify-content: space-between; color: #c084fc; border: 1px solid var(--line);">
+              <span>Remove SynthID (raiw.cc)</span>
+              <span>↗</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trust & Verification Bar -->
+      <div class="banner" style="margin-bottom: 24px; background: var(--surface-2); border: 1px solid var(--line-strong); justify-content: space-around; padding: 12px 18px; font-size: .82rem;">
+        <span class="row gap" style="align-items: center; color: var(--ink-2);"><span style="color: var(--ok);">🛡️</span> 100% Private · Zero data retention</span>
+        <span class="row gap" style="align-items: center; color: var(--ink-2);"><span style="color: var(--gold);">⚡</span> Powered by <code>remove-ai-watermarks v0.45.1</code></span>
+        <span class="row gap" style="align-items: center; color: var(--ink-2);"><span style="color: #c084fc;">☁️</span> Cloud GPU fallback via official raiw.cc</span>
       </div>
 
       <div class="grid cols-2 gap-16" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 18px; margin-bottom: 24px;">
-        <!-- Browser Instant Cleaner -->
+        <!-- Browser Instant Cleaner (Card 2 Implementation) -->
         <section class="card stack" id="cleaner">
           <div class="section-head">
-            <h2>Instant In-Browser Cleaner</h2>
-            <span class="chip ok">100% private · Zero upload</span>
+            <div>
+              <h2>1. Instant In-Browser Metadata Stripper</h2>
+              <p class="tiny muted">Client-side HTML5 canvas · Zero server upload · 100% Private</p>
+            </div>
+            <span class="chip ok">Instant</span>
           </div>
-          <p class="small muted">Drop an image here to scrub all hidden camera EXIF tags, GPS location, C2PA Content Credentials, and invisible AI generation markers directly on your device.</p>
+          <p class="small muted">Drop an image here to scrub all hidden camera EXIF tags, GPS location, C2PA Content Credentials ("Made with AI"), and invisible text markers directly on your device.</p>
 
           <div id="dropzone" style="border: 2px dashed var(--line-strong); border-radius: var(--r); padding: 32px 16px; text-align: center; background: var(--surface-2); cursor: pointer; transition: all .15s ease;">
             <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp" style="display:none">
@@ -72,51 +148,54 @@ export function render(el) {
           ` : ''}
         </section>
 
-        <!-- Deep Neural Remover & CLI Guide -->
+        <!-- Deep Neural Remover & CLI Guide (Card 1 Implementation) -->
         <section class="card stack" id="neural">
           <div class="section-head">
-            <h2>Deep Neural Remover (CLI & Skill)</h2>
-            <span class="chip gold">Local Python Skill</span>
+            <div>
+              <h2>2. Visible Watermark Inpainter</h2>
+              <p class="tiny muted">Local Mac Python Engine · OpenCV Inpainting · Zero Cloud Latency</p>
+            </div>
+            <span class="chip gold">Local CLI</span>
           </div>
-          <p class="small muted">For visible Google Gemini sparkle stamps, Veo/Sora marks, or pixel-embedded SynthID patterns, use the Python tool installed in <code>tools/</code>.</p>
+          <p class="small muted">For visible Google Gemini sparkle stamps, Doubao, Jimeng, or Kling labels, use the local engine installed directly on your Mac.</p>
 
           <div class="card flush" style="padding: 12px 14px; background: var(--surface-2); border-radius: var(--r);">
             <div class="row between" style="margin-bottom: 4px;">
-              <span class="tiny uppercase font-bold" style="font-weight: 600; letter-spacing: 0.05em; color: var(--gold-ink);">1. In Antigravity AI Chat</span>
+              <span class="tiny uppercase font-bold" style="font-weight: 600; letter-spacing: 0.05em; color: var(--gold-ink);">A. In Antigravity AI Chat (Easiest)</span>
             </div>
             <p class="small" style="margin: 0; line-height: 1.5;">
               Simply say in the chat: <br>
               <code style="background: var(--surface); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px;">"Clean watermarks from /path/to/image.png"</code><br>
-              The AI automatically activates the <code>remove-ai-watermarks</code> skill.
+              Antigravity runs the installed <code>remove-ai-watermarks</code> skill automatically.
             </p>
           </div>
 
           <div class="card flush" style="padding: 12px 14px; background: var(--surface-2); border-radius: var(--r);">
             <div class="row between" style="margin-bottom: 6px;">
-              <span class="tiny uppercase font-bold" style="font-weight: 600; letter-spacing: 0.05em; color: var(--gold-ink);">2. Direct Terminal Commands</span>
+              <span class="tiny uppercase font-bold" style="font-weight: 600; letter-spacing: 0.05em; color: var(--gold-ink);">B. Direct Terminal Command</span>
             </div>
             <div class="stack" style="gap: 8px;">
               <div>
-                <div class="tiny faint" style="margin-bottom: 2px;">Inspect marks & C2PA credentials:</div>
+                <div class="tiny faint" style="margin-bottom: 2px;">Inspect watermarks &amp; C2PA:</div>
                 <div class="row between" style="background: var(--surface); padding: 6px 8px; border-radius: 4px; border: 1px solid var(--line);">
-                  <code class="small" style="font-size: .78rem;">cd /Users/User/Downloads/tools/remove-ai-watermarks && uv run remove-ai-watermarks identify image.png</code>
-                  <button class="btn sm ghost" data-copy="cd /Users/User/Downloads/tools/remove-ai-watermarks && uv run remove-ai-watermarks identify image.png" style="padding: 2px 6px;">${icon('copy', 13)}</button>
+                  <code class="small" style="font-size: .78rem;">remove-ai-watermarks identify image.png</code>
+                  <button class="btn sm ghost" data-copy="remove-ai-watermarks identify image.png" style="padding: 2px 6px;">${icon('copy', 13)}</button>
                 </div>
               </div>
 
               <div>
-                <div class="tiny faint" style="margin-bottom: 2px;">Remove all watermarks (visible + metadata):</div>
+                <div class="tiny faint" style="margin-bottom: 2px;">Remove visible marks (Gemini sparkles, etc.):</div>
                 <div class="row between" style="background: var(--surface); padding: 6px 8px; border-radius: 4px; border: 1px solid var(--line);">
-                  <code class="small" style="font-size: .78rem;">cd /Users/User/Downloads/tools/remove-ai-watermarks && uv run remove-ai-watermarks all input.png -o clean.png</code>
-                  <button class="btn sm ghost" data-copy="cd /Users/User/Downloads/tools/remove-ai-watermarks && uv run remove-ai-watermarks all input.png -o clean.png" style="padding: 2px 6px;">${icon('copy', 13)}</button>
+                  <code class="small" style="font-size: .78rem;">remove-ai-watermarks visible input.png -o clean.png</code>
+                  <button class="btn sm ghost" data-copy="remove-ai-watermarks visible input.png -o clean.png" style="padding: 2px 6px;">${icon('copy', 13)}</button>
                 </div>
               </div>
 
               <div>
                 <div class="tiny faint" style="margin-bottom: 2px;">Batch process entire directory:</div>
                 <div class="row between" style="background: var(--surface); padding: 6px 8px; border-radius: 4px; border: 1px solid var(--line);">
-                  <code class="small" style="font-size: .78rem;">cd /Users/User/Downloads/tools/remove-ai-watermarks && uv run remove-ai-watermarks batch ./images/</code>
-                  <button class="btn sm ghost" data-copy="cd /Users/User/Downloads/tools/remove-ai-watermarks && uv run remove-ai-watermarks batch ./images/" style="padding: 2px 6px;">${icon('copy', 13)}</button>
+                  <code class="small" style="font-size: .78rem;">remove-ai-watermarks batch ./images/</code>
+                  <button class="btn sm ghost" data-copy="remove-ai-watermarks batch ./images/" style="padding: 2px 6px;">${icon('copy', 13)}</button>
                 </div>
               </div>
             </div>
@@ -128,7 +207,7 @@ export function render(el) {
       <section class="card stack" id="ratecard" style="margin-bottom: 24px;">
         <div class="section-head">
           <div>
-            <h2>DOROGO 2027 Wedding Partner Rate Card & Assets</h2>
+            <h2>3. DOROGO 2027 Wedding Partner Rate Card & Assets</h2>
             <p class="small muted">Official luxury rate card for Lake Como wedding planners, venues, and luxury concierges.</p>
           </div>
           <div class="row gap">
