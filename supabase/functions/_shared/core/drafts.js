@@ -5,10 +5,27 @@ import { DEFAULT_TEMPLATES, REPLY_FOR_INTENT } from './templates.js';
 import { lintMessage } from './lint.js';
 
 export function firstName(contact = '') {
-  const n = String(contact || '').trim().split(/\s+/)[0] || '';
-  if (/^(villa|hotel|grand|relais|palace|resort|team|events?|concierge|info|hello|office|studio|agency|wedding|weddings)$/i.test(n)) return '';
+  const str = String(contact || '').trim();
+  if (/\b(team|studio|agency|office|concierge|planners?|planning|events?|management|group|boutique|service|desk|hotel|villa|relais|palace|resort)\b/i.test(str)) {
+    return '';
+  }
+  const n = str.split(/\s+/)[0] || '';
+  if (/^(villa|hotel|grand|relais|palace|resort|team|events?|concierge|info|hello|office|studio|agency|wedding|weddings|planning|planner)$/i.test(n)) return '';
   if (!/^[\p{L}'’-]{2,}$/u.test(n)) return '';
   return n.charAt(0).toUpperCase() + n.slice(1);
+}
+
+export function cleanPersonalizationHook(hook = '') {
+  let s = String(hook || '').trim();
+  // Strip greeting with name followed by punctuation: e.g. "Здравствуйте, Анна," or "Hi Hannah," or "Buongiorno Chiara,"
+  s = s.replace(/^(?:здравствуйте|добрый\s+день|приветствую|buongiorno|buonasera|ciao|hello|hi|dear)[,\s]+[\p{L}'’-]+[,!:\n]\s*/iu, '');
+  // Strip standalone greeting: e.g. "Здравствуйте," or "Здравствуйте!" or "Buongiorno," or "Hello,"
+  s = s.replace(/^(?:здравствуйте|добрый\s+день|приветствую|buongiorno|buonasera|ciao|hello|hi|dear)[,\s!:]+\s*/iu, '');
+  s = s.trim();
+  if (s) {
+    s = s.charAt(0).toUpperCase() + s.slice(1);
+  }
+  return s;
 }
 
 export function greeting(prospect) {
@@ -190,13 +207,7 @@ export function buildVars(prospect, extra = {}) {
   const variant = extra.variant === 'B' ? 'B' : 'A';
   const tailored = buildTailoredCopy(prospect, agency_short, venue_or_location, lang, variant);
   const sig = lang === 'it' ? SIGNATURE_IT : lang === 'ru' ? SIGNATURE_RU : SIGNATURE;
-  let cleanHook = (prospect.personalization_hook || '').trim();
-  cleanHook = cleanHook
-    .replace(/^(Здравствуйте[,\s]+([А-Яа-яA-Za-z]+[,\s]+)?|Buongiorno[,\s]+([A-Za-z]+[,\s]+)?|Hi\s+[A-Za-z]+[,\s]+|Hello[,\s]+)/i, '')
-    .trim();
-  if (cleanHook) {
-    cleanHook = cleanHook.charAt(0).toUpperCase() + cleanHook.slice(1);
-  }
+  const cleanHook = cleanPersonalizationHook(prospect.personalization_hook);
   return {
     greeting: greeting(prospect),
     first_name: firstName(prospect.contact_name),
@@ -212,7 +223,7 @@ export function buildVars(prospect, extra = {}) {
     location: prospect.location || venue_or_location,
     signature: sig,
     optout: OPTOUT[lang] || OPTOUT.en,
-    sender_name: 'Dmitri',
+    sender_name: lang === 'ru' ? 'Дмитрий Трачук' : 'Dmitri Traciuc',
     ...extra,
   };
 }
@@ -246,13 +257,13 @@ const reSubject = (s) => (!s ? '' : /^re:/i.test(s) ? s : `Re: ${s}`);
  * → { subject, body, variant, template_id, template_key, attach_rate_card, lint }
  */
 export function buildDraft({ prospect, key, templates, threadSubject = '', step = null, extraVars = {} }) {
-  const lang = prospect.language === 'it' ? 'it' : 'en';
+  const lang = ['it', 'ru'].includes(prospect.language) ? prospect.language : 'en';
   const t = pickTemplate(templates, key, lang);
   if (!t) return null;
   const hookText = String((extraVars && extraVars.hook) || prospect.personalization_hook || '');
-  const inferredHookVariant = /^(The hardest part of a Lake Como wedding's transport|La parte più complessa dei trasporti)/i.test(hookText)
+  const inferredHookVariant = /^(The hardest part of a Lake Como wedding's transport|La parte più complessa dei trasporti|Самая сложная часть свадебной логистики)/i.test(hookText)
     ? 'B'
-    : /^(I'm Dmitri from DOROGO|Sono Dmitri di DOROGO)/i.test(hookText)
+    : /^(I'm Dmitri from DOROGO|Sono Dmitri di DOROGO|Я Дмитрий из компании DOROGO)/i.test(hookText)
       ? 'A'
       : null;
   const variant = extraVars.variant === 'A' || extraVars.variant === 'B'
@@ -293,11 +304,12 @@ export function renderDorogoLuxuryHtmlEmail(
 ) {
   const raw = String(textContent || '').trim();
   const isIt = /Un cordiale saluto|Buongiorno|rispondere "no"|nessun problema, basta farmelo sapere/i.test(raw);
+  const isRu = /Здравствуйте|Добрый день|С уважением|дайте знать|никаких вопросов|Трачук/i.test(raw);
 
   // Separate opt-out line if present at the bottom
   let optoutText = '';
   let bodyWithoutOptout = raw;
-  for (const opt of [OPTOUT.en, OPTOUT.it]) {
+  for (const opt of [OPTOUT.en, OPTOUT.it, OPTOUT.ru]) {
     if (bodyWithoutOptout.includes(opt)) {
       optoutText = opt;
       bodyWithoutOptout = bodyWithoutOptout.split(opt).join('').trim();
@@ -306,8 +318,9 @@ export function renderDorogoLuxuryHtmlEmail(
 
   // Strip trailing signature block from body paragraphs since we render the styled footer
   let cleanText = bodyWithoutOptout
-    .replace(/(?:Warm regards|Kind regards|Best regards|Un cordiale saluto|Cordiali saluti),?[\s\S]*$/i, '')
-    .replace(/\n*Dmitri\s*\n+DOROGO\s*\|\s*dmitri@dorogo\.eu[\s\S]*$/i, '')
+    .replace(/(?:Warm regards|Kind regards|Best regards|Un cordiale saluto|Cordiali saluti|С уважением),?[\s\S]*$/i, '')
+    .replace(/\n*(?:Dmitri(?:\s+Traciuc)?|Дмитрий(?:\s+Трачук)?)\s*\n+(?:Senior Dispatcher|Старший диспетчер|Founder|DOROGO)[\s\S]*$/i, '')
+    .replace(/\n*(?:Dmitri|Дмитрий)\s*\n+DOROGO\s*\|\s*dmitri@dorogo\.eu[\s\S]*$/i, '')
     .trim();
 
   if (!cleanText && bodyWithoutOptout) cleanText = bodyWithoutOptout;
@@ -340,8 +353,8 @@ export function renderDorogoLuxuryHtmlEmail(
     })
     .join('');
 
-  const signOff = isIt ? 'Un cordiale saluto,' : 'Warm regards,';
-  const regionLine = isIt ? 'Milano &bull; Lago di Como &bull; Alpi' : 'Milan &bull; Lake Como &bull; Italian Alps';
+  const signOff = isIt ? 'Un cordiale saluto,' : isRu ? 'С уважением,' : 'Warm regards,';
+  const regionLine = isIt ? 'Milano &bull; Lago di Como &bull; Alpi' : isRu ? 'Милан &bull; Озеро Комо &bull; Альпы' : 'Milan &bull; Lake Como &bull; Italian Alps';
   const displayEmail = fromEmail ? fromEmail.replace(/^booking@/i, 'Booking@') : 'dmitri@dorogo.eu';
   const safeFrom = htmlEsc(displayEmail);
 
@@ -413,7 +426,8 @@ export function renderDorogoLuxuryHtmlEmail(
           <tr>
             <td class="dm-text" style="padding: 0 0 14px 0; font-size: 15px; color: #18181b; line-height: 1.5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
               ${signOff}<br>
-              <strong style="font-weight: 600;">Dmitri</strong>
+              <strong style="font-weight: 600;">${isRu ? 'Дмитрий Трачук' : 'Dmitri Traciuc'}</strong><br>
+              <span style="font-size: 13px; color: #52525b;">${isRu ? 'Старший диспетчер, DOROGO' : 'Senior Dispatcher, DOROGO'}</span>
             </td>
           </tr>
           <tr>

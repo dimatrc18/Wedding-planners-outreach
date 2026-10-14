@@ -62,3 +62,25 @@ test('drafts: greeting, threading, stable A/B variant', () => {
   const split = new Set(Array.from({ length: 40 }, (_, i) => assignVariant(`p${i}`, { subject_b: 'x' })));
   assert.equal(split.size, 2, 'both variants get used');
 });
+
+test('Russian greeting & hook cleaning: no duplicate hello and Senior Dispatcher signature', () => {
+  const kzProspect = {
+    id: 'kz-1',
+    agency_name: 'Desìo Lux Eventi',
+    contact_name: 'Desìo Planning Team',
+    language: 'ru',
+    personalization_hook: 'Здравствуйте, увидел ваши масштабные свадьбы на озере Комо и в Лугано и решил познакомиться лично.',
+  };
+  const d = buildDraft({ prospect: kzProspect, key: 'T1_intro' });
+  assert.ok(d, 'Draft builds for Russian prospect');
+  // First paragraph should be general greeting without awkward "Desìo" name
+  assert.match(d.body, /^Здравствуйте,\n\nУвидел ваши масштабные свадьбы/);
+  // Ensure "Здравствуйте" occurs only once in the entire message
+  const hellos = (d.body.match(/Здравствуйте/g) || []).length;
+  assert.equal(hellos, 1, 'Здравствуйте must appear exactly once');
+  // Verify Senior Dispatcher signature
+  assert.ok(d.body.includes('Старший диспетчер, DOROGO'), 'Includes Senior Dispatcher role');
+  assert.ok(d.body.includes('Озеро Комо · Милан'), 'Includes Lake Como · Milan regional line');
+  assert.ok(!d.body.includes('Founder'), 'Does not contain Founder');
+});
+

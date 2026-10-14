@@ -2,15 +2,15 @@
 import { S, init, onChange, signIn, signOut, startDemo, leaveDemo, syncScores, isDemo } from './store.js';
 import { esc, icon, toast, debounce } from './ui.js';
 import { todayData } from './actions.js';
-import * as today from './views/today.js';
-import * as pipeline from './views/pipeline.js';
-import * as prospect from './views/prospect.js';
-import * as add from './views/add.js';
-import * as templates from './views/templates.js';
-import * as analytics from './views/analytics.js';
-import * as partners from './views/partners.js';
-import * as tools from './views/tools.js?v=3.0';
-import * as settings from './views/settings.js';
+import * as today from './views/today.js?v=3.1';
+import * as pipeline from './views/pipeline.js?v=3.1';
+import * as prospect from './views/prospect.js?v=3.1';
+import * as add from './views/add.js?v=3.1';
+import * as templates from './views/templates.js?v=3.1';
+import * as analytics from './views/analytics.js?v=3.1';
+import * as partners from './views/partners.js?v=3.1';
+import * as tools from './views/tools.js?v=3.1';
+import * as settings from './views/settings.js?v=3.1';
 
 const ROUTES = {
   today: { view: today, label: 'Today', icon: 'today' },

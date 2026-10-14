@@ -36,7 +36,9 @@ const OPTOUT_RE = /just let me know|basta farmelo sapere|дайте знать|�
 export function coreText(body = '') {
   let t = String(body);
   for (const s of [SIGNATURE, SIGNATURE_IT, SIGNATURE_RU, OPTOUT.en, OPTOUT.it, OPTOUT.ru]) t = t.split(s).join(' ');
-  t = t.replace(/^(warm regards|kind regards|best regards|un cordiale saluto|cordiali saluti|с уважением|дмитрий|dmitri\s*\n\s*dorogo\b),?[\s\S]*$/im, ' ');
+  t = t.replace(/\n*(?:Dmitri(?:\s+Traciuc)?|Дмитрий(?:\s+Трачук)?)\s*\n+(?:Senior Dispatcher|Старший диспетчер|Founder|DOROGO)[\s\S]*$/i, ' ');
+  t = t.replace(/\n*(?:Dmitri|Дмитрий)\s*\n+DOROGO\s*\|\s*dmitri@dorogo\.eu[\s\S]*$/i, ' ');
+  t = t.replace(/^(warm regards|kind regards|best regards|un cordiale saluto|cordiali saluti|с уважением|дмитрий|dmitri\s*\n\s*(?:senior\s+dispatcher|dorogo)\b),?[\s\S]*$/im, ' ');
   return t.trim();
 }
 

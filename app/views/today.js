@@ -21,11 +21,50 @@ function lintHtml(l) {
   return `<div class="lint">${(l.errors || []).map((e) => `<span class="e">${esc(e)}</span>`).join('')}${(l.warnings || []).map((w) => `<span class="w">${esc(w)}</span>`).join('')}</div>`;
 }
 
+export function cleanDuplicateDraftGreetings(body = '') {
+  if (!body) return '';
+  let clean = body.replace(/Founder,\s*DOROGO/gi, 'Senior Dispatcher, DOROGO');
+  const paras = clean.split(/\n\s*\n/);
+  if (paras.length >= 2) {
+    let p0 = paras[0].trim();
+    let p1 = paras[1].trim();
+    // Sanitize accidental agency name used as Russian contact first name (e.g. Desìo from Desìo Planning Team)
+    if (/^Здравствуйте,\s+Desìo,/i.test(p0)) {
+      p0 = 'Здравствуйте,';
+      paras[0] = p0;
+    }
+    // Clean Russian duplicate greeting
+    if (/^(?:Здравствуйте|Добрый день|Приветствую)[,\s!]*/i.test(p0) &&
+        /^(?:Здравствуйте|Добрый день|Приветствую)[,\s!]+/i.test(p1)) {
+      p1 = p1.replace(/^(?:Здравствуйте|Добрый день|Приветствую)[,\s!]+\s*/i, '');
+      if (p1) p1 = p1.charAt(0).toUpperCase() + p1.slice(1);
+      paras[1] = p1;
+    }
+    // Clean Italian duplicate greeting
+    if (/^(?:Buongiorno|Buonasera|Ciao)[,\s!]*/i.test(p0) &&
+        /^(?:Buongiorno|Buonasera|Ciao)[,\s!]+/i.test(p1)) {
+      p1 = p1.replace(/^(?:Buongiorno|Buonasera|Ciao)[,\s!]+\s*/i, '');
+      if (p1) p1 = p1.charAt(0).toUpperCase() + p1.slice(1);
+      paras[1] = p1;
+    }
+    // Clean English duplicate greeting
+    if (/^(?:Hi|Hello|Dear)[,\s!]*/i.test(p0) &&
+        /^(?:Hi|Hello|Dear)[,\s!]+/i.test(p1)) {
+      p1 = p1.replace(/^(?:Hi|Hello|Dear)[,\s!]+\s*/i, '');
+      if (p1) p1 = p1.charAt(0).toUpperCase() + p1.slice(1);
+      paras[1] = p1;
+    }
+    clean = paras.join('\n\n');
+  }
+  return clean;
+}
+
 function draftCard(t, i) {
   const p = A.prospectById(t.prospect_id);
   const lint = A.lintOf(t);
   const isEdit = editing === t.id;
   const inbound = t.suggested_for ? S.touches.find((x) => x.id === t.suggested_for) : null;
+  const displayBody = cleanDuplicateDraftGreetings(t.body || '');
   return `<article class="draft ${i === focusIdx ? 'focus' : ''}" data-card="${attr(t.id)}" data-idx="${i}">
     <div class="who">
       <a href="#prospect/${attr(p.id)}"><b>${esc(p.agency_name)}</b></a>
@@ -47,9 +86,9 @@ function draftCard(t, i) {
     ${p.personalization_hook && p.hook_needs_review ? '<span class="chip warn">Hook flagged for review</span>' : ''}
     ${isEdit ? `
       ${t.channel === 'email' ? `<label class="field"><span>Subject</span><input type="text" id="ed-subject" value="${attr(t.subject || '')}"></label>` : ''}
-      <textarea class="body-edit" id="ed-body" aria-label="Message">${esc(t.body || '')}</textarea>
+      <textarea class="body-edit" id="ed-body" aria-label="Message">${esc(displayBody)}</textarea>
       <div class="actions"><button class="btn primary" data-act="save" data-id="${attr(t.id)}">Save <kbd>⌘↵</kbd></button><button class="btn ghost" data-act="cancel">Cancel <kbd>Esc</kbd></button></div>`
-    : `${t.subject ? `<div class="subject">${esc(t.subject)}</div>` : ''}<div class="body">${esc(t.body || '')}</div>`}
+    : `${t.subject ? `<div class="subject">${esc(t.subject)}</div>` : ''}<div class="body">${esc(displayBody)}</div>`}
     ${lintHtml(lint)}
     ${isEdit ? '' : `<div class="actions">
       <button class="btn primary" data-act="approve" data-id="${attr(t.id)}" ${lint.errors.length ? 'disabled' : ''}>${icon('check', 16)} Approve <kbd>A</kbd></button>
@@ -244,7 +283,7 @@ export function render(el) {
           break;
         }
         case 'ai': toast('Rewriting…'); await api('ai_redraft', { touch_id: id }); toast('AI rewrite ready, check it before approving'); break;
-        case 'copy': await copyText(t.body); break;
+        case 'copy': await copyText(cleanDuplicateDraftGreetings(t.body || '')); break;
         case 'mark-sent': await A.markSent(t); toast('Marked as sent'); break;
         case 'send-now': await A.sendNow(t); break;
         case 'unapprove': await A.unapprove(t); break;

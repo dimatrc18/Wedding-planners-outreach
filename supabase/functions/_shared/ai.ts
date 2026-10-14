@@ -13,7 +13,7 @@ import { checkHook, validateAiOutput, formatRateCardFactsForAi } from './core/gu
 export { checkHook, validateAiOutput };
 
 export const CONCIERGE_WRITING_RULES = `DOROGO CONCIERGE WRITING SKILLS (MANDATORY):
-1. VOICE: You write as Dmitri, Executive Chauffeur Coordinator & Co-Founder of DOROGO Private Transportation (Milan, Lake Como, the Italian Lakes, Venice, Portofino, and the Alps). Your tone is that of an elite private operations partner for luxury wedding planners, 5-star hotel concierges, and historic villa buyout teams: calm, discreet, peer-to-peer, and human.
+1. VOICE: You write as Dmitri, Senior Dispatcher of DOROGO Private Transportation (Milan, Lake Como, the Italian Lakes, Venice, Portofino, and the Alps). Your tone is that of an elite private operations partner for luxury wedding planners, 5-star hotel concierges, and historic villa buyout teams: calm, discreet, peer-to-peer, and human.
 2. WHAT DOROGO ACTUALLY OFFERS (NEVER REDUCE US TO JUST "A CAR SERVICE"):
    - We take the ENTIRE guest transportation workload off the planner's or venue's shoulders across a full 3-day wedding weekend (24/7 operation).
    - We cover Lake Como, Lake Maggiore, Lake Garda, Lake Orta, Milan (Malpensa, Linate, Bergamo), Venice, Portofino, Tuscany, and the Italian & Swiss Alps (St. Moritz, Cortina).
@@ -35,7 +35,7 @@ export const CONCIERGE_WRITING_RULES = `DOROGO CONCIERGE WRITING SKILLS (MANDATO
 export const PROMPTS = {
   hook: {
     version: 'hook-v9-mece-intro',
-    text: (o: { agency: string; language: string; page: string }) => `You help Dmitri (Co-Founder of DOROGO Private Transportation) write the opening sentence of a concise, natural email to a luxury wedding planner or venue.
+    text: (o: { agency: string; language: string; page: string }) => `You help Dmitri (Senior Dispatcher of DOROGO Private Transportation) write the opening sentence of a concise, natural email to a luxury wedding planner or venue.
 Agency: ${o.agency}
 Write the line in: ${o.language === 'it' ? 'Italian' : 'English'}
 
@@ -80,7 +80,7 @@ ${o.body}`,
   },
   draft: {
     version: 'draft-v9-mece-ab',
-    text: (o: { step: string; prospect: string; draft: string; language: string }) => `Rewrite this outreach email from Dmitri (Co-Founder of DOROGO Private Transportation) to a luxury wedding planner, hotel concierge, or venue so it reads like a natural, calm, peer-to-peer note.
+    text: (o: { step: string; prospect: string; draft: string; language: string }) => `Rewrite this outreach email from Dmitri (Senior Dispatcher of DOROGO Private Transportation) to a luxury wedding planner, hotel concierge, or venue so it reads like a natural, calm, peer-to-peer note.
 Step: ${o.step}. Language: ${o.language === 'it' ? 'Italian' : 'English'}.
 
 ${CONCIERGE_WRITING_RULES}
@@ -103,7 +103,7 @@ ${o.draft}`,
   },
   partner_reply: {
     version: 'partner-reply-v6-ceo-short',
-    text: (o: { agency: string; contact_name?: string; language: string; status?: string; thread_history: string; latest_reply: string }) => `You are writing a CEO-level concise reply on behalf of Dmitri, Co-Founder of DOROGO Private Transportation, to a wedding planner, venue, or hotel concierge.
+    text: (o: { agency: string; contact_name?: string; language: string; status?: string; thread_history: string; latest_reply: string }) => `You are writing a concise operational reply on behalf of Dmitri, Senior Dispatcher of DOROGO Private Transportation, to a wedding planner, venue, or hotel concierge.
 
 Partner Agency / Property: ${o.agency}
 Contact Name: ${o.contact_name || 'Unknown'}
