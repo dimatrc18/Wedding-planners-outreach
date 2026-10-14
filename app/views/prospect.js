@@ -10,11 +10,11 @@ const FIELDS = [
   ['email', 'Email', 'email'], ['phone', 'Phone', 'text'], ['whatsapp', 'WhatsApp', 'text'],
   ['website', 'Website', 'url'], ['linkedin', 'LinkedIn', 'url'],
   ['location', 'Location', 'text'],
-  ['market', 'Market / Country', 'select', ['', 'kz', 'ae', 'uk', 'us', 'it', 'other']],
+  ['market', 'Market / Country', 'select', ['', 'kz', 'ru', 'ch', 'ae', 'uk', 'us', 'it', 'other']],
   ['type', 'Type', 'select', ['planner', 'venue', 'photographer', 'concierge_hotel']],
   ['segment', 'Segment', 'select', ['', 'boutique_local', 'high_volume_uk_us', 'international']],
 
-  ['language', 'Language', 'select', ['en', 'it', 'de', 'fr']], ['timezone', 'Time zone', 'text'],
+  ['language', 'Language', 'select', ['en', 'it', 'ru', 'de', 'fr']], ['timezone', 'Time zone', 'text'],
   ['source', 'Source', 'select', ['manual', 'matrimonio.com', 'wedding_wire', 'referral', 'website']],
   ['source_detail', 'Source detail', 'text'],
   ['rating', 'Rating', 'number'], ['verified_reviews_count', 'Verified reviews', 'number'], ['review_source', 'Review source', 'text'],

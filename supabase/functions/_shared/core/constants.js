@@ -142,6 +142,8 @@ export const LOST_REASONS = ['has_supplier', 'no_response', 'price', 'not_a_fit'
 
 export const MARKETS = [
   { key: 'kz', label: 'Kazakhstan & Central Asia', flag: '🇰🇿', tier: 'international', directCta: true },
+  { key: 'ru', label: 'Russia & CIS', flag: '🇷🇺', tier: 'international', directCta: true },
+  { key: 'ch', label: 'Switzerland', flag: '🇨🇭', tier: 'international', directCta: true },
   { key: 'ae', label: 'UAE & Gulf (GCC)', flag: '🇦🇪', tier: 'international', directCta: true },
   { key: 'uk', label: 'United Kingdom', flag: '🇬🇧', tier: 'international', directCta: true },
   { key: 'us', label: 'United States', flag: '🇺🇸', tier: 'international', directCta: true },
@@ -156,6 +158,8 @@ export const marketLabel = (m) => (MARKETS.find((x) => x.key === String(m || '')
 
 export const MARKET_TIMEZONES = {
   kz: 'Asia/Almaty',
+  ru: 'Europe/Moscow',
+  ch: 'Europe/Zurich',
   ae: 'Asia/Dubai',
   uk: 'Europe/London',
   us: 'America/New_York',

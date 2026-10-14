@@ -7,29 +7,36 @@ export function inferMarket(p = {}) {
   const directMarket = p.market || p.enrichment?.market;
   if (directMarket && MARKET_KEYS.includes(String(directMarket).toLowerCase())) return String(directMarket).toLowerCase();
   const phone = String(p.phone || p.whatsapp || '').trim();
-  if (/^\+?(77|76|71|72)/.test(phone) || /^\+7\b/.test(phone)) return 'kz';
+  if (/^\+?(77|76|71|72)/.test(phone)) return 'kz';
+  if (/^\+?7\b/.test(phone)) return 'ru';
+  if (/^\+?41/.test(phone)) return 'ch';
   if (/^\+?971/.test(phone)) return 'ae';
   if (/^\+?44/.test(phone)) return 'uk';
   if (/^\+?1\b/.test(phone)) return 'us';
   if (/^\+?39/.test(phone)) return 'it';
 
   const email = String(p.email || '').toLowerCase();
-  if (/@(mail\.ru|bk\.ru|inbox\.ru|list\.ru|yandex\.\w+|rambler\.ru|internet\.ru)$/.test(email)) return 'kz';
+  if (/@(mail\.kz)$/.test(email)) return 'kz';
+  if (/@(mail\.ru|bk\.ru|inbox\.ru|list\.ru|yandex\.\w+|rambler\.ru|internet\.ru)$/.test(email)) return 'ru';
 
   const web = String(p.website || '').toLowerCase();
-  if (/\.(kz|ru|by|uz|kg)(\/|$)/.test(web)) return 'kz';
+  if (/\.kz(\/|$)/.test(web)) return 'kz';
+  if (/\.(ru|by|su)(\/|$)/.test(web)) return 'ru';
+  if (/\.ch(\/|$)/.test(web)) return 'ch';
   if (/\.ae(\/|$)/.test(web)) return 'ae';
   if (/\.co\.uk(\/|$)/.test(web) || /\.uk(\/|$)/.test(web)) return 'uk';
   if (/\.it(\/|$)/.test(web)) return 'it';
 
   const loc = String(p.location || '').toLowerCase();
-  if (/almaty|astana|kazakhstan|moscow|russia|tashkent|bishkek|minsk/.test(loc)) return 'kz';
+  if (/almaty|astana|kazakhstan|tashkent|bishkek/.test(loc)) return 'kz';
+  if (/moscow|москва|russia|россия|petersburg|петербург/.test(loc)) return 'ru';
+  if (/switzerland|swiss|lugano|zurich|geneva/.test(loc)) return 'ch';
   if (/dubai|abu dhabi|uae|emirates|doha|qatar|riyadh|saudi/.test(loc)) return 'ae';
   if (/london|uk|united kingdom|manchester|surrey/.test(loc)) return 'uk';
   if (/usa|united states|new york|california|miami|los angeles|texas/.test(loc)) return 'us';
-  if (/como|milano|milan|italia|italy|varenna|bellagio|lecco|cernobbio|laglio/.test(loc)) return 'it';
+  if (/como|milano|milan|italia|italy|varenna|bellagio|lecco|cernobbio|laglio|rome|roma|verona|venice|venezia/.test(loc)) return 'it';
 
-  if (p.language === 'ru') return 'kz';
+  if (p.language === 'ru') return 'ru';
   if (p.segment === 'boutique_local' || p.language === 'it') return 'it';
   if (p.segment === 'high_volume_uk_us') return 'uk';
   return 'other';
@@ -52,7 +59,7 @@ export function priorityScore(p) {
 
   // 3. Client Tier, Market & Reputation (balanced 50% international / 50% local)
   const m = inferMarket(p);
-  if (m === 'kz' || m === 'ae') add(15, `high-spend market: ${m.toUpperCase()}`);
+  if (m === 'kz' || m === 'ru' || m === 'ch' || m === 'ae') add(15, `high-spend market: ${m.toUpperCase()}`);
   else if (m === 'uk' || m === 'us') add(12, `prime market: ${m.toUpperCase()}`);
   else if (m === 'it') add(12, 'local market: IT');
   else add({ boutique_local: 12, international: 12, high_volume_uk_us: 10 }[p.segment] || 6, p.segment ? `segment: ${p.segment}` : '');
@@ -621,7 +628,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     notes: 'Discovered via AI Partner Search (Bellagio 5-star luxury landmark).',
   },
 
-  // International Destination Agencies (50% international: CIS/Kazakhstan, UAE/Dubai, UK, US)
+  // International Destination Agencies (50% international: Russia/CIS, Switzerland, UAE/Dubai, UK, US)
   {
     agency_name: 'Desìo Lux Eventi',
     contact_name: 'Desìo Planning Team',
@@ -629,9 +636,9 @@ export const DISCOVERY_PARTNER_CATALOG = [
     website: 'https://desioluxeventi.com',
     type: 'planner',
     segment: 'international',
-    market: 'kz',
+    market: 'ch',
     language: 'ru',
-    location: 'Lake Como & Lugano',
+    location: 'Lugano & Lake Como',
     rating: 5.0,
     verified_reviews_count: 38,
     review_source: 'portfolio',
@@ -639,7 +646,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     key_venues: ['Villa Balbiano', 'Villa Sola Cabiati', 'Grand Hotel Tremezzo'],
     personalization_hook: 'Увидел ваши масштабные свадьбы на озере Комо и в Лугано и решил познакомиться лично.',
     hook_type: 'venue',
-    notes: 'Discovered via AI Partner Search (CIS / Kazakhstan high-spend private villa buyout specialist).',
+    notes: 'Discovered via AI Partner Search (Switzerland & Lake Como luxury wedding planner for high-spend international clientele).',
   },
   {
     agency_name: 'Katrin Moro Weddings',
@@ -650,9 +657,9 @@ export const DISCOVERY_PARTNER_CATALOG = [
     website: 'https://katrinmoroweddings.com',
     type: 'planner',
     segment: 'international',
-    market: 'kz',
+    market: 'it',
     language: 'ru',
-    location: 'Lake Como & Rome',
+    location: 'Rome & Lake Como',
     rating: 4.9,
     verified_reviews_count: 24,
     review_source: 'portfolio',
@@ -660,7 +667,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     key_venues: ['Villa del Balbianello', 'Villa Pizzo'],
     personalization_hook: 'Обратил внимание на ваши проекты на виллах озера Комо и хотел представиться.',
     hook_type: 'venue',
-    notes: 'Discovered via AI Partner Search (Russian, English & Italian luxury destination agency).',
+    notes: 'Discovered via AI Partner Search (Italy-based multilingual luxury destination planner in Rome and Lake Como).',
   },
   {
     agency_name: 'Brilliant Events Italy',
@@ -669,7 +676,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     website: 'https://wedding-venice.ru',
     type: 'planner',
     segment: 'international',
-    market: 'kz',
+    market: 'it',
     language: 'ru',
     location: 'Venice & Lake Como',
     rating: 4.9,
@@ -679,7 +686,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     key_venues: ['Villa Balbiano', 'Villa del Balbianello', 'Aman Venice'],
     personalization_hook: 'Увидел ваши свадебные проекты в Северной Италии и на озере Комо и решил познакомиться.',
     hook_type: 'venue',
-    notes: 'Discovered via AI Partner Search (High-spend CIS destination agency across Northern Italy).',
+    notes: 'Discovered via AI Partner Search (Italy-based luxury destination agency in Venice and Lake Como).',
   },
   {
     agency_name: 'Palazzo Eventi',
@@ -688,7 +695,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     website: 'https://palazzoeventi.com',
     type: 'planner',
     segment: 'international',
-    market: 'kz',
+    market: 'it',
     language: 'ru',
     location: 'Verona & Lake Como',
     rating: 5.0,
@@ -698,7 +705,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     key_venues: ['Villa Balbiano', 'Villa Sola Cabiati', 'Aman Venice'],
     personalization_hook: 'Увидел ваши роскошные частные проекты на виллах озера Комо и решил предложить прямой контакт с нашим парком на сезон.',
     hook_type: 'venue',
-    notes: 'Discovered via AI Partner Search (Premier CIS destination planner for Lake Como, Venice and Northern Italy).',
+    notes: 'Discovered via AI Partner Search (Italy-based luxury event planner in Verona, Lake Garda and Lake Como).',
   },
   {
     agency_name: 'Для Двоих (Dlya Dvoih)',
@@ -707,17 +714,17 @@ export const DISCOVERY_PARTNER_CATALOG = [
     website: 'https://dlyadvoih.ru',
     type: 'planner',
     segment: 'international',
-    market: 'kz',
+    market: 'ru',
     language: 'ru',
     location: 'Moscow & Lake Como',
     rating: 5.0,
     verified_reviews_count: 52,
     review_source: 'portfolio',
     source: 'ai_discovery',
-    key_venues: ['Villa Balbiano', 'Villa Erba', 'Villa Pizzo'],
-    personalization_hook: 'Обратил внимание на ваши масштабные закрытые проекты на виллах озера Комо и хотел познакомиться лично.',
+    key_venues: ['Villa Pizzo', 'Lake Maggiore', 'Villa Erba'],
+    personalization_hook: 'Увидел вашу прекрасную свадьбу Анастасии и Сергея на Villa Pizzo на озере Комо и решил познакомиться лично.',
     hook_type: 'venue',
-    notes: 'Discovered via AI Partner Search (Top CIS luxury wedding studio producing high-budget celebrations on Lake Como).',
+    notes: 'Discovered via AI Partner Search (Top luxury wedding studio; produced the Anastasia & Sergey wedding at Villa Pizzo on Lake Como).',
   },
   {
     agency_name: 'Carousel Luxury Weddings',

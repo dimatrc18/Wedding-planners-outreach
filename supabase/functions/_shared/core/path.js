@@ -333,8 +333,8 @@ export function classifyProspectStep(p, dimKey, ctx = {}) {
       const m = inferMarket(p);
       const flag = marketFlag(m);
       const lbl = marketLabel(m);
-      const order = { kz: 1, ae: 2, uk: 3, us: 4, it: 5, other: 6 };
-      const tone = { kz: 'ok', ae: 'ok', uk: 'info', us: 'info', it: 'gold', other: 'muted' };
+      const order = { kz: 1, ru: 2, ch: 3, ae: 4, uk: 5, us: 6, it: 7, other: 8 };
+      const tone = { kz: 'ok', ru: 'ok', ch: 'ok', ae: 'ok', uk: 'info', us: 'info', it: 'gold', other: 'muted' };
       return { key: `market:${m}`, label: `${flag} ${lbl}`, tone: tone[m] || 'info', band: 1, order: order[m] || 9 };
     }
 
