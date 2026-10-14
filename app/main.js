@@ -9,6 +9,7 @@ import * as add from './views/add.js';
 import * as templates from './views/templates.js';
 import * as analytics from './views/analytics.js';
 import * as partners from './views/partners.js';
+import * as tools from './views/tools.js';
 import * as settings from './views/settings.js';
 
 const ROUTES = {
@@ -18,6 +19,7 @@ const ROUTES = {
   partners: { view: partners, label: 'Partners', icon: 'partners' },
   coverage: { view: partners, label: 'Coverage', icon: 'map', sub: 'coverage' },
   templates: { view: templates, label: 'Sequence & templates', icon: 'template' },
+  tools: { view: tools, label: 'Tools', icon: 'sparkle' },
   settings: { view: settings, label: 'Settings', icon: 'settings' },
   add: { view: add, label: 'Add prospects', icon: 'plus', hidden: true },
   prospect: { view: prospect, label: 'Prospect', hidden: true },
