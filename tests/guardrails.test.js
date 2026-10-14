@@ -284,7 +284,7 @@ test('MECE overhaul: Variant A (Intro), Variant B (Late returns), Variant C (Hot
   assert.equal(draftB.variant, 'B');
   assert.equal(draftB.subject, 'Late returns after the reception');
   assert.match(draftB.body, /Late-night villa returns are where Lake Como weddings face the biggest friction/);
-  assert.match(draftB.body, /would having our 2027 partner rate card and shuttle circuits be useful for your file\?/);
+  assert.match(draftB.body, /would having our 2027 partner rate card and shuttle circuits be useful for your file/);
   assert.deepEqual(draftB.lint.errors, []);
   assert.deepEqual(draftB.lint.warnings, []);
 
