@@ -73,7 +73,7 @@ export function lintMessage({ subject = '', body = '', channel = 'email', step =
     if (!subject.trim()) errors.push('Subject is empty');
     if (subject.length > 65) warnings.push('Subject is long; keep it under about 60 characters');
     if (/!/.test(subject) || (subject.length > 8 && subject === subject.toUpperCase() && /[A-Z]/.test(subject))) warnings.push('Subject looks salesy (capitals or "!")');
-    if (!/Dmitri/.test(body)) warnings.push('Signature missing');
+    if (!/(Dmitri|Дмитрий)/.test(body)) warnings.push('Signature missing');
     if (['T1_intro', 'T3_followup', 'T4_breakup'].includes(step) && !OPTOUT_RE.test(body)) warnings.push('Add the opt-out line');
   }
 
