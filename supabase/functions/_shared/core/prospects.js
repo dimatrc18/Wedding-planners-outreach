@@ -4,7 +4,8 @@ import { LAKE_TOWNS, LAKE_VENUES, MARKET_KEYS } from './constants.js';
 
 /** Infer market code from country code, phone prefix, website TLD, or location. */
 export function inferMarket(p = {}) {
-  if (p.market && MARKET_KEYS.includes(p.market.toLowerCase())) return p.market.toLowerCase();
+  const directMarket = p.market || p.enrichment?.market;
+  if (directMarket && MARKET_KEYS.includes(String(directMarket).toLowerCase())) return String(directMarket).toLowerCase();
   const phone = String(p.phone || p.whatsapp || '').trim();
   if (/^\+?(77|76|71|72)/.test(phone) || /^\+7\b/.test(phone)) return 'kz';
   if (/^\+?971/.test(phone)) return 'ae';

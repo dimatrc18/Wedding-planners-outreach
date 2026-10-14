@@ -632,9 +632,9 @@ export async function autoResearchPending(db: any, _settings: any, now = new Dat
     await Promise.all(queue.slice(i, i + 3).map(processOne));
   }
 
-  // 2. If the researching queue is empty, auto-import up to 3 new verified luxury partners (>= 65/100) per run
-  if (queue.length === 0) {
-    const catalog = (core.DISCOVERY_PARTNER_CATALOG || []).filter((c: any) => core.findDuplicates(c, prospects).length === 0).slice(0, 3);
+  // 2. Auto-import up to 3 new verified luxury partners (>= 65/100) per run if unreached
+  const catalog = (core.DISCOVERY_PARTNER_CATALOG || []).filter((c: any) => core.findDuplicates(c, prospects).length === 0).slice(0, 3);
+  if (catalog.length > 0) {
     for (const item of catalog) {
       const jina = await fetchJinaSignals(item.website);
       const candidate: any = {
