@@ -128,7 +128,11 @@ export function render(el) {
 
     <section class="section" id="queue">
       <div class="section-head"><h2>Approval queue <span class="count">${drafts.length}</span></h2>
-        <div class="row">${clean.length > 1 ? `<button class="btn sm" data-act="approve-clean">Approve ${clean.length} with no warnings</button>` : ''}<span class="hint">J/K move · A approve · E edit · S skip</span></div></div>
+        <div class="row">
+          ${clean.length > 1 ? `<button class="btn sm" data-act="approve-clean">Approve ${clean.length} with no warnings</button>` : ''}
+          ${drafts.length > 0 ? `<button class="btn ghost sm" data-act="refresh-all" title="Refresh all drafts with latest 2027 season templates and direct subjects">Refresh All Drafts</button>` : ''}
+          <span class="hint">J/K move · A approve · E edit · S skip</span>
+        </div></div>
       ${drafts.length ? `<div class="queue">${drafts.map(draftCard).join('')}</div>` : `<div class="empty">${dueUndrafted ? `${plural(dueUndrafted, 'step is', 'steps are')} due. <button class="btn sm primary" data-act="gen">Draft them now</button>` : 'Nothing to approve. New drafts appear here when a step falls due.'}</div>`}
     </section>
 
@@ -181,6 +185,25 @@ export function render(el) {
           if (!await confirmDialog(`Approve ${list.length} drafts?`, 'Each one has passed the copy-linter with no warnings. They go out in the next send windows, within the daily cap.', 'Approve all')) break;
           for (const x of list) await A.approve(x);
           toast(`${list.length} approved`);
+          break;
+        }
+        case 'refresh-all': {
+          if (btn) btn.disabled = true;
+          toast('Refreshing drafts with updated 2027 season templates…');
+          try {
+            const res = await api('refresh_touches');
+            toast(`Refreshed ${res.updated || 0} drafts`);
+          } catch {
+            let count = 0;
+            for (const d of A.todayData().drafts) {
+              const p = A.prospectById(d.prospect_id);
+              if (!p) continue;
+              const dr = core.buildDraft({ prospect: p, key: d.step_name, templates: S.templates, extraVars: d.variant ? { variant: d.variant } : {} });
+              if (dr) { await A.saveDraft(d, { subject: dr.subject, body: dr.body, variant: dr.variant || d.variant }); count++; }
+            }
+            toast(`Refreshed ${count} drafts`);
+          }
+          paint();
           break;
         }
         case 'edit': editing = id; paint(); el.querySelector('#ed-body')?.focus(); return;

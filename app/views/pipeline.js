@@ -1093,15 +1093,38 @@ export function render(el) {
           let skippedDup = 0;
 
           try {
-            // 1. Scan curated verified partner catalog (balanced 50% international / 50% local)
-            const catalog = (core.DISCOVERY_PARTNER_CATALOG || []).filter((c) => {
+            // 1. Scan curated verified partner catalog (strictly balanced 50% international / 50% local)
+            const availableCatalog = (core.DISCOVERY_PARTNER_CATALOG || []).filter((c) => {
               if (category !== 'all' && c.type !== category) return false;
               if (market !== 'all') {
                 const cm = c.market || core.inferMarket(c);
                 if (cm !== market) return false;
               }
-              return true;
+              return core.findDuplicates(c, S.prospects).length === 0;
             });
+
+            let catalog = availableCatalog;
+            if (market === 'all') {
+              const isIntl = (p) => (p.market && p.market !== 'it') || p.segment === 'international';
+              const existingIntl = S.prospects.filter(isIntl).length;
+              const existingLocal = S.prospects.filter((p) => !isIntl(p)).length;
+              const intlPool = availableCatalog.filter(isIntl);
+              const localPool = availableCatalog.filter((c) => !isIntl(c));
+              const balanced = [];
+              while (intlPool.length > 0 || localPool.length > 0) {
+                const currentIntl = existingIntl + balanced.filter(isIntl).length;
+                const currentLocal = existingLocal + balanced.filter((x) => !isIntl(x)).length;
+                if (currentIntl < currentLocal && intlPool.length > 0) {
+                  balanced.push(intlPool.shift());
+                } else if (currentLocal < currentIntl && localPool.length > 0) {
+                  balanced.push(localPool.shift());
+                } else {
+                  if (intlPool.length > 0) balanced.push(intlPool.shift());
+                  else if (localPool.length > 0) balanced.push(localPool.shift());
+                }
+              }
+              catalog = balanced;
+            }
 
             for (const item of catalog) {
               if (core.findDuplicates(item, S.prospects).length > 0) {

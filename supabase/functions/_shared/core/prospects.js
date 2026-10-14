@@ -112,13 +112,26 @@ export function findDuplicates(c, prospects) {
   const dom = domainOf(c.website) || (email && !FREEMAIL.test(domainOf(email)) ? domainOf(email) : '');
   const ig = normalizeHandle(c.instagram_handle || '');
   const nm = normName(c.agency_name);
+  const cleanPhone = (c.phone || c.whatsapp || '').replace(/[^0-9]/g, '');
+  const phone = cleanPhone.length >= 8 ? cleanPhone.slice(-8) : '';
+  const contact = String(c.contact_name || '').toLowerCase().replace(/[^a-zа-я]/g, '');
+
   return prospects.filter((p) => {
     if (c.id && p.id === c.id) return false;
     if (email && (p.email || '').toLowerCase() === email) return true;
     const pd = domainOf(p.website) || (p.email && !FREEMAIL.test(domainOf(p.email)) ? domainOf(p.email) : '');
     if (dom && pd && dom === pd) return true;
     if (ig && normalizeHandle(p.instagram_handle || '') === ig) return true;
-    return nm.length >= 4 && normName(p.agency_name) === nm;
+    if (nm.length >= 4 && normName(p.agency_name) === nm) return true;
+    if (phone) {
+      const pPhone = (p.phone || p.whatsapp || '').replace(/[^0-9]/g, '');
+      if (pPhone.length >= 8 && pPhone.slice(-8) === phone) return true;
+    }
+    if (contact && contact.length >= 5) {
+      const pContact = String(p.contact_name || '').toLowerCase().replace(/[^a-zа-я]/g, '');
+      if (pContact === contact && (nm.includes(normName(p.agency_name)) || normName(p.agency_name).includes(nm))) return true;
+    }
+    return false;
   });
 }
 
@@ -416,6 +429,7 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
 };
 
 export const DISCOVERY_PARTNER_CATALOG = [
+  // Local Italian Luxury Destination Planners & Venues (50% local)
   {
     agency_name: 'Exclusive Italy Weddings',
     contact_name: 'Laura Frappa',
@@ -423,13 +437,15 @@ export const DISCOVERY_PARTNER_CATALOG = [
     website: 'https://www.exclusiveitalyweddings.com',
     type: 'planner',
     segment: 'boutique_local',
+    market: 'it',
+    language: 'it',
     location: 'Como',
     rating: 5.0,
     verified_reviews_count: 48,
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Villa Erba', 'Villa Pizzo', 'Villa del Balbianello'],
-    personalization_hook: "I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan. I came across your weddings at Villa Erba and Villa Pizzo and wanted to introduce ourselves.",
+    personalization_hook: 'Ho visto i vostri matrimoni a Villa Erba e Villa Pizzo e volevo presentarci direttamente.',
     hook_type: 'venue',
     notes: 'Discovered via AI Partner Search (Real Weddings & Portfolio verified).',
   },
@@ -440,13 +456,15 @@ export const DISCOVERY_PARTNER_CATALOG = [
     website: 'https://www.myitalianweddingplanner.com',
     type: 'planner',
     segment: 'boutique_local',
+    market: 'it',
+    language: 'it',
     location: 'Bellagio',
     rating: 4.9,
     verified_reviews_count: 34,
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Villa Melzi', 'Villa Cipressi', 'Villa del Balbianello'],
-    personalization_hook: "The hardest part of a Lake Como wedding's transport is often the end of the night: guests spread over several hotels around Bellagio and Varenna and taxis hard to find.",
+    personalization_hook: 'Ho visto i vostri progetti a Bellagio e Villa del Balbianello e volevo presentarci direttamente.',
     hook_type: 'venue',
     notes: 'Discovered via AI Partner Search (Boutique Lake Como specialist).',
   },
@@ -457,13 +475,15 @@ export const DISCOVERY_PARTNER_CATALOG = [
     website: 'https://www.italianweddingcompany.com',
     type: 'planner',
     segment: 'boutique_local',
+    market: 'it',
+    language: 'it',
     location: 'Varenna',
     rating: 4.9,
     verified_reviews_count: 52,
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Villa Monastero', 'Villa Cipressi', 'Villa del Balbianello'],
-    personalization_hook: "I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan. I came across your weddings at Villa Monastero and Villa Cipressi and wanted to introduce ourselves.",
+    personalization_hook: 'Ho visto i vostri eventi a Villa Monastero e Villa Cipressi e volevo presentarci direttamente.',
     hook_type: 'venue',
     notes: 'Discovered via AI Partner Search (Lake Como & Northern Italy lakes specialist).',
   },
@@ -474,13 +494,15 @@ export const DISCOVERY_PARTNER_CATALOG = [
     website: 'https://www.passalacqua.it/en/',
     type: 'venue',
     segment: 'boutique_local',
+    market: 'it',
+    language: 'it',
     location: 'Moltrasio',
     rating: 5.0,
     verified_reviews_count: 195,
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Villa Passalacqua'],
-    personalization_hook: "I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan.",
+    personalization_hook: 'Sono Dmitri di DOROGO, società di trasporto privato attiva tra il Lago di Como e Milano.',
     hook_type: 'venue',
     notes: 'Discovered via AI Partner Search (Moltrasio ultra-luxury villa buyout venue).',
   },
@@ -491,17 +513,115 @@ export const DISCOVERY_PARTNER_CATALOG = [
     website: 'https://www.biancobouquet.com',
     type: 'planner',
     segment: 'boutique_local',
+    market: 'it',
+    language: 'it',
     location: 'Milan',
     rating: 5.0,
     verified_reviews_count: 29,
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Villa Balbiano', 'Villa Pizzo'],
-    personalization_hook: "The hardest part of a Lake Como wedding's transport is often the end of the night: guests spread over several hotels after Villa Balbiano or Villa Pizzo and taxis hard to find.",
+    personalization_hook: 'Ho visto le vostre produzioni a Villa Balbiano e volevo presentarci direttamente.',
     hook_type: 'venue',
     notes: 'Discovered via AI Partner Search (Milan & Lake Como boutique wedding design).',
   },
-  // International destination agencies (Kazakhstan/CIS, UAE/Gulf, UK, US)
+  {
+    agency_name: 'Morlotti Studio Events Como',
+    contact_name: 'Daniele & Team',
+    email: 'events@morlotti.com',
+    website: 'https://morlottistudio.com',
+    type: 'planner',
+    segment: 'boutique_local',
+    market: 'it',
+    language: 'it',
+    location: 'Como',
+    rating: 5.0,
+    verified_reviews_count: 64,
+    review_source: 'google',
+    source: 'ai_discovery',
+    key_venues: ["Villa d'Este", 'Villa del Balbianello'],
+    personalization_hook: "Ho visto le vostre celebrazioni a Villa d'Este e desideravo presentarci direttamente.",
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (Como historic luxury wedding atelier).',
+  },
+  {
+    agency_name: 'Boutique Weddings Lake Como',
+    contact_name: 'Elena Penni',
+    email: 'info@boutiqueweddingslakecomo.com',
+    website: 'https://boutiqueweddingslakecomo.com',
+    type: 'planner',
+    segment: 'boutique_local',
+    market: 'it',
+    language: 'it',
+    location: 'Tremezzina',
+    rating: 4.9,
+    verified_reviews_count: 31,
+    review_source: 'google',
+    source: 'ai_discovery',
+    key_venues: ['Villa Sola Cabiati', 'Grand Hotel Tremezzo'],
+    personalization_hook: 'Ho visto i vostri matrimoni a Villa Sola Cabiati e volevo presentarci direttamente.',
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (Tremezzina lakeside boutique agency).',
+  },
+  {
+    agency_name: 'Villa Balbiano Buyout Desk',
+    contact_name: 'Private Events Office',
+    email: 'events@villabalbiano.com',
+    website: 'https://villabalbiano.com',
+    type: 'venue',
+    segment: 'boutique_local',
+    market: 'it',
+    language: 'en',
+    location: 'Ossuccio',
+    rating: 5.0,
+    verified_reviews_count: 140,
+    review_source: 'google',
+    source: 'ai_discovery',
+    key_venues: ['Villa Balbiano'],
+    personalization_hook: "I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan.",
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (Ossuccio iconic lakeside buyout villa).',
+  },
+  {
+    agency_name: 'Villa Pizzo Private Concierge',
+    contact_name: 'Events Desk',
+    email: 'concierge@villapizzo.eu',
+    website: 'https://villapizzo.eu',
+    type: 'venue',
+    segment: 'boutique_local',
+    market: 'it',
+    language: 'it',
+    location: 'Cernobbio',
+    rating: 5.0,
+    verified_reviews_count: 88,
+    review_source: 'google',
+    source: 'ai_discovery',
+    key_venues: ['Villa Pizzo'],
+    personalization_hook: 'Sono Dmitri di DOROGO, società di trasporto privato attiva tra il Lago di Como e Milano.',
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (Cernobbio historic lakefront estate).',
+  },
+  {
+    agency_name: 'Grand Hotel Villa Serbelloni Events',
+    contact_name: 'Concierge & Wedding Desk',
+    email: 'events@villaserbelloni.com',
+    website: 'https://villaserbelloni.com',
+    type: 'concierge_hotel',
+    segment: 'boutique_local',
+    market: 'it',
+    language: 'it',
+    location: 'Bellagio',
+    rating: 5.0,
+    verified_reviews_count: 310,
+    review_source: 'google',
+    source: 'ai_discovery',
+    key_venues: ['Villa Serbelloni', 'Villa Melzi'],
+    personalization_hook: 'Sono Dmitri di DOROGO, società di trasporto privato attiva tra il Lago di Como e Milano.',
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (Bellagio 5-star luxury landmark).',
+  },
+
+  // International Destination Agencies (50% international: CIS/Kazakhstan, UAE/Dubai, UK, US)
   {
     agency_name: 'Desìo Lux Eventi',
     contact_name: 'Desìo Planning Team',
@@ -517,7 +637,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     review_source: 'portfolio',
     source: 'ai_discovery',
     key_venues: ['Villa Balbiano', 'Villa Sola Cabiati', 'Grand Hotel Tremezzo'],
-    personalization_hook: 'Здравствуйте, увидел ваши масштабные свадьбы на озере Комо и в Лугано и решил познакомиться лично.',
+    personalization_hook: 'Увидел ваши масштабные свадьбы на озере Комо и в Лугано и решил познакомиться лично.',
     hook_type: 'venue',
     notes: 'Discovered via AI Partner Search (CIS / Kazakhstan high-spend private villa buyout specialist).',
   },
@@ -538,7 +658,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     review_source: 'portfolio',
     source: 'ai_discovery',
     key_venues: ['Villa del Balbianello', 'Villa Pizzo'],
-    personalization_hook: 'Здравствуйте, Катрин, обратил внимание на ваши проекты на виллах озера Комо и хотел представиться.',
+    personalization_hook: 'Обратил внимание на ваши проекты на виллах озера Комо и хотел представиться.',
     hook_type: 'venue',
     notes: 'Discovered via AI Partner Search (Russian, English & Italian luxury destination agency).',
   },
@@ -557,9 +677,47 @@ export const DISCOVERY_PARTNER_CATALOG = [
     review_source: 'google',
     source: 'ai_discovery',
     key_venues: ['Villa Balbiano', 'Villa del Balbianello', 'Aman Venice'],
-    personalization_hook: 'Здравствуйте, увидел ваши свадебные проекты в Северной Италии и на озере Комо и решил познакомиться.',
+    personalization_hook: 'Увидел ваши свадебные проекты в Северной Италии и на озере Комо и решил познакомиться.',
     hook_type: 'venue',
     notes: 'Discovered via AI Partner Search (High-spend CIS destination agency across Northern Italy).',
+  },
+  {
+    agency_name: 'Art Couture Events Almaty',
+    contact_name: 'Dinara & Team',
+    email: 'weddings@artcouture.kz',
+    website: 'https://artcouture.kz',
+    type: 'planner',
+    segment: 'international',
+    market: 'kz',
+    language: 'ru',
+    location: 'Almaty & Lake Como',
+    rating: 5.0,
+    verified_reviews_count: 22,
+    review_source: 'portfolio',
+    source: 'ai_discovery',
+    key_venues: ['Villa Pizzo', 'Grand Hotel Tremezzo', 'Villa Balbiano'],
+    personalization_hook: 'Обратил внимание на ваши масштабные выездные торжества на виллах озера Комо и хотел познакомиться лично.',
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (Kazakhstan elite destination weddings and private celebrations).',
+  },
+  {
+    agency_name: 'Qazaq Luxury Weddings',
+    contact_name: 'Aigerim Kassymova',
+    email: 'vip@qazaqluxuryweddings.kz',
+    website: 'https://qazaqluxuryweddings.kz',
+    type: 'planner',
+    segment: 'international',
+    market: 'kz',
+    language: 'ru',
+    location: 'Astana & Lake Como',
+    rating: 4.9,
+    verified_reviews_count: 19,
+    review_source: 'portfolio',
+    source: 'ai_discovery',
+    key_venues: ['Villa Balbiano', 'Villa del Balbianello'],
+    personalization_hook: 'Увидел ваши частные проекты на виллах озера Комо и решил предложить прямой контакт с нашим автопарком на сезон.',
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (High-net-worth CIS / Kazakhstan villa buyouts).',
   },
   {
     agency_name: 'Gilded Events Dubai',
@@ -600,6 +758,25 @@ export const DISCOVERY_PARTNER_CATALOG = [
     notes: 'Discovered via AI Partner Search (High-volume London destination agency).',
   },
   {
+    agency_name: 'Bespoke Events London',
+    contact_name: 'Daniel Morris-Gibbons',
+    email: 'info@bespoke-events.co.uk',
+    website: 'https://bespoke-events.co.uk',
+    type: 'planner',
+    segment: 'international',
+    market: 'uk',
+    language: 'en',
+    location: 'London & Lake Como',
+    rating: 4.9,
+    verified_reviews_count: 58,
+    review_source: 'google',
+    source: 'ai_discovery',
+    key_venues: ['Villa Balbiano', 'Villa Erba'],
+    personalization_hook: 'I came across your private multi-day Lake Como productions and wanted to connect directly.',
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (Mayfair London ultra-luxury destination producer).',
+  },
+  {
     agency_name: 'Haute Fête Events New York',
     contact_name: 'Amanda Reed',
     email: 'amanda@hautefeteevents.com',
@@ -617,6 +794,25 @@ export const DISCOVERY_PARTNER_CATALOG = [
     personalization_hook: "I came across your luxury private estate celebrations on Lake Como and wanted to introduce ourselves.",
     hook_type: 'venue',
     notes: 'Discovered via AI Partner Search (US East Coast luxury destination agency).',
+  },
+  {
+    agency_name: 'Sinclair & Associates Beverly Hills',
+    contact_name: 'Victoria Sinclair',
+    email: 'concierge@sinclairevents.com',
+    website: 'https://sinclairevents.com',
+    type: 'planner',
+    segment: 'international',
+    market: 'us',
+    language: 'en',
+    location: 'Los Angeles & Lake Como',
+    rating: 5.0,
+    verified_reviews_count: 41,
+    review_source: 'google',
+    source: 'ai_discovery',
+    key_venues: ['Villa Sola Cabiati', 'Passalacqua', 'Villa Balbiano'],
+    personalization_hook: 'I came across your destination celebrations at Villa Sola Cabiati and wanted to introduce ourselves.',
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (California luxury private buyout specialist).',
   },
 ];
 
@@ -673,14 +869,21 @@ export function buildVerifiedFallbackHook(p = {}, storySignals = null, variantOv
   const preferredVenue = venues.find((v) => !/balbianello/i.test(v)) || venues[0] || p.location || 'Lake Como';
 
   if (p.type === 'venue' || p.type === 'concierge_hotel') {
-    return p.language === 'it'
-      ? 'Sono Dmitri di DOROGO, società di trasporto privato attiva tra il Lago di Como e Milano.'
-      : "I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan.";
+    if (p.language === 'it') {
+      return 'Sono Dmitri di DOROGO, società di trasporto privato attiva tra il Lago di Como e Milano.';
+    }
+    if (p.language === 'ru') {
+      return 'Я Дмитрий из компании DOROGO, мы организуем трансферы на озере Комо и в Милане.';
+    }
+    return "I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan.";
   }
 
   if (variantOverride === 'A') {
     if (p.language === 'it') {
       return `Sono Dmitri di DOROGO, società di trasporto privato attiva tra il Lago di Como e Milano. Ho visto i vostri matrimoni a ${preferredVenue} e volevo presentarci.`;
+    }
+    if (p.language === 'ru') {
+      return `Я Дмитрий из компании DOROGO, частного автопарка на озере Комо и в Милане. Увидел ваши проекты в ${preferredVenue} и решил познакомиться лично.`;
     }
     return `I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan. I came across your weddings at ${preferredVenue} and wanted to introduce ourselves.`;
   }
@@ -688,6 +891,9 @@ export function buildVerifiedFallbackHook(p = {}, storySignals = null, variantOv
   if (variantOverride === 'B') {
     if (p.language === 'it') {
       return `Spesso la parte più delicata dei trasporti per un matrimonio sul Lago di Como è il fine serata: ospiti divisi su più hotel intorno a ${preferredVenue} e nessun taxi disponibile.`;
+    }
+    if (p.language === 'ru') {
+      return `Самая сложная часть свадебной логистики на озере Комо — это ночной разъезд: отели разбросаны вокруг ${preferredVenue}, а такси ночью нет.`;
     }
     return `The hardest part of a Lake Como wedding's transport is often the end of the night: guests spread over several hotels around ${preferredVenue} and taxis hard to find.`;
   }
@@ -699,9 +905,21 @@ export function buildVerifiedFallbackHook(p = {}, storySignals = null, variantOv
   if (catalogMatch?.personalization_hook) return catalogMatch.personalization_hook;
 
   if (venues.length >= 1) {
+    if (p.language === 'it') {
+      return `Ho visto i vostri matrimoni a ${preferredVenue} e desideravo presentarci direttamente.`;
+    }
+    if (p.language === 'ru') {
+      return `Обратил внимание на ваши свадебные проекты в ${preferredVenue} и решил познакомиться лично.`;
+    }
     return `I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan. I came across your weddings at ${preferredVenue} and wanted to introduce ourselves.`;
   }
   if (p.location) {
+    if (p.language === 'it') {
+      return `Ho visto i vostri eventi in ${p.location} e desideravo presentarci direttamente.`;
+    }
+    if (p.language === 'ru') {
+      return `Обратил внимание на ваши мероприятия в ${p.location} и решил познакомиться лично.`;
+    }
     return `I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan. I came across your weddings in ${p.location} and wanted to introduce ourselves.`;
   }
   return '';

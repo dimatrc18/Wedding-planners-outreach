@@ -72,25 +72,25 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
         subject_line_a: `Трансферы гостей для ${targetVenue}`,
         subject_line_b: 'Аэропортовые трансферы и шаттлы для отелей',
         service_pitch:
-          `Мы организуем трансферы из аэропортов и шаттлы для гостей отелей и вилл в ${targetVenue}. Работаем на собственном представительском парке Mercedes-Benz V-Class и S-Class, а также проверенных минибусах до 50 мест с координатором в WhatsApp.`,
+          `Мы организуем трансферы из аэропорта Мальпенса и шаттлы для гостей отелей и вилл в ${targetVenue}. Работаем на собственном представительском парке Mercedes-Benz V-Class и S-Class, а также проверенных минибусах до 50 мест с прямым координатором в WhatsApp.`,
         cta_line:
-          'Если вам полезно иметь прямой контакт с парком на сезон, напишите мне здесь или в WhatsApp, и я отправлю наш партнерский тариф.',
+          'Если вашему консьерж-сервису полезно иметь прямой контакт с парком на сезон, напишите мне здесь или в WhatsApp, и я отправлю наш партнерский тариф.',
       };
     }
 
     const hasSpecificVenueRu = venueOrLoc && !/^(lake como|lago di como|озеро комо|северная италия|milan|милан)$/i.test(venueOrLoc);
     const ruSubjectsA = hasSpecificVenueRu
-      ? [`Трансферы для свадеб в ${venueOrLoc}`, 'Трансферы гостей на озере Комо и в Северной Италии']
-      : ['Трансферы гостей на озере Комо и в Северной Италии', 'Трансферы гостей на свадебный сезон'];
+      ? [`${venueOrLoc} трансферы гостей 2027`, 'Трансферы гостей на озере Комо 2027']
+      : ['Трансферы гостей на озере Комо 2027', 'Бронь автопарка 2027 озеро Комо'];
 
     if (effectiveVariant === 'B') {
       return {
         subject_line_a: ruSubjectsA[idx],
         subject_line_b: 'Ночной разъезд гостей после свадебного ужина',
         service_pitch:
-          'Как ваша команда решает вопрос ночного разъезда гостей и шаттлов на озере Комо и по Северной Италии? Мы работаем на собственном парке Mercedes-Benz V-Class и S-Class, а также координируем проверенные минибусы до 50 мест с персональным ведущим в WhatsApp для каждой свадьбы.',
+          'Ночной разъезд гостей — самый сложный момент свадебной логистики на озере Комо: узкие подъезды к виллам, гости живут в разных городках по побережью, а такси после полуночи отсутствует. Мы работаем на собственном автопарке Mercedes-Benz V-Class и S-Class прямо на озере, привлекаем минибусы до 50 мест и выделяем персонального координатора в WhatsApp на каждое мероприятие.',
         cta_line:
-          'Если на предстоящих датах требуется четкая логистика гостей или ночной разъезд, пришлите список отелей или количество гостей. Я составлю схему шаттлов и отправлю наши партнерские тарифы.',
+          'Если на предстоящих датах требуется надежный ночной разъезд или трансферы гостей, отправить вам схему шаттлов и наш партнерский лист тарифов?',
       };
     }
 
@@ -98,9 +98,9 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       subject_line_a: ruSubjectsA[idx],
       subject_line_b: 'Ночной разъезд гостей после свадебного ужина',
       service_pitch:
-        'Как ваша команда организует трансферы гостей и поездки по виллам на озере Комо и по Северной Италии? Мы работаем на собственном парке Mercedes-Benz V-Class и S-Class, а также координируем проверенные минибусы до 50 мест с персональным ведущим в WhatsApp для каждой свадьбы. По текущей загрузке автопарка у нас забронировано 2 или 3 партнерских места на сезон 2027 года.',
+        'Мы базируем собственный парк Mercedes-Benz V-Class и S-Class на озере Комо, плюс привлекаем проверенные минибусы до 50 мест. Мы специализируемся на встрече в Мальпенсе и ночном разъезде с вилл, когда такси вызвать невозможно. На сезон 2027 года у нас забронировано 2–3 партнерских места.',
       cta_line:
-        'Если на предстоящих датах требуется четкая логистика гостей или ночной разъезд, пришлите список отелей или количество гостей. Я составлю схему шаттлов и отправлю наши партнерские тарифы.',
+        'Отправить вам наш партнерский лист тарифов на 2027 год и схему ночных шаттлов? Если у вас есть даты на озере, пришлите число гостей или отели, и я подготовлю расчет.',
     };
   }
 
@@ -119,17 +119,17 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
 
     const hasSpecificVenueIt = venueOrLoc && !/^(lago di como|lake como|milano|italia)$/i.test(venueOrLoc);
     const itSubjectsA = hasSpecificVenueIt
-      ? [`Transfer per i vostri matrimoni a ${venueOrLoc}`, 'Trasporti ospiti sul Lago di Como e Nord Italia']
-      : ['Trasporti ospiti sul Lago di Como e Nord Italia', 'Transfer ospiti per la stagione matrimoni'];
+      ? [`Transfer per i vostri matrimoni a ${venueOrLoc} 2027`, 'Trasporti ospiti sul Lago di Como 2027']
+      : ['Trasporti ospiti sul Lago di Como 2027', 'Disponibilità flotta 2027 Lago di Como'];
 
     if (effectiveVariant === 'B') {
       return {
         subject_line_a: itSubjectsA[idx],
         subject_line_b: 'Rientri notturni dopo il ricevimento',
         service_pitch:
-          'Come gestite i rientri notturni e le navette ospiti sul Lago di Como e nel Nord Italia? Operiamo con Mercedes-Benz Classe V e Classe S di nostra proprietà sul lago, più partner di fiducia per minibus e pullman fino a 50 posti, con un referente unico via WhatsApp.',
+          'Il rientro notturno è il momento più critico per i matrimoni sul Lago di Como: accessi stretti alle ville, ospiti distribuiti su diversi paesi del lago e nessun taxi disponibile a notte fonda. Operiamo con una flotta Mercedes-Benz Classe V e Classe S di proprietà basata sul lago, più minibus fino a 50 posti e un referente operativo dedicato su WhatsApp per ogni evento.',
         cta_line:
-          'Se avete un matrimonio con transfer complessi o rientri notturni dalle ville, inviatemi l\'elenco hotel o il numero di ospiti. Vi preparo il piano navette e il nostro listino riservato.',
+          'Se avete un matrimonio con transfer complessi o rientri notturni dalle ville, può esservi utile ricevere il piano navette e il nostro listino riservato?',
       };
     }
 
@@ -137,9 +137,9 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       subject_line_a: itSubjectsA[idx],
       subject_line_b: 'Rientri notturni dopo il ricevimento',
       service_pitch:
-        'Come gestite i trasferimenti degli ospiti e i rientri notturni dalle ville sul Lago di Como e nel Nord Italia? Operiamo con Mercedes-Benz Classe V e Classe S di nostra proprietà sul lago, più partner di fiducia per minibus e pullman fino a 50 posti, con un referente unico via WhatsApp. In base alla capienza della nostra flotta, abbiamo 2 o 3 posti partner riservati per la stagione 2027.',
+        'Operiamo con una flotta Mercedes-Benz Classe V e Classe S basata sul Lago di Como, più minibus fino a 50 posti. Gestiamo transfer da Malpensa e rientri notturni dalle ville dove i taxi non operano. Per garantire veicoli dedicati e referente WhatsApp, riserviamo 2 o 3 posti partner per la stagione 2027.',
       cta_line:
-        'Se avete un matrimonio con transfer complessi o rientri notturni dalle ville, inviatemi l\'elenco hotel o il numero di ospiti. Vi preparo il piano navette e il nostro listino riservato.',
+        'Può esservi utile ricevere il nostro listino partner 2027 e lo schema dei circuiti villa? Se avete una data in programma, inviatemi pure l\'elenco hotel o il numero di ospiti.',
     };
   }
 
@@ -159,17 +159,17 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
   // English MECE Variant A (Introduction) vs Variant B (Late Returns After the Reception)
   const hasSpecificVenue = venueOrLoc && !/^(lake como|lago di como|milan|italy)$/i.test(venueOrLoc);
   const plannerSubjectsA = hasSpecificVenue
-    ? [`Transfers for your ${venueOrLoc} weddings`, 'Lake Como and Northern Italy guest transport']
-    : ['Lake Como and Northern Italy guest transport', 'Guest transport for the season'];
+    ? [`${venueOrLoc} guest transport 2027`, 'Lake Como guest transport 2027']
+    : ['Lake Como guest transport 2027', 'Lake Como fleet backup 2027'];
 
   if (effectiveVariant === 'B') {
     return {
       subject_line_a: plannerSubjectsA[idx],
       subject_line_b: 'Late returns after the reception',
       service_pitch:
-        'How does your team handle late-night villa returns and shuttles on Lake Como and across Northern Italy? We run our own Mercedes-Benz V-Class and S-Class fleet on the lake, alongside vetted partner minibuses up to 50 seats, with one dedicated coordinator on WhatsApp for every wedding.',
+        'Late-night villa returns are where Lake Como weddings face the biggest friction: narrow access, guests in scattered hotels, and zero taxis past midnight. We operate an executive Mercedes-Benz V-Class and S-Class fleet on the lake, plus vetted minibuses up to 50 seats, with one dedicated fleet lead on WhatsApp.',
       cta_line:
-        'If an upcoming date has tight guest logistics or late-night returns, send over your hotel list or guest counts. I will map the vehicle circuits and share our confidential partner rates for your file.',
+        'If an upcoming date has tight guest logistics or late-night returns, would having our 2027 partner rate card and shuttle circuits be useful for your file?',
     };
   }
 
@@ -177,9 +177,9 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
     subject_line_a: plannerSubjectsA[idx],
     subject_line_b: 'Late returns after the reception',
     service_pitch:
-      'How does your team manage guest transfers and villa returns on Lake Como and across Northern Italy? We operate our own Mercedes-Benz V-Class and S-Class fleet, vetted minibuses up to 50 seats, and a dedicated coordinator on WhatsApp. As fleet capacity allows, we have 2 or 3 partner spots reserved for the 2027 season.',
+      'We operate an executive Mercedes-Benz V-Class and S-Class fleet based on Lake Como, plus vetted minibuses up to 50 seats. Because we are based on the lake, we handle airport runs and late-night villa returns where taxis are unavailable. We reserve capacity for 2 or 3 partner studios for the 2027 season.',
     cta_line:
-      'If an upcoming date has tight guest logistics or late-night returns, send over your hotel list or guest counts. I will map the vehicle circuits and share our confidential partner rates for your file.',
+      'Would having our 2027 partner rate card and villa shuttle circuits be useful for your file? If an upcoming date has tight guest logistics, send over your hotel list or guest counts and I will map the vehicle circuits.',
   };
 }
 
@@ -190,6 +190,13 @@ export function buildVars(prospect, extra = {}) {
   const variant = extra.variant === 'B' ? 'B' : 'A';
   const tailored = buildTailoredCopy(prospect, agency_short, venue_or_location, lang, variant);
   const sig = lang === 'it' ? SIGNATURE_IT : lang === 'ru' ? SIGNATURE_RU : SIGNATURE;
+  let cleanHook = (prospect.personalization_hook || '').trim();
+  cleanHook = cleanHook
+    .replace(/^(Здравствуйте[,\s]+([А-Яа-яA-Za-z]+[,\s]+)?|Buongiorno[,\s]+([A-Za-z]+[,\s]+)?|Hi\s+[A-Za-z]+[,\s]+|Hello[,\s]+)/i, '')
+    .trim();
+  if (cleanHook) {
+    cleanHook = cleanHook.charAt(0).toUpperCase() + cleanHook.slice(1);
+  }
   return {
     greeting: greeting(prospect),
     first_name: firstName(prospect.contact_name),
@@ -200,7 +207,7 @@ export function buildVars(prospect, extra = {}) {
     subject_line_b: tailored.subject_line_b,
     service_pitch: tailored.service_pitch,
     cta_line: tailored.cta_line,
-    hook: (prospect.personalization_hook || '').trim(),
+    hook: cleanHook,
     venue: (prospect.key_venues || [])[0] || venue_or_location,
     location: prospect.location || venue_or_location,
     signature: sig,

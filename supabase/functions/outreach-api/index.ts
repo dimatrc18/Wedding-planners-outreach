@@ -367,6 +367,28 @@ Deno.serve((req) => handle(req, async () => {
       return json(await syncInbox(db, settings, now));
     case 'digest_now':
       return json(await sendDigest(db, settings, now, true));
+    case 'run_research':
+      return json(await autoResearchPending(db, settings, now));
+    case 'refresh_touches': {
+      const { data: drafts } = await db.from('touches').select('*').in('state', ['draft', 'approved']).eq('direction', 'out');
+      const { prospects, templates } = await loadAll(db);
+      const pmap = new Map(prospects.map((p: any) => [p.id, p]));
+      let updated = 0;
+      for (const t of (drafts || [])) {
+        const p = pmap.get(t.prospect_id);
+        if (!p) continue;
+        const built = core.buildDraft({ prospect: p, key: t.step_name, templates, extraVars: t.variant ? { variant: t.variant } : {} });
+        if (built && built.subject && built.body) {
+          await db.from('touches').update({
+            subject: built.subject,
+            body: built.body,
+            lint: built.lint,
+          }).eq('id', t.id);
+          updated++;
+        }
+      }
+      return json({ ok: true, updated });
+    }
     case 'classify':
       return json(await classifyInboundMessage(db, { body: body.text || '', subject: body.subject || '' }, body.prospect_id || null, now));
     case 'log':

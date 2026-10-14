@@ -632,10 +632,34 @@ export async function autoResearchPending(db: any, _settings: any, now = new Dat
     await Promise.all(queue.slice(i, i + 3).map(processOne));
   }
 
-  // 2. Auto-import up to 3 new verified luxury partners (>= 65/100) per run if unreached
-  const catalog = (core.DISCOVERY_PARTNER_CATALOG || []).filter((c: any) => core.findDuplicates(c, prospects).length === 0).slice(0, 3);
-  if (catalog.length > 0) {
-    for (const item of catalog) {
+  // 2. Auto-import up to 2 new verified luxury partners (>= 65/100) per run strictly maintaining 50/50 international/local split
+  const isIntl = (p: any) => (p.market && p.market !== 'it') || p.segment === 'international';
+  const existingIntl = prospects.filter(isIntl).length;
+  const existingLocal = prospects.filter((p: any) => !isIntl(p)).length;
+
+  const available = (core.DISCOVERY_PARTNER_CATALOG || []).filter((c: any) => core.findDuplicates(c, prospects).length === 0);
+  const intlPool = available.filter(isIntl);
+  const localPool = available.filter((c: any) => !isIntl(c));
+
+  const toImport: any[] = [];
+  const maxPerRun = 2;
+
+  for (let step = 0; step < maxPerRun; step++) {
+    const currentIntl = existingIntl + toImport.filter(isIntl).length;
+    const currentLocal = existingLocal + toImport.filter((x: any) => !isIntl(x)).length;
+
+    if (currentIntl < currentLocal && intlPool.length > 0) {
+      toImport.push(intlPool.shift()!);
+    } else if (currentLocal < currentIntl && localPool.length > 0) {
+      toImport.push(localPool.shift()!);
+    } else {
+      if (intlPool.length > 0) toImport.push(intlPool.shift()!);
+      else if (localPool.length > 0) toImport.push(localPool.shift()!);
+    }
+  }
+
+  if (toImport.length > 0) {
+    for (const item of toImport) {
       const jina = await fetchJinaSignals(item.website);
       const candidate: any = {
         ...item,
