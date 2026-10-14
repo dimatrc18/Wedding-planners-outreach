@@ -51,23 +51,10 @@ function shell() {
     <nav class="rail" aria-label="Main">
       <div class="brand">
         <div class="mark">DOROGO</div>
-        <div class="sub">${isTools ? 'Creative & AI tools' : 'Partner outreach'}</div>
+        <div class="sub">Partner outreach &amp; tools</div>
       </div>
-      <div class="rail-mode-switch" role="tablist" aria-label="Mode">
-        <a href="#today" class="rail-mode-btn ${!isTools ? 'active' : ''}">${icon('mail', 14)}<span>Outreach</span></a>
-        <a href="#tools" class="rail-mode-btn ${isTools ? 'active' : ''}">${icon('sparkle', 14)}<span>Tools</span></a>
-      </div>
-      ${isTools ? `
-        <div class="label" style="padding: 10px 10px 4px; font-size: .68rem;">DOROGO TOOLS SUITE</div>
-        <a class="nav-link active" href="#tools">${icon('sparkle')}<span>AI Watermark & EXIF</span></a>
-        <a class="nav-link" href="#tools#ratecard">${icon('template')}<span>Rate Card & Assets</span></a>
-        <a class="nav-link" href="https://raiw.cc" target="_blank" rel="noopener">${icon('external')}<span>Cloud Web GUI</span></a>
-        <div class="divider" style="margin: 12px 10px;"></div>
-        <a class="nav-link" href="#today">${icon('mail')}<span>← Partner Outreach</span></a>
-      ` : `
-        ${links.map(([k, v]) => `<a class="nav-link ${r.name === k ? 'active' : ''}" href="#${k}">${icon(v.icon)}<span>${esc(v.label)}</span>${k === 'today' && n ? `<span class="count">${n}</span>` : ''}</a>`).join('')}
-        <a class="nav-link" href="#add" style="margin-top:10px">${icon('plus')}<span>Add prospects</span></a>
-      `}
+      ${links.map(([k, v]) => `<a class="nav-link ${r.name === k ? 'active' : ''}" href="#${k}">${icon(v.icon)}<span>${esc(v.label)}</span>${k === 'today' && n ? `<span class="count">${n}</span>` : ''}</a>`).join('')}
+      <a class="nav-link" href="#add" style="margin-top:10px">${icon('plus')}<span>Add prospects</span></a>
       <div class="rail-foot">
         <span class="tiny faint">${esc(S.user?.email || '')}</span>
         ${isDemo() ? '<button class="btn sm" data-act="leave-demo">Leave demo</button>' : '<button class="btn sm ghost" data-act="sign-out">Sign out</button>'}

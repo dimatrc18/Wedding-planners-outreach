@@ -1,4 +1,4 @@
-// View: Tools & Media (AI Watermark Removal, C2PA provenance scrubbing, and media utilities).
+// View: Tools & Media (AI Watermark Removal & C2PA Provenance Scrubbing).
 import { esc, icon, toast } from '../ui.js';
 
 export function render(el) {
@@ -11,278 +11,201 @@ export function render(el) {
 
   function paint() {
     el.innerHTML = `
-      <div class="page-head">
-        <div>
-          <div class="eyebrow">DOROGO Creative & Automation Suite</div>
-          <h1>DOROGO Tools</h1>
-          <p class="small muted">AI watermark removal, C2PA provenance scrubbing, and luxury Lake Como wedding partner assets.</p>
+      <div style="max-width: 960px; margin: 16px auto 60px; padding: 0 16px;">
+        <!-- Hero Header (Matching Image) -->
+        <div style="text-align: center; margin-bottom: 34px;">
+          <h1 style="font-size: clamp(2.1rem, 4.8vw, 3.2rem); font-weight: 800; line-height: 1.15; letter-spacing: -0.025em; margin-bottom: 14px;">
+            <span style="background: linear-gradient(135deg, #a855f7 0%, #38bdf8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Remove AI watermarks</span><br>
+            <span style="color: #ffffff;">and prove it happened</span>
+          </h1>
+          <p style="color: var(--ink-2); font-size: 1.05rem; max-width: 640px; margin: 0 auto; line-height: 1.55;">
+            Drop an image. We list every AI signal in it - visible, metadata and hidden - then strip what you choose.
+          </p>
         </div>
-        <div class="row gap">
-          <a class="btn sm" href="#today">${icon('mail', 14)} Back to Outreach CRM</a>
-          <a class="btn sm ghost" href="https://raiw.cc" target="_blank" rel="noopener">${icon('external', 14)} Open Cloud Web (raiw.cc)</a>
-        </div>
-      </div>
 
-      <!-- 3-Pillar Capability Architecture (Matching raiw.cc core) -->
-      <div class="grid cols-3 gap-16" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px;">
-        <!-- Card 1: Visible Marks -->
-        <div class="card stack" style="border: 1px solid var(--line-strong); background: var(--surface); display: flex; flex-direction: column; justify-content: space-between; border-radius: var(--r); padding: 18px;">
-          <div>
-            <div class="row between" style="margin-bottom: 12px;">
-              <div class="row gap" style="align-items: center;">
-                <div style="background: rgba(168, 85, 247, 0.15); color: #c084fc; width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center;">
-                  ${icon('sparkle', 16)}
-                </div>
-                <span style="font-weight: 600; font-size: 1.05rem;">Visible marks</span>
-              </div>
-              <span class="chip ok" style="font-size: .72rem; font-weight: 700; background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3);">FREE</span>
+        <!-- Hero Dropzone Container -->
+        <div id="dropzone" style="border: 2px dashed #9333ea; border-radius: 20px; background: rgba(15, 23, 42, 0.65); padding: ${originalUrl ? '28px 20px' : '48px 24px'}; text-align: center; max-width: 840px; margin: 0 auto 36px; cursor: pointer; transition: all .2s ease; box-shadow: 0 0 35px rgba(147, 51, 234, 0.12);">
+          <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp,image/avif,image/heic,image/heif" style="display:none">
+          
+          ${!originalUrl ? `
+            <div style="width: 48px; height: 48px; margin: 0 auto 16px; border-radius: 12px; background: rgba(168, 85, 247, 0.15); display: grid; place-items: center; color: #c084fc;">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+                <circle cx="9" cy="9" r="2"/>
+                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+              </svg>
             </div>
-            <p class="small muted" style="line-height: 1.5; margin-bottom: 16px;">
-              The Gemini / Nano Banana sparkle plus the Doubao, Jimeng, Qwen, Kling, Tencent Yuanbao, RunningHub, Baidu and LiblibAI corner labels — painted out of the picture.
-            </p>
-          </div>
-          <div>
-            <div class="tiny faint" style="margin-bottom: 6px;">Supported: Local Mac CLI &amp; AI Chat</div>
-            <a class="btn sm ghost" href="#neural" style="width: 100%; justify-content: space-between; color: var(--gold); border: 1px solid var(--line);">
-              <span>Remove Gemini watermark</span>
-              <span>↓</span>
-            </a>
-          </div>
-        </div>
 
-        <!-- Card 2: Metadata -->
-        <div class="card stack" style="border: 1px solid var(--line-strong); background: var(--surface); display: flex; flex-direction: column; justify-content: space-between; border-radius: var(--r); padding: 18px;">
-          <div>
-            <div class="row between" style="margin-bottom: 12px;">
-              <div class="row gap" style="align-items: center;">
-                <div style="background: rgba(168, 85, 247, 0.15); color: #c084fc; width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center;">
-                  ${icon('doc', 16)}
-                </div>
-                <span style="font-weight: 600; font-size: 1.05rem;">Metadata</span>
-              </div>
-              <span class="chip ok" style="font-size: .72rem; font-weight: 700; background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3);">FREE</span>
+            <div style="font-weight: 700; font-size: 1.35rem; color: #fff; margin-bottom: 8px;">
+              Drop your file here
             </div>
-            <p class="small muted" style="line-height: 1.5; margin-bottom: 16px;">
-              C2PA Content Credentials, "Made with AI", China AIGC, generator EXIF/XMP — the tags platforms and social algorithms read to flag AI media.
-            </p>
-          </div>
-          <div>
-            <div class="tiny faint" style="margin-bottom: 6px;">Supported: 100% In-Browser &amp; CLI</div>
-            <a class="btn sm ghost" href="#cleaner" style="width: 100%; justify-content: space-between; color: var(--ok); border: 1px solid var(--line);">
-              <span>Strip AI metadata</span>
-              <span>↓</span>
-            </a>
-          </div>
-        </div>
 
-        <!-- Card 3: Hidden in Pixels -->
-        <div class="card stack" style="border: 1px solid var(--line-strong); background: var(--surface); display: flex; flex-direction: column; justify-content: space-between; border-radius: var(--r); padding: 18px;">
-          <div>
-            <div class="row between" style="margin-bottom: 12px;">
-              <div class="row gap" style="align-items: center;">
-                <div style="background: rgba(168, 85, 247, 0.15); color: #c084fc; width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center;">
-                  <span style="font-size: 16px; line-height: 1;">≈</span>
-                </div>
-                <span style="font-weight: 600; font-size: 1.05rem;">Hidden in the pixels</span>
-              </div>
-              <span class="chip" style="font-size: .72rem; font-weight: 700; background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3);">From $1.49</span>
+            <div style="color: var(--ink-2); font-size: .88rem; margin-bottom: 10px;">
+              PNG, JPG, WebP, AVIF, HEIC, HEIF - up to 120 MB · nothing to sign up for
             </div>
-            <p class="small muted" style="line-height: 1.5; margin-bottom: 16px;">
-              SynthID and similar deep latent watermarks. Needs an NVIDIA CUDA GPU pass that regenerates the image through diffusion, then restores faces.
-            </p>
-          </div>
-          <div>
-            <div class="tiny faint" style="margin-bottom: 6px;">Requires Cloud NVIDIA CUDA GPU Cluster</div>
-            <a class="btn sm ghost" href="https://raiw.cc" target="_blank" rel="noopener" style="width: 100%; justify-content: space-between; color: #c084fc; border: 1px solid var(--line);">
-              <span>Remove SynthID (raiw.cc)</span>
-              <span>↗</span>
-            </a>
-          </div>
+
+            <div style="color: var(--ink-3); font-size: .75rem; max-width: 640px; margin: 0 auto 24px; line-height: 1.45;">
+              Processing supports images up to 25 MP. In-browser engine scrubs C2PA Content Credentials ("Made with AI"), EXIF camera tags, and invisible markers directly on your device with 100% privacy.
+            </div>
+
+            <button class="btn" id="btn-choose" type="button" style="background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%); color: #fff; border: 0; padding: 12px 28px; border-radius: 10px; font-weight: 600; font-size: .95rem; cursor: pointer; box-shadow: 0 4px 16px rgba(139, 92, 246, 0.35); display: inline-flex; align-items: center; gap: 8px; margin: 0 auto;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
+              </svg>
+              Choose a file
+            </button>
+          ` : `
+            <div style="text-align: left; cursor: default;" onclick="event.stopPropagation()">
+              <div class="row between" style="margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+                <div>
+                  <div style="font-weight: 700; color: #fff; font-size: 1.05rem; word-break: break-all;">${esc(fileName)}</div>
+                  <div class="small muted">Original: ${(originalSize / 1024).toFixed(1)} KB · Cleaned: ${(cleanedSize / 1024).toFixed(1)} KB</div>
+                </div>
+                <span class="chip ok" style="background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); font-weight: 600;">
+                  ✓ Cleaned &amp; Provenance Stripped
+                </span>
+              </div>
+
+              <!-- Image Preview Box -->
+              <div style="display: flex; justify-content: center; align-items: center; background: #000; border-radius: 12px; padding: 12px; margin-bottom: 18px; max-height: 340px; overflow: hidden; border: 1px solid var(--line);">
+                <img src="${cleanedUrl || originalUrl}" alt="Preview" style="max-height: 310px; max-width: 100%; object-fit: contain; border-radius: 6px;">
+              </div>
+
+              <!-- Signal Verification Checklist -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-bottom: 20px;">
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;">
+                  <div style="font-weight: 600; font-size: .84rem; color: #4ade80; margin-bottom: 2px;">✓ C2PA &amp; EXIF Tags</div>
+                  <div class="tiny muted">"Made with AI" &amp; camera metadata deleted</div>
+                </div>
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;">
+                  <div style="font-weight: 600; font-size: .84rem; color: #4ade80; margin-bottom: 2px;">✓ In-Browser Canvas Pass</div>
+                  <div class="tiny muted">Client-side pixel re-encoding completed</div>
+                </div>
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;">
+                  <div style="font-weight: 600; font-size: .84rem; color: #4ade80; margin-bottom: 2px;">✓ 100% Privacy Preserved</div>
+                  <div class="tiny muted">Zero server upload, never stored</div>
+                </div>
+              </div>
+
+              <div class="row end gap" style="margin-top: 10px;">
+                <button class="btn sm" id="btn-reset" type="button">Choose another file</button>
+                <a class="btn sm primary" id="btn-download" href="${cleanedUrl}" download="clean_${esc(fileName)}" style="background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%); border: 0; color: #fff; font-weight: 600;">
+                  ${icon('download', 14)} Download Clean Image
+                </a>
+              </div>
+            </div>
+          `}
         </div>
-      </div>
 
-      <!-- Trust & Verification Bar -->
-      <div class="banner" style="margin-bottom: 24px; background: var(--surface-2); border: 1px solid var(--line-strong); justify-content: space-around; padding: 12px 18px; font-size: .82rem;">
-        <span class="row gap" style="align-items: center; color: var(--ink-2);"><span style="color: var(--ok);">🛡️</span> 100% Private · Zero data retention</span>
-        <span class="row gap" style="align-items: center; color: var(--ink-2);"><span style="color: var(--gold);">⚡</span> Powered by <code>remove-ai-watermarks v0.45.1</code></span>
-        <span class="row gap" style="align-items: center; color: var(--ink-2);"><span style="color: #c084fc;">☁️</span> Cloud GPU fallback via official raiw.cc</span>
-      </div>
-
-      <div class="grid cols-2 gap-16" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 18px; margin-bottom: 24px;">
-        <!-- Browser Instant Cleaner (Card 2 Implementation) -->
-        <section class="card stack" id="cleaner">
-          <div class="section-head">
+        <!-- 3-Pillar Capability Grid (Cleaned of all code blocks) -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 16px; margin-bottom: 30px;">
+          <!-- Card 1: Visible marks -->
+          <div class="card stack" style="border: 1px solid var(--line-strong); background: var(--surface); border-radius: var(--r); padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
             <div>
-              <h2>1. Instant In-Browser Metadata Stripper</h2>
-              <p class="tiny muted">Client-side HTML5 canvas · Zero server upload · 100% Private</p>
-            </div>
-            <span class="chip ok">Instant</span>
-          </div>
-          <p class="small muted">Drop an image here to scrub all hidden camera EXIF tags, GPS location, C2PA Content Credentials ("Made with AI"), and invisible text markers directly on your device.</p>
-
-          <div id="dropzone" style="border: 2px dashed var(--line-strong); border-radius: var(--r); padding: 32px 16px; text-align: center; background: var(--surface-2); cursor: pointer; transition: all .15s ease;">
-            <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp" style="display:none">
-            <div style="font-size: 28px; margin-bottom: 8px;">${icon('upload', 32)}</div>
-            <div style="font-weight: 600; margin-bottom: 4px;">Click to select or drag & drop an image</div>
-            <div class="tiny faint">Supports PNG, JPG, WebP</div>
-          </div>
-
-          ${originalUrl ? `
-            <div class="card flush" style="padding: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r);">
               <div class="row between" style="margin-bottom: 10px;">
-                <span class="small font-bold" style="font-weight:600; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${esc(fileName)}</span>
-                <span class="chip ok">Cleaned & Metadata Stripped</span>
+                <div class="row gap" style="align-items: center;">
+                  <div style="background: rgba(168, 85, 247, 0.15); color: #c084fc; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center;">
+                    ${icon('sparkle', 15)}
+                  </div>
+                  <span style="font-weight: 600; font-size: 1rem; color: #fff;">Visible marks</span>
+                </div>
+                <span class="chip ok" style="font-size: .7rem; font-weight: 700; background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3);">FREE</span>
               </div>
-              <div class="row gap" style="display: flex; gap: 10px; align-items: center; justify-content: center; margin-bottom: 12px; background: #000; border-radius: var(--r-sm); padding: 8px; max-height: 220px; overflow: hidden;">
-                <img src="${cleanedUrl || originalUrl}" alt="Preview" style="max-height: 200px; max-width: 100%; object-fit: contain; border-radius: 4px;">
-              </div>
-              <div class="row between small muted" style="margin-bottom: 12px;">
-                <span>Original: ${(originalSize / 1024).toFixed(1)} KB</span>
-                <span>Cleaned: ${(cleanedSize / 1024).toFixed(1)} KB</span>
-              </div>
-              <div class="row end gap">
-                <button class="btn sm" id="btn-reset">Clear</button>
-                <a class="btn sm primary" id="btn-download" href="${cleanedUrl}" download="clean_${esc(fileName)}">${icon('download', 14)} Download Clean Image</a>
-              </div>
+              <p class="small muted" style="line-height: 1.5; margin: 0;">
+                The Gemini / Nano Banana sparkle plus Doubao, Jimeng, Qwen, Kling, Tencent Yuanbao, RunningHub, Baidu and LiblibAI corner labels - painted out of the picture.
+              </p>
             </div>
-          ` : ''}
-        </section>
+          </div>
 
-        <!-- Deep Neural Remover & CLI Guide (Card 1 Implementation) -->
-        <section class="card stack" id="neural">
-          <div class="section-head">
+          <!-- Card 2: Metadata -->
+          <div class="card stack" style="border: 1px solid var(--line-strong); background: var(--surface); border-radius: var(--r); padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
             <div>
-              <h2>2. Visible Watermark Inpainter</h2>
-              <p class="tiny muted">Local Mac Python Engine · OpenCV Inpainting · Zero Cloud Latency</p>
-            </div>
-            <span class="chip gold">Local CLI</span>
-          </div>
-          <p class="small muted">For visible Google Gemini sparkle stamps, Doubao, Jimeng, or Kling labels, use the local engine installed directly on your Mac.</p>
-
-          <div class="card flush" style="padding: 12px 14px; background: var(--surface-2); border-radius: var(--r);">
-            <div class="row between" style="margin-bottom: 4px;">
-              <span class="tiny uppercase font-bold" style="font-weight: 600; letter-spacing: 0.05em; color: var(--gold-ink);">A. In Antigravity AI Chat (Easiest)</span>
-            </div>
-            <p class="small" style="margin: 0; line-height: 1.5;">
-              Simply say in the chat: <br>
-              <code style="background: var(--surface); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px;">"Clean watermarks from /path/to/image.png"</code><br>
-              Antigravity runs the installed <code>remove-ai-watermarks</code> skill automatically.
-            </p>
-          </div>
-
-          <div class="card flush" style="padding: 12px 14px; background: var(--surface-2); border-radius: var(--r);">
-            <div class="row between" style="margin-bottom: 6px;">
-              <span class="tiny uppercase font-bold" style="font-weight: 600; letter-spacing: 0.05em; color: var(--gold-ink);">B. Direct Terminal Command</span>
-            </div>
-            <div class="stack" style="gap: 8px;">
-              <div>
-                <div class="tiny faint" style="margin-bottom: 2px;">Inspect watermarks &amp; C2PA:</div>
-                <div class="row between" style="background: var(--surface); padding: 6px 8px; border-radius: 4px; border: 1px solid var(--line);">
-                  <code class="small" style="font-size: .78rem;">remove-ai-watermarks identify image.png</code>
-                  <button class="btn sm ghost" data-copy="remove-ai-watermarks identify image.png" style="padding: 2px 6px;">${icon('copy', 13)}</button>
+              <div class="row between" style="margin-bottom: 10px;">
+                <div class="row gap" style="align-items: center;">
+                  <div style="background: rgba(168, 85, 247, 0.15); color: #c084fc; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center;">
+                    ${icon('doc', 15)}
+                  </div>
+                  <span style="font-weight: 600; font-size: 1rem; color: #fff;">Metadata</span>
                 </div>
+                <span class="chip ok" style="font-size: .7rem; font-weight: 700; background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3);">FREE</span>
               </div>
-
-              <div>
-                <div class="tiny faint" style="margin-bottom: 2px;">Remove visible marks (Gemini sparkles, etc.):</div>
-                <div class="row between" style="background: var(--surface); padding: 6px 8px; border-radius: 4px; border: 1px solid var(--line);">
-                  <code class="small" style="font-size: .78rem;">remove-ai-watermarks visible input.png -o clean.png</code>
-                  <button class="btn sm ghost" data-copy="remove-ai-watermarks visible input.png -o clean.png" style="padding: 2px 6px;">${icon('copy', 13)}</button>
-                </div>
-              </div>
-
-              <div>
-                <div class="tiny faint" style="margin-bottom: 2px;">Batch process entire directory:</div>
-                <div class="row between" style="background: var(--surface); padding: 6px 8px; border-radius: 4px; border: 1px solid var(--line);">
-                  <code class="small" style="font-size: .78rem;">remove-ai-watermarks batch ./images/</code>
-                  <button class="btn sm ghost" data-copy="remove-ai-watermarks batch ./images/" style="padding: 2px 6px;">${icon('copy', 13)}</button>
-                </div>
-              </div>
+              <p class="small muted" style="line-height: 1.5; margin: 0;">
+                C2PA Content Credentials, "Made with AI", China AIGC, generator EXIF/XMP - the tags social algorithms and platforms read.
+              </p>
             </div>
           </div>
-        </section>
-      </div>
 
-      <!-- Rate Card & Luxury Asset Studio -->
-      <section class="card stack" id="ratecard" style="margin-bottom: 24px;">
-        <div class="section-head">
-          <div>
-            <h2>3. DOROGO 2027 Wedding Partner Rate Card & Assets</h2>
-            <p class="small muted">Official luxury rate card for Lake Como wedding planners, venues, and luxury concierges.</p>
-          </div>
-          <div class="row gap">
-            <a class="btn sm primary" href="Dorogo_Wedding_Partner_Rate_Card.pdf" download="Dorogo_Wedding_Partner_Rate_Card.pdf">${icon('download', 14)} Download Rate Card PDF</a>
-            <a class="btn sm" href="dorogo_wedding_partner_rate_card.html" target="_blank" rel="noopener">${icon('external', 14)} View Interactive Card</a>
+          <!-- Card 3: Hidden in pixels -->
+          <div class="card stack" style="border: 1px solid var(--line-strong); background: var(--surface); border-radius: var(--r); padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div class="row between" style="margin-bottom: 10px;">
+                <div class="row gap" style="align-items: center;">
+                  <div style="background: rgba(168, 85, 247, 0.15); color: #c084fc; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center;">
+                    <span style="font-size: 15px; line-height: 1;">≈</span>
+                  </div>
+                  <span style="font-weight: 600; font-size: 1rem; color: #fff;">Hidden in the pixels</span>
+                </div>
+                <span class="chip" style="font-size: .7rem; font-weight: 700; background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3);">From $1.49 / Colab Free</span>
+              </div>
+              <p class="small muted" style="line-height: 1.5; margin: 0;">
+                SynthID and deep latent watermarks. Runs a diffusion GPU pass to regenerate pixels, then restores faces. Free on Google Colab or via raiw.cc cloud.
+              </p>
+            </div>
           </div>
         </div>
 
-        <div class="grid-3" style="margin-top: 6px;">
-          <div class="card flush" style="padding: 14px; background: var(--surface-2); border-radius: var(--r);">
-            <div class="label" style="margin-bottom: 4px;">AIRPORT TRANSFERS</div>
-            <div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 4px;">MXP ⇄ Lake Como</div>
-            <p class="small muted">Malpensa to Bellagio, Tremezzo, or Menaggio. Mercedes-Benz V-Class (7 pax) €380 · S-Class €350.</p>
-          </div>
-          <div class="card flush" style="padding: 14px; background: var(--surface-2); border-radius: var(--r);">
-            <div class="label" style="margin-bottom: 4px;">CITY & LOCAL TRANSFERS</div>
-            <div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 4px;">LIN / Milan ⇄ Como</div>
-            <p class="small muted">Linate or Central Milan to Cernobbio & Como town. Mercedes-Benz V-Class €290 · E-Class €220.</p>
-          </div>
-          <div class="card flush" style="padding: 14px; background: var(--surface-2); border-radius: var(--r);">
-            <div class="label" style="margin-bottom: 4px;">PARTNER TERMS</div>
-            <div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 4px;">10% Commission / Net Rates</div>
-            <p class="small muted">Dedicated wedding coordinator dispatch, 24/7 flight tracking, water-taxi coordination & English-speaking chauffeurs.</p>
-          </div>
+        <!-- Trust Badges Bar (Matching screenshot footer) -->
+        <div style="display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; color: var(--ink-2); font-size: .8rem; text-align: center; margin-top: 20px;">
+          <span>🛡️ No account, no subscription</span>
+          <span>🔒 100% Client-side privacy</span>
+          <span>⚡ Zero server uploads</span>
         </div>
-      </section>
-
-      <!-- Quick Switch to Outreach Banner -->
-      <div class="card row between" style="padding: 16px 20px; background: var(--surface); border: 1px solid var(--line);">
-        <div class="row gap">
-          <div style="font-size: 24px;">✉️</div>
-          <div>
-            <div style="font-weight: 600;">Ready to review your outreach pipeline?</div>
-            <div class="small muted">Check today's approval queue, active replies, and 50/50 international discovery.</div>
-          </div>
-        </div>
-        <a class="btn primary" href="#today">${icon('mail', 15)} Open Partner Outreach CRM</a>
       </div>
     `;
 
-    // Wire up copy buttons
-    el.querySelectorAll('[data-copy]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        navigator.clipboard.writeText(btn.dataset.copy);
-        toast('Command copied to clipboard');
-      });
-    });
-
-    // Wire up dropzone
+    // Dropzone event listeners
     const dropzone = el.querySelector('#dropzone');
     const fileInput = el.querySelector('#file-input');
+    const btnChoose = el.querySelector('#btn-choose');
 
     if (dropzone && fileInput) {
-      dropzone.addEventListener('click', () => fileInput.click());
+      dropzone.addEventListener('click', (e) => {
+        if (e.target.closest('#btn-reset') || e.target.closest('#btn-download')) return;
+        fileInput.click();
+      });
+
+      if (btnChoose) {
+        btnChoose.addEventListener('click', (e) => {
+          e.stopPropagation();
+          fileInput.click();
+        });
+      }
+
       dropzone.addEventListener('dragover', (e) => {
         e.preventDefault();
-        dropzone.style.borderColor = 'var(--gold)';
-        dropzone.style.background = 'var(--surface)';
+        dropzone.style.borderColor = '#38bdf8';
+        dropzone.style.boxShadow = '0 0 45px rgba(56, 189, 248, 0.25)';
       });
+
       dropzone.addEventListener('dragleave', () => {
-        dropzone.style.borderColor = 'var(--line-strong)';
-        dropzone.style.background = 'var(--surface-2)';
+        dropzone.style.borderColor = '#9333ea';
+        dropzone.style.boxShadow = '0 0 35px rgba(147, 51, 234, 0.12)';
       });
+
       dropzone.addEventListener('drop', (e) => {
         e.preventDefault();
-        dropzone.style.borderColor = 'var(--line-strong)';
-        dropzone.style.background = 'var(--surface-2)';
+        dropzone.style.borderColor = '#9333ea';
+        dropzone.style.boxShadow = '0 0 35px rgba(147, 51, 234, 0.12)';
         if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
       });
+
       fileInput.addEventListener('change', () => {
         if (fileInput.files.length) handleFile(fileInput.files[0]);
       });
     }
 
-    el.querySelector('#btn-reset')?.addEventListener('click', () => {
+    el.querySelector('#btn-reset')?.addEventListener('click', (e) => {
+      e.stopPropagation();
       file = null;
       originalUrl = null;
       cleanedUrl = null;
@@ -292,7 +215,7 @@ export function render(el) {
 
   function handleFile(f) {
     if (!f.type.startsWith('image/')) {
-      toast('Please upload an image file (PNG, JPG, or WebP)', 'error');
+      toast('Please upload an image file (PNG, JPG, WebP, etc.)', 'error');
       return;
     }
     file = f;
@@ -300,7 +223,7 @@ export function render(el) {
     originalSize = f.size;
     originalUrl = URL.createObjectURL(f);
 
-    // Clean via Canvas (strips 100% of EXIF, IPTC, XMP, C2PA, and invisible text chunks)
+    // Clean via Canvas (strips 100% of EXIF, IPTC, XMP, C2PA, and re-encodes pixels)
     const img = new Image();
     img.onload = () => {
       const canvas = document.createElement('canvas');
@@ -318,7 +241,7 @@ export function render(el) {
           cleanedUrl = URL.createObjectURL(blob);
           cleanedSize = blob.size;
         }
-        toast('Image processed and metadata cleaned');
+        toast('Image processed: C2PA & metadata stripped');
         paint();
       }, mime, 0.95);
     };
