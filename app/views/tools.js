@@ -145,12 +145,15 @@ export function render(el) {
                   </div>
                   <span style="font-weight: 600; font-size: 1rem; color: #fff;">Hidden in the pixels</span>
                 </div>
-                <span class="chip" style="font-size: .7rem; font-weight: 700; background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3);">From $1.49 / Colab Free</span>
+                <span class="chip" style="font-size: .7rem; font-weight: 700; background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3);">Colab Free / $1.49</span>
               </div>
-              <p class="small muted" style="line-height: 1.5; margin: 0;">
-                SynthID and deep latent watermarks. Runs a diffusion GPU pass to regenerate pixels, then restores faces. Free on Google Colab or via raiw.cc cloud.
+              <p class="small muted" style="line-height: 1.5; margin-bottom: 12px;">
+                SynthID and deep latent watermarks. Runs a diffusion GPU pass to regenerate pixels, then restores faces.
               </p>
             </div>
+            <a class="btn sm ghost" href="https://colab.research.google.com/github/dimatrc18/Wedding-planners-outreach/blob/main/dorogo_synthid_cleaner.ipynb" target="_blank" rel="noopener" style="font-size: .78rem; color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); justify-content: center; width: 100%; border-radius: 6px; padding: 6px 10px; text-decoration: none;">
+              <span>Open Free Google Colab GPU ↗</span>
+            </a>
           </div>
         </div>
 
