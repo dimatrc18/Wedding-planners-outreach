@@ -2,7 +2,7 @@
 // GET ?open=<touch id> is the optional open-tracking pixel (only used when settings.track_opens is on).
 import * as core from '../_shared/core/index.js';
 import { handle, json, requireAllowedUser, loadSettings, integrations, getState, admin, HttpError, logEvent } from '../_shared/server.ts';
-import { verifySmtp } from '../_shared/mail.ts';
+import { verifySmtp, sendMail } from '../_shared/mail.ts';
 import { tgSend } from '../_shared/telegram.ts';
 import { gemini, checkHook } from '../_shared/ai.ts';
 import { draftDueSteps, sendDue, syncInbox, sendDigest, approveTouch, fetchJinaSignals, autoResearchPending, loadAll, classifyInboundMessage, applyInbound, formatThreadHistory } from '../_shared/jobs.ts';
@@ -327,6 +327,22 @@ Deno.serve((req) => handle(req, async () => {
     case 'test_smtp':
       await verifySmtp();
       return json({ ok: true });
+    case 'test_email': {
+      const to = body.to || user?.email || 'dmitri@dorogo.eu';
+      const sampleText = `Hi Dmitri,\n\nThis is a live preview test of the updated DOROGO executive email template.\n\nWe operate our own Mercedes-Benz V-Class and S-Class fleet, vetted minibuses up to 50 seats, and a dedicated coordinator on WhatsApp. As fleet capacity allows, we have 2 or 3 partner spots reserved for the 2027 season.\n\nIf an upcoming date has tight guest logistics or late-night returns, send over your hotel list or guest counts. I will map the vehicle circuits and share our confidential partner rates for your file.\n\nDmitri\nDOROGO | dmitri@dorogo.eu | WhatsApp: wa.me/32456141497\n\nIf transport isn't something you handle, no problem at all, just let me know.`;
+      const fromEmail = settings.sender?.email || 'dmitri@dorogo.eu';
+      const fromName = settings.sender?.display_name || 'Dmitri | DOROGO Transfers';
+      const res = await sendMail({
+        fromName,
+        fromEmail,
+        replyTo: settings.sender?.reply_to || fromEmail,
+        to,
+        subject: 'DOROGO Email Template Live Verification (2027 Season & Pure HTML Footer)',
+        text: sampleText,
+        footerStyle: settings.email_footer_style || 'wordmark',
+      });
+      return json({ ok: true, to, messageId: res.messageId });
+    }
     case 'test_telegram': {
       const res = await tgSend('🔔 <b>DOROGO Partner System</b>: Test ping from Outreach API. Bot is connected and online.');
       return json({ ok: Boolean(res?.ok), result: res });

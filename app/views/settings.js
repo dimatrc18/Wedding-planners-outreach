@@ -71,7 +71,10 @@ export function render(el) {
           </label>
         </div>
         <label class="check small"><input type="checkbox" id="opens" ${s.track_opens ? 'checked' : ''}> Track opens with a pixel (adds an HTML part; less reliable and slightly worse for deliverability)</label>
-        <div class="row end"><button class="btn primary sm" data-act="save-sender">Save sender</button></div>
+        <div class="row end" style="gap: 8px;">
+          <button class="btn sm ghost" data-act="test-email">Send test email to myself</button>
+          <button class="btn primary sm" data-act="save-sender">Save sender</button>
+        </div>
       </section>
 
       <section class="card stack">
@@ -164,6 +167,10 @@ export function render(el) {
             email_footer_style: v('footer-style').value,
           });
           toast('Sender & footer saved'); break;
+        case 'test-email': {
+          const res = await api('test_email');
+          toast(`Verification email sent to ${res?.to || 'your inbox'}`); break;
+        }
         case 'upload': {
           const f = v('pdf').files[0]; if (!f) { toast('Choose the PDF first', 'error'); break; }
           if (f.type !== 'application/pdf') { toast('That is not a PDF', 'error'); break; }
