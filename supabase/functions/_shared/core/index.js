@@ -11,4 +11,4 @@ export * from './ratecard.js';
 export * from './inbound.js';
 export * from './path.js';
 export * from './guardrails.js';
-
+export * from './watermark.js';
