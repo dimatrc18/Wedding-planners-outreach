@@ -29,9 +29,11 @@ function draftCard(t, i) {
   return `<article class="draft ${i === focusIdx ? 'focus' : ''}" data-card="${attr(t.id)}" data-idx="${i}">
     <div class="who">
       <a href="#prospect/${attr(p.id)}"><b>${esc(p.agency_name)}</b></a>
+      ${p.website ? `<a href="${attr(p.website)}" target="_blank" rel="noopener" class="small muted" style="display:inline-flex;align-items:center;gap:3px;text-decoration:underline" title="Open verified agency website">${icon('external', 13)} ${esc(core.domainOf(p.website))}</a>` : ''}
       ${p.contact_name ? `<span class="muted small">${esc(p.contact_name)}</span>` : ''}
       <span class="chip" title="${esc(core.marketLabel(core.inferMarket(p)))}">${core.marketFlag(core.inferMarket(p))} ${(p.market || core.inferMarket(p)).toUpperCase()}</span>
       <span class="chip gold">${esc(stepLabel(t.step_name))}</span>
+      ${p.email_status === 'mx_ok' || p.email_status === 'valid' ? `<span class="chip ok" title="DNS MX verified: active mail server">🛡️ MX OK</span>` : p.email_status === 'invalid' || p.email_status === 'no_mx' ? `<span class="chip bad" title="DNS MX failed: cannot deliver email">⚠️ No MX</span>` : ''}
       ${t.variant && ['T1_intro', 'T4_breakup'].includes(t.step_name) ? `<span class="chip outline">${t.step_name === 'T1_intro' ? (p.type === 'venue' || p.type === 'concierge_hotel' ? 'Variant C · Hotel/Venue' : (t.variant === 'B' ? 'Variant B · Late returns' : 'Variant A · Intro')) : `Subject ${esc(t.variant)}`}</span>` : ''}
       ${p.language !== 'en' ? `<span class="chip">${esc(p.language.toUpperCase())}</span>` : ''}
       ${t.ai_generated ? '<span class="chip">AI</span>' : ''}

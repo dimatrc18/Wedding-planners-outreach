@@ -143,6 +143,8 @@ export function canSend(touch, prospect, touches, settings, ctx = {}) {
   if (touch.state !== 'approved') return { ok: false, reason: 'not_approved' };
   if (touch.channel !== 'email') return { ok: false, reason: 'manual_channel' };
   if (!prospect.email) return { ok: false, reason: 'no_email' };
+  if (prospect.email_status === 'invalid' || prospect.email_status === 'no_mx') return { ok: false, reason: 'invalid_email' };
+  if (prospect.website_status === 'broken' || prospect.website_status === 'nxdomain') return { ok: false, reason: 'broken_website' };
   if ((ctx.sentTotal || 0) >= s.bounce_min_sample && (ctx.bouncedTotal || 0) / ctx.sentTotal > s.bounce_pause_rate) {
     return { ok: false, reason: 'bounce_pause' };
   }
@@ -164,6 +166,8 @@ export const BLOCK_REASONS = {
   not_approved: 'Not approved yet',
   manual_channel: 'Send this one by hand',
   no_email: 'No email address',
+  invalid_email: 'Email address or domain failed DNS MX verification',
+  broken_website: 'Agency website returned DNS NXDOMAIN or connection error',
   bounce_pause: 'Paused: bounce rate above limit',
   replied: 'Planner replied, sequence stopped',
   paused: 'Sequence paused',

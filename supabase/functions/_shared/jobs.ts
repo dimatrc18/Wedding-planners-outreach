@@ -23,6 +23,41 @@ const group = (touches: any[]) => {
   return m;
 };
 
+// ---------------- DNS & Reachability Verification ----------------
+export async function verifyDnsMx(domain: string): Promise<'mx_ok' | 'no_mx' | 'unknown'> {
+  if (!domain) return 'unknown';
+  try {
+    const res = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=MX`, {
+      headers: { accept: 'application/dns-json' },
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!res.ok) return 'unknown';
+    const json: any = await res.json();
+    if (json.Status === 3) return 'no_mx'; // NXDOMAIN
+    const hasMx = (json.Answer || []).some((ans: any) => ans.type === 15);
+    return hasMx ? 'mx_ok' : 'no_mx';
+  } catch {
+    return 'unknown';
+  }
+}
+
+export async function verifyWebsiteReachability(url: string): Promise<'active' | 'broken' | 'unknown'> {
+  if (!url) return 'unknown';
+  try {
+    const u = new URL(url.startsWith('http') ? url : `https://${url}`);
+    const res = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(u.hostname)}&type=A`, {
+      headers: { accept: 'application/dns-json' },
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!res.ok) return 'unknown';
+    const json: any = await res.json();
+    if (json.Status === 3) return 'broken'; // NXDOMAIN
+    return (json.Answer || []).length > 0 ? 'active' : 'broken';
+  } catch {
+    return 'unknown';
+  }
+}
+
 // ---------------- Drafting ----------------
 export async function draftDueSteps(db: any, settings: any, now = new Date()) {
   const { prospects, touches, templates } = await loadAll(db);
@@ -115,8 +150,23 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
     if (!gate.ok && gate.reason === 'not_due' && onlyTouchId) gate = { ok: true }; // "Send now" overrides the slot, nothing else
     if (!gate.ok) {
       results.push({ id: t.id, reason: gate.reason });
-      if (['replied', 'do_not_contact'].includes(gate.reason)) await db.from('touches').update({ state: 'skipped', error: core.BLOCK_REASONS[gate.reason] }).eq('id', t.id);
+      if (['replied', 'do_not_contact', 'invalid_email', 'broken_website', 'no_email'].includes(gate.reason)) {
+        await db.from('touches').update({ state: 'skipped', error: core.BLOCK_REASONS[gate.reason] }).eq('id', t.id);
+      }
       continue;
+    }
+    // Live DNS MX safeguard before dispatching:
+    const emailDomain = core.domainOf(p.email);
+    if (emailDomain && p.email_status !== 'mx_ok' && p.email_status !== 'valid') {
+      const mxRes = await verifyDnsMx(emailDomain);
+      if (mxRes === 'no_mx') {
+        await db.from('prospects').update({ email_status: 'invalid' }).eq('id', p.id);
+        await db.from('touches').update({ state: 'skipped', error: 'Blocked: Email domain failed DNS MX verification' }).eq('id', t.id);
+        results.push({ id: t.id, reason: 'invalid_email' });
+        continue;
+      } else if (mxRes === 'mx_ok') {
+        await db.from('prospects').update({ email_status: 'mx_ok' }).eq('id', p.id);
+      }
     }
     const lint = core.lintMessage({ subject: t.subject, body: t.body, channel: 'email', step: t.step_name });
     if (lint.errors.length) {
@@ -574,12 +624,29 @@ export async function autoResearchPending(db: any, _settings: any, now = new Dat
     checkedMap[p.id] = now.toISOString();
     const seed: any = core.resolveProspectResearchSeed(p);
     const targetUrl = p.website || seed.website || seed.guessedUrl || '';
-    const jina = targetUrl ? await fetchJinaSignals(targetUrl) : null;
+    let webStatus = 'unknown';
+    if (targetUrl) {
+      webStatus = await verifyWebsiteReachability(targetUrl);
+    }
+    const jina = (targetUrl && webStatus !== 'broken') ? await fetchJinaSignals(targetUrl) : null;
 
     const patch: Record<string, any> = {};
     if (targetUrl && !p.website) patch.website = targetUrl;
+    if (webStatus === 'broken') {
+      patch.email_status = 'invalid';
+      patch.notes = `${p.notes ? p.notes + ' · ' : ''}Website domain unreachable (DNS error)`;
+    }
     const bestEmail = p.email || seed.email || jina?.emails?.[0] || '';
-    if (bestEmail && !p.email) { patch.email = bestEmail; patch.email_status = 'mx_ok'; }
+    if (bestEmail && webStatus !== 'broken') {
+      const emailDomain = core.domainOf(bestEmail);
+      const mxStatus = await verifyDnsMx(emailDomain);
+      if (mxStatus === 'no_mx') {
+        patch.email_status = 'invalid';
+      } else if (mxStatus === 'mx_ok') {
+        patch.email_status = 'mx_ok';
+        if (!p.email) patch.email = bestEmail;
+      }
+    }
     const bestContact = p.contact_name || seed.contact_name || jina?.story?.founderName || '';
     if (bestContact && !p.contact_name) patch.contact_name = bestContact;
     const bestLoc = p.location || seed.location || jina?.towns?.[0] || '';
@@ -617,7 +684,7 @@ export async function autoResearchPending(db: any, _settings: any, now = new Dat
     const score = core.priorityScore(merged).score;
     patch.priority_score = score;
 
-    if (merged.email && merged.personalization_hook && score >= 65) {
+    if (merged.email && merged.personalization_hook && score >= 65 && merged.email_status !== 'invalid' && webStatus !== 'broken') {
       patch.status = 'ready';
       promoted++;
     }
@@ -660,6 +727,12 @@ export async function autoResearchPending(db: any, _settings: any, now = new Dat
 
   if (toImport.length > 0) {
     for (const item of toImport) {
+      const emailDomain = core.domainOf(item.email);
+      const [mxStatus, webStatus] = await Promise.all([
+        verifyDnsMx(emailDomain),
+        verifyWebsiteReachability(item.website),
+      ]);
+      if (mxStatus === 'no_mx' || webStatus === 'broken') continue;
       const jina = await fetchJinaSignals(item.website);
       const candidate: any = {
         ...item,

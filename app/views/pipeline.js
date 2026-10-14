@@ -337,12 +337,13 @@ function card(p, { touchesByP, settings, showStageSelect = true } = {}) {
         <span class="fact-lbl">Contact:</span>
         ${p.contact_name ? `<b>${esc(p.contact_name)}</b>` : '<span class="muted">Team</span>'}
         ${hasEmail
-          ? `<span class="fact-email" title="${attr(p.email)}">· ${esc(p.email)}</span>`
+          ? `<span class="fact-email" title="${attr(p.email)}">· ${esc(p.email)}</span>${p.email_status === 'mx_ok' || p.email_status === 'valid' ? '<span class="chip ok tiny" style="margin-left:4px" title="DNS MX verified: active mail server">🛡️ MX OK</span>' : p.email_status === 'invalid' || p.email_status === 'no_mx' ? '<span class="chip bad tiny" style="margin-left:4px" title="DNS MX failed: cannot deliver email">⚠️ No MX</span>' : ''}`
           : `<span class="chip warn" data-quick-edit="${attr(p.id)}">⚠️ No email yet</span>`}
       </div>
       ${cleanWeb ? `<div class="pcard-fact">
         <span class="fact-lbl">Website:</span>
         <a href="${attr(webHref)}" target="_blank" rel="noopener" data-stop-card class="fact-link">${esc(cleanWeb)} ↗</a>
+        ${p.website_status === 'broken' ? '<span class="chip bad tiny" style="margin-left:4px" title="DNS NXDOMAIN or connection error">⚠️ Broken site</span>' : ''}
       </div>` : `<div class="pcard-fact"><span class="fact-lbl">Website:</span><span class="muted">Not set (AI Research can find it)</span></div>`}
       <div class="pcard-fact hook-row">
         <span class="fact-lbl">Email 1 Opener:</span>
