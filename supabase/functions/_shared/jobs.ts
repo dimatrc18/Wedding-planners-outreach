@@ -427,8 +427,11 @@ export async function syncInbox(db: any, settings: any, now = new Date()) {
     await setState(db, 'imap', { ...state, last_error: (e as Error).message, last_attempt_at: now.toISOString() });
     throw e;
   }
-  const { prospects, touches, templates } = await loadAll(db);
-  const byEmail = new Map(prospects.filter((p: any) => p.email).map((p: any) => [p.email.toLowerCase(), p]));
+  const byEmail = new Map();
+  for (const p of prospects) {
+    if (p.email) byEmail.set(p.email.toLowerCase(), p);
+    if (p.alt_email) byEmail.set(p.alt_email.toLowerCase(), p);
+  }
   const byMsg = new Map(touches.filter((t: any) => t.message_id).map((t: any) => [t.message_id, t]));
   const pById = new Map(prospects.map((p: any) => [p.id, p]));
   let stored = 0, bounces = 0;

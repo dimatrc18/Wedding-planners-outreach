@@ -37,6 +37,7 @@ const OOO = [
   /fuori (ufficio|sede)/i, /\bin ferie\b/i, /sar[oò] (assente|in ferie|fuori)/i, /\babwesen/i, /absent(e)? du bureau/i,
   /\b(i am|i'm|i will be) (currently )?(away|travell?ing|on (annual )?leave|on holiday|on vacation|out of office)/i,
   /limited access to (my )?e-?mail/i, /will (respond|reply|get back) (to you )?(up)?on my return/i,
+  /(?:в отпуске|вне офиса|автоответ|буду отсутствовать|в отъезде)/i,
 ];
 const UNSUB = [
   /\bunsubscribe\b/i, /\bremove (me|us|my (e-?mail|address))\b/i, /\btake (me|us) off\b/i,
@@ -44,11 +45,13 @@ const UNSUB = [
   /\bdo not (contact|e-?mail|write to) (me|us)\b/i, /\bdon'?t (contact|e-?mail|write to) (me|us)\b/i,
   /cancellatemi|cancellami|non (mi |ci )?(contattate|contatti|scrivete|scriva|mandate|inviate)(ci|mi)? pi[uù]/i, /rimuove(te|re) (il mio|la mia|i nostri|dalla)/i,
   /\bnicht mehr (kontaktieren|schreiben)\b/i, /\bdésinscri/i,
+  /(?:отпишите|отписаться|не пишите|не беспокойте|удалите из рассылки|не присылайте)/i,
 ];
-const PLAIN_NO = /^\s*(no|nope|no grazie|no,? thanks?( you)?|nein( danke)?|non merci)\s*[.!]*\s*$/i;
+const PLAIN_NO = /^\s*(no|nope|no grazie|no,? thanks?( you)?|nein( danke)?|non merci|нет)\s*[.!]*\s*$/i;
 const NEGATIVE = [
   /\bnot interested\b/i, /\bno,? thank(s| you)\b/i, /non (siamo|sono) interessat/i, /\bno grazie\b/i,
   /\bwe('re| are) (all )?set\b/i, /\bnot (a )?(good )?fit\b/i, /\bnot relevant\b/i, /kein interesse/i, /pas intéressé/i,
+  /(?:не интересно|не актуально|не нужно|спасибо,? нет|не требуется)/i,
 ];
 
 const INTENT_RULES = {
@@ -57,6 +60,7 @@ const INTENT_RULES = {
     /\b(call|zoom|teams|meet|speak|talk)\b[^.?\n]{0,40}\b(next week|tomorrow|monday|tuesday|wednesday|thursday|friday|this week|available)\b/i,
     /\bgive (me|us) a (call|ring)\b/i, /\bcall me\b/i, /\bwhen (are|would) you (be )?(free|available)\b/i,
     /\b(chiamata|videochiamata|incontrarci|appuntamento|telefonata)\b/i, /\bsentirci (al telefono|telefonicamente|per una chiamata)\b/i,
+    /(?:^|[\s,.:;!?-])(созвон|созвониться|встреч[ау]|зум|позвоните|наберите)/iu,
   ],
   wants_rate_card: [
     /\b(yes|sure|ok(ay)?|absolutely|of course|please|go ahead)\b[^.?\n]{0,40}\b(send|share|forward)/i,
@@ -64,17 +68,23 @@ const INTENT_RULES = {
     /\byes,? please\b/i, /\bplease do\b/i, /\bhappy to (see|receive|have a look|take a look)\b/i, /\bwould (love|like) to (see|receive|have)\b/i,
     /\bfeel free to send\b/i, /(?:^|[\s,(])(s[iì]|certo|volentieri|certamente)(?![a-zà-ù])[^.?\n]{0,40}\b(invia|mand|inoltr)/im,
     /\b(inviatemi|inviami|inviateci|mandami|mandatemi|mandateci|mandi pure|invii pure|inviate pure)\b/i,
-    /\bgerne\b/i, /\bavec plaisir\b/i, /^\s*(yes|sure|s[iì]|ja|oui)[.!]*\s*$/im,
+    /\bgerne\b/i, /\bavec plaisir\b/i, /^\s*(yes|sure|s[iì]|ja|oui|да)[.!]*\s*$/im,
+    /(?:^|[\s,.:;!?-])(пришлите|отправьте|скиньте|перешлите|направьте)[^.?\n]{0,50}(информацию|тарифы|прайс|условия|материалы|презентацию|карточку|подробности)/iu,
+    /(?:^|[\s,.:;!?-])(буду рад[а]?|с удовольствием)[^.?\n]{0,40}(получить|ознакомиться|посмотреть)/iu,
+    /(?:^|[\s,.:;!?-])(актуальн[оы]|интересн[оы])/iu,
+    /(?:^|[\s,.:;!?-])(партн[её]рские тарифы|сетк[уа] тарифов|прайс-лист|условия сотрудничества)/iu,
   ],
   asks_pricing: [
     /\b(price|prices|pricing|cost|costs|how much|quote|quotation|tariff)\b/i, /\byour rates\b[^\n]{0,40}\?/i,
     /\b(prezz[oi]|tariff[ae]|costi|quanto cost(a|ano|erebbe|erebbero)|preventiv[oi])\b/i, /\b(preise|kosten|tarifs?|prix)\b/i,
+    /(?:^|[\s,.:;!?-])(тариф[ыа]?|цен[ыа]|стоимость|расценки|прайс|доплат[ыа]|комисси[яи]|предоплат[аы]|сколько стоит)/iu,
   ],
   referral_to_other: [
     /\b(contact|write to|reach out to|e-?mail|speak (to|with)|get in touch with)\b[^.\n]{0,20}\b(my|our) (colleague|partner|assistant|logistics|team|co-?founder|business partner|coordinator)\b/i,
     /\b(i'?ve|i have) (cc'?d|copied|looped in)\b/i, /\b(handles|takes care of|is in charge of) (our |the )?(transport|logistics|transfers|suppliers|vendors)\b/i,
     /\b(scrivere|contattare|scriva|contatti|scrivete|contattate) (a |al |alla )?(mia|il mio|la mia|la nostra|il nostro) (collega|socio|socia|assistente|responsabile)\b/i,
     /\bin copia\b/i,
+    /(?:^|[\s,.:;!?-])(напишите|свяжитесь|обратитесь)[^.\n]{0,25}(коллег[еи]|партн[её]р[уа]|координатор[уа]|помощник[уа]|ассистент[уа])/iu,
   ],
   not_now: [
     /\b(next|following) (season|year|spring|winter)\b/i, /\b(not|n't) (right )?now\b/i, /\bnot at (the|this) (moment|time)\b/i,
@@ -82,11 +92,14 @@ const INTENT_RULES = {
     /\b(get|be|come) back (to you )?(in|after|later|next)\b/i, /\bmaybe later\b/i, /\b(in|next) (january|february|march|april|october|november|december)\b/i,
     /\b(reach out|contact (me|us)|write|try) (again )?(in|next|after) (the )?(\w+ )?(season|year|month|january|february|march|autumn|winter|spring)\b/i,
     /\bprossim[ao] (stagione|anno)\b/i, /\bal momento no\b/i, /\bnon (ora|adesso|in questo momento)\b/i, /\bdopo l'estate\b/i, /\ba fine stagione\b/i,
+    /(?:^|[\s,.:;!?-])(в следующ(ем|ей)|следующий|следующая)\s+(году|сезон|сезоне|весной|осенью)/iu,
+    /(?:^|[\s,.:;!?-])(сейчас не актуально|не в этом сезоне|позже|после сезона)/iu,
   ],
   has_supplier: [
     /\b(already|currently) (work|working|have|use|using|partner)\b[^.\n]{0,50}\b(supplier|provider|partner|company|driver|transport|chauffeur|ncc|transfer)/i,
     /\bwe (have|use) our own\b/i, /\bin-?house (transport|drivers?|fleet)\b/i, /\b(trusted|regular|existing) (supplier|provider|partner|driver)s?\b/i,
     /\b(abbiamo|lavoriamo|collaboriamo|ci appoggiamo) gi[aà](?![a-z])/i,
+    /(?:^|[\s,.:;!?-])(уже есть|уже работаем|свои водители|свой транспорт|постоянный перевозчик)/iu,
   ],
 };
 const INTENT_ORDER = ['meeting_request', 'wants_rate_card', 'asks_pricing', 'referral_to_other', 'not_now', 'has_supplier'];

@@ -25,6 +25,11 @@ const SAMPLES = [
   ['No', 'unsubscribe', null],
   ['No thanks.', 'unsubscribe', null],
   ['Non scriveteci più, grazie.', 'unsubscribe', null],
+  ['Да, пришлите подробную информацию и партнёрские тарифы на V-Class.', 'positive', 'wants_rate_card'],
+  ['Сколько стоит трансфер на микроавтобусе из Мальпенсы в Комо?', 'positive', 'asks_pricing'],
+  ['Спасибо, сейчас не актуально, напишите в следующем сезоне.', 'neutral', 'not_now'],
+  ['У нас уже есть свой транспорт.', 'negative', 'has_supplier'],
+  ['Отпишите меня от рассылки.', 'unsubscribe', null],
 ];
 
 test('sample replies are classified as expected', () => {

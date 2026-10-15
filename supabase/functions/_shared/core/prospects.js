@@ -651,7 +651,8 @@ export const DISCOVERY_PARTNER_CATALOG = [
   {
     agency_name: 'Katrin Moro Weddings',
     contact_name: 'Katrin Moro',
-    email: 'katrinmoroweddings@gmail.com',
+    email: 'katrinmorostar@gmail.com',
+    alt_email: 'katrinmoroweddings@gmail.com',
     phone: '+393925960767',
     whatsapp: '393925960767',
     website: 'https://katrinmoroweddings.com',
