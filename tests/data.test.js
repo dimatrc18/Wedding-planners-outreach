@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   wilson, computeMetrics, tractionVerdict, compareRates, csvToProspects, toCSV, findDuplicates, extractFromHtml,
-  priorityScore, parseProfileUrl, quoteNet, commissionFor,
+  priorityScore, parseProfileUrl, quoteNet, commissionFor, getRateCardInfo,
 } from '../supabase/functions/_shared/core/index.js';
 
 test('Wilson interval', () => {
@@ -107,4 +107,32 @@ test('rate card quote and commission', () => {
   assert.equal(q.deposit, Math.round(q.total * 0.25));
   assert.equal(commissionFor(10000, 'referral_12'), 500);
   assert.equal(commissionFor(10000, 'net_whitelabel'), 0);
+});
+
+test('multi-language rate card routing matches communication language (EN, IT, RU)', () => {
+  // Default routing
+  const enDefault = getRateCardInfo({}, 'en');
+  assert.equal(enDefault.filename, 'DOROGO_Tariffs_Logistics_EN.pdf');
+  assert.equal(enDefault.path, 'rate-card/DOROGO_Tariffs_Logistics_EN.pdf');
+
+  const itDefault = getRateCardInfo({}, 'it');
+  assert.equal(itDefault.filename, 'DOROGO_Tariffs_Logistics_IT.pdf');
+  assert.equal(itDefault.path, 'rate-card/DOROGO_Tariffs_Logistics_IT.pdf');
+
+  const ruDefault = getRateCardInfo({}, 'ru');
+  assert.equal(ruDefault.filename, 'DOROGO_Tariffs_Logistics_RU.pdf');
+  assert.equal(ruDefault.path, 'rate-card/DOROGO_Tariffs_Logistics_RU.pdf');
+
+  // Case-insensitivity & dialect prefix
+  assert.equal(getRateCardInfo({}, 'IT-it').filename, 'DOROGO_Tariffs_Logistics_IT.pdf');
+  assert.equal(getRateCardInfo({}, 'ru_RU').filename, 'DOROGO_Tariffs_Logistics_RU.pdf');
+  assert.equal(getRateCardInfo({}, '').filename, 'DOROGO_Tariffs_Logistics_EN.pdf');
+
+  // Custom setting overrides
+  const custom = getRateCardInfo({
+    rate_card_path_it: 'custom/italian_card.pdf',
+    rate_card_filename_it: 'Custom_Italian_Card.pdf',
+  }, 'it');
+  assert.equal(custom.path, 'custom/italian_card.pdf');
+  assert.equal(custom.filename, 'Custom_Italian_Card.pdf');
 });

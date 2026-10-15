@@ -78,9 +78,32 @@ export function render(el) {
       </section>
 
       <section class="card stack">
-        <div class="section-head"><h2>Rate card PDF</h2></div>
-        <p class="small muted">${s.rate_card_path ? `Attached to rate card emails: <b>${esc(s.rate_card_filename || s.rate_card_path)}</b>` : 'Not uploaded yet. Rate card emails cannot send until it is.'}</p>
-        <div class="row"><input type="file" id="pdf" accept="application/pdf" aria-label="Rate card PDF" style="max-width:320px"><button class="btn sm" data-act="upload">${icon('upload', 15)} Upload</button></div>
+        <div class="section-head"><h2>Rate card PDFs (Multi-Language)</h2></div>
+        <p class="small muted">The system automatically attaches the matching rate card edition based on the prospect's communication language (EN, IT, RU).</p>
+        <div class="list" style="margin:4px 0 8px;">
+          <div class="row between" style="padding:6px 0; border-bottom:1px solid var(--border);">
+            <span><b>English (EN)</b>: ${esc(s.rate_card_filename_en || s.rate_card_filename || 'DOROGO_Group_Mobility_Audit_EN.pdf')}</span>
+            <span class="chip ${s.rate_card_path_en || s.rate_card_path ? 'ok' : 'muted'}">${s.rate_card_path_en || s.rate_card_path ? 'Custom' : 'Default'}</span>
+          </div>
+          <div class="row between" style="padding:6px 0; border-bottom:1px solid var(--border);">
+            <span><b>Italian (IT)</b>: ${esc(s.rate_card_filename_it || 'DOROGO_Group_Mobility_Audit_IT.pdf')}</span>
+            <span class="chip ${s.rate_card_path_it ? 'ok' : 'muted'}">${s.rate_card_path_it ? 'Custom' : 'Default'}</span>
+          </div>
+          <div class="row between" style="padding:6px 0;">
+            <span><b>Russian (RU)</b>: ${esc(s.rate_card_filename_ru || 'DOROGO_Group_Mobility_Audit_RU.pdf')}</span>
+            <span class="chip ${s.rate_card_path_ru ? 'ok' : 'muted'}">${s.rate_card_path_ru ? 'Custom' : 'Default'}</span>
+          </div>
+        </div>
+        <div class="row" style="gap:8px;">
+          <select id="pdf-lang" style="max-width:130px;">
+            <option value="auto">Auto-detect</option>
+            <option value="en">English (EN)</option>
+            <option value="it">Italian (IT)</option>
+            <option value="ru">Russian (RU)</option>
+          </select>
+          <input type="file" id="pdf" accept="application/pdf" aria-label="Rate card PDF" style="max-width:280px">
+          <button class="btn sm" data-act="upload">${icon('upload', 15)} Upload</button>
+        </div>
       </section>
 
       <section class="card flush">
@@ -174,9 +197,31 @@ export function render(el) {
         case 'upload': {
           const f = v('pdf').files[0]; if (!f) { toast('Choose the PDF first', 'error'); break; }
           if (f.type !== 'application/pdf') { toast('That is not a PDF', 'error'); break; }
-          const path = await upload(`rate-card/${Date.now()}-${f.name.replace(/[^\w.-]+/g, '_')}`, f);
-          await saveSettings({ rate_card_path: path, rate_card_filename: f.name });
-          toast('Rate card uploaded'); paint(); break;
+          let langChoice = v('pdf-lang')?.value || 'auto';
+          if (langChoice === 'auto') {
+            const lower = f.name.toLowerCase();
+            if (lower.includes('_ru') || lower.includes('-ru') || lower.includes('russian')) langChoice = 'ru';
+            else if (lower.includes('_it') || lower.includes('-it') || lower.includes('italian')) langChoice = 'it';
+            else if (lower.includes('_en') || lower.includes('-en') || lower.includes('english')) langChoice = 'en';
+            else langChoice = 'en';
+          }
+          const cleanName = f.name.replace(/[^\w.-]+/g, '_');
+          const path = await upload(`rate-card/${Date.now()}-${cleanName}`, f);
+          const patch = {};
+          if (langChoice === 'ru') {
+            patch.rate_card_path_ru = path;
+            patch.rate_card_filename_ru = f.name;
+          } else if (langChoice === 'it') {
+            patch.rate_card_path_it = path;
+            patch.rate_card_filename_it = f.name;
+          } else {
+            patch.rate_card_path_en = path;
+            patch.rate_card_filename_en = f.name;
+            patch.rate_card_path = path;
+            patch.rate_card_filename = f.name;
+          }
+          await saveSettings(patch);
+          toast(`Rate card (${langChoice.toUpperCase()}) uploaded`); paint(); break;
         }
         case 'job': {
           const r = await api(b.dataset.job);

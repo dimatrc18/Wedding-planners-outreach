@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>DOROGO · Тарифы и Логистика 2026</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+  @font-face {
+    font-family: 'Amelaryas';
+    src: url('data:font/woff2;base64,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') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: block;
+  }
+
+
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm 7mm 10mm;
+  }
+  * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #09090b;
+    background: #ffffff;
+    font-size: 8.5px;
+    line-height: 1.35;
+  }
+  .sheet {
+    background: #ffffff;
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding-bottom: 11px;
+    border-bottom: 1.5px solid #09090b;
+  }
+  .brand-logo {
+    font-family: 'Amelaryas', Georgia, serif;
+    font-size: 29px;
+    line-height: 1.0;
+    color: #09090b;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    font-weight: 400;
+  }
+  .brand-sub {
+    font-size: 7.8px;
+    color: #71717a;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-top: 3px;
+    font-weight: 600;
+  }
+  .header-right {
+    text-align: right;
+  }
+  .doc-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #09090b;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+  .doc-sub {
+    font-size: 7.8px;
+    color: #71717a;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 3px;
+    font-weight: 600;
+  }
+  .section-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 15px;
+    margin-bottom: 6px;
+    padding-bottom: 3px;
+    border-bottom: 1px solid #f4f4f5;
+  }
+  .section-title {
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #09090b;
+  }
+  .section-hint {
+    font-size: 7.8px;
+    color: #a1a1aa;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* Partnership 2 Cards on Top */
+  .collab-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .collab-card {
+    background: #fafafa;
+    border: 1px solid #e4e4e7;
+    border-radius: 3px;
+    padding: 9px 12px;
+  }
+  .collab-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1.5px solid #09090b;
+    padding-bottom: 4px;
+    margin-bottom: 5px;
+  }
+  .collab-title {
+    font-size: 8.8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #09090b;
+  }
+  .collab-tag {
+    font-size: 7.5px;
+    font-weight: 700;
+    color: #09090b;
+    background: #f4f4f5;
+    border: 1px solid #e4e4e7;
+    padding: 1.5px 6px;
+    border-radius: 2px;
+  }
+  .collab-desc {
+    font-size: 8px;
+    color: #52525b;
+    line-height: 1.4;
+  }
+
+  /* 3 B2B Bonuses */
+  .bonus-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 9px;
+  }
+  .bonus-card {
+    background: #fafafa;
+    border: 1px solid #e4e4e7;
+    border-top: 2px solid #9B7B4B;
+    border-radius: 3px;
+    padding: 7px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+  .bonus-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+    padding-bottom: 3px;
+    border-bottom: 1px solid #f4f4f5;
+  }
+  .bonus-title {
+    font-size: 8.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #09090b;
+  }
+  .bonus-tag {
+    font-size: 7.2px;
+    font-weight: 700;
+    color: #9B7B4B;
+    white-space: nowrap;
+  }
+  .bonus-body {
+    font-size: 7.8px;
+    color: #52525b;
+    line-height: 1.36;
+  }
+
+  /* Fleet Table */
+  table.fleet-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 4px;
+  }
+  table.fleet-table th {
+    font-size: 7.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #71717a;
+    padding: 6px 8px;
+    text-align: left;
+    border-bottom: 1.5px solid #09090b;
+    background: transparent;
+  }
+  table.fleet-table th.num,
+  table.fleet-table td.num {
+    text-align: right;
+  }
+  table.fleet-table td {
+    padding: 9.5px 8px;
+    border-bottom: 1px solid #f4f4f5;
+    vertical-align: middle;
+    font-size: 8.2px;
+    line-height: 1.35;
+  }
+  table.fleet-table tr:last-child td {
+    border-bottom: 1.5px solid #09090b;
+  }
+  .car-name {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #09090b;
+    letter-spacing: -0.01em;
+  }
+  .car-sub {
+    font-size: 7.5px;
+    color: #71717a;
+    display: block;
+    margin-top: 1.5px;
+  }
+  .price-bold {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #09090b;
+    font-variant-numeric: tabular-nums;
+  }
+  .price-note {
+    font-size: 7.5px;
+    color: #71717a;
+    display: block;
+    margin-top: 1.5px;
+  }
+
+  /* Bottom 3 Panels */
+  .panels-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 9px;
+    margin-top: 15px;
+  }
+  .panel {
+    background: #fafafa;
+    border: 1px solid #e4e4e7;
+    border-radius: 3px;
+    padding: 10px 10px;
+  }
+  .panel-header {
+    padding-bottom: 5px;
+    margin-bottom: 6px;
+    border-bottom: 1.5px solid #09090b;
+  }
+  .panel-title {
+    font-size: 8.4px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #09090b;
+  }
+  .kv-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .kv-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 7.8px;
+    padding-bottom: 2.5px;
+    border-bottom: 1px solid #f4f4f5;
+  }
+  .kv-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .kv-key {
+    color: #52525b;
+    font-weight: 500;
+  }
+  .kv-val {
+    color: #09090b;
+    font-weight: 700;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .footer {
+    margin-top: 15px;
+    padding-top: 6px;
+    border-top: 1px solid #f4f4f5;
+    text-align: center;
+    font-size: 7.6px;
+    color: #a1a1aa;
+    letter-spacing: 0.04em;
+  }
+  .footer strong {
+    color: #71717a;
+  }
+  @media print {
+    body {
+      background: #ffffff;
+      padding: 0;
+    }
+  }
+
+
+  /* Minimalist Boxless Feedback */
+  .feedback-minimal {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 14px;
+    margin-bottom: 12px;
+    padding-top: 9px;
+    border-top: 1px solid #e4e4e7;
+  }
+  .feedback-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .feedback-quote {
+    font-size: 7.4px;
+    line-height: 1.4;
+    color: #3f3f46;
+    font-style: italic;
+    margin-bottom: 4px;
+  }
+  .feedback-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 6.8px;
+    color: #71717a;
+    font-weight: 500;
+  }
+  .feedback-author {
+    color: #71717a;
+  }
+  .feedback-stars {
+    color: #9B7B4B;
+    font-weight: 700;
+    font-size: 7.2px;
+    letter-spacing: 0.5px;
+  }
+
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="header">
+    <div>
+      <div class="brand-logo">DOROGO</div>
+      <div class="brand-sub">Private Chauffeur &amp; Group Mobility • Milan &amp; Lake Como</div>
+    </div>
+    <div class="header-right">
+      <div class="doc-title">Тарифы и Логистика</div>
+      <div class="doc-sub">Сезон 2026 / 2027</div>
+    </div>
+  </div>
+
+  <!-- Section 1: Partnership Models (Top) -->
+  <div class="section-label">
+    <span class="section-title">Форматы Сотрудничества B2B</span>
+    <span class="section-hint">Два способа работы с агентствами и организаторами</span>
+  </div>
+
+  <div class="collab-grid">
+    <div class="collab-card">
+      <div class="collab-head">
+        <span class="collab-title">01. White-Label (Работаем под вами)</span>
+        <span class="collab-tag">Своя наценка</span>
+      </div>
+      <div class="collab-desc">
+        Вы называете клиенту финальную стоимость с вашей агентской маржой — мы предоставляем закрытые оптовые Net-тарифы ниже и берем на себя 100% диспетчеризации гостей, рейсов и багажа под вашим брендом (White-label). 100% защита клиентов.
+      </div>
+    </div>
+    <div class="collab-card">
+      <div class="collab-head">
+        <span class="collab-title">02. Передача лида (Referral)</span>
+        <span class="collab-tag">Комиссия % TBD</span>
+      </div>
+      <div class="collab-desc">
+        Вы передаете нам контакт заказчика и тайминг — мы берем на себя 100% расчетов, координации и логистики. Агентству выплачивается согласованная комиссия <strong>(% TBD)</strong> от общей стоимости подтвержденного заказа.
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2: Included B2B Partner Bonuses -->
+  <div class="section-label">
+    <span class="section-title">Включенные B2B-Бонусы и Гарантии</span>
+    <span class="section-hint">3 Сервиса для Организаторов Без Доплат</span>
+  </div>
+
+  <div class="bonus-grid">
+    <div class="bonus-card">
+      <div class="bonus-head">
+        <span class="bonus-title">01. Villa Access Audit</span>
+        <span class="bonus-tag">€350 Value • Включено</span>
+      </div>
+      <div class="bonus-body">
+        Лично выезжаем и проверяем ширину ворот и радиусы конкретной виллы (Balbianello, Pizzo, Erba, d’Este). Даем заключение о проходе 50-местных автобусов или бесплатно стыкуем с минивэнами V-Class.
+      </div>
+    </div>
+    <div class="bonus-card">
+      <div class="bonus-head">
+        <span class="bonus-title">02. WhatsApp Dispatch Room</span>
+        <span class="bonus-tag">24/7 Live • Бесплатно</span>
+      </div>
+      <div class="bonus-body">
+        Отдельный оперативный чат с главным диспетчером 24/7 для вашей команды координаторов в день монтажа и торжества. Контакты и данные всех водителей передаются за 24ч до выезда.
+      </div>
+    </div>
+    <div class="bonus-card">
+      <div class="bonus-head">
+        <span class="bonus-title">03. Flight Delay Shield</span>
+        <span class="bonus-tag">60 мин ожидания • Бесплатно</span>
+      </div>
+      <div class="bonus-body">
+        Автоматический радар задержки рейсов в Malpensa и Linate. Без штрафных списаний за первый час ожидания. При переносе рейса диспетчер автоматически перестраивает график подачи.
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3: Fleet Table -->
+  <div class="section-label">
+    <span class="section-title">Тарифная Сетка B2B</span>
+    <span class="section-hint">Черный автопарк NCC • Без рекламы • Все цены финальные и включают НДС 10%</span>
+  </div>
+
+  <table class="fleet-table">
+    <thead>
+      <tr>
+        <th style="width: 21%;">Класс и Модель</th>
+        <th style="width: 13%;">Вместимость</th>
+        <th style="width: 15%;" class="num">Почасовая Аренда</th>
+        <th style="width: 15%;" class="num">Полный День (10ч)</th>
+        <th style="width: 15%;" class="num">Трансфер MXP</th>
+        <th style="width: 21%;">Назначение</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="car-name">Mercedes-Benz E-Class</span><span class="car-sub">Бизнес-седан</span></td>
+        <td>2 VIP (макс. 3)<br><span style="color:#71717a;">2 Чемодана</span></td>
+        <td class="num"><span class="price-bold">€90 / час</span><span class="price-note">Минимум 3 часа</span></td>
+        <td class="num"><span class="price-bold">€900 / день</span><span class="price-note">10 часов / 200 км</span></td>
+        <td class="num"><span class="price-bold">€180.00</span><span class="price-note">База €1.45/км (мин. €120)</span></td>
+        <td><strong>Тактический VIP:</strong> стилисты, фотографы, регистратор, соло-гости. Свободный въезд в ZTL Комо и Милана.</td>
+      </tr>
+      <tr>
+        <td><span class="car-name">Mercedes-Benz V-Class</span><span class="car-sub">Минивэн 6–7 мест (1 рядом с водителем)</span></td>
+        <td>5–6 VIP (макс. 7)<br><span style="color:#71717a;">6–7 Чемоданов</span></td>
+        <td class="num"><span class="price-bold">€95 / час</span><span class="price-note">Минимум 3 часа</span></td>
+        <td class="num"><span class="price-bold">€950 / день</span><span class="price-note">10 часов / 200 км</span></td>
+        <td class="num"><span class="price-bold">€230.00</span><span class="price-note">База €1.60/км (мин. €120)</span></td>
+        <td><strong>Главный шаттл Комо:</strong> проходит в узкие ворота вилл (Pizzo, Balbiano). Непрерывный ночной развоз гостей до 04:00.</td>
+      </tr>
+      <tr>
+        <td><span class="car-name">Mercedes-Benz S-Class</span><span class="car-sub">Представительский флагман</span></td>
+        <td>2 VIP (макс. 3)<br><span style="color:#71717a;">2 Чемодана</span></td>
+        <td class="num"><span class="price-bold">€180 / час</span><span class="price-note">Минимум 3 часа</span></td>
+        <td class="num"><span class="price-bold">€1,800 / день</span><span class="price-note">10 часов / 200 км</span></td>
+        <td class="num"><span class="price-bold">€290.00</span><span class="price-note">База €2.70/км (мин. €180)</span></td>
+        <td><strong>Флагман молодоженов:</strong> простор для свадебного платья со шлейфом, торжественная церемония и фотосессия.</td>
+      </tr>
+      <tr>
+        <td><span class="car-name">Mercedes Sprinter Executive</span><span class="car-sub">Микроавтобус 16–20 мест</span></td>
+        <td>16–20 Мест<br><span style="color:#71717a;">16 Чемоданов</span></td>
+        <td class="num"><span class="price-bold">€115 / час</span><span class="price-note">Минимум 6 часов</span></td>
+        <td class="num"><span class="price-bold">€1,150 / день</span><span class="price-note">10 часов (8ч: €1,050)</span></td>
+        <td class="num"><span class="price-bold">€540.00</span><span class="price-note">+ стоянка MXP €30 / час</span></td>
+        <td><strong>Узкие серпантины:</strong> компактная база (&lt;7.5м) проходит горные улочки и подъезды, куда запрещен въезд большим bus.</td>
+      </tr>
+      <tr>
+        <td><span class="car-name">Mercedes Sprinter XL</span><span class="car-sub">Микроавтобус 24 места</span></td>
+        <td>24 Места<br><span style="color:#71717a;">20 Чемоданов</span></td>
+        <td class="num"><span class="price-bold">€120 / час</span><span class="price-note">Минимум 6 часов</span></td>
+        <td class="num"><span class="price-bold">€1,200 / день</span><span class="price-note">10 часов (8ч: €1,100)</span></td>
+        <td class="num"><span class="price-bold">€560.00</span><span class="price-note">+ стоянка MXP €30 / час</span></td>
+        <td><strong>Аэропорты и Welcome Dinner:</strong> вместительный багажник под 20+ больших чемоданов из MXP без деления группы на части.</td>
+      </tr>
+      <tr>
+        <td><span class="car-name">Grand Turismo Coach</span><span class="car-sub">Автобус 50–54 места</span></td>
+        <td>50–54 Места<br><span style="color:#71717a;">50 Чемоданов</span></td>
+        <td class="num"><span class="price-bold">€170 / час</span><span class="price-note">Мин. заказ 4ч (€880)</span></td>
+        <td class="num"><span class="price-bold">€1,705 / день</span><span class="price-note">10 часов (12ч: €1,980)</span></td>
+        <td class="num"><span class="price-bold">€880.00</span><span class="price-note">+ стоянка MXP €30 / час</span></td>
+        <td><strong>Магистральный экспресс:</strong> централизованный трансфер всех гостей из Милана к отелям и катерным пирсам Комо.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Section 4: Bottom 3 Panels -->
+  <div class="panels-grid">
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">Въезд в Милан (Area C)</span></div>
+      <div class="kv-list">
+        <div class="kv-row"><span class="kv-key">Седаны и минивэны (до 8 мест)</span><span class="kv-val">Бесплатно</span></div>
+        <div class="kv-row"><span class="kv-key">Микроавтобусы ≤8м (Пн–Пт)</span><span class="kv-val">€60.00 / день</span></div>
+        <div class="kv-row"><span class="kv-key">Мидибусы 8–10.5м (Пн–Пт)</span><span class="kv-val">€97.50 / день</span></div>
+        <div class="kv-row"><span class="kv-key">Автобусы GT &gt;10.5м (Пн–Пт)</span><span class="kv-val">€150.00 / день</span></div>
+        <div class="kv-row"><span class="kv-key">Выходные и праздники (все авто)</span><span class="kv-val">Бесплатно</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">Оплата и Отмена</span></div>
+      <div class="kv-list">
+        <div class="kv-row"><span class="kv-key">Авансовый депозит</span><span class="kv-val">40%</span></div>
+        <div class="kv-row"><span class="kv-key">Окончательный расчет</span><span class="kv-val">60% за 14 дней</span></div>
+        <div class="kv-row"><span class="kv-key">Отмена более 30 дней</span><span class="kv-val">100% возврат</span></div>
+        <div class="kv-row"><span class="kv-key">Отмена за 15–29 дней</span><span class="kv-val">50% возврат</span></div>
+        <div class="kv-row"><span class="kv-key">Отмена менее 14 дней</span><span class="kv-val">0% (удержание)</span></div>
+        <div class="kv-row"><span class="kv-key">Ожидание в MXP и радар</span><span class="kv-val">60 мин бесплатно</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">Регламенты и Экстра</span></div>
+      <div class="kv-list">
+        <div class="kv-row"><span class="kv-key">Включенный пробег (день)</span><span class="kv-val">200 км (25 км/ч)</span></div>
+        <div class="kv-row"><span class="kv-key">Доп. час (Overtime)</span><span class="kv-val">€95 – €120 / час</span></div>
+        <div class="kv-row"><span class="kv-key">Перепробег (Extra km)</span><span class="kv-val">€1.60 – €2.50 / км</span></div>
+        <div class="kv-row"><span class="kv-key">Ставка НДС (IVA)</span><span class="kv-val">10% (Включен в тариф)</span></div>
+        <div class="kv-row"><span class="kv-key">Пиковые даты (MFW, F1, Salone)</span><span class="kv-val">+10% – 20%</span></div>
+      </div>
+    </div>
+  </div>
+
+  
+  <!-- Minimalist Boxless Social Proof -->
+  <div class="feedback-minimal">
+    <div class="feedback-col">
+      <div class="feedback-quote">
+        “DOROGO вели трансферы наших гостей все 3 дня свадьбы на Комо. Ни единого сообщения от гостей о том, что они не могут найти машину или не знают, как уехать. Когда у мамы отменили рейс, команда перестроила трансфер без лишних звонков нам.”
+      </div>
+      <div class="feedback-meta">
+        <span class="feedback-author">Cocrzt • Свадьба 3 дня (Пара из Франции)</span>
+        <span class="feedback-stars">★★★★★ Trustpilot 5.0</span>
+      </div>
+    </div>
+    <div class="feedback-col">
+      <div class="feedback-quote">
+        “Огромное спасибо водителям и координаторам DOROGO на Комо. 70 гостей из-за рубежа — нам предоставили 12 минивэнов Mercedes V-Class на 2 дня в полное распоряжение. 5/5 за безупречную организацию, профессионализм и гибкость.”
+      </div>
+      <div class="feedback-meta">
+        <span class="feedback-author">Claudia C. • Свадьба на озере Комо (70 гостей)</span>
+        <span class="feedback-stars">★★★★★ Trustpilot 5.0</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <strong>DOROGO Private Transportation</strong> • Лицензированный сервис NCC • booking@dorogo.eu
+  </div>
+</div>
+</body>
+</html>

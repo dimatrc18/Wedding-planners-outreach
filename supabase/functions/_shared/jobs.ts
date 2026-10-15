@@ -112,14 +112,44 @@ export async function draftDueSteps(db: any, settings: any, now = new Date()) {
 }
 
 // ---------------- Sending ----------------
-async function rateCardAttachment(db: any, settings: any) {
-  const path = settings.rate_card_path || 'rate-card/DOROGO_Wedding_Partner_Rate_Card_2026.pdf';
-  const { data, error } = await db.storage.from('outreach').download(path);
+export async function rateCardAttachment(db: any, settings: any, lang: string = 'en') {
+  const { path, filename } = core.getRateCardInfo(settings, lang);
+  let { data, error } = await db.storage.from('outreach').download(path);
+
+  // Fallback to generic rate_card_path if specific path download failed
+  if ((error || !data) && settings.rate_card_path && settings.rate_card_path !== path) {
+    const fallback = await db.storage.from('outreach').download(settings.rate_card_path);
+    if (!fallback.error && fallback.data) {
+      data = fallback.data;
+      error = null;
+    }
+  }
+
   if (error || !data) {
+    try {
+      // Local filesystem fallback for dev/local or before storage upload
+      // @ts-ignore
+      if (typeof Deno !== 'undefined' && Deno.readFile) {
+        const localCandidates = [
+          `/Users/User/Downloads/Wedding-planners-outreach/${filename}`,
+          `/Users/User/Downloads/${filename}`,
+          filename,
+        ];
+        for (const cand of localCandidates) {
+          try {
+            // @ts-ignore
+            const bytes = await Deno.readFile(cand);
+            if (bytes && bytes.length > 0) {
+              return { filename, content: bytes, contentType: 'application/pdf' };
+            }
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
     console.warn(`Rate card not found in storage (${path}), sending without PDF attachment`);
     return null;
   }
-  return { filename: settings.rate_card_filename || 'DOROGO_Wedding_Partner_Rate_Card_2026.pdf', content: new Uint8Array(await data.arrayBuffer()), contentType: 'application/pdf' };
+  return { filename, content: new Uint8Array(await data.arrayBuffer()), contentType: 'application/pdf' };
 }
 
 export async function sendDue(db: any, settings: any, now = new Date(), { onlyTouchId = null as string | null, actor = 'cron' } = {}) {
@@ -182,7 +212,8 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
     const lastInbound = [...thread].reverse().find((x: any) => x.direction === 'in');
     const inReplyTo = threaded ? (lastInbound || thread[thread.length - 1]).message_id : null;
     try {
-      const rcAtt = t.attach_rate_card ? await rateCardAttachment(db, settings) : null;
+      const prospectLang = p.language || t.language || 'en';
+      const rcAtt = t.attach_rate_card ? await rateCardAttachment(db, settings, prospectLang) : null;
       const attachments = rcAtt ? [rcAtt] : [];
       const pixelUrl = settings.track_opens ? `${env('SUPABASE_URL')}/functions/v1/outreach-api?open=${t.id}` : null;
       const { messageId, raw } = await sendMail({
@@ -427,6 +458,7 @@ export async function syncInbox(db: any, settings: any, now = new Date()) {
     await setState(db, 'imap', { ...state, last_error: (e as Error).message, last_attempt_at: now.toISOString() });
     throw e;
   }
+  const { prospects, touches, templates } = await loadAll(db);
   const byEmail = new Map();
   for (const p of prospects) {
     if (p.email) byEmail.set(p.email.toLowerCase(), p);
@@ -454,8 +486,80 @@ export async function syncInbox(db: any, settings: any, now = new Date()) {
       bounces++;
       continue;
     }
-    const p: any = byEmail.get(m.from) || (viaThread && pById.get(viaThread.prospect_id));
-    if (!p) continue; // mail from anyone who is not a prospect is never stored
+    let p: any = byEmail.get(m.from) || (viaThread && pById.get(viaThread.prospect_id));
+    if (!p && core.DISCOVERY_PARTNER_CATALOG) {
+      const catMatch = core.DISCOVERY_PARTNER_CATALOG.find((c: any) =>
+        (c.email && c.email.toLowerCase() === m.from.toLowerCase()) ||
+        (c.alt_email && c.alt_email.toLowerCase() === m.from.toLowerCase()) ||
+        (m.fromName && c.contact_name && c.contact_name.toLowerCase() === m.fromName.toLowerCase()) ||
+        (m.fromName && c.agency_name && c.agency_name.toLowerCase() === m.fromName.toLowerCase())
+      );
+      if (catMatch) {
+        const existingInDb = prospects.find((x: any) =>
+          (catMatch.agency_name && x.agency_name?.toLowerCase() === catMatch.agency_name.toLowerCase()) ||
+          (catMatch.website && x.website && core.domainOf(x.website) === core.domainOf(catMatch.website))
+        );
+        if (existingInDb) {
+          p = existingInDb;
+          if (!existingInDb.alt_email && existingInDb.email?.toLowerCase() !== m.from.toLowerCase()) {
+            existingInDb.alt_email = m.from;
+            await db.from('prospects').update({ alt_email: m.from }).eq('id', existingInDb.id);
+          }
+        } else {
+          const newP = {
+            ...catMatch,
+            email: catMatch.email || m.from,
+            alt_email: catMatch.email && catMatch.email.toLowerCase() !== m.from.toLowerCase() ? m.from : catMatch.alt_email,
+            status: 'replied',
+            created_at: now.toISOString(),
+          };
+          const { data: insP, error: pErr } = await db.from('prospects').insert(newP).select().single();
+          if (!pErr && insP) {
+            p = insP;
+            prospects.push(p);
+            pById.set(p.id, p);
+            if (p.email) byEmail.set(p.email.toLowerCase(), p);
+            if (p.alt_email) byEmail.set(p.alt_email.toLowerCase(), p);
+          }
+        }
+      }
+    }
+    if (!p) {
+      const senderDomain = core.domainOf(m.from);
+      if (senderDomain && !['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'me.com', 'mail.ru', 'yandex.ru', 'bk.ru'].includes(senderDomain)) {
+        const domainMatch = prospects.find((x: any) => x.website && core.domainOf(x.website) === senderDomain);
+        if (domainMatch) {
+          p = domainMatch;
+          if (!domainMatch.alt_email) {
+            domainMatch.alt_email = m.from;
+            await db.from('prospects').update({ alt_email: m.from }).eq('id', domainMatch.id);
+          }
+        }
+      }
+    }
+    if (!p) {
+      // Inbound inquiry from a new partner or client - auto-create so lead is never dropped
+      const inferredAgency = m.fromName || m.from.split('@')[0];
+      const newLead = {
+        agency_name: inferredAgency,
+        contact_name: m.fromName || inferredAgency,
+        email: m.from,
+        source: 'inbound_inquiry',
+        type: 'planner',
+        segment: 'international',
+        status: 'replied',
+        notes: `Inbound email received on ${m.date}: "${m.subject}"`,
+        created_at: now.toISOString(),
+      };
+      const { data: insLead, error: leadErr } = await db.from('prospects').insert(newLead).select().single();
+      if (!leadErr && insLead) {
+        p = insLead;
+        prospects.push(p);
+        pById.set(p.id, p);
+        byEmail.set(p.email.toLowerCase(), p);
+      }
+    }
+    if (!p) continue; // Final safety fallback
     const cls: any = await classifyInboundMessage(
       db,
       { from: m.from, subject: m.subject, body: m.text, autoSubmitted: m.autoSubmitted },

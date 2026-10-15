@@ -7,7 +7,7 @@
 //    and automatically set needs_human=true when a planner asks something outside verified facts.
 import { env } from './server.ts';
 import { BANNED } from './core/lint.js';
-import { SIGNATURE, SIGNATURE_IT } from './core/constants.js';
+import { SIGNATURE, SIGNATURE_IT, SIGNATURE_RU } from './core/constants.js';
 import { checkHook, validateAiOutput, formatRateCardFactsForAi } from './core/guardrails.js';
 
 export { checkHook, validateAiOutput };
@@ -108,25 +108,27 @@ ${o.draft}`,
 Partner Agency / Property: ${o.agency}
 Contact Name: ${o.contact_name || 'Unknown'}
 Current Stage: ${o.status || 'replied'}
-Default Language: ${o.language === 'it' ? 'Italian' : 'English'}
+Default Language: ${o.language === 'ru' ? 'Russian' : o.language === 'it' ? 'Italian' : 'English'}
 
 ${CONCIERGE_WRITING_RULES}
 
 ${formatRateCardFactsForAi()}
 
 Execution Rules:
-1. CEO-LEVEL SHORT (25 TO 50 WORDS MAX BEFORE SIGNATURE): Start with a greeting ("Hi [Name]," or "Buongiorno [Name],"), then answer ONLY what they asked in 1 to 2 crisp sentences (25 to 50 words max before the signature). Zero filler, zero unrequested feature lists.
-2. ONE QUESTION MAX: Ask at most ONE short question (?) at the end if needed. Zero exclamation marks, zero em-dashes (—).
+1. CEO-LEVEL SHORT (25 TO 50 WORDS MAX BEFORE SIGNATURE): Start with a greeting ("Hi [Name]," or "Buongiorno [Name]," or "Здравствуйте, [Имя]!"), then answer ONLY what they asked in 1 to 2 crisp sentences (25 to 50 words max before the signature). Zero filler, zero unrequested feature lists.
+2. ONE QUESTION MAX: Ask at most ONE short question (?) at the end if needed. Zero exclamation marks in body (except formal Russian greeting if natural), zero em-dashes (—).
 3. LANGUAGE & SIGNATURE MATCH: Write in the same language as LATEST PLANNER REPLY and end with the matching signature:
    - English signature:
 ${SIGNATURE}
    - Italian signature:
 ${SIGNATURE_IT}
+   - Russian signature:
+${SIGNATURE_RU}
 4. NEVER INVENT: Never invent Euro prices for unlisted routes (e.g., Bergamo BGY, Venice, St. Moritz, or 16–50 seat minibuses/coaches) and never guarantee fleet availability for a specific wedding date without human confirmation. Quote exact listed net rates when asked.
 5. HUMAN ESCALATION GATE:
    - Set "can_answer_confidently": true and "needs_human": false when the partner's questions/objections can be fully answered from the Verified Partner Facts above.
    - Set "can_answer_confidently": false and "needs_human": true (with a clear "escalation_reason") ONLY when the partner asks for: (a) exact pricing on an unlisted route or 16–50 seat minibus/coach, (b) confirmed availability or a formal quote for a specific wedding date, (c) custom contract/deposit modifications, or (d) scheduling a phone/Zoom call.
-6. RATE CARD ATTACHMENT: Set "attach_rate_card": true whenever they ask for rates, prices, the rate card, or how our partner pricing works (unless CONVERSATION HISTORY shows we already sent the rate card in an earlier message). Whenever attach_rate_card is true, explicitly state in the body that our 1-page partner rate card is attached (e.g., "I have attached our 1-page partner rate card with net rates for Lake Como and Milan." / Italian: "In allegato trova la nostra scheda partner di 1 pagina con le tariffe nette per il Lago di Como e Milano.").
+6. RATE CARD ATTACHMENT: Set "attach_rate_card": true whenever they ask for rates, prices, the rate card, or how our partner pricing works (unless CONVERSATION HISTORY shows we already sent the rate card in an earlier message). Whenever attach_rate_card is true, explicitly state in the body that our 1-page partner rate card is attached in their language (e.g., Russian: "Во вложении направляю наш одностраничный партнерский тарифный лист на русском языке с ценами и автопарком для озера Комо и Милана." / English: "I have attached our 1-page partner rate card with net rates for Lake Como and Milan." / Italian: "In allegato trova la nostra scheda partner di 1 pagina con le tariffe nette per il Lago di Como e Milano.").
 7. THREAD MEMORY & CONTINUITY: Read CONVERSATION HISTORY carefully. Remember any wedding date, venue, guest count, vehicle choice, or partner model the planner mentioned in earlier messages, and never repeat the same pitch or re-ask a question they already answered in the thread.
 
 Return JSON only:

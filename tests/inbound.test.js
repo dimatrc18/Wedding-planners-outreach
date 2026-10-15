@@ -49,3 +49,26 @@ test('not now: nurture with a date; pricing: opportunity and quote stage', () =>
   const neg = run('Not interested.');
   assert.equal(neg.draft, null, 'no reply drafted to a plain no-interest');
 });
+
+test('Russian pricing inquiry attaches rate card and stops cadence', () => {
+  const ruProspect = { id: 'p_ru', agency_name: 'Katrin Moro Weddings', contact_name: 'Katrin Moro', email: 'katrinmorostar@gmail.com', alt_email: 'katrinmoroweddings@gmail.com', status: 't1_sent', language: 'ru' };
+  const ruTouches = [
+    { id: 't1_ru', prospect_id: 'p_ru', direction: 'out', step_name: 'T1_intro', state: 'sent', channel: 'email', sent_at: '2026-10-15T08:00:00Z' },
+    { id: 't3_ru', prospect_id: 'p_ru', direction: 'out', step_name: 'T3_followup', state: 'approved', channel: 'email', scheduled_at: '2026-10-19T08:00:00Z' },
+  ];
+  const ruInbound = { id: 'in_ru', channel: 'email', subject: 'Трансферы гостей на озере Комо и в Северной Италии' };
+  const res = inboundEffects({
+    prospect: ruProspect,
+    touches: ruTouches,
+    cls: classifyReply({ body: 'Здравствуйте! Подскажите ваши тарифы на V-Class и микроавтобусы из Мальпенсы на виллы озера Комо?' }, now),
+    settings: DEFAULT_SETTINGS,
+    now,
+    inbound: ruInbound,
+  });
+  assert.deepEqual(res.skipIds, ['t3_ru']);
+  assert.equal(res.patch.status, 'quote_requested');
+  assert.equal(res.draft.attach_rate_card, true);
+  assert.equal(res.draft.suggested_for, 'in_ru');
+  assert.equal(res.opportunity.prospect_id, 'p_ru');
+});
+
