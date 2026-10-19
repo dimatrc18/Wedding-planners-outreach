@@ -43,53 +43,72 @@ export function inferMarket(p = {}) {
 }
 
 /** 0-100. Higher = contact sooner. Explainable: returns the parts too. */
-export function priorityScore(p) {
+export function priorityScore(p = {}) {
   const parts = [];
   const add = (pts, why) => { if (pts) parts.push({ pts, why, label: why }); };
   const normType = p.type === 'wedding_planner' ? 'planner' : (p.type || 'planner');
   // 1. Partner Role Fit (Planners, 5★ Hotel Concierges, and Luxury Buyout Villas all control high-value guest transport)
-  add({ planner: 35, concierge_hotel: 35, venue: 35, dmc: 32, photographer: 15 }[normType] || 22, `type: ${normType}`);
+  add({ planner: 26, concierge_hotel: 24, venue: 24, dmc: 23, photographer: 12 }[normType] || 18, `type: ${normType}`);
 
   // 2. Venue & Route Logistics Fit (Lake Como villas & prime transfer corridors)
   const venuesCount = Array.isArray(p.key_venues) ? p.key_venues.length : 0;
-  if (venuesCount >= 2) add(18, `${venuesCount} luxury venues (${p.key_venues.slice(0, 2).join(', ')})`);
-  else if (venuesCount === 1) add(12, `1 luxury venue (${p.key_venues[0]})`);
+  if (venuesCount >= 3) add(15, `${venuesCount} luxury venues (${p.key_venues.slice(0, 2).join(', ')})`);
+  else if (venuesCount === 2) add(13, `2 luxury venues (${p.key_venues.slice(0, 2).join(', ')})`);
+  else if (venuesCount === 1) add(9, `1 luxury venue (${p.key_venues[0]})`);
   const loc = (p.location || '').trim();
-  if (loc) add(7, `location: ${loc}`);
+  if (loc) add(5, `location: ${loc}`);
 
   // 3. Client Tier, Market & Reputation (balanced 50% international / 50% local)
   const m = inferMarket(p);
-  if (m === 'kz' || m === 'ru' || m === 'ch' || m === 'ae') add(15, `high-spend market: ${m.toUpperCase()}`);
-  else if (m === 'uk' || m === 'us') add(12, `prime market: ${m.toUpperCase()}`);
-  else if (m === 'it') add(12, 'local market: IT');
-  else add({ boutique_local: 12, international: 12, high_volume_uk_us: 10 }[p.segment] || 6, p.segment ? `segment: ${p.segment}` : '');
+  if (m === 'kz' || m === 'ru' || m === 'ch' || m === 'ae') add(12, `high-spend market: ${m.toUpperCase()}`);
+  else if (m === 'uk' || m === 'us') add(11, `prime market: ${m.toUpperCase()}`);
+  else if (m === 'it') add(10, 'local market: IT');
+  else add({ boutique_local: 9, international: 10, high_volume_uk_us: 9 }[p.segment] || 5, p.segment ? `segment: ${p.segment}` : '');
 
   const rating = +p.rating || 0;
-  if (rating >= 4.8) add(6, `rating ${rating}★`); else if (rating >= 4.5) add(4, `rating ${rating}★`);
-  const reviews = +p.verified_reviews_count || 0;
-  if (reviews) add(Math.min(12, Math.round(3.5 * Math.log2(1 + reviews))), `${reviews} reviews`);
-  else if (venuesCount >= 1 && p.website) add(6, 'verified luxury portfolio');
+  if (rating >= 4.9) add(6, `rating ${rating}★`);
+  else if (rating >= 4.7) add(4, `rating ${rating}★`);
+  else if (rating >= 4.5) add(2, `rating ${rating}★`);
 
+  const reviews = +p.verified_reviews_count || 0;
+  if (reviews) add(Math.min(8, Math.round(1.6 * Math.log2(1 + reviews))), `${reviews} reviews`);
+  else if (venuesCount >= 1 && p.website) add(4, 'verified luxury portfolio');
 
   // 4. Reachability & Personalization Readiness
-  if (p.email_status === 'bounced' || p.email_status === 'no_mx') add(-25, `email ${p.email_status}`);
-  else if (p.email) {
-    add(12, 'verified email');
+  const emailStatus = String(p.email_status || '').toLowerCase();
+  if (['bounced', 'no_mx', 'invalid'].includes(emailStatus)) {
+    add(-35, `email ${emailStatus}`);
+  } else if (p.email) {
+    add(10, 'verified email');
+    const localPart = String(p.email).split('@')[0].toLowerCase();
     if (FREEMAIL.test(domainOf(p.email))) {
-      add(-10, 'freemail address (gmail/yahoo)');
+      add(-6, 'freemail address (gmail/yahoo)');
+    } else if (!/^(info|contact|contatti|reception|reservations|booking|bookings|office|mail|general|frontdesk|amministrazione|admin)$/i.test(localPart)) {
+      add(4, `direct/events inbox (${localPart}@)`);
     }
-  } else add(-10, 'no email yet');
+  } else {
+    add(-15, 'no email yet');
+  }
 
-  if ((p.personalization_hook || '').trim()) add(8, 'custom story/venue hook');
-  if ((p.contact_name || '').trim()) add(4, `contact: ${p.contact_name}`);
-  if (p.website) add(3, 'has website');
+  const hook = (p.personalization_hook || '').trim();
+  const isGenericHook = /^(I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan\.|Sono Dmitri di DOROGO, società di trasporto privato attiva tra il Lago di Como e Milano\.|Я Дмитрий из компании DOROGO, мы организуем трансферы на озере Комо и в Милане\.)$/i.test(hook);
+  if (hook && !isGenericHook) add(8, 'custom story/venue hook');
+  else if (hook) add(4, 'intro hook');
+
+  const contact = (p.contact_name || '').trim();
+  const isGenericContact = !contact || /\b(team|desk|office|concierge|events|studio|wedding|weddings|planning|reception|staff|department|banqueting)\b/i.test(contact);
+  if (contact && !isGenericContact) add(4, `contact: ${contact}`);
+  else if (contact) add(1, `role desk: ${contact}`);
+
+  if (p.website) add(2, 'has website');
 
   // 5. Saturation / Quality Penalties
   const tags = (p.tags || []).map((t) => String(t).toLowerCase());
   if (tags.includes('tier1') || tags.includes('low_priority')) add(-25, 'tier 1/2 agency (saturated)');
   if (tags.includes('unverified')) add(-10, 'unverified');
 
-  const score = Math.max(0, Math.min(100, parts.reduce((s, x) => s + x.pts, 0)));
+  let score = Math.max(0, Math.min(100, parts.reduce((s, x) => s + x.pts, 0)));
+  if (['bounced', 'no_mx', 'invalid'].includes(emailStatus)) score = Math.min(score, 35);
   return { score, parts };
 }
 
@@ -803,24 +822,349 @@ export const DISCOVERY_PARTNER_CATALOG = [
     hook_type: 'venue',
     notes: 'Discovered via AI Partner Search (High-end London agency delivering ultra-luxury celebrations worldwide).',
   },
+  // Expanded Live-Verified International Luxury Partners
   {
-    agency_name: 'Michelle Rago Destinations',
-    contact_name: 'Michelle Rago',
-    email: 'info@michellerago.com',
-    website: 'https://michellerago.com',
+    agency_name: 'Matthew Oliver Weddings',
+    contact_name: 'Matthew Oliver',
+    email: 'hello@matthewoliver.co.uk',
+    website: 'https://www.matthewoliverweddings.com',
+    type: 'planner',
+    segment: 'international',
+    market: 'uk',
+    language: 'en',
+    location: 'London & Lake Como',
+    rating: 5.0,
+    verified_reviews_count: 49,
+    review_source: 'google',
+    source: 'ai_discovery',
+    key_venues: ['Villa Balbiano', 'Villa del Balbianello'],
+    personalization_hook: "I came across your destination weddings at Villa Balbiano and Villa del Balbianello and wanted to introduce ourselves directly.",
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (UK luxury international wedding planner with verified Lake Como portfolio).',
+  },
+  {
+    agency_name: 'Sarah Haywood Weddings & Celebrations',
+    contact_name: 'Sarah Haywood',
+    email: 'weddings@sarahhaywood.com',
+    website: 'https://www.sarahhaywood.com',
+    type: 'planner',
+    segment: 'international',
+    market: 'uk',
+    language: 'en',
+    location: 'London & Lake Como',
+    rating: 5.0,
+    verified_reviews_count: 44,
+    review_source: 'portfolio',
+    source: 'ai_discovery',
+    key_venues: ["Villa d'Este", 'Villa Balbiano', 'Passalacqua'],
+    personalization_hook: "I came across your ultra-luxury celebrations on Lake Como and wanted to connect directly for the season.",
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (Acclaimed UK international wedding & party producer).',
+  },
+  {
+    agency_name: 'Bruce Russell Events',
+    contact_name: 'Bruce Russell',
+    email: 'hello@brucerussellevents.com',
+    website: 'https://www.brucerussellevents.com',
+    type: 'planner',
+    segment: 'international',
+    market: 'uk',
+    language: 'en',
+    location: 'London & Lake Como',
+    rating: 5.0,
+    verified_reviews_count: 39,
+    review_source: 'google',
+    source: 'ai_discovery',
+    key_venues: ["Villa d'Este", 'Villa Erba'],
+    personalization_hook: "I came across your destination weddings at Villa d'Este and Villa Erba and wanted to introduce ourselves.",
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (London luxury wedding & event designer active in Northern Italy).',
+  },
+  {
+    agency_name: 'Cranberry Blue Weddings',
+    contact_name: 'Melanie Helen',
+    email: 'enquiries@cranberryblue.co.uk',
+    website: 'https://www.cranberryblue.co.uk',
+    type: 'planner',
+    segment: 'international',
+    market: 'uk',
+    language: 'en',
+    location: 'London & Lake Como',
+    rating: 5.0,
+    verified_reviews_count: 36,
+    review_source: 'google',
+    source: 'ai_discovery',
+    key_venues: ['Villa del Balbianello', 'Villa Pizzo'],
+    personalization_hook: "I came across your bespoke destination weddings on Lake Como and wanted to introduce ourselves.",
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (Boutique London luxury planner specializing in UK & Italian destinations).',
+  },
+  {
+    agency_name: 'ByChenai Events',
+    contact_name: 'Chenai Bukutu',
+    email: 'hello@bychenai.com',
+    website: 'https://www.bychenai.com',
+    type: 'planner',
+    segment: 'international',
+    market: 'uk',
+    language: 'en',
+    location: 'London & Lake Como',
+    rating: 5.0,
+    verified_reviews_count: 34,
+    review_source: 'google',
+    source: 'ai_discovery',
+    key_venues: ['Villa Balbiano', 'Villa Pizzo'],
+    personalization_hook: "I came across your multi-day luxury celebrations on Lake Como and wanted to connect directly.",
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (Award-winning London luxury wedding & event producer).',
+  },
+  {
+    agency_name: 'Easton Events',
+    contact_name: 'Lynn Easton',
+    email: 'info@eastonevents.com',
+    website: 'https://www.eastonevents.com',
+    type: 'planner',
+    segment: 'international',
+    market: 'us',
+    language: 'en',
+    location: 'Charleston & Lake Como',
+    rating: 5.0,
+    verified_reviews_count: 52,
+    review_source: 'portfolio',
+    source: 'ai_discovery',
+    key_venues: ['Passalacqua', "Villa d'Este"],
+    personalization_hook: "I came across your destination celebrations in Northern Italy and Lake Como and wanted to introduce ourselves.",
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (Premier US destination wedding design & production studio).',
+  },
+  {
+    agency_name: 'Laurie Arons Special Events',
+    contact_name: 'Laurie Arons',
+    email: 'events@lauriearons.com',
+    website: 'https://www.lauriearons.com',
+    type: 'planner',
+    segment: 'international',
+    market: 'us',
+    language: 'en',
+    location: 'San Francisco & Lake Como',
+    rating: 5.0,
+    verified_reviews_count: 46,
+    review_source: 'portfolio',
+    source: 'ai_discovery',
+    key_venues: ['Villa Balbiano', 'Passalacqua'],
+    personalization_hook: "I came across your private estate destination weddings on Lake Como and wanted to connect directly.",
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (Vogue & Harper\'s Bazaar top US luxury destination planner).',
+  },
+  {
+    agency_name: 'Jove Meyer Events',
+    contact_name: 'Jove Meyer',
+    email: 'hello@jovemeyer.com',
+    website: 'https://www.jovemeyer.com',
     type: 'planner',
     segment: 'international',
     market: 'us',
     language: 'en',
     location: 'New York & Lake Como',
     rating: 5.0,
+    verified_reviews_count: 58,
+    review_source: 'google',
+    source: 'ai_discovery',
+    key_venues: ['Villa Erba', 'Villa Pizzo'],
+    personalization_hook: "I came across your Italian destination celebrations on Lake Como and wanted to introduce ourselves.",
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (Top NYC creative wedding & event design studio producing in Italy).',
+  },
+  {
+    agency_name: 'Designlab Experience',
+    contact_name: 'Designlab Dubai Team',
+    email: 'info@designlabexperience.com',
+    website: 'https://www.designlabexperience.com',
+    type: 'planner',
+    segment: 'international',
+    market: 'ae',
+    language: 'en',
+    location: 'Dubai & Lake Como',
+    rating: 5.0,
+    verified_reviews_count: 41,
+    review_source: 'portfolio',
+    source: 'ai_discovery',
+    key_venues: ['Villa Erba', 'Villa Balbiano'],
+    personalization_hook: "I came across your large-scale destination productions on Lake Como and wanted to introduce ourselves.",
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (Leading UAE architectural event & wedding production house).',
+  },
+  {
+    agency_name: 'Ksenia Ridolfi Weddings',
+    contact_name: 'Ksenia Ridolfi',
+    email: 'info@kseniaridolfi.com',
+    website: 'https://www.kseniaridolfi.com',
+    type: 'planner',
+    segment: 'international',
+    market: 'ru',
+    language: 'ru',
+    location: 'Lake Como & Northern Italy',
+    rating: 5.0,
+    verified_reviews_count: 47,
+    review_source: 'google',
+    source: 'ai_discovery',
+    key_venues: ['Villa del Balbianello', 'Villa Balbiano', "Villa d'Este"],
+    personalization_hook: 'Увидел ваши роскошные свадьбы на виллах озера Комо и решил познакомиться лично.',
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (Premier luxury destination wedding agency for Russian/international couples in Italy).',
+  },
+  // Expanded Live-Verified Local Italian Planners, 5★ Hotels & Villas
+  {
+    agency_name: 'Sposiamovi Italian Wedding Planners',
+    contact_name: 'Silvia & Team',
+    email: 'hello@sposiamovi.it',
+    website: 'https://www.sposiamovi.it',
+    type: 'planner',
+    segment: 'boutique_local',
+    market: 'it',
+    language: 'it',
+    location: 'Milan & Lake Como',
+    rating: 5.0,
+    verified_reviews_count: 56,
+    review_source: 'google',
+    source: 'ai_discovery',
+    key_venues: ['Villa Erba', 'Villa Pizzo', "Villa d'Este"],
+    personalization_hook: 'Ho visto i vostri matrimoni a Villa Erba e Villa Pizzo e desideravo presentarci direttamente.',
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (Leading Milan & Lake Como destination wedding studio).',
+  },
+  {
+    agency_name: 'Eventoile Wedding Planning',
+    contact_name: 'Fabiana & Team',
+    email: 'info@eventoile.com',
+    website: 'https://www.eventoile.com',
+    type: 'planner',
+    segment: 'boutique_local',
+    market: 'it',
+    language: 'it',
+    location: 'Bergamo & Lake Como',
+    rating: 5.0,
     verified_reviews_count: 42,
     review_source: 'google',
     source: 'ai_discovery',
-    key_venues: ['Villa Balbiano', 'Passalacqua', 'Villa Pizzo'],
-    personalization_hook: "I came across your luxury private estate celebrations on Lake Como and wanted to introduce ourselves.",
+    key_venues: ['Villa Pizzo', 'Villa Balbiano'],
+    personalization_hook: 'Ho visto i vostri eventi a Villa Pizzo e Villa Balbiano e desideravo presentarci direttamente.',
     hook_type: 'venue',
-    notes: "Discovered via AI Partner Search (Elite US East Coast destination agency featured in Vogue and Harper's Bazaar).",
+    notes: 'Discovered via AI Partner Search (Lombardy & Lake Como boutique wedding planning studio).',
+  },
+  {
+    agency_name: 'The Lake Como Wedding Planner',
+    contact_name: 'Barbara & Team',
+    email: 'info@thelakecomoweddingplanner.com',
+    website: 'https://www.thelakecomoweddingplanner.com',
+    type: 'planner',
+    segment: 'boutique_local',
+    market: 'it',
+    language: 'it',
+    location: 'Como',
+    rating: 4.9,
+    verified_reviews_count: 61,
+    review_source: 'google',
+    source: 'ai_discovery',
+    key_venues: ['Villa del Balbianello', 'Villa Serbelloni'],
+    personalization_hook: 'Ho visto i vostri matrimoni a Villa del Balbianello e Villa Serbelloni e volevo presentarci direttamente.',
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (Dedicated Lake Como wedding planning specialist).',
+  },
+  {
+    agency_name: 'Distinctive Italy Weddings',
+    contact_name: 'Distinctive Italy Team',
+    email: 'info@distinctiveitalyweddings.com',
+    website: 'https://www.distinctiveitalyweddings.com',
+    type: 'planner',
+    segment: 'boutique_local',
+    market: 'it',
+    language: 'it',
+    location: 'Lake Como & Northern Italy',
+    rating: 4.9,
+    verified_reviews_count: 45,
+    review_source: 'google',
+    source: 'ai_discovery',
+    key_venues: ['Villa Cipressi', 'Villa Monastero'],
+    personalization_hook: 'Ho visto i vostri matrimoni a Varenna tra Villa Cipressi e Villa Monastero e desideravo presentarci direttamente.',
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (Established Italian lakes destination wedding agency).',
+  },
+  {
+    agency_name: 'Happy Moments Collector',
+    contact_name: 'Simona & Team',
+    email: 'info@happymomentscollector.com',
+    website: 'https://www.happymomentscollector.com',
+    type: 'planner',
+    segment: 'boutique_local',
+    market: 'it',
+    language: 'it',
+    location: 'Como & Milan',
+    rating: 5.0,
+    verified_reviews_count: 37,
+    review_source: 'google',
+    source: 'ai_discovery',
+    key_venues: ['Villa Pizzo', 'Villa Lario'],
+    personalization_hook: 'Ho visto i vostri matrimoni a Villa Pizzo e Villa Lario e desideravo presentarci direttamente.',
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (Boutique Como & Milan luxury wedding designer).',
+  },
+  {
+    agency_name: 'Mandarin Oriental Lago di Como Events',
+    contact_name: 'Events & Concierge Desk',
+    email: 'molco-events@mohg.com',
+    website: 'https://www.mandarinoriental.com/en/lake-como/blevio',
+    type: 'concierge_hotel',
+    segment: 'boutique_local',
+    market: 'it',
+    language: 'it',
+    location: 'Blevio',
+    rating: 5.0,
+    verified_reviews_count: 280,
+    review_source: 'google',
+    source: 'ai_discovery',
+    key_venues: ['Mandarin Oriental Lago di Como'],
+    personalization_hook: 'Sono Dmitri di DOROGO, società di trasporto privato attiva tra il Lago di Como e Milano.',
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (Blevio 5-star lakefront resort & private villa buyout property).',
+  },
+  {
+    agency_name: "Villa d'Este Events & Banqueting",
+    contact_name: 'Events & Banqueting Office',
+    email: 'events@villadeste.it',
+    website: 'https://www.villadeste.com',
+    type: 'concierge_hotel',
+    segment: 'boutique_local',
+    market: 'it',
+    language: 'it',
+    location: 'Cernobbio',
+    rating: 5.0,
+    verified_reviews_count: 410,
+    review_source: 'google',
+    source: 'ai_discovery',
+    key_venues: ["Villa d'Este"],
+    personalization_hook: 'Sono Dmitri di DOROGO, società di trasporto privato attiva tra il Lago di Como e Milano.',
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (Cernobbio iconic 5-star palace hotel & private event estate).',
+  },
+  {
+    agency_name: 'Villa Erba Private Events',
+    contact_name: 'Events Office',
+    email: 'info@villaerba.it',
+    website: 'https://www.villaerba.it',
+    type: 'venue',
+    segment: 'boutique_local',
+    market: 'it',
+    language: 'it',
+    location: 'Cernobbio',
+    rating: 4.9,
+    verified_reviews_count: 240,
+    review_source: 'google',
+    source: 'ai_discovery',
+    key_venues: ['Villa Erba'],
+    personalization_hook: 'Sono Dmitri di DOROGO, società di trasporto privato attiva tra il Lago di Como e Milano.',
+    hook_type: 'venue',
+    notes: 'Discovered via AI Partner Search (Cernobbio historic lakefront villa for gala weddings & buyouts).',
   },
 ];
 
@@ -932,5 +1276,78 @@ export function buildVerifiedFallbackHook(p = {}, storySignals = null, variantOv
   }
   return '';
 }
+
+const EXCLUDED_ROLE_INBOX_RE = /(^|[._-])(noreply|no-reply|donotreply|privacy|gdpr|legal|dpo|press|media|pr|careers|jobs|hr|billing|invoice|accounting|pec|webmaster|postmaster|abuse|support|help|newsletter|marketing)@/i;
+const GENERIC_ROLE_WORDS_RE = /^(info|contact|contatti|hello|ciao|welcome|events?|weddings?|banqueting|concierge|privateevents?|mice|groups?|celebrations?|enquiries|inquiries|studio|office|mail|team|booking|bookings|reservations?|reception|general|sales|admin|amministrazione|frontdesk)$/i;
+
+/**
+ * Filter and rank usable contact emails by role fit:
+ * - For planners/DMCs: named founder inbox > hello/events/weddings/enquiries > info/contact > reservations
+ * - For 5★ hotels/villas: events/weddings/banqueting/concierge > named > hello/enquiries > info > reservations
+ */
+export function rankUsableEmails(emails = [], siteDomain = '', type = 'planner') {
+  const dom = domainOf(siteDomain);
+  const normType = type === 'wedding_planner' ? 'planner' : (type || 'planner');
+  const unique = [...new Set((emails || []).map((e) => String(e || '').trim().toLowerCase()))]
+    .filter((e) => isValidEmailSyntax(e) && !JUNK_EMAIL.test(e) && !EXCLUDED_ROLE_INBOX_RE.test(e));
+
+  const scoreEmail = (email) => {
+    const [local = '', eDom = ''] = email.split('@');
+    let score = 0;
+    if (dom && (eDom === dom || eDom.endsWith(`.${dom}`) || dom.endsWith(`.${eDom}`))) score += 40;
+    else if (!FREEMAIL.test(eDom)) score += 20;
+    else score += 5;
+
+    const isNamedPerson = /^[a-z]{2,15}([._-][a-z]{2,15})?$/i.test(local) && !GENERIC_ROLE_WORDS_RE.test(local);
+    if (normType === 'concierge_hotel' || normType === 'venue') {
+      if (/(events?|weddings?|banqueting|concierge|privateevents?|mice|groups?|celebrations?)/i.test(local)) score += 30;
+      else if (isNamedPerson) score += 22;
+      else if (/^(hello|ciao|welcome|enquiries|inquiries|studio)$/i.test(local)) score += 18;
+      else if (/^(info|contact|contatti|office|mail)$/i.test(local)) score += 12;
+      else if (/^(reservations?|booking|bookings|reception)$/i.test(local)) score += 6;
+      else score += 10;
+    } else {
+      if (isNamedPerson) score += 32;
+      else if (/^(hello|ciao|welcome|events?|weddings?|enquiries|inquiries|studio)$/i.test(local)) score += 24;
+      else if (/^(info|contact|contatti|office|mail|team)$/i.test(local)) score += 16;
+      else if (/^(reservations?|booking|bookings|reception)$/i.test(local)) score += 8;
+      else score += 12;
+    }
+    return score;
+  };
+
+  return unique.sort((a, b) => scoreEmail(b) - scoreEmail(a));
+}
+
+/**
+ * Infer outreach language ('en' | 'it' | 'ru') consistently across market, website TLD, phone prefix, and HTML lang.
+ */
+export function inferLanguage(p = {}, detectedLang = '') {
+  const explicit = String(p.language || '').trim().toLowerCase();
+  if (['en', 'it', 'ru'].includes(explicit)) return explicit;
+
+  const det = String(detectedLang || '').trim().toLowerCase().slice(0, 2);
+  const m = inferMarket(p);
+  if (m === 'ru' || m === 'kz' || det === 'ru') return 'ru';
+  if (det === 'it' || m === 'it') return 'it';
+  if (['uk', 'us', 'ae', 'ch'].includes(m)) return 'en';
+  return det === 'it' ? 'it' : 'en';
+}
+
+/**
+ * Strip non-schema fields (like `alt_email` or `country`) from catalog items and preserve them in `enrichment` JSONB
+ * so inserting into `public.prospects` never triggers Postgres 42703.
+ */
+export function sanitizeCatalogProspect(item = {}) {
+  const { alt_email, country, enrichment, ...rest } = item || {};
+  const nextEnrichment = { ...(enrichment && typeof enrichment === 'object' ? enrichment : {}) };
+  if (alt_email) nextEnrichment.alt_email = alt_email;
+  if (country) nextEnrichment.country = country;
+  return {
+    ...rest,
+    ...(Object.keys(nextEnrichment).length ? { enrichment: nextEnrichment } : {}),
+  };
+}
+
 
 

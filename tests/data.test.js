@@ -2,7 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   wilson, computeMetrics, tractionVerdict, compareRates, csvToProspects, toCSV, findDuplicates, extractFromHtml,
-  priorityScore, parseProfileUrl, quoteNet, commissionFor, getRateCardInfo,
+  priorityScore, parseProfileUrl, quoteNet, commissionFor, getRateCardInfo, rankUsableEmails, inferLanguage,
+  sanitizeCatalogProspect, DISCOVERY_PARTNER_CATALOG,
 } from '../supabase/functions/_shared/core/index.js';
 
 test('Wilson interval', () => {
@@ -99,6 +100,107 @@ test('priority: boutique planners with reviews outrank saturated tier-1 agencies
   const tier1 = priorityScore({ type: 'planner', rating: 5, verified_reviews_count: 41, segment: 'international', tags: ['tier1'] }).score;
   const photographer = priorityScore({ type: 'photographer' }).score;
   assert.ok(boutique > tier1 && boutique > photographer);
+});
+
+test('priorityScore differentiates named planners, generic hotel info desks, missing emails, and invalid emails', () => {
+  const namedPlanner = priorityScore({
+    type: 'planner',
+    contact_name: 'Jane Riddell',
+    email: 'jane@plannedforperfection.co.uk',
+    email_status: 'mx_ok',
+    website: 'https://plannedforperfection.co.uk',
+    market: 'uk',
+    location: 'London & Lake Como',
+    key_venues: ['Villa Balbiano', 'Villa del Balbianello', "Villa d'Este"],
+    rating: 5.0,
+    verified_reviews_count: 54,
+    personalization_hook: 'I came across your bespoke weddings on Lake Como and wanted to introduce ourselves directly.',
+  }).score;
+
+  const genericHotelDesk = priorityScore({
+    type: 'venue',
+    contact_name: '',
+    email: 'info@relaisvillavittoria.it',
+    email_status: 'mx_ok',
+    website: 'https://www.relaisvillavittoria.com',
+    market: 'it',
+    location: 'Laglio',
+    key_venues: ['Relais Villa Vittoria'],
+    rating: 4.8,
+    verified_reviews_count: 180,
+    personalization_hook: "I'm Dmitri from DOROGO, a private transport company covering Lake Como and Milan.",
+  }).score;
+
+  const noEmailProspect = priorityScore({
+    type: 'planner',
+    contact_name: 'WP Bellagio',
+    email: null,
+    website: 'https://www.wpbellagio.com',
+    market: 'it',
+    location: 'Bellagio',
+    key_venues: ['Villa Serbelloni'],
+    rating: 4.9,
+    verified_reviews_count: 12,
+    personalization_hook: 'Ho visto i vostri matrimoni a Bellagio.',
+  }).score;
+
+  const invalidEmailProspect = priorityScore({
+    type: 'planner',
+    contact_name: 'Michelle Rago',
+    email: 'info@michellerago.com',
+    email_status: 'invalid',
+    website: 'https://michellerago.com',
+    market: 'us',
+    location: 'New York & Lake Como',
+    key_venues: ['Villa Balbiano', 'Passalacqua', 'Villa Pizzo'],
+    rating: 5.0,
+    verified_reviews_count: 42,
+    personalization_hook: 'I came across your luxury private estate celebrations on Lake Como.',
+  }).score;
+
+  assert.ok(namedPlanner >= 95, `namedPlanner should be >= 95, got ${namedPlanner}`);
+  assert.ok(genericHotelDesk >= 70 && genericHotelDesk < 90, `genericHotelDesk should be 70..89, got ${genericHotelDesk}`);
+  assert.ok(namedPlanner > genericHotelDesk, 'named planner must outrank generic hotel info@ desk');
+  assert.ok(noEmailProspect < 65, `prospect without email must score below 65 gate, got ${noEmailProspect}`);
+  assert.ok(invalidEmailProspect <= 35, `invalid email prospect must be capped <= 35, got ${invalidEmailProspect}`);
+});
+
+test('rankUsableEmails prioritizes founder inboxes for planners and events/concierge desks for hotels', () => {
+  const plannerRanked = rankUsableEmails(
+    ['privacy@studio.it', 'reservations@studio.it', 'info@studio.it', 'hello@studio.it', 'sarah@studio.it'],
+    'https://www.studio.it',
+    'planner',
+  );
+  assert.equal(plannerRanked[0], 'sarah@studio.it');
+  assert.equal(plannerRanked[1], 'hello@studio.it');
+  assert.equal(plannerRanked[2], 'info@studio.it');
+  assert.ok(!plannerRanked.includes('privacy@studio.it'));
+
+  const hotelRanked = rankUsableEmails(
+    ['reservations@villadeste.it', 'info@villadeste.it', 'events@villadeste.it', 'press@villadeste.it'],
+    'https://www.villadeste.it',
+    'concierge_hotel',
+  );
+  assert.equal(hotelRanked[0], 'events@villadeste.it');
+  assert.ok(!hotelRanked.includes('press@villadeste.it'));
+});
+
+test('inferLanguage routes RU, IT, and EN accurately even when Italian sites use English HTML tags', () => {
+  assert.equal(inferLanguage({ website: 'https://dlyadvoih.ru', location: 'Moscow' }, 'en'), 'ru');
+  assert.equal(inferLanguage({ website: 'https://www.sposiamovi.it', location: 'Milan' }, 'en'), 'it');
+  assert.equal(inferLanguage({ website: 'https://www.plannedforperfection.co.uk', location: 'London' }, 'en'), 'en');
+  assert.equal(inferLanguage({ website: 'https://katrinmoroweddings.com', language: 'ru', location: 'Rome' }, 'en'), 'ru');
+});
+
+test('sanitizeCatalogProspect strips alt_email and country into enrichment JSONB and catalog has 35+ verified partners', () => {
+  const raw = { agency_name: 'Katrin Moro Weddings', email: 'katrinmorostar@gmail.com', alt_email: 'katrinmoroweddings@gmail.com', country: 'IT' };
+  const clean = sanitizeCatalogProspect(raw);
+  assert.equal('alt_email' in clean, false);
+  assert.equal('country' in clean, false);
+  assert.equal(clean.enrichment.alt_email, 'katrinmoroweddings@gmail.com');
+  assert.equal(clean.enrichment.country, 'IT');
+  assert.ok(DISCOVERY_PARTNER_CATALOG.length >= 35, `Expected >= 35 catalog partners, got ${DISCOVERY_PARTNER_CATALOG.length}`);
+  assert.equal(DISCOVERY_PARTNER_CATALOG.some((c) => c.email === 'info@michellerago.com'), false, 'Michelle Rago dangling MX must not be in catalog');
 });
 
 test('rate card quote and commission', () => {

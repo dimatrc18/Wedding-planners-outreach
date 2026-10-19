@@ -34,7 +34,7 @@ export function render(el, param) {
             <label class="field"><span>Location</span><input type="text" name="location" list="towns"></label>
             <label class="field"><span>Target Market</span><select name="market"><option value="">Auto-detect</option>${core.MARKETS.map((m) => `<option value="${m.key}">${m.flag} ${esc(m.label)}</option>`).join('')}</select></label>
             <label class="field"><span>Type</span><select name="type"><option value="planner">Planner</option><option value="venue">Venue</option><option value="photographer">Photographer</option><option value="concierge_hotel">Hotel concierge</option></select></label>
-            <label class="field"><span>Language</span><select name="language"><option value="en">EN</option><option value="it">IT</option><option value="de">DE</option><option value="fr">FR</option></select></label>
+            <label class="field"><span>Language</span><select name="language"><option value="">Auto-detect</option><option value="en">EN</option><option value="it">IT</option><option value="ru">RU</option><option value="de">DE</option><option value="fr">FR</option></select></label>
             <label class="field"><span>Source</span><select name="source"><option>manual</option><option>matrimonio.com</option><option>wedding_wire</option><option>referral</option><option>website</option></select></label>
           </div>
 
@@ -75,6 +75,7 @@ export function render(el, param) {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(e.target));
     for (const k of Object.keys(data)) if (data[k] === '') data[k] = null;
+    if (!data.language) data.language = core.inferLanguage(data);
     if (data.email) { data.email = data.email.toLowerCase(); data.email_status = await A.verifyEmail(data.email); }
     data.priority_score = core.priorityScore(data).score;
     data.status = 'researching';
@@ -92,7 +93,7 @@ export function render(el, param) {
     if (id === 'tpl') return download('dorogo_prospects_template.csv', 'agency,contact,email,website,location,type,segment,language,rating,reviews,source,hook,notes,tags\n', 'text/csv');
     if (id === 'csv-cancel') { preview = null; return paint(); }
     if (id === 'csv-go') {
-      const rows = preview.filter((r) => !r.dup).map(({ dup, ...r }) => ({ type: 'planner', language: 'en', status: 'researching', ...r, priority_score: core.priorityScore(r).score }));
+      const rows = preview.filter((r) => !r.dup).map(({ dup, ...r }) => ({ type: 'planner', language: core.inferLanguage(r), status: 'researching', ...r, priority_score: core.priorityScore(r).score }));
       try {
         for (let i = 0; i < rows.length; i += 100) await insert('prospects', rows.slice(i, i + 100));
         log('csv_import', { count: rows.length });
@@ -140,7 +141,7 @@ export function render(el, param) {
       ...Object.fromEntries(Object.entries(s).filter(([k, v]) => v !== '' && v !== null && v !== undefined && k !== 'source')),
       enrichment: found?.sources ? { last: { at: new Date().toISOString(), sources: found.sources, evidence: found.evidence } } : {},
     };
-    if (!row.language) row.language = 'en';
+    if (!row.language) row.language = core.inferLanguage(row);
     row.priority_score = core.priorityScore(row).score;
     try {
       const [saved] = await insert('prospects', row);

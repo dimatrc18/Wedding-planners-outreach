@@ -579,7 +579,7 @@ export function render(el) {
       <select id="f-type" aria-label="Type"><option value="">All partner types</option>${Object.entries(TYPE).map(([k, v]) => `<option value="${k}" ${f.type === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
 
       <select id="f-segment" aria-label="Segment"><option value="">All agency sizes</option>${Object.entries(SEG).map(([k, v]) => `<option value="${k}" ${f.segment === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
-      <select id="f-language" aria-label="Language"><option value="">All languages</option>${['en', 'it', 'de', 'fr'].map((l) => `<option value="${l}" ${f.language === l ? 'selected' : ''}>${l.toUpperCase()}</option>`).join('')}</select>
+      <select id="f-language" aria-label="Language"><option value="">All languages</option>${['en', 'it', 'ru', 'de', 'fr'].map((l) => `<option value="${l}" ${f.language === l ? 'selected' : ''}>${l.toUpperCase()}</option>`).join('')}</select>
       ${tags.length ? `<select id="f-tag" aria-label="Tag"><option value="">All tags</option>${tags.map((t) => `<option ${f.tag === t ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>` : ''}
       <label class="check small" title="Hide leads scoring below 65/100"><input type="checkbox" id="f-highfit" ${f.onlyHighFit ? 'checked' : ''}> Only ≥ ${MIN_FIT_SCORE}/100 Fit</label>
       <label class="check small"><input type="checkbox" id="f-closed" ${f.hideClosed ? 'checked' : ''}> Hide Declined</label>
@@ -1133,11 +1133,18 @@ export function render(el) {
                 continue;
               }
               statusEl.textContent = `🔍 Checking portfolio & stories for ${item.agency_name}…`;
-              const jina = await fetchJinaStorySignals(item.website);
+              const sanitized = core.sanitizeCatalogProspect(item);
+              const mxCheck = sanitized.email ? await A.verifyEmail(sanitized.email) : 'no_mx';
+              if (mxCheck === 'no_mx' || mxCheck === 'invalid') {
+                skippedLowScore++;
+                continue;
+              }
+              const jina = await fetchJinaStorySignals(sanitized.website);
               const candidate = {
-                ...item,
-                key_venues: [...new Set([...(item.key_venues || []), ...(jina?.venues || [])])],
+                ...sanitized,
+                key_venues: [...new Set([...(sanitized.key_venues || []), ...(jina?.venues || [])])],
               };
+              candidate.language = core.inferLanguage(candidate);
               candidate.personalization_hook = core.buildVerifiedFallbackHook(candidate, jina?.story);
               const sc = core.priorityScore(candidate).score;
               candidate.priority_score = sc;
@@ -1149,7 +1156,7 @@ export function render(el) {
               candidate.hook_confidence = 'high';
               candidate.hook_needs_review = false;
               candidate.hook_source_url = candidate.website;
-              candidate.email_status = 'mx_ok';
+              candidate.email_status = mxCheck === 'mx_ok' ? 'mx_ok' : 'syntax_ok';
               const [saved] = await insert('prospects', candidate);
               if (saved && saved.status === 'ready' && autoDraft) {
                 await A.draftNextStep(saved);

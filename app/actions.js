@@ -180,7 +180,7 @@ export function readinessProblems(p) {
   const probs = [];
   if (!p.email) probs.push('No email address');
   else if (!core.isValidEmailSyntax(p.email)) probs.push('Email address looks invalid');
-  else if (p.email_status === 'no_mx' || p.email_status === 'bounced') probs.push(`Email ${p.email_status === 'bounced' ? 'bounced before' : 'domain has no mail server'}`);
+  else if (['no_mx', 'bounced', 'invalid'].includes(p.email_status)) probs.push(`Email ${p.email_status === 'bounced' ? 'bounced before' : 'domain has no valid mail server'}`);
   if (!(p.personalization_hook || '').trim()) probs.push('No personalization hook');
   if (p.hook_needs_review) probs.push('Hook is flagged for review');
   if (core.isBlocked(p)) probs.push('Marked Do Not Contact');
@@ -192,13 +192,23 @@ export async function eraseProspect(p) {
   log('prospect_erased', { agency: p.agency_name, reason: 'GDPR erase from app' });
 }
 
-// ---------- Email verification (syntax + MX over DNS-over-HTTPS) ----------
+// ---------- Email verification (syntax + MX + MX host A-record over DNS-over-HTTPS) ----------
 export async function verifyEmail(email) {
   if (!core.isValidEmailSyntax(email)) return 'invalid';
   try {
     const r = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(core.domainOf(email))}&type=MX`);
     const j = await r.json();
-    return (j.Answer || []).some((a) => a.type === 15) ? 'mx_ok' : 'no_mx';
+    const mxAnswers = (j.Answer || []).filter((a) => a.type === 15 && a.data);
+    if (!mxAnswers.length) return 'no_mx';
+    const mxHost = String(mxAnswers[0].data).trim().split(/\s+/).pop()?.replace(/\.$/, '').toLowerCase() || '';
+    if (!mxHost || mxHost === 'localhost' || mxHost === '0.0.0.0') return 'no_mx';
+    const aRes = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(mxHost)}&type=A`);
+    if (aRes.ok) {
+      const aJson = await aRes.json();
+      const validIps = (aJson.Answer || []).filter((a) => a.type === 1 && a.data && !/^(127\.|0\.)/.test(String(a.data).trim()));
+      if (aJson.Status === 3 || !validIps.length) return 'no_mx';
+    }
+    return 'mx_ok';
   } catch { return 'syntax_ok'; }
 }
 

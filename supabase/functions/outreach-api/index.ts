@@ -102,22 +102,23 @@ async function enrich(db: any, body: any) {
       merged.text += `\n${x.text}`;
     } catch { /* a missing contact page is fine */ }
   }
-  const dom = core.domainOf(main.finalUrl);
-  const emails = (merged.emails || [])
-    .filter((e: string) => !REJECT_EMAIL_LOCAL_RE.test(e) && !REJECT_EMAIL_DOM_RE.test(core.domainOf(e)))
-    .sort((a: string, b: string) => Number(core.domainOf(b) === dom) - Number(core.domainOf(a) === dom));
+  const emails = core.rankUsableEmails(
+    (merged.emails || []).filter((e: string) => !REJECT_EMAIL_LOCAL_RE.test(e) && !REJECT_EMAIL_DOM_RE.test(core.domainOf(e))),
+    main.finalUrl,
+    body.type || 'planner',
+  );
   const email = emails[0] || '';
   const email_status = email ? await mxCheck(core.domainOf(email)) : 'unknown';
+  const location = merged.towns[0] || body.location || '';
+  const preLang = core.inferLanguage({ ...body, website: main.finalUrl, email, phone: merged.phones[0] || '', location }, merged.lang);
   let ai: any = null, aiError = null;
   if (integrations().gemini) {
     try {
-      const lang = ['it', 'de', 'fr'].includes(merged.lang) ? merged.lang : 'en';
-      ai = checkHook(await gemini(db, 'hook', { agency: body.agency_name || merged.site_name || merged.title, language: lang === 'it' ? 'it' : 'en', page: merged.text.slice(0, 14000) }, body.prospect_id || null), merged.text);
+      ai = checkHook(await gemini(db, 'hook', { agency: body.agency_name || merged.site_name || merged.title, language: preLang, page: merged.text.slice(0, 14000) }, body.prospect_id || null), merged.text);
     } catch (e) { aiError = (e as Error).message; }
   }
-  const lang = ai?.language_detected || (['en', 'it', 'de', 'fr'].includes(merged.lang) ? merged.lang : 'en');
+  const lang = core.inferLanguage({ ...body, website: main.finalUrl, email, phone: merged.phones[0] || '', location }, ai?.language_detected || merged.lang);
   const key_venues = [...new Set([...(merged.venues || []), ...((ai?.key_venues || []).filter((v: string) => merged.text.toLowerCase().includes(String(v).toLowerCase())))])];
-  const location = merged.towns[0] || body.location || '';
   const suggestions: any = {
     website: main.finalUrl, email, email_status,
     phone: merged.phones[0] || '', whatsapp: merged.whatsapp || '', language: lang,
@@ -126,26 +127,18 @@ async function enrich(db: any, body: any) {
   };
   if (ai?.hook) {
     Object.assign(suggestions, { personalization_hook: ai.hook, hook_type: ai.hook_type, hook_confidence: ai.confidence, hook_needs_review: ai.needs_review, hook_source_url: main.finalUrl });
-  } else if (key_venues.length > 0) {
-    const v = key_venues[0];
-    suggestions.personalization_hook = lang === 'it'
-      ? `I vostri matrimoni a ${v} sul Lago di Como hanno attirato la nostra attenzione.`
-      : `Your weddings at ${v} on Lake Como caught our eye.`;
-    suggestions.hook_type = 'venue';
-    suggestions.hook_confidence = 'high';
-    suggestions.hook_needs_review = false;
-    suggestions.hook_source_url = main.finalUrl;
-  } else if (location) {
-    suggestions.personalization_hook = lang === 'it'
-      ? `Il vostro lavoro nell'organizzazione di matrimoni a ${location} ha attirato la nostra attenzione.`
-      : `Your destination wedding work in ${location} caught our eye.`;
-    suggestions.hook_type = 'event';
-    suggestions.hook_confidence = 'medium';
-    suggestions.hook_needs_review = false;
-    suggestions.hook_source_url = main.finalUrl;
+  } else {
+    const fallbackHook = core.buildVerifiedFallbackHook({ ...body, ...suggestions, personalization_hook: '' }, jina?.story);
+    if (fallbackHook) {
+      suggestions.personalization_hook = fallbackHook;
+      suggestions.hook_type = key_venues.length > 0 ? 'venue' : 'event';
+      suggestions.hook_confidence = key_venues.length > 0 ? 'high' : 'medium';
+      suggestions.hook_needs_review = false;
+      suggestions.hook_source_url = main.finalUrl;
+    }
   }
   if (ai?.segment_guess) suggestions.segment = ai.segment_guess;
-  else if (!body.segment) suggestions.segment = lang === 'it' ? 'boutique_local' : 'international';
+  else if (!body.segment) suggestions.segment = core.inferMarket({ ...body, ...suggestions }) === 'it' ? 'boutique_local' : 'international';
   if (ai?.weddings_per_year_guess) suggestions.avg_weddings_per_year_estimate = ai.weddings_per_year_guess;
   if (ai?.contact_name && merged.text.includes(ai.contact_name)) suggestions.contact_name = ai.contact_name;
 

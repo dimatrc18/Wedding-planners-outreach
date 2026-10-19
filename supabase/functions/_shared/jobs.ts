@@ -36,17 +36,19 @@ export async function verifyDnsMx(domain: string): Promise<'mx_ok' | 'no_mx' | '
     if (json.Status === 3) return 'no_mx'; // NXDOMAIN
     const mxAnswers = (json.Answer || []).filter((ans: any) => ans.type === 15 && ans.data);
     if (!mxAnswers.length) return 'no_mx';
-    // Verify the primary MX target hostname itself resolves to an A record (prevents dangling MX like michellerago.com)
-    const mxHost = String(mxAnswers[0].data).trim().split(/\s+/).pop()?.replace(/\.$/, '') || '';
-    if (mxHost) {
-      const aRes = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(mxHost)}&type=A`, {
-        headers: { accept: 'application/dns-json' },
-        signal: AbortSignal.timeout(4000),
-      });
-      if (aRes.ok) {
-        const aJson: any = await aRes.json();
-        if (aJson.Status === 3 || !(aJson.Answer || []).length) return 'no_mx';
-      }
+    // Verify the primary MX target hostname itself resolves to a public IPv4 A record (prevents dangling MX like michellerago.com or parked localhost MX like wow-italy.com)
+    const mxHost = String(mxAnswers[0].data).trim().split(/\s+/).pop()?.replace(/\.$/, '').toLowerCase() || '';
+    if (!mxHost || mxHost === 'localhost' || mxHost === '0.0.0.0') return 'no_mx';
+    const aRes = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(mxHost)}&type=A`, {
+      headers: { accept: 'application/dns-json' },
+      signal: AbortSignal.timeout(4000),
+    });
+    if (aRes.ok) {
+      const aJson: any = await aRes.json();
+      const validIps = (aJson.Answer || []).filter(
+        (ans: any) => ans.type === 1 && ans.data && !/^(127\.|0\.)/.test(String(ans.data).trim()),
+      );
+      if (aJson.Status === 3 || !validIps.length) return 'no_mx';
     }
     return 'mx_ok';
   } catch {
@@ -808,7 +810,8 @@ export async function autoResearchPending(db: any, _settings: any, now = new Dat
       patch.email_status = 'invalid';
       patch.notes = `${p.notes ? p.notes + ' · ' : ''}Website domain unreachable (DNS error)`;
     }
-    const bestEmail = p.email || seed.email || jina?.emails?.[0] || '';
+    const rankedJinaEmails = core.rankUsableEmails(jina?.emails || [], targetUrl, p.type);
+    const bestEmail = p.email || seed.email || rankedJinaEmails[0] || '';
     if (bestEmail && webStatus !== 'broken') {
       const emailDomain = core.domainOf(bestEmail);
       const mxStatus = await verifyDnsMx(emailDomain);
@@ -830,7 +833,10 @@ export async function autoResearchPending(db: any, _settings: any, now = new Dat
     const venues = [...new Set([...(p.key_venues || []), ...(seed.key_venues || []), ...(jina?.venues || [])])];
     if (venues.length) patch.key_venues = venues;
 
-    const preHook = { ...p, ...patch, personalization_hook: '' };
+    const inferredLang = core.inferLanguage({ ...p, ...patch });
+    if (!p.language && inferredLang) patch.language = inferredLang;
+
+    const preHook = { ...p, ...patch, language: inferredLang || p.language || 'en', personalization_hook: '' };
     const existingHook = String(p.personalization_hook || '').trim();
     const hasRichExisting = existingHook && !/^We note(d)?\b/i.test(existingHook);
     let hookText = hasRichExisting ? existingHook : '';
@@ -839,7 +845,7 @@ export async function autoResearchPending(db: any, _settings: any, now = new Dat
     }
     if (!hookText && integrations().gemini && jina?.text) {
       try {
-        const aiOut: any = await gemini(db, 'hook', { agency: p.agency_name, language: p.language === 'it' ? 'it' : 'en', page: jina.text }, p.id);
+        const aiOut: any = await gemini(db, 'hook', { agency: p.agency_name, language: preHook.language, page: jina.text }, p.id);
         if (aiOut?.hook && !/^We note(d)?\b/i.test(aiOut.hook)) hookText = aiOut.hook;
       } catch { /* fallback below */ }
     }
@@ -906,10 +912,12 @@ export async function autoResearchPending(db: any, _settings: any, now = new Dat
       ]);
       if (mxStatus === 'no_mx' || webStatus === 'broken') continue;
       const jina = await fetchJinaSignals(item.website);
+      const sanitized = core.sanitizeCatalogProspect(item);
       const candidate: any = {
-        ...item,
-        key_venues: [...new Set([...(item.key_venues || []), ...(jina?.venues || [])])],
+        ...sanitized,
+        key_venues: [...new Set([...(sanitized.key_venues || []), ...(jina?.venues || [])])],
       };
+      candidate.language = core.inferLanguage(candidate);
       candidate.personalization_hook = core.buildVerifiedFallbackHook(candidate, jina?.story);
       const sc = core.priorityScore(candidate).score;
       if (sc >= 65 && candidate.email && candidate.personalization_hook) {

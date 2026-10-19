@@ -60,22 +60,14 @@ const REGION_KEYWORDS_RE = /\b(lake\s+como|lago\s+di\s+como|como|bellagio|tremez
 const REJECT_EMAIL_LOCAL_RE = /^(noreply|no-reply|donotreply|do-not-reply|privacy|gdpr|dpo|pec|fatturazione|billing|abuse|postmaster|webmaster|jobs|careers|hr|stagisti|stage)@/i;
 const REJECT_EMAIL_DOMAIN_RE = /(?:^|\.)(pec\.it|legalmail\.it|arubapec\.it|registerpec\.it|matrimonio\.com|weddingwire\.\w+|zankyou\.\w+|sentry\.io|wixpress\.com|example\.com)$/i;
 
-export function filterUsableEmails(emails: string[], siteDomain: string): string[] {
+export function filterUsableEmails(emails: string[], siteDomain: string, type = 'planner'): string[] {
   const clean = (emails || [])
     .map((e) => String(e || '').trim().toLowerCase())
     .filter((e) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e))
     .filter((e) => !REJECT_EMAIL_LOCAL_RE.test(e))
     .filter((e) => !REJECT_EMAIL_DOMAIN_RE.test(core.domainOf(e)));
 
-  // Prefer emails on the agency's own domain first, then personal/general inbox names
-  return [...new Set(clean)].sort((a, b) => {
-    const aSame = Number(core.domainOf(a) === siteDomain);
-    const bSame = Number(core.domainOf(b) === siteDomain);
-    if (bSame !== aSame) return bSame - aSame;
-    const aInfo = Number(/^(info|hello|contact|contatti|wedding|weddings|events|studio)@/i.test(a));
-    const bInfo = Number(/^(info|hello|contact|contatti|wedding|weddings|events|studio)@/i.test(b));
-    return bInfo - aInfo;
-  });
+  return core.rankUsableEmails(clean, siteDomain, type);
 }
 
 export async function checkDnsMx(domain: string, fetchImpl: typeof fetch = fetch): Promise<'mx_ok' | 'no_mx' | 'unknown'> {
@@ -84,7 +76,23 @@ export async function checkDnsMx(domain: string, fetchImpl: typeof fetch = fetch
     const r = await fetchImpl(`https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=MX`);
     if (!r.ok) return 'unknown';
     const j: any = await r.json();
-    return (j.Answer || []).some((a: any) => a.type === 15) ? 'mx_ok' : 'no_mx';
+    const mxAnswers = (j.Answer || []).filter((a: any) => a.type === 15 && a.data);
+    if (!mxAnswers.length) return 'no_mx';
+    const mxHost = String(mxAnswers[0].data || '').trim().split(/\s+/).pop()?.replace(/\.$/, '').toLowerCase() || '';
+    if (mxHost === 'localhost' || mxHost === '0.0.0.0') return 'no_mx';
+    if (mxHost) {
+      const aRes = await fetchImpl(`https://dns.google/resolve?name=${encodeURIComponent(mxHost)}&type=A`);
+      if (aRes && aRes.ok) {
+        const aJson: any = await aRes.json();
+        if (aJson && Array.isArray(aJson.Answer)) {
+          const validIps = aJson.Answer.filter((a: any) => a.type === 1 && a.data && !/^(127\.|0\.)/.test(String(a.data).trim()));
+          if (aJson.Status === 3 || !validIps.length) return 'no_mx';
+        } else if (aJson && aJson.Status === 3) {
+          return 'no_mx';
+        }
+      }
+    }
+    return 'mx_ok';
   } catch {
     return 'unknown';
   }
@@ -166,13 +174,23 @@ export async function evaluateLeadCandidate(
     (extracted.title ? String(extracted.title).split(/\s*[|–—-]\s*/)[0].trim() : '') ||
     siteDomain;
 
-  const lang = ['it', 'de', 'fr'].includes(extracted.lang) ? extracted.lang : 'en';
-
   // Stage 4: Contact Email Hygiene & DNS MX Verification
   const usableEmails = filterUsableEmails(extracted.emails, siteDomain);
   const primaryEmail = usableEmails[0] || '';
   const mxResolver = options.mxResolver || checkDnsMx;
   const mxStatus = primaryEmail ? await mxResolver(core.domainOf(primaryEmail)) : 'unknown';
+
+  const inferredMarket = core.inferMarket({
+    website: finalUrl,
+    email: primaryEmail,
+    phone: extracted.phones[0],
+    whatsapp: extracted.whatsapp,
+    location: extracted.towns[0],
+  });
+  const lang = core.inferLanguage(
+    { website: finalUrl, email: primaryEmail, phone: extracted.phones[0], whatsapp: extracted.whatsapp, location: extracted.towns[0], market: inferredMarket },
+    extracted.lang,
+  );
 
   const isHighMatch = extracted.venues.length >= 1 || luxurySignals.length >= 2;
 
@@ -191,9 +209,9 @@ export async function evaluateLeadCandidate(
         website: finalUrl,
         location: extracted.towns[0] || 'Lake Como / Northern Italy',
         type: 'planner',
-        market: core.inferMarket({ website: finalUrl, phone: extracted.phones[0], whatsapp: extracted.whatsapp, location: extracted.towns[0], language: lang }),
-        segment: lang === 'it' ? 'boutique_local' : 'international',
-        language: lang === 'it' ? 'it' : 'en',
+        market: inferredMarket,
+        segment: inferredMarket === 'it' ? 'boutique_local' : 'international',
+        language: lang,
         source: 'manual_priority_review',
         source_detail: finalUrl,
         key_venues: extracted.venues,
@@ -235,9 +253,9 @@ export async function evaluateLeadCandidate(
     website: finalUrl,
     location: extracted.towns[0] || 'Lake Como / Northern Italy',
     type: 'planner',
-    market: core.inferMarket({ website: finalUrl, phone: extracted.phones[0], whatsapp: extracted.whatsapp, location: extracted.towns[0], language: lang }),
-    segment: lang === 'it' ? 'boutique_local' : 'international',
-    language: lang === 'it' ? 'it' : 'en',
+    market: inferredMarket,
+    segment: inferredMarket === 'it' ? 'boutique_local' : 'international',
+    language: lang,
     source: 'batch_discovery',
     source_detail: finalUrl,
     key_venues: extracted.venues,
@@ -291,8 +309,8 @@ export async function evaluateLeadCandidate(
         if (validated.key_venues?.length) {
           baseProspect.key_venues = [...new Set([...baseProspect.key_venues, ...validated.key_venues])];
         }
-        if (validated.language_detected && ['en', 'it'].includes(validated.language_detected)) {
-          baseProspect.language = validated.language_detected;
+        if (validated.language_detected && ['en', 'it', 'ru'].includes(validated.language_detected)) {
+          baseProspect.language = core.inferLanguage(baseProspect, validated.language_detected);
         }
         if (validated.hook && validated.confidence === 'high' && !validated.needs_review && mxStatus === 'mx_ok') {
           baseProspect.status = 'ready';
