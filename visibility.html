@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#FFFFFF">
+<title>DOROGO · AI Search Visibility & Competitive Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="app/styles.css?v=3.1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230E100F'/%3E%3Ctext x='16' y='22' font-family='Georgia' font-size='17' fill='%23FFFFFF' text-anchor='middle'%3ED%3C/text%3E%3C/svg%3E">
+<style>
+  body {
+    background: var(--bg);
+    margin: 0;
+    padding: 0;
+    font-family: var(--sans);
+    color: var(--ink);
+  }
+  .standalone-wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 20px;
+    margin-bottom: 28px;
+    border-bottom: 1.5px solid var(--line-strong);
+  }
+  .brand-group {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .brand-title {
+    font-family: var(--display);
+    font-size: 1.8rem;
+    letter-spacing: .08em;
+    font-weight: 600;
+  }
+  .brand-sub {
+    font-size: .8rem;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    font-weight: 600;
+  }
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: grid;
+    place-items: center;
+    z-index: 999;
+    padding: 20px;
+  }
+  .modal-box {
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r);
+    max-width: 760px;
+    width: 100%;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+  }
+  .modal-head {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-body {
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .modal-foot {
+    padding: 14px 20px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: flex-end;
+  }
+</style>
+</head>
+<body>
+<div class="standalone-wrap">
+  <div class="top-bar">
+    <div class="brand-group">
+      <div class="brand-title">DOROGO</div>
+      <div class="brand-sub">AI Search Visibility &amp; Competitive Intelligence</div>
+    </div>
+    <div class="row" style="gap:10px">
+      <a class="btn ghost sm" href="index.html">← Back to Outreach CRM</a>
+      <button class="btn sm" id="btn-run-audit">⚡ Run Live Audit</button>
+    </div>
+  </div>
+
+  <div id="content"><div class="skeleton" style="height:300px;margin-top:20px"></div></div>
+</div>
+
+<div id="modal-container"></div>
+
+<script type="module">
+  let historyData = null;
+  let activeNiche = 'all';
+
+  async function loadData() {
+    const paths = ['data/visibility_history.json', 'data/visibility/visibility_history.json'];
+    for (const p of paths) {
+      try {
+        const res = await fetch(p);
+        if (res.ok) {
+          const json = await res.json();
+          if (Array.isArray(json) && json.length > 0) return json;
+        }
+      } catch (_) {}
+    }
+    return [];
+  }
+
+  function esc(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function renderView() {
+    const content = document.getElementById('content');
+    if (!historyData || !historyData.length) {
+      content.innerHTML = `
+        <div class="card empty stack" style="padding:60px 20px;text-align:center;gap:14px">
+          <div style="font-size:2.5rem">📡</div>
+          <h2>No AI Visibility Audit Found</h2>
+          <p class="muted" style="max-width:540px;margin:0 auto">
+            Run the automated monitor to probe 10 high-margin natural inquiries via Perplexity Sonar.
+          </p>
+          <div style="margin-top:10px">
+            <code style="background:var(--surface-2);padding:8px 16px;border-radius:var(--r-sm);font-size:.9rem">
+              python3 /Users/User/Desktop/Dorogo/tools/visibility/weekly_ai_tracker.py
+            </code>
+          </div>
+          <div style="margin-top:16px">
+            <button class="btn primary" id="btn-reload">Refresh Data</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('btn-reload')?.addEventListener('click', async () => {
+        historyData = await loadData();
+        renderView();
+      });
+      return;
+    }
+
+    const currentRun = historyData[historyData.length - 1];
+    const top1Rate = currentRun.top1_rate_pct ?? (currentRun.total_queries ? (currentRun.top1_count / currentRun.total_queries) * 100 : 0);
+    const top3Rate = currentRun.top3_rate_pct ?? (currentRun.total_queries ? (currentRun.top3_count / currentRun.total_queries) * 100 : 0);
+    const citationRate = currentRun.citation_rate_pct ?? (currentRun.total_queries ? (currentRun.cited_count / currentRun.total_queries) * 100 : 0);
+    const cost = currentRun.estimated_cost_usd ?? 0.0047;
+    const auditDate = new Date(currentRun.timestamp);
+
+    const niches = ['all', ...new Set(currentRun.details.map((d) => d.niche))];
+    const items = currentRun.details.filter((d) => activeNiche === 'all' || d.niche === activeNiche);
+
+    content.innerHTML = `
+      <div class="page-head" style="margin-bottom:24px">
+        <div>
+          <div class="label eyebrow">
+            Audited ${auditDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} · Model: ${esc(currentRun.model || 'perplexity/sonar')}
+          </div>
+          <h1 style="margin-top:4px;font-family:var(--display);font-size:2.2rem;font-weight:400">Weekly AI Search Equity Scorecard</h1>
+        </div>
+      </div>
+
+      <div class="stack lg">
+        <!-- KPI Cards -->
+        <div class="kpis">
+          <div class="kpi">
+            <span class="label">#1 Top Pick Rate</span>
+            <div class="row" style="align-items:baseline;justify-content:space-between">
+              <span class="val" style="color:${top1Rate >= 50 ? 'var(--gold-ink)' : 'var(--ink)'}">${top1Rate.toFixed(1)}%</span>
+              <span class="chip ${top1Rate >= 50 ? 'ok' : 'gold'}">${top1Rate >= 50 ? '🟢 On Target' : '🟡 Progressing'}</span>
+            </div>
+            <span class="ci">${currentRun.top1_count} of ${currentRun.total_queries} high-ticket inquiries · Target &gt;50%</span>
+          </div>
+
+          <div class="kpi">
+            <span class="label">Top-3 Recommendation Rate</span>
+            <div class="row" style="align-items:baseline;justify-content:space-between">
+              <span class="val">${top3Rate.toFixed(1)}%</span>
+              <span class="chip ${top3Rate >= 70 ? 'ok' : 'warn'}">${top3Rate >= 70 ? '🟢 Strong' : '🟡 Progressing'}</span>
+            </div>
+            <span class="ci">${currentRun.top3_count} of ${currentRun.total_queries} inquiries · Target &gt;80%</span>
+          </div>
+
+          <div class="kpi">
+            <span class="label">Total AI Brand Presence</span>
+            <div class="row" style="align-items:baseline;justify-content:space-between">
+              <span class="val">${citationRate.toFixed(1)}%</span>
+              <span class="chip ${citationRate >= 80 ? 'ok' : 'warn'}">${citationRate >= 80 ? '🟢 High' : '🟡 Progressing'}</span>
+            </div>
+            <span class="ci">${currentRun.cited_count} of ${currentRun.total_queries} cited · Target &gt;90%</span>
+          </div>
+
+          <div class="kpi">
+            <span class="label">Audit Efficiency</span>
+            <div class="val" style="font-size:1.8rem">$${cost.toFixed(4)}</div>
+            <span class="ci">${currentRun.total_tokens || 4700} tokens via Perplexity Sonar</span>
+          </div>
+        </div>
+
+        <!-- Filter Segment -->
+        <section class="section" style="margin-top:14px">
+          <div class="section-head">
+            <h2>Battleground Niche Breakdown</h2>
+            <div class="seg" role="tablist">
+              ${niches.map((n) => `<button class="${activeNiche === n ? 'on' : ''}" data-niche="${esc(n)}">${n === 'all' ? 'All Niches (10)' : esc(n)}</button>`).join('')}
+            </div>
+          </div>
+
+          <!-- Probed Queries Table -->
+          <div class="card flush list">
+            <div class="table-wrap">
+              <table style="width:100%;border-collapse:collapse;font-size:.88rem">
+                <thead>
+                  <tr style="border-bottom:1.5px solid var(--line);text-align:left;color:var(--ink-3);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em">
+                    <th style="padding:14px 16px">Niche</th>
+                    <th style="padding:14px 16px;width:38%">Traveler Query Probed</th>
+                    <th style="padding:14px 16px">Dorogo Position</th>
+                    <th style="padding:14px 16px">Top Competitors Cited</th>
+                    <th style="padding:14px 16px;text-align:right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${items.map((it, i) => {
+                    let badge = '<span class="chip bad">❌ Unranked</span>';
+                    if (it.is_top_recommendation || it.dorogo_rank === 1) {
+                      badge = '<span class="chip gold" style="font-weight:700">🏆 #1 Top Pick</span>';
+                    } else if (it.dorogo_rank && it.dorogo_rank <= 3) {
+                      badge = `<span class="chip ok">🥈 Top-3 (#${it.dorogo_rank})</span>`;
+                    } else if (it.dorogo_present) {
+                      badge = `<span class="chip">🥉 Ranked #${it.dorogo_rank}</span>`;
+                    }
+
+                    const competitors = (it.competitors || []).map((c) => `<span class="chip outline" style="font-size:.72rem">${esc(c)}</span>`).join(' ') || '<span class="muted small">—</span>';
+
+                    return `
+                      <tr style="border-bottom:1px solid var(--line)">
+                        <td style="padding:14px 16px;vertical-align:top">
+                          <span class="chip" style="font-weight:600">${esc(it.niche)}</span>
+                        </td>
+                        <td style="padding:14px 16px;vertical-align:top">
+                          <div style="font-weight:500;color:var(--ink);line-height:1.45">${esc(it.query)}</div>
+                        </td>
+                        <td style="padding:14px 16px;vertical-align:top">
+                          ${badge}
+                        </td>
+                        <td style="padding:14px 16px;vertical-align:top">
+                          <div style="display:flex;flex-wrap:wrap;gap:5px">${competitors}</div>
+                        </td>
+                        <td style="padding:14px 16px;vertical-align:top;text-align:right">
+                          <button class="btn sm ghost" data-idx="${i}">Inspect AI Answer</button>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Benchmark Intel -->
+        <section class="card stack" style="gap:12px;background:var(--surface)">
+          <div class="section-head">
+            <h2>Competitor Intelligence Highlights</h2>
+            <span class="hint">Milan NCC operators observed in search citations</span>
+          </div>
+          <div class="split">
+            <div>
+              <h4 style="margin:0 0 8px 0;font-size:.9rem">Observed Competitors</h4>
+              <div style="display:flex;flex-wrap:wrap;gap:8px">
+                <span class="chip outline" style="padding:4px 10px;font-size:.8rem"><b>MilanoByCar:</b> Cited in Outlet shopping &amp; day trips</span>
+                <span class="chip outline" style="padding:4px 10px;font-size:.8rem"><b>NCC Milano:</b> Cited in Cervinia ski &amp; Milan executive</span>
+                <span class="chip outline" style="padding:4px 10px;font-size:.8rem"><b>MC Eurodriver:</b> Cited in FBO private aviation</span>
+                <span class="chip outline" style="padding:4px 10px;font-size:.8rem"><b>Blackcars:</b> Cited in Linate Prime FBO</span>
+              </div>
+            </div>
+            <div>
+              <h4 style="margin:0 0 8px 0;font-size:.9rem">Organic Win Highlights</h4>
+              <div style="font-size:.88rem;line-height:1.5;color:var(--ink-2)">
+                🏆 <b>#1 Top Recommendation</b> in <span class="chip gold">Linate Prime &amp; Malpensa Prime FBO</span> queries, with the AI engine praising Dorogo's dedicated tarmac handler coordination and VIP fleet.
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    `;
+
+    // Filter clicks
+    content.querySelectorAll('[data-niche]').forEach((b) => {
+      b.addEventListener('click', (e) => {
+        activeNiche = e.currentTarget.dataset.niche;
+        renderView();
+      });
+    });
+
+    // Inspect AI Answer clicks
+    content.querySelectorAll('[data-idx]').forEach((b) => {
+      b.addEventListener('click', (e) => {
+        const idx = parseInt(e.currentTarget.dataset.idx, 10);
+        const it = items[idx];
+        if (!it) return;
+        showModal(it);
+      });
+    });
+  }
+
+  function showModal(it) {
+    const container = document.getElementById('modal-container');
+    container.innerHTML = `
+      <div class="modal-overlay" id="overlay">
+        <div class="modal-box">
+          <div class="modal-head">
+            <h3 style="margin:0;font-size:1.1rem">${esc(it.niche)}: AI Model Resolution</h3>
+            <button class="btn sm ghost" id="btn-modal-close" style="padding:4px 8px">✕</button>
+          </div>
+          <div class="modal-body stack" style="gap:14px">
+            <div>
+              <div class="label eyebrow">Query Probed</div>
+              <p style="font-weight:600;margin:4px 0 0 0;font-size:1rem">${esc(it.query)}</p>
+            </div>
+            <div class="row" style="gap:16px;background:var(--surface-2);padding:10px 14px;border-radius:var(--r-sm)">
+              <div>
+                <span class="label tiny">Dorogo Rank:</span>
+                <span style="font-weight:700">${it.dorogo_rank ? '#' + it.dorogo_rank : 'Unranked'}</span>
+              </div>
+              <div>
+                <span class="label tiny">Top Pick:</span>
+                <span style="font-weight:700">${it.is_top_recommendation ? 'Yes 🏆' : 'No'}</span>
+              </div>
+              <div>
+                <span class="label tiny">Competitors:</span>
+                <span>${(it.competitors || []).join(', ') || 'None'}</span>
+              </div>
+            </div>
+            <div>
+              <div class="label eyebrow">Perplexity Sonar Full Response</div>
+              <div style="background:var(--bg);padding:14px;border-radius:var(--r-sm);white-space:pre-wrap;font-size:.85rem;line-height:1.6;max-height:360px;overflow-y:auto">
+                ${esc(it.full_content || it.snippet || 'No content recorded')}
+              </div>
+            </div>
+          </div>
+          <div class="modal-foot">
+            <button class="btn primary sm" id="btn-modal-ok">Close</button>
+          </div>
+        </div>
+      </div>
+    `;
+    const close = () => { container.innerHTML = ''; };
+    document.getElementById('btn-modal-close')?.addEventListener('click', close);
+    document.getElementById('btn-modal-ok')?.addEventListener('click', close);
+    document.getElementById('overlay')?.addEventListener('click', (e) => {
+      if (e.target.id === 'overlay') close();
+    });
+  }
+
+  document.getElementById('btn-run-audit')?.addEventListener('click', () => {
+    alert("To run a live audit, execute in terminal:\n\npython3 /Users/User/Desktop/Dorogo/tools/visibility/weekly_ai_tracker.py\n\nExecution takes ~20 seconds and costs <$0.01 USD. Once complete, click Refresh.");
+  });
+
+  (async () => {
+    historyData = await loadData();
+    renderView();
+  })();
+</script>
+</body>
+</html>

@@ -17,7 +17,7 @@ const ROUTES = {
   today: { view: today, label: 'Today', icon: 'today' },
   pipeline: { view: pipeline, label: 'Pipeline', icon: 'board' },
   analytics: { view: analytics, label: 'Analytics', icon: 'chart' },
-  visibility: { view: visibility, label: 'AI Visibility', icon: 'radar' },
+  visibility: { view: visibility, label: 'AI Visibility', icon: 'radar', hidden: true },
   partners: { view: partners, label: 'Partners', icon: 'partners' },
   coverage: { view: partners, label: 'Coverage', icon: 'map', sub: 'coverage' },
   templates: { view: templates, label: 'Sequence & templates', icon: 'template' },
@@ -47,7 +47,7 @@ function shell() {
   const root = document.getElementById('root');
   const n = badgeCount();
   const r = parseHash();
-  const isTools = r.name === 'tools';
+  const isTools = r.name === 'tools' || r.name === 'visibility';
   const links = Object.entries(ROUTES).filter(([, v]) => !v.hidden);
   root.innerHTML = `<div class="app">
     <nav class="rail" aria-label="Main">
@@ -61,8 +61,8 @@ function shell() {
         <a href="#tools" class="rail-mode-btn ${isTools ? 'active' : ''}">${icon('sparkle', 14)}<span>Tools</span></a>
       </div>
       ${isTools ? `
-        <a class="nav-link active" href="#tools">${icon('sparkle')}<span>AI Watermark Cleaner</span></a>
-        <a class="nav-link" href="#visibility">${icon('radar')}<span>AI Search Visibility</span></a>
+        <a class="nav-link ${r.name === 'tools' ? 'active' : ''}" href="#tools">${icon('sparkle')}<span>AI Watermark Cleaner</span></a>
+        <a class="nav-link ${r.name === 'visibility' ? 'active' : ''}" href="#visibility">${icon('radar')}<span>AI Search Visibility</span></a>
         <div class="divider" style="margin: 12px 10px;"></div>
         <a class="nav-link" href="#today">${icon('mail')}<span>← Back to Outreach</span></a>
       ` : `

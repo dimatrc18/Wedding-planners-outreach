@@ -105,7 +105,7 @@ export function render(el) {
         </div>
         <span class="small muted">Perplexity Sonar audit probes 10 high-intent traveler searches across Ski, FBO, Outlets, and Lakes vs MilanoByCar, NCC Milano, Blackcars.</span>
       </div>
-      <a class="btn primary sm" href="#visibility" style="text-decoration:none;white-space:nowrap">${icon('radar', 15)} Open AI Tracker →</a>
+      <a class="btn primary sm" href="visibility.html" target="_blank" style="text-decoration:none;white-space:nowrap">${icon('external', 15)} Open AI Tracker ↗</a>
     </div>
 
     <div class="grid-2">
