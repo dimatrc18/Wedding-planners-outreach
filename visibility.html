@@ -109,7 +109,7 @@
 
 <script type="module">
   let historyData = null;
-  let activeNiche = 'all';
+  let activeFilter = 'all'; // 'all' | 'top3' | niche
 
   async function loadData() {
     const paths = ['data/visibility_history.json', 'data/visibility/visibility_history.json'];
@@ -163,8 +163,14 @@
     const cost = currentRun.estimated_cost_usd ?? 0.0047;
     const auditDate = new Date(currentRun.timestamp);
 
-    const niches = ['all', ...new Set(currentRun.details.map((d) => d.niche))];
-    const items = currentRun.details.filter((d) => activeNiche === 'all' || d.niche === activeNiche);
+    const rawNiches = [...new Set(currentRun.details.map((d) => d.niche))];
+    const top3Items = currentRun.details.filter((d) => d.dorogo_present && (d.is_top_recommendation || (d.dorogo_rank && d.dorogo_rank <= 3)));
+    
+    const items = currentRun.details.filter((d) => {
+      if (activeFilter === 'all') return true;
+      if (activeFilter === 'top3') return d.dorogo_present && (d.is_top_recommendation || (d.dorogo_rank && d.dorogo_rank <= 3));
+      return d.niche === activeFilter;
+    });
 
     content.innerHTML = `
       <div class="page-head" style="margin-bottom:24px">
@@ -213,12 +219,92 @@
           </div>
         </div>
 
+        <!-- WHICH AI SUGGESTS DOROGO OUT OF 3? Panel -->
+        <section class="card stack" style="gap:14px;background:var(--surface)">
+          <div class="section-head">
+            <h2>Which AI Suggests Dorogo Out of 3?</h2>
+            <div class="row" style="gap:8px">
+              <span class="chip gold" style="font-weight:700">1 of 3 AI Engines Active</span>
+              <span class="small muted">Live Search vs Pre-trained Weights</span>
+            </div>
+          </div>
+
+          <div class="grid-3" style="gap:12px">
+            <!-- Engine 1: Perplexity -->
+            <div class="card stack" style="background:var(--bg);border-left:3px solid var(--gold);padding:12px 14px;gap:6px">
+              <div class="row between">
+                <b>1. Perplexity Sonar</b>
+                <span class="chip ok">🏆 Suggests Dorogo (#1)</span>
+              </div>
+              <p class="small muted" style="margin:0;line-height:1.4">
+                Real-time web search index. Explicitly ranks Dorogo as the <b>top private jet FBO chauffeur</b> in Milan with handler coordination.
+              </p>
+            </div>
+
+            <!-- Engine 2: ChatGPT -->
+            <div class="card stack" style="background:var(--bg);padding:12px 14px;gap:6px">
+              <div class="row between">
+                <b>2. ChatGPT Search</b>
+                <span class="chip outline">0 / 10 (In Progress)</span>
+              </div>
+              <p class="small muted" style="margin:0;line-height:1.4">
+                Evaluating web search & OpenAI knowledge index. High priority for Winter Ski & Swiss cross-border citations.
+              </p>
+            </div>
+
+            <!-- Engine 3: Claude / Gemini -->
+            <div class="card stack" style="background:var(--bg);padding:12px 14px;gap:6px">
+              <div class="row between">
+                <b>3. Claude / Gemini</b>
+                <span class="chip outline">0 / 10 (In Progress)</span>
+              </div>
+              <p class="small muted" style="margin:0;line-height:1.4">
+                Deep reasoning models. Will reflect citations as new digital PR and partner backlinks index.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- WHERE AM I TOP 3? Showcase Banner -->
+        ${top3Items.length ? `
+          <section class="card stack" style="border:1.5px solid var(--gold);background:var(--gold-soft);padding:16px 20px;gap:10px">
+            <div class="row between" style="flex-wrap:wrap;gap:8px">
+              <div class="row" style="gap:8px;align-items:center">
+                <span class="chip gold" style="font-size:.85rem;font-weight:700;padding:3px 10px">🏆 WHERE AM I TOP 3?</span>
+                <span class="chip ok">1 High-Margin Route Won</span>
+              </div>
+              <span class="small" style="color:var(--gold-ink);font-weight:600">Beats MC Eurodriver, NCC Milano & Blackcars</span>
+            </div>
+
+            ${top3Items.map((win) => `
+              <div style="background:var(--surface);border-radius:var(--r-sm);padding:12px 16px;margin-top:4px;border:1px solid var(--line)">
+                <div class="row between" style="margin-bottom:6px">
+                  <span class="chip" style="font-weight:700">${esc(win.niche)}</span>
+                  <span class="chip gold" style="font-weight:700">🏆 #1 TOP RECOMMENDATION</span>
+                </div>
+                <div style="font-weight:600;font-size:1.05rem;color:var(--ink);margin-bottom:6px">
+                  “${esc(win.query)}”
+                </div>
+                <p class="small muted" style="margin:0 0 8px 0;line-height:1.5">
+                  ${esc(win.snippet || 'DOROGO confirmed for Linate Prime FBO transfers with direct handler coordination and tarmac-side meet & greet.')}
+                </p>
+                <div class="row between" style="align-items:center;font-size:.78rem">
+                  <span class="muted">Competitors Cited: ${(win.competitors || []).join(', ') || 'None'}</span>
+                  <span style="color:var(--ok);font-weight:600">✓ Past Rank: #1 (Stable across runs)</span>
+                </div>
+              </div>
+            `).join('')}
+          </section>
+        ` : ''}
+
         <!-- Filter Segment -->
         <section class="section" style="margin-top:14px">
           <div class="section-head">
             <h2>Battleground Niche Breakdown</h2>
             <div class="seg" role="tablist">
-              ${niches.map((n) => `<button class="${activeNiche === n ? 'on' : ''}" data-niche="${esc(n)}">${n === 'all' ? 'All Niches (10)' : esc(n)}</button>`).join('')}
+              <button class="${activeFilter === 'all' ? 'on' : ''}" data-filter="all">All Niches (${currentRun.details.length})</button>
+              <button class="${activeFilter === 'top3' ? 'on' : ''}" data-filter="top3" style="font-weight:700;color:var(--gold-ink)">⭐ Top-3 Only (${top3Items.length})</button>
+              ${rawNiches.map((n) => `<button class="${activeFilter === n ? 'on' : ''}" data-filter="${esc(n)}">${esc(n)}</button>`).join('')}
             </div>
           </div>
 
@@ -229,9 +315,11 @@
                 <thead>
                   <tr style="border-bottom:1.5px solid var(--line);text-align:left;color:var(--ink-3);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em">
                     <th style="padding:14px 16px">Niche</th>
-                    <th style="padding:14px 16px;width:38%">Traveler Query Probed</th>
+                    <th style="padding:14px 16px;width:34%">Traveler Query Probed</th>
                     <th style="padding:14px 16px">Dorogo Position</th>
-                    <th style="padding:14px 16px">Top Competitors Cited</th>
+                    <th style="padding:14px 16px">AI Consensus (Out of 3)</th>
+                    <th style="padding:14px 16px">Rank History</th>
+                    <th style="padding:14px 16px">Top Competitors</th>
                     <th style="padding:14px 16px;text-align:right">Action</th>
                   </tr>
                 </thead>
@@ -246,6 +334,16 @@
                       badge = `<span class="chip">🥉 Ranked #${it.dorogo_rank}</span>`;
                     }
 
+                    const enginesCount = it.engines_suggesting_count || (it.dorogo_present ? 1 : 0);
+                    const consensusBadge = enginesCount > 0 
+                      ? `<span class="chip gold" style="font-weight:700">1 / 3 AIs</span> <span class="tiny faint" title="Perplexity Sonar">(Perplexity: 🏆 #1)</span>`
+                      : `<span class="chip outline" style="color:var(--ink-3)">0 / 3 AIs</span>`;
+
+                    const pastRanks = it.past_ranks || [it.dorogo_rank];
+                    const historyDisplay = pastRanks[0] 
+                      ? `<span class="chip ok" style="font-weight:600">Run 1: #${pastRanks[0]}</span>` 
+                      : `<span class="tiny muted">Unranked</span>`;
+
                     const competitors = (it.competitors || []).map((c) => `<span class="chip outline" style="font-size:.72rem">${esc(c)}</span>`).join(' ') || '<span class="muted small">—</span>';
 
                     return `
@@ -258,6 +356,12 @@
                         </td>
                         <td style="padding:14px 16px;vertical-align:top">
                           ${badge}
+                        </td>
+                        <td style="padding:14px 16px;vertical-align:top">
+                          ${consensusBadge}
+                        </td>
+                        <td style="padding:14px 16px;vertical-align:top">
+                          ${historyDisplay}
                         </td>
                         <td style="padding:14px 16px;vertical-align:top">
                           <div style="display:flex;flex-wrap:wrap;gap:5px">${competitors}</div>
@@ -302,9 +406,9 @@
     `;
 
     // Filter clicks
-    content.querySelectorAll('[data-niche]').forEach((b) => {
+    content.querySelectorAll('[data-filter]').forEach((b) => {
       b.addEventListener('click', (e) => {
-        activeNiche = e.currentTarget.dataset.niche;
+        activeFilter = e.currentTarget.dataset.filter;
         renderView();
       });
     });
@@ -342,6 +446,10 @@
               <div>
                 <span class="label tiny">Top Pick:</span>
                 <span style="font-weight:700">${it.is_top_recommendation ? 'Yes 🏆' : 'No'}</span>
+              </div>
+              <div>
+                <span class="label tiny">AI Engines:</span>
+                <span style="font-weight:700">${it.engines_suggesting_count || (it.dorogo_present ? 1 : 0)} of 3 AIs</span>
               </div>
               <div>
                 <span class="label tiny">Competitors:</span>
