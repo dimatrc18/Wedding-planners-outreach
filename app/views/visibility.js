@@ -2,30 +2,46 @@
 // ranking across Perplexity, ChatGPT Search, and Claude against Milan NCC competitors.
 
 import { esc, attr, icon, toast, dialog } from '../ui.js';
+import { TRACKED_QUERIES, runFullLiveAudit, persistLiveAuditRun } from '../services/live_audit.js';
 
 let cachedHistory = null;
-let activeFilter = 'all'; // 'all' | 'top3' | specific niche
+let activeFilter = 'top3'; // 'all' | 'top3' | specific niche
 let selectedRunIdx = -1;
 
 export async function loadVisibilityHistory() {
   if (cachedHistory && cachedHistory.length) return cachedHistory;
+  let history = [];
   const paths = [
     'data/visibility_history.json',
     'data/visibility/visibility_history.json',
   ];
   for (const p of paths) {
     try {
-      const res = await fetch(p);
+      const res = await fetch(p + '?v=' + Date.now());
       if (res.ok) {
         const json = await res.json();
         if (Array.isArray(json) && json.length > 0) {
-          cachedHistory = json;
-          return json;
+          history = json;
+          break;
         }
       }
     } catch (_) {}
   }
-  return cachedHistory || [];
+
+  // Check localStorage for any live runs performed in-browser
+  try {
+    const local = JSON.parse(localStorage.getItem('dorogo_visibility_history') || '[]');
+    if (Array.isArray(local) && local.length > 0) {
+      const latestFileTime = history.length ? new Date(history[history.length - 1].timestamp).getTime() : 0;
+      const latestLocalTime = new Date(local[local.length - 1].timestamp).getTime();
+      if (latestLocalTime > latestFileTime) {
+        history = local;
+      }
+    }
+  } catch (_) {}
+
+  cachedHistory = history;
+  return history;
 }
 
 export async function render(el) {
@@ -372,32 +388,191 @@ export async function render(el) {
   });
 
   el.querySelector('#btn-live-audit')?.addEventListener('click', () => {
+    const triggerBtn = el.querySelector('#btn-live-audit');
+    if (triggerBtn) {
+      triggerBtn.disabled = true;
+      triggerBtn.innerHTML = `<span class="spin">⟳</span> Running Audit...`;
+    }
+
+    const abortCtrl = new AbortController();
+    const startTime = Date.now();
+
     dialog({
-      title: 'Run Live AI Visibility Audit',
+      wide: true,
+      title: 'Live AI Visibility Audit (Perplexity Sonar)',
       body: `
-        <div class="stack" style="gap:14px">
-          <p class="small muted">
-            The automated monitor probes natural traveler inquiries across Ski, FBO, Outlets, and Lakes vs Milan competitors.
-          </p>
-          <div class="card" style="background:var(--bg);padding:12px;font-family:monospace;font-size:.82rem">
-            python3 /Users/User/Desktop/Dorogo/tools/visibility/weekly_ai_tracker.py
+        <div class="stack" style="gap:16px">
+          <!-- Live Status & Progress Meter -->
+          <div class="card" style="background:var(--surface-2);padding:14px 18px;border-radius:var(--r-sm)">
+            <div class="row" style="justify-content:space-between;align-items:baseline;margin-bottom:8px">
+              <div class="row" style="gap:8px;align-items:center">
+                <span class="pulse-dot"></span>
+                <span style="font-weight:600;font-size:.9rem" id="crm-hud-progress-label">Initiating probe across 10 niches... (0%)</span>
+              </div>
+              <span class="small muted" id="crm-hud-timer">Elapsed: 00:00</span>
+            </div>
+            <div style="height:10px;background:var(--line);border-radius:6px;overflow:hidden">
+              <div id="crm-hud-progress-bar" style="width:0%;height:100%;background:linear-gradient(90deg, var(--gold) 0%, #10B981 100%);transition:width .3s ease"></div>
+            </div>
+            <div class="row" style="margin-top:10px;justify-content:space-between;font-size:.82rem;color:var(--ink-2)">
+              <span>Completed: <b id="crm-hud-count">0</b> / 10 inquiries</span>
+              <span>Dorogo #1 Wins: <b id="crm-hud-top1" style="color:var(--gold-ink)">0</b></span>
+              <span>Top-3 Citations: <b id="crm-hud-top3" style="color:#10B981">0</b></span>
+              <span>Est. Cost: <b id="crm-hud-cost">&lt;$0.01 USD</b></span>
+            </div>
           </div>
-          <div class="small" style="color:var(--ink-2)">
-            Execution takes ~20 seconds and costs <$0.01 USD. Results automatically append to <code>tools/visibility/visibility_history.json</code> and sync to this dashboard.
+
+          <!-- Dynamic Query Step Cards -->
+          <div class="stack" style="gap:8px;max-height:360px;overflow-y:auto" id="crm-hud-steps-container">
+            ${TRACKED_QUERIES.map((q, idx) => `
+              <div class="live-step-item" id="crm-step-${idx}">
+                <div style="flex:1">
+                  <div class="row" style="gap:8px;margin-bottom:2px">
+                    <span class="chip" style="font-size:.72rem">${esc(q.niche)}</span>
+                    <span class="small" style="font-weight:600;color:var(--ink)">"${esc(q.query)}"</span>
+                  </div>
+                </div>
+                <div id="crm-step-badge-${idx}">
+                  <span class="chip outline" style="font-size:.72rem;color:var(--ink-3)">Pending</span>
+                </div>
+              </div>
+            `).join('')}
           </div>
-          <div class="row end" style="margin-top:10px">
-            <button class="btn ghost" data-close>Close</button>
-            <button class="btn primary" id="btn-refresh-history">Reload Latest Data</button>
+
+          <div class="row" id="crm-hud-foot" style="justify-content:space-between;margin-top:4px;display:none">
+            <button class="btn ghost sm" id="btn-crm-download-run">📥 Download JSON</button>
+            <button class="btn primary sm" id="btn-crm-finish-audit">Apply &amp; View Updated Dashboard</button>
           </div>
         </div>
       `,
       onMount: (box, close) => {
-        box.querySelector('#btn-refresh-history')?.addEventListener('click', async () => {
-          cachedHistory = null;
-          await render(el);
-          toast('Data reloaded');
-          close();
+        let isDone = false;
+
+        const timerInterval = setInterval(() => {
+          if (isDone) return;
+          const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+          const m = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+          const s = String(elapsedSec % 60).padStart(2, '0');
+          const timerEl = box.querySelector('#crm-hud-timer');
+          if (timerEl) timerEl.textContent = `Elapsed: ${m}:${s}`;
+        }, 1000);
+
+        box.querySelector('[data-close]')?.addEventListener('click', () => {
+          abortCtrl.abort();
+          clearInterval(timerInterval);
+          if (triggerBtn) {
+            triggerBtn.disabled = false;
+            triggerBtn.innerHTML = `⚡ Run Live Audit`;
+          }
         });
+
+        // Run the live audit
+        (async () => {
+          try {
+            const previousRun = cachedHistory && cachedHistory.length ? cachedHistory[cachedHistory.length - 1] : null;
+
+            const newRun = await runFullLiveAudit({
+              previousRun,
+              signal: abortCtrl.signal,
+              onQueryStart: ({ index, total, item }) => {
+                const stepEl = box.querySelector(`#crm-step-${index}`);
+                if (stepEl) {
+                  stepEl.classList.add('active');
+                  stepEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+                const badgeEl = box.querySelector(`#crm-step-badge-${index}`);
+                if (badgeEl) {
+                  badgeEl.innerHTML = `<span class="chip gold" style="font-size:.72rem"><span class="spin">⟳</span> Probing Live Web...</span>`;
+                }
+                const label = box.querySelector('#crm-hud-progress-label');
+                if (label) label.textContent = `Query ${index + 1} of ${total}: Probing Perplexity for "${item.niche}"...`;
+              },
+              onQueryComplete: ({ index, result }) => {
+                const stepEl = box.querySelector(`#crm-step-${index}`);
+                if (stepEl) {
+                  stepEl.classList.remove('active');
+                  if (result.dorogo_rank === 1 || result.is_top_recommendation) {
+                    stepEl.classList.add('top1');
+                  }
+                }
+                const badgeEl = box.querySelector(`#crm-step-badge-${index}`);
+                if (badgeEl) {
+                  if (result.is_top_recommendation || result.dorogo_rank === 1) {
+                    badgeEl.innerHTML = `<span class="chip ok" style="font-weight:700;font-size:.75rem">🏆 #1 Top Pick! (${result.latency}ms)</span>`;
+                  } else if (result.dorogo_rank && result.dorogo_rank <= 3) {
+                    badgeEl.innerHTML = `<span class="chip ok" style="font-weight:600;font-size:.75rem">🥈 Top 3 (#${result.dorogo_rank})</span>`;
+                  } else if (result.dorogo_present) {
+                    badgeEl.innerHTML = `<span class="chip warn" style="font-size:.75rem">Ranked #${result.dorogo_rank}</span>`;
+                  } else {
+                    const comps = (result.competitors || []).slice(0, 2).join(', ');
+                    badgeEl.innerHTML = `<span class="chip outline" style="font-size:.72rem;color:var(--ink-3)">Unranked ${comps ? '(' + comps + ')' : ''}</span>`;
+                  }
+                }
+              },
+              onProgress: ({ completed, percent, resultsSoFar, estimatedCostUsd }) => {
+                const progressBar = box.querySelector('#crm-hud-progress-bar');
+                if (progressBar) progressBar.style.width = `${percent}%`;
+
+                const countLabel = box.querySelector('#crm-hud-count');
+                if (countLabel) countLabel.textContent = completed;
+
+                const top1Count = resultsSoFar.filter(r => r.is_top_recommendation || r.dorogo_rank === 1).length;
+                const top1El = box.querySelector('#crm-hud-top1');
+                if (top1El) top1El.textContent = top1Count;
+
+                const top3Count = resultsSoFar.filter(r => r.dorogo_present && (r.is_top_recommendation || (r.dorogo_rank && r.dorogo_rank <= 3))).length;
+                const top3El = box.querySelector('#crm-hud-top3');
+                if (top3El) top3El.textContent = top3Count;
+
+                const costEl = box.querySelector('#crm-hud-cost');
+                if (costEl) costEl.textContent = `$${estimatedCostUsd.toFixed(4)} USD`;
+              }
+            });
+
+            isDone = true;
+            clearInterval(timerInterval);
+
+            // Save & Update State
+            cachedHistory = persistLiveAuditRun(newRun);
+            selectedRunIdx = cachedHistory.length - 1;
+
+            const progressBar = box.querySelector('#crm-hud-progress-bar');
+            if (progressBar) progressBar.style.width = '100%';
+
+            const progressLabel = box.querySelector('#crm-hud-progress-label');
+            if (progressLabel) progressLabel.innerHTML = `✅ <b>Audit Complete! 10/10 Inquiries Analyzed</b>`;
+
+            const foot = box.querySelector('#crm-hud-foot');
+            if (foot) foot.style.display = 'flex';
+
+            box.querySelector('#btn-crm-download-run')?.addEventListener('click', () => {
+              const blob = new Blob([JSON.stringify(cachedHistory, null, 2)], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'visibility_history.json';
+              a.click();
+              URL.revokeObjectURL(url);
+            });
+
+            box.querySelector('#btn-crm-finish-audit')?.addEventListener('click', async () => {
+              close();
+              await render(el);
+              toast('Dashboard updated with live audit');
+            });
+
+          } catch (err) {
+            clearInterval(timerInterval);
+            if (err.message !== "Audit cancelled by user") {
+              toast('Live Audit Notice: ' + err.message, 'error');
+            }
+          } finally {
+            if (triggerBtn) {
+              triggerBtn.disabled = false;
+              triggerBtn.innerHTML = `⚡ Run Live Audit`;
+            }
+          }
+        })();
       },
     });
   });
