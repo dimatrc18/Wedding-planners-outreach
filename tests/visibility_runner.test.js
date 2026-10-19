@@ -1,6 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyzeVisibility, TRACKED_QUERIES, COMPETITORS, formatAiResponse, saveVisibilityAction, deleteVisibilityAction } from '../app/services/live_audit.js';
+import { 
+  analyzeVisibility, 
+  TRACKED_QUERIES, 
+  COMPETITORS, 
+  formatAiResponse, 
+  saveVisibilityAction, 
+  deleteVisibilityAction,
+  cleanSnippetPreview 
+} from '../app/services/live_audit.js';
 
 test('analyzeVisibility identifies Dorogo #1 top pick and competitors', () => {
   const content = `
@@ -77,4 +85,13 @@ test('saveVisibilityAction and deleteVisibilityAction persist actions cleanly', 
 
   const afterDelete = deleteVisibilityAction('test_act_1');
   assert.equal(afterDelete.length, 0);
+});
+
+test('cleanSnippetPreview strips markdown asterisks, bracket citations, and caps length', () => {
+  const raw = 'For **heavy ski gear**, **DOROGO** and **ZoneTransfers** stand out explicitly.[1][2][3] They provide winter-equipped vehicles.';
+  const preview = cleanSnippetPreview(raw, 70);
+  assert.ok(!preview.includes('**'));
+  assert.ok(!preview.includes('[1]'));
+  assert.ok(preview.length <= 75); // with ellipsis
+  assert.ok(preview.endsWith('…'));
 });

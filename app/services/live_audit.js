@@ -115,6 +115,22 @@ export const COMPETITORS = [
 ];
 
 /**
+ * Strips raw markdown, citation brackets, and trims text for concise UI cards.
+ */
+export function cleanSnippetPreview(text, maxLen = 140) {
+  if (!text) return '';
+  const clean = String(text)
+    .replace(/\[\d+\]/g, '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/#{1,6}\s+/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (clean.length <= maxLen) return clean;
+  return clean.slice(0, maxLen).trim() + '…';
+}
+
+/**
  * Converts AI raw markdown response into beautifully legible HTML,
  * replacing citation markers [1], [2] with interactive, clickable link badges.
  */

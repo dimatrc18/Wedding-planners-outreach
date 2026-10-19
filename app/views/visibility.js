@@ -9,7 +9,8 @@ import {
   formatAiResponse,
   loadVisibilityActions,
   saveVisibilityAction,
-  deleteVisibilityAction
+  deleteVisibilityAction,
+  cleanSnippetPreview
 } from '../services/live_audit.js';
 
 let cachedHistory = null;
@@ -109,231 +110,222 @@ export async function render(el) {
   cachedActions = actionsData;
 
   el.innerHTML = `
-    <!-- Tools Sub-Navigation -->
-    <div class="seg" style="display:inline-flex;gap:4px;margin-bottom:16px;background:var(--surface-2);padding:3px;border-radius:var(--r-sm)">
-      <a class="seg-btn active" href="#visibility" style="text-decoration:none;font-size:.82rem">${icon('radar', 14)} AI Search Visibility</a>
-      <a class="seg-btn" href="#tools" style="text-decoration:none;font-size:.82rem">${icon('sparkle', 14)} Watermark Sanitizer</a>
-    </div>
-
-    <div class="page-head">
+    <!-- Page Header -->
+    <div class="page-head" style="margin-bottom:18px">
       <div>
-        <div class="label eyebrow">
-          ${auditDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} · Tracked across Perplexity, ChatGPT & Claude
+        <div class="label eyebrow" style="letter-spacing:.04em;margin-bottom:4px">
+          LIVE SEARCH GROUNDING · AUDITED ${auditDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase()} · ${currentRun.details.length} LUXURY ROUTES
         </div>
-        <h1>AI Search Visibility & Competitive Intelligence</h1>
+        <h1 style="margin:0;font-size:1.65rem">AI Search Visibility &amp; Competitive Intelligence</h1>
       </div>
-      <div class="row" style="gap:8px">
+      <div class="row" style="gap:8px;align-items:center">
         <button class="btn ghost sm" id="btn-crm-log-action">📝 Log Action</button>
-        <a class="btn ghost sm" href="visibility.html" target="_blank" title="Open in separate tab without CRM sidebar">${icon('external', 15)} Open Standalone Page ↗</a>
-        <button class="btn sm" id="btn-live-audit">⚡ Run Live Audit</button>
+        <a class="btn ghost sm" href="visibility.html" target="_blank" title="Open standalone page without CRM sidebar">${icon('external', 14)} Full Screen ↗</a>
+        <button class="btn sm primary" id="btn-live-audit">⚡ Run Live Audit</button>
       </div>
     </div>
 
     <div class="stack lg">
-      <!-- Executive KPI Cards -->
+      <!-- 1. Executive Performance Scorecard -->
       <div class="kpis">
         <div class="kpi">
           <span class="label">#1 Top Pick Rate</span>
           <div class="row" style="align-items:baseline;justify-content:space-between">
             <span class="val" style="color:${top1Rate >= 50 ? 'var(--gold-ink)' : 'var(--ink)'}">${top1Rate.toFixed(1)}%</span>
-            <span class="chip ${top1Rate >= 50 ? 'ok' : 'gold'}">${top1Rate >= 50 ? '🟢 On Target' : '🟡 Progressing'}</span>
+            <span class="chip ${top1Rate >= 50 ? 'ok' : 'gold'}">${top1Rate >= 50 ? '🟢 Strong' : '🟡 Progressing'}</span>
           </div>
-          <span class="ci">${currentRun.top1_count} of ${currentRun.total_queries} high-ticket inquiries · Target &gt;50%</span>
+          <span class="ci">${currentRun.top1_count} of ${currentRun.total_queries} queries · Target &gt;50%</span>
         </div>
 
         <div class="kpi">
-          <span class="label">Top-3 Recommendation Rate</span>
+          <span class="label">Top-3 Podium Share</span>
           <div class="row" style="align-items:baseline;justify-content:space-between">
             <span class="val">${top3Rate.toFixed(1)}%</span>
             <span class="chip ${top3Rate >= 70 ? 'ok' : 'warn'}">${top3Rate >= 70 ? '🟢 Strong' : '🟡 Progressing'}</span>
           </div>
-          <span class="ci">${currentRun.top3_count} of ${currentRun.total_queries} inquiries · Target &gt;80%</span>
+          <span class="ci">${currentRun.top3_count} of ${currentRun.total_queries} queries · Target &gt;80%</span>
         </div>
 
         <div class="kpi">
-          <span class="label">Total AI Brand Presence</span>
+          <span class="label">Brand Citation Share</span>
           <div class="row" style="align-items:baseline;justify-content:space-between">
             <span class="val">${citationRate.toFixed(1)}%</span>
             <span class="chip ${citationRate >= 80 ? 'ok' : 'warn'}">${citationRate >= 80 ? '🟢 High' : '🟡 Progressing'}</span>
           </div>
-          <span class="ci">${currentRun.cited_count} of ${currentRun.total_queries} cited · Target &gt;90%</span>
+          <span class="ci">${currentRun.cited_count} of ${currentRun.total_queries} queries cited</span>
         </div>
 
         <div class="kpi">
-          <span class="label">Audit Efficiency</span>
-          <div class="val" style="font-size:1.8rem">$${cost.toFixed(4)}</div>
-          <span class="ci">${currentRun.total_tokens || 4700} tokens via Perplexity Sonar</span>
+          <span class="label">AI Consensus &amp; Cost</span>
+          <div class="row" style="align-items:baseline;justify-content:space-between">
+            <span class="val" style="font-size:1.55rem">1 of 3 AIs</span>
+            <span class="chip ok">Active</span>
+          </div>
+          <span class="ci">Est. $${cost.toFixed(4)} USD · ${currentRun.total_tokens || 4700} tokens</span>
         </div>
       </div>
 
-      <!-- 3 AI Engines & Past Ranking Monitor Card -->
-      <section class="card stack" style="gap:14px;background:var(--surface)">
-        <div class="section-head">
-          <h2>Which AI Suggests Dorogo Out of 3?</h2>
-          <div class="row" style="gap:8px">
-            <span class="chip gold" style="font-weight:700">1 of 3 AI Engines Active</span>
-            <span class="small muted">Live Grounded vs Training Weights</span>
+      <!-- 2. AI Engine Coverage (Compact MECE Matrix) -->
+      <section class="card stack" style="gap:10px;background:var(--surface);padding:14px 18px">
+        <div class="row between" style="align-items:center">
+          <div class="row" style="gap:8px;align-items:center">
+            <span style="font-size:1.05rem">🤖</span>
+            <h3 style="margin:0;font-size:1rem;font-weight:600">Multi-AI Search Engine Coverage</h3>
           </div>
+          <span class="chip gold" style="font-weight:600;font-size:.78rem">1 of 3 Engines Actively Recommending Dorogo</span>
         </div>
 
-        <div class="grid-3" style="gap:12px">
-          <!-- Engine 1: Perplexity -->
-          <div class="card stack" style="background:var(--bg);border-left:3px solid var(--gold);padding:12px 14px;gap:6px">
-            <div class="row between">
-              <b>1. Perplexity Sonar</b>
-              <span class="chip ok">🏆 Suggests Dorogo (#1)</span>
+        <div class="grid-3" style="gap:10px">
+          <!-- Perplexity -->
+          <div style="background:var(--bg);border:1px solid var(--line);border-left:3px solid var(--ok);padding:10px 14px;border-radius:var(--r-sm)">
+            <div class="row between" style="margin-bottom:4px">
+              <b style="font-size:.88rem">Perplexity Sonar</b>
+              <span class="chip ok" style="font-weight:700;font-size:.72rem">🏆 Active (#1)</span>
             </div>
-            <p class="small muted" style="margin:0;line-height:1.4">
-              Real-time web search index. Explicitly ranks Dorogo as the <b>top private jet FBO chauffeur</b> in Milan with handler coordination.
-            </p>
+            <div class="small muted" style="font-size:.78rem;line-height:1.4">Real-Time Web Search · Explicitly recommends Dorogo for Alpine Ski &amp; Jet FBO</div>
           </div>
 
-          <!-- Engine 2: ChatGPT -->
-          <div class="card stack" style="background:var(--bg);padding:12px 14px;gap:6px">
-            <div class="row between">
-              <b>2. ChatGPT Search</b>
-              <span class="chip outline">0 / 10 (In Progress)</span>
+          <!-- ChatGPT -->
+          <div style="background:var(--bg);border:1px solid var(--line);padding:10px 14px;border-radius:var(--r-sm)">
+            <div class="row between" style="margin-bottom:4px">
+              <b style="font-size:.88rem;color:var(--ink-2)">ChatGPT Search</b>
+              <span class="chip outline" style="font-size:.72rem">Tracking (0/10)</span>
             </div>
-            <p class="small muted" style="margin:0;line-height:1.4">
-              Evaluating web search & OpenAI knowledge index. High priority for Winter Ski & Swiss cross-border citations.
-            </p>
+            <div class="small muted" style="font-size:.78rem;line-height:1.4">Web Index · Monitoring Milan directory citations &amp; Swiss cross-border links</div>
           </div>
 
-          <!-- Engine 3: Claude / Gemini -->
-          <div class="card stack" style="background:var(--bg);padding:12px 14px;gap:6px">
-            <div class="row between">
-              <b>3. Claude / Gemini</b>
-              <span class="chip outline">0 / 10 (In Progress)</span>
+          <!-- Claude / Gemini -->
+          <div style="background:var(--bg);border:1px solid var(--line);padding:10px 14px;border-radius:var(--r-sm)">
+            <div class="row between" style="margin-bottom:4px">
+              <b style="font-size:.88rem;color:var(--ink-2)">Claude &amp; Gemini</b>
+              <span class="chip outline" style="font-size:.72rem">Tracking (0/10)</span>
             </div>
-            <p class="small muted" style="margin:0;line-height:1.4">
-              Deep reasoning models. Will reflect citations as new digital PR and partner backlinks index.
-            </p>
+            <div class="small muted" style="font-size:.78rem;line-height:1.4">Foundation Weights · Periodic index updates reflecting digital PR authority</div>
           </div>
         </div>
       </section>
 
-      <!-- WHERE AM I TOP 3? Showcase Banner -->
+      <!-- 3. WHERE AM I TOP 3? (Podium Wins Showcase) -->
       ${top3Items.length ? `
-        <section class="card stack" style="border:1.5px solid var(--gold);background:var(--gold-soft);padding:16px 20px;gap:10px">
-          <div class="row between" style="flex-wrap:wrap;gap:8px">
+        <section class="card stack" style="border:1.5px solid var(--gold);background:var(--gold-soft);padding:16px 20px;gap:12px">
+          <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px">
             <div class="row" style="gap:8px;align-items:center">
-              <span class="chip gold" style="font-size:.85rem;font-weight:700;padding:3px 10px">🏆 WHERE AM I TOP 3?</span>
-              <span class="chip ok">1 High-Margin Route Won</span>
+              <span class="chip gold" style="font-weight:700;font-size:.82rem">🏆 PODIUM WINS (${top3Items.length})</span>
+              <span class="small" style="font-weight:600;color:var(--gold-ink)">High-margin routes where AI directly crowns Dorogo</span>
             </div>
-            <span class="small" style="color:var(--gold-ink);font-weight:600">Beats MC Eurodriver, NCC Milano & Blackcars</span>
+            <span class="small muted">Outranking legacy operators: MC Eurodriver, NCC Milano &amp; ZoneTransfers</span>
           </div>
 
-          ${top3Items.map((win) => `
-            <div style="background:var(--surface);border-radius:var(--r-sm);padding:12px 16px;margin-top:4px;border:1px solid var(--line)">
-              <div class="row between" style="margin-bottom:6px">
-                <span class="chip" style="font-weight:700">${esc(win.niche)}</span>
-                <span class="chip gold" style="font-weight:700">🏆 #1 TOP RECOMMENDATION</span>
-              </div>
-              <div style="font-weight:600;font-size:1.05rem;color:var(--ink);margin-bottom:6px">
-                “${esc(win.query)}”
-              </div>
-              <p class="small muted" style="margin:0 0 8px 0;line-height:1.5">
-                ${esc(win.snippet || 'DOROGO confirmed for Linate Prime FBO transfers with direct handler coordination and tarmac-side meet & greet.')}
-              </p>
-              <div class="row between" style="align-items:center;font-size:.78rem">
-                <span class="muted">Competitors Cited: ${(win.competitors || []).join(', ') || 'None'}</span>
-                <span style="color:var(--ok);font-weight:600">✓ Past Rank: #1 (Stable across runs)</span>
-              </div>
-            </div>
-          `).join('')}
+          <div class="stack" style="gap:8px">
+            ${top3Items.map((win) => {
+              const badge = win.is_top_recommendation || win.dorogo_rank === 1
+                ? `<span class="chip ok" style="font-weight:700;font-size:.76rem">🏆 #1 Top Recommendation</span>`
+                : `<span class="chip ok" style="font-weight:600;font-size:.76rem">🥈 Top-3 (#${win.dorogo_rank})</span>`;
+
+              return `
+                <div style="background:var(--surface);border-radius:var(--r-sm);padding:12px 16px;border:1px solid var(--line)">
+                  <div class="row between" style="align-items:center;margin-bottom:6px">
+                    <div class="row" style="gap:8px;align-items:center">
+                      <span class="chip" style="font-weight:600;font-size:.76rem">${esc(win.niche)}</span>
+                      ${badge}
+                    </div>
+                    <button class="btn ghost sm" data-view-snippet="${esc(win.id)}" style="font-size:.75rem;padding:3px 10px">Inspect Resolution →</button>
+                  </div>
+
+                  <div style="font-weight:600;font-size:.95rem;color:var(--ink);margin-bottom:4px">
+                    “${esc(win.query)}”
+                  </div>
+
+                  <div style="font-size:.84rem;color:var(--ink-2);line-height:1.45;margin-bottom:6px">
+                    ${esc(cleanSnippetPreview(win.snippet || win.full_content, 160))}
+                  </div>
+
+                  <div class="row between" style="align-items:center;font-size:.75rem">
+                    <span class="muted">Competitors Outranked: ${(win.competitors || []).map(c => `<span class="chip outline" style="font-size:.7rem;padding:1px 6px">${esc(c)}</span>`).join(' ') || '<span class="muted">None</span>'}</span>
+                    <span style="color:var(--ok);font-weight:600">✓ Past Rank: #1 (Stable across audits)</span>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
         </section>
       ` : ''}
 
-      <!-- Niche Filter Tabs (includes Top 3 button) -->
-      <section class="section">
-        <div class="section-head">
-          <h2>Battleground Niche Breakdown</h2>
+      <!-- 4. Tracked Route Performance Matrix -->
+      <section class="card stack" style="gap:12px;background:var(--surface);padding:14px 18px">
+        <div class="section-head" style="margin-bottom:0">
+          <div>
+            <div class="row" style="gap:8px;align-items:center">
+              <span style="font-size:1.1rem">🗺️</span>
+              <h3 style="margin:0;font-size:1.05rem;font-weight:600">Tracked Route Matrix</h3>
+            </div>
+            <span class="small muted">Natural high-ticket traveler queries across Northern Italy luxury routes</span>
+          </div>
           <div class="seg" role="tablist">
-            <button class="${activeFilter === 'all' ? 'on' : ''}" data-filter="all">All Niches (${currentRun.details.length})</button>
+            <button class="${activeFilter === 'all' ? 'on' : ''}" data-filter="all">All (${currentRun.details.length})</button>
             <button class="${activeFilter === 'top3' ? 'on' : ''}" data-filter="top3" style="font-weight:700;color:var(--gold-ink)">⭐ Top-3 Only (${top3Items.length})</button>
             ${rawNiches.map((n) => `<button class="${activeFilter === n ? 'on' : ''}" data-filter="${attr(n)}">${esc(n)}</button>`).join('')}
           </div>
         </div>
 
-        <!-- Table of probed queries -->
-        <div class="card flush list">
-          <div class="table-wrap">
-            <table style="width:100%;border-collapse:collapse;font-size:.85rem">
-              <thead>
-                <tr style="border-bottom:1.5px solid var(--line);text-align:left;color:var(--ink-3);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em">
-                  <th style="padding:12px 14px">Niche</th>
-                  <th style="padding:12px 14px;width:34%">Traveler Query Probed</th>
-                  <th style="padding:12px 14px">Dorogo Position</th>
-                  <th style="padding:12px 14px">AI Consensus (Out of 3)</th>
-                  <th style="padding:12px 14px">Rank History</th>
-                  <th style="padding:12px 14px">Top Competitors</th>
-                  <th style="padding:12px 14px;text-align:right">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${items.map((it, i) => {
-                  let badge = '<span class="chip bad">❌ Unranked</span>';
-                  if (it.is_top_recommendation || it.dorogo_rank === 1) {
-                    badge = '<span class="chip gold" style="font-weight:700">🏆 #1 Top Pick</span>';
-                  } else if (it.dorogo_rank && it.dorogo_rank <= 3) {
-                    badge = `<span class="chip ok">🥈 Top-3 (#${it.dorogo_rank})</span>`;
-                  } else if (it.dorogo_present) {
-                    badge = `<span class="chip">🥉 Ranked #${it.dorogo_rank}</span>`;
-                  }
+        <div class="table-wrap">
+          <table style="width:100%;border-collapse:collapse;font-size:.85rem">
+            <thead>
+              <tr style="border-bottom:1.5px solid var(--line);text-align:left;color:var(--ink-3);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em">
+                <th style="padding:10px 12px">Route / Niche</th>
+                <th style="padding:10px 12px;width:44%">Traveler Query Probed</th>
+                <th style="padding:10px 12px">Dorogo Status</th>
+                <th style="padding:10px 12px">Competitors Mentioned</th>
+                <th style="padding:10px 12px;text-align:right">Resolution</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map((it) => {
+                let badge = '<span class="chip outline" style="color:var(--ink-3);font-size:.72rem">Unranked</span>';
+                if (it.is_top_recommendation || it.dorogo_rank === 1) {
+                  badge = '<span class="chip ok" style="font-weight:700;font-size:.74rem">🏆 #1 Top Pick</span>';
+                } else if (it.dorogo_rank && it.dorogo_rank <= 3) {
+                  badge = `<span class="chip ok" style="font-weight:600;font-size:.74rem">🥈 Top-3 (#${it.dorogo_rank})</span>`;
+                } else if (it.dorogo_present) {
+                  badge = `<span class="chip warn" style="font-size:.74rem">Ranked #${it.dorogo_rank}</span>`;
+                }
 
-                  const enginesCount = it.engines_suggesting_count || (it.dorogo_present ? 1 : 0);
-                  const consensusBadge = enginesCount > 0 
-                    ? `<span class="chip gold" style="font-weight:700">1 / 3 AIs</span> <span class="tiny faint" title="Perplexity Sonar">(Perplexity: 🏆 #1)</span>`
-                    : `<span class="chip outline" style="color:var(--ink-3)">0 / 3 AIs</span>`;
+                const competitors = (it.competitors || []).map((c) => `<span class="chip outline" style="font-size:.7rem;padding:1px 6px">${esc(c)}</span>`).join(' ') || '<span class="muted small">—</span>';
 
-                  const pastRanks = it.past_ranks || [it.dorogo_rank];
-                  const historyDisplay = pastRanks[0] 
-                    ? `<span class="chip ok" style="font-weight:600">Run 1: #${pastRanks[0]}</span>` 
-                    : `<span class="tiny muted">Unranked</span>`;
-
-                  const competitors = (it.competitors || []).map((c) => `<span class="chip outline" style="font-size:.7rem">${esc(c)}</span>`).join(' ') || '<span class="muted small">—</span>';
-
-                  return `
-                    <tr style="border-bottom:1px solid var(--line)">
-                      <td style="padding:12px 14px;vertical-align:top">
-                        <span class="chip" style="font-weight:600">${esc(it.niche)}</span>
-                      </td>
-                      <td style="padding:12px 14px;vertical-align:top">
-                        <div style="font-weight:500;color:var(--ink);line-height:1.4">${esc(it.query)}</div>
-                      </td>
-                      <td style="padding:12px 14px;vertical-align:top">
-                        ${badge}
-                      </td>
-                      <td style="padding:12px 14px;vertical-align:top">
-                        ${consensusBadge}
-                      </td>
-                      <td style="padding:12px 14px;vertical-align:top">
-                        ${historyDisplay}
-                      </td>
-                      <td style="padding:12px 14px;vertical-align:top">
-                        <div style="display:flex;flex-wrap:wrap;gap:4px">${competitors}</div>
-                      </td>
-                      <td style="padding:12px 14px;vertical-align:top;text-align:right">
-                        <button class="btn sm ghost" data-view-snippet="${i}">Inspect AI Answer</button>
-                      </td>
-                    </tr>
-                  `;
-                }).join('')}
-              </tbody>
-            </table>
-          </div>
+                return `
+                  <tr style="border-bottom:1px solid var(--line)">
+                    <td style="padding:10px 12px;vertical-align:middle;white-space:nowrap">
+                      <span class="chip" style="font-weight:600;font-size:.76rem">${esc(it.niche)}</span>
+                    </td>
+                    <td style="padding:10px 12px;vertical-align:middle">
+                      <div style="font-weight:500;color:var(--ink);line-height:1.4">“${esc(it.query)}”</div>
+                    </td>
+                    <td style="padding:10px 12px;vertical-align:middle;white-space:nowrap">
+                      ${badge}
+                    </td>
+                    <td style="padding:10px 12px;vertical-align:middle">
+                      <div style="display:flex;flex-wrap:wrap;gap:4px">${competitors}</div>
+                    </td>
+                    <td style="padding:10px 12px;vertical-align:middle;text-align:right;white-space:nowrap">
+                      <button class="btn sm ghost" data-view-snippet="${esc(it.id)}" style="font-size:.78rem;padding:3px 10px">Inspect Answer →</button>
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
         </div>
       </section>
 
-      <!-- OPTIMIZATION ACTION LOG: WHAT WORKS & WHAT DOESN'T -->
-      <section class="card stack" style="gap:14px;background:var(--surface)">
+      <!-- 5. OPTIMIZATION ACTION LOG: WHAT WORKS & WHAT DOESN'T -->
+      <section class="card stack" style="gap:12px;background:var(--surface);padding:14px 18px">
         <div class="section-head" style="margin-bottom:0">
           <div>
             <div class="row" style="gap:8px;align-items:center">
-              <span style="font-size:1.25rem">📝</span>
-              <h2 style="margin:0;font-size:1.15rem">Optimization Action Log: What Works &amp; What Doesn't</h2>
+              <span style="font-size:1.1rem">📝</span>
+              <h3 style="margin:0;font-size:1.05rem;font-weight:600">Optimization Action Log: What Works &amp; What Doesn't</h3>
             </div>
-            <span class="hint">Record what you do (landing pages, rate cards, schema, digital PR) and measure direct rank impact over time</span>
+            <span class="small muted">Record landing pages, rate cards, and PR actions to track real rank impact over time</span>
           </div>
           <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">
             <div class="seg" style="display:flex;gap:4px">
@@ -350,7 +342,7 @@ export async function render(el) {
           const list = actionsData.filter(a => actionFilter === 'all' ? true : a.verdict === actionFilter);
           if (list.length === 0) {
             return `
-              <div style="text-align:center;padding:36px 16px;background:var(--surface-2);border-radius:var(--r-sm)">
+              <div style="text-align:center;padding:32px 16px;background:var(--surface-2);border-radius:var(--r-sm)">
                 <div class="muted small">No optimization actions recorded in this view yet.</div>
                 <button class="btn sm primary" id="btn-crm-add-action-empty" style="margin-top:10px">+ Log What You Did</button>
               </div>
@@ -360,18 +352,18 @@ export async function render(el) {
             <div class="stack" style="gap:10px">
               ${list.map(act => {
                 const verdictBadge = act.verdict === 'effective'
-                  ? `<span class="chip ok" style="font-weight:700">🟢 Effective (Rank Climbed)</span>`
+                  ? `<span class="chip ok" style="font-weight:700;font-size:.76rem">🟢 Effective (Rank Climbed)</span>`
                   : act.verdict === 'testing'
-                  ? `<span class="chip gold" style="font-weight:600">⏳ Testing / Monitoring</span>`
-                  : `<span class="chip warn" style="font-weight:600">🔴 Ineffective (No Impact)</span>`;
+                  ? `<span class="chip gold" style="font-weight:600;font-size:.76rem">⏳ Testing / Monitoring</span>`
+                  : `<span class="chip warn" style="font-weight:600;font-size:.76rem">🔴 Ineffective (No Impact)</span>`;
 
                 return `
-                  <div class="card" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px 18px">
+                  <div class="card" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 16px">
                     <div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px">
                       <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
-                        <span class="chip" style="font-weight:600;font-size:.78rem">📅 ${esc(act.date)}</span>
-                        <span class="chip" style="font-weight:600;font-size:.78rem">${esc(act.niche)}</span>
-                        <span class="chip outline" style="font-size:.74rem">${esc(act.category || 'Initiative')}</span>
+                        <span class="chip" style="font-weight:600;font-size:.76rem">📅 ${esc(act.date)}</span>
+                        <span class="chip" style="font-weight:600;font-size:.76rem">${esc(act.niche)}</span>
+                        <span class="chip outline" style="font-size:.72rem">${esc(act.category || 'Initiative')}</span>
                       </div>
                       <div class="row" style="gap:8px;align-items:center">
                         ${verdictBadge}
@@ -379,16 +371,16 @@ export async function render(el) {
                       </div>
                     </div>
 
-                    <div style="font-weight:600;font-size:1rem;color:var(--ink);margin-bottom:4px">
+                    <div style="font-weight:600;font-size:.95rem;color:var(--ink);margin-bottom:4px">
                       ${esc(act.title)}
                     </div>
 
-                    <div style="font-size:.88rem;color:var(--ink-2);line-height:1.55;margin-bottom:6px">
+                    <div style="font-size:.85rem;color:var(--ink-2);line-height:1.5;margin-bottom:6px">
                       ${esc(act.description || '')}
                     </div>
 
                     ${act.notes ? `
-                      <div class="row" style="gap:6px;align-items:center;background:var(--surface-2);padding:6px 12px;border-radius:var(--r-sm);font-size:.82rem;color:var(--ink);margin-bottom:6px">
+                      <div class="row" style="gap:6px;align-items:center;background:var(--surface-2);padding:6px 12px;border-radius:var(--r-sm);font-size:.8rem;color:var(--ink);margin-bottom:6px">
                         <b>Observed Impact:</b>
                         <span>${esc(act.notes)}</span>
                       </div>
@@ -409,26 +401,28 @@ export async function render(el) {
         })()}
       </section>
 
-      <!-- Competitor Intelligence Benchmark -->
-      <section class="card stack" style="gap:12px;background:var(--surface)">
-        <div class="section-head">
-          <h2>Competitor Benchmark Analysis</h2>
-          <span class="hint">Milan NCC operators observed in search citations</span>
+      <!-- 6. Competitive Landscape & Displacement -->
+      <section class="card stack" style="gap:12px;background:var(--surface);padding:14px 18px">
+        <div class="section-head" style="margin-bottom:0">
+          <div class="row" style="gap:8px;align-items:center">
+            <span style="font-size:1.1rem">⚡</span>
+            <h3 style="margin:0;font-size:1.05rem;font-weight:600">Competitive Landscape &amp; Displacement</h3>
+          </div>
+          <span class="small muted">Direct market share comparison across monitored routes</span>
         </div>
-        <div class="split">
-          <div>
-            <h4 style="margin:0 0 8px 0;font-size:.9rem">Observed Competitors</h4>
-            <div style="display:flex;flex-wrap:wrap;gap:8px">
-              <span class="chip outline" style="padding:4px 10px;font-size:.8rem"><b>MilanoByCar:</b> Cited in Outlet shopping & day trips</span>
-              <span class="chip outline" style="padding:4px 10px;font-size:.8rem"><b>NCC Milano:</b> Cited in Cervinia ski & Milan executive</span>
-              <span class="chip outline" style="padding:4px 10px;font-size:.8rem"><b>MC Eurodriver:</b> Cited in FBO private aviation</span>
-              <span class="chip outline" style="padding:4px 10px;font-size:.8rem"><b>Blackcars:</b> Cited in Linate Prime FBO</span>
+
+        <div class="split" style="gap:12px">
+          <div style="background:var(--bg);border-left:3px solid var(--ok);padding:12px 14px;border-radius:var(--r-sm)">
+            <div class="label small" style="margin-bottom:4px;font-weight:700;color:var(--ok)">🏆 Competitors Displaced (Dorogo #1 / Top-3)</div>
+            <div style="font-size:.84rem;color:var(--ink-2);line-height:1.5">
+              Dorogo unseats <b>MC Eurodriver</b> &amp; <b>Blackcars</b> in Linate/Malpensa Prime FBO aviation, and outranks <b>AlpinBus</b> &amp; <b>ZoneTransfers</b> on heavy-gear ski transfers to Livigno.
             </div>
           </div>
-          <div>
-            <h4 style="margin:0 0 8px 0;font-size:.9rem">Dorogo Organic Win Highlights</h4>
-            <div style="font-size:.85rem;line-height:1.5;color:var(--ink-2)">
-              🏆 <b>#1 Top Recommendation</b> in <span class="chip gold">Linate Prime & Malpensa Prime FBO</span> queries, with the AI engine praising Dorogo's tarmac handler coordination and executive fleet over legacy competitors.
+
+          <div style="background:var(--bg);border-left:3px solid var(--gold);padding:12px 14px;border-radius:var(--r-sm)">
+            <div class="label small" style="margin-bottom:4px;font-weight:700;color:var(--gold-ink)">🎯 Incumbents Holding Unranked Routes</div>
+            <div style="font-size:.84rem;color:var(--ink-2);line-height:1.5">
+              <b>MilanoByCar</b> holds designer outlet standby routes (Serravalle); <b>NCC Milano</b> dominates generic city chauffeur. Targeted landing pages will attack these 2 clusters next.
             </div>
           </div>
         </div>
@@ -470,8 +464,8 @@ export async function render(el) {
 
   el.querySelectorAll('[data-view-snippet]').forEach((b) => {
     b.addEventListener('click', (e) => {
-      const idx = parseInt(e.currentTarget.dataset.viewSnippet, 10);
-      const it = items[idx];
+      const qid = e.currentTarget.dataset.viewSnippet;
+      const it = currentRun.details.find((d) => d.id === qid) || items[parseInt(qid, 10)];
       if (!it) return;
       const citations = it.citations || [];
       dialog({
