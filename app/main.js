@@ -2,22 +2,22 @@
 import { S, init, onChange, signIn, signOut, startDemo, leaveDemo, syncScores, isDemo } from './store.js';
 import { esc, icon, toast, debounce } from './ui.js';
 import { todayData } from './actions.js';
-import * as today from './views/today.js?v=3.1';
-import * as pipeline from './views/pipeline.js?v=3.1';
-import * as prospect from './views/prospect.js?v=3.1';
-import * as add from './views/add.js?v=3.1';
-import * as templates from './views/templates.js?v=3.1';
-import * as analytics from './views/analytics.js?v=3.1';
-import * as partners from './views/partners.js?v=3.1';
-import * as tools from './views/tools.js?v=3.1';
-import * as visibility from './views/visibility.js?v=3.1';
-import * as settings from './views/settings.js?v=3.1';
+import * as today from './views/today.js?v=3.2';
+import * as pipeline from './views/pipeline.js?v=3.2';
+import * as prospect from './views/prospect.js?v=3.2';
+import * as add from './views/add.js?v=3.2';
+import * as templates from './views/templates.js?v=3.2';
+import * as analytics from './views/analytics.js?v=3.2';
+import * as partners from './views/partners.js?v=3.2';
+import * as tools from './views/tools.js?v=3.2';
+import * as visibility from './views/visibility.js?v=3.2';
+import * as settings from './views/settings.js?v=3.2';
 
 const ROUTES = {
   today: { view: today, label: 'Today', icon: 'today' },
   pipeline: { view: pipeline, label: 'Pipeline', icon: 'board' },
   analytics: { view: analytics, label: 'Analytics', icon: 'chart' },
-  visibility: { view: visibility, label: 'AI Visibility', icon: 'radar', hidden: true },
+  visibility: { view: visibility, label: 'AI Search Visibility', icon: 'radar', hidden: true },
   partners: { view: partners, label: 'Partners', icon: 'partners' },
   coverage: { view: partners, label: 'Coverage', icon: 'map', sub: 'coverage' },
   templates: { view: templates, label: 'Sequence & templates', icon: 'template' },
@@ -101,7 +101,7 @@ function renderView() {
   if (!['live', 'demo'].includes(S.mode)) return;
   const r = parseHash();
   const route = ROUTES[r.name];
-  const isTools = r.name === 'tools';
+  const isTools = r.name === 'tools' || r.name === 'visibility';
   if (current !== r.name || !document.getElementById('view')) shell();
   else {
     // keep nav badges fresh without rebuilding the shell
@@ -121,7 +121,7 @@ function renderView() {
   
   el.innerHTML = banners() + '<div id="view-body"></div>';
   cleanup = route.view.render(el.querySelector('#view-body'), r.param, route.sub) || null;
-  document.title = isTools ? 'DOROGO Tools · AI Watermark & Metadata Engine' : `${route.label} · DOROGO Partner Outreach`;
+  document.title = isTools ? `DOROGO Tools · ${route.label}` : `${route.label} · DOROGO Partner Outreach`;
   window.scrollTo(0, prevScroll);
 }
 

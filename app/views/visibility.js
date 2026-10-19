@@ -96,6 +96,12 @@ export async function render(el) {
   });
 
   el.innerHTML = `
+    <!-- Tools Sub-Navigation -->
+    <div class="seg" style="display:inline-flex;gap:4px;margin-bottom:16px;background:var(--surface-2);padding:3px;border-radius:var(--r-sm)">
+      <a class="seg-btn active" href="#visibility" style="text-decoration:none;font-size:.82rem">${icon('radar', 14)} AI Search Visibility</a>
+      <a class="seg-btn" href="#tools" style="text-decoration:none;font-size:.82rem">${icon('sparkle', 14)} Watermark Sanitizer</a>
+    </div>
+
     <div class="page-head">
       <div>
         <div class="label eyebrow">

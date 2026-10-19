@@ -17,6 +17,12 @@ export function render(el) {
   function paint() {
     el.innerHTML = `
       <div style="max-width: 880px; margin: 0 auto 60px;">
+        <!-- Tools Sub-Navigation -->
+        <div class="seg" style="display:inline-flex;gap:4px;margin-bottom:20px;background:var(--surface-2);padding:3px;border-radius:var(--r-sm)">
+          <a class="seg-btn" href="#visibility" style="text-decoration:none;font-size:.82rem">${icon('radar', 14)} AI Search Visibility</a>
+          <a class="seg-btn active" href="#tools" style="text-decoration:none;font-size:.82rem">${icon('sparkle', 14)} Watermark Sanitizer</a>
+        </div>
+
         <!-- Page Header (Minimalist DOROGO Design System) -->
         <div class="page-head" style="margin-bottom: 24px;">
           <div>
