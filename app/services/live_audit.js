@@ -27,13 +27,14 @@ export const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 export const AUDIT_MODEL = "perplexity/sonar";
 
 export const TRACKED_QUERIES = [
+  // --- Pillar 1: Alpine Ski Transfers (€650 - €1,500) ---
   {
     id: "ski_livigno",
     niche: "Alpine Ski",
     query: "What is the best private transfer service Milan Malpensa to Livigno with heavy ski gear and winter tires?"
   },
   {
-    id: "ski_stmoritz_group",
+    id: "ski_stmoritz",
     niche: "Alpine Ski",
     query: "Mercedes Sprinter luxury minibus hire Milan to St Moritz ski transfer private chauffeur"
   },
@@ -42,6 +43,8 @@ export const TRACKED_QUERIES = [
     niche: "Alpine Ski",
     query: "Best luxury private transfer service Milan Malpensa to Cervinia for winter ski vacation"
   },
+
+  // --- Pillar 2: Private Jet FBO (€350 - €800) ---
   {
     id: "fbo_private_jets",
     niche: "Private Jet FBO",
@@ -52,6 +55,37 @@ export const TRACKED_QUERIES = [
     niche: "Private Jet FBO",
     query: "VIP tarmac chauffeur Milan Linate Prime meet and greet handler coordination Signature Jetex"
   },
+
+  // --- Pillar 3: Lake Como Weddings & Villa Shuttles (€1,200 - €8,000, >1,000 GSC impressions) ---
+  {
+    id: "wedding_como_shuttle",
+    niche: "Lake Como Weddings",
+    query: "Luxury guest shuttle service Lake Como wedding Villa d'Este Villa Balbianello private minibus"
+  },
+  {
+    id: "wedding_lake_como_transfers",
+    niche: "Lake Como Weddings",
+    query: "Best wedding transportation service Lake Como Milan airport coordinated guest transfers"
+  },
+  {
+    id: "wedding_bridal_car",
+    niche: "Lake Como Weddings",
+    query: "Lake Como luxury wedding chauffeur Mercedes S-Class bridal car and V-Class guest vans"
+  },
+
+  // --- Pillar 4: Corporate Fiera Milano Multi-Van Convoys (€1,000 - €3,500, Top-2.7 in Google) ---
+  {
+    id: "corp_fiera_prebook",
+    niche: "Fiera Milano Convoys",
+    query: "Can I pre-book multiple luxury taxis or vans for a corporate delegation at Fiera Milano Rho?"
+  },
+  {
+    id: "corp_cphi_milan",
+    niche: "Fiera Milano Convoys",
+    query: "CPHI Milan executive van convoy transfer service for corporate executive team"
+  },
+
+  // --- Pillar 5: VIP Designer Outlet Standby (€550 - €950) ---
   {
     id: "outlet_serravalle",
     niche: "Outlet Standby",
@@ -61,21 +95,6 @@ export const TRACKED_QUERIES = [
     id: "outlet_foxtown",
     niche: "Outlet Standby",
     query: "Private day trip Milan to FoxTown luxury outlet chauffeur standby Mercedes V-Class"
-  },
-  {
-    id: "lake_como_standby",
-    niche: "Lake & Cross-Border",
-    query: "Luxury private chauffeur Milan to Bellagio Lake Como hourly standby"
-  },
-  {
-    id: "swiss_cross_border",
-    niche: "Lake & Cross-Border",
-    query: "Private luxury chauffeur transfer Milan Malpensa to Lugano and Zurich Switzerland"
-  },
-  {
-    id: "milan_vip_exec",
-    niche: "Executive Chauffeur",
-    query: "Most reliable English-speaking luxury chauffeur company in Milan for VIP executives"
   }
 ];
 
@@ -90,7 +109,9 @@ export const COMPETITORS = [
   "blacklane",
   "sixt",
   "alpin bus",
-  "ski-lifts"
+  "ski-lifts",
+  "next milan",
+  "zonetransfers"
 ];
 
 /**

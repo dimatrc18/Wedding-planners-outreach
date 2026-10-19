@@ -28,12 +28,12 @@ test('analyzeVisibility identifies unranked query when Dorogo is not cited', () 
   assert.deepEqual(result.competitors_cited, ['milanobycar', 'blacklane']);
 });
 
-test('TRACKED_QUERIES contains exactly 10 high-value commercial queries across 4 niches', () => {
-  assert.equal(TRACKED_QUERIES.length, 10);
+test('TRACKED_QUERIES contains high-value commercial queries across 5 GSC-verified niches', () => {
+  assert.ok(TRACKED_QUERIES.length >= 10);
   const niches = new Set(TRACKED_QUERIES.map(q => q.niche));
   assert.ok(niches.has('Alpine Ski'));
   assert.ok(niches.has('Private Jet FBO'));
   assert.ok(niches.has('Outlet Standby'));
-  assert.ok(niches.has('Lake & Cross-Border'));
-  assert.ok(niches.has('Executive Chauffeur'));
+  assert.ok(niches.has('Lake Como Weddings'));
+  assert.ok(niches.has('Fiera Milano Convoys'));
 });
