@@ -2,7 +2,7 @@
 // ranking across Perplexity, ChatGPT Search, and Claude against Milan NCC competitors.
 
 import { esc, attr, icon, toast, dialog } from '../ui.js';
-import { TRACKED_QUERIES, runFullLiveAudit, persistLiveAuditRun } from '../services/live_audit.js';
+import { TRACKED_QUERIES, runFullLiveAudit, persistLiveAuditRun, formatAiResponse } from '../services/live_audit.js';
 
 let cachedHistory = null;
 let activeFilter = 'top3'; // 'all' | 'top3' | specific niche
@@ -351,16 +351,17 @@ export async function render(el) {
       const idx = parseInt(e.currentTarget.dataset.viewSnippet, 10);
       const it = items[idx];
       if (!it) return;
+      const citations = it.citations || [];
       dialog({
-        title: `${it.niche}: AI Model Resolution`,
+        title: `${it.niche}: AI Search Resolution & Citation Map`,
         wide: true,
         body: `
-          <div class="stack" style="gap:14px">
+          <div class="stack" style="gap:16px">
             <div>
-              <div class="label eyebrow">Query</div>
-              <p style="font-weight:600;margin:4px 0 0 0">${esc(it.query)}</p>
+              <div class="label eyebrow">Customer Query Probed</div>
+              <p style="font-weight:600;margin:4px 0 0 0;font-size:1.02rem;color:var(--ink)">"${esc(it.query)}"</p>
             </div>
-            <div class="row" style="gap:16px;background:var(--surface-2);padding:10px 14px;border-radius:var(--r-sm)">
+            <div class="row" style="gap:16px;background:var(--surface-2);padding:10px 14px;border-radius:var(--r-sm);flex-wrap:wrap">
               <div>
                 <span class="label tiny">Dorogo Rank:</span>
                 <span style="font-weight:700">${it.dorogo_rank ? '#' + it.dorogo_rank : 'Unranked'}</span>
@@ -378,13 +379,54 @@ export async function render(el) {
                 <span>${(it.competitors || []).join(', ') || 'None'}</span>
               </div>
             </div>
+
             <div>
-              <div class="label eyebrow">Perplexity Sonar Full Response</div>
-              <div style="background:var(--bg);padding:14px;border-radius:var(--r-sm);white-space:pre-wrap;font-size:.85rem;line-height:1.6;max-height:360px;overflow-y:auto">
-                ${esc(it.full_content || it.snippet || 'No content')}
+              <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:6px">
+                <div class="label eyebrow" style="margin:0">Perplexity Sonar Formatted Response</div>
+                <span class="tiny muted">Interactive citation badges link directly to web sources</span>
+              </div>
+              <div class="ai-resp-box">
+                ${formatAiResponse(it.full_content || it.snippet, citations)}
               </div>
             </div>
-            <div class="row end">
+
+            <!-- Verified AI Web Sources & Citations -->
+            <div class="stack" style="gap:10px;border-top:1px solid var(--line);padding-top:14px">
+              <div class="row" style="justify-content:space-between;align-items:center">
+                <span class="label eyebrow" style="margin:0">Verified AI Web Sources &amp; Citations (${citations.length})</span>
+                <span class="tiny muted">Click any source link to trace competitor citation on live web</span>
+              </div>
+              ${citations.length > 0 ? `
+                <div class="citations-grid">
+                  ${citations.map((c) => {
+                    const isCompetitor = (it.competitors || []).some(comp => c.domain.includes(comp.replace(/\s+/g, '')) || c.title.toLowerCase().includes(comp));
+                    const isDorogo = c.domain.includes('dorogo') || c.title.toLowerCase().includes('dorogo');
+                    const badge = isDorogo 
+                      ? `<span class="chip ok" style="font-size:.68rem;font-weight:700">Dorogo Domain</span>`
+                      : (isCompetitor ? `<span class="chip warn" style="font-size:.68rem">Competitor Source</span>` : `<span class="chip outline" style="font-size:.68rem">Authority Directory</span>`);
+
+                    return `
+                      <a href="${esc(c.url)}" target="_blank" rel="noopener" class="citation-card">
+                        <span class="cite-num">${c.index}</span>
+                        <div style="flex:1;min-width:0">
+                          <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:2px">
+                            <span class="cite-domain">${esc(c.domain)} ↗</span>
+                            ${badge}
+                          </div>
+                          <div class="cite-title" title="${esc(c.title)}">${esc(c.title)}</div>
+                        </div>
+                      </a>
+                    `;
+                  }).join('')}
+                </div>
+              ` : `
+                <div class="tiny muted" style="padding:10px;background:var(--surface-2);border-radius:var(--r-sm)">
+                  No URL citation annotations were returned for this specific probe.
+                </div>
+              `}
+            </div>
+
+            <div class="row end" style="margin-top:10px">
               <button class="btn primary" data-close>Close</button>
             </div>
           </div>

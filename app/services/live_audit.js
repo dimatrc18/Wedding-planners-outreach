@@ -115,6 +115,69 @@ export const COMPETITORS = [
 ];
 
 /**
+ * Converts AI raw markdown response into beautifully legible HTML,
+ * replacing citation markers [1], [2] with interactive, clickable link badges.
+ */
+export function formatAiResponse(content, citations = []) {
+  if (!content) return '<p class="muted">No content recorded.</p>';
+
+  const citeMap = new Map();
+  if (Array.isArray(citations)) {
+    for (const c of citations) {
+      citeMap.set(c.index, c);
+    }
+  }
+
+  // Escape HTML characters
+  let safe = String(content || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // 1. Replace bracket citations like [1], [2], [10] with clickable link pills
+  safe = safe.replace(/\[(\d+)\]/g, (match, num) => {
+    const idx = parseInt(num, 10);
+    const c = citeMap.get(idx);
+    if (c && c.url) {
+      const titleEsc = String(c.title || c.domain).replace(/"/g, '&quot;');
+      const domainEsc = String(c.domain || '').replace(/"/g, '&quot;');
+      return `<a href="${c.url}" target="_blank" rel="noopener" class="cite-ref" title="${domainEsc}: ${titleEsc}">[${idx}]</a>`;
+    }
+    return `<span class="cite-ref-plain">[${idx}]</span>`;
+  });
+
+  // 2. Bold text: **text** -> <strong>text</strong>
+  safe = safe.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+  // 3. Format bullet lists and paragraphs
+  const lines = safe.split('\n');
+  const out = [];
+  let inList = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+      if (!inList) {
+        out.push('<ul class="ai-resp-list">');
+        inList = true;
+      }
+      out.push(`<li>${trimmed.slice(2)}</li>`);
+    } else {
+      if (inList) {
+        out.push('</ul>');
+        inList = false;
+      }
+      if (trimmed.length > 0) {
+        out.push(`<p class="ai-resp-p">${trimmed}</p>`);
+      }
+    }
+  }
+  if (inList) out.push('</ul>');
+
+  return out.join('');
+}
+
+/**
  * Analyzes raw response text to detect brand mentions, relative rank, and competitor citations.
  */
 export function analyzeVisibility(content) {
@@ -184,11 +247,28 @@ export async function queryPerplexitySonar(query, apiKey = getOpenRouterApiKey()
   }
 
   const json = await res.json();
-  const content = json.choices?.[0]?.message?.content || "";
+  const msg = json.choices?.[0]?.message || {};
+  const content = msg.content || "";
+  const annotations = msg.annotations || [];
+  const citations = [];
+  for (let idx = 0; idx < annotations.length; idx++) {
+    const uc = annotations[idx].url_citation || {};
+    if (uc.url) {
+      let domain = "";
+      try { domain = new URL(uc.url).hostname.replace(/^www\./, ''); } catch (_) { domain = uc.url; }
+      citations.push({
+        index: idx + 1,
+        url: uc.url,
+        title: uc.title || domain,
+        domain
+      });
+    }
+  }
   const usage = json.usage || {};
 
   return {
     content,
+    citations,
     latency,
     usage,
     tokens: usage.total_tokens || Math.round(content.length / 4)
@@ -299,6 +379,7 @@ export async function runFullLiveAudit({
       rank_trend: rankTrend,
       snippet: apiRes.content.slice(0, 300).replace(/\n/g, ' '),
       full_content: apiRes.content,
+      citations: apiRes.citations || [],
       tokens: apiRes.tokens,
       latency: apiRes.latency
     };
