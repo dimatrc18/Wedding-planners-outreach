@@ -1,0 +1,46 @@
+[
+  {
+    "id": "act_fbo_handler_oct12",
+    "date": "2026-10-12",
+    "niche": "Private Jet FBO",
+    "category": "Web Content & Specs",
+    "title": "Published Linate & Malpensa Prime VIP FBO landing pages",
+    "description": "Detailed airside tarmac passes, direct Jetex & Signature handler coordination, and dedicated Maybach / V-Class fleet.",
+    "url": "https://dorogo.eu/fbo-private-jet-transfers-milan",
+    "verdict": "effective",
+    "notes": "Triggered immediate #1 recommendation in Perplexity Sonar for FBO queries."
+  },
+  {
+    "id": "act_ski_livigno_oct15",
+    "date": "2026-10-15",
+    "niche": "Alpine Ski",
+    "category": "Web Content & Specs",
+    "title": "Published zero-train Livigno & St Moritz ski transfer page",
+    "description": "Specified winter tires, 4MATIC all-wheel drive, ski box equipment, and flat rate €650-€1,200 RT.",
+    "url": "https://dorogo.eu/ski-transfers-milan-malpensa",
+    "verdict": "effective",
+    "notes": "Secured #1 Top Pick in Perplexity for Malpensa to Livigno heavy ski gear transfers."
+  },
+  {
+    "id": "act_como_wedding_ratecard_oct18",
+    "date": "2026-10-18",
+    "niche": "Lake Como Weddings",
+    "category": "Outreach & Partnerships",
+    "title": "Direct outreach with Dorogo Wedding Partner Rate Card 2026 to Lake Como planners",
+    "description": "Sent 2-page rate cards with 10% commission, Villa Balbianello water-taxi coordination, and midnight guest shuttles.",
+    "url": "file:///Users/User/Desktop/Dorogo/Dorogo_Wedding_Partner_Rate_Card_2026.pdf",
+    "verdict": "effective",
+    "notes": "Elevated Dorogo to #2 podium recommendation in Lake Como wedding guest shuttles."
+  },
+  {
+    "id": "act_exec_milan_generic_oct14",
+    "date": "2026-10-14",
+    "niche": "Fiera Milano Convoys",
+    "category": "Digital PR & Backlinks",
+    "title": "General directory submissions for generic Milan executive transport",
+    "description": "Added profile to local business directories without specific event or fleet differentiators.",
+    "url": "",
+    "verdict": "ineffective",
+    "notes": "Zero AI citations generated against 20-year legacy operators (MC Eurodriver, NCC Milano). Shifted focus to corporate multi-van convoys."
+  }
+]

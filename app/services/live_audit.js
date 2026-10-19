@@ -449,3 +449,65 @@ export function persistLiveAuditRun(newRun) {
     return [newRun];
   }
 }
+
+/**
+ * Loads logged optimization actions from static JSON and merges with in-browser localStorage.
+ */
+export async function loadVisibilityActions() {
+  let actions = [];
+  try {
+    const res = await fetch('data/visibility_actions.json?v=' + Date.now());
+    if (res.ok) {
+      const json = await res.json();
+      if (Array.isArray(json)) actions = json;
+    }
+  } catch (_) {}
+
+  try {
+    const local = JSON.parse(localStorage.getItem('dorogo_visibility_actions') || '[]');
+    if (Array.isArray(local) && local.length > 0) {
+      const map = new Map();
+      for (const a of actions) map.set(a.id, a);
+      for (const a of local) map.set(a.id, a);
+      actions = [...map.values()];
+    }
+  } catch (_) {}
+
+  actions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  return actions;
+}
+
+/**
+ * Persists a new or updated optimization action into localStorage.
+ */
+export function saveVisibilityAction(action) {
+  try {
+    const local = JSON.parse(localStorage.getItem('dorogo_visibility_actions') || '[]');
+    const existingIdx = local.findIndex((a) => a.id === action.id);
+    if (existingIdx >= 0) {
+      local[existingIdx] = action;
+    } else {
+      local.unshift(action);
+    }
+    localStorage.setItem('dorogo_visibility_actions', JSON.stringify(local));
+    return local;
+  } catch (e) {
+    console.warn("Failed to save action to localStorage:", e);
+    return [action];
+  }
+}
+
+/**
+ * Deletes an optimization action by ID from localStorage.
+ */
+export function deleteVisibilityAction(id) {
+  try {
+    let local = JSON.parse(localStorage.getItem('dorogo_visibility_actions') || '[]');
+    local = local.filter((a) => a.id !== id);
+    localStorage.setItem('dorogo_visibility_actions', JSON.stringify(local));
+    return local;
+  } catch (e) {
+    return [];
+  }
+}
+

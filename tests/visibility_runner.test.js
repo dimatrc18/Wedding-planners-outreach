@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyzeVisibility, TRACKED_QUERIES, COMPETITORS, formatAiResponse } from '../app/services/live_audit.js';
+import { analyzeVisibility, TRACKED_QUERIES, COMPETITORS, formatAiResponse, saveVisibilityAction, deleteVisibilityAction } from '../app/services/live_audit.js';
 
 test('analyzeVisibility identifies Dorogo #1 top pick and competitors', () => {
   const content = `
@@ -52,4 +52,29 @@ test('formatAiResponse converts markdown and bracket citations to interactive li
   assert.ok(html.includes('[1]'));
   assert.ok(html.includes('href="https://nccmilano.com"'));
   assert.ok(html.includes('[2]'));
+});
+
+test('saveVisibilityAction and deleteVisibilityAction persist actions cleanly', () => {
+  // Mock localStorage
+  const storage = {};
+  global.localStorage = {
+    getItem: (k) => storage[k] || null,
+    setItem: (k, v) => { storage[k] = String(v); }
+  };
+
+  const newAction = {
+    id: 'test_act_1',
+    date: '2026-10-20',
+    niche: 'Lake Como Weddings',
+    category: 'Web Content & Specs',
+    title: 'Published Villa Balbianello logistics guide',
+    verdict: 'effective'
+  };
+
+  const saved = saveVisibilityAction(newAction);
+  assert.equal(saved.length, 1);
+  assert.equal(saved[0].title, 'Published Villa Balbianello logistics guide');
+
+  const afterDelete = deleteVisibilityAction('test_act_1');
+  assert.equal(afterDelete.length, 0);
 });

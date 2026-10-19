@@ -1,11 +1,21 @@
 // AI Search Visibility & Competitive Intelligence: monitors Dorogo's live citations and
 // ranking across Perplexity, ChatGPT Search, and Claude against Milan NCC competitors.
 
-import { esc, attr, icon, toast, dialog } from '../ui.js';
-import { TRACKED_QUERIES, runFullLiveAudit, persistLiveAuditRun, formatAiResponse } from '../services/live_audit.js';
+import { esc, attr, icon, toast, dialog, confirmDialog } from '../ui.js';
+import { 
+  TRACKED_QUERIES, 
+  runFullLiveAudit, 
+  persistLiveAuditRun, 
+  formatAiResponse,
+  loadVisibilityActions,
+  saveVisibilityAction,
+  deleteVisibilityAction
+} from '../services/live_audit.js';
 
 let cachedHistory = null;
+let cachedActions = null;
 let activeFilter = 'top3'; // 'all' | 'top3' | specific niche
+let actionFilter = 'all'; // 'all' | 'effective' | 'testing' | 'ineffective'
 let selectedRunIdx = -1;
 
 export async function loadVisibilityHistory() {
@@ -95,6 +105,9 @@ export async function render(el) {
     return d.niche === activeFilter;
   });
 
+  const actionsData = await loadVisibilityActions();
+  cachedActions = actionsData;
+
   el.innerHTML = `
     <!-- Tools Sub-Navigation -->
     <div class="seg" style="display:inline-flex;gap:4px;margin-bottom:16px;background:var(--surface-2);padding:3px;border-radius:var(--r-sm)">
@@ -109,7 +122,8 @@ export async function render(el) {
         </div>
         <h1>AI Search Visibility & Competitive Intelligence</h1>
       </div>
-      <div class="row">
+      <div class="row" style="gap:8px">
+        <button class="btn ghost sm" id="btn-crm-log-action">📝 Log Action</button>
         <a class="btn ghost sm" href="visibility.html" target="_blank" title="Open in separate tab without CRM sidebar">${icon('external', 15)} Open Standalone Page ↗</a>
         <button class="btn sm" id="btn-live-audit">⚡ Run Live Audit</button>
       </div>
@@ -311,6 +325,90 @@ export async function render(el) {
         </div>
       </section>
 
+      <!-- OPTIMIZATION ACTION LOG: WHAT WORKS & WHAT DOESN'T -->
+      <section class="card stack" style="gap:14px;background:var(--surface)">
+        <div class="section-head" style="margin-bottom:0">
+          <div>
+            <div class="row" style="gap:8px;align-items:center">
+              <span style="font-size:1.25rem">📝</span>
+              <h2 style="margin:0;font-size:1.15rem">Optimization Action Log: What Works &amp; What Doesn't</h2>
+            </div>
+            <span class="hint">Record what you do (landing pages, rate cards, schema, digital PR) and measure direct rank impact over time</span>
+          </div>
+          <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">
+            <div class="seg" style="display:flex;gap:4px">
+              <button class="seg-btn ${actionFilter === 'all' ? 'active' : ''}" data-act-filter="all">All (${actionsData.length})</button>
+              <button class="seg-btn ${actionFilter === 'effective' ? 'active' : ''}" data-act-filter="effective">🟢 Worked (${actionsData.filter(a => a.verdict === 'effective').length})</button>
+              <button class="seg-btn ${actionFilter === 'testing' ? 'active' : ''}" data-act-filter="testing">⏳ Testing (${actionsData.filter(a => a.verdict === 'testing').length})</button>
+              <button class="seg-btn ${actionFilter === 'ineffective' ? 'active' : ''}" data-act-filter="ineffective">🔴 Ineffective (${actionsData.filter(a => a.verdict === 'ineffective').length})</button>
+            </div>
+            <button class="btn primary sm" id="btn-crm-add-action-inline">+ Log Action</button>
+          </div>
+        </div>
+
+        ${(() => {
+          const list = actionsData.filter(a => actionFilter === 'all' ? true : a.verdict === actionFilter);
+          if (list.length === 0) {
+            return `
+              <div style="text-align:center;padding:36px 16px;background:var(--surface-2);border-radius:var(--r-sm)">
+                <div class="muted small">No optimization actions recorded in this view yet.</div>
+                <button class="btn sm primary" id="btn-crm-add-action-empty" style="margin-top:10px">+ Log What You Did</button>
+              </div>
+            `;
+          }
+          return `
+            <div class="stack" style="gap:10px">
+              ${list.map(act => {
+                const verdictBadge = act.verdict === 'effective'
+                  ? `<span class="chip ok" style="font-weight:700">🟢 Effective (Rank Climbed)</span>`
+                  : act.verdict === 'testing'
+                  ? `<span class="chip gold" style="font-weight:600">⏳ Testing / Monitoring</span>`
+                  : `<span class="chip warn" style="font-weight:600">🔴 Ineffective (No Impact)</span>`;
+
+                return `
+                  <div class="card" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px 18px">
+                    <div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px">
+                      <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
+                        <span class="chip" style="font-weight:600;font-size:.78rem">📅 ${esc(act.date)}</span>
+                        <span class="chip" style="font-weight:600;font-size:.78rem">${esc(act.niche)}</span>
+                        <span class="chip outline" style="font-size:.74rem">${esc(act.category || 'Initiative')}</span>
+                      </div>
+                      <div class="row" style="gap:8px;align-items:center">
+                        ${verdictBadge}
+                        <button class="btn ghost sm" data-del-act="${esc(act.id)}" style="padding:2px 6px;color:var(--ink-3)" title="Delete action">✕</button>
+                      </div>
+                    </div>
+
+                    <div style="font-weight:600;font-size:1rem;color:var(--ink);margin-bottom:4px">
+                      ${esc(act.title)}
+                    </div>
+
+                    <div style="font-size:.88rem;color:var(--ink-2);line-height:1.55;margin-bottom:6px">
+                      ${esc(act.description || '')}
+                    </div>
+
+                    ${act.notes ? `
+                      <div class="row" style="gap:6px;align-items:center;background:var(--surface-2);padding:6px 12px;border-radius:var(--r-sm);font-size:.82rem;color:var(--ink);margin-bottom:6px">
+                        <b>Observed Impact:</b>
+                        <span>${esc(act.notes)}</span>
+                      </div>
+                    ` : ''}
+
+                    ${act.url ? `
+                      <div style="font-size:.78rem">
+                        <a href="${esc(act.url)}" target="_blank" rel="noopener" style="color:var(--gold-ink);text-decoration:none;font-weight:500">
+                          🔗 Target Link / Evidence: ${esc(act.url)} ↗
+                        </a>
+                      </div>
+                    ` : ''}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `;
+        })()}
+      </section>
+
       <!-- Competitor Intelligence Benchmark -->
       <section class="card stack" style="gap:12px;background:var(--surface)">
         <div class="section-head">
@@ -343,6 +441,30 @@ export async function render(el) {
     b.addEventListener('click', (e) => {
       activeFilter = e.currentTarget.dataset.filter;
       render(el);
+    });
+  });
+
+  // Optimization Action Log listeners
+  el.querySelector('#btn-crm-log-action')?.addEventListener('click', () => openCrmActionModal(el));
+  el.querySelector('#btn-crm-add-action-inline')?.addEventListener('click', () => openCrmActionModal(el));
+  el.querySelector('#btn-crm-add-action-empty')?.addEventListener('click', () => openCrmActionModal(el));
+
+  el.querySelectorAll('[data-act-filter]').forEach((b) => {
+    b.addEventListener('click', (e) => {
+      actionFilter = e.currentTarget.dataset.actFilter;
+      render(el);
+    });
+  });
+
+  el.querySelectorAll('[data-del-act]').forEach((b) => {
+    b.addEventListener('click', async (e) => {
+      const id = e.currentTarget.dataset.delAct;
+      const ok = await confirmDialog('Delete Optimization Action', 'Are you sure you want to delete this action record?', 'Delete', true);
+      if (ok) {
+        deleteVisibilityAction(id);
+        toast('Action deleted');
+        render(el);
+      }
     });
   });
 
@@ -623,5 +745,115 @@ export async function render(el) {
         })();
       },
     });
+  });
+}
+
+function openCrmActionModal(el, existing = null) {
+  const today = new Date().toISOString().slice(0, 10);
+  const dateVal = existing ? existing.date : today;
+  const nicheVal = existing ? existing.niche : 'Lake Como Weddings';
+  const catVal = existing ? existing.category : 'Web Content & Specs';
+  const titleVal = existing ? esc(existing.title) : '';
+  const descVal = existing ? esc(existing.description || '') : '';
+  const urlVal = existing ? esc(existing.url || '') : '';
+  const verdictVal = existing ? existing.verdict : 'testing';
+  const notesVal = existing ? esc(existing.notes || '') : '';
+
+  dialog({
+    title: existing ? 'Edit Optimization Action' : 'Log Visibility Optimization Action',
+    wide: false,
+    body: `
+      <div class="stack" style="gap:14px">
+        <div class="split" style="gap:12px">
+          <div>
+            <label class="label small" style="display:block;margin-bottom:4px">Date of Action</label>
+            <input type="date" class="input sm" id="crm-act-date" value="${dateVal}" style="width:100%" required>
+          </div>
+          <div>
+            <label class="label small" style="display:block;margin-bottom:4px">Target Revenue Pillar</label>
+            <select class="input sm" id="crm-act-niche" style="width:100%">
+              <option value="Lake Como Weddings" ${nicheVal === 'Lake Como Weddings' ? 'selected' : ''}>Lake Como Weddings</option>
+              <option value="Alpine Ski" ${nicheVal === 'Alpine Ski' ? 'selected' : ''}>Alpine Ski</option>
+              <option value="Private Jet FBO" ${nicheVal === 'Private Jet FBO' ? 'selected' : ''}>Private Jet FBO</option>
+              <option value="Fiera Milano Convoys" ${nicheVal === 'Fiera Milano Convoys' ? 'selected' : ''}>Fiera Milano Convoys</option>
+              <option value="Outlet Standby" ${nicheVal === 'Outlet Standby' ? 'selected' : ''}>VIP Designer Outlet Standby</option>
+              <option value="Brand-wide / All" ${nicheVal === 'Brand-wide / All' ? 'selected' : ''}>Brand-wide / All Niches</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="split" style="gap:12px">
+          <div>
+            <label class="label small" style="display:block;margin-bottom:4px">Initiative Category</label>
+            <select class="input sm" id="crm-act-cat" style="width:100%">
+              <option value="Web Content & Specs" ${catVal === 'Web Content & Specs' ? 'selected' : ''}>Web Content & Specs</option>
+              <option value="Outreach & Partnerships" ${catVal === 'Outreach & Partnerships' ? 'selected' : ''}>Outreach & Partnerships</option>
+              <option value="Digital PR & Backlinks" ${catVal === 'Digital PR & Backlinks' ? 'selected' : ''}>Digital PR & Backlinks</option>
+              <option value="AI SEO & Schema" ${catVal === 'AI SEO & Schema' ? 'selected' : ''}>AI SEO & Schema Markup</option>
+              <option value="Fleet & Service Update" ${catVal === 'Fleet & Service Update' ? 'selected' : ''}>Fleet & Service Update</option>
+            </select>
+          </div>
+          <div>
+            <label class="label small" style="display:block;margin-bottom:4px">Observed Verdict / Status</label>
+            <select class="input sm" id="crm-act-verdict" style="width:100%">
+              <option value="effective" ${verdictVal === 'effective' ? 'selected' : ''}>🟢 Worked (Rank Climbed / New Win)</option>
+              <option value="testing" ${verdictVal === 'testing' ? 'selected' : ''}>⏳ Testing / Monitoring Impact</option>
+              <option value="ineffective" ${verdictVal === 'ineffective' ? 'selected' : ''}>🔴 Ineffective (No Impact)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="label small" style="display:block;margin-bottom:4px">Action Title</label>
+          <input type="text" class="input sm" id="crm-act-title" value="${titleVal}" placeholder="e.g. Published Villa Balbianello & Villa d'Este guest shuttle logistics page" style="width:100%" required>
+        </div>
+
+        <div>
+          <label class="label small" style="display:block;margin-bottom:4px">What did you do? (Details & Specifics)</label>
+          <textarea class="input sm" id="crm-act-desc" rows="3" placeholder="Outlined exact vehicle widths, midnight guest turnaround, and direct driver dispatch..." style="width:100%;resize:vertical">${descVal}</textarea>
+        </div>
+
+        <div>
+          <label class="label small" style="display:block;margin-bottom:4px">Observed Impact / Results</label>
+          <input type="text" class="input sm" id="crm-act-notes" value="${notesVal}" placeholder="e.g. Dorogo climbed from unranked to #2 in Lake Como wedding guest shuttles" style="width:100%">
+        </div>
+
+        <div>
+          <label class="label small" style="display:block;margin-bottom:4px">Target URL / Evidence Link (Optional)</label>
+          <input type="url" class="input sm" id="crm-act-url" value="${urlVal}" placeholder="https://dorogo.eu/... or link to asset" style="width:100%">
+        </div>
+
+        <div class="row end gap" style="margin-top:10px">
+          <button class="btn ghost sm" data-close>Cancel</button>
+          <button class="btn primary sm" id="btn-crm-act-save">Save Optimization Action</button>
+        </div>
+      </div>
+    `,
+    onMount: (box, close) => {
+      box.querySelector('#btn-crm-act-save')?.addEventListener('click', async () => {
+        const title = box.querySelector('#crm-act-title').value.trim();
+        if (!title) {
+          toast('Please enter an action title', 'error');
+          return;
+        }
+
+        const actObj = {
+          id: existing ? existing.id : 'act_' + Date.now(),
+          date: box.querySelector('#crm-act-date').value || today,
+          niche: box.querySelector('#crm-act-niche').value,
+          category: box.querySelector('#crm-act-cat').value,
+          verdict: box.querySelector('#crm-act-verdict').value,
+          title,
+          description: box.querySelector('#crm-act-desc').value.trim(),
+          notes: box.querySelector('#crm-act-notes').value.trim(),
+          url: box.querySelector('#crm-act-url').value.trim()
+        };
+
+        saveVisibilityAction(actObj);
+        close();
+        toast('Action logged successfully');
+        await render(el);
+      });
+    }
   });
 }
