@@ -95,6 +95,19 @@ export function render(el) {
       <div class="kpi"><span class="label">Speed</span><span class="val" style="font-size:1.5rem">${hrs(m.medianMyResponseHours)}</span><span class="ci">Your median reply time · planners take ${hrs(m.medianHoursToReply)} to answer</span></div>
     </div>
 
+    <!-- AI Brand Visibility & Search Equity Card -->
+    <div class="card row nowrap between" style="align-items:center;background:var(--surface);border-left:3px solid var(--gold);padding:14px 18px">
+      <div class="stack" style="gap:4px">
+        <div class="row" style="gap:8px;align-items:center">
+          <span class="chip gold" style="font-weight:700">AI Search Visibility</span>
+          <b>Dorogo Ranked #1 in Linate & Malpensa Prime FBO Transfers</b>
+          <span class="chip ok">🏆 #1 Top Pick</span>
+        </div>
+        <span class="small muted">Perplexity Sonar audit probes 10 high-intent traveler searches across Ski, FBO, Outlets, and Lakes vs MilanoByCar, NCC Milano, Blackcars.</span>
+      </div>
+      <a class="btn primary sm" href="#visibility" style="text-decoration:none;white-space:nowrap">${icon('radar', 15)} Open AI Tracker →</a>
+    </div>
+
     <div class="grid-2">
       <section class="card stack"><div class="section-head"><h2>Funnel</h2></div>
         <div class="funnel">${m.funnel.map((f, i) => `<div class="funnel-row"><span>${esc(f.label)}</span><div class="funnel-bar"><span style="width:${(f.count / maxF) * 100}%"></span></div><span class="num small">${f.count}${i > 0 && m.funnel[i - 1].count ? ` <span class="faint">${pct(f.count / m.funnel[i - 1].count)}</span>` : ''}</span></div>`).join('')}</div>

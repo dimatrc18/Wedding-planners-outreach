@@ -10,12 +10,14 @@ import * as templates from './views/templates.js?v=3.1';
 import * as analytics from './views/analytics.js?v=3.1';
 import * as partners from './views/partners.js?v=3.1';
 import * as tools from './views/tools.js?v=3.1';
+import * as visibility from './views/visibility.js?v=3.1';
 import * as settings from './views/settings.js?v=3.1';
 
 const ROUTES = {
   today: { view: today, label: 'Today', icon: 'today' },
   pipeline: { view: pipeline, label: 'Pipeline', icon: 'board' },
   analytics: { view: analytics, label: 'Analytics', icon: 'chart' },
+  visibility: { view: visibility, label: 'AI Visibility', icon: 'radar' },
   partners: { view: partners, label: 'Partners', icon: 'partners' },
   coverage: { view: partners, label: 'Coverage', icon: 'map', sub: 'coverage' },
   templates: { view: templates, label: 'Sequence & templates', icon: 'template' },
@@ -60,6 +62,7 @@ function shell() {
       </div>
       ${isTools ? `
         <a class="nav-link active" href="#tools">${icon('sparkle')}<span>AI Watermark Cleaner</span></a>
+        <a class="nav-link" href="#visibility">${icon('radar')}<span>AI Search Visibility</span></a>
         <div class="divider" style="margin: 12px 10px;"></div>
         <a class="nav-link" href="#today">${icon('mail')}<span>← Back to Outreach</span></a>
       ` : `
