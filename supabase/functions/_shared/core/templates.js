@@ -176,6 +176,26 @@ Share your date, venue and guest count whenever you want a fixed quote.
 {{signature}}`,
   },
   {
+    key: 'reply_asks_pricing', language: 'it', kind: 'reply', name: 'Risposta: richiesta tariffe', subject_a: '', subject_b: '', attach_rate_card: true,
+    body: `{{greeting}}
+
+In allegato trovate il nostro listino partner di 1 pagina: una Mercedes-Benz Classe V da Malpensa a Como parte da €230 netti (Bellagio €320 netti) e il servizio navetta notturno dalle ville da €450 netti per Classe V (oppure con commissione partner del 5%).
+
+Condividete pure data, location e numero di ospiti quando desiderate una quotazione dedicata.
+
+{{signature}}`,
+  },
+  {
+    key: 'reply_asks_pricing', language: 'ru', kind: 'reply', name: 'Ответ: запрос тарифов', subject_a: '', subject_b: '', attach_rate_card: true,
+    body: `{{greeting}}
+
+Во вложении наш одностраничный партнерский лист тарифов: Mercedes-Benz V-Class из Мальпенсы на Комо — €230 нетто (Белладжио — €320 нетто), ночной шаттл с вилл — €450 нетто за V-Class (также работаем с партнерской комиссией).
+
+Пришлите дату, виллу и количество гостей, когда потребуется точный расчет под проект.
+
+{{signature}}`,
+  },
+  {
     key: 'reply_meeting_request', language: 'en', kind: 'reply', name: 'Reply: wants a call', subject_a: '', subject_b: '',
     body: `{{greeting}}
 

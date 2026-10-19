@@ -34,8 +34,21 @@ export async function verifyDnsMx(domain: string): Promise<'mx_ok' | 'no_mx' | '
     if (!res.ok) return 'unknown';
     const json: any = await res.json();
     if (json.Status === 3) return 'no_mx'; // NXDOMAIN
-    const hasMx = (json.Answer || []).some((ans: any) => ans.type === 15);
-    return hasMx ? 'mx_ok' : 'no_mx';
+    const mxAnswers = (json.Answer || []).filter((ans: any) => ans.type === 15 && ans.data);
+    if (!mxAnswers.length) return 'no_mx';
+    // Verify the primary MX target hostname itself resolves to an A record (prevents dangling MX like michellerago.com)
+    const mxHost = String(mxAnswers[0].data).trim().split(/\s+/).pop()?.replace(/\.$/, '') || '';
+    if (mxHost) {
+      const aRes = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(mxHost)}&type=A`, {
+        headers: { accept: 'application/dns-json' },
+        signal: AbortSignal.timeout(4000),
+      });
+      if (aRes.ok) {
+        const aJson: any = await aRes.json();
+        if (aJson.Status === 3 || !(aJson.Answer || []).length) return 'no_mx';
+      }
+    }
+    return 'mx_ok';
   } catch {
     return 'unknown';
   }
@@ -162,7 +175,8 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
   let sentToday = coldSent.filter((t: any) => t.sent_at && core.localDateKey(new Date(t.sent_at), settings.timezone) === today).length;
   const emailsSent = touches.filter((t: any) => t.direction === 'out' && t.state === 'sent' && t.channel === 'email');
   let sentTotal = emailsSent.length;
-  const bouncedTotal = emailsSent.filter((t: any) => t.bounced).length;
+  // Count only unremediated bounces (where prospect has not already been quarantined via do_not_contact)
+  const bouncedTotal = emailsSent.filter((t: any) => t.bounced && !pmap.get(t.prospect_id)?.do_not_contact).length;
 
   let due = touches.filter((t: any) => t.direction === 'out' && t.state === 'approved' && t.channel === 'email' && (!t.scheduled_at || new Date(t.scheduled_at) <= now));
   if (onlyTouchId) due = touches.filter((t: any) => t.id === onlyTouchId);
@@ -216,19 +230,20 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
       const rcAtt = t.attach_rate_card ? await rateCardAttachment(db, settings, prospectLang) : null;
       const attachments = rcAtt ? [rcAtt] : [];
       const pixelUrl = settings.track_opens ? `${env('SUPABASE_URL')}/functions/v1/outreach-api?open=${t.id}` : null;
+      const targetTo = t.to_address || (t.step_name === 'reply' && lastInbound?.from_address ? lastInbound.from_address : p.email);
       const { messageId, raw } = await sendMail({
-        fromName, fromEmail, replyTo: settings.sender?.reply_to || fromEmail, to: p.email, subject: t.subject, text: t.body,
+        fromName, fromEmail, replyTo: settings.sender?.reply_to || fromEmail, to: targetTo, subject: t.subject, text: t.body,
         inReplyTo, references: threaded ? thread.map((x: any) => x.message_id).slice(-10) : [], attachments, pixelUrl,
         footerStyle: settings.email_footer_style || 'wordmark',
       });
       const at = new Date().toISOString();
-      await db.from('touches').update({ state: 'sent', sent_at: at, message_id: messageId, in_reply_to: inReplyTo, to_address: p.email, from_address: fromEmail, error: null, send_attempts: (t.send_attempts || 0) + 1 }).eq('id', t.id);
+      await db.from('touches').update({ state: 'sent', sent_at: at, message_id: messageId, in_reply_to: inReplyTo, to_address: targetTo, from_address: fromEmail, error: null, send_attempts: (t.send_attempts || 0) + 1 }).eq('id', t.id);
       await db.from('prospects').update({ status: core.statusAfterSend(p.status, t.step_name, core.FUNNEL_RANK), last_touch_at: at }).eq('id', p.id);
       if (t.suggested_for) await db.from('touches').update({ handled_at: at }).eq('id', t.suggested_for);
       appendToSent(raw).catch((e) => console.error('append to Sent failed', e.message));
       if (core.COLD_STEPS.includes(t.step_name)) sentToday++;
       sentTotal++; sent++;
-      await logEvent(db, 'email_sent', { touch_id: t.id, step: t.step_name, to: p.email }, p.id, actor);
+      await logEvent(db, 'email_sent', { touch_id: t.id, step: t.step_name, to: targetTo }, p.id, actor);
       results.push({ id: t.id, sent: true });
     } catch (e) {
       const attempts = (t.send_attempts || 0) + 1;
@@ -420,6 +435,7 @@ export async function applyInbound(
 
   let insertedDraft: any = null;
   if (fx.draft) {
+    if (inbound?.from_address && !fx.draft.to_address) fx.draft.to_address = inbound.from_address;
     const { data: insDraft } = await db.from('touches').insert(fx.draft).select().single();
     insertedDraft = insDraft || fx.draft;
   }
@@ -459,124 +475,173 @@ export async function syncInbox(db: any, settings: any, now = new Date()) {
     throw e;
   }
   const { prospects, touches, templates } = await loadAll(db);
+  const stripSubjectPrefix = (s = '') => String(s || '').replace(/^(\s*(re|fwd|fw|r|rif|ответ|на)\s*:\s*)+/i, '').trim().toLowerCase();
+  const PUBLIC_DOMAINS = new Set(['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'me.com', 'mail.ru', 'yandex.ru', 'bk.ru']);
   const byEmail = new Map();
   for (const p of prospects) {
     if (p.email) byEmail.set(p.email.toLowerCase(), p);
     if (p.alt_email) byEmail.set(p.alt_email.toLowerCase(), p);
+    if (p.enrichment?.alt_email) byEmail.set(String(p.enrichment.alt_email).toLowerCase(), p);
   }
   const byMsg = new Map(touches.filter((t: any) => t.message_id).map((t: any) => [t.message_id, t]));
   const pById = new Map(prospects.map((p: any) => [p.id, p]));
+  const saveAltEmail = async (prospect: any, altAddr: string) => {
+    if (!prospect?.id || !altAddr || prospect.email?.toLowerCase() === altAddr.toLowerCase()) return;
+    if (prospect.enrichment?.alt_email?.toLowerCase() === altAddr.toLowerCase()) return;
+    const enrichment = { ...(prospect.enrichment || {}), alt_email: altAddr };
+    prospect.enrichment = enrichment;
+    prospect.alt_email = altAddr;
+    byEmail.set(altAddr.toLowerCase(), prospect);
+    await db.from('prospects').update({ enrichment }).eq('id', prospect.id);
+  };
   let stored = 0, bounces = 0;
   for (const m of fetched.messages) {
-    if (m.messageId && byMsg.has(m.messageId)) continue;
-    const viaThread = [m.inReplyTo, ...m.references].map((id: string) => byMsg.get(id)).find(Boolean);
-    const bounce = core.detectBounce({ from: m.from, subject: m.subject, body: m.text });
-    if (bounce) {
-      const failed = (m.failedRecipients || '').toLowerCase();
-      const p: any = (failed && byEmail.get(failed)) || (viaThread && pById.get(viaThread.prospect_id)) ||
-        prospects.find((x: any) => x.email && m.text.toLowerCase().includes(x.email.toLowerCase()));
+    try {
+      if (m.messageId && byMsg.has(m.messageId)) continue;
+      const viaThread = [m.inReplyTo, ...m.references].map((id: string) => byMsg.get(id)).find(Boolean);
+      const bounce = core.detectBounce({ from: m.from, subject: m.subject, body: m.text });
+      if (bounce) {
+        const failed = (m.failedRecipients || '').toLowerCase();
+        const p: any = (failed && byEmail.get(failed)) || (viaThread && pById.get(viaThread.prospect_id)) ||
+          prospects.find((x: any) => x.email && m.text.toLowerCase().includes(x.email.toLowerCase()));
+        if (!p) continue;
+        const lastOut = [...touches].reverse().find((t: any) => t.prospect_id === p.id && t.direction === 'out' && t.state === 'sent' && t.channel === 'email');
+        if (lastOut) await db.from('touches').update({ bounced: true }).eq('id', lastOut.id);
+        const patch: any = { email_status: 'bounced' };
+        if (bounce.hard) Object.assign(patch, { do_not_contact: true, status: 'do_not_contact' });
+        await db.from('prospects').update(patch).eq('id', p.id);
+        await db.from('touches').update({ state: 'skipped', error: 'Address bounced' }).eq('prospect_id', p.id).in('state', ['draft', 'approved']);
+        await logEvent(db, 'bounce', { hard: bounce.hard, subject: m.subject }, p.id);
+        bounces++;
+        continue;
+      }
+      // Tier 1 & 2: Direct email match or In-Reply-To / References thread match
+      let p: any = byEmail.get(m.from) || (viaThread && pById.get(viaThread.prospect_id));
+
+      // Tier 3: Existing DB prospect match by Contact Name, Agency Name, Website in body/signature, or Sent Subject
+      if (!p) {
+        const cleanFromName = String(m.fromName || '').toLowerCase().trim();
+        const cleanSubj = stripSubjectPrefix(m.subject);
+        const bodyLower = String(m.text || '').toLowerCase();
+
+        p = prospects.find((x: any) => {
+          const cName = String(x.contact_name || '').toLowerCase().trim();
+          const aName = String(x.agency_name || '').toLowerCase().trim();
+          const wDom = x.website ? core.domainOf(x.website) : '';
+          if (cleanFromName && cName.length >= 4 && (cleanFromName.includes(cName) || cName.includes(cleanFromName))) return true;
+          if (cleanFromName && aName.length >= 4 && (cleanFromName.includes(aName) || aName.includes(cleanFromName))) return true;
+          if (wDom && !PUBLIC_DOMAINS.has(wDom) && bodyLower.includes(wDom)) return true;
+          return false;
+        });
+
+        if (!p && cleanSubj.length >= 10) {
+          const matchingTouch = [...touches].reverse().find((t: any) =>
+            t.direction === 'out' && t.state === 'sent' && t.subject && stripSubjectPrefix(t.subject) === cleanSubj
+          );
+          if (matchingTouch) p = pById.get(matchingTouch.prospect_id);
+        }
+
+        if (p) await saveAltEmail(p, m.from);
+      }
+
+      // Tier 4: Discovery Partner Catalog match (including substring match on fromName)
+      if (!p && core.DISCOVERY_PARTNER_CATALOG) {
+        const cleanFromName = String(m.fromName || '').toLowerCase().trim();
+        const catMatch = core.DISCOVERY_PARTNER_CATALOG.find((c: any) => {
+          const cName = String(c.contact_name || '').toLowerCase().trim();
+          const aName = String(c.agency_name || '').toLowerCase().trim();
+          return (
+            (c.email && c.email.toLowerCase() === m.from.toLowerCase()) ||
+            (c.alt_email && c.alt_email.toLowerCase() === m.from.toLowerCase()) ||
+            (cleanFromName && cName.length >= 4 && (cleanFromName.includes(cName) || cName.includes(cleanFromName))) ||
+            (cleanFromName && aName.length >= 4 && (cleanFromName.includes(aName) || aName.includes(cleanFromName)))
+          );
+        });
+        if (catMatch) {
+          const existingInDb = prospects.find((x: any) =>
+            (catMatch.agency_name && x.agency_name?.toLowerCase() === catMatch.agency_name.toLowerCase()) ||
+            (catMatch.website && x.website && core.domainOf(x.website) === core.domainOf(catMatch.website))
+          );
+          if (existingInDb) {
+            p = existingInDb;
+            await saveAltEmail(p, m.from);
+          } else {
+            const { alt_email, country, ...safeCat } = catMatch as any;
+            const altAddr = catMatch.email && catMatch.email.toLowerCase() !== m.from.toLowerCase() ? m.from : alt_email;
+            const newP = {
+              ...safeCat,
+              email: catMatch.email || m.from,
+              enrichment: { ...(safeCat.enrichment || {}), ...(altAddr ? { alt_email: altAddr } : {}) },
+              status: 'replied',
+              created_at: now.toISOString(),
+            };
+            const { data: insP, error: pErr } = await db.from('prospects').insert(newP).select().single();
+            if (!pErr && insP) {
+              p = insP;
+              prospects.push(p);
+              pById.set(p.id, p);
+              if (p.email) byEmail.set(p.email.toLowerCase(), p);
+              if (altAddr) byEmail.set(altAddr.toLowerCase(), p);
+            }
+          }
+        }
+      }
+
+      // Tier 5: Custom sender domain match
+      if (!p) {
+        const senderDomain = core.domainOf(m.from);
+        if (senderDomain && !PUBLIC_DOMAINS.has(senderDomain)) {
+          const domainMatch = prospects.find((x: any) => x.website && core.domainOf(x.website) === senderDomain);
+          if (domainMatch) {
+            p = domainMatch;
+            await saveAltEmail(p, m.from);
+          }
+        }
+      }
+
+      // Tier 6: Organic Inbound Lead Auto-Creation
+      if (!p) {
+        const inferredAgency = m.fromName || m.from.split('@')[0];
+        const newLead = {
+          agency_name: inferredAgency,
+          contact_name: m.fromName || inferredAgency,
+          email: m.from,
+          source: 'inbound_inquiry',
+          type: 'planner',
+          segment: 'international',
+          status: 'replied',
+          notes: `Inbound email received on ${m.date}: "${m.subject}"`,
+          created_at: now.toISOString(),
+        };
+        const { data: insLead, error: leadErr } = await db.from('prospects').insert(newLead).select().single();
+        if (!leadErr && insLead) {
+          p = insLead;
+          prospects.push(p);
+          pById.set(p.id, p);
+          byEmail.set(p.email.toLowerCase(), p);
+        }
+      }
       if (!p) continue;
-      const lastOut = [...touches].reverse().find((t: any) => t.prospect_id === p.id && t.direction === 'out' && t.state === 'sent' && t.channel === 'email');
-      if (lastOut) await db.from('touches').update({ bounced: true }).eq('id', lastOut.id);
-      const patch: any = { email_status: 'bounced' };
-      if (bounce.hard) Object.assign(patch, { do_not_contact: true, status: 'do_not_contact' });
-      await db.from('prospects').update(patch).eq('id', p.id);
-      await db.from('touches').update({ state: 'skipped', error: 'Address bounced' }).eq('prospect_id', p.id).in('state', ['draft', 'approved']);
-      await logEvent(db, 'bounce', { hard: bounce.hard, subject: m.subject }, p.id);
-      bounces++;
-      continue;
-    }
-    let p: any = byEmail.get(m.from) || (viaThread && pById.get(viaThread.prospect_id));
-    if (!p && core.DISCOVERY_PARTNER_CATALOG) {
-      const catMatch = core.DISCOVERY_PARTNER_CATALOG.find((c: any) =>
-        (c.email && c.email.toLowerCase() === m.from.toLowerCase()) ||
-        (c.alt_email && c.alt_email.toLowerCase() === m.from.toLowerCase()) ||
-        (m.fromName && c.contact_name && c.contact_name.toLowerCase() === m.fromName.toLowerCase()) ||
-        (m.fromName && c.agency_name && c.agency_name.toLowerCase() === m.fromName.toLowerCase())
+      const cls: any = await classifyInboundMessage(
+        db,
+        { from: m.from, subject: m.subject, body: m.text, autoSubmitted: m.autoSubmitted },
+        p.id,
+        now,
       );
-      if (catMatch) {
-        const existingInDb = prospects.find((x: any) =>
-          (catMatch.agency_name && x.agency_name?.toLowerCase() === catMatch.agency_name.toLowerCase()) ||
-          (catMatch.website && x.website && core.domainOf(x.website) === core.domainOf(catMatch.website))
-        );
-        if (existingInDb) {
-          p = existingInDb;
-          if (!existingInDb.alt_email && existingInDb.email?.toLowerCase() !== m.from.toLowerCase()) {
-            existingInDb.alt_email = m.from;
-            await db.from('prospects').update({ alt_email: m.from }).eq('id', existingInDb.id);
-          }
-        } else {
-          const newP = {
-            ...catMatch,
-            email: catMatch.email || m.from,
-            alt_email: catMatch.email && catMatch.email.toLowerCase() !== m.from.toLowerCase() ? m.from : catMatch.alt_email,
-            status: 'replied',
-            created_at: now.toISOString(),
-          };
-          const { data: insP, error: pErr } = await db.from('prospects').insert(newP).select().single();
-          if (!pErr && insP) {
-            p = insP;
-            prospects.push(p);
-            pById.set(p.id, p);
-            if (p.email) byEmail.set(p.email.toLowerCase(), p);
-            if (p.alt_email) byEmail.set(p.alt_email.toLowerCase(), p);
-          }
-        }
-      }
-    }
-    if (!p) {
-      const senderDomain = core.domainOf(m.from);
-      if (senderDomain && !['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'me.com', 'mail.ru', 'yandex.ru', 'bk.ru'].includes(senderDomain)) {
-        const domainMatch = prospects.find((x: any) => x.website && core.domainOf(x.website) === senderDomain);
-        if (domainMatch) {
-          p = domainMatch;
-          if (!domainMatch.alt_email) {
-            domainMatch.alt_email = m.from;
-            await db.from('prospects').update({ alt_email: m.from }).eq('id', domainMatch.id);
-          }
-        }
-      }
-    }
-    if (!p) {
-      // Inbound inquiry from a new partner or client - auto-create so lead is never dropped
-      const inferredAgency = m.fromName || m.from.split('@')[0];
-      const newLead = {
-        agency_name: inferredAgency,
-        contact_name: m.fromName || inferredAgency,
-        email: m.from,
-        source: 'inbound_inquiry',
-        type: 'planner',
-        segment: 'international',
-        status: 'replied',
-        notes: `Inbound email received on ${m.date}: "${m.subject}"`,
-        created_at: now.toISOString(),
+      const row = {
+        prospect_id: p.id, channel: 'email', direction: 'in', state: 'received', step_name: 'reply', subject: m.subject, body: m.text,
+        replied_at: m.date, message_id: m.messageId, in_reply_to: m.inReplyTo, from_address: m.from,
+        reply_sentiment: cls.sentiment, reply_intent: cls.intent, classification: cls,
       };
-      const { data: insLead, error: leadErr } = await db.from('prospects').insert(newLead).select().single();
-      if (!leadErr && insLead) {
-        p = insLead;
-        prospects.push(p);
-        pById.set(p.id, p);
-        byEmail.set(p.email.toLowerCase(), p);
-      }
+      const { data: ins, error } = await db.from('touches').insert(row).select().single();
+      if (error) { if (error.code !== '23505') console.error(error.message); continue; }
+      const fx = await applyInbound(db, p, touches.filter((t: any) => t.prospect_id === p.id), ins, cls, settings, templates, now);
+      touches.push(ins);
+      if (fx?.patch) Object.assign(p, fx.patch);
+      stored++;
+    } catch (msgErr) {
+      console.error('syncInbox message error:', (msgErr as Error).message);
     }
-    if (!p) continue; // Final safety fallback
-    const cls: any = await classifyInboundMessage(
-      db,
-      { from: m.from, subject: m.subject, body: m.text, autoSubmitted: m.autoSubmitted },
-      p.id,
-      now,
-    );
-    const row = {
-      prospect_id: p.id, channel: 'email', direction: 'in', state: 'received', step_name: 'reply', subject: m.subject, body: m.text,
-      replied_at: m.date, message_id: m.messageId, in_reply_to: m.inReplyTo, from_address: m.from,
-      reply_sentiment: cls.sentiment, reply_intent: cls.intent, classification: cls,
-    };
-    const { data: ins, error } = await db.from('touches').insert(row).select().single();
-    if (error) { if (error.code !== '23505') console.error(error.message); continue; }
-    const fx = await applyInbound(db, p, touches.filter((t: any) => t.prospect_id === p.id), ins, cls, settings, templates, now);
-    touches.push(ins);
-    if (fx?.patch) Object.assign(p, fx.patch);
-    stored++;
   }
   await setState(db, 'imap', { last_uid: fetched.lastUid, last_sync_at: now.toISOString(), last_error: null, last_count: stored });
   return { fetched: fetched.messages.length, stored, bounces };

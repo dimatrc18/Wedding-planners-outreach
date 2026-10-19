@@ -8,7 +8,7 @@ import { SIGNATURE, SIGNATURE_IT } from './constants.js';
 
 const HOOK_TYPES = new Set(['venue', 'event', 'style', 'press', 'award', 'other']);
 const CONFIDENCE_LEVELS = new Set(['high', 'medium', 'low']);
-const LANGUAGES = new Set(['en', 'it', 'de', 'fr']);
+const LANGUAGES = new Set(['en', 'it', 'de', 'fr', 'ru']);
 const SEGMENTS = new Set(['boutique_local', 'high_volume_uk_us', 'international']);
 const SENTIMENTS = new Set(['positive', 'neutral', 'negative', 'ooo', 'unsubscribe']);
 const INTENTS = new Set([

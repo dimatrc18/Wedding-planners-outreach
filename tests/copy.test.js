@@ -84,3 +84,26 @@ test('Russian greeting & hook cleaning: no duplicate hello and Senior Dispatcher
   assert.ok(!d.body.includes('Founder'), 'Does not contain Founder');
 });
 
+test('pickTemplate falls back to DEFAULT_TEMPLATES for Russian when DB templates only have EN and IT', () => {
+  const dbTemplatesWithoutRu = DEFAULT_TEMPLATES.filter((t) => t.language !== 'ru');
+  const ruProspect = {
+    id: 'katrin-id',
+    agency_name: 'Katrin Moro Weddings',
+    contact_name: 'Katrin Moro',
+    language: 'ru',
+    key_venues: ['Villa del Balbianello'],
+    personalization_hook: 'Обратил внимание на ваши проекты на виллах озера Комо и хотел представиться.',
+  };
+  const t3 = buildDraft({
+    prospect: ruProspect,
+    key: 'T3_followup',
+    templates: dbTemplatesWithoutRu,
+    threadSubject: 'Трансферы гостей на озере Комо и в Северной Италии',
+    step: { thread: true },
+  });
+  assert.ok(t3, 'Draft builds for Russian T3_followup');
+  assert.ok(t3.body.includes('Полезная деталь для ваших свадеб'), 'Uses Russian T3_followup body from DEFAULT_TEMPLATES instead of English');
+  assert.ok(!t3.body.includes('One detail worth adding'), 'Does not mix Russian greeting with English body');
+});
+
+

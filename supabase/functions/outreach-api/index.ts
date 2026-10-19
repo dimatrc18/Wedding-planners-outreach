@@ -5,7 +5,7 @@ import { handle, json, requireAllowedUser, loadSettings, integrations, getState,
 import { verifySmtp, sendMail } from '../_shared/mail.ts';
 import { tgSend } from '../_shared/telegram.ts';
 import { gemini, checkHook } from '../_shared/ai.ts';
-import { draftDueSteps, sendDue, syncInbox, sendDigest, approveTouch, fetchJinaSignals, autoResearchPending, loadAll, classifyInboundMessage, applyInbound, formatThreadHistory } from '../_shared/jobs.ts';
+import { draftDueSteps, sendDue, syncInbox, sendDigest, approveTouch, fetchJinaSignals, autoResearchPending, loadAll, classifyInboundMessage, applyInbound, formatThreadHistory, verifyDnsMx } from '../_shared/jobs.ts';
 
 const GIF = Uint8Array.from(atob('R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=='), (c) => c.charCodeAt(0));
 const UA = 'Mozilla/5.0 (compatible; DOROGO-partner-research/1.0; +https://dorogo.eu)';
@@ -23,11 +23,7 @@ async function fetchPage(url: string) {
 }
 
 async function mxCheck(domain: string) {
-  try {
-    const r = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=MX`);
-    const j = await r.json();
-    return (j.Answer || []).some((a: any) => a.type === 15) ? 'mx_ok' : 'no_mx';
-  } catch { return 'unknown'; }
+  return verifyDnsMx(domain);
 }
 
 const DIRECTORY_HOST_RE = /(?:^|\.)(matrimonio\.com|weddingwire\.\w+|zankyou\.\w+|hitched\.\w+|theknot\.com|caratsandcake\.com|stylemepretty\.com|overthemoon\.com|lalista\.com|facebook\.com|instagram\.com|pinterest\.\w+|linkedin\.com|tiktok\.com|youtube\.com|tripadvisor\.\w+|yelp\.\w+|google\.\w+|duckduckgo\.com)$/i;

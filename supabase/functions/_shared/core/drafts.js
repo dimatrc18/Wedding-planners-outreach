@@ -238,8 +238,13 @@ export function merge(text = '', vars = {}) {
 }
 
 export function pickTemplate(templates, key, language = 'en') {
-  const list = (templates && templates.length ? templates : DEFAULT_TEMPLATES).filter((t) => t.key === key && t.active !== false);
-  return list.find((t) => t.language === language) || list.find((t) => t.language === 'en') || null;
+  const dbList = (templates && templates.length ? templates : []).filter((t) => t.key === key && t.active !== false);
+  const exactDb = dbList.find((t) => t.language === language);
+  if (exactDb) return exactDb;
+  const defList = DEFAULT_TEMPLATES.filter((t) => t.key === key && t.active !== false);
+  const exactDef = defList.find((t) => t.language === language);
+  if (exactDef) return exactDef;
+  return dbList.find((t) => t.language === 'en') || defList.find((t) => t.language === 'en') || null;
 }
 
 // Stable A/B split per prospect, so a prospect never sees both subject variants.
