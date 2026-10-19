@@ -15,7 +15,7 @@ export const RATE_CARD = {
   late_night_shuttle: { V: 450, window: 'late-night block' },
   deposit: 0.25,
   balance_days_before: 7,
-  referral_commission: 0.05,
+  referral_commission: 0.10,
   planner_markup_range: [0.15, 0.25],
 };
 

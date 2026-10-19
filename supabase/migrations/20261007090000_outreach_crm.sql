@@ -214,10 +214,10 @@ create policy "outreach bucket allowed users" on storage.objects for all to auth
 alter publication supabase_realtime add table public.touches, public.prospects;
 
 -- ---------------- Seed ----------------
-insert into public.outreach_settings (id, data) values (1, '{"kill_switch":false,"timezone":"Europe/Rome","send_days":[2,3,4],"window_start":"09:00","window_end":"11:30","daily_cap":12,"warmup":{"enabled":true,"start":6,"weekly_increment":3},"jitter_min":4,"jitter_max":11,"season_mode":"auto","bounce_pause_rate":0.03,"bounce_min_sample":15,"steps":[{"key":"T1_intro","label":"Intro email","day":0,"channel":"email","thread":false,"require_approval":true,"enabled":true},{"key":"T3_followup","label":"Follow-up email","day":4,"channel":"email","thread":true,"require_approval":true,"enabled":true},{"key":"T4_breakup","label":"Breakup email (new thread)","day":9,"channel":"email","thread":false,"require_approval":true,"enabled":true}],"sender":{"name":"Dmitri","email":"dmitri@dorogo.eu","reply_to":"dmitri@dorogo.eu"},"track_opens":false,"stale_days":10,"ratecard_nudge_days":5,"human_escalation_hours":2,"nurture_month_day":"10-01","targets":{"open_rate":0.5,"positive_reply_rate":0.1,"positive_reply_rate_high":0.15,"ratecard_to_quote":0.25,"partners_won":5,"partners_won_high":10},"avg_wedding_transport_value":10000,"commission_rate":0.05}'::jsonb) on conflict (id) do nothing;
+insert into public.outreach_settings (id, data) values (1, '{"kill_switch":false,"timezone":"Europe/Rome","send_days":[2,3,4],"window_start":"09:00","window_end":"11:30","daily_cap":12,"warmup":{"enabled":true,"start":6,"weekly_increment":3},"jitter_min":4,"jitter_max":11,"season_mode":"auto","bounce_pause_rate":0.03,"bounce_min_sample":15,"steps":[{"key":"T1_intro","label":"Step 1 (Intro email)","day":0,"channel":"email","thread":false,"require_approval":false,"enabled":true},{"key":"T3_followup","label":"Step 2 (Follow-up 1)","day":4,"channel":"email","thread":true,"require_approval":true,"enabled":true},{"key":"T4_breakup","label":"Step 3 (Follow-up 2 · disabled)","day":9,"channel":"email","thread":false,"require_approval":true,"enabled":false}],"sender":{"name":"Dmitri","email":"dmitri@dorogo.eu","reply_to":"dmitri@dorogo.eu"},"track_opens":false,"stale_days":10,"ratecard_nudge_days":5,"human_escalation_hours":2,"nurture_month_day":"10-01","targets":{"open_rate":0.5,"positive_reply_rate":0.1,"positive_reply_rate_high":0.15,"ratecard_to_quote":0.25,"partners_won":5,"partners_won_high":10},"avg_wedding_transport_value":10000,"commission_rate":0.1}'::jsonb) on conflict (id) do nothing;
 
 insert into public.templates (key, language, kind, name, subject_a, subject_b, body, attach_rate_card) values
-('T1_intro', 'en', 'sequence', 'T1 Intro email', '{{subject_line_a}}', '{{subject_line_b}}', '{{greeting}}
+('T1_intro', 'en', 'sequence', 'Step 1 (Intro email)', '{{subject_line_a}}', '{{subject_line_b}}', '{{greeting}}
 
 {{hook}}
 
@@ -228,31 +228,25 @@ insert into public.templates (key, language, kind, name, subject_a, subject_b, b
 {{signature}}
 
 {{optout}}', false),
-('T3_followup', 'en', 'sequence', 'T3 Follow-up (Guest Transfer Portal)', '', '', '{{greeting}}
+('T3_followup', 'en', 'sequence', 'Step 2 (Follow-up 1: Route & Vehicle Fit)', '', '', '{{greeting}}
 
-One thing our partner planners tell us saves them the most hours before a wedding is our private Guest Transfer Portal.
+One logistical detail worth adding for your {{venue}} weddings: rather than your team spending unbillable hours building arrival spreadsheets for 80+ guests, you can forward us your guest flight list and our dispatch desk clusters them into shared Mercedes-Benz V-Classes, monitors live Malpensa delays, and shares a live master manifest.
 
-You drop a custom link onto the couple''s wedding website, guests enter their own flight details, and our team groups arrivals into shared or private Mercedes-Benz V-Class and E-Class transfers, tracks every flight on radar, and bills guests directly via SumUp. Your team never has to chase flight spreadsheets or guest payments.
-
-We also run 16 to 50-seat minibuses and coaches alongside our Mercedes-Benz fleet, so we can match compact minibuses to narrow lakeside villa gates and 50-seaters to main hotel transfers.
-
-Would it be helpful to see our 1-page partner rate card and how the portal works?
+We also run 16 to 50-seat minibuses for larger groups. If transport ever gets tight on an upcoming date, feel free to message me on WhatsApp or reply here.
 
 {{signature}}
 
 {{optout}}', false),
-('T4_breakup', 'en', 'sequence', 'T4 Breakup email (new thread)', '{{agency}} · private transport on Lake Como & Northern Italy', 'Airport transfer on your next Milan site visit · {{agency}}', '{{greeting}}
+('T4_breakup', 'en', 'sequence', 'Step 3 (Follow-up 2 · Final note)', 'Lake Como & Milan private guest transport', 'Guest transport on Lake Como', '{{greeting}}
 
-I will leave this here so I do not crowd your inbox while you are deep in planning.
-
-Next time you fly into Malpensa or Linate for a client venue visit, message me on WhatsApp and we will gladly host your airport transfer on us so you can experience our chauffeurs firsthand. Whenever you need a team to take over the guest transport logistics for a wedding weekend, we are one reply away.
+Last note from me so I do not crowd your inbox. Whenever you need guest transport for a Lake Como or Milan date, feel free to message me on WhatsApp or reply here.
 
 Wishing you a calm, successful season.
 
 {{signature}}
 
 {{optout}}', false),
-('T1_intro', 'it', 'sequence', 'T1 Email di presentazione', '{{subject_line_a}}', '{{subject_line_b}}', '{{greeting}}
+('T1_intro', 'it', 'sequence', 'Step 1 (Email di presentazione)', '{{subject_line_a}}', '{{subject_line_b}}', '{{greeting}}
 
 {{hook}}
 
@@ -263,83 +257,123 @@ Wishing you a calm, successful season.
 {{signature}}
 
 {{optout}}', false),
-('T3_followup', 'it', 'sequence', 'T3 Follow-up (Portale Ospiti)', '', '', '{{greeting}}
+('T3_followup', 'it', 'sequence', 'Step 2 (Follow-up 1: Flotta e Portale)', '', '', '{{greeting}}
 
-Uno strumento che fa risparmiare decine di ore ai wedding planner con cui lavoriamo è il nostro Portale Ospiti dedicato.
+Un dettaglio operativo per i vostri matrimoni a {{venue}}: anziché farvi impiegare ore a incrociare fogli Excel per gli arrivi degli ospiti, potete semplicemente inoltrarci la lista dei voli e la nostra centrale organizza le navette Mercedes-Benz Classe V condivise, monitorando i ritardi a Malpensa in tempo reale.
 
-Inserite un link riservato sul sito degli sposi, gli ospiti registrano i propri voli in autonomia e il nostro team organizza i transfer in Mercedes-Benz Classe V e Classe E, monitora i voli sul radar e gestisce i singoli pagamenti tramite SumUp. Il vostro studio non deve più rincorrere fogli Excel con i voli o pagamenti degli invitati.
-
-Disponiamo inoltre di minibus e pullman da 16 a 50 posti, così da abbinare mezzi compatti per i viali stretti delle ville e pullman da 50 posti per gli spostamenti principali.
-
-Vi fa comodo ricevere la nostra tariffa partner di una pagina per vedere come funziona?
+Disponiamo inoltre di minibus da 16 a 50 posti per i gruppi più numerosi. Se dovesse servirvi supporto su una data intensa, scrivetemi pure su WhatsApp o rispondete a questa mail.
 
 {{signature}}
 
 {{optout}}', false),
-('T4_breakup', 'it', 'sequence', 'T4 Email di chiusura (nuovo thread)', '{{agency}} · logistica trasporti Lago di Como e Nord Italia', 'Transfer per i vostri prossimi sopralluoghi · {{agency}}', '{{greeting}}
+('T4_breakup', 'it', 'sequence', 'Step 3 (Follow-up 2 · Chiusura)', 'Trasporti privati Lago di Como e Milano', 'Transfer ospiti Lago di Como', '{{greeting}}
 
-Chiudo qui per non affollare la vostra casella durante i preparativi.
+Chiudo qui per non affollare la vostra casella. Quando vi servirà supporto per i trasferimenti ospiti sul Lago di Como o a Milano, scrivetemi pure su WhatsApp o rispondete qui.
 
-La prossima volta che avete un sopralluogo con una coppia tra Milano, i laghi o le Alpi, scrivetemi su WhatsApp: saremo felici di offrirvi un transfer di prova per farvi conoscere di persona i nostri autisti. Quando vorrete delegare l''intera logistica trasporti di un matrimonio, siamo a un messaggio di distanza.
-
-Buon lavoro e buona stagione.
+Buona stagione.
 
 {{signature}}
 
 {{optout}}', false),
+('T1_intro', 'ru', 'sequence', 'Step 1 (Email знакомства)', '{{subject_line_a}}', '{{subject_line_b}}', '{{greeting}}
+
+{{hook}}
+
+{{service_pitch}}
+
+{{cta_line}}
+
+{{signature}}
+
+{{optout}}', false),
+('T3_followup', 'ru', 'sequence', 'Step 2 (Follow-up 1: Автопарк и логистика)', '', '', '{{greeting}}
+
+Полезная деталь для ваших свадеб в {{venue}}: чтобы ваши координаторы не тратили часы на составление таблиц прилета гостей в Excel, вы можете просто переслать нам список рейсов. Наш диспетчерский центр сам группирует гостей по Mercedes-Benz V-Class, отслеживает задержки рейсов в Мальпенсе и ведет единую ведомость.
+
+Для больших групп мы также предоставляем комфортабельные минибусы от 16 до 50 мест. Если на ближайших датах потребуется поддержка с транспортом, напишите мне в WhatsApp или ответьте на это письмо.
+
+{{signature}}
+
+{{optout}}', false),
+('T4_breakup', 'ru', 'sequence', 'Step 3 (Follow-up 2 · Финальное письмо)', 'Трансферы гостей: озеро Комо и Северная Италия', 'Трансферы гостей в Италии', '{{greeting}}
+
+Пишу в последний раз, чтобы не перегружать вашу почту. Если для свадеб на озере Комо, в Милане или Северной Италии понадобится надежный транспорт для гостей, напишите мне в WhatsApp или ответьте на это письмо.
+
+Успешного и спокойного сезона.
+
+{{signature}}
+
+{{optout}}', false),
+('rate_card_delivery', 'ru', 'reply', 'Отправка тарифов (PDF)', '', '', '{{greeting}}
+
+Во вложении направляю наш одностраничный партнерский лист тарифов и автопарк. Мы работаем как по конфиденциальным нетто-тарифам для вашей сметы, так и с 10% партнерской комиссией.
+
+Если у вас запланирована дата и локация, пришлите ориентировочное число гостей, и я рассчитаю точный бюджет.
+
+{{signature}}', true),
 ('rate_card_delivery', 'en', 'reply', 'Rate card delivery (attach PDF)', '', '', '{{greeting}}
 
-Here is our 1-page partner rate card, attached.
+Attached is our 1-page partner rate card and vehicle list. We work either on confidential net rates that you can include in your client offer, or on a 10% partner commission.
 
-It covers fixed net rates from Malpensa, Linate and Lugano to the lake, hourly service, and the late-night villa shuttle. You can either include our confidential net rates directly in your client offer with your own markup, or work with us on a 5% referral commission where we bill the couple directly.
-
-If you have a date and venue in mind, send them with the guest count and I''ll draft the transport plan.
+If you have an upcoming date and venue, send the guest count and I will put together a quote.
 
 {{signature}}', true),
 ('rate_card_delivery', 'it', 'reply', 'Invio tariffa (PDF allegato)', '', '', '{{greeting}}
 
-In allegato la nostra tariffa partner, in una pagina.
+In allegato trovate il nostro listino partner di 1 pagina e la lista veicoli. Lavoriamo sia con tariffe nette riservate da includere nella vostra offerta, sia con una commissione partner del 10%.
 
-Contiene le tariffe nette fisse da Malpensa, Linate e Lugano verso il lago, il servizio orario e la navetta notturna dalle ville. Potete inserire le nostre tariffe nette riservate direttamente nella vostra offerta agli sposi, oppure lavorare con noi con una commissione del 5% sulle prenotazioni segnalate, dove fatturiamo direttamente agli sposi.
-
-Se avete già una data e una location, mandatemi anche il numero di ospiti e preparo il piano dei transfer.
+Se avete una data e una location in programma, scrivetemi il numero di ospiti e preparo il preventivo.
 
 {{signature}}', true),
 ('reply_asks_pricing', 'en', 'reply', 'Reply: asks for prices', '', '', '{{greeting}}
 
-The rate card is attached. As a guide, a Mercedes-Benz V-Class from Malpensa to Como is €230 net, and to Bellagio €320. The late-night villa shuttle is €450 per V-Class for continuous return loops to local hotels.
+Our 1-page partner rate card is attached: a Mercedes-Benz V-Class from Malpensa to Como is €230 net (Bellagio €320 net), and our late-night villa shuttle is €450 net per V-Class (or we can work on a 10% partner commission).
 
-If you share the date, venue and guest count, I''ll put together a full transport plan with a fixed price.
+Share your date, venue and guest count whenever you want a fixed quote.
+
+{{signature}}', true),
+('reply_asks_pricing', 'it', 'reply', 'Risposta: richiesta tariffe', '', '', '{{greeting}}
+
+In allegato trovate il nostro listino partner di 1 pagina: una Mercedes-Benz Classe V da Malpensa a Como parte da €230 netti (Bellagio €320 netti) e il servizio navetta notturno dalle ville da €450 netti per Classe V (oppure con commissione partner del 10%).
+
+Condividete pure data, location e numero di ospiti quando desiderate una quotazione dedicata.
+
+{{signature}}', true),
+('reply_asks_pricing', 'ru', 'reply', 'Ответ: запрос тарифов', '', '', '{{greeting}}
+
+Во вложении наш одностраничный партнерский лист тарифов: Mercedes-Benz V-Class из Мальпенсы на Комо — €230 нетто (Белладжио — €320 нетто), ночной шаттл с вилл — €450 нетто за V-Class (также работаем с 10% партнерской комиссией).
+
+Пришлите дату, виллу и количество гостей, когда потребуется точный расчет под проект.
 
 {{signature}}', true),
 ('reply_meeting_request', 'en', 'reply', 'Reply: wants a call', '', '', '{{greeting}}
 
-Happy to talk. I''m free {{slot_1}} or {{slot_2}}, or send me a time that suits you better. My direct line is +32 456 14 14 97.
+Happy to speak. I am free {{slot_1}} or {{slot_2}}, or send a time that suits you on WhatsApp.
 
 {{signature}}', false),
 ('reply_has_supplier', 'en', 'reply', 'Reply: already has a supplier', '', '', '{{greeting}}
 
-Thank you for letting me know. A second supplier can help on peak weekends, when your main one is fully booked. If that ever happens, we can cover a single late-night shuttle or a full airport day, and the rate card is here for your files.
+Understood, we are not looking to replace anyone you work with. I have attached our 1-page partner rate card and vehicle list (V-Classes, S-Classes and 16 to 50-seat minibuses) in case you ever need extra vehicles on a busy date.
 
-{{signature}}', false),
+{{signature}}', true),
 ('reply_not_now', 'en', 'reply', 'Reply: not now / next season', '', '', '{{greeting}}
 
-Understood, and thank you. I''ll write again before next season. If a date comes up sooner, a reply here is all it takes.
+Understood. I will check back before next season, and if a date comes up sooner, just reply here.
 
 {{signature}}', false),
 ('reply_referral_to_other', 'en', 'reply', 'Reply: points to a colleague', '', '', '{{greeting}}
 
-Thank you for pointing me in the right direction. I''ll write to {{referred_name}} directly and mention that you suggested it.
+Thank you, I will write to {{referred_name}} directly and mention your note.
 
 {{signature}}', false),
 ('ratecard_nudge', 'en', 'nudge', 'Nudge: rate card sent, no answer', '', '', '{{greeting}}
 
-A quick check that the rate card reached you. If one of next season''s weddings needs guests moved between Milan and the lake, send me the date and venue and I''ll sketch the transport plan.
+Quick check that our partner rate card reached you. If an upcoming wedding needs guest transfers or late-night returns, send me the date and venue for a quote.
 
 {{signature}}', false),
 ('fam_followup', 'en', 'nudge', 'After a FAM transfer', '', '', '{{greeting}}
 
-Thank you for riding with us. I''d value one line on how it went, and on anything you would want different for your couples'' guests.
+Thank you for riding with us. Let me know if there is anything you would tailor for your couples'' guests.
 
 {{signature}}', false),
 ('reply_generic', 'en', 'reply', 'Reply: blank', '', '', '{{greeting}}
@@ -350,25 +384,25 @@ Thank you for riding with us. I''d value one line on how it went, and on anythin
 on conflict (key, language) do nothing;
 
 insert into public.prospects (type, agency_name, contact_name, source, review_source, rating, verified_reviews_count, location, segment, tags, notes, priority_score) values
-('planner', 'WP Bellagio', null, 'matrimonio.com', 'matrimonio.com', '5', '27', 'Bellagio', 'boutique_local', array['seed','priority']::text[], null, '64'),
-('planner', 'Federica Cantù Wedding Planner', null, 'matrimonio.com', 'matrimonio.com', '5', '41', null, 'boutique_local', array['seed','priority']::text[], null, '57'),
-('planner', 'Como Luxury Wedding', null, 'matrimonio.com', 'matrimonio.com', '5', '11', null, 'boutique_local', array['seed','priority']::text[], null, '57'),
-('planner', 'Perlee', null, 'matrimonio.com', 'matrimonio.com', '5', '26', null, 'boutique_local', array['seed','priority']::text[], null, '57'),
-('planner', 'I Do in Lake Como', null, 'manual', 'google', null, null, null, 'boutique_local', array['seed','priority']::text[], 'Strong Google reviews (brief). Re-verify rating and count.', '39'),
-('planner', 'SugarEvents', null, 'matrimonio.com', 'matrimonio.com', '4.9', '70', 'Laglio', 'boutique_local', array['seed','priority']::text[], 'Laglio / Milan.', '64'),
-('planner', 'Best Day Ever', 'Barbara Botta', 'manual', null, null, null, null, null, array['seed']::text[], null, '29'),
-('planner', 'Kiss & Escape', null, 'manual', null, null, null, null, null, array['seed']::text[], null, '25'),
-('planner', 'Lena Freitag Weddings', null, 'manual', null, null, null, null, null, array['seed']::text[], null, '25'),
-('planner', 'Romance in Italy', null, 'manual', null, null, null, null, null, array['seed']::text[], null, '25'),
-('planner', 'Erika Romano Weddings', null, 'manual', null, null, null, null, null, array['seed']::text[], null, '25'),
-('planner', 'Sabine Wedding Planner', null, 'manual', null, null, null, null, null, array['seed','unverified']::text[], 'Unverified in the brief: deprioritised.', '15'),
-('venue', 'Relais Villa Vittoria', null, 'manual', null, null, null, 'Laglio', null, array['seed','backdoor']::text[], 'Venue with in-house event coordinator (referral backdoor).', '32'),
-('venue', 'Villa Lario', null, 'manual', null, null, null, null, null, array['seed','backdoor']::text[], 'Written "Villa Larío" in the brief. Confirm the exact property.', '25'),
-('venue', 'Filario', null, 'manual', null, null, null, 'Lezzeno', null, array['seed','backdoor']::text[], null, '32'),
-('venue', 'Villa Cipressi', null, 'manual', null, null, null, 'Varenna', null, array['seed','backdoor']::text[], null, '32'),
-('concierge_hotel', 'Grand Hotel Imperiale', null, 'manual', null, null, null, 'Moltrasio', null, array['seed','backdoor']::text[], null, '32'),
-('planner', 'The Lake Como Wedding Planner', null, 'manual', null, null, null, null, 'international', array['seed','tier1','low_priority']::text[], 'Tier 1/2 agency: judged saturated, kept for later.', '10'),
-('planner', 'SposiamoVi', null, 'manual', null, null, null, null, 'international', array['seed','tier1','low_priority']::text[], 'Tier 1/2 agency: judged saturated, kept for later.', '10'),
-('planner', 'Eventoile', null, 'manual', null, null, null, null, 'international', array['seed','tier1','low_priority']::text[], 'Tier 1/2 agency: judged saturated, kept for later.', '10'),
-('planner', 'Elena Renzi', null, 'manual', null, null, null, null, 'international', array['seed','tier1','low_priority']::text[], 'Tier 1/2 agency: judged saturated, kept for later.', '10'),
-('planner', 'Matthew Oliver', null, 'manual', null, null, null, null, 'international', array['seed','tier1','low_priority']::text[], 'Tier 1/2 agency: judged saturated, kept for later.', '10');
+('planner', 'WP Bellagio', null, 'matrimonio.com', 'matrimonio.com', '5', '27', 'Bellagio', 'boutique_local', array['seed','priority']::text[], null, '40'),
+('planner', 'Federica Cantù Wedding Planner', null, 'matrimonio.com', 'matrimonio.com', '5', '41', null, 'boutique_local', array['seed','priority']::text[], null, '35'),
+('planner', 'Como Luxury Wedding', null, 'matrimonio.com', 'matrimonio.com', '5', '11', null, 'boutique_local', array['seed','priority']::text[], null, '33'),
+('planner', 'Perlee', null, 'matrimonio.com', 'matrimonio.com', '5', '26', null, 'boutique_local', array['seed','priority']::text[], null, '35'),
+('planner', 'I Do in Lake Como', null, 'manual', 'google', null, null, null, 'boutique_local', array['seed','priority']::text[], 'Strong Google reviews (brief). Re-verify rating and count.', '21'),
+('planner', 'SugarEvents', null, 'matrimonio.com', 'matrimonio.com', '4.9', '70', 'Laglio', 'boutique_local', array['seed','priority']::text[], 'Laglio / Milan.', '40'),
+('planner', 'Best Day Ever', 'Barbara Botta', 'manual', null, null, null, null, null, array['seed']::text[], null, '20'),
+('planner', 'Kiss & Escape', null, 'manual', null, null, null, null, null, array['seed']::text[], null, '16'),
+('planner', 'Lena Freitag Weddings', null, 'manual', null, null, null, null, null, array['seed']::text[], null, '16'),
+('planner', 'Romance in Italy', null, 'manual', null, null, null, null, null, array['seed']::text[], null, '16'),
+('planner', 'Erika Romano Weddings', null, 'manual', null, null, null, null, null, array['seed']::text[], null, '16'),
+('planner', 'Sabine Wedding Planner', null, 'manual', null, null, null, null, null, array['seed','unverified']::text[], 'Unverified in the brief: deprioritised.', '6'),
+('venue', 'Relais Villa Vittoria', null, 'manual', null, null, null, 'Laglio', null, array['seed','backdoor']::text[], 'Venue with in-house event coordinator (referral backdoor).', '24'),
+('venue', 'Villa Lario', null, 'manual', null, null, null, null, null, array['seed','backdoor']::text[], 'Written "Villa Larío" in the brief. Confirm the exact property.', '14'),
+('venue', 'Filario', null, 'manual', null, null, null, 'Lezzeno', null, array['seed','backdoor']::text[], null, '19'),
+('venue', 'Villa Cipressi', null, 'manual', null, null, null, 'Varenna', null, array['seed','backdoor']::text[], null, '24'),
+('concierge_hotel', 'Grand Hotel Imperiale', null, 'manual', null, null, null, 'Moltrasio', null, array['seed','backdoor']::text[], null, '19'),
+('planner', 'The Lake Como Wedding Planner', null, 'manual', null, null, null, null, 'international', array['seed','tier1','low_priority']::text[], 'Tier 1/2 agency: judged saturated, kept for later.', '0'),
+('planner', 'SposiamoVi', null, 'manual', null, null, null, null, 'international', array['seed','tier1','low_priority']::text[], 'Tier 1/2 agency: judged saturated, kept for later.', '0'),
+('planner', 'Eventoile', null, 'manual', null, null, null, null, 'international', array['seed','tier1','low_priority']::text[], 'Tier 1/2 agency: judged saturated, kept for later.', '0'),
+('planner', 'Elena Renzi', null, 'manual', null, null, null, null, 'international', array['seed','tier1','low_priority']::text[], 'Tier 1/2 agency: judged saturated, kept for later.', '0'),
+('planner', 'Matthew Oliver', null, 'manual', null, null, null, null, 'international', array['seed','tier1','low_priority']::text[], 'Tier 1/2 agency: judged saturated, kept for later.', '0');

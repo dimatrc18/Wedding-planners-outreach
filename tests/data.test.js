@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   wilson, computeMetrics, tractionVerdict, compareRates, csvToProspects, toCSV, findDuplicates, extractFromHtml,
   priorityScore, parseProfileUrl, quoteNet, commissionFor, getRateCardInfo, rankUsableEmails, inferLanguage,
-  sanitizeCatalogProspect, DISCOVERY_PARTNER_CATALOG,
+  sanitizeCatalogProspect, DISCOVERY_PARTNER_CATALOG, buildSocialOpener,
 } from '../supabase/functions/_shared/core/index.js';
 
 test('Wilson interval', () => {
@@ -207,8 +207,30 @@ test('rate card quote and commission', () => {
   const q = quoteNet([{ kind: 'route', route: 'mxp_bellagio', vehicle: 'V', qty: 4 }, { kind: 'shuttle', qty: 2 }, { kind: 'hourly', vehicle: 'S', hours: 2, qty: 1 }]);
   assert.equal(q.total, 4 * 320 + 2 * 450 + 3 * 110);
   assert.equal(q.deposit, Math.round(q.total * 0.25));
-  assert.equal(commissionFor(10000, 'referral_12'), 500);
+  assert.equal(commissionFor(10000, 'referral_12'), 1000);
   assert.equal(commissionFor(10000, 'net_whitelabel'), 0);
+});
+
+test('buildSocialOpener produces multi-channel openers for Instagram and WhatsApp across EN, IT, RU', () => {
+  const enProspect = { contact_name: 'Rachel Birthistle', agency_name: 'The Lake Como Wedding Planner', language: 'en' };
+  const igEn = buildSocialOpener(enProspect, 'instagram');
+  assert.match(igEn, /Rachel/);
+  assert.match(igEn, /backup slots/);
+  assert.match(igEn, /2027 partner rate card/);
+
+  const waEn = buildSocialOpener(enProspect, 'whatsapp');
+  assert.match(waEn, /Rachel/);
+  assert.match(waEn, /vetted backup fleet/);
+
+  const itProspect = { contact_name: 'Elena Pennisi', agency_name: 'Elena Pennisi Events', language: 'it' };
+  const igIt = buildSocialOpener(itProspect, 'instagram');
+  assert.match(igIt, /Elena/);
+  assert.match(igIt, /backup/i);
+
+  const ruProspect = { contact_name: 'Катрин Моро', agency_name: 'Katrin Moro Weddings', language: 'ru' };
+  const waRu = buildSocialOpener(ruProspect, 'whatsapp');
+  assert.match(waRu, /Катрин/);
+  assert.match(waRu, /резерв/);
 });
 
 test('multi-language rate card routing matches communication language (EN, IT, RU)', () => {

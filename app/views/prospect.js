@@ -91,6 +91,7 @@ export function render(el, id) {
       <button class="btn" data-act="ratecard">${icon('send', 16)} Send rate card</button>
       <button class="btn" data-act="log-reply">${icon('reply', 16)} Log a reply</button>
       <button class="btn" data-act="log-touch">${icon('phone', 16)} Log call / meeting</button>
+      <button class="btn" data-act="copy-social">${icon('copy', 16)} Copy IG/WA pitch</button>
       <button class="btn ghost" data-act="snooze">${icon('clock', 16)} Snooze</button>
       <button class="btn ghost" data-act="lost">Mark lost</button>
       ${p.do_not_contact ? '' : '<button class="btn ghost" data-act="dnc">Do not contact</button>'}
@@ -135,7 +136,7 @@ export function render(el, id) {
         <section class="card stack">
           <div class="section-head"><h2>Partnership & dates</h2></div>
           <div class="fields" id="dates">
-            <label class="field"><span>Partner model</span><select data-f="partner_model"><option value="">–</option><option value="referral_12" ${p.partner_model === 'referral_12' ? 'selected' : ''}>A · 5% referral</option><option value="net_whitelabel" ${p.partner_model === 'net_whitelabel' ? 'selected' : ''}>B · Net / in offer</option></select></label>
+            <label class="field"><span>Partner model</span><select data-f="partner_model"><option value="">–</option><option value="referral_12" ${p.partner_model === 'referral_12' ? 'selected' : ''}>A · 10% referral</option><option value="net_whitelabel" ${p.partner_model === 'net_whitelabel' ? 'selected' : ''}>B · Net / in offer</option></select></label>
             <label class="field"><span>FAM transfer</span><select data-f="fam_status"><option value="">–</option>${['offered', 'accepted', 'completed', 'declined'].map((o) => `<option ${p.fam_status === o ? 'selected' : ''}>${o}</option>`).join('')}</select></label>
             <label class="field"><span>FAM date</span><input type="datetime-local" data-f="fam_at" value="${toLocalInput(p.fam_at)}"></label>
             <label class="field"><span>Nurture until</span><input type="datetime-local" data-f="nurture_until" value="${toLocalInput(p.nurture_until)}"></label>
@@ -211,6 +212,12 @@ export function render(el, id) {
       }
       else if (a === 'log-reply') await logReplyDialog(p);
       else if (a === 'log-touch') await logTouchDialog(p);
+      else if (a === 'copy-social') {
+        const channel = p.whatsapp_opt_in || p.phone ? 'whatsapp' : 'instagram';
+        const msg = core.buildSocialOpener(p, channel);
+        await copyText(msg);
+        toast(`Copied ${channel === 'whatsapp' ? 'WhatsApp' : 'Instagram'} opener to clipboard`);
+      }
       else if (a === 'snooze') {
         const days = await dialog({ title: 'Snooze', body: `<div class="row">${[3, 7, 14, 30, 90].map((d) => `<button class="btn" data-d="${d}">${d} days</button>`).join('')}</div>`, onMount: (bx, close) => bx.addEventListener('click', (ev) => { const x = ev.target.closest('[data-d]'); if (x) close(+x.dataset.d); }) });
         if (days) { await update('prospects', p.id, { snoozed_until: new Date(Date.now() + days * 86400000).toISOString() }); toast(`Snoozed ${days} days`); }

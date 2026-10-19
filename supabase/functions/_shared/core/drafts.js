@@ -115,7 +115,7 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       subject_line_a: ruSubjectsA[idx],
       subject_line_b: 'Ночной разъезд гостей после свадебного ужина',
       service_pitch:
-        'Мы базируем собственный парк Mercedes-Benz V-Class и S-Class на озере Комо, плюс привлекаем проверенные минибусы до 50 мест. Мы специализируемся на встрече в Мальпенсе и ночном разъезде с вилл, когда такси вызвать невозможно. На сезон 2027 года у нас забронировано 2–3 партнерских места.',
+        'Мы базируем собственный парк Mercedes-Benz V-Class и S-Class на озере Комо, плюс привлекаем проверенные минибусы до 50 мест. Мы не стремимся заменить ваших основных перевозчиков, но на пиковые даты, когда парк перегружен, мы держим резервные слоты для партнерских студий.',
       cta_line:
         'Отправить вам наш партнерский лист тарифов на 2027 год и схему ночных шаттлов, или у вас уже закрыты трансферы на озере?',
     };
@@ -154,9 +154,9 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       subject_line_a: itSubjectsA[idx],
       subject_line_b: 'Rientri notturni dopo il ricevimento',
       service_pitch:
-        'Operiamo con una flotta Mercedes-Benz Classe V e Classe S basata sul Lago di Como, più minibus fino a 50 posti. Gestiamo transfer da Malpensa e rientri notturni dalle ville dove i taxi non operano. Per garantire veicoli dedicati e referente WhatsApp, riserviamo 2 o 3 posti partner per la stagione 2027.',
+        'Operiamo con una flotta Mercedes-Benz Classe V e Classe S basata sul Lago di Como, più minibus fino a 50 posti. Non cerchiamo di sostituire i vostri autisti di fiducia, ma nelle date di punta in cui le disponibilità sul lago scarseggiano, riserviamo disponibilità di flotta per le agenzie partner.',
       cta_line:
-        'Può esservi utile ricevere il nostro listino partner 2027 e lo schema dei circuiti villa, o avete già fornitori fissi sul lago?',
+        'Può esservi utile ricevere il nostro listino riservato 2027 e lo schema dei circuiti villa, o avete già fornitori fissi sul lago?',
     };
   }
 
@@ -194,7 +194,7 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
     subject_line_a: plannerSubjectsA[idx],
     subject_line_b: 'Late returns after the reception',
     service_pitch:
-      'We operate an executive Mercedes-Benz V-Class and S-Class fleet based on Lake Como, plus vetted minibuses up to 50 seats. Because villa roads are narrow and taxis are unavailable past midnight, we reserve capacity for 2 or 3 partner studios for the 2027 season to guarantee vehicle availability.',
+      'We operate an executive Mercedes-Benz V-Class and S-Class fleet based on Lake Como, plus vetted minibuses up to 50 seats. We are not looking to replace your usual drivers, but on peak summer dates when villa schedules exceed capacity, we hold dedicated backup fleet slots on reserve for partner studios.',
     cta_line:
       'Would having our 2027 partner rate card and villa shuttle circuits be useful for your file, or do you already have fixed transfer partners on the lake?',
   };
@@ -472,5 +472,34 @@ export function renderDorogoLuxuryHtmlEmail(
   </table>
 </body>
 </html>`;
+}
+
+/**
+ * Builds high-converting, concise social openers for Instagram DM or WhatsApp.
+ * Designed for multi-channel touches when planners are active on social media.
+ */
+export function buildSocialOpener(prospect = {}, channel = 'instagram') {
+  const lang = ['it', 'ru'].includes(prospect.language) ? prospect.language : 'en';
+  const name = firstName(prospect.contact_name);
+  const agency = prospect.agency_name || '';
+
+  if (channel === 'whatsapp') {
+    if (lang === 'it') {
+      return `Ciao ${name || ''}${name ? ', ' : ''}qui Dmitri di DOROGO (NCC lago di Como & Milano). Volevo solo lasciarti il contatto diretto per le date estive in cui la tua flotta abituale è satura e serve un supporto d'emergenza con van Mercedes o minibus. Ti lascio la scheda tariffe o un contatto per quando serve?`.trim();
+    }
+    if (lang === 'ru') {
+      return `Привет, ${name || ''}${name ? '! ' : ''}Дмитрий из DOROGO (трансферы и мерседесы на озере Комо). Сохрани наш контакт на случай пиковых свадебных дат, когда основные водители заняты и нужен срочный резерв (V-Class, S-Class, минибусы). Скинуть тебе наш партнерский прайс-лист в WhatsApp?`.trim();
+    }
+    return `Hi ${name || ''}${name ? ', ' : ''}Dmitri from DOROGO (Lake Como & Milan NCC). Just wanted to leave our direct contact for peak wedding weekends when your usual drivers are fully booked and you need vetted backup fleet (Mercedes V-Class, S-Class, minibuses). Should I send our 2027 partner rate sheet here?`.trim();
+  }
+
+  // Instagram DM (punchy, casual luxury, direct)
+  if (lang === 'it') {
+    return `Ciao ${name || agency || ''}${name || agency ? ' — ' : ''}complimenti sinceri per le produzioni sul Lago. Sono Dmitri di DOROGO (flotta Mercedes & minibus su Como/Milano). Se per la stagione ti capita un weekend con flotta abituale già al completo, teniamo sempre van di backup dedicati ai planner. Ti giro la scheda partner in DM o via email?`.trim();
+  }
+  if (lang === 'ru') {
+    return `Привет, ${name || agency || ''}${name || agency ? ' — ' : ''}очень красивое портфолио на Комо! Я Дмитрий из DOROGO (собственный парк Mercedes V/S-Class и минибусов на Комо и в Милане). Если в сезон твои основные подрядчики будут на 100% заняты, мы держим резервные слоты для координаторов. Прислать партнерские тарифы сюда или на почту?`.trim();
+  }
+  return `Hi ${name || agency || ''}${name || agency ? ' — ' : ''}stunning work across Lake Como! I'm Dmitri from DOROGO (Mercedes V-Class & minibus fleet on Lake Como/Milan). If you ever hit peak wedding Saturdays where your regular fleet is fully maxed out, we hold dedicated backup slots for planners. Would our 2027 partner rate card be helpful here or over email?`.trim();
 }
 
