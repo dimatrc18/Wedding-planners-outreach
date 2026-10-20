@@ -246,6 +246,70 @@ export async function render(el) {
         </div>
       </section>
 
+      <!-- 1.5 Milestone Progression & Trajectory Visual (User-Friendly Executive Layout) -->
+      <section class="card stack" style="gap:12px;background:var(--surface);padding:18px 20px;border:1px solid var(--line);border-radius:var(--r-sm)">
+        <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px">
+          <div>
+            <div class="row" style="gap:8px;align-items:center">
+              <span style="font-size:1.1rem">📈</span>
+              <h3 style="margin:0;font-size:1.05rem;font-weight:600">AI Search Visibility Trajectory &amp; Growth</h3>
+            </div>
+            <span class="small muted">Measured impact from Initial Baseline to Live 3-Engine Consensus</span>
+          </div>
+          <span class="chip ok" style="font-weight:700;font-size:.74rem">▲ +40.0% Overall Reach Lift</span>
+        </div>
+
+        <!-- Milestone Progression Visual Bar -->
+        <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px 18px">
+          
+          <!-- Milestone 1: Baseline -->
+          <div class="stack" style="gap:6px">
+            <div class="row" style="gap:6px;align-items:center">
+              <span class="chip outline" style="font-size:.68rem;font-weight:600">Milestone 1</span>
+              <span class="small" style="font-weight:600;color:var(--ink-2)">15 Oct · Initial Baseline</span>
+            </div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.75rem;font-weight:700;color:var(--ink);line-height:1">
+              10.0% <span style="font-size:.82rem;font-family:var(--sans);font-weight:500;color:var(--ink-3)">(1 of 10 routes cited)</span>
+            </div>
+            <div class="small muted" style="font-size:.76rem">
+              Top-3 Podium Share: <strong>10.0%</strong> · Single engine (Perplexity)
+            </div>
+          </div>
+
+          <!-- Arrow Indicator -->
+          <div style="text-align:center;padding:0 8px">
+            <div style="font-size:1.3rem;color:var(--gold-ink);font-weight:700">➔</div>
+            <span class="chip ok" style="font-size:.66rem;font-weight:700;margin-top:2px">+40.0% Lift</span>
+          </div>
+
+          <!-- Milestone 2: Live Multi-Engine -->
+          <div class="stack" style="gap:6px">
+            <div class="row" style="gap:6px;align-items:center">
+              <span class="chip gold" style="font-size:.68rem;font-weight:700">Latest Live Audit</span>
+              <span class="small" style="font-weight:600;color:var(--ink)">20 Oct · 3-Engine Consensus</span>
+            </div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.75rem;font-weight:700;color:var(--gold-ink);line-height:1">
+              50.0% <span style="font-size:.82rem;font-family:var(--sans);font-weight:500;color:var(--ink-2)">(6 of 12 routes cited)</span>
+            </div>
+            <div class="small muted" style="font-size:.76rem">
+              Top-3 Podium Share: <strong>41.7%</strong> · 3 Engines (Perplexity + ChatGPT + Gemini)
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Trajectory Key Breakthroughs -->
+        <div class="row between" style="background:var(--surface-2);border-radius:var(--r-sm);padding:8px 14px;font-size:.78rem;align-items:center;flex-wrap:wrap;gap:8px">
+          <div class="row" style="gap:8px;align-items:center">
+            <span style="font-weight:600;color:var(--ink)">Key Rank Breakthroughs:</span>
+            <span class="chip ok" style="font-size:.7rem">🏆 Courchevel 1850 (#1 Top Pick)</span>
+            <span class="chip ok" style="font-size:.7rem">🥈 Fiera Milano Convoys (#2 Podium)</span>
+            <span class="chip ok" style="font-size:.7rem">🥈 Linate Prime FBO (#3 Podium)</span>
+          </div>
+          <span class="tiny muted">6 routes still unranked (Target for next week's SEO landing pages)</span>
+        </div>
+      </section>
+
       <!-- 2. Tracked Route Battleground Matrix (Unified & MECE) -->
       <section class="card stack" style="gap:12px;background:var(--surface);padding:18px 20px;border:1px solid var(--line);border-radius:var(--r-sm)">
         <div class="row between" style="align-items:center;flex-wrap:wrap;gap:10px">

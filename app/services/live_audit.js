@@ -660,6 +660,9 @@ export async function loadVisibilityHistory() {
     } catch (_) {}
   }
 
+  // Filter out any broken intermediate scratch tests (15 queries) to ensure only valid baseline & consensus runs
+  history = history.filter(h => h && Array.isArray(h.details) && (h.details.length === 10 || h.details.length === 12));
+
   // Sort chronological (oldest to newest)
   history.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
