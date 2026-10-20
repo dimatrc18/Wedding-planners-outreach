@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { lintMessage, buildDraft, DEFAULT_TEMPLATES, merge, buildVars, assignVariant, greeting } from '../supabase/functions/_shared/core/index.js';
+import { lintMessage, buildDraft, DEFAULT_TEMPLATES, merge, buildVars, assignVariant, greeting, renderDorogoLuxuryHtmlEmail } from '../supabase/functions/_shared/core/index.js';
 
 const prospect = {
   id: 'abc', agency_name: 'WP Bellagio', contact_name: 'Giulia Rossi', language: 'en',
@@ -78,10 +78,14 @@ test('Russian greeting & hook cleaning: no duplicate hello and Senior Dispatcher
   // Ensure "Здравствуйте" occurs only once in the entire message
   const hellos = (d.body.match(/Здравствуйте/g) || []).length;
   assert.equal(hellos, 1, 'Здравствуйте must appear exactly once');
-  // Verify Senior Dispatcher signature
-  assert.ok(d.body.includes('Старший диспетчер, DOROGO'), 'Includes Senior Dispatcher role');
-  assert.ok(d.body.includes('Озеро Комо · Милан'), 'Includes Lake Como · Milan regional line');
-  assert.ok(!d.body.includes('Founder'), 'Does not contain Founder');
+  // Verify plain body does NOT contain redundant raw contact block
+  assert.ok(!d.body.includes('dmitri@dorogo.eu | WhatsApp: wa.me/32456141497'), 'Body does not contain redundant raw contact line');
+  // Verify HTML email render contains Senior Dispatcher under Dmitri
+  const html = renderDorogoLuxuryHtmlEmail(d.body, { fromEmail: 'booking@dorogo.eu' });
+  assert.ok(html.includes('Старший диспетчер'), 'Rendered HTML email includes Senior Dispatcher in Russian');
+  assert.ok(!html.includes('Старший диспетчер, DOROGO'), 'Under name it has just Senior Dispatcher without redundant , DOROGO');
+  assert.ok(html.includes('Милан &bull; Озеро Комо &bull; Альпы'), 'Includes Lake Como · Milan regional line');
+  assert.ok(!html.includes('Founder'), 'Does not contain Founder');
 });
 
 test('pickTemplate falls back to DEFAULT_TEMPLATES for Russian when DB templates only have EN and IT', () => {

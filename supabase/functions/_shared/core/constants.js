@@ -44,15 +44,15 @@ export const DEFAULT_STEPS = [
 ];
 
 export const SIGNATURE = `Dmitri Traciuc
-Senior Dispatcher, DOROGO
+Senior Dispatcher
 Lake Como · Milan | dmitri@dorogo.eu | WhatsApp: wa.me/32456141497`;
 
 export const SIGNATURE_IT = `Dmitri Traciuc
-Senior Dispatcher, DOROGO
+Senior Dispatcher
 Lago di Como · Milano | dmitri@dorogo.eu | WhatsApp: wa.me/32456141497`;
 
 export const SIGNATURE_RU = `Дмитрий Трачук
-Старший диспетчер, DOROGO
+Старший диспетчер
 Озеро Комо · Милан | dmitri@dorogo.eu | WhatsApp: wa.me/32456141497`;
 
 export const OPTOUT = {

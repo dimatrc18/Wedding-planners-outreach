@@ -36,6 +36,8 @@ const OPTOUT_RE = /just let me know|basta farmelo sapere|дайте знать|�
 export function coreText(body = '') {
   let t = String(body);
   for (const s of [SIGNATURE, SIGNATURE_IT, SIGNATURE_RU, OPTOUT.en, OPTOUT.it, OPTOUT.ru]) t = t.split(s).join(' ');
+  const SIG_BLOCK_RE = /\n*(?:Dmitri(?:\s+Traciuc)?|Дмитрий(?:\s+Трачук)?)\s*\n+(?:Senior Dispatcher|Старший диспетчер|Founder|DOROGO)[^\n]*\n+(?:(?:Lake Como|Lago di Como|Озеро Комо)[^\n]*\n*|(?:dmitri@dorogo\.eu|wa\.me)[^\n]*\n*)*/gi;
+  t = t.replace(SIG_BLOCK_RE, ' ');
   t = t.replace(/\n*(?:Dmitri(?:\s+Traciuc)?|Дмитрий(?:\s+Трачук)?)\s*\n+(?:Senior Dispatcher|Старший диспетчер|Founder|DOROGO)[\s\S]*$/i, ' ');
   t = t.replace(/\n*(?:Dmitri|Дмитрий)\s*\n+DOROGO\s*\|\s*dmitri@dorogo\.eu[\s\S]*$/i, ' ');
   t = t.replace(/^(warm regards|kind regards|best regards|un cordiale saluto|cordiali saluti|с уважением|дмитрий|dmitri\s*\n\s*(?:senior\s+dispatcher|dorogo)\b),?[\s\S]*$/im, ' ');
@@ -75,7 +77,6 @@ export function lintMessage({ subject = '', body = '', channel = 'email', step =
     if (!subject.trim()) errors.push('Subject is empty');
     if (subject.length > 65) warnings.push('Subject is long; keep it under about 60 characters');
     if (/!/.test(subject) || (subject.length > 8 && subject === subject.toUpperCase() && /[A-Z]/.test(subject))) warnings.push('Subject looks salesy (capitals or "!")');
-    if (!/(Dmitri|Дмитрий)/.test(body)) warnings.push('Signature missing');
     if (['T1_intro', 'T3_followup', 'T4_breakup'].includes(step) && !OPTOUT_RE.test(body)) warnings.push('Add the opt-out line');
   }
 

@@ -23,7 +23,8 @@ function lintHtml(l) {
 
 export function cleanDuplicateDraftGreetings(body = '') {
   if (!body) return '';
-  let clean = body.replace(/Founder,\s*DOROGO/gi, 'Senior Dispatcher, DOROGO');
+  const SIG_BLOCK_RE = /\n*(?:Dmitri(?:\s+Traciuc)?|Дмитрий(?:\s+Трачук)?)\s*\n+(?:Senior Dispatcher|Старший диспетчер|Founder|DOROGO)[^\n]*\n+(?:(?:Lake Como|Lago di Como|Озеро Комо)[^\n]*\n*|(?:dmitri@dorogo\.eu|wa\.me)[^\n]*\n*)*/gi;
+  let clean = body.replace(SIG_BLOCK_RE, '\n\n').replace(/Founder,\s*DOROGO/gi, 'Senior Dispatcher');
   const paras = clean.split(/\n\s*\n/);
   if (paras.length >= 2) {
     let p0 = paras[0].trim();

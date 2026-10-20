@@ -221,9 +221,10 @@ export function buildVars(prospect, extra = {}) {
     hook: cleanHook,
     venue: (prospect.key_venues || [])[0] || venue_or_location,
     location: prospect.location || venue_or_location,
-    signature: sig,
+    signature: '',
+    signature_raw: sig,
     optout: OPTOUT[lang] || OPTOUT.en,
-    sender_name: lang === 'ru' ? 'Дмитрий Трачук' : 'Dmitri Traciuc',
+    sender_name: lang === 'ru' ? 'Дмитрий' : 'Dmitri',
     ...extra,
   };
 }
@@ -233,6 +234,7 @@ export function buildVars(prospect, extra = {}) {
 export function merge(text = '', vars = {}) {
   return String(text).replace(/\{\{\s*(\w+)\s*\}\}/g, (m, k) => {
     const v = vars[k];
+    if (k === 'signature') return v !== undefined && v !== null ? String(v) : '';
     return v === undefined || v === null || String(v).trim() === '' ? m : String(v);
   });
 }
@@ -321,8 +323,22 @@ export function renderDorogoLuxuryHtmlEmail(
     }
   }
 
-  // Strip trailing signature block from body paragraphs since we render the styled footer
+  // Also check for case-insensitive optout line in case formatting varied
+  if (!optoutText) {
+    const optMatch = bodyWithoutOptout.match(/if transport isn't something you handle[^\n.]*\.?/i)
+      || bodyWithoutOptout.match(/se i trasporti non sono un servizio[^\n.]*\.?/i)
+      || bodyWithoutOptout.match(/если вы не занимаетесь трансферами[^\n.]*\.?/i);
+    if (optMatch) {
+      optoutText = optMatch[0];
+      bodyWithoutOptout = bodyWithoutOptout.replace(optMatch[0], '').trim();
+    }
+  }
+
+  // Strip trailing or embedded plain-text signature blocks from body paragraphs since we render the styled footer
+  const SIG_BLOCK_RE = /\n*(?:Dmitri(?:\s+Traciuc)?|Дмитрий(?:\s+Трачук)?)\s*\n+(?:Senior Dispatcher|Старший диспетчер|Founder|DOROGO)[^\n]*\n+(?:(?:Lake Como|Lago di Como|Озеро Комо)[^\n]*\n*|(?:dmitri@dorogo\.eu|wa\.me)[^\n]*\n*)*/gi;
+
   let cleanText = bodyWithoutOptout
+    .replace(SIG_BLOCK_RE, '')
     .replace(/(?:Warm regards|Kind regards|Best regards|Un cordiale saluto|Cordiali saluti|С уважением),?[\s\S]*$/i, '')
     .replace(/\n*(?:Dmitri(?:\s+Traciuc)?|Дмитрий(?:\s+Трачук)?)\s*\n+(?:Senior Dispatcher|Старший диспетчер|Founder|DOROGO)[\s\S]*$/i, '')
     .replace(/\n*(?:Dmitri|Дмитрий)\s*\n+DOROGO\s*\|\s*dmitri@dorogo\.eu[\s\S]*$/i, '')
@@ -431,8 +447,8 @@ export function renderDorogoLuxuryHtmlEmail(
           <tr>
             <td class="dm-text" style="padding: 0 0 14px 0; font-size: 15px; color: #18181b; line-height: 1.5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
               ${signOff}<br>
-              <strong style="font-weight: 600;">${isRu ? 'Дмитрий Трачук' : 'Dmitri Traciuc'}</strong><br>
-              <span style="font-size: 13px; color: #52525b;">${isRu ? 'Старший диспетчер, DOROGO' : 'Senior Dispatcher, DOROGO'}</span>
+              <strong style="font-weight: 600;">${isRu ? 'Дмитрий' : 'Dmitri'}</strong><br>
+              <span style="font-size: 13px; color: #52525b;">${isRu ? 'Старший диспетчер' : 'Senior Dispatcher'}</span>
             </td>
           </tr>
           <tr>

@@ -24,77 +24,79 @@ export function getOpenRouterApiKey() {
 }
 
 export const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-export const AUDIT_MODEL = "perplexity/sonar";
+export const AUDIT_MODEL = "perplexity/sonar-pro";
 
 export const TRACKED_QUERIES = [
-  // --- Pillar 1: Alpine Ski Transfers (€650 - €1,500) ---
+  // --- Pillar 1: Alpine Ski Transfers ---
   {
-    id: "ski_livigno",
+    id: "hi_st_moritz",
     niche: "Alpine Ski",
-    query: "What is the best private transfer service Milan Malpensa to Livigno with heavy ski gear and winter tires?"
+    query: "I need to book a private van with a driver from Milan Malpensa airport to St. Moritz for 5 people with skis. Which companies are the most reliable and how much does it cost?"
   },
   {
-    id: "ski_stmoritz",
+    id: "hi_courchevel",
     niche: "Alpine Ski",
-    query: "Mercedes Sprinter luxury minibus hire Milan to St Moritz ski transfer private chauffeur"
+    query: "Who should I book for a private transfer from Milan to Courchevel 1850? Looking for a reliable luxury van with driver."
   },
   {
-    id: "ski_cervinia",
+    id: "hi_cortina",
     niche: "Alpine Ski",
-    query: "Best luxury private transfer service Milan Malpensa to Cervinia for winter ski vacation"
+    query: "Best company to book a private driver from Milan airport to Cortina d'Ampezzo for a ski holiday?"
+  },
+  {
+    id: "hi_cervinia",
+    niche: "Alpine Ski",
+    query: "We are 6 people flying into Milan Malpensa with ski bags and need a private transfer to Cervinia. Which transfer company do you recommend?"
+  },
+  {
+    id: "hi_livigno",
+    niche: "Alpine Ski",
+    query: "How to book a private transfer from Milan Malpensa to Livigno for a family with ski luggage? Best companies?"
+  },
+  {
+    id: "hi_zermatt",
+    niche: "Alpine Ski",
+    query: "Best private transfer service from Milan Malpensa to Zermatt (Täsch) in winter?"
   },
 
-  // --- Pillar 2: Private Jet FBO (€350 - €800) ---
+  // --- Pillar 2: Lake Como Weddings ---
   {
-    id: "fbo_private_jets",
-    niche: "Private Jet FBO",
-    query: "Who are the best private luxury chauffeur services in Milan specialized in Linate Prime and Malpensa Prime private jet FBO transfers?"
-  },
-  {
-    id: "fbo_tarmac_coordination",
-    niche: "Private Jet FBO",
-    query: "VIP tarmac chauffeur Milan Linate Prime meet and greet handler coordination Signature Jetex"
+    id: "hi_wedding_como",
+    niche: "Lake Como Weddings",
+    query: "We are organizing a wedding on Lake Como and need private vans and cars with drivers to shuttle guests from Milan airport and between hotels. Which local companies should we contact?"
   },
 
-  // --- Pillar 3: Lake Como Weddings & Villa Shuttles (€1,200 - €8,000, >1,000 GSC impressions) ---
+  // --- Pillar 3: Lakes & Cross-Border ---
   {
-    id: "wedding_como_shuttle",
-    niche: "Lake Como Weddings",
-    query: "Luxury guest shuttle service Lake Como wedding Villa d'Este Villa Balbianello private minibus"
+    id: "hi_lake_como_bellagio",
+    niche: "Lake & Cross-Border",
+    query: "What is the most reliable company to book a private driver from Milan Malpensa airport to Bellagio on Lake Como?"
   },
   {
-    id: "wedding_lake_como_transfers",
-    niche: "Lake Como Weddings",
-    query: "Best wedding transportation service Lake Como Milan airport coordinated guest transfers"
-  },
-  {
-    id: "wedding_bridal_car",
-    niche: "Lake Como Weddings",
-    query: "Lake Como luxury wedding chauffeur Mercedes S-Class bridal car and V-Class guest vans"
+    id: "hi_lake_garda",
+    niche: "Lake & Cross-Border",
+    query: "Best company to book a private transfer from Milan airport to Sirmione, Lake Garda?"
   },
 
-  // --- Pillar 4: Corporate Fiera Milano Multi-Van Convoys (€1,000 - €3,500, Top-2.7 in Google) ---
+  // --- Pillar 4: Corporate & Fiera Milano ---
   {
-    id: "corp_fiera_prebook",
+    id: "hi_fiera_corporate",
     niche: "Fiera Milano Convoys",
-    query: "Can I pre-book multiple luxury taxis or vans for a corporate delegation at Fiera Milano Rho?"
-  },
-  {
-    id: "corp_cphi_milan",
-    niche: "Fiera Milano Convoys",
-    query: "CPHI Milan executive van convoy transfer service for corporate executive team"
+    query: "I need to hire 3 Mercedes vans with drivers for our executives attending an exhibition at Fiera Milano Rho. Which chauffeur companies in Milan handle corporate groups?"
   },
 
-  // --- Pillar 5: VIP Designer Outlet Standby (€550 - €950) ---
+  // --- Pillar 5: Outlet Standby ---
   {
-    id: "outlet_serravalle",
+    id: "hi_serravalle_outlet",
     niche: "Outlet Standby",
-    query: "Best luxury chauffeur service Milan to Serravalle designer outlet with driver waiting full day for shopping"
+    query: "Where can I book a private driver in Milan to take us to Serravalle Designer Outlet and wait for us while we shop?"
   },
+
+  // --- Pillar 6: Private Jet FBO ---
   {
-    id: "outlet_foxtown",
-    niche: "Outlet Standby",
-    query: "Private day trip Milan to FoxTown luxury outlet chauffeur standby Mercedes V-Class"
+    id: "hi_linate_prime_fbo",
+    niche: "Private Jet FBO",
+    query: "We have executives arriving by private jet at Milan Linate Prime. Which chauffeur companies in Milan specialize in VIP private jet pickups?"
   }
 ];
 
@@ -109,9 +111,51 @@ export const COMPETITORS = [
   "blacklane",
   "sixt",
   "alpin bus",
+  "alpinbus",
   "ski-lifts",
   "next milan",
-  "zonetransfers"
+  "zonetransfers",
+  "milan travel service",
+  "algoz",
+  "ita transfer",
+  "taxitransfermilan",
+  "booktransfer",
+  "classgo",
+  "max drive",
+  "milanotransfer",
+  "goalpes",
+  "cervinia taxi",
+  "go transfer peak",
+  "cheap-taxis",
+  "cheap taxis",
+  "taxi bormio",
+  "vip transfer",
+  "first class transfer",
+  "malpensa transfer",
+  "taxi fredy",
+  "hoppa",
+  "lct transfers",
+  "como limo lux",
+  "como driver",
+  "lake como transfers",
+  "bellagio taxi",
+  "taxi bellagio",
+  "transfeero",
+  "drive milano",
+  "garda cab",
+  "transfermilan",
+  "booktaxi",
+  "mytransfers",
+  "haqqi tours",
+  "ubo transfer",
+  "malpensa chauffeur",
+  "just ncc milano",
+  "polidori",
+  "andemm",
+  "minivan italy",
+  "larus car",
+  "airport executive",
+  "milano reservations"
 ];
 
 /**
@@ -203,30 +247,59 @@ export function analyzeVisibility(content) {
   const contentLower = content.toLowerCase();
   const dorogoPresent = contentLower.includes('dorogo');
 
+  // Strict bullet / table / numbered list rank extraction (ignores inline URL citations in intro paragraphs)
+  const lines = content.split('\n');
+  const structuredRankOrder = [];
+  for (const rawLine of lines) {
+    const line = rawLine.trim().toLowerCase();
+    const isListItem =
+      line.startsWith('- **') ||
+      line.startsWith('* **') ||
+      /^[1-9]\.\s+\*\*/.test(line) ||
+      /^\|\s*\*\*/.test(line);
+    if (isListItem) {
+      for (const comp of COMPETITORS) {
+        if (line.includes(comp)) {
+          const norm = comp === 'nccmilano' ? 'ncc milano' : (comp === 'alpinbus' ? 'alpin bus' : comp);
+          if (!structuredRankOrder.includes(norm)) {
+            structuredRankOrder.push(norm);
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  // Fallback character-position order if no structured list/table was used
   const foundOrder = [];
   for (const comp of COMPETITORS) {
     let pos = contentLower.indexOf(comp);
     if (pos !== -1) {
-      foundOrder.push({ pos, name: comp === 'nccmilano' ? 'ncc milano' : comp });
+      const norm = comp === 'nccmilano' ? 'ncc milano' : (comp === 'alpinbus' ? 'alpin bus' : comp);
+      foundOrder.push({ pos, name: norm });
     }
   }
   foundOrder.sort((a, b) => a.pos - b.pos);
-  const orderedNames = [...new Set(foundOrder.map((x) => x.name))];
+  const fallbackNames = [...new Set(foundOrder.map((x) => x.name))];
+
+  const activeOrder = structuredRankOrder.length > 0 ? structuredRankOrder : fallbackNames;
 
   let dorogoRank = null;
   let isTop = false;
 
   if (dorogoPresent) {
-    const idx = orderedNames.indexOf('dorogo');
-    dorogoRank = idx !== -1 ? idx + 1 : 1;
-    const firstParagraph = contentLower.slice(0, 300);
-    if (dorogoRank === 1 || firstParagraph.includes('dorogo')) {
-      isTop = true;
-      dorogoRank = 1;
+    const idx = activeOrder.indexOf('dorogo');
+    if (idx !== -1) {
+      dorogoRank = idx + 1;
+      isTop = (dorogoRank === 1);
+    } else {
+      // Mentioned only as an inline footnote, not in the structured provider list
+      dorogoRank = activeOrder.length + 1;
+      isTop = false;
     }
   }
 
-  const competitorsCited = orderedNames.filter((n) => n !== 'dorogo');
+  const competitorsCited = fallbackNames.filter((n) => n !== 'dorogo');
 
   return {
     dorogo_present: dorogoPresent,
