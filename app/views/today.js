@@ -168,6 +168,18 @@ export function render(el) {
           </div></div>`;
       }).join('')}</div></section>` : ''}
 
+    ${(() => {
+      const manualLeads = (S.prospects || []).filter((p) => p.email_status === 'bounced' || !p.email || ['no_mx', 'invalid'].includes(p.email_status));
+      if (!manualLeads.length) return '';
+      const bCnt = manualLeads.filter((p) => p.email_status === 'bounced').length;
+      const mCnt = manualLeads.filter((p) => !p.email).length;
+      return `<div class="banner warn" style="margin-bottom:18px">
+        <span>📱 <b>${manualLeads.length} ${plural(manualLeads.length, 'partner')} need manual outreach</b> (${bCnt ? `${bCnt} email bounced` : ''}${bCnt && mCnt ? ', ' : ''}${mCnt ? `${mCnt} missing email` : ''}). Reach out directly via Instagram DM or WhatsApp.</span>
+        <span class="grow"></span>
+        <a class="btn sm" href="#pipeline">Open in Pipeline →</a>
+      </div>`;
+    })()}
+
     <section class="section" id="queue">
       <div class="section-head"><h2>Approval queue <span class="count">${drafts.length}</span></h2>
         <div class="row">

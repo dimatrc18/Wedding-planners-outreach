@@ -78,11 +78,16 @@ export function buildDemoData() {
       id: id(), type, agency_name, contact_name, location, segment, language, rating, verified_reviews_count: reviews || null,
       review_source: reviews ? 'matrimonio.com' : null, source: i % 3 ? 'matrimonio.com' : 'website',
       email: plan === 'researching' ? '' : `${(contact_name.split(' ')[0] || 'info').toLowerCase()}@${slug}.test`,
-      email_status: plan === 'researching' ? 'unknown' : 'mx_ok',
+      email_status: plan === 'researching' ? 'unknown' : (plan === 'do_not_contact' ? 'bounced' : 'mx_ok'),
       website: `https://${slug}.test`,
       personalization_hook: hook, hook_type, hook_confidence: hook ? (i % 5 === 0 ? 'medium' : 'high') : null, hook_needs_review: i === 20,
-      key_venues: [], timezone: 'Europe/Rome', tags: ['demo'], notes: '', status: plan === 'replied_wait' ? 'replied' : plan,
+      key_venues: [], timezone: 'Europe/Rome', tags: plan === 'do_not_contact' ? ['demo', 'bounced', 'manual_touch'] : ['demo'],
+      notes: plan === 'do_not_contact' ? 'Email bounced (554 Relay access denied). Reach out manually via WhatsApp or Instagram.' : '',
+      status: plan === 'replied_wait' ? 'replied' : plan,
       do_not_contact: plan === 'do_not_contact', created_at: iso(Date.now() - (40 - i) * DAY), updated_at: iso(Date.now()),
+      phone: plan === 'do_not_contact' ? '+39 348 244 8708' : (i % 4 === 0 ? '+39 031 950 123' : null),
+      whatsapp: plan === 'do_not_contact' ? '+39 348 244 8708' : null,
+      instagram: plan === 'do_not_contact' ? slug : null,
       timezoneLabel: '',
     };
     p.priority_score = priorityScore(p).score;

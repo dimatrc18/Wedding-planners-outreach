@@ -2,8 +2,9 @@
 import * as core from '../../supabase/functions/_shared/core/index.js';
 import { S, insert, update, remove, api, startDemo } from '../store.js';
 import { buildDemoData } from '../demo.js';
-import { esc, attr, icon, ago, fmtDate, pct, plural, toast, download, dialog, confirmDialog } from '../ui.js';
+import { esc, attr, icon, ago, fmtDate, pct, plural, toast, download, dialog, confirmDialog, copyText } from '../ui.js';
 import * as A from '../actions.js';
+import { logTouchDialog } from './prospect.js';
 
 const KEY = 'dorogo-pipeline-v2';
 const MIN_FIT_SCORE = 65;
@@ -93,7 +94,16 @@ const FRIENDLY_COL_TITLE = {
   priority_tier: { step: 'FIT', title: 'Fit Score Tier (/100)' },
 };
 
-// The 5-Step Journey buckets that a 16-year-old understands at a glance
+// Helper: identify leads that require manual social/messaging contact (bounced email, missing email, invalid mail server, or manual tag)
+export function isManualLead(p) {
+  if (!p) return false;
+  if (p.email_status === 'bounced') return true;
+  if ((p.tags || []).includes('manual_touch') || (p.tags || []).includes('bounced')) return true;
+  if (!p.email || !String(p.email).trim() || ['no_mx', 'invalid'].includes(p.email_status)) return true;
+  return false;
+}
+
+// The 5-Step Journey buckets + dedicated 📱 Manual Outreach folder for bounced/no-email leads
 const JOURNEY_STEPS = [
   {
     key: 'researching',
@@ -102,7 +112,7 @@ const JOURNEY_STEPS = [
     sub: 'Find email & 1-line note',
     tone: 'muted',
     dropStage: 'researching',
-    match: (p) => p.status === 'researching',
+    match: (p) => p.status === 'researching' && !isManualLead(p),
   },
   {
     key: 'ready',
@@ -111,7 +121,7 @@ const JOURNEY_STEPS = [
     sub: 'Approved · drafts Email 1',
     tone: 'gold',
     dropStage: 'ready',
-    match: (p) => p.status === 'ready',
+    match: (p) => p.status === 'ready' && !isManualLead(p),
   },
   {
     key: 'cadence',
@@ -120,7 +130,7 @@ const JOURNEY_STEPS = [
     sub: 'In 3-email sequence',
     tone: 'info',
     dropStage: 't1_sent',
-    match: (p) => ['t1_sent', 't2_sent', 't3_sent', 't4_sent'].includes(p.status),
+    match: (p) => ['t1_sent', 't2_sent', 't3_sent', 't4_sent'].includes(p.status) && !isManualLead(p),
   },
   {
     key: 'engaged',
@@ -129,7 +139,7 @@ const JOURNEY_STEPS = [
     sub: 'Replied · send rates or quote',
     tone: 'gold',
     dropStage: 'replied',
-    match: (p) => ['replied', 'rate_card_sent', 'in_conversation', 'quote_requested', 'fam_offered'].includes(p.status),
+    match: (p) => ['replied', 'rate_card_sent', 'in_conversation', 'quote_requested', 'fam_offered'].includes(p.status) && !isManualLead(p),
   },
   {
     key: 'won',
@@ -141,13 +151,22 @@ const JOURNEY_STEPS = [
     match: (p) => p.status === 'partner_won',
   },
   {
+    key: 'manual',
+    num: '📱',
+    label: 'Manual Outreach',
+    sub: 'Bounced or No Email · IG/WA',
+    tone: 'warn',
+    dropStage: 'manual',
+    match: (p) => isManualLead(p),
+  },
+  {
     key: 'closed',
     num: '·',
     label: 'Later / Closed',
     sub: 'Next season or declined',
     tone: 'bad',
     dropStage: 'nurture',
-    match: (p) => ['nurture', 'lost', 'do_not_contact'].includes(p.status),
+    match: (p) => (['nurture', 'lost'].includes(p.status) || p.status === 'do_not_contact') && !isManualLead(p),
   },
 ];
 
@@ -294,9 +313,20 @@ function card(p, { touchesByP, settings, showStageSelect = true } = {}) {
   const cleanWeb = (p.website || '').replace(/^https?:\/\/(www\.)?/i, '').replace(/\/.*$/, '');
   const webHref = p.website ? (/^https?:\/\//i.test(p.website) ? p.website : `https://${p.website}`) : '';
   const isResearchingNow = pathSession.researchingIds.has(p.id);
+  const isManual = isManualLead(p);
+  const isBounced = p.email_status === 'bounced';
+  const cleanPhone = (p.whatsapp || p.phone || '').replace(/[^0-9+]/g, '');
+  const igHandle = p.instagram ? p.instagram.replace(/^@/, '') : '';
 
   let quickBtn = '';
-  if (isResearchingNow) {
+  if (isManual) {
+    quickBtn = `<div class="row" style="gap:5px;flex-wrap:wrap">
+      ${cleanPhone ? `<a class="btn sm ok" href="https://wa.me/${cleanPhone.replace(/^\+/, '')}" target="_blank" rel="noopener" data-stop-card title="Open WhatsApp chat">${icon('phone', 13)} WhatsApp</a>` : ''}
+      ${igHandle ? `<a class="btn sm ghost" href="https://instagram.com/${igHandle}" target="_blank" rel="noopener" data-stop-card title="Open Instagram profile">${icon('external', 13)} @${esc(igHandle)}</a>` : `<a class="btn sm ghost" href="https://www.google.com/search?q=${encodeURIComponent(p.agency_name + ' Instagram Lake Como wedding')}" target="_blank" rel="noopener" data-stop-card title="Search Instagram profile">${icon('search', 13)} Find IG</a>`}
+      <button class="btn sm primary" data-copy-pitch="${attr(p.id)}" title="Copy personalized outreach pitch for WhatsApp / Instagram DM">📋 Copy Pitch</button>
+      <button class="btn sm gold-btn" data-log-touch-card="${attr(p.id)}" title="Record that you messaged or called this partner">📱 Log Touch</button>
+    </div>`;
+  } else if (isResearchingNow) {
     quickBtn = `<button class="btn sm gold-btn" disabled>⏳ Researching…</button>`;
   } else if (na.needsInfo) {
     quickBtn = `<div class="row" style="gap:5px">
@@ -313,7 +343,7 @@ function card(p, { touchesByP, settings, showStageSelect = true } = {}) {
     quickBtn = `<button class="btn sm primary" data-open="${attr(p.id)}">💬 Open & Reply</button>`;
   }
 
-  return `<div class="pcard ${!isQualifiedScore ? 'low-score' : ''}" draggable="true" data-id="${attr(p.id)}" tabindex="0" role="button" aria-label="${attr(p.agency_name)}">
+  return `<div class="pcard ${!isQualifiedScore ? 'low-score' : ''} ${isManual ? 'manual-card' : ''}" draggable="true" data-id="${attr(p.id)}" tabindex="0" role="button" aria-label="${attr(p.agency_name)}">
     <div class="pcard-top">
       <div class="pcard-title-wrap">
         <span class="name">${esc(p.agency_name)}</span>
@@ -322,7 +352,8 @@ function card(p, { touchesByP, settings, showStageSelect = true } = {}) {
           ${p.location ? `<span>📍 ${esc(p.location)}</span>` : '<span class="muted">📍 No town</span>'}
           <span>· ${esc(TYPE[p.type] || p.type || 'Planner')}</span>
           ${p.language ? `<span class="chip">${esc((p.language || 'en').toUpperCase())}</span>` : ''}
-          ${p.do_not_contact ? '<span class="chip bad">Do Not Contact</span>' : ''}
+          ${isBounced ? '<span class="chip bad">⚠️ Email Bounced</span>' : p.do_not_contact ? '<span class="chip bad">Do Not Contact</span>' : ''}
+          ${isManual && !isBounced && !hasEmail ? '<span class="chip warn">📱 Manual (No Email)</span>' : ''}
         </div>
       </div>
       <div class="row" style="gap:4px">
@@ -333,11 +364,20 @@ function card(p, { touchesByP, settings, showStageSelect = true } = {}) {
     </div>
 
     <div class="pcard-facts">
+      ${isBounced ? `
+      <div class="pcard-fact" style="background:rgba(239,68,68,0.08);padding:4px 8px;border-radius:6px;border:1px solid rgba(239,68,68,0.22);margin-bottom:3px">
+        <span class="chip bad tiny" style="font-weight:700">⚠️ Email Bounced</span>
+        <span class="small" style="color:var(--bad);margin-left:4px">Recipient rejected (${esc(p.email)}). Reach out manually via IG/WhatsApp!</span>
+      </div>` : !hasEmail ? `
+      <div class="pcard-fact" style="background:rgba(245,158,11,0.08);padding:4px 8px;border-radius:6px;border:1px solid rgba(245,158,11,0.22);margin-bottom:3px">
+        <span class="chip warn tiny" style="font-weight:700">⚠️ No Email</span>
+        <span class="small" style="color:#d97706;margin-left:4px">No address on file. Reach out manually via IG/WhatsApp!</span>
+      </div>` : ''}
       <div class="pcard-fact">
         <span class="fact-lbl">Contact:</span>
         ${p.contact_name ? `<b>${esc(p.contact_name)}</b>` : '<span class="muted">Team</span>'}
         ${hasEmail
-          ? `<span class="fact-email" title="${attr(p.email)}">· ${esc(p.email)}</span>${p.email_status === 'mx_ok' || p.email_status === 'valid' ? '<span class="chip ok tiny" style="margin-left:4px" title="DNS MX verified: active mail server">🛡️ MX OK</span>' : p.email_status === 'invalid' || p.email_status === 'no_mx' ? '<span class="chip bad tiny" style="margin-left:4px" title="DNS MX failed: cannot deliver email">⚠️ No MX</span>' : ''}`
+          ? `<span class="fact-email" title="${attr(p.email)}">· ${esc(p.email)}</span>${p.email_status === 'bounced' ? '<span class="chip bad tiny" style="margin-left:4px">⚠️ Bounced</span>' : p.email_status === 'mx_ok' || p.email_status === 'valid' ? '<span class="chip ok tiny" style="margin-left:4px" title="DNS MX verified: active mail server">🛡️ MX OK</span>' : p.email_status === 'invalid' || p.email_status === 'no_mx' ? '<span class="chip bad tiny" style="margin-left:4px" title="DNS MX failed: cannot deliver email">⚠️ No MX</span>' : ''}`
           : `<span class="chip warn" data-quick-edit="${attr(p.id)}">⚠️ No email yet</span>`}
       </div>
       ${cleanWeb ? `<div class="pcard-fact">
@@ -357,13 +397,16 @@ function card(p, { touchesByP, settings, showStageSelect = true } = {}) {
 
     <div class="pcard-foot">
       <div class="pcard-next">
-        ${na.text ? `<span class="next-txt ${na.brokenStage ? 'bad-txt' : ''}">${esc(na.text)}${na.at ? ` · <b>${esc(fmtDate(na.at))}</b>` : ''}</span>` : ''}
-        <span class="muted small">${last ? `Last email activity ${esc(ago(last))}` : 'No emails sent yet'}</span>
+        ${isManual
+          ? `<span class="next-txt" style="color:#d97706">📱 <b>Needs manual touch</b> · ${isBounced ? 'Email bounced' : 'Missing email'}</span>`
+          : na.text ? `<span class="next-txt ${na.brokenStage ? 'bad-txt' : ''}">${esc(na.text)}${na.at ? ` · <b>${esc(fmtDate(na.at))}</b>` : ''}</span>` : ''}
+        <span class="muted small">${last ? `Last activity ${esc(ago(last))}` : 'No touches logged yet'}</span>
       </div>
       <div class="pcard-actions">
         ${quickBtn}
         ${showStageSelect ? `<select class="stage-pill-select" data-stage-select="${attr(p.id)}" aria-label="Change stage for ${attr(p.agency_name)}">
-          ${core.STAGES.map((s) => `<option value="${s.key}" ${p.status === s.key ? 'selected' : ''}>${esc(plainStage(s.key))}</option>`).join('')}
+          <option value="manual" ${isManual ? 'selected' : ''}>📱 Manual (IG / WA)</option>
+          ${core.STAGES.map((s) => `<option value="${s.key}" ${!isManual && p.status === s.key ? 'selected' : ''}>${esc(plainStage(s.key))}</option>`).join('')}
         </select>` : ''}
       </div>
     </div>
@@ -447,7 +490,7 @@ export function render(el) {
   }
 
   function matchesFilters(p, hiddenStages) {
-    if (hiddenStages.includes(p.status)) return false;
+    if (hiddenStages.includes(p.status) && !isManualLead(p)) return false;
     if (f.onlyHighFit && core.priorityScore(p).score < MIN_FIT_SCORE) return false;
     if (f.q) {
       const q = f.q.toLowerCase();
@@ -489,17 +532,21 @@ export function render(el) {
 
   function renderJourneyBar(list, data) {
     const missingInfoCount = data.prospects.filter((p) =>
-      ['researching', 't1_sent'].includes(p.status) && (!p.email || !p.personalization_hook)
+      ['researching', 't1_sent'].includes(p.status) && (!p.email || !p.personalization_hook) && !isManualLead(p)
     ).length;
     const lowFitCount = data.prospects.filter((p) => core.priorityScore(p).score < MIN_FIT_SCORE).length;
+    const manualCount = data.prospects.filter(isManualLead).length;
 
     return `<div class="journey-strip" role="region" aria-label="5-Step Outreach Journey">
       <div class="journey-head">
         <div>
-          <span class="journey-title">How Your Outreach Works (5 Simple Steps)</span>
-          <span class="muted small"> · Click any step to filter leads, or drag a card onto a step to move it</span>
+          <span class="journey-title">How Your Outreach Works</span>
+          <span class="muted small"> · 5-Step Email Sequence + dedicated 📱 Manual Outreach folder for bounced &amp; social leads</span>
         </div>
         <div class="row" style="gap:8px">
+          ${manualCount > 0 ? `<button class="btn sm ${stageFilter === 'manual' ? 'primary' : 'gold-btn'}" data-stage-filter="manual" title="View ${manualCount} partners with bounced email or missing email to contact via Instagram or WhatsApp">
+            📱 Manual / Social (${manualCount})
+          </button>` : ''}
           ${!data.isSample ? `<button class="btn sm" data-act="auto-discover-partners" title="Automatically search for new luxury wedding planners, venues &amp; hotel concierges scoring ≥ 65/100">
             🔍 Auto-Find New Partners
           </button>` : ''}
@@ -515,6 +562,20 @@ export function render(el) {
       <div class="journey-steps">
         ${JOURNEY_STEPS.map((st, idx) => {
           const cnt = list.filter((p) => st.match(p)).length;
+          const active = stageFilter === st.key;
+          return `${idx > 0 && idx < 5 ? '<span class="journey-arrow" aria-hidden="true">→</span>' : idx === 5 ? '<span class="journey-arrow" style="opacity:0.35" aria-hidden="true">│</span>' : ''}
+          <button class="journey-step tone-${st.tone} ${active ? 'on' : ''}" data-stage-filter="${st.key}" data-drop-stage="${st.dropStage}" aria-pressed="${active}">
+            <div class="j-top">
+              <span class="j-badge">${st.num}</span>
+              <span class="j-name">${esc(st.label)}</span>
+              <span class="j-count">${cnt}</span>
+            </div>
+            <div class="j-sub">${esc(st.sub)}</div>
+          </button>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
           const active = stageFilter === st.key;
           return `${idx > 0 && idx < 5 ? '<span class="journey-arrow" aria-hidden="true">→</span>' : ''}
           <button class="journey-step tone-${st.tone} ${active ? 'on' : ''}" data-stage-filter="${st.key}" data-drop-stage="${st.dropStage}" aria-pressed="${active}">
@@ -780,7 +841,7 @@ export function render(el) {
     const filteredList = stageFilter === 'all' ? list : list.filter((p) => sgObj.match(p));
 
     if (!detailedBoard) {
-      const cols = f.hideClosed ? JOURNEY_STEPS.slice(0, 5) : JOURNEY_STEPS;
+      const cols = f.hideClosed ? JOURNEY_STEPS.filter((s) => s.key !== 'closed') : JOURNEY_STEPS;
       return `<div class="stack">
         <div class="row between">
           <span class="small muted">💡 Drag any lead card from one column to the next, or click <b>🤖 AI Research</b> / <b>✓ Approve & Draft Email 1</b> on a card.</span>
@@ -1372,11 +1433,30 @@ export function render(el) {
     if (!p || !toStage || p.status === toStage) return;
 
     if (data.isSample) {
-      p.status = toStage;
+      if (toStage === 'manual') {
+        p.tags = Array.from(new Set([...(p.tags || []), 'manual_touch']));
+        p.status = 'do_not_contact';
+      } else {
+        p.tags = (p.tags || []).filter((t) => t !== 'manual_touch');
+        p.status = toStage;
+      }
       p.updated_at = new Date().toISOString();
       toast(`${p.agency_name} → ${plainStage(toStage)} (sample preview)`);
       paint();
       return;
+    }
+
+    // Manual Outreach stage
+    if (toStage === 'manual') {
+      const tags = Array.from(new Set([...(p.tags || []), 'manual_touch']));
+      await A.setStatus(p, 'do_not_contact', { tags });
+      toast(`📱 ${p.agency_name} moved to Manual Outreach (reach out via IG / WhatsApp)!`);
+      paint();
+      return;
+    }
+
+    if ((p.tags || []).includes('manual_touch')) {
+      p.tags = (p.tags || []).filter((t) => t !== 'manual_touch');
     }
 
     // Guardrail 1: Never allow moving to Ready or Email 1/2/3 Sent if the lead is missing an email address or personal note!
@@ -1649,6 +1729,29 @@ export function render(el) {
       }
       await A.draftNextStep(p);
       paint();
+      return;
+    }
+
+    const cp = e.target.closest('[data-copy-pitch]');
+    if (cp) {
+      e.stopPropagation();
+      const p = activeData().prospects.find((x) => x.id === cp.dataset.copyPitch);
+      if (p) {
+        const channel = p.whatsapp || p.phone ? 'whatsapp' : 'instagram';
+        const msg = core.buildSocialOpener(p, channel);
+        await copyText(msg);
+        toast(`Copied ${channel === 'whatsapp' ? 'WhatsApp' : 'Instagram'} pitch for ${p.agency_name} to clipboard!`);
+      }
+      return;
+    }
+
+    const ltc = e.target.closest('[data-log-touch-card]');
+    if (ltc) {
+      e.stopPropagation();
+      const p = activeData().prospects.find((x) => x.id === ltc.dataset.logTouchCard);
+      if (p) {
+        await logTouchDialog(p);
+      }
       return;
     }
 

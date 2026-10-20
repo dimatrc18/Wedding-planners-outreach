@@ -100,6 +100,16 @@ export function render(el, id) {
       <button class="btn ghost sm" data-act="erase">${icon('trash', 15)} Erase</button>
     </div>
 
+    ${p.email_status === 'bounced' ? `<div class="banner bad">
+      <span>⚠️ <b>Email address bounced (${esc(p.email || '')}).</b> Automated email cadence is stopped to protect your domain. Reach out directly via WhatsApp or Instagram DM.</span>
+      <span class="grow"></span>
+      <button class="btn sm" data-act="copy-social">📋 Copy IG/WA Pitch</button>
+      <button class="btn sm primary" data-act="log-touch">📱 Log Touch</button>
+    </div>` : !p.email ? `<div class="banner warn">
+      <span>⚠️ <b>No email address on file.</b> Automated email cadence is held. Contact manually via Instagram/WhatsApp or find contact via Research.</span>
+      <span class="grow"></span>
+      <button class="btn sm" data-act="copy-social">📋 Copy IG/WA Pitch</button>
+    </div>` : ''}
     ${p.status === 'researching' ? `<div class="banner ${probs.length ? 'warn' : ''}">${probs.length ? `<span><b>Before contacting:</b> ${esc(probs.join(' · '))}</span>` : '<span><b>Research complete.</b> Move to Ready and the intro email will be drafted for approval.</span>'}<span class="grow"></span><button class="btn sm ${probs.length ? '' : 'primary'}" data-act="make-ready">Mark Ready</button></div>` : ''}
     ${st.active && st.step ? `<div class="banner"><span>Next in the cadence: <b>${esc(st.step.label)}</b> ${st.pending ? `(${st.pending.state === 'draft' ? 'drafted, awaiting approval' : 'approved'})` : st.dueAt ? `due ${esc(fmtDate(st.dueAt, { weekday: 'short' }))}` : ''}${st.blocked === 'no_email' ? ' · needs an email address' : ''}</span></div>` : ''}
     ${!st.active && st.reason === 'replied' ? '<div class="banner"><span>Planner replied: the automatic cadence is stopped for good.</span></div>' : ''}
