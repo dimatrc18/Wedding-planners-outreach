@@ -73,9 +73,14 @@ export function render(el) {
   }).filter((r) => r.p).sort((a, b) => b.revenue + b.pipeline - a.revenue - a.pipeline);
   const hrs = (h) => (h === null ? '–' : h < 1 ? `${Math.round(h * 60)} min` : h < 48 ? `${h.toFixed(1)} h` : `${(h / 24).toFixed(1)} days`);
   const badge = { traction: 'check', below: 'flag', unclear: 'chart', early: 'clock', none: 'clock' }[v.level];
+  const bouncedProspects = S.prospects.filter((p) => p.email_status === 'bounced' || p.bounced || (p.tags || []).includes('bounced'));
+  const effectiveBounced = Math.max(m.bounced, bouncedProspects.length);
+  const deliveredCount = Math.max(0, m.emailsSent - effectiveBounced);
+  const deliveryPct = m.emailsSent > 0 ? (deliveredCount / m.emailsSent) * 100 : 100;
+  const bouncePct = m.emailsSent > 0 ? (effectiveBounced / m.emailsSent) * 100 : (m.bounceRate.p ? m.bounceRate.p * 100 : 0);
 
   el.innerHTML = `
-  <div class="page-head"><div><div class="label eyebrow">${m.contacted} contacted · ${m.emailsSent} emails sent</div><h1>Do we have traction?</h1></div>
+  <div class="page-head"><div><div class="label eyebrow">${m.contacted} contacted · ${m.emailsSent} emails sent · ${effectiveBounced} bounced</div><h1>Do we have traction?</h1></div>
     <button class="btn ghost" id="export">${icon('download', 16)} Export metrics</button></div>
   <div class="stack lg">
     <section class="verdict ${v.level}"><div class="badge">${icon(badge, 22)}</div>
@@ -94,6 +99,66 @@ export function render(el) {
       <div class="kpi"><span class="label">Commission owed</span><span class="val">${eur(m.commissionOutstanding)}</span><span class="ci">${eur(m.commissionPaid)} paid of ${eur(m.commissionOwed)}</span></div>
       <div class="kpi"><span class="label">Speed</span><span class="val" style="font-size:1.5rem">${hrs(m.medianMyResponseHours)}</span><span class="ci">Your median reply time · planners take ${hrs(m.medianHoursToReply)} to answer</span></div>
     </div>
+
+    <div class="kpis">
+      <div class="kpi ${effectiveBounced > 0 ? 'tone-warn' : ''}">
+        <span class="label">Bounced emails</span>
+        <span class="val" style="${effectiveBounced > 0 ? 'color:var(--bad)' : ''}">${effectiveBounced}</span>
+        <span class="ci">${bouncePct.toFixed(1)}% bounce rate (${effectiveBounced} of ${m.emailsSent} emails)</span>
+        ${rateMeter(m.bounceRate, S.settings.bounce_pause_rate || 0.05, 0.2)}
+        <span class="target">Auto-pause threshold: ${pct(S.settings.bounce_pause_rate || 0.05, 1)}</span>
+      </div>
+      <div class="kpi">
+        <span class="label">Delivery rate</span>
+        <span class="val" style="color:var(--ok)">${deliveryPct.toFixed(1)}%</span>
+        <span class="ci">${deliveredCount} of ${m.emailsSent} emails delivered clean</span>
+      </div>
+      <div class="kpi">
+        <span class="label">Clean mailboxes (MX OK)</span>
+        <span class="val">${S.prospects.filter((p) => p.email_status === 'mx_ok' || p.email_status === 'valid').length}</span>
+        <span class="ci">Active mail exchange verified · <a href="#settings" style="text-decoration:underline">DNS checks</a></span>
+      </div>
+      <div class="kpi">
+        <span class="label">Manual / Social leads</span>
+        <span class="val">${effectiveBounced + S.prospects.filter((p) => !p.email).length}</span>
+        <span class="ci">${effectiveBounced} bounced · ${S.prospects.filter((p) => !p.email).length} no email · <a href="#pipeline" style="text-decoration:underline">View in Pipeline →</a></span>
+      </div>
+    </div>
+
+    ${bouncedProspects.length ? `<section class="card stack">
+      <div class="section-head">
+        <h2>⚠️ Bounced Email Log <span class="count">${bouncedProspects.length}</span></h2>
+        <span class="hint">These contacts failed delivery (e.g. Hostinger Relay denied or Yandex No such user). They are quarantined from automatic sending to keep your sender reputation safe. Reach out manually via WhatsApp or Instagram.</span>
+      </div>
+      <div class="card flush table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Partner Agency</th>
+              <th>Bounced Email</th>
+              <th>Failure Diagnostic</th>
+              <th>Location</th>
+              <th>Alternative Channel</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${bouncedProspects.map((p) => {
+              const cleanPhone = (p.whatsapp || p.phone || '').replace(/[^0-9+]/g, '');
+              const ig = p.instagram ? p.instagram.replace(/^@/, '') : '';
+              return `<tr>
+                <td><a href="#prospect/${attr(p.id)}"><b>${esc(p.agency_name)}</b></a></td>
+                <td><code style="color:var(--bad)">${esc(p.email || '–')}</code></td>
+                <td><span class="chip bad tiny">${esc(p.notes?.includes('Relay') ? '554 Relay Access Denied (Hostinger)' : p.notes?.includes('No such') ? '550 No Such User (Yandex)' : 'Mailbox Rejected (Hard Bounce)')}</span></td>
+                <td>📍 ${esc(p.location || 'Northern Italy')}</td>
+                <td>${cleanPhone ? `<span class="chip ok">WhatsApp: ${esc(cleanPhone)}</span>` : ig ? `<span class="chip">IG: @${esc(ig)}</span>` : '<span class="muted">Search Instagram</span>'}</td>
+                <td><a class="btn sm" href="#pipeline" style="padding:3px 8px;font-size:.78rem">Open in Pipeline →</a></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </section>` : ''}
 
     <!-- AI Brand Visibility & Search Equity Card -->
     <div class="card row nowrap between" style="align-items:center;background:var(--surface);border-left:3px solid var(--gold);padding:14px 18px">

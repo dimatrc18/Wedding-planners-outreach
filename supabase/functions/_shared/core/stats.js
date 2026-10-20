@@ -98,7 +98,9 @@ export function computeMetrics(prospects, touches, opportunities = [], now = new
 
   const emailsSent = touches.filter((t) => t.direction === 'out' && t.state === 'sent' && t.channel === 'email');
   const opened = emailsSent.filter((t) => t.opened_at).length;
-  const bounced = emailsSent.filter((t) => t.bounced).length;
+  const bouncedTouches = emailsSent.filter((t) => t.bounced).length;
+  const bouncedProspects = prospects.filter((p) => p.email_status === 'bounced').length;
+  const bounced = Math.max(bouncedTouches, bouncedProspects);
 
   const hoursToReply = facts.filter(({ f }) => f.firstOut && f.firstReply)
     .map(({ f }) => (t0(f.firstReply.replied_at || f.firstReply.created_at) - t0(f.firstOut.sent_at)) / 3600000).filter((h) => h >= 0);
@@ -126,8 +128,8 @@ export function computeMetrics(prospects, touches, opportunities = [], now = new
     positiveRate: wilson(positive, contacted),
     ratecardToQuote: wilson(conv30, mature.length),
     openRate: emailsSent.length ? wilson(opened, emailsSent.length) : wilson(0, 0),
-    bounceRate: wilson(bounced, emailsSent.length),
-    emailsSent: emailsSent.length, bounced,
+    bounceRate: wilson(bounced, Math.max(bounced, emailsSent.length)),
+    emailsSent: emailsSent.length, bounced, bouncedProspects,
     medianHoursToReply: median(hoursToReply),
     medianMyResponseHours: median(myResponse),
     revenue, commissionOwed, commissionPaid, commissionOutstanding: commissionOwed - commissionPaid, pipeline,

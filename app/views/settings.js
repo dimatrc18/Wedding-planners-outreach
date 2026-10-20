@@ -138,6 +138,22 @@ export function render(el) {
           <div class="kpi"><span class="label">Bounce rate</span><span class="val">${pct(m.bounceRate.p, 1)}</span><span class="ci">${m.bounced} of ${m.emailsSent} emails · pause above ${pct(s.bounce_pause_rate, 1)}</span></div>
           <div class="kpi"><span class="label">Emails sent</span><span class="val">${m.emailsSent}</span><span class="ci">${S.prospects.filter((p) => p.email_status === 'bounced').length} addresses bounced</span></div>
         </div>
+        ${(() => {
+          const bList = S.prospects.filter((p) => p.email_status === 'bounced' || p.bounced);
+          if (!bList.length) return '';
+          return `<div class="card flush list" style="margin-top:8px">
+            <div class="list-item" style="background:var(--surface-2);font-weight:600">
+              <span>Bounced Partner Lead (${bList.length})</span>
+              <span>Failure Code</span>
+              <span>Action</span>
+            </div>
+            ${bList.map((p) => `<div class="list-item">
+              <div class="t"><b>${esc(p.agency_name)}</b><span class="small" style="margin-left:6px;color:var(--bad)">${esc(p.email)}</span></div>
+              <span class="chip bad tiny">${esc(p.notes?.includes('Relay') ? '554 Relay Access Denied (Hostinger)' : p.notes?.includes('No such') ? '550 No Such User (Yandex)' : 'Mailbox Rejected')}</span>
+              <a class="small" href="#prospect/${attr(p.id)}">Open Contact →</a>
+            </div>`).join('')}
+          </div>`;
+        })()}
         ${dnsResult ? `<div class="card flush list">
           ${statusRow(dnsResult.mx.length, 'MX', dnsResult.mx.join(', ') || 'No mail server found')}
           ${statusRow(!!dnsResult.spf, 'SPF', dnsResult.spf || 'Missing: add a TXT record starting v=spf1 that includes your mail provider')}

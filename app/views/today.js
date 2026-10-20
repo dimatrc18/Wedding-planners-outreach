@@ -148,6 +148,7 @@ export function render(el) {
       ${kpiTile('Positive reply rate', pct(m.positiveRate.p, m.positiveRate.p !== null && m.positiveRate.p < 0.1 ? 1 : 0), m.positiveRate.n ? `${m.positive} of ${m.contacted} · likely ${pct(m.positiveRate.lo)} to ${pct(m.positiveRate.hi)}` : 'No contacts yet', rateMeter(m.positiveRate, tg.positive_reply_rate))}
       ${kpiTile('Replies waiting', `${d.replies.length}`, d.replies.length ? `oldest ${ago(d.replies.reduce((a, t) => (new Date(t.replied_at || t.created_at || Date.now()) < new Date(a) ? (t.replied_at || t.created_at) : a), d.replies[0]?.replied_at || d.replies[0]?.created_at || new Date().toISOString()))}` : 'Inbox clear', '')}
       ${kpiTile('Partners won', `${m.won}`, `target ${tg.partners_won} to ${tg.partners_won_high} this season · ${m.contacted} contacted`, rateMeter({ p: Math.min(m.won / tg.partners_won_high, 1), lo: Math.min(m.won / tg.partners_won_high, 1), hi: Math.min(m.won / tg.partners_won_high, 1) }, tg.partners_won / tg.partners_won_high, 1))}
+      ${kpiTile('Bounced emails', `${m.bounced}`, `${m.bounced} bounced (${pct(m.bounceRate.p || (m.emailsSent > 0 ? m.bounced / m.emailsSent : 0), 1)}) · ${m.emailsSent} sent`, rateMeter(m.bounceRate, S.settings.bounce_pause_rate || 0.05, 0.2))}
     </div>
     <a class="card row nowrap" href="#analytics" style="text-decoration:none;color:inherit">${icon('chart')}<span class="grow"><b>${esc(v.headline)}</b> <span class="muted small">${esc(v.detail)}</span></span><span class="small">Analytics →</span></a>
 
