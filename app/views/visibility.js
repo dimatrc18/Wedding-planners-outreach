@@ -395,8 +395,6 @@ export async function render(el) {
       </section>
     </div>
   `;
-    </div>
-  `;
 
   // Attach event handlers
   el.querySelector('#sel-history-run')?.addEventListener('change', (e) => {
