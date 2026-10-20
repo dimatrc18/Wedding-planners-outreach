@@ -175,84 +175,54 @@ export async function render(el) {
         </div>
       </div>
 
-      <!-- 2. AI Engine Coverage (Compact MECE Matrix) -->
-      <section class="card stack" style="gap:10px;background:var(--surface);padding:14px 18px">
-        <div class="row between" style="align-items:center">
-          <div class="row" style="gap:8px;align-items:center">
-            <span style="font-size:1.05rem">🤖</span>
-            <h3 style="margin:0;font-size:1rem;font-weight:600">Multi-AI Search Engine Coverage</h3>
-          </div>
-          <span class="chip gold" style="font-weight:600;font-size:.78rem">1 of 3 Engines Actively Recommending Dorogo</span>
+      <!-- 2. AI Engine Coverage Ribbon -->
+      <section class="card row between" style="padding:10px 16px;background:var(--surface);align-items:center;flex-wrap:wrap;gap:10px">
+        <div class="row" style="gap:8px;align-items:center">
+          <span style="font-size:1rem">🤖</span>
+          <span style="font-weight:600;font-size:.88rem">AI Engine Presence:</span>
         </div>
-
-        <div class="grid-3" style="gap:10px">
-          <!-- Perplexity -->
-          <div style="background:var(--bg);border:1px solid var(--line);border-left:3px solid var(--ok);padding:10px 14px;border-radius:var(--r-sm)">
-            <div class="row between" style="margin-bottom:4px">
-              <b style="font-size:.88rem">Perplexity Sonar</b>
-              <span class="chip ok" style="font-weight:700;font-size:.72rem">🏆 Active (#1)</span>
-            </div>
-            <div class="small muted" style="font-size:.78rem;line-height:1.4">Real-Time Web Search · Explicitly recommends Dorogo for Alpine Ski &amp; Jet FBO</div>
+        <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">
+          <div class="row" style="gap:6px;align-items:center;background:var(--bg);padding:4px 10px;border-radius:var(--r-sm);border:1px solid var(--line)">
+            <span style="font-size:.8rem;font-weight:600">Perplexity Sonar</span>
+            <span class="chip ok" style="font-weight:700;font-size:.7rem">🏆 Active (#1)</span>
           </div>
-
-          <!-- ChatGPT -->
-          <div style="background:var(--bg);border:1px solid var(--line);padding:10px 14px;border-radius:var(--r-sm)">
-            <div class="row between" style="margin-bottom:4px">
-              <b style="font-size:.88rem;color:var(--ink-2)">ChatGPT Search</b>
-              <span class="chip outline" style="font-size:.72rem">Tracking (0/10)</span>
-            </div>
-            <div class="small muted" style="font-size:.78rem;line-height:1.4">Web Index · Monitoring Milan directory citations &amp; Swiss cross-border links</div>
+          <div class="row" style="gap:6px;align-items:center;background:var(--bg);padding:4px 10px;border-radius:var(--r-sm);border:1px solid var(--line)">
+            <span style="font-size:.8rem;font-weight:500;color:var(--ink-2)">ChatGPT Search</span>
+            <span class="chip outline" style="font-size:.7rem">Tracking (0/10)</span>
           </div>
-
-          <!-- Claude / Gemini -->
-          <div style="background:var(--bg);border:1px solid var(--line);padding:10px 14px;border-radius:var(--r-sm)">
-            <div class="row between" style="margin-bottom:4px">
-              <b style="font-size:.88rem;color:var(--ink-2)">Claude &amp; Gemini</b>
-              <span class="chip outline" style="font-size:.72rem">Tracking (0/10)</span>
-            </div>
-            <div class="small muted" style="font-size:.78rem;line-height:1.4">Foundation Weights · Periodic index updates reflecting digital PR authority</div>
+          <div class="row" style="gap:6px;align-items:center;background:var(--bg);padding:4px 10px;border-radius:var(--r-sm);border:1px solid var(--line)">
+            <span style="font-size:.8rem;font-weight:500;color:var(--ink-2)">Google Gemini</span>
+            <span class="chip outline" style="font-size:.7rem">Tracking (0/10)</span>
           </div>
         </div>
       </section>
 
       <!-- 3. WHERE AM I TOP 3? (Podium Wins Showcase) -->
       ${top3Items.length ? `
-        <section class="card stack" style="border:1.5px solid var(--gold);background:var(--gold-soft);padding:16px 20px;gap:12px">
+        <section class="card stack" style="border:1.5px solid var(--gold);background:var(--gold-soft);padding:14px 18px;gap:10px">
           <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px">
             <div class="row" style="gap:8px;align-items:center">
-              <span class="chip gold" style="font-weight:700;font-size:.82rem">🏆 PODIUM WINS (${top3Items.length})</span>
-              <span class="small" style="font-weight:600;color:var(--gold-ink)">High-margin routes where AI directly crowns Dorogo</span>
+              <span class="chip gold" style="font-weight:700;font-size:.78rem">🏆 PODIUM WINS (${top3Items.length})</span>
+              <span class="small" style="font-weight:600;color:var(--gold-ink)">Direct #1 &amp; Top-3 AI Recommendations</span>
             </div>
-            <span class="small muted">Outranking legacy operators: MC Eurodriver, NCC Milano &amp; ZoneTransfers</span>
           </div>
 
-          <div class="stack" style="gap:8px">
+          <div class="stack" style="gap:6px">
             ${top3Items.map((win) => {
               const badge = win.is_top_recommendation || win.dorogo_rank === 1
-                ? `<span class="chip ok" style="font-weight:700;font-size:.76rem">🏆 #1 Top Recommendation</span>`
-                : `<span class="chip ok" style="font-weight:600;font-size:.76rem">🥈 Top-3 (#${win.dorogo_rank})</span>`;
+                ? `<span class="chip ok" style="font-weight:700;font-size:.74rem">🏆 #1 Top Pick</span>`
+                : `<span class="chip ok" style="font-weight:600;font-size:.74rem">🥈 Top-3 (#${win.dorogo_rank})</span>`;
 
               return `
-                <div style="background:var(--surface);border-radius:var(--r-sm);padding:12px 16px;border:1px solid var(--line)">
-                  <div class="row between" style="align-items:center;margin-bottom:6px">
-                    <div class="row" style="gap:8px;align-items:center">
-                      <span class="chip" style="font-weight:600;font-size:.76rem">${esc(win.niche)}</span>
-                      ${badge}
-                    </div>
-                    <button class="btn ghost sm" data-view-snippet="${esc(win.id)}" style="font-size:.75rem;padding:3px 10px">Inspect Resolution →</button>
+                <div class="row between" style="background:var(--surface);border-radius:var(--r-sm);padding:8px 14px;border:1px solid var(--line);align-items:center;gap:10px;flex-wrap:wrap">
+                  <div class="row" style="gap:8px;align-items:center;flex:1;min-width:260px">
+                    <span class="chip" style="font-weight:600;font-size:.74rem">${esc(win.niche)}</span>
+                    ${badge}
+                    <span style="font-weight:500;font-size:.86rem;color:var(--ink)">“${esc(win.query)}”</span>
                   </div>
-
-                  <div style="font-weight:600;font-size:.95rem;color:var(--ink);margin-bottom:4px">
-                    “${esc(win.query)}”
-                  </div>
-
-                  <div style="font-size:.84rem;color:var(--ink-2);line-height:1.45;margin-bottom:6px">
-                    ${esc(cleanSnippetPreview(win.snippet || win.full_content, 160))}
-                  </div>
-
-                  <div class="row between" style="align-items:center;font-size:.75rem">
-                    <span class="muted">Competitors Outranked: ${(win.competitors || []).map(c => `<span class="chip outline" style="font-size:.7rem;padding:1px 6px">${esc(c)}</span>`).join(' ') || '<span class="muted">None</span>'}</span>
-                    <span style="color:var(--ok);font-weight:600">✓ Past Rank: #1 (Stable across audits)</span>
+                  <div class="row" style="gap:10px;align-items:center">
+                    <span class="muted small">Beats ${(win.competitors || []).slice(0, 2).map(c => esc(c)).join(', ') || 'competition'}</span>
+                    <button class="btn ghost sm" data-view-snippet="${esc(win.id)}" style="font-size:.74rem;padding:2px 8px">Inspect Resolution →</button>
                   </div>
                 </div>
               `;
@@ -342,24 +312,21 @@ export async function render(el) {
         </div>
       </section>
 
-      <!-- 5. OPTIMIZATION ACTION LOG: WHAT WORKS & WHAT DOESN'T -->
-      <section class="card stack" style="gap:12px;background:var(--surface);padding:14px 18px">
-        <div class="section-head" style="margin-bottom:0">
-          <div>
-            <div class="row" style="gap:8px;align-items:center">
-              <span style="font-size:1.1rem">📝</span>
-              <h3 style="margin:0;font-size:1.05rem;font-weight:600">Optimization Action Log: What Works &amp; What Doesn't</h3>
-            </div>
-            <span class="small muted">Record landing pages, rate cards, and PR actions to track real rank impact over time</span>
+      <!-- 5. OPTIMIZATION ACTIONS (WHAT WORKS & WHAT DOESN'T) -->
+      <section class="card stack" style="gap:10px;background:var(--surface);padding:14px 18px">
+        <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px">
+          <div class="row" style="gap:8px;align-items:center">
+            <span style="font-size:1.1rem">📝</span>
+            <h3 style="margin:0;font-size:1.02rem;font-weight:600">Optimization Action Log: What Works &amp; What Doesn't</h3>
           </div>
-          <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">
-            <div class="seg" style="display:flex;gap:4px">
-              <button class="seg-btn ${actionFilter === 'all' ? 'active' : ''}" data-act-filter="all">All (${actionsData.length})</button>
-              <button class="seg-btn ${actionFilter === 'effective' ? 'active' : ''}" data-act-filter="effective">🟢 Worked (${actionsData.filter(a => a.verdict === 'effective').length})</button>
-              <button class="seg-btn ${actionFilter === 'testing' ? 'active' : ''}" data-act-filter="testing">⏳ Testing (${actionsData.filter(a => a.verdict === 'testing').length})</button>
-              <button class="seg-btn ${actionFilter === 'ineffective' ? 'active' : ''}" data-act-filter="ineffective">🔴 Ineffective (${actionsData.filter(a => a.verdict === 'ineffective').length})</button>
+          <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
+            <div class="seg" role="tablist">
+              <button class="${actionFilter === 'all' ? 'on' : ''}" data-act-filter="all">All (${actionsData.length})</button>
+              <button class="${actionFilter === 'effective' ? 'on' : ''}" data-act-filter="effective">🟢 Worked (${actionsData.filter(a => a.verdict === 'effective').length})</button>
+              <button class="${actionFilter === 'testing' ? 'on' : ''}" data-act-filter="testing">⏳ Testing (${actionsData.filter(a => a.verdict === 'testing').length})</button>
+              <button class="${actionFilter === 'ineffective' ? 'on' : ''}" data-act-filter="ineffective">🔴 Ineffective (${actionsData.filter(a => a.verdict === 'ineffective').length})</button>
             </div>
-            <button class="btn primary sm" id="btn-crm-add-action-inline">+ Log Action</button>
+            <button class="btn primary sm" id="btn-crm-add-action-inline" style="padding:4px 10px">+ Log Action</button>
           </div>
         </div>
 
@@ -367,91 +334,67 @@ export async function render(el) {
           const list = actionsData.filter(a => actionFilter === 'all' ? true : a.verdict === actionFilter);
           if (list.length === 0) {
             return `
-              <div style="text-align:center;padding:32px 16px;background:var(--surface-2);border-radius:var(--r-sm)">
-                <div class="muted small">No optimization actions recorded in this view yet.</div>
-                <button class="btn sm primary" id="btn-crm-add-action-empty" style="margin-top:10px">+ Log What You Did</button>
+              <div style="text-align:center;padding:24px 16px;background:var(--bg);border-radius:var(--r-sm)">
+                <span class="muted small">No optimization actions recorded in this view.</span>
+                <button class="btn sm primary" id="btn-crm-add-action-empty" style="margin-left:8px">+ Log What You Did</button>
               </div>
             `;
           }
           return `
-            <div class="stack" style="gap:10px">
-              ${list.map(act => {
-                const verdictBadge = act.verdict === 'effective'
-                  ? `<span class="chip ok" style="font-weight:700;font-size:.76rem">🟢 Effective (Rank Climbed)</span>`
-                  : act.verdict === 'testing'
-                  ? `<span class="chip gold" style="font-weight:600;font-size:.76rem">⏳ Testing / Monitoring</span>`
-                  : `<span class="chip warn" style="font-weight:600;font-size:.76rem">🔴 Ineffective (No Impact)</span>`;
+            <div class="table-wrap">
+              <table style="width:100%;border-collapse:collapse;font-size:.84rem">
+                <thead>
+                  <tr style="border-bottom:1px solid var(--line);text-align:left;color:var(--ink-3);font-size:.72rem;text-transform:uppercase;letter-spacing:.04em">
+                    <th style="padding:8px 10px;width:95px">Date</th>
+                    <th style="padding:8px 10px;width:130px">Revenue Pillar</th>
+                    <th style="padding:8px 10px">Initiative &amp; Observed Impact</th>
+                    <th style="padding:8px 10px;width:130px">Verdict</th>
+                    <th style="padding:8px 10px;text-align:right;width:40px"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${list.map(act => {
+                    const verdictBadge = act.verdict === 'effective'
+                      ? `<span class="chip ok" style="font-weight:600;font-size:.72rem">🟢 Effective</span>`
+                      : act.verdict === 'testing'
+                      ? `<span class="chip gold" style="font-weight:600;font-size:.72rem">⏳ Testing</span>`
+                      : `<span class="chip warn" style="font-weight:600;font-size:.72rem">🔴 Ineffective</span>`;
 
-                return `
-                  <div class="card" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 16px">
-                    <div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px">
-                      <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
-                        <span class="chip" style="font-weight:600;font-size:.76rem">📅 ${esc(act.date)}</span>
-                        <span class="chip" style="font-weight:600;font-size:.76rem">${esc(act.niche)}</span>
-                        <span class="chip outline" style="font-size:.72rem">${esc(act.category || 'Initiative')}</span>
-                      </div>
-                      <div class="row" style="gap:8px;align-items:center">
-                        ${verdictBadge}
-                        <button class="btn ghost sm" data-del-act="${esc(act.id)}" style="padding:2px 6px;color:var(--ink-3)" title="Delete action">✕</button>
-                      </div>
-                    </div>
+                    const dParts = String(act.date || '').split('-');
+                    const formattedDate = dParts.length === 3 ? `${dParts[2]} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(dParts[1], 10)-1] || dParts[1]}` : act.date;
 
-                    <div style="font-weight:600;font-size:.95rem;color:var(--ink);margin-bottom:4px">
-                      ${esc(act.title)}
-                    </div>
-
-                    <div style="font-size:.85rem;color:var(--ink-2);line-height:1.5;margin-bottom:6px">
-                      ${esc(act.description || '')}
-                    </div>
-
-                    ${act.notes ? `
-                      <div class="row" style="gap:6px;align-items:center;background:var(--surface-2);padding:6px 12px;border-radius:var(--r-sm);font-size:.8rem;color:var(--ink);margin-bottom:6px">
-                        <b>Observed Impact:</b>
-                        <span>${esc(act.notes)}</span>
-                      </div>
-                    ` : ''}
-
-                    ${act.url ? `
-                      <div style="font-size:.78rem">
-                        <a href="${esc(act.url)}" target="_blank" rel="noopener" style="color:var(--gold-ink);text-decoration:none;font-weight:500">
-                          🔗 Target Link / Evidence: ${esc(act.url)} ↗
-                        </a>
-                      </div>
-                    ` : ''}
-                  </div>
-                `;
-              }).join('')}
+                    return `
+                      <tr style="border-bottom:1px solid var(--line)">
+                        <td style="padding:8px 10px;vertical-align:middle;white-space:nowrap">
+                          <span class="muted small" style="font-weight:500">${esc(formattedDate)}</span>
+                        </td>
+                        <td style="padding:8px 10px;vertical-align:middle;white-space:nowrap">
+                          <span class="chip" style="font-weight:600;font-size:.72rem">${esc(act.niche)}</span>
+                        </td>
+                        <td style="padding:8px 10px;vertical-align:middle">
+                          <div style="font-weight:600;color:var(--ink);font-size:.85rem;line-height:1.35;margin-bottom:2px">${esc(act.title)}</div>
+                          <div class="small muted" style="line-height:1.35">
+                            ${esc(act.notes || act.description || '')}
+                            ${act.url ? ` · <a href="${esc(act.url)}" target="_blank" rel="noopener" style="color:var(--gold-ink);text-decoration:underline">Evidence ↗</a>` : ''}
+                          </div>
+                        </td>
+                        <td style="padding:8px 10px;vertical-align:middle;white-space:nowrap">
+                          ${verdictBadge}
+                        </td>
+                        <td style="padding:8px 10px;vertical-align:middle;text-align:right;white-space:nowrap">
+                          <button class="btn ghost sm" data-del-act="${esc(act.id)}" style="padding:2px 6px;color:var(--ink-3);font-size:.85rem;line-height:1" title="Delete action">✕</button>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
             </div>
           `;
         })()}
       </section>
-
-      <!-- 6. Competitive Landscape & Displacement -->
-      <section class="card stack" style="gap:12px;background:var(--surface);padding:14px 18px">
-        <div class="section-head" style="margin-bottom:0">
-          <div class="row" style="gap:8px;align-items:center">
-            <span style="font-size:1.1rem">⚡</span>
-            <h3 style="margin:0;font-size:1.05rem;font-weight:600">Competitive Landscape &amp; Displacement</h3>
-          </div>
-          <span class="small muted">Direct market share comparison across monitored routes</span>
-        </div>
-
-        <div class="split" style="gap:12px">
-          <div style="background:var(--bg);border-left:3px solid var(--ok);padding:12px 14px;border-radius:var(--r-sm)">
-            <div class="label small" style="margin-bottom:4px;font-weight:700;color:var(--ok)">🏆 Competitors Displaced (Dorogo #1 / Top-3)</div>
-            <div style="font-size:.84rem;color:var(--ink-2);line-height:1.5">
-              Dorogo unseats <b>MC Eurodriver</b> &amp; <b>Blackcars</b> in Linate/Malpensa Prime FBO aviation, and outranks <b>AlpinBus</b> &amp; <b>ZoneTransfers</b> on heavy-gear ski transfers to Livigno.
-            </div>
-          </div>
-
-          <div style="background:var(--bg);border-left:3px solid var(--gold);padding:12px 14px;border-radius:var(--r-sm)">
-            <div class="label small" style="margin-bottom:4px;font-weight:700;color:var(--gold-ink)">🎯 Incumbents Holding Unranked Routes</div>
-            <div style="font-size:.84rem;color:var(--ink-2);line-height:1.5">
-              <b>MilanoByCar</b> holds designer outlet standby routes (Serravalle); <b>NCC Milano</b> dominates generic city chauffeur. Targeted landing pages will attack these 2 clusters next.
-            </div>
-          </div>
-        </div>
-      </section>
+    </div>
+  `;
     </div>
   `;
 
@@ -487,12 +430,13 @@ export async function render(el) {
 
   el.querySelectorAll('[data-del-act]').forEach((b) => {
     b.addEventListener('click', async (e) => {
+      e.stopPropagation();
       const id = e.currentTarget.dataset.delAct;
-      const ok = await confirmDialog('Delete Optimization Action', 'Are you sure you want to delete this action record?', 'Delete', true);
+      const ok = await confirmDialog('Delete Optimization Action', 'Remove this optimization action from the tracker?', 'Delete', true);
       if (ok) {
-        deleteVisibilityAction(id);
+        cachedActions = deleteVisibilityAction(id, cachedActions);
         toast('Action deleted');
-        render(el);
+        await render(el);
       }
     });
   });

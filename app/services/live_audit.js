@@ -774,10 +774,10 @@ export function persistLiveAuditRun(newRun) {
  * Loads logged optimization actions from Supabase, static JSON, and localStorage.
  */
 export async function loadVisibilityActions() {
-  let actions = [];
+  let actions = null;
   const sb = getSupabaseClient();
 
-  // 1. Try Supabase
+  // 1. Try Supabase (authoritative cloud store)
   if (sb) {
     try {
       const { data, error } = await sb
@@ -785,7 +785,7 @@ export async function loadVisibilityActions() {
         .select('value')
         .eq('key', 'ai_visibility_actions')
         .maybeSingle();
-      if (!error && data?.value && Array.isArray(data.value) && data.value.length > 0) {
+      if (!error && data?.value && Array.isArray(data.value)) {
         actions = data.value;
       }
     } catch (e) {
@@ -793,30 +793,38 @@ export async function loadVisibilityActions() {
     }
   }
 
-  // 2. Merge static file
-  try {
-    const res = await fetch('data/visibility_actions.json?v=' + Date.now());
-    if (res.ok) {
-      const json = await res.json();
-      if (Array.isArray(json)) {
-        const map = new Map();
-        for (const a of json) map.set(a.id, a);
-        for (const a of actions) map.set(a.id, a);
-        actions = [...map.values()];
+  // 2. Fallback to localStorage if Supabase is offline
+  if (actions === null && typeof localStorage !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('dorogo_visibility_actions');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) actions = parsed;
       }
-    }
-  } catch (_) {}
+    } catch (_) {}
+  }
 
-  // 3. Merge localStorage
+  // 3. Fallback to static seed file ONLY on first initialization
+  if (actions === null) {
+    try {
+      const res = await fetch('data/visibility_actions.json?v=' + Date.now());
+      if (res.ok) {
+        const json = await res.json();
+        if (Array.isArray(json)) actions = json;
+      }
+    } catch (_) {}
+  }
+
+  if (!Array.isArray(actions)) actions = [];
+
+  // Exclude any explicitly deleted tombstones
   if (typeof localStorage !== 'undefined') {
     try {
-      const local = JSON.parse(localStorage.getItem('dorogo_visibility_actions') || '[]');
-      if (Array.isArray(local) && local.length > 0) {
-        const map = new Map();
-        for (const a of actions) map.set(a.id, a);
-        for (const a of local) map.set(a.id, a);
-        actions = [...map.values()];
+      const deletedIds = new Set(JSON.parse(localStorage.getItem('dorogo_visibility_actions_deleted') || '[]'));
+      if (deletedIds.size > 0) {
+        actions = actions.filter(a => !deletedIds.has(a.id));
       }
+      localStorage.setItem('dorogo_visibility_actions', JSON.stringify(actions));
     } catch (_) {}
   }
 
@@ -827,24 +835,34 @@ export async function loadVisibilityActions() {
 /**
  * Persists an optimization action to localStorage and Supabase.
  */
-export function saveVisibilityAction(action) {
-  let local = [];
-  if (typeof localStorage !== 'undefined') {
+export function saveVisibilityAction(action, currentList = null) {
+  let list = [];
+  if (Array.isArray(currentList) && currentList.length > 0) {
+    list = [...currentList];
+  } else if (typeof localStorage !== 'undefined') {
     try {
-      local = JSON.parse(localStorage.getItem('dorogo_visibility_actions') || '[]');
+      list = JSON.parse(localStorage.getItem('dorogo_visibility_actions') || '[]');
     } catch (_) {
-      local = [];
+      list = [];
     }
   }
-  const existingIdx = local.findIndex((a) => a.id === action.id);
+
+  const existingIdx = list.findIndex((a) => a.id === action.id);
   if (existingIdx >= 0) {
-    local[existingIdx] = action;
+    list[existingIdx] = action;
   } else {
-    local.unshift(action);
+    list.unshift(action);
   }
+
   if (typeof localStorage !== 'undefined') {
     try {
-      localStorage.setItem('dorogo_visibility_actions', JSON.stringify(local));
+      // Remove from deleted tombstones if re-added
+      const deleted = new Set(JSON.parse(localStorage.getItem('dorogo_visibility_actions_deleted') || '[]'));
+      if (deleted.has(action.id)) {
+        deleted.delete(action.id);
+        localStorage.setItem('dorogo_visibility_actions_deleted', JSON.stringify([...deleted]));
+      }
+      localStorage.setItem('dorogo_visibility_actions', JSON.stringify(list));
     } catch (e) {
       console.warn("Failed to save action to localStorage:", e);
     }
@@ -855,40 +873,51 @@ export function saveVisibilityAction(action) {
   if (sb) {
     sb.from('outreach_state').upsert({
       key: 'ai_visibility_actions',
-      value: local,
+      value: list,
       updated_at: new Date().toISOString()
     }).catch((e) => {
       console.warn("Failed to save action to Supabase:", e);
     });
   }
 
-  return local;
+  return list;
 }
 
 /**
- * Deletes an optimization action by ID from localStorage and Supabase.
+ * Deletes an optimization action by ID from localStorage, Supabase, and in-memory list.
  */
-export function deleteVisibilityAction(id) {
-  let local = [];
+export function deleteVisibilityAction(id, currentList = null) {
+  let list = [];
+  if (Array.isArray(currentList) && currentList.length > 0) {
+    list = [...currentList];
+  } else if (typeof localStorage !== 'undefined') {
+    try {
+      list = JSON.parse(localStorage.getItem('dorogo_visibility_actions') || '[]');
+    } catch (_) {
+      list = [];
+    }
+  }
+
+  const updated = list.filter((a) => a.id !== id);
+
   if (typeof localStorage !== 'undefined') {
     try {
-      local = JSON.parse(localStorage.getItem('dorogo_visibility_actions') || '[]');
-      local = local.filter((a) => a.id !== id);
-      localStorage.setItem('dorogo_visibility_actions', JSON.stringify(local));
-    } catch (e) {
-      local = [];
-    }
+      const deleted = new Set(JSON.parse(localStorage.getItem('dorogo_visibility_actions_deleted') || '[]'));
+      deleted.add(id);
+      localStorage.setItem('dorogo_visibility_actions_deleted', JSON.stringify([...deleted]));
+      localStorage.setItem('dorogo_visibility_actions', JSON.stringify(updated));
+    } catch (_) {}
   }
 
   const sb = getSupabaseClient();
   if (sb) {
     sb.from('outreach_state').upsert({
       key: 'ai_visibility_actions',
-      value: local,
+      value: updated,
       updated_at: new Date().toISOString()
     }).catch(() => {});
   }
 
-  return local;
+  return updated;
 }
 
