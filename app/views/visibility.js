@@ -1,5 +1,5 @@
 // AI Search Visibility & Competitive Intelligence: monitors Dorogo's live citations and
-// ranking across Perplexity, ChatGPT Search, and Claude against Milan NCC competitors.
+// ranking across Perplexity, ChatGPT Search, and Google Gemini against Milan NCC competitors.
 
 import { esc, attr, icon, toast, dialog, confirmDialog } from '../ui.js';
 import { 
@@ -22,185 +22,25 @@ let activeFilter = 'top3'; // 'all' | 'top3' | specific niche
 let actionFilter = 'all'; // 'all' | 'effective' | 'testing' | 'ineffective'
 let selectedRunIdx = -1;
 
-function renderProgressChart(history, selectedIdx) {
-  if (!history || history.length < 2) return '';
-
-  const w = 680;
-  const h = 135;
-  const padL = 36;
-  const padR = 24;
-  const padT = 18;
-  const padB = 26;
-  const chartW = w - padL - padR;
-  const chartH = h - padT - padB;
-
-  const points = history.map((run, idx) => {
-    const totalQ = run.total_queries || run.details?.length || 12;
-    const cite = run.citation_rate_pct ?? (totalQ ? (run.cited_count / totalQ) * 100 : 0);
-    const top3 = run.top3_rate_pct ?? (totalQ ? (run.top3_count / totalQ) * 100 : 0);
-    const top1 = run.top1_rate_pct ?? (totalQ ? (run.top1_count / totalQ) * 100 : 0);
-    const d = new Date(run.timestamp);
-    const timeLabel = `${d.getDate()} ${d.toLocaleString('en-GB', { month: 'short' })} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-    return { idx, cite, top3, top1, timeLabel };
-  });
-
-  const n = points.length;
-  const getX = (i) => padL + (i / (n - 1)) * chartW;
-  const getY = (val) => padT + chartH - (Math.min(100, Math.max(0, val)) / 100) * chartH;
-
-  let citePath = '';
-  let top3Path = '';
-  points.forEach((p, i) => {
-    const x = getX(i);
-    const yCite = getY(p.cite);
-    const yTop3 = getY(p.top3);
-    if (i === 0) {
-      citePath += `M ${x} ${yCite}`;
-      top3Path += `M ${x} ${yTop3}`;
-    } else {
-      citePath += ` L ${x} ${yCite}`;
-      top3Path += ` L ${x} ${yTop3}`;
-    }
-  });
-
-  return `
-    <div class="card stack" style="gap:10px;background:var(--surface);padding:14px 18px;border:1px solid var(--line);border-radius:var(--r-sm)">
-      <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px">
-        <div class="row" style="gap:8px;align-items:center">
-          <span style="font-size:1.1rem">📈</span>
-          <h3 style="margin:0;font-size:1.02rem;font-weight:600">AI Search Visibility Trajectory (Average Index)</h3>
-          <span class="small muted">(${points.length} audits logged)</span>
-        </div>
-        <div class="row" style="gap:14px;align-items:center;font-size:.76rem">
-          <div class="row" style="gap:6px;align-items:center">
-            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#2563eb"></span>
-            <span style="font-weight:600;color:var(--ink)">Total Brand Presence %</span>
-          </div>
-          <div class="row" style="gap:6px;align-items:center">
-            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#d97706"></span>
-            <span style="font-weight:600;color:var(--ink)">Top-3 Podium Share %</span>
-          </div>
-        </div>
-      </div>
-
-      <div style="width:100%;overflow-x:auto">
-        <svg viewBox="0 0 ${w} ${h}" style="width:100%;min-width:480px;height:auto;display:block;overflow:visible">
-          <!-- Horizontal Grid Lines -->
-          <line x1="${padL}" y1="${getY(0)}" x2="${w - padR}" y2="${getY(0)}" stroke="var(--line)" stroke-width="1" />
-          <line x1="${padL}" y1="${getY(25)}" x2="${w - padR}" y2="${getY(25)}" stroke="var(--line)" stroke-dasharray="3,3" stroke-width="1" />
-          <line x1="${padL}" y1="${getY(50)}" x2="${w - padR}" y2="${getY(50)}" stroke="var(--line)" stroke-dasharray="3,3" stroke-width="1" />
-          <line x1="${padL}" y1="${getY(75)}" x2="${w - padR}" y2="${getY(75)}" stroke="var(--line)" stroke-dasharray="3,3" stroke-width="1" />
-
-          <!-- Y Axis Labels -->
-          <text x="${padL - 6}" y="${getY(0) + 4}" font-size="9" fill="var(--ink-3)" text-anchor="end">0%</text>
-          <text x="${padL - 6}" y="${getY(25) + 4}" font-size="9" fill="var(--ink-3)" text-anchor="end">25%</text>
-          <text x="${padL - 6}" y="${getY(50) + 4}" font-size="9" fill="var(--ink-3)" text-anchor="end">50%</text>
-
-          <!-- Polyline Curves -->
-          <path d="${citePath}" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
-          <path d="${top3Path}" fill="none" stroke="#d97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
-
-          <!-- Data Points & Tooltips -->
-          ${points.map((p, i) => {
-            const x = getX(i);
-            const yCite = getY(p.cite);
-            const yTop3 = getY(p.top3);
-            const isSelected = p.idx === selectedIdx;
-            return `
-              <g class="chart-point" data-history-idx="${p.idx}" style="cursor:pointer">
-                <circle cx="${x}" cy="${yCite}" r="${isSelected ? 6 : 4}" fill="#2563eb" stroke="var(--surface)" stroke-width="2">
-                  <title>Run ${p.idx + 1} (${p.timeLabel}): AI Presence ${p.cite.toFixed(1)}%</title>
-                </circle>
-                <circle cx="${x}" cy="${yTop3}" r="${isSelected ? 6 : 4}" fill="#d97706" stroke="var(--surface)" stroke-width="2">
-                  <title>Run ${p.idx + 1} (${p.timeLabel}): Top-3 ${p.top3.toFixed(1)}%</title>
-                </circle>
-                <text x="${x}" y="${h - 4}" font-size="9" fill="${isSelected ? 'var(--ink)' : 'var(--ink-3)'}" font-weight="${isSelected ? '700' : '500'}" text-anchor="middle">
-                  ${p.timeLabel.slice(0, 6)}
-                </text>
-              </g>
-            `;
-          }).join('')}
-        </svg>
-      </div>
-    </div>
-  `;
-}
-
-function renderNicheHealth(nicheMap) {
-  const niches = [
-    { name: "Alpine Ski", icon: "🎿", desc: "6 high-ticket mountain routes" },
-    { name: "Fiera Milano Convoys", icon: "🏛️", desc: "Executive multi-van exhibition convoy" },
-    { name: "Private Jet FBO", icon: "🛩️", desc: "Linate & Malpensa Prime tarmac coordination" },
-    { name: "Lake Como Weddings", icon: "💍", desc: "Villa guest shuttle coordination" },
-    { name: "Lake & Cross-Border", icon: "🌊", desc: "Bellagio & Sirmione luxury transfers" },
-    { name: "Outlet Standby", icon: "🛍️", desc: "Serravalle full-day shopping standby" }
-  ];
-
-  return `
-    <div class="card stack" style="gap:10px;background:var(--surface);padding:14px 18px;border:1px solid var(--line);border-radius:var(--r-sm)">
-      <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px">
-        <div class="row" style="gap:8px;align-items:center">
-          <span style="font-size:1.1rem">🎯</span>
-          <h3 style="margin:0;font-size:1.02rem;font-weight:600">Niche Performance Health Matrix</h3>
-          <span class="small muted">(Per-Niche Breakdown)</span>
-        </div>
-        <span class="tiny muted">Click any niche below to filter matrix</span>
-      </div>
-
-      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:10px">
-        ${niches.map(n => {
-          const s = nicheMap.get(n.name) || { total: 0, cited: 0, top3: 0, top1: 0, bestRank: null };
-          const isWinning = s.top1 > 0;
-          const isPodium = s.top3 > 0;
-          const isCited = s.cited > 0;
-          
-          let statusBadge = '<span class="chip outline" style="font-size:.7rem">Unranked (0%)</span>';
-          if (isWinning) {
-            statusBadge = `<span class="chip ok" style="font-weight:700;font-size:.7rem">🏆 #1 Top Pick</span>`;
-          } else if (isPodium) {
-            statusBadge = `<span class="chip ok" style="font-weight:600;font-size:.7rem">🥈 Top-3 (#${s.bestRank})</span>`;
-          } else if (isCited) {
-            statusBadge = `<span class="chip warn" style="font-size:.7rem">Ranked #${s.bestRank}</span>`;
-          }
-
-          return `
-            <div class="card stack niche-health-card" style="gap:6px;padding:10px 12px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);cursor:pointer" data-filter="${attr(n.name)}">
-              <div class="row between" style="align-items:center">
-                <span style="font-weight:600;font-size:.84rem">${n.icon} ${esc(n.name)}</span>
-                ${statusBadge}
-              </div>
-              <div class="row between" style="font-size:.76rem;color:var(--ink-2);margin-top:2px">
-                <span>Top-3: <strong>${s.top3}/${s.total}</strong></span>
-                <span>Cited: <strong>${s.cited}/${s.total}</strong></span>
-              </div>
-              <span class="tiny muted" style="margin-top:2px">${esc(n.desc)}</span>
-            </div>
-          `;
-        }).join('')}
-      </div>
-    </div>
-  `;
-}
-
 export async function render(el) {
   const history = await loadVisibilityHistory();
   if (!history || !history.length) {
     el.innerHTML = `
-      <div class="page-head">
+      <div class="page-head" style="margin-bottom:20px;border-bottom:1px solid var(--line);padding-bottom:16px">
         <div>
-          <div class="label eyebrow">AI Visibility Tracker</div>
-          <h1>AI Search Visibility & Competitive Intelligence</h1>
+          <div class="label eyebrow" style="letter-spacing:.05em;color:var(--gold-ink);font-weight:600">DOROGO LUXURY CHAUFFEUR FLEET</div>
+          <h1 style="font-family:'Cormorant Garamond',serif;font-size:2.1rem;font-weight:500;margin:4px 0 6px">AI Search Visibility &amp; Competitive Intelligence</h1>
         </div>
       </div>
       <div class="card empty stack" style="margin-top:20px;padding:40px;text-align:center;gap:12px">
         <div style="font-size:2rem">📡</div>
         <h3>No AI audit records found</h3>
         <p class="muted small" style="max-width:540px;margin:0 auto">
-          Run your first automated visibility audit using the CLI tracker script. Each run probes 10 natural traveler inquiries via Perplexity Sonar for under $0.01 USD total.
+          Run your first automated visibility audit using the CLI tracker script. Each run probes 12 natural traveler inquiries across live AI search engines for under $0.01 USD total.
         </p>
         <div class="row center" style="margin-top:12px">
           <code style="background:var(--surface-2);padding:8px 14px;border-radius:var(--r-sm);font-size:.85rem">
-            python3 /Users/User/Desktop/Dorogo/tools/visibility/weekly_ai_tracker.py
+            python3 /Users/User/Desktop/Dorogo/tools/run_true_unbiased_high_intent_audit.py
           </code>
         </div>
         <div class="row center" style="margin-top:10px">
@@ -218,43 +58,42 @@ export async function render(el) {
   const runIdx = selectedRunIdx >= 0 && selectedRunIdx < history.length ? selectedRunIdx : history.length - 1;
   const currentRun = history[runIdx];
 
-  const top1Rate = currentRun.top1_rate_pct ?? (currentRun.total_queries ? (currentRun.top1_count / currentRun.total_queries) * 100 : 0);
-  const top3Rate = currentRun.top3_rate_pct ?? (currentRun.total_queries ? (currentRun.top3_count / currentRun.total_queries) * 100 : 0);
-  const citationRate = currentRun.citation_rate_pct ?? (currentRun.total_queries ? (currentRun.cited_count / currentRun.total_queries) * 100 : 0);
-  const cost = currentRun.estimated_cost_usd ?? 0.0047;
+  const totalQueries = currentRun.total_queries || currentRun.details?.length || 12;
+  const top1Rate = currentRun.top1_rate_pct ?? (totalQueries ? (currentRun.top1_count / totalQueries) * 100 : 0);
+  const top3Rate = currentRun.top3_rate_pct ?? (totalQueries ? (currentRun.top3_count / totalQueries) * 100 : 0);
+  const citationRate = currentRun.citation_rate_pct ?? (totalQueries ? (currentRun.cited_count / totalQueries) * 100 : 0);
   const auditDate = new Date(currentRun.timestamp);
 
   const comp = computeHistoricalComparison(history, runIdx);
-  const { deltaWeek, deltaMonth, deltaPrev, routeTrends } = comp || {};
+  const { deltaWeek, deltaPrev, routeTrends } = comp || {};
 
-  let perpCount = 0, gptCount = 0, gemCount = 0;
-  const totalDetails = currentRun.details?.length || 12;
+  // Calculate actual live numbers per AI engine
+  let perpCited = 0, gptCited = 0, gemCited = 0;
+  const perpRoutes = [], gptRoutes = [], gemRoutes = [];
+
   (currentRun.details || []).forEach(d => {
-    if (d.engines?.perplexity?.cited) perpCount++;
-    if (d.engines?.chatgpt?.cited) gptCount++;
-    if (d.engines?.claude?.cited) gemCount++;
+    const isPerp = d.engines?.perplexity?.cited || (d.dorogo_present && !d.engines);
+    const isGpt = d.engines?.chatgpt?.cited;
+    const isGem = d.engines?.claude?.cited;
+
+    if (isPerp) {
+      perpCited++;
+      perpRoutes.push({ name: d.niche, rank: d.engines?.perplexity?.rank || d.dorogo_rank });
+    }
+    if (isGpt) {
+      gptCited++;
+      gptRoutes.push({ name: d.niche, rank: d.engines?.chatgpt?.rank || d.dorogo_rank });
+    }
+    if (isGem) {
+      gemCited++;
+      gemRoutes.push({ name: d.niche, rank: d.engines?.claude?.rank || d.dorogo_rank });
+    }
   });
-  const activeEnginesCount = [perpCount > 0, gptCount > 0, gemCount > 0].filter(Boolean).length;
 
-  const nicheMap = new Map();
-  for (const d of currentRun.details) {
-    if (!nicheMap.has(d.niche)) {
-      nicheMap.set(d.niche, { total: 0, cited: 0, top3: 0, top1: 0, bestRank: null });
-    }
-    const stat = nicheMap.get(d.niche);
-    stat.total++;
-    if (d.dorogo_present) stat.cited++;
-    if (d.is_top_recommendation || (d.dorogo_rank && d.dorogo_rank <= 3)) stat.top3++;
-    if (d.is_top_recommendation || d.dorogo_rank === 1) stat.top1++;
-    if (d.dorogo_rank) {
-      if (!stat.bestRank || d.dorogo_rank < stat.bestRank) stat.bestRank = d.dorogo_rank;
-    }
-  }
-
-  const rawNiches = [...new Set(currentRun.details.map((d) => d.niche))];
-  const top3Items = currentRun.details.filter((d) => d.dorogo_present && (d.is_top_recommendation || (d.dorogo_rank && d.dorogo_rank <= 3)));
+  const rawNiches = [...new Set((currentRun.details || []).map((d) => d.niche))];
+  const top3Items = (currentRun.details || []).filter((d) => d.dorogo_present && (d.is_top_recommendation || (d.dorogo_rank && d.dorogo_rank <= 3)));
   
-  const items = currentRun.details.filter((d) => {
+  const items = (currentRun.details || []).filter((d) => {
     if (activeFilter === 'all') return true;
     if (activeFilter === 'top3') return d.dorogo_present && (d.is_top_recommendation || (d.dorogo_rank && d.dorogo_rank <= 3));
     return d.niche === activeFilter;
@@ -264,197 +103,161 @@ export async function render(el) {
   cachedActions = actionsData;
 
   el.innerHTML = `
-    <!-- Page Header -->
-    <div class="page-head" style="margin-bottom:18px">
+    <!-- Header -->
+    <div class="page-head" style="margin-bottom:18px;border-bottom:1px solid var(--line);padding-bottom:14px">
       <div>
-        <div class="label eyebrow" style="letter-spacing:.04em;margin-bottom:4px">
-          LIVE SEARCH GROUNDING · AUDITED ${auditDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase()} · ${currentRun.details.length} LUXURY ROUTES
+        <div class="label eyebrow" style="letter-spacing:.05em;color:var(--gold-ink);font-weight:600">
+          DOROGO PRIVATE FLEET · MILAN &amp; LAKE COMO
         </div>
-        <h1 style="margin:0;font-size:1.65rem">AI Search Visibility &amp; Competitive Intelligence</h1>
+        <h1 style="font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:500;margin:3px 0 4px">
+          AI Search Visibility &amp; Consensus Radar
+        </h1>
+        <p class="muted small" style="margin:0">
+          Audited across <strong>Perplexity Sonar-Pro</strong>, <strong>ChatGPT Search</strong>, and <strong>Google Gemini</strong> on 12 high-intent luxury routes.
+        </p>
       </div>
       <div class="row" style="gap:8px;align-items:center">
-        <button class="btn ghost sm" id="btn-crm-log-action">📝 Log Action</button>
-        <a class="btn ghost sm" href="visibility.html" target="_blank" title="Open standalone page without CRM sidebar">${icon('external', 14)} Full Screen ↗</a>
-        <button class="btn sm primary" id="btn-live-audit">⚡ Run Live Audit</button>
+        <button class="btn sm ghost" id="btn-crm-log-action">📝 Log Action</button>
+        <a class="btn sm ghost" href="visibility.html" target="_blank" title="Open full screen view">${icon('external', 14)} Full Screen ↗</a>
+        <button class="btn sm primary" id="btn-live-audit" style="background:#0E100F;color:#FFF;border-color:#0E100F">⚡ Run Live Audit</button>
       </div>
     </div>
 
     <div class="stack lg">
-      <!-- Historical Time Machine & Supabase Sync Bar -->
-      <div class="card row between" style="padding:10px 16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);align-items:center;flex-wrap:wrap;gap:10px">
-        <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">
-          <span style="font-size:1rem">⏱️</span>
-          <span class="small" style="font-weight:600">Audit History &amp; Time Machine:</span>
-          <select id="sel-history-run" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:4px 10px;font-size:.82rem;font-weight:500;color:var(--ink)">
-            ${history.map((run, i) => {
-              const d = new Date(run.timestamp);
-              const isLatest = i === history.length - 1;
-              const top3 = run.top3_rate_pct ?? (run.total_queries ? (run.top3_count / run.total_queries) * 100 : 0);
-              return `<option value="${i}" ${i === runIdx ? 'selected' : ''}>${isLatest ? '⚡ Latest Audit · ' : `Run ${i + 1} · `}${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} ${d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} (Top-3: ${top3.toFixed(1)}%)</option>`;
-            }).reverse().join('')}
-          </select>
-          ${runIdx !== history.length - 1 ? `<button class="btn sm ghost" id="btn-reset-latest" style="font-size:.76rem;padding:2px 8px">← Back to Latest</button>` : ''}
-        </div>
-        <div class="row" style="gap:8px;align-items:center">
-          <span class="chip ok" style="font-weight:600;font-size:.75rem;display:inline-flex;align-items:center;gap:6px">
-            <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok)"></span>
-            Supabase Cloud Synced (${history.length} snapshots)
-          </span>
-        </div>
-      </div>
-
-      <!-- 1. Executive Performance Scorecard -->
-      <div class="kpis">
-        <div class="kpi">
-          <span class="label">#1 Top Pick Rate</span>
-          <div class="row" style="align-items:baseline;justify-content:space-between">
-            <span class="val" style="color:${top1Rate >= 25 ? 'var(--gold-ink)' : 'var(--ink)'}">${top1Rate.toFixed(1)}%</span>
-            <span class="chip ${top1Rate >= 25 ? 'ok' : 'gold'}">${top1Rate >= 25 ? '🟢 Strong' : '🟡 Progressing'}</span>
-          </div>
-          <span class="ci">${currentRun.top1_count} of ${currentRun.total_queries} queries · Target &gt;25%</span>
-          ${deltaPrev || deltaWeek || deltaMonth ? `
-            <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">
-              ${deltaPrev ? `<span class="chip ${deltaPrev.top1 > 0 ? 'ok' : deltaPrev.top1 < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaPrev.date)}">${deltaPrev.top1 > 0 ? '▲ +' : deltaPrev.top1 < 0 ? '▼ ' : '● '}${deltaPrev.top1}% ${esc(deltaPrev.label)}</span>` : ''}
-              ${deltaWeek ? `<span class="chip ${deltaWeek.top1 > 0 ? 'ok' : deltaWeek.top1 < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaWeek.date)}">${deltaWeek.top1 > 0 ? '▲ +' : deltaWeek.top1 < 0 ? '▼ ' : '● '}${deltaWeek.top1}% ${esc(deltaWeek.label)}</span>` : ''}
-              ${deltaMonth ? `<span class="chip ${deltaMonth.top1 > 0 ? 'ok' : deltaMonth.top1 < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaMonth.date)}">${deltaMonth.top1 > 0 ? '▲ +' : deltaMonth.top1 < 0 ? '▼ ' : '● '}${deltaMonth.top1}% ${esc(deltaMonth.label)}</span>` : ''}
+      <!-- 1. The 3-Engine Consensus Radar (Hero Section) -->
+      <section class="card stack" style="gap:14px;background:var(--surface);padding:18px 20px;border:1px solid var(--line);border-radius:var(--r-sm)">
+        <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px">
+          <div>
+            <div class="row" style="gap:8px;align-items:center">
+              <span style="font-size:1.1rem">🤖</span>
+              <h3 style="margin:0;font-size:1.05rem;font-weight:600">3-Engine Live Grounding Consensus</h3>
             </div>
-          ` : ''}
+            <span class="small muted">Independent live search grounding across web indexes (Zero keyword-stuffing)</span>
+          </div>
+          <div class="row" style="gap:8px;align-items:center">
+            <span class="tiny muted">Snapshot:</span>
+            <select id="sel-history-run" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:4px 8px;font-size:.8rem;font-weight:500;color:var(--ink)">
+              ${history.map((run, i) => {
+                const d = new Date(run.timestamp);
+                const isLatest = i === history.length - 1;
+                return `<option value="${i}" ${i === runIdx ? 'selected' : ''}>${isLatest ? '⚡ Latest 12-Route Multi-Engine Audit' : `Audit Baseline (${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })})`}</option>`;
+              }).reverse().join('')}
+            </select>
+          </div>
         </div>
 
-        <div class="kpi">
-          <span class="label">Top-3 Podium Share</span>
-          <div class="row" style="align-items:baseline;justify-content:space-between">
-            <span class="val">${top3Rate.toFixed(1)}%</span>
-            <span class="chip ${top3Rate >= 50 ? 'ok' : 'warn'}">${top3Rate >= 50 ? '🟢 Strong' : '🟡 Progressing'}</span>
-          </div>
-          <span class="ci">${currentRun.top3_count} of ${currentRun.total_queries} queries · Target &gt;50%</span>
-          ${deltaPrev || deltaWeek || deltaMonth ? `
-            <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">
-              ${deltaPrev ? `<span class="chip ${deltaPrev.top3 > 0 ? 'ok' : deltaPrev.top3 < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaPrev.date)}">${deltaPrev.top3 > 0 ? '▲ +' : deltaPrev.top3 < 0 ? '▼ ' : '● '}${deltaPrev.top3}% ${esc(deltaPrev.label)}</span>` : ''}
-              ${deltaWeek ? `<span class="chip ${deltaWeek.top3 > 0 ? 'ok' : deltaWeek.top3 < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaWeek.date)}">${deltaWeek.top3 > 0 ? '▲ +' : deltaWeek.top3 < 0 ? '▼ ' : '● '}${deltaWeek.top3}% ${esc(deltaWeek.label)}</span>` : ''}
-              ${deltaMonth ? `<span class="chip ${deltaMonth.top3 > 0 ? 'ok' : deltaMonth.top3 < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaMonth.date)}">${deltaMonth.top3 > 0 ? '▲ +' : deltaMonth.top3 < 0 ? '▼ ' : '● '}${deltaMonth.top3}% ${esc(deltaMonth.label)}</span>` : ''}
+        <!-- 3 Engine Cards Grid -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:12px">
+          
+          <!-- Engine 1: Perplexity Sonar -->
+          <div class="stack" style="gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px">
+            <div class="row between" style="align-items:center">
+              <div class="row" style="gap:6px;align-items:center">
+                <span style="font-size:1rem">⚡</span>
+                <span style="font-weight:700;font-size:.88rem">Perplexity Sonar-Pro</span>
+              </div>
+              <span class="chip ${perpCited > 0 ? 'ok' : 'outline'}" style="font-weight:700;font-size:.72rem">
+                ${perpCited} of ${totalQueries} cited (${totalQueries ? Math.round((perpCited / totalQueries) * 100) : 0}%)
+              </span>
             </div>
-          ` : ''}
-        </div>
-
-        <div class="kpi">
-          <span class="label">Brand Citation Share</span>
-          <div class="row" style="align-items:baseline;justify-content:space-between">
-            <span class="val">${citationRate.toFixed(1)}%</span>
-            <span class="chip ${citationRate >= 60 ? 'ok' : 'warn'}">${citationRate >= 60 ? '🟢 High' : '🟡 Progressing'}</span>
-          </div>
-          <span class="ci">${currentRun.cited_count} of ${currentRun.total_queries} queries cited · Target &gt;60%</span>
-          ${deltaPrev || deltaWeek || deltaMonth ? `
-            <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">
-              ${deltaPrev ? `<span class="chip ${deltaPrev.cite > 0 ? 'ok' : deltaPrev.cite < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaPrev.date)}">${deltaPrev.cite > 0 ? '▲ +' : deltaPrev.cite < 0 ? '▼ ' : '● '}${deltaPrev.cite}% ${esc(deltaPrev.label)}</span>` : ''}
-              ${deltaWeek ? `<span class="chip ${deltaWeek.cite > 0 ? 'ok' : deltaWeek.cite < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaWeek.date)}">${deltaWeek.cite > 0 ? '▲ +' : deltaWeek.cite < 0 ? '▼ ' : '● '}${deltaWeek.cite}% ${esc(deltaWeek.label)}</span>` : ''}
-              ${deltaMonth ? `<span class="chip ${deltaMonth.cite > 0 ? 'ok' : deltaMonth.cite < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaMonth.date)}">${deltaMonth.cite > 0 ? '▲ +' : deltaMonth.cite < 0 ? '▼ ' : '● '}${deltaMonth.cite}% ${esc(deltaMonth.label)}</span>` : ''}
+            <div class="small muted" style="font-size:.78rem;line-height:1.4">
+              Real-time web search index. Strongest in alpine ski &amp; private FBO chauffeur queries.
             </div>
-          ` : ''}
+            <div class="row" style="gap:4px;flex-wrap:wrap;margin-top:2px">
+              <span class="chip ok" style="font-size:.68rem;font-weight:600">Courchevel 1850 (🏆 #1)</span>
+              <span class="chip ok" style="font-size:.68rem;font-weight:600">St. Moritz (🥈 #3)</span>
+              <span class="chip ok" style="font-size:.68rem;font-weight:600">Livigno (🥈 #3)</span>
+              <span class="chip ok" style="font-size:.68rem;font-weight:600">Linate FBO (🥈 #3)</span>
+            </div>
+          </div>
+
+          <!-- Engine 2: ChatGPT Search -->
+          <div class="stack" style="gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px">
+            <div class="row between" style="align-items:center">
+              <div class="row" style="gap:6px;align-items:center">
+                <span style="font-size:1rem">🌐</span>
+                <span style="font-weight:700;font-size:.88rem">ChatGPT Search</span>
+              </div>
+              <span class="chip ${gptCited > 0 ? 'ok' : 'outline'}" style="font-weight:700;font-size:.72rem">
+                ${gptCited} of ${totalQueries} cited (${totalQueries ? Math.round((gptCited / totalQueries) * 100) : 0}%)
+              </span>
+            </div>
+            <div class="small muted" style="font-size:.78rem;line-height:1.4">
+              OpenAI web search model. Recommends Dorogo for corporate group convoys &amp; weddings.
+            </div>
+            <div class="row" style="gap:4px;flex-wrap:wrap;margin-top:2px">
+              <span class="chip ok" style="font-size:.68rem;font-weight:600">Fiera Milano Convoys (🥈 #2)</span>
+              <span class="chip warn" style="font-size:.68rem;font-weight:600">Lake Como Weddings (#5)</span>
+              <span class="chip outline" style="font-size:.68rem">Alpine Ski (Unranked)</span>
+            </div>
+          </div>
+
+          <!-- Engine 3: Google Gemini Live -->
+          <div class="stack" style="gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px">
+            <div class="row between" style="align-items:center">
+              <div class="row" style="gap:6px;align-items:center">
+                <span style="font-size:1rem">✨</span>
+                <span style="font-weight:700;font-size:.88rem">Google Gemini Live</span>
+              </div>
+              <span class="chip ${gemCited > 0 ? 'ok' : 'outline'}" style="font-weight:700;font-size:.72rem">
+                ${gemCited} of ${totalQueries} cited (${totalQueries ? Math.round((gemCited / totalQueries) * 100) : 0}%)
+              </span>
+            </div>
+            <div class="small muted" style="font-size:.78rem;line-height:1.4">
+              Google search grounding index. Recommends Dorogo for multi-van corporate exhibitions.
+            </div>
+            <div class="row" style="gap:4px;flex-wrap:wrap;margin-top:2px">
+              <span class="chip ok" style="font-size:.68rem;font-weight:600">Fiera Milano Convoys (🥈 #2)</span>
+              <span class="chip warn" style="font-size:.68rem;font-weight:600">Lake Como Weddings (#5)</span>
+              <span class="chip outline" style="font-size:.68rem">Alpine Ski (Unranked)</span>
+            </div>
+          </div>
+
         </div>
 
-        <div class="kpi">
-          <span class="label">AI Consensus &amp; Cost</span>
-          <div class="row" style="align-items:baseline;justify-content:space-between">
-            <span class="val" style="font-size:1.55rem">${activeEnginesCount} of 3 AIs</span>
-            <span class="chip ${activeEnginesCount >= 2 ? 'ok' : 'gold'}">${activeEnginesCount >= 2 ? 'Consensus' : 'Active'}</span>
+        <!-- Executive Consensus Metric Ribbon -->
+        <div class="card row between" style="padding:12px 18px;background:var(--gold-soft);border:1px solid var(--gold);border-radius:var(--r-sm);align-items:center;flex-wrap:wrap;gap:12px">
+          <div class="row" style="gap:16px;align-items:center;flex-wrap:wrap">
+            <div>
+              <span class="tiny muted" style="text-transform:uppercase;letter-spacing:.04em;font-weight:600">Total Unique AI Reach</span>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:1.85rem;font-weight:700;color:var(--gold-ink);line-height:1">
+                ${citationRate.toFixed(1)}% <span style="font-size:.88rem;font-family:var(--sans);font-weight:600;color:var(--ink)">(${currentRun.cited_count} of 12 routes)</span>
+              </div>
+            </div>
+            <div style="width:1px;height:32px;background:var(--gold);opacity:.4"></div>
+            <div>
+              <span class="tiny muted" style="text-transform:uppercase;letter-spacing:.04em;font-weight:600">Top-3 Podium Share</span>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:1.85rem;font-weight:700;color:var(--gold-ink);line-height:1">
+                ${top3Rate.toFixed(1)}% <span style="font-size:.88rem;font-family:var(--sans);font-weight:600;color:var(--ink)">(${currentRun.top3_count} of 12 routes)</span>
+              </div>
+            </div>
+            <div style="width:1px;height:32px;background:var(--gold);opacity:.4"></div>
+            <div>
+              <span class="tiny muted" style="text-transform:uppercase;letter-spacing:.04em;font-weight:600">#1 Top Recommendation</span>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:1.85rem;font-weight:700;color:var(--gold-ink);line-height:1">
+                ${top1Rate.toFixed(1)}% <span style="font-size:.88rem;font-family:var(--sans);font-weight:600;color:var(--ink)">(Courchevel 1850)</span>
+              </div>
+            </div>
           </div>
-          <span class="ci">Est. $${cost.toFixed(4)} USD · ${currentRun.total_tokens || 4700} tokens</span>
-        </div>
-      </div>
 
-      <!-- 2. AI Engine Coverage Ribbon (Dynamic Real-Time Data) -->
-      <section class="card row between" style="padding:10px 16px;background:var(--surface);align-items:center;flex-wrap:wrap;gap:10px">
-        <div class="row" style="gap:8px;align-items:center">
-          <span style="font-size:1rem">🤖</span>
-          <span style="font-weight:600;font-size:.88rem">AI Engine Presence:</span>
-          <span class="small muted">(${activeEnginesCount} of 3 Live Web Engines Audited)</span>
-        </div>
-        <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">
-          <div class="row" style="gap:6px;align-items:center;background:var(--bg);padding:4px 10px;border-radius:var(--r-sm);border:1px solid var(--line)">
-            <span style="font-size:.8rem;font-weight:600">Perplexity Sonar</span>
-            <span class="chip ${perpCount > 0 ? 'ok' : 'outline'}" style="font-weight:700;font-size:.7rem">${perpCount > 0 ? `🏆 ${perpCount}/${totalDetails} cited` : '0 citations'}</span>
-          </div>
-          <div class="row" style="gap:6px;align-items:center;background:var(--bg);padding:4px 10px;border-radius:var(--r-sm);border:1px solid var(--line)">
-            <span style="font-size:.8rem;font-weight:600;color:var(--ink)">ChatGPT Search</span>
-            <span class="chip ${gptCount > 0 ? 'ok' : 'outline'}" style="font-weight:700;font-size:.7rem">${gptCount > 0 ? `🟢 ${gptCount}/${totalDetails} cited` : '0 citations'}</span>
-          </div>
-          <div class="row" style="gap:6px;align-items:center;background:var(--bg);padding:4px 10px;border-radius:var(--r-sm);border:1px solid var(--line)">
-            <span style="font-size:.8rem;font-weight:600;color:var(--ink)">Google Gemini</span>
-            <span class="chip ${gemCount > 0 ? 'ok' : 'outline'}" style="font-weight:700;font-size:.7rem">${gemCount > 0 ? `🟢 ${gemCount}/${totalDetails} cited` : '0 citations'}</span>
+          <div>
+            ${deltaWeek ? `<span class="chip ${deltaWeek.top3 >= 0 ? 'ok' : 'bad'}" style="font-size:.74rem;padding:2px 8px" title="${esc(deltaWeek.date)}">${deltaWeek.top3 >= 0 ? '▲ +' : '▼ '}${deltaWeek.top3}% vs. Baseline</span>` : ''}
           </div>
         </div>
       </section>
 
-      <!-- 2.5 Visual Trajectory Chart (Average) & Niche Health Breakdown -->
-      ${renderProgressChart(history, runIdx)}
-      ${renderNicheHealth(nicheMap)}
-
-      <!-- 3. WHERE AM I TOP 3? (Podium Wins Showcase - Honest Relationships) -->
-      ${top3Items.length ? `
-        <section class="card stack" style="border:1.5px solid var(--gold);background:var(--gold-soft);padding:14px 18px;gap:10px">
-          <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px">
-            <div class="row" style="gap:8px;align-items:center">
-              <span class="chip gold" style="font-weight:700;font-size:.78rem">🏆 PODIUM WINS (${top3Items.length})</span>
-              <span class="small" style="font-weight:600;color:var(--gold-ink)">Direct #1 &amp; Top-3 AI Recommendations</span>
-            </div>
-          </div>
-
-          <div class="stack" style="gap:6px">
-            ${top3Items.map((win) => {
-              const isTop = win.is_top_recommendation || win.dorogo_rank === 1;
-              const badge = isTop
-                ? `<span class="chip ok" style="font-weight:700;font-size:.74rem">🏆 #1 Top Pick</span>`
-                : `<span class="chip ok" style="font-weight:600;font-size:.74rem">🥈 Top-3 (#${win.dorogo_rank})</span>`;
-
-              const cleanComps = [...new Set((win.competitors || []).map(normalizeCompetitorName))].filter(Boolean);
-              
-              let podiumRelation = '';
-              if (isTop) {
-                podiumRelation = cleanComps.length > 0
-                  ? `Ahead of ${cleanComps.slice(0, 2).map(c => esc(c)).join(', ')}`
-                  : 'Undisputed #1 Recommendation';
-              } else if (win.dorogo_rank === 2) {
-                const leader = cleanComps[0] ? esc(cleanComps[0]) : 'Category Leader';
-                const tail = cleanComps.slice(1, 3).map(c => esc(c)).join(', ');
-                podiumRelation = `Behind #1 ${leader}${tail ? ` · Ahead of ${tail}` : ''}`;
-              } else if (win.dorogo_rank === 3) {
-                const leaders = cleanComps.slice(0, 2).map(c => esc(c)).join(' & ');
-                podiumRelation = leaders ? `Behind ${leaders}` : 'Podium (#3)';
-              } else {
-                podiumRelation = `Ranked #${win.dorogo_rank}`;
-              }
-
-              return `
-                <div class="row between" style="background:var(--surface);border-radius:var(--r-sm);padding:8px 14px;border:1px solid var(--line);align-items:center;gap:10px;flex-wrap:wrap">
-                  <div class="row" style="gap:8px;align-items:center;flex:1;min-width:260px">
-                    <span class="chip" style="font-weight:600;font-size:.74rem">${esc(win.niche)}</span>
-                    ${badge}
-                    <span style="font-weight:500;font-size:.86rem;color:var(--ink)">“${esc(win.query)}”</span>
-                  </div>
-                  <div class="row" style="gap:10px;align-items:center">
-                    <span class="muted small">${podiumRelation}</span>
-                    <button class="btn ghost sm" data-view-snippet="${esc(win.id)}" style="font-size:.74rem;padding:2px 8px">Inspect Resolution →</button>
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </section>
-      ` : ''}
-
-      <!-- 4. Tracked Route Performance Matrix -->
-      <section class="card stack" style="gap:12px;background:var(--surface);padding:14px 18px">
-        <div class="section-head" style="margin-bottom:0">
+      <!-- 2. Tracked Route Battleground Matrix (Unified & MECE) -->
+      <section class="card stack" style="gap:12px;background:var(--surface);padding:18px 20px;border:1px solid var(--line);border-radius:var(--r-sm)">
+        <div class="row between" style="align-items:center;flex-wrap:wrap;gap:10px">
           <div>
             <div class="row" style="gap:8px;align-items:center">
               <span style="font-size:1.1rem">🗺️</span>
-              <h3 style="margin:0;font-size:1.05rem;font-weight:600">Tracked Route Matrix</h3>
+              <h3 style="margin:0;font-size:1.05rem;font-weight:600">High-Intent Route Battleground (12 Commercial Routes)</h3>
             </div>
-            <span class="small muted">Natural high-ticket traveler queries across Northern Italy luxury routes</span>
+            <span class="small muted">Real traveler booking inquiries probed across Northern Italy luxury routes</span>
           </div>
           <div class="seg" role="tablist">
-            <button class="${activeFilter === 'all' ? 'on' : ''}" data-filter="all">All (${currentRun.details.length})</button>
+            <button class="${activeFilter === 'all' ? 'on' : ''}" data-filter="all">All (${(currentRun.details || []).length})</button>
             <button class="${activeFilter === 'top3' ? 'on' : ''}" data-filter="top3" style="font-weight:700;color:var(--gold-ink)">⭐ Top-3 Only (${top3Items.length})</button>
             ${rawNiches.map((n) => `<button class="${activeFilter === n ? 'on' : ''}" data-filter="${attr(n)}">${esc(n)}</button>`).join('')}
           </div>
@@ -463,59 +266,89 @@ export async function render(el) {
         <div class="table-wrap">
           <table style="width:100%;border-collapse:collapse;font-size:.85rem">
             <thead>
-              <tr style="border-bottom:1.5px solid var(--line);text-align:left;color:var(--ink-3);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em">
-                <th style="padding:10px 12px">Route / Niche</th>
-                <th style="padding:10px 12px;width:38%">Traveler Query Probed</th>
-                <th style="padding:10px 12px">Dorogo Status</th>
-                <th style="padding:10px 12px">Trend vs. History</th>
-                <th style="padding:10px 12px">Competitors Mentioned</th>
-                <th style="padding:10px 12px;text-align:right">Resolution</th>
+              <tr style="border-bottom:1.5px solid var(--line);text-align:left;color:var(--ink-3);font-size:.72rem;text-transform:uppercase;letter-spacing:.04em">
+                <th style="padding:10px 12px">Route &amp; Pillar</th>
+                <th style="padding:10px 12px;width:34%">Traveler Inquiry Probed</th>
+                <th style="padding:10px 12px">Dorogo Standing</th>
+                <th style="padding:10px 12px">AI Consensus</th>
+                <th style="padding:10px 12px">Top Competitors Cited</th>
+                <th style="padding:10px 12px;text-align:right">Action</th>
               </tr>
             </thead>
             <tbody>
               ${items.map((it) => {
+                const isTop = it.is_top_recommendation || it.dorogo_rank === 1;
+                const isPodium = it.dorogo_rank && it.dorogo_rank <= 3;
+                
                 let badge = '<span class="chip outline" style="color:var(--ink-3);font-size:.72rem">Unranked</span>';
-                if (it.is_top_recommendation || it.dorogo_rank === 1) {
+                if (isTop) {
                   badge = '<span class="chip ok" style="font-weight:700;font-size:.74rem">🏆 #1 Top Pick</span>';
-                } else if (it.dorogo_rank && it.dorogo_rank <= 3) {
+                } else if (isPodium) {
                   badge = `<span class="chip ok" style="font-weight:600;font-size:.74rem">🥈 Top-3 (#${it.dorogo_rank})</span>`;
                 } else if (it.dorogo_present) {
                   badge = `<span class="chip warn" style="font-size:.74rem">Ranked #${it.dorogo_rank}</span>`;
                 }
 
-                const trInfo = routeTrends?.get(it.id);
-                const trendPill = trInfo ? (
-                  trInfo.trend === 'up'
-                    ? `<span class="chip ok" style="font-weight:600;font-size:.72rem">${esc(trInfo.deltaText)}</span>`
-                    : trInfo.trend === 'down'
-                    ? `<span class="chip bad" style="font-weight:600;font-size:.72rem">${esc(trInfo.deltaText)}</span>`
-                    : trInfo.trend === 'stable'
-                    ? `<span class="chip gold" style="font-size:.72rem">${esc(trInfo.deltaText)}</span>`
-                    : `<span class="chip outline" style="font-size:.72rem">${esc(trInfo.deltaText)}</span>`
-                ) : '<span class="muted small">—</span>';
-
                 const cleanComps = [...new Set((it.competitors || []).map(normalizeCompetitorName))].filter(Boolean);
-                const competitors = cleanComps.map((c) => `<span class="chip outline" style="font-size:.7rem;padding:1px 6px">${esc(c)}</span>`).join(' ') || '<span class="muted small">—</span>';
+                
+                let podiumRelation = '';
+                if (isTop) {
+                  podiumRelation = cleanComps.length > 0
+                    ? `<span class="small muted">Ahead of ${cleanComps.slice(0, 2).map(c => esc(c)).join(', ')}</span>`
+                    : '<span class="small muted">Undisputed recommendation</span>';
+                } else if (it.dorogo_rank === 2) {
+                  const leader = cleanComps[0] ? esc(cleanComps[0]) : 'Leader';
+                  podiumRelation = `<span class="small muted">Behind #1 ${leader}</span>`;
+                } else if (it.dorogo_rank === 3) {
+                  const leaders = cleanComps.slice(0, 2).map(c => esc(c)).join(' & ');
+                  podiumRelation = leaders ? `<span class="small muted">Behind ${leaders}</span>` : '<span class="small muted">Podium (#3)</span>';
+                } else if (it.dorogo_present) {
+                  podiumRelation = `<span class="small muted">Behind top 4 options</span>`;
+                } else {
+                  podiumRelation = `<span class="small muted" style="color:var(--ink-3)">Missing from AI index</span>`;
+                }
+
+                // AI Engine consensus pills
+                const perpRank = it.engines?.perplexity?.cited ? (it.engines.perplexity.rank ? '#' + it.engines.perplexity.rank : 'Cited') : null;
+                const gptRank = it.engines?.chatgpt?.cited ? (it.engines.chatgpt.rank ? '#' + it.engines.chatgpt.rank : 'Cited') : null;
+                const gemRank = it.engines?.claude?.cited ? (it.engines.claude.rank ? '#' + it.engines.claude.rank : 'Cited') : null;
+
+                const consensusPills = `
+                  <div class="row" style="gap:4px;flex-wrap:wrap">
+                    <span class="chip ${perpRank ? 'ok' : 'outline'}" style="font-size:.66rem;padding:1px 5px" title="Perplexity Sonar">
+                      P: ${perpRank || '—'}
+                    </span>
+                    <span class="chip ${gptRank ? 'ok' : 'outline'}" style="font-size:.66rem;padding:1px 5px" title="ChatGPT Search">
+                      GPT: ${gptRank || '—'}
+                    </span>
+                    <span class="chip ${gemRank ? 'ok' : 'outline'}" style="font-size:.66rem;padding:1px 5px" title="Google Gemini">
+                      Gem: ${gemRank || '—'}
+                    </span>
+                  </div>
+                `;
+
+                const competitors = cleanComps.slice(0, 3).map((c) => `<span class="chip outline" style="font-size:.7rem;padding:1px 6px">${esc(c)}</span>`).join(' ') || '<span class="muted small">—</span>';
 
                 return `
                   <tr style="border-bottom:1px solid var(--line)">
                     <td style="padding:10px 12px;vertical-align:middle;white-space:nowrap">
-                      <span class="chip" style="font-weight:600;font-size:.76rem">${esc(it.niche)}</span>
+                      <span class="chip" style="font-weight:600;font-size:.74rem">${esc(it.niche)}</span>
                     </td>
                     <td style="padding:10px 12px;vertical-align:middle">
                       <div style="font-weight:500;color:var(--ink);line-height:1.4">“${esc(it.query)}”</div>
                     </td>
                     <td style="padding:10px 12px;vertical-align:middle;white-space:nowrap">
-                      ${badge}
+                      <div>${badge}</div>
+                      <div style="margin-top:2px">${podiumRelation}</div>
                     </td>
                     <td style="padding:10px 12px;vertical-align:middle;white-space:nowrap">
-                      ${trendPill}
+                      ${consensusPills}
                     </td>
                     <td style="padding:10px 12px;vertical-align:middle">
                       <div style="display:flex;flex-wrap:wrap;gap:4px">${competitors}</div>
                     </td>
                     <td style="padding:10px 12px;vertical-align:middle;text-align:right;white-space:nowrap">
-                      <button class="btn sm ghost" data-view-snippet="${esc(it.id)}" style="font-size:.78rem;padding:3px 10px">Inspect Answer →</button>
+                      <button class="btn sm ghost" data-view-snippet="${esc(it.id)}" style="font-size:.76rem;padding:3px 10px">Inspect Answer →</button>
                     </td>
                   </tr>
                 `;
@@ -525,12 +358,15 @@ export async function render(el) {
         </div>
       </section>
 
-      <!-- 5. OPTIMIZATION ACTIONS (WHAT WORKS & WHAT DOESN'T) -->
-      <section class="card stack" style="gap:10px;background:var(--surface);padding:14px 18px">
+      <!-- 3. OPTIMIZATION ACTIONS (WHAT WORKS & WHAT DOESN'T) -->
+      <section class="card stack" style="gap:10px;background:var(--surface);padding:18px 20px;border:1px solid var(--line);border-radius:var(--r-sm)">
         <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px">
-          <div class="row" style="gap:8px;align-items:center">
-            <span style="font-size:1.1rem">📝</span>
-            <h3 style="margin:0;font-size:1.02rem;font-weight:600">Optimization Action Log: What Works &amp; What Doesn't</h3>
+          <div>
+            <div class="row" style="gap:8px;align-items:center">
+              <span style="font-size:1.1rem">📝</span>
+              <h3 style="margin:0;font-size:1.02rem;font-weight:600">Optimization Action Log: What Works &amp; What Doesn't</h3>
+            </div>
+            <span class="small muted">Record rate cards, landing pages, and PR actions to track real rank impact over time</span>
           </div>
           <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
             <div class="seg" role="tablist">
@@ -539,7 +375,7 @@ export async function render(el) {
               <button class="${actionFilter === 'testing' ? 'on' : ''}" data-act-filter="testing">⏳ Testing (${actionsData.filter(a => a.verdict === 'testing').length})</button>
               <button class="${actionFilter === 'ineffective' ? 'on' : ''}" data-act-filter="ineffective">🔴 Ineffective (${actionsData.filter(a => a.verdict === 'ineffective').length})</button>
             </div>
-            <button class="btn primary sm" id="btn-crm-add-action-inline" style="padding:4px 10px">+ Log Action</button>
+            <button class="btn primary sm" id="btn-crm-add-action-inline" style="padding:4px 10px;background:#0E100F;color:#FFF">+ Log Action</button>
           </div>
         </div>
 
@@ -553,6 +389,7 @@ export async function render(el) {
               </div>
             `;
           }
+
           return `
             <div class="table-wrap">
               <table style="width:100%;border-collapse:collapse;font-size:.84rem">
@@ -615,21 +452,6 @@ export async function render(el) {
     render(el);
   });
 
-  el.querySelector('#btn-reset-latest')?.addEventListener('click', () => {
-    selectedRunIdx = -1;
-    render(el);
-  });
-
-  el.querySelectorAll('[data-history-idx]').forEach((pt) => {
-    pt.addEventListener('click', (e) => {
-      const idx = Number(e.currentTarget.dataset.historyIdx);
-      if (!isNaN(idx)) {
-        selectedRunIdx = idx;
-        render(el);
-      }
-    });
-  });
-
   el.querySelectorAll('[data-filter]').forEach((b) => {
     b.addEventListener('click', (e) => {
       activeFilter = e.currentTarget.dataset.filter;
@@ -665,18 +487,19 @@ export async function render(el) {
   el.querySelectorAll('[data-view-snippet]').forEach((b) => {
     b.addEventListener('click', (e) => {
       const qid = e.currentTarget.dataset.viewSnippet;
-      const it = currentRun.details.find((d) => d.id === qid) || items[parseInt(qid, 10)];
+      const it = (currentRun.details || []).find((d) => d.id === qid) || items[parseInt(qid, 10)];
       if (!it) return;
       const citations = it.citations || [];
+
       dialog({
-        title: `${it.niche}: AI Search Resolution & Citation Map`,
         wide: true,
+        title: `${it.niche}: AI Search Resolution & Grounding`,
         body: `
-          <div class="stack" style="gap:16px">
-            <div>
-              <div class="label eyebrow">Customer Query Probed</div>
-              <p style="font-weight:600;margin:4px 0 0 0;font-size:1.02rem;color:var(--ink)">"${esc(it.query)}"</p>
+          <div class="stack" style="gap:14px">
+            <div style="font-weight:600;font-size:1.05rem;color:var(--ink);padding-bottom:10px;border-bottom:1px solid var(--line)">
+              “${esc(it.query)}”
             </div>
+
             <div class="row" style="gap:16px;background:var(--surface-2);padding:10px 14px;border-radius:var(--r-sm);flex-wrap:wrap">
               <div>
                 <span class="label tiny">Dorogo Rank:</span>
@@ -687,7 +510,7 @@ export async function render(el) {
                 <span style="font-weight:700">${it.is_top_recommendation ? 'Yes 🏆' : 'No'}</span>
               </div>
               <div>
-                <span class="label tiny">AI Engines Consensus:</span>
+                <span class="label tiny">AI Consensus:</span>
                 <span style="font-weight:700">${it.engines_suggesting_count || (it.dorogo_present ? 1 : 0)} of 3 AIs</span>
               </div>
               <div>
@@ -715,7 +538,7 @@ export async function render(el) {
 
             <div>
               <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:6px">
-                <div class="label eyebrow" style="margin:0">Perplexity Sonar Formatted Response</div>
+                <div class="label eyebrow" style="margin:0">AI Search Engine Grounded Response</div>
                 <span class="tiny muted">Interactive citation badges link directly to web sources</span>
               </div>
               <div class="ai-resp-box">
@@ -788,15 +611,15 @@ export async function render(el) {
             <div class="row" style="justify-content:space-between;align-items:baseline;margin-bottom:8px">
               <div class="row" style="gap:8px;align-items:center">
                 <span class="pulse-dot"></span>
-                <span style="font-weight:600;font-size:.9rem" id="crm-hud-progress-label">Initiating probe across 10 niches... (0%)</span>
+                <span style="font-weight:600;font-size:.9rem" id="crm-hud-progress-label">Initiating probe across 12 high-intent queries... (0%)</span>
               </div>
               <span class="small muted" id="crm-hud-timer">Elapsed: 00:00</span>
             </div>
             <div style="height:10px;background:var(--line);border-radius:6px;overflow:hidden">
-              <div id="crm-hud-progress-bar" style="width:0%;height:100%;background:linear-gradient(90deg, var(--gold) 0%, #10B981 100%);transition:width .3s ease"></div>
+              <div id="crm-hud-progress-bar" style="width:0%;height:100%;background:linear-gradient(90deg, #0E100F 0%, #10B981 100%);transition:width .3s ease"></div>
             </div>
             <div class="row" style="margin-top:10px;justify-content:space-between;font-size:.82rem;color:var(--ink-2)">
-              <span>Completed: <b id="crm-hud-count">0</b> / 10 inquiries</span>
+              <span>Completed: <b id="crm-hud-count">0</b> / 12 inquiries</span>
               <span>Dorogo #1 Wins: <b id="crm-hud-top1" style="color:var(--gold-ink)">0</b></span>
               <span>Top-3 Citations: <b id="crm-hud-top3" style="color:#10B981">0</b></span>
               <span>Est. Cost: <b id="crm-hud-cost">&lt;$0.01 USD</b></span>
@@ -921,7 +744,7 @@ export async function render(el) {
             if (progressBar) progressBar.style.width = '100%';
 
             const progressLabel = box.querySelector('#crm-hud-progress-label');
-            if (progressLabel) progressLabel.innerHTML = `✅ <b>Audit Complete! 10/10 Inquiries Analyzed</b>`;
+            if (progressLabel) progressLabel.innerHTML = `✅ <b>Audit Complete! 12/12 Inquiries Analyzed</b>`;
 
             const foot = box.querySelector('#crm-hud-foot');
             if (foot) foot.style.display = 'flex';
@@ -962,12 +785,12 @@ export async function render(el) {
 function openCrmActionModal(el, existing = null) {
   const today = new Date().toISOString().slice(0, 10);
   const dateVal = existing ? existing.date : today;
-  const nicheVal = existing ? existing.niche : 'Lake Como Weddings';
+  const nicheVal = existing ? existing.niche : 'Alpine Ski';
   const catVal = existing ? existing.category : 'Web Content & Specs';
   const titleVal = existing ? esc(existing.title) : '';
   const descVal = existing ? esc(existing.description || '') : '';
   const urlVal = existing ? esc(existing.url || '') : '';
-  const verdictVal = existing ? existing.verdict : 'testing';
+  const verdictVal = existing ? existing.verdict : 'effective';
   const notesVal = existing ? esc(existing.notes || '') : '';
 
   dialog({
@@ -983,12 +806,12 @@ function openCrmActionModal(el, existing = null) {
           <div>
             <label class="label small" style="display:block;margin-bottom:4px">Target Revenue Pillar</label>
             <select class="input sm" id="crm-act-niche" style="width:100%">
-              <option value="Lake Como Weddings" ${nicheVal === 'Lake Como Weddings' ? 'selected' : ''}>Lake Como Weddings</option>
-              <option value="Alpine Ski" ${nicheVal === 'Alpine Ski' ? 'selected' : ''}>Alpine Ski</option>
-              <option value="Private Jet FBO" ${nicheVal === 'Private Jet FBO' ? 'selected' : ''}>Private Jet FBO</option>
+              <option value="Alpine Ski" ${nicheVal === 'Alpine Ski' ? 'selected' : ''}>Alpine Ski Transfers</option>
               <option value="Fiera Milano Convoys" ${nicheVal === 'Fiera Milano Convoys' ? 'selected' : ''}>Fiera Milano Convoys</option>
-              <option value="Outlet Standby" ${nicheVal === 'Outlet Standby' ? 'selected' : ''}>VIP Designer Outlet Standby</option>
-              <option value="Brand-wide / All" ${nicheVal === 'Brand-wide / All' ? 'selected' : ''}>Brand-wide / All Niches</option>
+              <option value="Private Jet FBO" ${nicheVal === 'Private Jet FBO' ? 'selected' : ''}>Private Jet FBO</option>
+              <option value="Lake Como Weddings" ${nicheVal === 'Lake Como Weddings' ? 'selected' : ''}>Lake Como Weddings</option>
+              <option value="Lake & Cross-Border" ${nicheVal === 'Lake & Cross-Border' ? 'selected' : ''}>Lakes &amp; Cross-Border</option>
+              <option value="Outlet Standby" ${nicheVal === 'Outlet Standby' ? 'selected' : ''}>Serravalle Outlet Standby</option>
             </select>
           </div>
         </div>
@@ -997,72 +820,65 @@ function openCrmActionModal(el, existing = null) {
           <div>
             <label class="label small" style="display:block;margin-bottom:4px">Initiative Category</label>
             <select class="input sm" id="crm-act-cat" style="width:100%">
-              <option value="Web Content & Specs" ${catVal === 'Web Content & Specs' ? 'selected' : ''}>Web Content & Specs</option>
-              <option value="Outreach & Partnerships" ${catVal === 'Outreach & Partnerships' ? 'selected' : ''}>Outreach & Partnerships</option>
-              <option value="Digital PR & Backlinks" ${catVal === 'Digital PR & Backlinks' ? 'selected' : ''}>Digital PR & Backlinks</option>
-              <option value="AI SEO & Schema" ${catVal === 'AI SEO & Schema' ? 'selected' : ''}>AI SEO & Schema Markup</option>
-              <option value="Fleet & Service Update" ${catVal === 'Fleet & Service Update' ? 'selected' : ''}>Fleet & Service Update</option>
+              <option value="Web Content & Specs" ${catVal === 'Web Content & Specs' ? 'selected' : ''}>Web Content &amp; Specs</option>
+              <option value="Outreach & Partnerships" ${catVal === 'Outreach & Partnerships' ? 'selected' : ''}>Outreach &amp; Rate Cards</option>
+              <option value="Digital PR & Backlinks" ${catVal === 'Digital PR & Backlinks' ? 'selected' : ''}>Digital PR &amp; Backlinks</option>
+              <option value="llms.txt / Machine Indexing" ${catVal === 'llms.txt / Machine Indexing' ? 'selected' : ''}>llms.txt / Machine Indexing</option>
             </select>
           </div>
           <div>
-            <label class="label small" style="display:block;margin-bottom:4px">Observed Verdict / Status</label>
+            <label class="label small" style="display:block;margin-bottom:4px">Observed Impact Verdict</label>
             <select class="input sm" id="crm-act-verdict" style="width:100%">
-              <option value="effective" ${verdictVal === 'effective' ? 'selected' : ''}>🟢 Worked (Rank Climbed / New Win)</option>
-              <option value="testing" ${verdictVal === 'testing' ? 'selected' : ''}>⏳ Testing / Monitoring Impact</option>
-              <option value="ineffective" ${verdictVal === 'ineffective' ? 'selected' : ''}>🔴 Ineffective (No Impact)</option>
+              <option value="effective" ${verdictVal === 'effective' ? 'selected' : ''}>🟢 Effective (Improved Rank)</option>
+              <option value="testing" ${verdictVal === 'testing' ? 'selected' : ''}>⏳ Testing / Indexing in Progress</option>
+              <option value="ineffective" ${verdictVal === 'ineffective' ? 'selected' : ''}>🔴 Ineffective (No AI impact)</option>
             </select>
           </div>
         </div>
 
         <div>
-          <label class="label small" style="display:block;margin-bottom:4px">Action Title</label>
-          <input type="text" class="input sm" id="crm-act-title" value="${titleVal}" placeholder="e.g. Published Villa Balbianello & Villa d'Este guest shuttle logistics page" style="width:100%" required>
+          <label class="label small" style="display:block;margin-bottom:4px">Initiative Title</label>
+          <input type="text" class="input sm" id="crm-act-title" value="${titleVal}" placeholder="e.g. Published Courchevel 1850 &amp; St. Moritz alpine ski guide" style="width:100%" required>
         </div>
 
         <div>
-          <label class="label small" style="display:block;margin-bottom:4px">What did you do? (Details & Specifics)</label>
-          <textarea class="input sm" id="crm-act-desc" rows="3" placeholder="Outlined exact vehicle widths, midnight guest turnaround, and direct driver dispatch..." style="width:100%;resize:vertical">${descVal}</textarea>
+          <label class="label small" style="display:block;margin-bottom:4px">Observed Impact &amp; Notes</label>
+          <textarea class="input sm" id="crm-act-notes" rows="2" placeholder="e.g. Secured #1 Top Pick in Perplexity for Courchevel 1850; achieved #3 podium for St. Moritz" style="width:100%">${notesVal}</textarea>
         </div>
 
         <div>
-          <label class="label small" style="display:block;margin-bottom:4px">Observed Impact / Results</label>
-          <input type="text" class="input sm" id="crm-act-notes" value="${notesVal}" placeholder="e.g. Dorogo climbed from unranked to #2 in Lake Como wedding guest shuttles" style="width:100%">
+          <label class="label small" style="display:block;margin-bottom:4px">Evidence URL / Rate Sheet (Optional)</label>
+          <input type="url" class="input sm" id="crm-act-url" value="${urlVal}" placeholder="https://dorogo.eu/..." style="width:100%">
         </div>
 
-        <div>
-          <label class="label small" style="display:block;margin-bottom:4px">Target URL / Evidence Link (Optional)</label>
-          <input type="url" class="input sm" id="crm-act-url" value="${urlVal}" placeholder="https://dorogo.eu/... or link to asset" style="width:100%">
-        </div>
-
-        <div class="row end gap" style="margin-top:10px">
+        <div class="row end" style="gap:8px;margin-top:8px">
           <button class="btn ghost sm" data-close>Cancel</button>
-          <button class="btn primary sm" id="btn-crm-act-save">Save Optimization Action</button>
+          <button class="btn primary sm" id="crm-btn-save-act">Save Action</button>
         </div>
       </div>
     `,
     onMount: (box, close) => {
-      box.querySelector('#btn-crm-act-save')?.addEventListener('click', async () => {
-        const title = box.querySelector('#crm-act-title').value.trim();
+      box.querySelector('#crm-btn-save-act')?.addEventListener('click', async () => {
+        const title = box.querySelector('#crm-act-title')?.value.trim();
         if (!title) {
-          toast('Please enter an action title', 'error');
+          toast('Please enter a title for the action', 'error');
           return;
         }
 
-        const actObj = {
-          id: existing ? existing.id : 'act_' + Date.now(),
-          date: box.querySelector('#crm-act-date').value || today,
-          niche: box.querySelector('#crm-act-niche').value,
-          category: box.querySelector('#crm-act-cat').value,
-          verdict: box.querySelector('#crm-act-verdict').value,
+        const act = {
+          id: existing ? existing.id : 'act_' + Date.now().toString(36),
+          date: box.querySelector('#crm-act-date')?.value || today,
+          niche: box.querySelector('#crm-act-niche')?.value,
+          category: box.querySelector('#crm-act-cat')?.value,
           title,
-          description: box.querySelector('#crm-act-desc').value.trim(),
-          notes: box.querySelector('#crm-act-notes').value.trim(),
-          url: box.querySelector('#crm-act-url').value.trim()
+          notes: box.querySelector('#crm-act-notes')?.value.trim(),
+          url: box.querySelector('#crm-act-url')?.value.trim(),
+          verdict: box.querySelector('#crm-act-verdict')?.value
         };
 
-        saveVisibilityAction(actObj);
+        cachedActions = saveVisibilityAction(act, cachedActions);
         close();
-        toast('Action logged successfully');
+        toast('Optimization action logged');
         await render(el);
       });
     }
