@@ -576,20 +576,6 @@ export function render(el) {
       </div>
     </div>`;
   }
-          const active = stageFilter === st.key;
-          return `${idx > 0 && idx < 5 ? '<span class="journey-arrow" aria-hidden="true">→</span>' : ''}
-          <button class="journey-step tone-${st.tone} ${active ? 'on' : ''}" data-stage-filter="${st.key}" data-drop-stage="${st.dropStage}" aria-pressed="${active}">
-            <div class="j-top">
-              <span class="j-badge">${st.num}</span>
-              <span class="j-name">${esc(st.label)}</span>
-              <span class="j-count">${cnt}</span>
-            </div>
-            <div class="j-sub">${esc(st.sub)}</div>
-          </button>`;
-        }).join('')}
-      </div>
-    </div>`;
-  }
 
   function paint() {
     removeTip();

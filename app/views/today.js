@@ -174,7 +174,7 @@ export function render(el) {
       const bCnt = manualLeads.filter((p) => p.email_status === 'bounced').length;
       const mCnt = manualLeads.filter((p) => !p.email).length;
       return `<div class="banner warn" style="margin-bottom:18px">
-        <span>📱 <b>${manualLeads.length} ${plural(manualLeads.length, 'partner')} need manual outreach</b> (${bCnt ? `${bCnt} email bounced` : ''}${bCnt && mCnt ? ', ' : ''}${mCnt ? `${mCnt} missing email` : ''}). Reach out directly via Instagram DM or WhatsApp.</span>
+        <span>📱 <b>${plural(manualLeads.length, 'partner')} need manual outreach</b> (${bCnt ? `${bCnt} email bounced` : ''}${bCnt && mCnt ? ', ' : ''}${mCnt ? `${mCnt} missing email` : ''}). Reach out directly via Instagram DM or WhatsApp.</span>
         <span class="grow"></span>
         <a class="btn sm" href="#pipeline">Open in Pipeline →</a>
       </div>`;
