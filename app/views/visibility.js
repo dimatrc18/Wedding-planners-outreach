@@ -12,7 +12,8 @@ import {
   saveVisibilityAction,
   deleteVisibilityAction,
   cleanSnippetPreview,
-  computeHistoricalComparison
+  computeHistoricalComparison,
+  normalizeCompetitorName
 } from '../services/live_audit.js';
 
 let cachedHistory = null;
@@ -20,6 +21,166 @@ let cachedActions = null;
 let activeFilter = 'top3'; // 'all' | 'top3' | specific niche
 let actionFilter = 'all'; // 'all' | 'effective' | 'testing' | 'ineffective'
 let selectedRunIdx = -1;
+
+function renderProgressChart(history, selectedIdx) {
+  if (!history || history.length < 2) return '';
+
+  const w = 680;
+  const h = 135;
+  const padL = 36;
+  const padR = 24;
+  const padT = 18;
+  const padB = 26;
+  const chartW = w - padL - padR;
+  const chartH = h - padT - padB;
+
+  const points = history.map((run, idx) => {
+    const totalQ = run.total_queries || run.details?.length || 12;
+    const cite = run.citation_rate_pct ?? (totalQ ? (run.cited_count / totalQ) * 100 : 0);
+    const top3 = run.top3_rate_pct ?? (totalQ ? (run.top3_count / totalQ) * 100 : 0);
+    const top1 = run.top1_rate_pct ?? (totalQ ? (run.top1_count / totalQ) * 100 : 0);
+    const d = new Date(run.timestamp);
+    const timeLabel = `${d.getDate()} ${d.toLocaleString('en-GB', { month: 'short' })} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+    return { idx, cite, top3, top1, timeLabel };
+  });
+
+  const n = points.length;
+  const getX = (i) => padL + (i / (n - 1)) * chartW;
+  const getY = (val) => padT + chartH - (Math.min(100, Math.max(0, val)) / 100) * chartH;
+
+  let citePath = '';
+  let top3Path = '';
+  points.forEach((p, i) => {
+    const x = getX(i);
+    const yCite = getY(p.cite);
+    const yTop3 = getY(p.top3);
+    if (i === 0) {
+      citePath += `M ${x} ${yCite}`;
+      top3Path += `M ${x} ${yTop3}`;
+    } else {
+      citePath += ` L ${x} ${yCite}`;
+      top3Path += ` L ${x} ${yTop3}`;
+    }
+  });
+
+  return `
+    <div class="card stack" style="gap:10px;background:var(--surface);padding:14px 18px;border:1px solid var(--line);border-radius:var(--r-sm)">
+      <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px">
+        <div class="row" style="gap:8px;align-items:center">
+          <span style="font-size:1.1rem">📈</span>
+          <h3 style="margin:0;font-size:1.02rem;font-weight:600">AI Search Visibility Trajectory (Average Index)</h3>
+          <span class="small muted">(${points.length} audits logged)</span>
+        </div>
+        <div class="row" style="gap:14px;align-items:center;font-size:.76rem">
+          <div class="row" style="gap:6px;align-items:center">
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#2563eb"></span>
+            <span style="font-weight:600;color:var(--ink)">Total Brand Presence %</span>
+          </div>
+          <div class="row" style="gap:6px;align-items:center">
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#d97706"></span>
+            <span style="font-weight:600;color:var(--ink)">Top-3 Podium Share %</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="width:100%;overflow-x:auto">
+        <svg viewBox="0 0 ${w} ${h}" style="width:100%;min-width:480px;height:auto;display:block;overflow:visible">
+          <!-- Horizontal Grid Lines -->
+          <line x1="${padL}" y1="${getY(0)}" x2="${w - padR}" y2="${getY(0)}" stroke="var(--line)" stroke-width="1" />
+          <line x1="${padL}" y1="${getY(25)}" x2="${w - padR}" y2="${getY(25)}" stroke="var(--line)" stroke-dasharray="3,3" stroke-width="1" />
+          <line x1="${padL}" y1="${getY(50)}" x2="${w - padR}" y2="${getY(50)}" stroke="var(--line)" stroke-dasharray="3,3" stroke-width="1" />
+          <line x1="${padL}" y1="${getY(75)}" x2="${w - padR}" y2="${getY(75)}" stroke="var(--line)" stroke-dasharray="3,3" stroke-width="1" />
+
+          <!-- Y Axis Labels -->
+          <text x="${padL - 6}" y="${getY(0) + 4}" font-size="9" fill="var(--ink-3)" text-anchor="end">0%</text>
+          <text x="${padL - 6}" y="${getY(25) + 4}" font-size="9" fill="var(--ink-3)" text-anchor="end">25%</text>
+          <text x="${padL - 6}" y="${getY(50) + 4}" font-size="9" fill="var(--ink-3)" text-anchor="end">50%</text>
+
+          <!-- Polyline Curves -->
+          <path d="${citePath}" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="${top3Path}" fill="none" stroke="#d97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+
+          <!-- Data Points & Tooltips -->
+          ${points.map((p, i) => {
+            const x = getX(i);
+            const yCite = getY(p.cite);
+            const yTop3 = getY(p.top3);
+            const isSelected = p.idx === selectedIdx;
+            return `
+              <g class="chart-point" data-history-idx="${p.idx}" style="cursor:pointer">
+                <circle cx="${x}" cy="${yCite}" r="${isSelected ? 6 : 4}" fill="#2563eb" stroke="var(--surface)" stroke-width="2">
+                  <title>Run ${p.idx + 1} (${p.timeLabel}): AI Presence ${p.cite.toFixed(1)}%</title>
+                </circle>
+                <circle cx="${x}" cy="${yTop3}" r="${isSelected ? 6 : 4}" fill="#d97706" stroke="var(--surface)" stroke-width="2">
+                  <title>Run ${p.idx + 1} (${p.timeLabel}): Top-3 ${p.top3.toFixed(1)}%</title>
+                </circle>
+                <text x="${x}" y="${h - 4}" font-size="9" fill="${isSelected ? 'var(--ink)' : 'var(--ink-3)'}" font-weight="${isSelected ? '700' : '500'}" text-anchor="middle">
+                  ${p.timeLabel.slice(0, 6)}
+                </text>
+              </g>
+            `;
+          }).join('')}
+        </svg>
+      </div>
+    </div>
+  `;
+}
+
+function renderNicheHealth(nicheMap) {
+  const niches = [
+    { name: "Alpine Ski", icon: "🎿", desc: "6 high-ticket mountain routes" },
+    { name: "Fiera Milano Convoys", icon: "🏛️", desc: "Executive multi-van exhibition convoy" },
+    { name: "Private Jet FBO", icon: "🛩️", desc: "Linate & Malpensa Prime tarmac coordination" },
+    { name: "Lake Como Weddings", icon: "💍", desc: "Villa guest shuttle coordination" },
+    { name: "Lake & Cross-Border", icon: "🌊", desc: "Bellagio & Sirmione luxury transfers" },
+    { name: "Outlet Standby", icon: "🛍️", desc: "Serravalle full-day shopping standby" }
+  ];
+
+  return `
+    <div class="card stack" style="gap:10px;background:var(--surface);padding:14px 18px;border:1px solid var(--line);border-radius:var(--r-sm)">
+      <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px">
+        <div class="row" style="gap:8px;align-items:center">
+          <span style="font-size:1.1rem">🎯</span>
+          <h3 style="margin:0;font-size:1.02rem;font-weight:600">Niche Performance Health Matrix</h3>
+          <span class="small muted">(Per-Niche Breakdown)</span>
+        </div>
+        <span class="tiny muted">Click any niche below to filter matrix</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:10px">
+        ${niches.map(n => {
+          const s = nicheMap.get(n.name) || { total: 0, cited: 0, top3: 0, top1: 0, bestRank: null };
+          const isWinning = s.top1 > 0;
+          const isPodium = s.top3 > 0;
+          const isCited = s.cited > 0;
+          
+          let statusBadge = '<span class="chip outline" style="font-size:.7rem">Unranked (0%)</span>';
+          if (isWinning) {
+            statusBadge = `<span class="chip ok" style="font-weight:700;font-size:.7rem">🏆 #1 Top Pick</span>`;
+          } else if (isPodium) {
+            statusBadge = `<span class="chip ok" style="font-weight:600;font-size:.7rem">🥈 Top-3 (#${s.bestRank})</span>`;
+          } else if (isCited) {
+            statusBadge = `<span class="chip warn" style="font-size:.7rem">Ranked #${s.bestRank}</span>`;
+          }
+
+          return `
+            <div class="card stack niche-health-card" style="gap:6px;padding:10px 12px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);cursor:pointer" data-filter="${attr(n.name)}">
+              <div class="row between" style="align-items:center">
+                <span style="font-weight:600;font-size:.84rem">${n.icon} ${esc(n.name)}</span>
+                ${statusBadge}
+              </div>
+              <div class="row between" style="font-size:.76rem;color:var(--ink-2);margin-top:2px">
+                <span>Top-3: <strong>${s.top3}/${s.total}</strong></span>
+                <span>Cited: <strong>${s.cited}/${s.total}</strong></span>
+              </div>
+              <span class="tiny muted" style="margin-top:2px">${esc(n.desc)}</span>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
 
 export async function render(el) {
   const history = await loadVisibilityHistory();
@@ -64,7 +225,31 @@ export async function render(el) {
   const auditDate = new Date(currentRun.timestamp);
 
   const comp = computeHistoricalComparison(history, runIdx);
-  const { deltaWeek, deltaMonth, routeTrends } = comp || {};
+  const { deltaWeek, deltaMonth, deltaPrev, routeTrends } = comp || {};
+
+  let perpCount = 0, gptCount = 0, gemCount = 0;
+  const totalDetails = currentRun.details?.length || 12;
+  (currentRun.details || []).forEach(d => {
+    if (d.engines?.perplexity?.cited) perpCount++;
+    if (d.engines?.chatgpt?.cited) gptCount++;
+    if (d.engines?.claude?.cited) gemCount++;
+  });
+  const activeEnginesCount = [perpCount > 0, gptCount > 0, gemCount > 0].filter(Boolean).length;
+
+  const nicheMap = new Map();
+  for (const d of currentRun.details) {
+    if (!nicheMap.has(d.niche)) {
+      nicheMap.set(d.niche, { total: 0, cited: 0, top3: 0, top1: 0, bestRank: null });
+    }
+    const stat = nicheMap.get(d.niche);
+    stat.total++;
+    if (d.dorogo_present) stat.cited++;
+    if (d.is_top_recommendation || (d.dorogo_rank && d.dorogo_rank <= 3)) stat.top3++;
+    if (d.is_top_recommendation || d.dorogo_rank === 1) stat.top1++;
+    if (d.dorogo_rank) {
+      if (!stat.bestRank || d.dorogo_rank < stat.bestRank) stat.bestRank = d.dorogo_rank;
+    }
+  }
 
   const rawNiches = [...new Set(currentRun.details.map((d) => d.niche))];
   const top3Items = currentRun.details.filter((d) => d.dorogo_present && (d.is_top_recommendation || (d.dorogo_rank && d.dorogo_rank <= 3)));
@@ -123,12 +308,13 @@ export async function render(el) {
         <div class="kpi">
           <span class="label">#1 Top Pick Rate</span>
           <div class="row" style="align-items:baseline;justify-content:space-between">
-            <span class="val" style="color:${top1Rate >= 50 ? 'var(--gold-ink)' : 'var(--ink)'}">${top1Rate.toFixed(1)}%</span>
-            <span class="chip ${top1Rate >= 50 ? 'ok' : 'gold'}">${top1Rate >= 50 ? '🟢 Strong' : '🟡 Progressing'}</span>
+            <span class="val" style="color:${top1Rate >= 25 ? 'var(--gold-ink)' : 'var(--ink)'}">${top1Rate.toFixed(1)}%</span>
+            <span class="chip ${top1Rate >= 25 ? 'ok' : 'gold'}">${top1Rate >= 25 ? '🟢 Strong' : '🟡 Progressing'}</span>
           </div>
-          <span class="ci">${currentRun.top1_count} of ${currentRun.total_queries} queries · Target &gt;50%</span>
-          ${deltaWeek || deltaMonth ? `
+          <span class="ci">${currentRun.top1_count} of ${currentRun.total_queries} queries · Target &gt;25%</span>
+          ${deltaPrev || deltaWeek || deltaMonth ? `
             <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">
+              ${deltaPrev ? `<span class="chip ${deltaPrev.top1 > 0 ? 'ok' : deltaPrev.top1 < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaPrev.date)}">${deltaPrev.top1 > 0 ? '▲ +' : deltaPrev.top1 < 0 ? '▼ ' : '● '}${deltaPrev.top1}% ${esc(deltaPrev.label)}</span>` : ''}
               ${deltaWeek ? `<span class="chip ${deltaWeek.top1 > 0 ? 'ok' : deltaWeek.top1 < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaWeek.date)}">${deltaWeek.top1 > 0 ? '▲ +' : deltaWeek.top1 < 0 ? '▼ ' : '● '}${deltaWeek.top1}% ${esc(deltaWeek.label)}</span>` : ''}
               ${deltaMonth ? `<span class="chip ${deltaMonth.top1 > 0 ? 'ok' : deltaMonth.top1 < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaMonth.date)}">${deltaMonth.top1 > 0 ? '▲ +' : deltaMonth.top1 < 0 ? '▼ ' : '● '}${deltaMonth.top1}% ${esc(deltaMonth.label)}</span>` : ''}
             </div>
@@ -139,11 +325,12 @@ export async function render(el) {
           <span class="label">Top-3 Podium Share</span>
           <div class="row" style="align-items:baseline;justify-content:space-between">
             <span class="val">${top3Rate.toFixed(1)}%</span>
-            <span class="chip ${top3Rate >= 70 ? 'ok' : 'warn'}">${top3Rate >= 70 ? '🟢 Strong' : '🟡 Progressing'}</span>
+            <span class="chip ${top3Rate >= 50 ? 'ok' : 'warn'}">${top3Rate >= 50 ? '🟢 Strong' : '🟡 Progressing'}</span>
           </div>
-          <span class="ci">${currentRun.top3_count} of ${currentRun.total_queries} queries · Target &gt;80%</span>
-          ${deltaWeek || deltaMonth ? `
+          <span class="ci">${currentRun.top3_count} of ${currentRun.total_queries} queries · Target &gt;50%</span>
+          ${deltaPrev || deltaWeek || deltaMonth ? `
             <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">
+              ${deltaPrev ? `<span class="chip ${deltaPrev.top3 > 0 ? 'ok' : deltaPrev.top3 < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaPrev.date)}">${deltaPrev.top3 > 0 ? '▲ +' : deltaPrev.top3 < 0 ? '▼ ' : '● '}${deltaPrev.top3}% ${esc(deltaPrev.label)}</span>` : ''}
               ${deltaWeek ? `<span class="chip ${deltaWeek.top3 > 0 ? 'ok' : deltaWeek.top3 < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaWeek.date)}">${deltaWeek.top3 > 0 ? '▲ +' : deltaWeek.top3 < 0 ? '▼ ' : '● '}${deltaWeek.top3}% ${esc(deltaWeek.label)}</span>` : ''}
               ${deltaMonth ? `<span class="chip ${deltaMonth.top3 > 0 ? 'ok' : deltaMonth.top3 < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaMonth.date)}">${deltaMonth.top3 > 0 ? '▲ +' : deltaMonth.top3 < 0 ? '▼ ' : '● '}${deltaMonth.top3}% ${esc(deltaMonth.label)}</span>` : ''}
             </div>
@@ -154,11 +341,12 @@ export async function render(el) {
           <span class="label">Brand Citation Share</span>
           <div class="row" style="align-items:baseline;justify-content:space-between">
             <span class="val">${citationRate.toFixed(1)}%</span>
-            <span class="chip ${citationRate >= 80 ? 'ok' : 'warn'}">${citationRate >= 80 ? '🟢 High' : '🟡 Progressing'}</span>
+            <span class="chip ${citationRate >= 60 ? 'ok' : 'warn'}">${citationRate >= 60 ? '🟢 High' : '🟡 Progressing'}</span>
           </div>
-          <span class="ci">${currentRun.cited_count} of ${currentRun.total_queries} queries cited</span>
-          ${deltaWeek || deltaMonth ? `
+          <span class="ci">${currentRun.cited_count} of ${currentRun.total_queries} queries cited · Target &gt;60%</span>
+          ${deltaPrev || deltaWeek || deltaMonth ? `
             <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">
+              ${deltaPrev ? `<span class="chip ${deltaPrev.cite > 0 ? 'ok' : deltaPrev.cite < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaPrev.date)}">${deltaPrev.cite > 0 ? '▲ +' : deltaPrev.cite < 0 ? '▼ ' : '● '}${deltaPrev.cite}% ${esc(deltaPrev.label)}</span>` : ''}
               ${deltaWeek ? `<span class="chip ${deltaWeek.cite > 0 ? 'ok' : deltaWeek.cite < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaWeek.date)}">${deltaWeek.cite > 0 ? '▲ +' : deltaWeek.cite < 0 ? '▼ ' : '● '}${deltaWeek.cite}% ${esc(deltaWeek.label)}</span>` : ''}
               ${deltaMonth ? `<span class="chip ${deltaMonth.cite > 0 ? 'ok' : deltaMonth.cite < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaMonth.date)}">${deltaMonth.cite > 0 ? '▲ +' : deltaMonth.cite < 0 ? '▼ ' : '● '}${deltaMonth.cite}% ${esc(deltaMonth.label)}</span>` : ''}
             </div>
@@ -168,36 +356,41 @@ export async function render(el) {
         <div class="kpi">
           <span class="label">AI Consensus &amp; Cost</span>
           <div class="row" style="align-items:baseline;justify-content:space-between">
-            <span class="val" style="font-size:1.55rem">1 of 3 AIs</span>
-            <span class="chip ok">Active</span>
+            <span class="val" style="font-size:1.55rem">${activeEnginesCount} of 3 AIs</span>
+            <span class="chip ${activeEnginesCount >= 2 ? 'ok' : 'gold'}">${activeEnginesCount >= 2 ? 'Consensus' : 'Active'}</span>
           </div>
           <span class="ci">Est. $${cost.toFixed(4)} USD · ${currentRun.total_tokens || 4700} tokens</span>
         </div>
       </div>
 
-      <!-- 2. AI Engine Coverage Ribbon -->
+      <!-- 2. AI Engine Coverage Ribbon (Dynamic Real-Time Data) -->
       <section class="card row between" style="padding:10px 16px;background:var(--surface);align-items:center;flex-wrap:wrap;gap:10px">
         <div class="row" style="gap:8px;align-items:center">
           <span style="font-size:1rem">🤖</span>
           <span style="font-weight:600;font-size:.88rem">AI Engine Presence:</span>
+          <span class="small muted">(${activeEnginesCount} of 3 Live Web Engines Audited)</span>
         </div>
         <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">
           <div class="row" style="gap:6px;align-items:center;background:var(--bg);padding:4px 10px;border-radius:var(--r-sm);border:1px solid var(--line)">
             <span style="font-size:.8rem;font-weight:600">Perplexity Sonar</span>
-            <span class="chip ok" style="font-weight:700;font-size:.7rem">🏆 Active (#1)</span>
+            <span class="chip ${perpCount > 0 ? 'ok' : 'outline'}" style="font-weight:700;font-size:.7rem">${perpCount > 0 ? `🏆 ${perpCount}/${totalDetails} cited` : '0 citations'}</span>
           </div>
           <div class="row" style="gap:6px;align-items:center;background:var(--bg);padding:4px 10px;border-radius:var(--r-sm);border:1px solid var(--line)">
-            <span style="font-size:.8rem;font-weight:500;color:var(--ink-2)">ChatGPT Search</span>
-            <span class="chip outline" style="font-size:.7rem">Tracking (0/10)</span>
+            <span style="font-size:.8rem;font-weight:600;color:var(--ink)">ChatGPT Search</span>
+            <span class="chip ${gptCount > 0 ? 'ok' : 'outline'}" style="font-weight:700;font-size:.7rem">${gptCount > 0 ? `🟢 ${gptCount}/${totalDetails} cited` : '0 citations'}</span>
           </div>
           <div class="row" style="gap:6px;align-items:center;background:var(--bg);padding:4px 10px;border-radius:var(--r-sm);border:1px solid var(--line)">
-            <span style="font-size:.8rem;font-weight:500;color:var(--ink-2)">Google Gemini</span>
-            <span class="chip outline" style="font-size:.7rem">Tracking (0/10)</span>
+            <span style="font-size:.8rem;font-weight:600;color:var(--ink)">Google Gemini</span>
+            <span class="chip ${gemCount > 0 ? 'ok' : 'outline'}" style="font-weight:700;font-size:.7rem">${gemCount > 0 ? `🟢 ${gemCount}/${totalDetails} cited` : '0 citations'}</span>
           </div>
         </div>
       </section>
 
-      <!-- 3. WHERE AM I TOP 3? (Podium Wins Showcase) -->
+      <!-- 2.5 Visual Trajectory Chart (Average) & Niche Health Breakdown -->
+      ${renderProgressChart(history, runIdx)}
+      ${renderNicheHealth(nicheMap)}
+
+      <!-- 3. WHERE AM I TOP 3? (Podium Wins Showcase - Honest Relationships) -->
       ${top3Items.length ? `
         <section class="card stack" style="border:1.5px solid var(--gold);background:var(--gold-soft);padding:14px 18px;gap:10px">
           <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px">
@@ -209,9 +402,28 @@ export async function render(el) {
 
           <div class="stack" style="gap:6px">
             ${top3Items.map((win) => {
-              const badge = win.is_top_recommendation || win.dorogo_rank === 1
+              const isTop = win.is_top_recommendation || win.dorogo_rank === 1;
+              const badge = isTop
                 ? `<span class="chip ok" style="font-weight:700;font-size:.74rem">🏆 #1 Top Pick</span>`
                 : `<span class="chip ok" style="font-weight:600;font-size:.74rem">🥈 Top-3 (#${win.dorogo_rank})</span>`;
+
+              const cleanComps = [...new Set((win.competitors || []).map(normalizeCompetitorName))].filter(Boolean);
+              
+              let podiumRelation = '';
+              if (isTop) {
+                podiumRelation = cleanComps.length > 0
+                  ? `Ahead of ${cleanComps.slice(0, 2).map(c => esc(c)).join(', ')}`
+                  : 'Undisputed #1 Recommendation';
+              } else if (win.dorogo_rank === 2) {
+                const leader = cleanComps[0] ? esc(cleanComps[0]) : 'Category Leader';
+                const tail = cleanComps.slice(1, 3).map(c => esc(c)).join(', ');
+                podiumRelation = `Behind #1 ${leader}${tail ? ` · Ahead of ${tail}` : ''}`;
+              } else if (win.dorogo_rank === 3) {
+                const leaders = cleanComps.slice(0, 2).map(c => esc(c)).join(' & ');
+                podiumRelation = leaders ? `Behind ${leaders}` : 'Podium (#3)';
+              } else {
+                podiumRelation = `Ranked #${win.dorogo_rank}`;
+              }
 
               return `
                 <div class="row between" style="background:var(--surface);border-radius:var(--r-sm);padding:8px 14px;border:1px solid var(--line);align-items:center;gap:10px;flex-wrap:wrap">
@@ -221,7 +433,7 @@ export async function render(el) {
                     <span style="font-weight:500;font-size:.86rem;color:var(--ink)">“${esc(win.query)}”</span>
                   </div>
                   <div class="row" style="gap:10px;align-items:center">
-                    <span class="muted small">Beats ${(win.competitors || []).slice(0, 2).map(c => esc(c)).join(', ') || 'competition'}</span>
+                    <span class="muted small">${podiumRelation}</span>
                     <button class="btn ghost sm" data-view-snippet="${esc(win.id)}" style="font-size:.74rem;padding:2px 8px">Inspect Resolution →</button>
                   </div>
                 </div>
@@ -282,7 +494,8 @@ export async function render(el) {
                     : `<span class="chip outline" style="font-size:.72rem">${esc(trInfo.deltaText)}</span>`
                 ) : '<span class="muted small">—</span>';
 
-                const competitors = (it.competitors || []).map((c) => `<span class="chip outline" style="font-size:.7rem;padding:1px 6px">${esc(c)}</span>`).join(' ') || '<span class="muted small">—</span>';
+                const cleanComps = [...new Set((it.competitors || []).map(normalizeCompetitorName))].filter(Boolean);
+                const competitors = cleanComps.map((c) => `<span class="chip outline" style="font-size:.7rem;padding:1px 6px">${esc(c)}</span>`).join(' ') || '<span class="muted small">—</span>';
 
                 return `
                   <tr style="border-bottom:1px solid var(--line)">
@@ -407,6 +620,16 @@ export async function render(el) {
     render(el);
   });
 
+  el.querySelectorAll('[data-history-idx]').forEach((pt) => {
+    pt.addEventListener('click', (e) => {
+      const idx = Number(e.currentTarget.dataset.historyIdx);
+      if (!isNaN(idx)) {
+        selectedRunIdx = idx;
+        render(el);
+      }
+    });
+  });
+
   el.querySelectorAll('[data-filter]').forEach((b) => {
     b.addEventListener('click', (e) => {
       activeFilter = e.currentTarget.dataset.filter;
@@ -469,7 +692,24 @@ export async function render(el) {
               </div>
               <div>
                 <span class="label tiny">Competitors:</span>
-                <span>${(it.competitors || []).join(', ') || 'None'}</span>
+                <span>${[...new Set((it.competitors || []).map(normalizeCompetitorName))].filter(Boolean).join(', ') || 'None'}</span>
+              </div>
+            </div>
+
+            <!-- 2-Step Traveler Simulation: Follow-Up Refinement -->
+            <div style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px">
+              <div class="row between" style="align-items:center;margin-bottom:6px">
+                <div class="row" style="gap:6px;align-items:center">
+                  <span style="font-size:1rem">💬</span>
+                  <span class="label eyebrow" style="margin:0">Traveler Step 2: High-Intent Follow-Up Refinement</span>
+                </div>
+                <span class="chip gold" style="font-size:.7rem;font-weight:600">Refinement Probe</span>
+              </div>
+              <div style="font-weight:500;font-size:.88rem;color:var(--ink);margin-bottom:6px">
+                “${esc(it.followup || TRACKED_QUERIES.find(q => q.id === it.id)?.followup || 'Which company provides Mercedes V-Class with winter equipment and English-speaking chauffeur?')}”
+              </div>
+              <div class="small muted" style="line-height:1.4">
+                <strong>Why this matters:</strong> Real clients rarely book after 1 prompt. When travelers narrow down from a generic 5-company list to specific operational needs (4MATIC, ski gear, airside tarmac access, corporate VAT invoice), AI search indexes dedicated service specs where Dorogo excels.
               </div>
             </div>
 

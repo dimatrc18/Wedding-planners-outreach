@@ -131,3 +131,13 @@ test('computeHistoricalComparison calculates deltas vs past week and baseline', 
   assert.equal(comp.routeTrends.get('q2').trend, 'up');
   assert.equal(comp.routeTrends.get('q2').deltaText, '★ Ranked (#3)');
 });
+
+test('normalizeCompetitorName deduplicates case variations and aliases', async () => {
+  const { normalizeCompetitorName } = await import('../app/services/live_audit.js');
+  assert.equal(normalizeCompetitorName('milanobycar'), 'MilanoByCar');
+  assert.equal(normalizeCompetitorName('MilanobyCar'), 'MilanoByCar');
+  assert.equal(normalizeCompetitorName('nccmilano'), 'NCC Milano');
+  assert.equal(normalizeCompetitorName('NCC Milano'), 'NCC Milano');
+  assert.equal(normalizeCompetitorName('taxitransfermilan'), 'Taxi Transfer Milan');
+  assert.equal(normalizeCompetitorName('como limo lux (cll)'), 'Como Limo Lux');
+});

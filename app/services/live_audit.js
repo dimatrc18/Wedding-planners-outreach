@@ -31,72 +31,84 @@ export const TRACKED_QUERIES = [
   {
     id: "hi_st_moritz",
     niche: "Alpine Ski",
-    query: "I need to book a private van with a driver from Milan Malpensa airport to St. Moritz for 5 people with skis. Which companies are the most reliable and how much does it cost?"
+    query: "I need to book a private van with a driver from Milan Malpensa airport to St. Moritz for 5 people with skis. Which companies are the most reliable and how much does it cost?",
+    followup: "Which of these companies provides 4MATIC all-wheel-drive Mercedes V-Class with winter tires and ski racks included at a fixed rate?"
   },
   {
     id: "hi_courchevel",
     niche: "Alpine Ski",
-    query: "Who should I book for a private transfer from Milan to Courchevel 1850? Looking for a reliable luxury van with driver."
+    query: "Who should I book for a private transfer from Milan to Courchevel 1850? Looking for a reliable luxury van with driver.",
+    followup: "Do any of these operators provide dedicated English-speaking alpine drivers with mountain pass permits for Courchevel?"
   },
   {
     id: "hi_cortina",
     niche: "Alpine Ski",
-    query: "Best company to book a private driver from Milan airport to Cortina d'Ampezzo for a ski holiday?"
+    query: "Best company to book a private driver from Milan airport to Cortina d'Ampezzo for a ski holiday?",
+    followup: "Which transfer company offers large luggage capacity for 4 adults with snowboards and flight delay tracking from Malpensa?"
   },
   {
     id: "hi_cervinia",
     niche: "Alpine Ski",
-    query: "We are 6 people flying into Milan Malpensa with ski bags and need a private transfer to Cervinia. Which transfer company do you recommend?"
+    query: "We are 6 people flying into Milan Malpensa with ski bags and need a private transfer to Cervinia. Which transfer company do you recommend?",
+    followup: "Which service can guarantee a Mercedes Extra Long V-Class so all 6 passengers and 6 ski bags fit without cramping?"
   },
   {
     id: "hi_livigno",
     niche: "Alpine Ski",
-    query: "How to book a private transfer from Milan Malpensa to Livigno for a family with ski luggage? Best companies?"
+    query: "How to book a private transfer from Milan Malpensa to Livigno for a family with ski luggage? Best companies?",
+    followup: "Which company includes child car seats, winter chains, and zero hidden tunnel or toll fees on the route to Livigno?"
   },
   {
     id: "hi_zermatt",
     niche: "Alpine Ski",
-    query: "Best private transfer service from Milan Malpensa to Zermatt (Täsch) in winter?"
+    query: "Best private transfer service from Milan Malpensa to Zermatt (Täsch) in winter?",
+    followup: "Which Milan chauffeur handles the Swiss border crossing and coordinates the Täsch shuttle train transfer to Zermatt?"
   },
 
   // --- Pillar 2: Lake Como Weddings ---
   {
     id: "hi_wedding_como",
     niche: "Lake Como Weddings",
-    query: "We are organizing a wedding on Lake Como and need private vans and cars with drivers to shuttle guests from Milan airport and between hotels. Which local companies should we contact?"
+    query: "We are organizing a wedding on Lake Como and need private vans and cars with drivers to shuttle guests from Milan airport and between hotels. Which local companies should we contact?",
+    followup: "Which company coordinates late-night guest shuttles (2:00-4:00 AM) between Villa Balbianello / Villa d'Este and nearby hotels?"
   },
 
   // --- Pillar 3: Lakes & Cross-Border ---
   {
     id: "hi_lake_como_bellagio",
     niche: "Lake & Cross-Border",
-    query: "What is the most reliable company to book a private driver from Milan Malpensa airport to Bellagio on Lake Como?"
+    query: "What is the most reliable company to book a private driver from Milan Malpensa airport to Bellagio on Lake Como?",
+    followup: "Which service provides experienced drivers who know the narrow winding roads into Bellagio and offer fixed upfront pricing?"
   },
   {
     id: "hi_lake_garda",
     niche: "Lake & Cross-Border",
-    query: "Best company to book a private transfer from Milan airport to Sirmione, Lake Garda?"
+    query: "Best company to book a private transfer from Milan airport to Sirmione, Lake Garda?",
+    followup: "Which chauffeur service has official NCC permits (ZTL access) to drive directly through the historic castle gate in Sirmione?"
   },
 
   // --- Pillar 4: Corporate & Fiera Milano ---
   {
     id: "hi_fiera_corporate",
     niche: "Fiera Milano Convoys",
-    query: "I need to hire 3 Mercedes vans with drivers for our executives attending an exhibition at Fiera Milano Rho. Which chauffeur companies in Milan handle corporate groups?"
+    query: "I need to hire 3 Mercedes vans with drivers for our executives attending an exhibition at Fiera Milano Rho. Which chauffeur companies in Milan handle corporate groups?",
+    followup: "Which provider can issue a single unified corporate VAT invoice and coordinate a 3-van convoy with a lead dispatcher on WhatsApp?"
   },
 
   // --- Pillar 5: Outlet Standby ---
   {
     id: "hi_serravalle_outlet",
     niche: "Outlet Standby",
-    query: "Where can I book a private driver in Milan to take us to Serravalle Designer Outlet and wait for us while we shop?"
+    query: "Where can I book a private driver in Milan to take us to Serravalle Designer Outlet and wait for us while we shop?",
+    followup: "Which luxury service offers a flat full-day standby package (6-8 hours) with bottled water and secure luggage storage in the vehicle?"
   },
 
   // --- Pillar 6: Private Jet FBO ---
   {
     id: "hi_linate_prime_fbo",
     niche: "Private Jet FBO",
-    query: "We have executives arriving by private jet at Milan Linate Prime. Which chauffeur companies in Milan specialize in VIP private jet pickups?"
+    query: "We have executives arriving by private jet at Milan Linate Prime. Which chauffeur companies in Milan specialize in VIP private jet pickups?",
+    followup: "Which chauffeur company coordinates directly with Linate Prime FBO handlers (Signature/Jetex) for tarmac-side or VIP lounge meet-and-assist?"
   }
 ];
 
@@ -157,6 +169,41 @@ export const COMPETITORS = [
   "airport executive",
   "milano reservations"
 ];
+
+/**
+ * Normalizes competitor brand names into clean canonical display labels,
+ * resolving duplicate aliases, differing casing, and punctuation variants.
+ */
+export function normalizeCompetitorName(name) {
+  if (!name) return '';
+  const trimmed = String(name).trim();
+  const lower = trimmed.toLowerCase();
+  if (lower === 'milanobycar' || lower === 'milano by car' || lower === 'milanotransfer') return 'MilanoByCar';
+  if (lower === 'ncc milano' || lower === 'nccmilano' || lower === 'just ncc milano') return 'NCC Milano';
+  if (lower === 'taxitransfermilan' || lower === 'taxi transfer milan') return 'Taxi Transfer Milan';
+  if (lower === 'ncc milan cortina' || lower === 'ncc milano cortina') return 'NCC Milano Cortina';
+  if (lower === 'como limo lux (cll)' || lower === 'como limo lux') return 'Como Limo Lux';
+  if (lower === 'alpinbus' || lower === 'alpin bus') return 'Alpin Bus';
+  if (lower === 'zonetransfers' || lower === 'zone transfers') return 'ZoneTransfers';
+  if (lower === 'mc eurodriver' || lower === 'mceurodriver') return 'MC Eurodriver';
+  if (lower === 'nexaride' || lower === 'nexa ride') return 'NexaRide';
+  if (lower === 'blackcars' || lower === 'black cars') return 'Blackcars';
+  if (lower === 'blacklane') return 'Blacklane';
+  if (lower === 'larus car' || lower === 'larus car service') return 'Larus Car';
+  if (lower === 'taxi bormio ncc' || lower === 'taxi bormio') return 'Taxi Bormio NCC';
+  if (lower === 'vip transfer') return 'Vip Transfer';
+  if (lower === 'milan travel service') return 'Milan Travel Service';
+  if (lower === 'algoz' || lower === 'algoz group') return 'Algoz';
+  if (lower === 'ski-lifts' || lower === 'skilifts') return 'Ski-Lifts';
+  if (lower === 'minivan italy') return 'Minivan Italy';
+  if (lower === 'airport executive') return 'Airport Executive';
+  if (lower === 'milano reservations') return 'Milano Reservations';
+  if (lower === 'bellagio taxi' || lower === 'taxi bellagio') return 'Bellagio Taxi';
+  if (lower === 'lake como transfers' || lower === 'lct transfers') return 'Lake Como Transfers';
+  if (lower === 'garda cab') return 'Garda Cab';
+  if (lower === 'cervinia taxi') return 'Cervinia Taxi';
+  return trimmed.replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 /**
  * Strips raw markdown, citation brackets, and trims text for concise UI cards.
@@ -438,6 +485,7 @@ export async function runFullLiveAudit({
       id: item.id,
       niche: item.niche,
       query: item.query,
+      followup: item.followup,
       dorogo_present: analysis.dorogo_present,
       dorogo_rank: analysis.dorogo_rank,
       is_top_recommendation: analysis.is_top_recommendation,
@@ -648,7 +696,6 @@ export function computeHistoricalComparison(history, currentIdx = -1) {
 
   // Fallback if records are all within a single test week: use baseline or previous
   if (!pastWeekRun && idx > 0) pastWeekRun = history[0];
-  if (!pastMonthRun && idx > 0) pastMonthRun = history[0];
 
   const getTop1 = (r) => r.top1_rate_pct ?? (r.total_queries ? (r.top1_count / r.total_queries) * 100 : 0);
   const getTop3 = (r) => r.top3_rate_pct ?? (r.total_queries ? (r.top3_count / r.total_queries) * 100 : 0);
@@ -666,12 +713,25 @@ export function computeHistoricalComparison(history, currentIdx = -1) {
     label: (currentTime - new Date(pastWeekRun.timestamp).getTime()) / ONE_DAY_MS >= 5 ? 'vs. Past Week' : 'vs. Baseline'
   } : null;
 
-  const deltaMonth = pastMonthRun ? {
+  // Only emit deltaMonth if it points to a distinct run >= 20 days ago (avoids duplicate vs. Baseline chip)
+  const isMonthDistinct = pastMonthRun && pastMonthRun !== pastWeekRun && ((currentTime - new Date(pastMonthRun.timestamp).getTime()) / ONE_DAY_MS >= 20);
+
+  const deltaMonth = isMonthDistinct ? {
     top1: Number((curTop1 - getTop1(pastMonthRun)).toFixed(1)),
     top3: Number((curTop3 - getTop3(pastMonthRun)).toFixed(1)),
     cite: Number((curCite - getCite(pastMonthRun)).toFixed(1)),
     date: pastMonthRun.timestamp,
-    label: (currentTime - new Date(pastMonthRun.timestamp).getTime()) / ONE_DAY_MS >= 25 ? 'vs. Past Month' : 'vs. Baseline'
+    label: 'vs. Past Month'
+  } : null;
+
+  // Emit immediate previous run comparison if different from baseline
+  const isPrevDistinct = previousRun && previousRun !== pastWeekRun && previousRun !== pastMonthRun;
+  const deltaPrev = isPrevDistinct ? {
+    top1: Number((curTop1 - getTop1(previousRun)).toFixed(1)),
+    top3: Number((curTop3 - getTop3(previousRun)).toFixed(1)),
+    cite: Number((curCite - getCite(previousRun)).toFixed(1)),
+    date: previousRun.timestamp,
+    label: 'vs. Prev Run'
   } : null;
 
   // Build route-level rank comparison map
@@ -725,6 +785,7 @@ export function computeHistoricalComparison(history, currentIdx = -1) {
     previousRun,
     deltaWeek,
     deltaMonth,
+    deltaPrev,
     routeTrends
   };
 }
