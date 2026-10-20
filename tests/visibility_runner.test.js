@@ -7,7 +7,8 @@ import {
   formatAiResponse, 
   saveVisibilityAction, 
   deleteVisibilityAction,
-  cleanSnippetPreview 
+  cleanSnippetPreview,
+  computeHistoricalComparison
 } from '../app/services/live_audit.js';
 
 test('analyzeVisibility identifies Dorogo #1 top pick and competitors', () => {
@@ -94,4 +95,39 @@ test('cleanSnippetPreview strips markdown asterisks, bracket citations, and caps
   assert.ok(!preview.includes('[1]'));
   assert.ok(preview.length <= 75); // with ellipsis
   assert.ok(preview.endsWith('…'));
+});
+
+test('computeHistoricalComparison calculates deltas vs past week and baseline', () => {
+  const mockHistory = [
+    {
+      timestamp: '2026-10-01T10:00:00Z',
+      top1_count: 1,
+      top1_rate_pct: 10.0,
+      top3_count: 2,
+      top3_rate_pct: 20.0,
+      cited_count: 3,
+      citation_rate_pct: 30.0,
+      details: [{ id: 'q1', dorogo_rank: 2 }, { id: 'q2', dorogo_rank: null }]
+    },
+    {
+      timestamp: '2026-10-20T10:00:00Z',
+      top1_count: 2,
+      top1_rate_pct: 20.0,
+      top3_count: 4,
+      top3_rate_pct: 40.0,
+      cited_count: 6,
+      citation_rate_pct: 60.0,
+      details: [{ id: 'q1', dorogo_rank: 1 }, { id: 'q2', dorogo_rank: 3 }]
+    }
+  ];
+
+  const comp = computeHistoricalComparison(mockHistory, 1);
+  assert.ok(comp);
+  assert.equal(comp.deltaWeek.top1, 10.0);
+  assert.equal(comp.deltaWeek.top3, 20.0);
+  assert.equal(comp.deltaWeek.cite, 30.0);
+  assert.equal(comp.routeTrends.get('q1').trend, 'up');
+  assert.equal(comp.routeTrends.get('q1').deltaText, '▲ Rose to #1 (+1)');
+  assert.equal(comp.routeTrends.get('q2').trend, 'up');
+  assert.equal(comp.routeTrends.get('q2').deltaText, '★ Ranked (#3)');
 });

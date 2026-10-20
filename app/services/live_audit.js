@@ -523,80 +523,372 @@ export async function runFullLiveAudit({
 }
 
 /**
- * Saves run summary into localStorage and merges with existing history.
+ * Resolves an active Supabase client for reading/writing visibility data.
  */
-export function persistLiveAuditRun(newRun) {
-  try {
-    const raw = localStorage.getItem('dorogo_visibility_history');
-    let history = raw ? JSON.parse(raw) : [];
-    if (!Array.isArray(history)) history = [];
-    history.push(newRun);
-    localStorage.setItem('dorogo_visibility_history', JSON.stringify(history));
-    return history;
-  } catch (e) {
-    console.warn("Unable to persist to localStorage:", e);
-    return [newRun];
+let _supabaseClient = null;
+export function getSupabaseClient() {
+  if (_supabaseClient) return _supabaseClient;
+  if (typeof window !== 'undefined' && window.supabase && window.APP_CONFIG?.SUPABASE_URL) {
+    try {
+      _supabaseClient = window.supabase.createClient(
+        window.APP_CONFIG.SUPABASE_URL,
+        window.APP_CONFIG.SUPABASE_KEY
+      );
+      return _supabaseClient;
+    } catch (e) {
+      console.warn("Unable to initialize Supabase client for AI visibility:", e);
+    }
   }
+  return null;
 }
 
 /**
- * Loads logged optimization actions from static JSON and merges with in-browser localStorage.
+ * Loads historical audit runs with 3-tier cascade:
+ * 1. Live Supabase database (source of truth across team & machines)
+ * 2. Static JSON baseline (`data/visibility_history.json`)
+ * 3. LocalStorage in-browser live cache
+ */
+export async function loadVisibilityHistory() {
+  let history = [];
+  const sb = getSupabaseClient();
+
+  // 1. Fetch from Supabase
+  if (sb) {
+    try {
+      const { data, error } = await sb
+        .from('outreach_state')
+        .select('value')
+        .eq('key', 'ai_visibility_history')
+        .maybeSingle();
+      if (!error && data?.value && Array.isArray(data.value) && data.value.length > 0) {
+        history = data.value;
+      }
+    } catch (e) {
+      console.warn('Supabase visibility load error:', e);
+    }
+  }
+
+  // 2. Fall back / merge with static files if Supabase is empty or offline
+  const paths = [
+    'data/visibility_history.json',
+    'data/visibility/visibility_history.json',
+  ];
+  for (const p of paths) {
+    try {
+      const res = await fetch(p + '?v=' + Date.now());
+      if (res.ok) {
+        const json = await res.json();
+        if (Array.isArray(json) && json.length > 0) {
+          if (!history.length) {
+            history = json;
+          } else {
+            const times = new Set(history.map(x => x.timestamp));
+            for (const item of json) {
+              if (!times.has(item.timestamp)) {
+                history.push(item);
+                times.add(item.timestamp);
+              }
+            }
+          }
+          break;
+        }
+      }
+    } catch (_) {}
+  }
+
+  // 3. Merge in-browser localStorage runs
+  if (typeof localStorage !== 'undefined') {
+    try {
+      const local = JSON.parse(localStorage.getItem('dorogo_visibility_history') || '[]');
+      if (Array.isArray(local) && local.length > 0) {
+        const times = new Set(history.map(x => x.timestamp));
+        for (const item of local) {
+          if (!times.has(item.timestamp)) {
+            history.push(item);
+            times.add(item.timestamp);
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
+  // Sort chronological (oldest to newest)
+  history.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem('dorogo_visibility_history', JSON.stringify(history));
+    } catch (_) {}
+  }
+
+  return history;
+}
+
+/**
+ * Calculates comparative trends between the currently selected run,
+ * the audit run from ~7 days ago (past week), and ~30 days ago (past month).
+ */
+export function computeHistoricalComparison(history, currentIdx = -1) {
+  if (!history || !history.length) return null;
+  const idx = currentIdx >= 0 && currentIdx < history.length ? currentIdx : history.length - 1;
+  const current = history[idx];
+  const currentTime = new Date(current.timestamp).getTime();
+  const ONE_DAY_MS = 86400000;
+
+  let pastWeekRun = null;
+  let pastMonthRun = null;
+  const previousRun = idx > 0 ? history[idx - 1] : null;
+
+  for (let i = idx - 1; i >= 0; i--) {
+    const t = new Date(history[i].timestamp).getTime();
+    const diffDays = (currentTime - t) / ONE_DAY_MS;
+    if (!pastWeekRun && diffDays >= 5) pastWeekRun = history[i];
+    if (!pastMonthRun && diffDays >= 25) pastMonthRun = history[i];
+  }
+
+  // Fallback if records are all within a single test week: use baseline or previous
+  if (!pastWeekRun && idx > 0) pastWeekRun = history[0];
+  if (!pastMonthRun && idx > 0) pastMonthRun = history[0];
+
+  const getTop1 = (r) => r.top1_rate_pct ?? (r.total_queries ? (r.top1_count / r.total_queries) * 100 : 0);
+  const getTop3 = (r) => r.top3_rate_pct ?? (r.total_queries ? (r.top3_count / r.total_queries) * 100 : 0);
+  const getCite = (r) => r.citation_rate_pct ?? (r.total_queries ? (r.cited_count / r.total_queries) * 100 : 0);
+
+  const curTop1 = getTop1(current);
+  const curTop3 = getTop3(current);
+  const curCite = getCite(current);
+
+  const deltaWeek = pastWeekRun ? {
+    top1: Number((curTop1 - getTop1(pastWeekRun)).toFixed(1)),
+    top3: Number((curTop3 - getTop3(pastWeekRun)).toFixed(1)),
+    cite: Number((curCite - getCite(pastWeekRun)).toFixed(1)),
+    date: pastWeekRun.timestamp,
+    label: (currentTime - new Date(pastWeekRun.timestamp).getTime()) / ONE_DAY_MS >= 5 ? 'vs. Past Week' : 'vs. Baseline'
+  } : null;
+
+  const deltaMonth = pastMonthRun ? {
+    top1: Number((curTop1 - getTop1(pastMonthRun)).toFixed(1)),
+    top3: Number((curTop3 - getTop3(pastMonthRun)).toFixed(1)),
+    cite: Number((curCite - getCite(pastMonthRun)).toFixed(1)),
+    date: pastMonthRun.timestamp,
+    label: (currentTime - new Date(pastMonthRun.timestamp).getTime()) / ONE_DAY_MS >= 25 ? 'vs. Past Month' : 'vs. Baseline'
+  } : null;
+
+  // Build route-level rank comparison map
+  const routeTrends = new Map();
+  const baselineRun = history[0];
+  const compareRun = pastWeekRun || previousRun || baselineRun;
+  
+  if (compareRun && compareRun.details) {
+    const compMap = new Map();
+    for (const d of compareRun.details) {
+      compMap.set(d.id, d.dorogo_rank);
+    }
+    for (const d of (current.details || [])) {
+      const pastRank = compMap.get(d.id);
+      const curRank = d.dorogo_rank;
+      let trend = 'stable';
+      let deltaText = '● Stable';
+      if (curRank === 1 && pastRank !== 1) {
+        trend = 'up';
+        deltaText = pastRank ? `▲ Rose to #1 (+${pastRank - 1})` : `▲ New #1 Pick`;
+      } else if (curRank && (!pastRank || pastRank > curRank)) {
+        trend = 'up';
+        deltaText = pastRank ? `▲ +${pastRank - curRank} ranks` : `★ Ranked (#${curRank})`;
+      } else if (!curRank && pastRank) {
+        trend = 'down';
+        deltaText = `▼ Dropped (#${pastRank} lost)`;
+      } else if (curRank && pastRank && curRank > pastRank) {
+        trend = 'down';
+        deltaText = `▼ -${curRank - pastRank} ranks`;
+      } else if (curRank === 1 && pastRank === 1) {
+        trend = 'stable';
+        deltaText = `● Stable #1`;
+      } else if (curRank && pastRank && curRank === pastRank) {
+        trend = 'stable';
+        deltaText = `● Stable (#${curRank})`;
+      } else if (!curRank && !pastRank && d.dorogo_present) {
+        trend = 'cited';
+        deltaText = `★ Brand Cited`;
+      } else {
+        trend = 'unranked';
+        deltaText = `— Unranked`;
+      }
+      routeTrends.set(d.id, { trend, deltaText, pastRank, curRank });
+    }
+  }
+
+  return {
+    current,
+    pastWeekRun,
+    pastMonthRun,
+    previousRun,
+    deltaWeek,
+    deltaMonth,
+    routeTrends
+  };
+}
+
+/**
+ * Saves run summary into localStorage and persists directly into Supabase.
+ */
+export function persistLiveAuditRun(newRun) {
+  let history = [];
+  if (typeof localStorage !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('dorogo_visibility_history');
+      history = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(history)) history = [];
+    } catch (_) {
+      history = [];
+    }
+  }
+
+  history.push(newRun);
+  history.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem('dorogo_visibility_history', JSON.stringify(history));
+    } catch (e) {
+      console.warn("Unable to persist to localStorage:", e);
+    }
+  }
+
+  // Persist to Supabase in background
+  const sb = getSupabaseClient();
+  if (sb) {
+    sb.from('outreach_state').upsert({
+      key: 'ai_visibility_history',
+      value: history,
+      updated_at: new Date().toISOString()
+    }).catch((e) => {
+      console.warn("Unable to persist visibility run to Supabase:", e);
+    });
+  }
+
+  return history;
+}
+
+/**
+ * Loads logged optimization actions from Supabase, static JSON, and localStorage.
  */
 export async function loadVisibilityActions() {
   let actions = [];
+  const sb = getSupabaseClient();
+
+  // 1. Try Supabase
+  if (sb) {
+    try {
+      const { data, error } = await sb
+        .from('outreach_state')
+        .select('value')
+        .eq('key', 'ai_visibility_actions')
+        .maybeSingle();
+      if (!error && data?.value && Array.isArray(data.value) && data.value.length > 0) {
+        actions = data.value;
+      }
+    } catch (e) {
+      console.warn('Supabase actions load error:', e);
+    }
+  }
+
+  // 2. Merge static file
   try {
     const res = await fetch('data/visibility_actions.json?v=' + Date.now());
     if (res.ok) {
       const json = await res.json();
-      if (Array.isArray(json)) actions = json;
+      if (Array.isArray(json)) {
+        const map = new Map();
+        for (const a of json) map.set(a.id, a);
+        for (const a of actions) map.set(a.id, a);
+        actions = [...map.values()];
+      }
     }
   } catch (_) {}
 
-  try {
-    const local = JSON.parse(localStorage.getItem('dorogo_visibility_actions') || '[]');
-    if (Array.isArray(local) && local.length > 0) {
-      const map = new Map();
-      for (const a of actions) map.set(a.id, a);
-      for (const a of local) map.set(a.id, a);
-      actions = [...map.values()];
-    }
-  } catch (_) {}
+  // 3. Merge localStorage
+  if (typeof localStorage !== 'undefined') {
+    try {
+      const local = JSON.parse(localStorage.getItem('dorogo_visibility_actions') || '[]');
+      if (Array.isArray(local) && local.length > 0) {
+        const map = new Map();
+        for (const a of actions) map.set(a.id, a);
+        for (const a of local) map.set(a.id, a);
+        actions = [...map.values()];
+      }
+    } catch (_) {}
+  }
 
   actions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   return actions;
 }
 
 /**
- * Persists a new or updated optimization action into localStorage.
+ * Persists an optimization action to localStorage and Supabase.
  */
 export function saveVisibilityAction(action) {
-  try {
-    const local = JSON.parse(localStorage.getItem('dorogo_visibility_actions') || '[]');
-    const existingIdx = local.findIndex((a) => a.id === action.id);
-    if (existingIdx >= 0) {
-      local[existingIdx] = action;
-    } else {
-      local.unshift(action);
+  let local = [];
+  if (typeof localStorage !== 'undefined') {
+    try {
+      local = JSON.parse(localStorage.getItem('dorogo_visibility_actions') || '[]');
+    } catch (_) {
+      local = [];
     }
-    localStorage.setItem('dorogo_visibility_actions', JSON.stringify(local));
-    return local;
-  } catch (e) {
-    console.warn("Failed to save action to localStorage:", e);
-    return [action];
   }
+  const existingIdx = local.findIndex((a) => a.id === action.id);
+  if (existingIdx >= 0) {
+    local[existingIdx] = action;
+  } else {
+    local.unshift(action);
+  }
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem('dorogo_visibility_actions', JSON.stringify(local));
+    } catch (e) {
+      console.warn("Failed to save action to localStorage:", e);
+    }
+  }
+
+  // Persist to Supabase in background
+  const sb = getSupabaseClient();
+  if (sb) {
+    sb.from('outreach_state').upsert({
+      key: 'ai_visibility_actions',
+      value: local,
+      updated_at: new Date().toISOString()
+    }).catch((e) => {
+      console.warn("Failed to save action to Supabase:", e);
+    });
+  }
+
+  return local;
 }
 
 /**
- * Deletes an optimization action by ID from localStorage.
+ * Deletes an optimization action by ID from localStorage and Supabase.
  */
 export function deleteVisibilityAction(id) {
-  try {
-    let local = JSON.parse(localStorage.getItem('dorogo_visibility_actions') || '[]');
-    local = local.filter((a) => a.id !== id);
-    localStorage.setItem('dorogo_visibility_actions', JSON.stringify(local));
-    return local;
-  } catch (e) {
-    return [];
+  let local = [];
+  if (typeof localStorage !== 'undefined') {
+    try {
+      local = JSON.parse(localStorage.getItem('dorogo_visibility_actions') || '[]');
+      local = local.filter((a) => a.id !== id);
+      localStorage.setItem('dorogo_visibility_actions', JSON.stringify(local));
+    } catch (e) {
+      local = [];
+    }
   }
+
+  const sb = getSupabaseClient();
+  if (sb) {
+    sb.from('outreach_state').upsert({
+      key: 'ai_visibility_actions',
+      value: local,
+      updated_at: new Date().toISOString()
+    }).catch(() => {});
+  }
+
+  return local;
 }
 

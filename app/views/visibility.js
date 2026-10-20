@@ -7,10 +7,12 @@ import {
   runFullLiveAudit, 
   persistLiveAuditRun, 
   formatAiResponse,
+  loadVisibilityHistory,
   loadVisibilityActions,
   saveVisibilityAction,
   deleteVisibilityAction,
-  cleanSnippetPreview
+  cleanSnippetPreview,
+  computeHistoricalComparison
 } from '../services/live_audit.js';
 
 let cachedHistory = null;
@@ -18,42 +20,6 @@ let cachedActions = null;
 let activeFilter = 'top3'; // 'all' | 'top3' | specific niche
 let actionFilter = 'all'; // 'all' | 'effective' | 'testing' | 'ineffective'
 let selectedRunIdx = -1;
-
-export async function loadVisibilityHistory() {
-  if (cachedHistory && cachedHistory.length) return cachedHistory;
-  let history = [];
-  const paths = [
-    'data/visibility_history.json',
-    'data/visibility/visibility_history.json',
-  ];
-  for (const p of paths) {
-    try {
-      const res = await fetch(p + '?v=' + Date.now());
-      if (res.ok) {
-        const json = await res.json();
-        if (Array.isArray(json) && json.length > 0) {
-          history = json;
-          break;
-        }
-      }
-    } catch (_) {}
-  }
-
-  // Check localStorage for any live runs performed in-browser
-  try {
-    const local = JSON.parse(localStorage.getItem('dorogo_visibility_history') || '[]');
-    if (Array.isArray(local) && local.length > 0) {
-      const latestFileTime = history.length ? new Date(history[history.length - 1].timestamp).getTime() : 0;
-      const latestLocalTime = new Date(local[local.length - 1].timestamp).getTime();
-      if (latestLocalTime > latestFileTime) {
-        history = local;
-      }
-    }
-  } catch (_) {}
-
-  cachedHistory = history;
-  return history;
-}
 
 export async function render(el) {
   const history = await loadVisibilityHistory();
@@ -97,6 +63,9 @@ export async function render(el) {
   const cost = currentRun.estimated_cost_usd ?? 0.0047;
   const auditDate = new Date(currentRun.timestamp);
 
+  const comp = computeHistoricalComparison(history, runIdx);
+  const { deltaWeek, deltaMonth, routeTrends } = comp || {};
+
   const rawNiches = [...new Set(currentRun.details.map((d) => d.niche))];
   const top3Items = currentRun.details.filter((d) => d.dorogo_present && (d.is_top_recommendation || (d.dorogo_rank && d.dorogo_rank <= 3)));
   
@@ -126,6 +95,29 @@ export async function render(el) {
     </div>
 
     <div class="stack lg">
+      <!-- Historical Time Machine & Supabase Sync Bar -->
+      <div class="card row between" style="padding:10px 16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);align-items:center;flex-wrap:wrap;gap:10px">
+        <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:1rem">⏱️</span>
+          <span class="small" style="font-weight:600">Audit History &amp; Time Machine:</span>
+          <select id="sel-history-run" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:4px 10px;font-size:.82rem;font-weight:500;color:var(--ink)">
+            ${history.map((run, i) => {
+              const d = new Date(run.timestamp);
+              const isLatest = i === history.length - 1;
+              const top3 = run.top3_rate_pct ?? (run.total_queries ? (run.top3_count / run.total_queries) * 100 : 0);
+              return `<option value="${i}" ${i === runIdx ? 'selected' : ''}>${isLatest ? '⚡ Latest Audit · ' : `Run ${i + 1} · `}${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} ${d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} (Top-3: ${top3.toFixed(1)}%)</option>`;
+            }).reverse().join('')}
+          </select>
+          ${runIdx !== history.length - 1 ? `<button class="btn sm ghost" id="btn-reset-latest" style="font-size:.76rem;padding:2px 8px">← Back to Latest</button>` : ''}
+        </div>
+        <div class="row" style="gap:8px;align-items:center">
+          <span class="chip ok" style="font-weight:600;font-size:.75rem;display:inline-flex;align-items:center;gap:6px">
+            <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok)"></span>
+            Supabase Cloud Synced (${history.length} snapshots)
+          </span>
+        </div>
+      </div>
+
       <!-- 1. Executive Performance Scorecard -->
       <div class="kpis">
         <div class="kpi">
@@ -135,6 +127,12 @@ export async function render(el) {
             <span class="chip ${top1Rate >= 50 ? 'ok' : 'gold'}">${top1Rate >= 50 ? '🟢 Strong' : '🟡 Progressing'}</span>
           </div>
           <span class="ci">${currentRun.top1_count} of ${currentRun.total_queries} queries · Target &gt;50%</span>
+          ${deltaWeek || deltaMonth ? `
+            <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">
+              ${deltaWeek ? `<span class="chip ${deltaWeek.top1 > 0 ? 'ok' : deltaWeek.top1 < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaWeek.date)}">${deltaWeek.top1 > 0 ? '▲ +' : deltaWeek.top1 < 0 ? '▼ ' : '● '}${deltaWeek.top1}% ${esc(deltaWeek.label)}</span>` : ''}
+              ${deltaMonth ? `<span class="chip ${deltaMonth.top1 > 0 ? 'ok' : deltaMonth.top1 < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaMonth.date)}">${deltaMonth.top1 > 0 ? '▲ +' : deltaMonth.top1 < 0 ? '▼ ' : '● '}${deltaMonth.top1}% ${esc(deltaMonth.label)}</span>` : ''}
+            </div>
+          ` : ''}
         </div>
 
         <div class="kpi">
@@ -144,6 +142,12 @@ export async function render(el) {
             <span class="chip ${top3Rate >= 70 ? 'ok' : 'warn'}">${top3Rate >= 70 ? '🟢 Strong' : '🟡 Progressing'}</span>
           </div>
           <span class="ci">${currentRun.top3_count} of ${currentRun.total_queries} queries · Target &gt;80%</span>
+          ${deltaWeek || deltaMonth ? `
+            <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">
+              ${deltaWeek ? `<span class="chip ${deltaWeek.top3 > 0 ? 'ok' : deltaWeek.top3 < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaWeek.date)}">${deltaWeek.top3 > 0 ? '▲ +' : deltaWeek.top3 < 0 ? '▼ ' : '● '}${deltaWeek.top3}% ${esc(deltaWeek.label)}</span>` : ''}
+              ${deltaMonth ? `<span class="chip ${deltaMonth.top3 > 0 ? 'ok' : deltaMonth.top3 < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaMonth.date)}">${deltaMonth.top3 > 0 ? '▲ +' : deltaMonth.top3 < 0 ? '▼ ' : '● '}${deltaMonth.top3}% ${esc(deltaMonth.label)}</span>` : ''}
+            </div>
+          ` : ''}
         </div>
 
         <div class="kpi">
@@ -153,6 +157,12 @@ export async function render(el) {
             <span class="chip ${citationRate >= 80 ? 'ok' : 'warn'}">${citationRate >= 80 ? '🟢 High' : '🟡 Progressing'}</span>
           </div>
           <span class="ci">${currentRun.cited_count} of ${currentRun.total_queries} queries cited</span>
+          ${deltaWeek || deltaMonth ? `
+            <div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap">
+              ${deltaWeek ? `<span class="chip ${deltaWeek.cite > 0 ? 'ok' : deltaWeek.cite < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaWeek.date)}">${deltaWeek.cite > 0 ? '▲ +' : deltaWeek.cite < 0 ? '▼ ' : '● '}${deltaWeek.cite}% ${esc(deltaWeek.label)}</span>` : ''}
+              ${deltaMonth ? `<span class="chip ${deltaMonth.cite > 0 ? 'ok' : deltaMonth.cite < 0 ? 'bad' : 'outline'}" style="font-size:.7rem;padding:1px 6px" title="${esc(deltaMonth.date)}">${deltaMonth.cite > 0 ? '▲ +' : deltaMonth.cite < 0 ? '▼ ' : '● '}${deltaMonth.cite}% ${esc(deltaMonth.label)}</span>` : ''}
+            </div>
+          ` : ''}
         </div>
 
         <div class="kpi">
@@ -273,8 +283,9 @@ export async function render(el) {
             <thead>
               <tr style="border-bottom:1.5px solid var(--line);text-align:left;color:var(--ink-3);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em">
                 <th style="padding:10px 12px">Route / Niche</th>
-                <th style="padding:10px 12px;width:44%">Traveler Query Probed</th>
+                <th style="padding:10px 12px;width:38%">Traveler Query Probed</th>
                 <th style="padding:10px 12px">Dorogo Status</th>
+                <th style="padding:10px 12px">Trend vs. History</th>
                 <th style="padding:10px 12px">Competitors Mentioned</th>
                 <th style="padding:10px 12px;text-align:right">Resolution</th>
               </tr>
@@ -290,6 +301,17 @@ export async function render(el) {
                   badge = `<span class="chip warn" style="font-size:.74rem">Ranked #${it.dorogo_rank}</span>`;
                 }
 
+                const trInfo = routeTrends?.get(it.id);
+                const trendPill = trInfo ? (
+                  trInfo.trend === 'up'
+                    ? `<span class="chip ok" style="font-weight:600;font-size:.72rem">${esc(trInfo.deltaText)}</span>`
+                    : trInfo.trend === 'down'
+                    ? `<span class="chip bad" style="font-weight:600;font-size:.72rem">${esc(trInfo.deltaText)}</span>`
+                    : trInfo.trend === 'stable'
+                    ? `<span class="chip gold" style="font-size:.72rem">${esc(trInfo.deltaText)}</span>`
+                    : `<span class="chip outline" style="font-size:.72rem">${esc(trInfo.deltaText)}</span>`
+                ) : '<span class="muted small">—</span>';
+
                 const competitors = (it.competitors || []).map((c) => `<span class="chip outline" style="font-size:.7rem;padding:1px 6px">${esc(c)}</span>`).join(' ') || '<span class="muted small">—</span>';
 
                 return `
@@ -302,6 +324,9 @@ export async function render(el) {
                     </td>
                     <td style="padding:10px 12px;vertical-align:middle;white-space:nowrap">
                       ${badge}
+                    </td>
+                    <td style="padding:10px 12px;vertical-align:middle;white-space:nowrap">
+                      ${trendPill}
                     </td>
                     <td style="padding:10px 12px;vertical-align:middle">
                       <div style="display:flex;flex-wrap:wrap;gap:4px">${competitors}</div>
@@ -431,6 +456,16 @@ export async function render(el) {
   `;
 
   // Attach event handlers
+  el.querySelector('#sel-history-run')?.addEventListener('change', (e) => {
+    selectedRunIdx = Number(e.target.value);
+    render(el);
+  });
+
+  el.querySelector('#btn-reset-latest')?.addEventListener('click', () => {
+    selectedRunIdx = -1;
+    render(el);
+  });
+
   el.querySelectorAll('[data-filter]').forEach((b) => {
     b.addEventListener('click', (e) => {
       activeFilter = e.currentTarget.dataset.filter;
