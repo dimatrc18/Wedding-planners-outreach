@@ -235,8 +235,9 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
       const targetTo = t.to_address || (t.step_name === 'reply' && lastInbound?.from_address ? lastInbound.from_address : p.email);
       const fromName = prospectLang === 'ru' ? 'Дмитрий | DOROGO Transfers' : 'Dmitri | DOROGO Transfers';
       const html = core.renderDorogoLuxuryHtmlEmail(t.body, { lang: prospectLang, fromEmail, pixelUrl, footerStyle: settings.email_footer_style || 'wordmark' });
+      const cleanText = core.stripSignOff ? core.stripSignOff(t.body) : t.body;
       const { messageId, raw } = await sendMail({
-        fromName, fromEmail, replyTo: settings.sender?.reply_to || fromEmail, to: targetTo, subject: t.subject, text: t.body, html,
+        fromName, fromEmail, replyTo: settings.sender?.reply_to || fromEmail, to: targetTo, subject: t.subject, text: cleanText, html,
         lang: prospectLang,
         inReplyTo, references: threaded ? thread.map((x: any) => x.message_id).slice(-10) : [], attachments, pixelUrl,
         footerStyle: settings.email_footer_style || 'wordmark',

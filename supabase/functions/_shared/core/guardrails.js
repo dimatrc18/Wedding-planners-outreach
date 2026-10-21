@@ -4,7 +4,7 @@
 
 import { BANNED, lintMessage, wordCount } from './lint.js';
 import { RATE_CARD } from './ratecard.js';
-import { SIGNATURE, SIGNATURE_IT } from './constants.js';
+import { stripSignOff } from './drafts.js';
 
 const HOOK_TYPES = new Set(['venue', 'event', 'style', 'press', 'award', 'other']);
 const CONFIDENCE_LEVELS = new Set(['high', 'medium', 'low']);
@@ -144,8 +144,9 @@ export function validateDraftOutput(raw) {
     throw new Error('Guardrail: draft output must be a JSON object');
   }
   const subject = typeof raw.subject === 'string' ? raw.subject.trim() : '';
-  const body = typeof raw.body === 'string' ? raw.body.trim() : '';
-  if (!body) throw new Error('Guardrail: AI draft body is empty');
+  const rawBody = typeof raw.body === 'string' ? raw.body.trim() : '';
+  if (!rawBody) throw new Error('Guardrail: AI draft body is empty');
+  const body = stripSignOff(rawBody);
   const banned = BANNED.find((b) => b.re.test(`${subject}\n${body}`));
   if (banned) throw new Error(`Guardrail: AI draft used banned phrase (${banned.label})`);
   return { subject, body };
@@ -164,6 +165,7 @@ function cleanPartnerReplyBody(raw = '') {
     .replace(/\bgreat question[.,]?\s*/gi, '')
     .replace(/\bthank(s| you) for reaching out[.,]?\s*/gi, '')
     .replace(/\bhope (this|my|the) (e-?mail|message|note) finds you( well)?[.,]?\s*/gi, '')
+    .replace(/\bthank you for the update[.,]?\s*/gi, '')
     .replace(/\bseamlessly\b/gi, 'smoothly')
     .replace(/\bseamless\b/gi, 'smooth')
     .replace(/\btop[- ]notch\b/gi, 'first-class')
@@ -173,11 +175,8 @@ function cleanPartnerReplyBody(raw = '') {
   if (/\b[VES][- ]Class\b|\bClasse [VES]\b/.test(s) && !/Mercedes-Benz/.test(s)) {
     s = s.replace(/\b([VES][- ]Class|Classe [VES])\b/, 'Mercedes-Benz $1');
   }
-  s = s.trim();
-  if (s && !/DOROGO\s*\|\s*Private Transportation|dmitri@dorogo\.eu|wa\.me\/32456141497/i.test(s)) {
-    const isIt = /\b(buongiorno|gentile|cordiali|saluti|tariffa|matrimoni|ospiti)\b/i.test(s);
-    s = `${s}\n\n${isIt ? SIGNATURE_IT : SIGNATURE}`;
-  }
+  // Strip any accidental plain-text sign-offs or signature blocks so the body remains pure message text
+  s = stripSignOff(s);
   return s;
 }
 

@@ -23,8 +23,15 @@ function lintHtml(l) {
 
 export function cleanDuplicateDraftGreetings(body = '') {
   if (!body) return '';
-  const SIG_BLOCK_RE = /\n*(?:Dmitri(?:\s+Traciuc)?|Дмитрий(?:\s+Трачук)?)\s*\n+(?:Senior Dispatcher|Старший диспетчер|Founder|DOROGO)[^\n]*\n+(?:(?:Lake Como|Lago di Como|Озеро Комо)[^\n]*\n*|(?:dmitri@dorogo\.eu|wa\.me)[^\n]*\n*)*/gi;
-  let clean = body.replace(SIG_BLOCK_RE, '\n\n').replace(/Founder,\s*DOROGO/gi, 'Senior Dispatcher');
+  let clean = core.stripSignOff ? core.stripSignOff(body) : body;
+  const SIG_BLOCK_RE = /\n*(?:Dmitri(?:\s+Traciuc)?|Дмитрий(?:\s+Трачук)?)\s*\n+(?:Senior Dispatcher|Старший диспетчер|Founder|DOROGO)[^\n]*\n+(?:(?:Lake Como|Lago di Como|Озеро Комо|Tuscany|Venice|Toscana|Venezia|Milano|Milan)[^\n]*\n*|(?:dmitri@dorogo\.eu|wa\.me)[^\n]*\n*)*/gi;
+  clean = clean.replace(SIG_BLOCK_RE, '\n\n').replace(/Founder,\s*DOROGO/gi, 'Senior Dispatcher');
+  clean = clean
+    .replace(/(?:Warm regards|Kind regards|Best regards|With warm regards|Regards|Sincerely|Un cordiale saluto|Cordiali saluti|Distinti saluti|A presto|С уважением|Всего доброго),?[\s\S]*$/i, '')
+    .replace(/\n*(?:Dmitri(?:\s+Traciuc)?|Дмитрий(?:\s+Трачук)?)\s*\n+(?:Senior Dispatcher|Старший диспетчер|Founder|DOROGO)[\s\S]*$/i, '')
+    .replace(/\n*(?:Dmitri|Дмитрий)\s*\n+(?:DOROGO|WhatsApp|wa\.me|dmitri@dorogo\.eu)[^\n]*[\s\S]*$/i, '')
+    .replace(/\n+(?:Dmitri(?:\s+Traciuc)?|Дмитрий(?:\s+Трачук)?)\s*$/i, '')
+    .trim();
   const paras = clean.split(/\n\s*\n/);
   if (paras.length >= 2) {
     let p0 = paras[0].trim();
@@ -266,7 +273,8 @@ export function render(el) {
         case 'edit': editing = id; paint(); el.querySelector('#ed-body')?.focus(); return;
         case 'cancel': editing = null; paint(); return;
         case 'save': {
-          const body = el.querySelector('#ed-body').value;
+          const rawBody = el.querySelector('#ed-body').value;
+          const body = core.stripSignOff ? core.stripSignOff(rawBody) : rawBody;
           const subject = el.querySelector('#ed-subject')?.value;
           editing = null;
           document.activeElement?.blur();

@@ -242,6 +242,24 @@ test('partner rate card CTAs across planner, venue, and hotel drafts do not cont
   assert.deepEqual(sanitized.lint.warnings, []);
   assert.match(sanitized.body, /Mercedes-Benz V-Class/);
   assert.doesNotMatch(sanitized.body, /—|!|\bCertainly\b|\bseamless\b/i);
+  assert.doesNotMatch(sanitized.body, /Dmitri Traciuc|wa\.me|Senior Dispatcher/);
+
+  // Verify that conversational sign-offs like "Kind regards, Dmitri" are stripped from partner replies
+  const carouselStyleReply = validatePartnerReplyOutput({
+    can_answer_confidently: true,
+    needs_human: false,
+    body: 'Much appreciated, Hyacinth. Wishing you and the Carousel team a wonderful season ahead, and feel free to reach out whenever a date comes up.\n\nKind regards,\nDmitri',
+    attach_rate_card: false,
+  });
+  assert.equal(carouselStyleReply.body, 'Much appreciated, Hyacinth. Wishing you and the Carousel team a wonderful season ahead, and feel free to reach out whenever a date comes up.');
+  assert.doesNotMatch(carouselStyleReply.body, /Kind regards|Dmitri/);
+
+  // Verify validateDraftOutput also strips trailing sign-offs from AI rewrites
+  const rewrittenDraft = validateDraftOutput({
+    subject: 'DOROGO x Test Studio',
+    body: 'Hi Sarah,\n\nWe operate an executive Mercedes-Benz fleet.\n\nWarm regards,\nDmitri\nSenior Dispatcher',
+  });
+  assert.equal(rewrittenDraft.body, 'Hi Sarah,\n\nWe operate an executive Mercedes-Benz fleet.');
 });
 
 test('MECE overhaul: Variant A (Intro), Variant B (Late returns), Variant C (Hotels/Venues), and Balbianello accuracy', async () => {

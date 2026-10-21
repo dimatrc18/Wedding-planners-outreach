@@ -317,6 +317,21 @@ const htmlEsc = (s = '') =>
 
 export const EMAIL_ASSETS_BASE = 'https://qjarhdrrbjeeqbhfgmnp.supabase.co/storage/v1/object/public/email-assets';
 
+// Strip trailing or embedded plain-text signature blocks or sign-offs
+export function stripSignOff(raw = '') {
+  if (!raw) return '';
+  const SIG_BLOCK_RE = /\n*(?:Dmitri(?:\s+Traciuc)?|Дмитрий(?:\s+Трачук)?)\s*\n+(?:Senior Dispatcher|Старший диспетчер|Founder|DOROGO)[^\n]*\n+(?:(?:Lake Como|Lago di Como|Озеро Комо|Tuscany|Venice|Toscana|Venezia|Milano|Milan)[^\n]*\n*|(?:dmitri@dorogo\.eu|wa\.me)[^\n]*\n*)*/gi;
+
+  return String(raw).trim()
+    .replace(SIG_BLOCK_RE, '')
+    .replace(/(?:Warm regards|Kind regards|Best regards|With warm regards|Regards|Sincerely|Un cordiale saluto|Cordiali saluti|Distinti saluti|A presto|С уважением|Всего доброго),?[\s\S]*$/i, '')
+    .replace(/\n*(?:Dmitri(?:\s+Traciuc)?|Дмитрий(?:\s+Трачук)?)\s*\n+(?:Senior Dispatcher|Старший диспетчер|Founder|DOROGO)[\s\S]*$/i, '')
+    .replace(/\n*(?:Dmitri|Дмитрий)\s*\n+(?:DOROGO|WhatsApp|wa\.me|dmitri@dorogo\.eu)[^\n]*[\s\S]*$/i, '')
+    .replace(/\n+(?:Dmitri(?:\s+Traciuc)?|Дмитрий(?:\s+Трачук)?)\s*$/i, '')
+    .replace(/\n*(?:dmitri@dorogo\.eu|wa\.me\/32456141497|WhatsApp:\s*wa\.me)[^\n]*$/i, '')
+    .trim();
+}
+
 /**
  * Ported from dorogo-ai-concierge/email.js (generateLuxuryHtmlEmail):
  * Wraps plain-text outreach/concierge copy in DOROGO's executive HTML email layout
@@ -357,14 +372,7 @@ export function renderDorogoLuxuryHtmlEmail(
   }
 
   // Strip trailing or embedded plain-text signature blocks from body paragraphs since we render the styled footer
-  const SIG_BLOCK_RE = /\n*(?:Dmitri(?:\s+Traciuc)?|Дмитрий(?:\s+Трачук)?)\s*\n+(?:Senior Dispatcher|Старший диспетчер|Founder|DOROGO)[^\n]*\n+(?:(?:Lake Como|Lago di Como|Озеро Комо)[^\n]*\n*|(?:dmitri@dorogo\.eu|wa\.me)[^\n]*\n*)*/gi;
-
-  let cleanText = bodyWithoutOptout
-    .replace(SIG_BLOCK_RE, '')
-    .replace(/(?:Warm regards|Kind regards|Best regards|Un cordiale saluto|Cordiali saluti|С уважением),?[\s\S]*$/i, '')
-    .replace(/\n*(?:Dmitri(?:\s+Traciuc)?|Дмитрий(?:\s+Трачук)?)\s*\n+(?:Senior Dispatcher|Старший диспетчер|Founder|DOROGO)[\s\S]*$/i, '')
-    .replace(/\n*(?:Dmitri|Дмитрий)\s*\n+DOROGO\s*\|\s*dmitri@dorogo\.eu[\s\S]*$/i, '')
-    .trim();
+  let cleanText = stripSignOff(bodyWithoutOptout);
 
   if (!cleanText && bodyWithoutOptout) cleanText = bodyWithoutOptout;
 
