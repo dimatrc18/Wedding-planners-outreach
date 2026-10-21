@@ -438,6 +438,7 @@ export function render(el) {
     view: 'flow',
     hideClosed: false,
     onlyHighFit: false,
+    manualOnly: false,
     sort: 'score',
     preset: defaultPreset.key,
     steps: [...defaultPreset.steps],
@@ -490,6 +491,7 @@ export function render(el) {
   }
 
   function matchesFilters(p, hiddenStages) {
+    if (f.manualOnly && !isManualLead(p)) return false;
     if (hiddenStages.includes(p.status) && !isManualLead(p)) return false;
     if (f.onlyHighFit && core.priorityScore(p).score < MIN_FIT_SCORE) return false;
     if (f.q) {
@@ -513,13 +515,13 @@ export function render(el) {
     const src = activeData().prospects;
     const hidden = f.hideClosed ? ['lost', 'do_not_contact'] : [];
     if (src.length > 0 && src.filter((p) => matchesFilters(p, hidden)).length === 0) {
-      f.q = ''; f.market = ''; f.type = ''; f.segment = ''; f.location = ''; f.language = ''; f.tag = ''; f.onlyHighFit = false;
+      f.q = ''; f.market = ''; f.type = ''; f.segment = ''; f.location = ''; f.language = ''; f.tag = ''; f.onlyHighFit = false; f.manualOnly = false;
       save(f);
     }
   }
 
   function hasActiveFilters() {
-    return Boolean(f.q || f.market || f.type || f.segment || f.location || f.language || f.tag || f.onlyHighFit);
+    return Boolean(f.q || f.market || f.type || f.segment || f.location || f.language || f.tag || f.onlyHighFit || f.manualOnly);
   }
 
 
@@ -630,6 +632,7 @@ export function render(el) {
       ${tags.length ? `<select id="f-tag" aria-label="Tag"><option value="">All tags</option>${tags.map((t) => `<option ${f.tag === t ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>` : ''}
       <label class="check small" title="Hide leads scoring below 65/100"><input type="checkbox" id="f-highfit" ${f.onlyHighFit ? 'checked' : ''}> Only ≥ ${MIN_FIT_SCORE}/100 Fit</label>
       <label class="check small"><input type="checkbox" id="f-closed" ${f.hideClosed ? 'checked' : ''}> Hide Declined</label>
+      <label class="check small" title="Show only bounced or missing-email leads that require manual IG/WhatsApp contact"><input type="checkbox" id="f-manual" ${f.manualOnly ? 'checked' : ''}> 📱 Manual Contact</label>
       ${hasActiveFilters() || stageFilter !== 'all' ? `<button class="btn ghost sm" data-act="reset-filters">${icon('x', 14)} Reset filters</button>` : ''}
     </div>
 
@@ -796,13 +799,17 @@ export function render(el) {
       <section class="path-inspector" aria-label="Lead cards">
         <div class="path-inspector-head">
           <div>
-            <div class="row">
-              <h2>${hasSel || stageFilter !== 'all' ? 'Matching Partner Leads' : 'Partner Leads in Pipeline'} <span class="muted small">(${inspectorList.length})</span></h2>
-              ${hasSel || stageFilter !== 'all' ? `<button class="btn ghost sm" data-act="path-clear-selection">Show all (${list.length})</button>` : ''}
+            <div class="row" style="gap:8px;align-items:center">
+              <h2>${f.manualOnly ? '📱 Leads Needing Manual Contact' : (hasSel || stageFilter !== 'all' ? 'Matching Partner Leads' : 'Partner Leads in Pipeline')} <span class="muted small">(${inspectorList.length})</span></h2>
+              ${hasSel || stageFilter !== 'all' || f.manualOnly ? `<button class="btn ghost sm" data-act="path-clear-selection">Show all (${list.length})</button>` : ''}
             </div>
-            <div class="small muted">Each card shows the partner's Fit Score out of 100 (target ≥ ${MIN_FIT_SCORE}/100), contact info, and the next action.</div>
+            <div class="small muted">${f.manualOnly ? 'Leads with bounced emails or missing inboxes. Reach out directly via 1-click Instagram DM or WhatsApp.' : `Each card shows the partner's Fit Score out of 100 (target ≥ ${MIN_FIT_SCORE}/100), contact info, and the next action.`}</div>
           </div>
-          <div class="row">
+          <div class="row" style="gap:10px;align-items:center">
+            <button class="btn sm ${f.manualOnly ? 'primary' : 'ghost'}" data-act="toggle-manual-filter" title="Filter leads that bounced or require direct IG/WhatsApp outreach">
+              ${f.manualOnly ? '✓ Needs Manual Contact' : '📱 Needs Manual Contact'}
+              ${data.prospects.filter(isManualLead).length ? `<span class="chip ${f.manualOnly ? '' : 'warn'}" style="padding:1px 5px;font-size:.7rem">${data.prospects.filter(isManualLead).length}</span>` : ''}
+            </button>
             <label class="row small muted" style="gap:6px">
               <span>Sort by</span>
               <select id="f-sort" aria-label="Sort prospects" style="width:auto;padding:4px 8px;font-size:.8rem">
@@ -1672,6 +1679,7 @@ export function render(el) {
     const id = e.target.id;
     if (id === 'f-closed') f.hideClosed = e.target.checked;
     else if (id === 'f-highfit') f.onlyHighFit = e.target.checked;
+    else if (id === 'f-manual') f.manualOnly = e.target.checked;
     else if (id === 'f-sort') f.sort = e.target.value;
     else if (id && id.startsWith('f-') && id !== 'f-q') f[id.slice(2)] = e.target.value;
     else return;
@@ -1789,11 +1797,16 @@ export function render(el) {
       }
       return persist();
     }
+    if (act === 'toggle-manual-filter') {
+      f.manualOnly = !f.manualOnly;
+      return persist();
+    }
     if (act === 'path-clear-selection') {
       pushUndo();
       selectedPath = {};
       stageFilter = 'all';
-      return paint();
+      f.manualOnly = false;
+      return persist();
     }
     if (act === 'add-step' && f.steps.length < 5) {
       pushUndo();
@@ -1804,7 +1817,7 @@ export function render(el) {
       return persist();
     }
     if (act === 'reset-filters') {
-      f.q = ''; f.market = ''; f.type = ''; f.segment = ''; f.location = ''; f.language = ''; f.tag = ''; f.onlyHighFit = false;
+      f.q = ''; f.market = ''; f.type = ''; f.segment = ''; f.location = ''; f.language = ''; f.tag = ''; f.onlyHighFit = false; f.manualOnly = false;
       selectedPath = {};
       stageFilter = 'all';
       return persist();
