@@ -109,7 +109,7 @@ const JOURNEY_STEPS = [
     key: 'researching',
     num: '1',
     label: 'To Check',
-    sub: 'Find email & 1-line note',
+    sub: 'Find email & note',
     tone: 'muted',
     dropStage: 'researching',
     match: (p) => p.status === 'researching' && !isManualLead(p),
@@ -118,7 +118,7 @@ const JOURNEY_STEPS = [
     key: 'ready',
     num: '2',
     label: 'Ready to Email',
-    sub: 'Approved · drafts Email 1',
+    sub: 'Drafts ready',
     tone: 'gold',
     dropStage: 'ready',
     match: (p) => p.status === 'ready' && !isManualLead(p),
@@ -126,8 +126,8 @@ const JOURNEY_STEPS = [
   {
     key: 'cadence',
     num: '3',
-    label: 'Emailed (Waiting)',
-    sub: 'In 3-email sequence',
+    label: 'Emailed',
+    sub: 'In sequence',
     tone: 'info',
     dropStage: 't1_sent',
     match: (p) => ['t1_sent', 't2_sent', 't3_sent', 't4_sent'].includes(p.status) && !isManualLead(p),
@@ -136,7 +136,7 @@ const JOURNEY_STEPS = [
     key: 'engaged',
     num: '4',
     label: 'Talking & Quotes',
-    sub: 'Replied · send rates or quote',
+    sub: 'Replied · send rates',
     tone: 'gold',
     dropStage: 'replied',
     match: (p) => ['replied', 'rate_card_sent', 'in_conversation', 'quote_requested', 'fam_offered'].includes(p.status) && !isManualLead(p),
@@ -145,7 +145,7 @@ const JOURNEY_STEPS = [
     key: 'won',
     num: '5',
     label: 'Won Partners',
-    sub: 'Active referral partner',
+    sub: 'Active partner',
     tone: 'ok',
     dropStage: 'partner_won',
     match: (p) => p.status === 'partner_won',
@@ -154,7 +154,7 @@ const JOURNEY_STEPS = [
     key: 'manual',
     num: '📱',
     label: 'Manual Outreach',
-    sub: 'Bounced or No Email · IG/WA',
+    sub: 'Bounced · IG / WA',
     tone: 'warn',
     dropStage: 'manual',
     match: (p) => isManualLead(p),
@@ -163,7 +163,7 @@ const JOURNEY_STEPS = [
     key: 'closed',
     num: '·',
     label: 'Later / Closed',
-    sub: 'Next season or declined',
+    sub: 'Next season',
     tone: 'bad',
     dropStage: 'nurture',
     match: (p) => (['nurture', 'lost'].includes(p.status) || p.status === 'do_not_contact') && !isManualLead(p),
@@ -566,7 +566,7 @@ export function render(el) {
           const cnt = list.filter((p) => st.match(p)).length;
           const active = stageFilter === st.key;
           return `${idx > 0 && idx < 5 ? '<span class="journey-arrow" aria-hidden="true">→</span>' : idx === 5 ? '<span class="journey-arrow" style="opacity:0.35" aria-hidden="true">│</span>' : ''}
-          <button class="journey-step tone-${st.tone} ${active ? 'on' : ''}" data-stage-filter="${st.key}" data-drop-stage="${st.dropStage}" aria-pressed="${active}">
+          <button class="journey-step tone-${st.tone} ${active ? 'on' : ''}" data-stage-filter="${st.key}" data-drop-stage="${st.dropStage}" aria-pressed="${active}" title="${esc(st.label)} (${cnt}): ${esc(st.sub)}">
             <div class="j-top">
               <span class="j-badge">${st.num}</span>
               <span class="j-name">${esc(st.label)}</span>
