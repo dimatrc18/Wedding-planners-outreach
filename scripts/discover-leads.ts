@@ -51,11 +51,12 @@ const BUDGET_OR_UNRELATED_RE = /\b(low[- ]cost|economici|economico|budget\s+wedd
 
 const LUXURY_SIGNALS = [
   'luxury', 'bespoke', 'destination wedding', 'multi-day', 'exclusive', 'private villa',
-  'lake como', 'lago di como', 'vogue', 'harper', 'tatler', 'brides', 'style me pretty',
+  'lake como', 'lago di como', 'tuscany', 'toscana', 'florence', 'firenze', 'venice', 'venezia',
+  'vogue', 'harper', 'tatler', 'brides', 'style me pretty',
   'over the moon', 'matrimonio di lusso', 'ville esclusive', 'concierge', 'atelier', 'boutique',
 ];
 
-const REGION_KEYWORDS_RE = /\b(lake\s+como|lago\s+di\s+como|como|bellagio|tremezzina|cernobbio|menaggio|varenna|moltrasio|laglio|blevio|lenno|milan|milano|lake\s+maggiore|lago\s+maggiore|stresa|baveno|verbania|lake\s+garda|lago\s+di\s+garda|sirmione|desenzano|gardone|riva\s+del\s+garda|orta|orta\s+san\s+giulio|franciacorta|bergamo|monza|brianza|brescia|verona|venice|venezia|portofino|lombardy|lombardia|piedmont|piemonte|veneto|liguria|northern\s+italy|italian\s+lakes)\b/i;
+const REGION_KEYWORDS_RE = /\b(lake\s+como|lago\s+di\s+como|como|bellagio|tremezzina|cernobbio|menaggio|varenna|moltrasio|laglio|blevio|lenno|milan|milano|tuscany|toscana|florence|firenze|siena|chianti|lucca|val\s+d['’]orcia|cortona|arezzo|venice|venezia|lake\s+maggiore|lago\s+maggiore|stresa|baveno|verbania|lake\s+garda|lago\s+di\s+garda|sirmione|desenzano|gardone|riva\s+del\s+garda|orta|orta\s+san\s+giulio|franciacorta|bergamo|monza|brianza|brescia|verona|portofino|lombardy|lombardia|piedmont|piemonte|veneto|liguria|northern\s+italy|italian\s+lakes)\b/i;
 
 const REJECT_EMAIL_LOCAL_RE = /^(noreply|no-reply|donotreply|do-not-reply|privacy|gdpr|dpo|pec|fatturazione|billing|abuse|postmaster|webmaster|jobs|careers|hr|stagisti|stage)@/i;
 const REJECT_EMAIL_DOMAIN_RE = /(?:^|\.)(pec\.it|legalmail\.it|arubapec\.it|registerpec\.it|matrimonio\.com|weddingwire\.\w+|zankyou\.\w+|sentry\.io|wixpress\.com|example\.com)$/i;

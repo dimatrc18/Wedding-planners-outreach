@@ -36,7 +36,7 @@ test('2+1 thread split: T1 and T3 are in the same thread, T4 breakup starts a se
 
   assert.equal(d3.subject, `Re: ${d1.subject}`, 'T3 keeps Re: subject from T1');
   assert.ok(!d4.subject.startsWith('Re:'), 'T4 uses its own fresh subject line, not Re:');
-  assert.match(d4.subject, /Lake Como & Milan private guest transport|Guest transport on Lake Como/, 'T4 uses clean unbranded subject');
+  assert.match(d4.subject, /private guest transport|Guest transport/i, 'T4 uses clean unbranded subject');
   assert.deepEqual(d4.lint.errors, []);
 
   // Verify DOROGO Executive Email HTML signature (Version 1: Adaptive Wordmark & Version 2: Drawn Logo Badge)
@@ -286,9 +286,9 @@ test('MECE overhaul: Variant A (Intro), Variant B (Late returns), Variant C (Hot
     extraVars: { variant: 'B', hook: hookB },
   });
   assert.equal(draftB.variant, 'B');
-  assert.equal(draftB.subject, 'Late returns after the reception');
-  assert.match(draftB.body, /Late-night villa returns are where Lake Como weddings face the biggest friction/);
-  assert.match(draftB.body, /would having our 2027 partner rate card and shuttle circuits be useful for your file/);
+  assert.equal(draftB.subject, 'backup V-Class fleet for 2027');
+  assert.match(draftB.body, /Late-night returns are where Italian destination weddings face friction/);
+  assert.match(draftB.body, /2027 partner rate card and shuttle circuits/);
   assert.deepEqual(draftB.lint.errors, []);
   assert.deepEqual(draftB.lint.warnings, []);
 

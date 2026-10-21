@@ -72,15 +72,14 @@ function resolveVenueOrLocation(prospect = {}, agencyShort = '', lang = 'en') {
   if (distinctVenues[0]) return distinctVenues[0];
   if (loc && loc.toLowerCase() !== normAgency) return loc;
   if (venues[0] && venues[0].toLowerCase() !== normAgency) return venues[0];
-  return lang === 'it' ? 'Lago di Como e Nord Italia' : lang === 'ru' ? 'озеро Комо и Северная Италия' : 'Lake Como & Northern Italy';
+  return lang === 'it' ? 'Lago di Como, Toscana, Venezia e Nord Italia' : lang === 'ru' ? 'озеро Комо, Тоскана, Венеция и Северная Италия' : 'Lake Como, Tuscany, Venice & Northern Italy';
 }
 
 function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lang = 'en', variant = 'A') {
   const type = prospect.type === 'wedding_planner' ? 'planner' : (prospect.type || 'planner');
-  const idx = stableHashIndex(`${prospect.id || ''}:${prospect.agency_name || ''}`, 3);
   const hookText = String(prospect.personalization_hook || '');
   const isHookVariantB = /^(The hardest part of a Lake Como wedding's transport|La parte più complessa dei trasporti|Самая сложная часть логистики)/i.test(hookText);
-  const effectiveVariant = isHookVariantB ? 'B' : (variant === 'B' ? 'B' : 'A');
+  const effectiveVariant = isHookVariantB ? 'B' : (variant === 'B' ? 'B' : (variant === 'C' ? 'C' : 'A'));
 
   if (lang === 'ru') {
     if (type === 'venue' || type === 'concierge_hotel') {
@@ -88,37 +87,41 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       return {
         subject_line_a: `Трансферы гостей для ${targetVenue}`,
         subject_line_b: 'Аэропортовые трансферы и шаттлы для отелей',
+        subject_line_c: 'Прямой контакт с автопарком: трансферы гостей',
         service_pitch:
-          `Мы организуем трансферы из аэропорта Мальпенса и шаттлы для гостей отелей и вилл в ${targetVenue}. Работаем на собственном представительском парке Mercedes-Benz V-Class и S-Class, а также проверенных минибусах до 50 мест с прямым координатором в WhatsApp.`,
+          `Мы организуем трансферы из аэропортов (Мальпенса, Линате, Венеция, Флоренция) и шаттлы для гостей отелей и вилл в ${targetVenue}. Работаем на собственном представительском парке Mercedes-Benz V-Class и S-Class, а также комфортабельных минибусах до 50 мест с прямым координатором в WhatsApp на озере Комо, в Милане, Тоскане и Венеции.`,
         cta_line:
           'Если вашему консьерж-сервису полезно иметь прямой контакт с парком на сезон, напишите мне здесь или в WhatsApp, и я отправлю наш партнерский тариф.',
       };
     }
 
-    const ruSubjectsA = [
-      'Трансферы гостей на озере Комо / 2027',
-      'вопрос по трансферам на озере Комо',
-      'резерв V-Class на озере Комо',
-    ];
+    const ruAgency = agencyShort || prospect.agency_name || 'Партнер';
+    const ruSubjects = {
+      a: `DOROGO x ${ruAgency}`,
+      b: 'резервный парк Mercedes V-Class / 2027',
+      c: 'вопрос по трансферам гостей',
+    };
 
     if (effectiveVariant === 'B') {
       return {
-        subject_line_a: ruSubjectsA[idx],
-        subject_line_b: 'Ночной разъезд гостей после свадебного ужина',
+        subject_line_a: ruSubjects.a,
+        subject_line_b: ruSubjects.b,
+        subject_line_c: ruSubjects.c,
         service_pitch:
-          'Ночной разъезд гостей — самый сложный момент свадебной логистики на озере Комо: узкие подъезды к виллам, гости живут в разных городках по побережью, а такси после полуночи отсутствует. Мы работаем на собственном автопарке Mercedes-Benz V-Class и S-Class прямо на озере, привлекаем минибусы до 50 мест и выделяем персонального координатора в WhatsApp на каждое мероприятие.',
+          'Ночной разъезд гостей — самый сложный момент свадебной логистики на виллах: узкие подъезды, гости живут в разных городках по побережью или холмам, а такси после полуночи отсутствует. Мы работаем на собственном автопарке Mercedes-Benz V-Class и S-Class на озере Комо, в Милане, Тоскане и Венеции, привлекаем минибусы до 50 мест и выделяем персонального координатора в WhatsApp на каждое мероприятие.',
         cta_line:
           'Если на предстоящих датах требуется надежный ночной разъезд или трансферы гостей, отправить вам схему шаттлов и наш партнерский лист тарифов, или логистика уже закрыта?',
       };
     }
 
     return {
-      subject_line_a: ruSubjectsA[idx],
-      subject_line_b: 'Ночной разъезд гостей после свадебного ужина',
+      subject_line_a: ruSubjects.a,
+      subject_line_b: ruSubjects.b,
+      subject_line_c: ruSubjects.c,
       service_pitch:
-        'Мы базируем собственный парк Mercedes-Benz V-Class и S-Class на озере Комо, плюс привлекаем проверенные минибусы до 50 мест. Мы не стремимся заменить ваших основных перевозчиков, но на пиковые даты, когда парк перегружен, мы держим резервные слоты для партнерских студий.',
+        'Мы организуем трансферы гостей на собственном автопарке представительских Mercedes-Benz V-Class и S-Class, а также комфортабельных минибусах до 50 мест на озере Комо, в Милане, Тоскане и Венеции. Мы не стремимся заменить ваших основных перевозчиков, но на пиковые даты, когда парк перегружен, мы держим резервные слоты для партнерских студий.',
       cta_line:
-        'Отправить вам наш партнерский лист тарифов на 2027 год и схему ночных шаттлов, или у вас уже закрыты трансферы на озере?',
+        'Отправить вам наш партнерский лист тарифов на 2027 год и схему шаттлов, или у вас уже закрыты трансферы на сезон?',
     };
   }
 
@@ -128,37 +131,41 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       return {
         subject_line_a: 'Transfer ospiti per il vostro team eventi',
         subject_line_b: 'Transfer aeroportuali e navette di gruppo',
+        subject_line_c: 'Contatto diretto flotta: transfer per ospiti',
         service_pitch:
-          `Gestiamo transfer aeroportuali e navette per gli ospiti degli hotel e delle ville a ${targetVenue}. Operiamo con Mercedes-Benz Classe V e Classe S di nostra proprietà sul Lago di Como, Milano e nel Nord Italia, affiancate da partner selezionati per minibus e bus fino a 50 posti, con coordinamento diretto via WhatsApp.`,
+          `Gestiamo transfer aeroportuali e navette per gli ospiti degli hotel e delle ville a ${targetVenue}. Operiamo con Mercedes-Benz Classe V e Classe S di nostra proprietà tra Milano, Lago di Como, Toscana e Venezia, affiancate da partner selezionati per minibus e bus fino a 50 posti, con coordinamento diretto via WhatsApp.`,
         cta_line:
           'Se vi è utile avere una flotta di riferimento per la stagione, rispondetemi qui o su WhatsApp e vi condivido il listino riservato.',
       };
     }
 
-    const itSubjectsA = [
-      'Transfer ospiti Lago di Como / 2027',
-      'breve domanda sui transfer a Como',
-      'disponibilità flotta Classe V sul lago',
-    ];
+    const itAgency = agencyShort || prospect.agency_name || 'Partner';
+    const itSubjects = {
+      a: `DOROGO x ${itAgency}`,
+      b: 'flotta Mercedes di supporto per il 2027',
+      c: 'breve domanda sulla gestione transfer',
+    };
 
     if (effectiveVariant === 'B') {
       return {
-        subject_line_a: itSubjectsA[idx],
-        subject_line_b: 'Rientri notturni dopo il ricevimento',
+        subject_line_a: itSubjects.a,
+        subject_line_b: itSubjects.b,
+        subject_line_c: itSubjects.c,
         service_pitch:
-          'Il rientro notturno è il momento più critico per i matrimoni sul Lago di Como: accessi stretti alle ville, ospiti distribuiti su diversi paesi del lago e nessun taxi disponibile a notte fonda. Operiamo con una flotta Mercedes-Benz Classe V e Classe S di proprietà basata sul lago, più minibus fino a 50 posti e un referente operativo dedicato su WhatsApp per ogni evento.',
+          'Il rientro notturno è il momento più critico per i matrimoni nelle ville: accessi stretti, ospiti distribuiti su diversi paesi e nessun taxi disponibile a notte fonda. Operiamo con una flotta Mercedes-Benz Classe V e Classe S di proprietà attiva tra Lago di Como, Milano, Toscana e Venezia, più minibus fino a 50 posti e un referente operativo dedicato su WhatsApp per ogni evento.',
         cta_line:
-          'Se avete un matrimonio con transfer complessi o rientri notturni dalle ville, può esservi utile ricevere il piano navette e il nostro listino riservato, o avete già fornitori fissi sul lago?',
+          'Se avete un matrimonio con transfer complessi o rientri notturni dalle ville, può esservi utile ricevere il piano navette e il nostro listino riservato, o avete già fornitori fissi?',
       };
     }
 
     return {
-      subject_line_a: itSubjectsA[idx],
-      subject_line_b: 'Rientri notturni dopo il ricevimento',
+      subject_line_a: itSubjects.a,
+      subject_line_b: itSubjects.b,
+      subject_line_c: itSubjects.c,
       service_pitch:
-        'Operiamo con una flotta Mercedes-Benz Classe V e Classe S basata sul Lago di Como, più minibus fino a 50 posti. Non cerchiamo di sostituire i vostri autisti di fiducia, ma nelle date di punta in cui le disponibilità sul lago scarseggiano, riserviamo disponibilità di flotta per le agenzie partner.',
+        'Operiamo con una flotta Mercedes-Benz Classe V e Classe S basata sul Lago di Como e attiva a Milano, in Toscana e a Venezia, più minibus fino a 50 posti. Non cerchiamo di sostituire i vostri autisti di fiducia, ma nelle date di punta in cui le disponibilità scarseggiano, riserviamo disponibilità di flotta per le agenzie partner.',
       cta_line:
-        'Può esservi utile ricevere il nostro listino riservato 2027 e lo schema dei circuiti villa, o avete già fornitori fissi sul lago?',
+        'Può esservi utile ricevere il nostro listino riservato 2027 e lo schema dei circuiti villa, o avete già fornitori fissi?',
     };
   }
 
@@ -168,38 +175,41 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
     return {
       subject_line_a: 'Guest transfers for your events team',
       subject_line_b: 'Airport transfers and group shuttles',
+      subject_line_c: 'Direct fleet contact: event guest transfers',
       service_pitch:
-        `How does your team handle airport runs and group shuttles around ${targetVenue}? We operate executive Mercedes-Benz V-Class and S-Class vehicles directly across Lake Como, Milan, and Northern Italy, plus vetted partner minibuses up to 50 seats for large wedding parties, with one dedicated lead on WhatsApp.`,
+        `How does your team handle airport runs and group shuttles around ${targetVenue}? We operate executive Mercedes-Benz V-Class and S-Class vehicles directly across Lake Como, Milan, Tuscany, Venice, and Northern Italy, plus vetted partner minibuses up to 50 seats for large wedding parties, with one dedicated lead on WhatsApp.`,
       cta_line:
         'Reply here or text me on WhatsApp and I will send our rate card and vehicle guide.',
     };
   }
 
-  // English MECE Variant A (Introduction) vs Variant B (Late Returns After the Reception)
-  const plannerSubjectsA = [
-    'Lake Como guest transfers / 2027',
-    'quick question about Lake Como transport',
-    'backup V-Class fleet on Lake Como',
-  ];
+  const enAgency = agencyShort || prospect.agency_name || 'Partner';
+  const enSubjects = {
+    a: `DOROGO x ${enAgency}`,
+    b: 'backup V-Class fleet for 2027',
+    c: 'quick question re: guest transport',
+  };
 
   if (effectiveVariant === 'B') {
     return {
-      subject_line_a: plannerSubjectsA[idx],
-      subject_line_b: 'Late returns after the reception',
+      subject_line_a: enSubjects.a,
+      subject_line_b: enSubjects.b,
+      subject_line_c: enSubjects.c,
       service_pitch:
-        'Late-night villa returns are where Lake Como weddings face the biggest friction: narrow access, guests in scattered hotels, and zero taxis past midnight. We operate an executive Mercedes-Benz V-Class and S-Class fleet on the lake, plus vetted minibuses up to 50 seats, with one dedicated fleet lead on WhatsApp.',
+        'Late-night returns are where Italian destination weddings face friction: narrow access, scattered hotels, and zero taxis past midnight. We operate executive Mercedes-Benz V-Class and S-Class vehicles across Lake Como, Milan, Tuscany, and Venice, plus vetted minibuses up to 50 seats, with one fleet lead on WhatsApp.',
       cta_line:
-        'If an upcoming date has tight guest logistics or late-night returns, would having our 2027 partner rate card and shuttle circuits be useful for your file, or do you already have fixed transfer partners on the lake?',
+        'If an upcoming date has tight guest logistics, would having our 2027 partner rate card and shuttle circuits be useful for your file, or are transfers already arranged?',
     };
   }
 
   return {
-    subject_line_a: plannerSubjectsA[idx],
-    subject_line_b: 'Late returns after the reception',
+    subject_line_a: enSubjects.a,
+    subject_line_b: enSubjects.b,
+    subject_line_c: enSubjects.c,
     service_pitch:
-      'We operate an executive Mercedes-Benz V-Class and S-Class fleet based on Lake Como, plus vetted minibuses up to 50 seats. We are not looking to replace your usual drivers, but on peak summer dates when villa schedules exceed capacity, we hold dedicated backup fleet slots on reserve for partner studios.',
+      'We operate an executive Mercedes-Benz V-Class and S-Class fleet based on Lake Como and active across Milan, Tuscany, and Venice, plus vetted minibuses up to 50 seats. We are not looking to replace your usual drivers, but on peak summer dates when villa schedules exceed capacity, we hold dedicated backup fleet slots on reserve for partner studios.',
     cta_line:
-      'Would having our 2027 partner rate card and villa shuttle circuits be useful for your file, or do you already have fixed transfer partners on the lake?',
+      'Would having our 2027 partner rate card and villa shuttle circuits be useful for your file, or do you already have fixed transfer partners in Italy?',
   };
 }
 
@@ -207,7 +217,7 @@ export function buildVars(prospect, extra = {}) {
   const lang = ['it', 'ru'].includes(prospect.language) ? prospect.language : 'en';
   const agency_short = shortAgencyName(prospect.agency_name, lang);
   const venue_or_location = resolveVenueOrLocation(prospect, agency_short, lang);
-  const variant = extra.variant === 'B' ? 'B' : 'A';
+  const variant = ['A', 'B', 'C'].includes(extra.variant) ? extra.variant : 'A';
   const tailored = buildTailoredCopy(prospect, agency_short, venue_or_location, lang, variant);
   const sig = lang === 'it' ? SIGNATURE_IT : lang === 'ru' ? SIGNATURE_RU : SIGNATURE;
   const cleanHook = cleanPersonalizationHook(prospect.personalization_hook);
@@ -219,6 +229,7 @@ export function buildVars(prospect, extra = {}) {
     venue_or_location,
     subject_line_a: tailored.subject_line_a,
     subject_line_b: tailored.subject_line_b,
+    subject_line_c: tailored.subject_line_c,
     service_pitch: tailored.service_pitch,
     cta_line: tailored.cta_line,
     hook: cleanHook,
@@ -231,7 +242,6 @@ export function buildVars(prospect, extra = {}) {
     ...extra,
   };
 }
-
 
 // Replace {{var}} with a non-empty value; leave the placeholder otherwise so the linter can flag it.
 export function merge(text = '', vars = {}) {
@@ -252,11 +262,15 @@ export function pickTemplate(templates, key, language = 'en') {
   return dbList.find((t) => t.language === 'en') || defList.find((t) => t.language === 'en') || null;
 }
 
-// Stable A/B split per prospect, so a prospect never sees both subject variants.
+// Stable A/B/C split per prospect, so a prospect never sees both subject variants.
 export function assignVariant(seed, template) {
-  if (!template || !template.subject_b) return 'A';
   let h = 2166136261;
-  for (const c of String(seed)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); }
+  for (const c of String(seed || 'dorogo')) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); }
+  if (template && template.subject_c) {
+    const rem = (h >>> 0) % 3;
+    return rem === 0 ? 'A' : (rem === 1 ? 'B' : 'C');
+  }
+  if (!template || !template.subject_b) return 'A';
   return (h >>> 0) % 2 === 0 ? 'A' : 'B';
 }
 
@@ -276,12 +290,14 @@ export function buildDraft({ prospect, key, templates, threadSubject = '', step 
     : /^(I'm Dmitri from DOROGO|Sono Dmitri di DOROGO|Я Дмитрий из компании DOROGO)/i.test(hookText)
       ? 'A'
       : null;
-  const variant = extraVars.variant === 'A' || extraVars.variant === 'B'
+  const variant = ['A', 'B', 'C'].includes(extraVars.variant)
     ? extraVars.variant
     : (inferredHookVariant || assignVariant(prospect.id, t));
   const vars = buildVars(prospect, { variant, ...extraVars });
   const threaded = (step && step.thread) || t.kind === 'reply' || t.kind === 'nudge';
-  const rawSubject = variant === 'B' ? t.subject_b : t.subject_a;
+  const rawSubject = variant === 'C'
+    ? (t.subject_c || vars.subject_line_c || t.subject_a || vars.subject_line_a)
+    : (variant === 'B' ? (t.subject_b || vars.subject_line_b) : (t.subject_a || vars.subject_line_a));
   let subject = threaded && threadSubject ? reSubject(threadSubject) : merge(rawSubject || '', vars);
   if (!subject && threaded) subject = reSubject(threadSubject);
   const channel = 'email';

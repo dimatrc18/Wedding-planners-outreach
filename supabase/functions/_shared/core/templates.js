@@ -9,6 +9,7 @@ export const DEFAULT_TEMPLATES = [
     key: 'T1_intro', language: 'en', kind: 'sequence', name: 'Step 1 (Intro email)',
     subject_a: '{{subject_line_a}}',
     subject_b: '{{subject_line_b}}',
+    subject_c: '{{subject_line_c}}',
     body: `{{greeting}}
 
 {{hook}}
@@ -31,11 +32,11 @@ Would it be helpful if I shared our confidential partner rate card and vehicle o
   },
   {
     key: 'T4_breakup', language: 'en', kind: 'sequence', name: 'Step 3 (Follow-up 2 · Final note)',
-    subject_a: 'Lake Como & Milan private guest transport',
-    subject_b: 'Guest transport on Lake Como',
+    subject_a: 'Lake Como, Tuscany & Venice private guest transport',
+    subject_b: 'Executive guest transport in Italy',
     body: `{{greeting}}
 
-Last note from me so I do not crowd your inbox. Whenever you need guest transport for a Lake Como or Milan date, feel free to message me on WhatsApp or reply here.
+Last note from me so I do not crowd your inbox. Whenever you need guest transport for Lake Como, Milan, Tuscany, or Venice, feel free to message me on WhatsApp or reply here.
 
 Wishing you a calm, successful season.
 
@@ -46,6 +47,7 @@ Wishing you a calm, successful season.
     key: 'T1_intro', language: 'it', kind: 'sequence', name: 'Step 1 (Email di presentazione)',
     subject_a: '{{subject_line_a}}',
     subject_b: '{{subject_line_b}}',
+    subject_c: '{{subject_line_c}}',
     body: `{{greeting}}
 
 {{hook}}
@@ -68,11 +70,11 @@ Vi farebbe piacere ricevere la nostra scheda tariffe partner riservata e la pano
   },
   {
     key: 'T4_breakup', language: 'it', kind: 'sequence', name: 'Step 3 (Follow-up 2 · Chiusura)',
-    subject_a: 'Trasporti privati Lago di Como e Milano',
-    subject_b: 'Transfer ospiti Lago di Como',
+    subject_a: 'Trasporti privati Lago di Como, Toscana e Venezia',
+    subject_b: 'Transfer ospiti in Italia',
     body: `{{greeting}}
 
-Chiudo qui per non affollare la vostra casella. Quando vi servirà supporto per i trasferimenti ospiti sul Lago di Como o a Milano, scrivetemi pure su WhatsApp o rispondete qui.
+Chiudo qui per non affollare la vostra casella. Quando vi servirà supporto per i trasferimenti ospiti tra Lago di Como, Milano, Toscana o Venezia, scrivetemi pure su WhatsApp o rispondete qui.
 
 Buona stagione.
 
@@ -83,6 +85,7 @@ Buona stagione.
     key: 'T1_intro', language: 'ru', kind: 'sequence', name: 'Step 1 (Email знакомства)',
     subject_a: '{{subject_line_a}}',
     subject_b: '{{subject_line_b}}',
+    subject_c: '{{subject_line_c}}',
     body: `{{greeting}}
 
 {{hook}}
@@ -105,11 +108,11 @@ Buona stagione.
   },
   {
     key: 'T4_breakup', language: 'ru', kind: 'sequence', name: 'Step 3 (Follow-up 2 · Финальное письмо)',
-    subject_a: 'Трансферы гостей: озеро Комо и Северная Италия',
+    subject_a: 'Трансферы гостей: озеро Комо, Тоскана и Венеция',
     subject_b: 'Трансферы гостей в Италии',
     body: `{{greeting}}
 
-Пишу в последний раз, чтобы не перегружать вашу почту. Если для свадеб на озере Комо, в Милане или Северной Италии понадобится надежный транспорт для гостей, напишите мне в WhatsApp или ответьте на это письмо.
+Пишу в последний раз, чтобы не перегружать вашу почту. Если для свадеб на озере Комо, в Милане, Тоскане или Венеции понадобится надежный транспорт для гостей, напишите мне в WhatsApp или ответьте на это письмо.
 
 Успешного и спокойного сезона.
 
