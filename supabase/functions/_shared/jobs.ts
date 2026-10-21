@@ -233,8 +233,11 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
       const attachments = rcAtt ? [rcAtt] : [];
       const pixelUrl = settings.track_opens ? `${env('SUPABASE_URL')}/functions/v1/outreach-api?open=${t.id}` : null;
       const targetTo = t.to_address || (t.step_name === 'reply' && lastInbound?.from_address ? lastInbound.from_address : p.email);
+      const fromName = prospectLang === 'ru' ? 'Дмитрий | DOROGO Transfers' : 'Dmitri | DOROGO Transfers';
+      const html = core.renderDorogoLuxuryHtmlEmail(t.body, { lang: prospectLang, fromEmail, pixelUrl, footerStyle: settings.email_footer_style || 'wordmark' });
       const { messageId, raw } = await sendMail({
-        fromName, fromEmail, replyTo: settings.sender?.reply_to || fromEmail, to: targetTo, subject: t.subject, text: t.body,
+        fromName, fromEmail, replyTo: settings.sender?.reply_to || fromEmail, to: targetTo, subject: t.subject, text: t.body, html,
+        lang: prospectLang,
         inReplyTo, references: threaded ? thread.map((x: any) => x.message_id).slice(-10) : [], attachments, pixelUrl,
         footerStyle: settings.email_footer_style || 'wordmark',
       });

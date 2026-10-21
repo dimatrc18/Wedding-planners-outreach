@@ -307,11 +307,14 @@ export const EMAIL_ASSETS_BASE = 'https://qjarhdrrbjeeqbhfgmnp.supabase.co/stora
  */
 export function renderDorogoLuxuryHtmlEmail(
   textContent = '',
-  { fromEmail = 'dmitri@dorogo.eu', pixelUrl = null, footerStyle = 'wordmark' } = {}
+  { fromEmail = 'dmitri@dorogo.eu', pixelUrl = null, footerStyle = 'wordmark', lang = null } = {}
 ) {
   const raw = String(textContent || '').trim();
-  const isIt = /Un cordiale saluto|Buongiorno|rispondere "no"|nessun problema, basta farmelo sapere/i.test(raw);
-  const isRu = /Здравствуйте|Добрый день|С уважением|дайте знать|никаких вопросов|Трачук/i.test(raw);
+  const detectedRu = /Здравствуйте|Добрый день|С уважением|дайте знать|никаких вопросов|Трачук|Комо|Милан|разъезд/i.test(raw);
+  const detectedIt = /Un cordiale saluto|Buongiorno|rispondere "no"|nessun problema, basta farmelo sapere|Lago di Como/i.test(raw);
+  const effectiveLang = (lang === 'ru' || lang === 'it' || lang === 'en') ? lang : (detectedRu ? 'ru' : detectedIt ? 'it' : 'en');
+  const isIt = effectiveLang === 'it';
+  const isRu = effectiveLang === 'ru';
 
   // Separate opt-out line if present at the bottom
   let optoutText = '';
@@ -413,7 +416,7 @@ export function renderDorogoLuxuryHtmlEmail(
   const brandBlock = footerStyle === 'badge' ? badgeBrandHtml : wordmarkBrandHtml;
 
   return `<!DOCTYPE html>
-<html lang="${isIt ? 'it' : 'en'}" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<html lang="${effectiveLang}" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
