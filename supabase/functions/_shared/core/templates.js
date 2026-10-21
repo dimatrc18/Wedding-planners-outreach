@@ -20,12 +20,12 @@ export const DEFAULT_TEMPLATES = [
 {{optout}}`,
   },
   {
-    key: 'T3_followup', language: 'en', kind: 'sequence', name: 'Step 2 (Follow-up 1: Route & Vehicle Fit)', subject_a: '', subject_b: '',
+    key: 'T3_followup', language: 'en', kind: 'sequence', name: 'Step 2 (Follow-up 1: Genuine Partner Fit)', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
-One logistical detail worth adding for your {{venue}} weddings: rather than your team spending unbillable hours building arrival spreadsheets for 80+ guests, you can forward us your guest flight list and our dispatch desk clusters them into shared Mercedes-Benz V-Classes, monitors live Malpensa delays, and shares a live master manifest.
+I wanted to make sure you saw my previous note regarding guest transport for your {{venue}} weddings. We see your team as a genuine potential partner for our fleet, and we do not reach out like this to everyone.
 
-We also run 16 to 50-seat minibuses for larger groups. If transport ever gets tight on an upcoming date, feel free to message me on WhatsApp or reply here.
+Would it be helpful if I shared our confidential partner rate card and vehicle overview?
 
 {{optout}}`,
   },
@@ -57,12 +57,12 @@ Wishing you a calm, successful season.
 {{optout}}`,
   },
   {
-    key: 'T3_followup', language: 'it', kind: 'sequence', name: 'Step 2 (Follow-up 1: Flotta e Portale)', subject_a: '', subject_b: '',
+    key: 'T3_followup', language: 'it', kind: 'sequence', name: 'Step 2 (Follow-up 1: Partner Speciale)', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
-Un dettaglio operativo per i vostri matrimoni a {{venue}}: anziché farvi impiegare ore a incrociare fogli Excel per gli arrivi degli ospiti, potete semplicemente inoltrarci la lista dei voli e la nostra centrale organizza le navette Mercedes-Benz Classe V condivise, monitorando i ritardi a Malpensa in tempo reale.
+Volevo solo assicurarmi che vi sia arrivata la nostra mail precedente sui trasferimenti per i vostri matrimoni a {{venue}}. Vediamo la vostra agenzia come un partner davvero speciale per la nostra flotta, e non scriviamo questo a tutti.
 
-Disponiamo inoltre di minibus da 16 a 50 posti per i gruppi più numerosi. Se dovesse servirvi supporto su una data intensa, scrivetemi pure su WhatsApp o rispondete a questa mail.
+Vi farebbe piacere ricevere la nostra scheda tariffe partner riservata e la panoramica della flotta?
 
 {{optout}}`,
   },
@@ -94,12 +94,12 @@ Buona stagione.
 {{optout}}`,
   },
   {
-    key: 'T3_followup', language: 'ru', kind: 'sequence', name: 'Step 2 (Follow-up 1: Автопарк и логистика)', subject_a: '', subject_b: '',
+    key: 'T3_followup', language: 'ru', kind: 'sequence', name: 'Step 2 (Follow-up 1: Партнерский интерес)', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
-Полезная деталь для ваших свадеб в {{venue}}: чтобы ваши координаторы не тратили часы на составление таблиц прилета гостей в Excel, вы можете просто переслать нам список рейсов. Наш диспетчерский центр сам группирует гостей по Mercedes-Benz V-Class, отслеживает задержки рейсов в Мальпенсе и ведет единую ведомость.
+Хотел убедиться, что вы получили мое предыдущее письмо по трансферам для ваших свадеб в {{venue}}. Мы видим в вашем агентстве действительно сильного потенциального партнера для нашего автопарка, и мы точно не пишем такие слова всем подряд.
 
-Для больших групп мы также предоставляем комфортабельные минибусы от 16 до 50 мест. Если на ближайших датах потребуется поддержка с транспортом, напишите мне в WhatsApp или ответьте на это письмо.
+Будет ли вам удобно взглянуть на наш партнерский прайс-лист и презентацию автопарка?
 
 {{optout}}`,
   },

@@ -214,7 +214,7 @@ create policy "outreach bucket allowed users" on storage.objects for all to auth
 alter publication supabase_realtime add table public.touches, public.prospects;
 
 -- ---------------- Seed ----------------
-insert into public.outreach_settings (id, data) values (1, '{"kill_switch":false,"timezone":"Europe/Rome","send_days":[2,3,4],"window_start":"09:00","window_end":"11:30","daily_cap":12,"warmup":{"enabled":true,"start":6,"weekly_increment":3},"jitter_min":4,"jitter_max":11,"season_mode":"auto","bounce_pause_rate":0.03,"bounce_min_sample":15,"steps":[{"key":"T1_intro","label":"Step 1 (Intro email)","day":0,"channel":"email","thread":false,"require_approval":false,"enabled":true},{"key":"T3_followup","label":"Step 2 (Follow-up 1)","day":4,"channel":"email","thread":true,"require_approval":true,"enabled":true},{"key":"T4_breakup","label":"Step 3 (Follow-up 2 · disabled)","day":9,"channel":"email","thread":false,"require_approval":true,"enabled":false}],"sender":{"name":"Dmitri","email":"dmitri@dorogo.eu","reply_to":"dmitri@dorogo.eu"},"track_opens":false,"stale_days":10,"ratecard_nudge_days":5,"human_escalation_hours":2,"nurture_month_day":"10-01","targets":{"open_rate":0.5,"positive_reply_rate":0.1,"positive_reply_rate_high":0.15,"ratecard_to_quote":0.25,"partners_won":5,"partners_won_high":10},"avg_wedding_transport_value":10000,"commission_rate":0.1}'::jsonb) on conflict (id) do nothing;
+insert into public.outreach_settings (id, data) values (1, '{"kill_switch":false,"timezone":"Europe/Rome","send_days":[2,3,4],"window_start":"09:00","window_end":"11:30","daily_cap":12,"warmup":{"enabled":true,"start":6,"weekly_increment":3},"jitter_min":4,"jitter_max":11,"season_mode":"auto","bounce_pause_rate":0.03,"bounce_min_sample":15,"steps":[{"key":"T1_intro","label":"Step 1 (Intro email)","day":0,"channel":"email","thread":false,"require_approval":false,"enabled":true},{"key":"T3_followup","label":"Step 2 (Follow-up 1)","day":4,"channel":"email","thread":true,"require_approval":false,"enabled":true},{"key":"T4_breakup","label":"Step 3 (Follow-up 2 · disabled)","day":9,"channel":"email","thread":false,"require_approval":true,"enabled":false}],"sender":{"name":"Dmitri","email":"dmitri@dorogo.eu","reply_to":"dmitri@dorogo.eu"},"track_opens":false,"stale_days":10,"ratecard_nudge_days":5,"human_escalation_hours":2,"nurture_month_day":"10-01","targets":{"open_rate":0.5,"positive_reply_rate":0.1,"positive_reply_rate_high":0.15,"ratecard_to_quote":0.25,"partners_won":5,"partners_won_high":10},"avg_wedding_transport_value":10000,"commission_rate":0.1}'::jsonb) on conflict (id) do nothing;
 
 insert into public.templates (key, language, kind, name, subject_a, subject_b, body, attach_rate_card) values
 ('T1_intro', 'en', 'sequence', 'Step 1 (Intro email)', '{{subject_line_a}}', '{{subject_line_b}}', '{{greeting}}
@@ -228,11 +228,11 @@ insert into public.templates (key, language, kind, name, subject_a, subject_b, b
 {{signature}}
 
 {{optout}}', false),
-('T3_followup', 'en', 'sequence', 'Step 2 (Follow-up 1: Route & Vehicle Fit)', '', '', '{{greeting}}
+('T3_followup', 'en', 'sequence', 'Step 2 (Follow-up 1: Genuine Partner Fit)', '', '', '{{greeting}}
 
-One logistical detail worth adding for your {{venue}} weddings: rather than your team spending unbillable hours building arrival spreadsheets for 80+ guests, you can forward us your guest flight list and our dispatch desk clusters them into shared Mercedes-Benz V-Classes, monitors live Malpensa delays, and shares a live master manifest.
+I wanted to make sure you saw my previous note regarding guest transport for your {{venue}} weddings. We see your team as a genuine potential partner for our fleet, and we do not reach out like this to everyone.
 
-We also run 16 to 50-seat minibuses for larger groups. If transport ever gets tight on an upcoming date, feel free to message me on WhatsApp or reply here.
+Would it be helpful if I shared our confidential partner rate card and vehicle overview?
 
 {{signature}}
 
@@ -257,11 +257,11 @@ Wishing you a calm, successful season.
 {{signature}}
 
 {{optout}}', false),
-('T3_followup', 'it', 'sequence', 'Step 2 (Follow-up 1: Flotta e Portale)', '', '', '{{greeting}}
+('T3_followup', 'it', 'sequence', 'Step 2 (Follow-up 1: Partner Speciale)', '', '', '{{greeting}}
 
-Un dettaglio operativo per i vostri matrimoni a {{venue}}: anziché farvi impiegare ore a incrociare fogli Excel per gli arrivi degli ospiti, potete semplicemente inoltrarci la lista dei voli e la nostra centrale organizza le navette Mercedes-Benz Classe V condivise, monitorando i ritardi a Malpensa in tempo reale.
+Volevo solo assicurarmi che vi sia arrivata la nostra mail precedente sui trasferimenti per i vostri matrimoni a {{venue}}. Vediamo la vostra agenzia come un partner davvero speciale per la nostra flotta, e non scriviamo questo a tutti.
 
-Disponiamo inoltre di minibus da 16 a 50 posti per i gruppi più numerosi. Se dovesse servirvi supporto su una data intensa, scrivetemi pure su WhatsApp o rispondete a questa mail.
+Vi farebbe piacere ricevere la nostra scheda tariffe partner riservata e la panoramica della flotta?
 
 {{signature}}
 
@@ -286,11 +286,11 @@ Buona stagione.
 {{signature}}
 
 {{optout}}', false),
-('T3_followup', 'ru', 'sequence', 'Step 2 (Follow-up 1: Автопарк и логистика)', '', '', '{{greeting}}
+('T3_followup', 'ru', 'sequence', 'Step 2 (Follow-up 1: Партнерский интерес)', '', '', '{{greeting}}
 
-Полезная деталь для ваших свадеб в {{venue}}: чтобы ваши координаторы не тратили часы на составление таблиц прилета гостей в Excel, вы можете просто переслать нам список рейсов. Наш диспетчерский центр сам группирует гостей по Mercedes-Benz V-Class, отслеживает задержки рейсов в Мальпенсе и ведет единую ведомость.
+Хотел убедиться, что вы получили мое предыдущее письмо по трансферам для ваших свадеб в {{venue}}. Мы видим в вашем агентстве действительно сильного потенциального партнера для нашего автопарка, и мы точно не пишем такие слова всем подряд.
 
-Для больших групп мы также предоставляем комфортабельные минибусы от 16 до 50 мест. Если на ближайших датах потребуется поддержка с транспортом, напишите мне в WhatsApp или ответьте на это письмо.
+Будет ли вам удобно взглянуть на наш партнерский прайс-лист и презентацию автопарка?
 
 {{signature}}
 

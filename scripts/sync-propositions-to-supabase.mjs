@@ -47,9 +47,10 @@ async function syncSettings() {
   if (!res.ok) throw new Error(`Failed to fetch settings: ${res.status} ${await res.text()}`);
   const [row] = await res.json();
   const currentData = row ? row.data || {} : {};
-  const updatedData = { ...currentData, commission_rate: 0.10 };
+  const steps = (currentData.steps || []).map((s) => (s.key === 'T3_followup' ? { ...s, require_approval: false } : s));
+  const updatedData = { ...currentData, steps, commission_rate: 0.10 };
 
-  console.log('Updating settings data.commission_rate to 0.10...');
+  console.log('Updating settings data: require_approval=false on T3_followup, commission_rate=0.10...');
   const patchRes = await fetch(`${SUPABASE_URL}/outreach_settings?id=eq.1`, {
     method: 'PATCH',
     headers: { ...headers, Prefer: 'return=representation' },
@@ -60,13 +61,13 @@ async function syncSettings() {
 }
 
 async function refreshPendingDrafts() {
-  console.log('Checking for pending touches in state "draft"...');
-  const touchesRes = await fetch(`${SUPABASE_URL}/touches?state=eq.draft&select=*`, { headers });
+  console.log('Checking for pending touches in state "draft" or "approved"...');
+  const touchesRes = await fetch(`${SUPABASE_URL}/touches?state=in.(draft,approved)&direction=eq.out&select=*`, { headers });
   if (!touchesRes.ok) throw new Error(`Failed to fetch touches: ${touchesRes.status} ${await touchesRes.text()}`);
-  const drafts = await touchesRes.json();
-  console.log(`Found ${drafts.length} pending draft(s).`);
+  const pending = await touchesRes.json();
+  console.log(`Found ${pending.length} pending touch(es).`);
 
-  if (!drafts.length) return;
+  if (!pending.length) return;
 
   const prospectsRes = await fetch(`${SUPABASE_URL}/prospects?select=*`, { headers });
   const prospects = await prospectsRes.json();
@@ -75,29 +76,33 @@ async function refreshPendingDrafts() {
   const templatesRes = await fetch(`${SUPABASE_URL}/templates?select=*`, { headers });
   const templates = await templatesRes.json();
 
-  for (const t of drafts) {
+  for (const t of pending) {
     const p = prospectMap.get(t.prospect_id);
     if (!p) continue;
+    const t1 = pending.find((x) => x.prospect_id === t.prospect_id && x.step_name === 'T1_intro' && x.direction === 'out' && x.subject && x.id !== t.id);
+    const threadSubject = t1?.subject || t.subject || '';
     const freshDraft = buildDraft({
       prospect: p,
       key: t.step_name,
       templates,
-      threadSubject: t.thread_subject || null,
-      step: { thread: !!t.thread_subject },
+      threadSubject,
+      step: { thread: t.step_name === 'T3_followup' },
+      extraVars: t.variant ? { variant: t.variant } : {},
     });
     if (!freshDraft) continue;
 
-    console.log(`Updating pending draft #${t.id} for ${p.agency_name} (${t.step_name})...`);
+    console.log(`Updating pending touch #${t.id} for ${p.agency_name} (${t.step_name})...`);
     await fetch(`${SUPABASE_URL}/touches?id=eq.${t.id}`, {
       method: 'PATCH',
       headers,
       body: JSON.stringify({
-        subject: freshDraft.subject,
+        subject: freshDraft.subject || t.subject,
         body: freshDraft.body,
+        lint: freshDraft.lint,
       }),
     });
   }
-  console.log('Finished updating pending drafts.');
+  console.log('Finished updating pending touches.');
 }
 
 async function main() {

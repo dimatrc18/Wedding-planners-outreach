@@ -360,16 +360,19 @@ Deno.serve((req) => handle(req, async () => {
       return json(await autoResearchPending(db, settings, now));
     case 'refresh_touches': {
       const { data: drafts } = await db.from('touches').select('*').in('state', ['draft', 'approved']).eq('direction', 'out');
-      const { prospects, templates } = await loadAll(db);
+      const { prospects, touches, templates } = await loadAll(db);
       const pmap = new Map(prospects.map((p: any) => [p.id, p]));
       let updated = 0;
       for (const t of (drafts || [])) {
         const p = pmap.get(t.prospect_id);
         if (!p) continue;
-        const built = core.buildDraft({ prospect: p, key: t.step_name, templates, extraVars: t.variant ? { variant: t.variant } : {} });
-        if (built && built.subject && built.body) {
+        const t1 = (touches || []).find((x: any) => x.prospect_id === t.prospect_id && x.step_name === 'T1_intro' && x.direction === 'out' && x.subject && x.id !== t.id);
+        const threadSubject = t1?.subject || t.subject || '';
+        const stepCfg = (settings.steps || core.DEFAULT_STEPS).find((s: any) => s.key === t.step_name);
+        const built = core.buildDraft({ prospect: p, key: t.step_name, templates, threadSubject, step: stepCfg, extraVars: t.variant ? { variant: t.variant } : {} });
+        if (built && built.body) {
           await db.from('touches').update({
-            subject: built.subject,
+            subject: built.subject || t.subject,
             body: built.body,
             lint: built.lint,
           }).eq('id', t.id);

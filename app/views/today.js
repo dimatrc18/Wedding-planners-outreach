@@ -253,8 +253,10 @@ export function render(el) {
             for (const d of A.todayData().drafts) {
               const p = A.prospectById(d.prospect_id);
               if (!p) continue;
-              const dr = core.buildDraft({ prospect: p, key: d.step_name, templates: S.templates, extraVars: d.variant ? { variant: d.variant } : {} });
-              if (dr) { await A.saveDraft(d, { subject: dr.subject, body: dr.body, variant: dr.variant || d.variant }); count++; }
+              const t1 = A.touchesOf(p.id).find((x) => x.step_name === 'T1_intro' && x.subject && x.id !== d.id);
+              const stepCfg = (S.settings.steps || core.DEFAULT_STEPS).find((s) => s.key === d.step_name);
+              const dr = core.buildDraft({ prospect: p, key: d.step_name, templates: S.templates, threadSubject: t1?.subject || d.subject || '', step: stepCfg, extraVars: d.variant ? { variant: d.variant } : {} });
+              if (dr) { await A.saveDraft(d, { subject: dr.subject || d.subject, body: dr.body, variant: dr.variant || d.variant }); count++; }
             }
             toast(`Refreshed ${count} drafts`);
           }

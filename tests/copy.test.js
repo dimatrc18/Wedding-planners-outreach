@@ -106,7 +106,7 @@ test('pickTemplate falls back to DEFAULT_TEMPLATES for Russian when DB templates
     step: { thread: true },
   });
   assert.ok(t3, 'Draft builds for Russian T3_followup');
-  assert.ok(t3.body.includes('Полезная деталь для ваших свадеб'), 'Uses Russian T3_followup body from DEFAULT_TEMPLATES instead of English');
+  assert.ok(t3.body.includes('Хотел убедиться, что вы получили мое предыдущее письмо'), 'Uses Russian T3_followup body from DEFAULT_TEMPLATES instead of English');
   assert.ok(!t3.body.includes('One detail worth adding'), 'Does not mix Russian greeting with English body');
 });
 

@@ -23,10 +23,20 @@ function draftRow(p, key, step, extra = {}) {
   const t1 = touchesOf(p.id).find((t) => t.step_name === 'T1_intro' && t.direction === 'out' && t.subject);
   const d = core.buildDraft({ prospect: p, key, templates: S.templates, threadSubject: extra.threadSubject ?? (t1 ? t1.subject : ''), step });
   if (!d) return null;
-  return {
+  const row = {
     prospect_id: p.id, channel: d.channel, direction: 'out', step_name: extra.step_name || key, state: 'draft', subject: d.subject, body: d.body,
     template_key: d.template_key, variant: d.variant, lint: d.lint, attach_rate_card: d.attach_rate_card, suggested_for: extra.suggested_for || null,
   };
+  if (step && step.require_approval === false && !d.lint.errors.length && d.channel === 'email') {
+    const now = new Date();
+    row.state = 'approved';
+    row.approved_by = 'auto';
+    row.approved_at = now.toISOString();
+    const taken = core.takenSlots(S.touches, now);
+    const firstSendAt = core.firstColdSend(S.touches);
+    row.scheduled_at = core.scheduleApproved(row, p, S.settings, taken, { now, firstSendAt })?.toISOString() || null;
+  }
+  return row;
 }
 
 async function insertDraft(row) {
