@@ -3,7 +3,7 @@ import { S, init, onChange, signIn, signOut, startDemo, leaveDemo, syncScores, i
 import { esc, icon, toast, debounce } from './ui.js';
 import { todayData } from './actions.js';
 import * as today from './views/today.js?v=3.7';
-import * as pipeline from './views/pipeline.js?v=3.7';
+import * as pipeline from './views/pipeline.js?v=3.8';
 import * as prospect from './views/prospect.js?v=3.7';
 import * as add from './views/add.js?v=3.7';
 import * as templates from './views/templates.js?v=3.7';
