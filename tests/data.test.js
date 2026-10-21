@@ -167,13 +167,14 @@ test('priorityScore differentiates named planners, generic hotel info desks, mis
 
 test('rankUsableEmails prioritizes founder inboxes for planners and events/concierge desks for hotels', () => {
   const plannerRanked = rankUsableEmails(
-    ['privacy@studio.it', 'reservations@studio.it', 'info@studio.it', 'hello@studio.it', 'sarah@studio.it'],
+    ['privacy@studio.it', 'reservations@studio.it', 'info@studio.it', 'hello@studio.it', 'sarah@studio.it', 'vendors@studio.it'],
     'https://www.studio.it',
     'planner',
   );
-  assert.equal(plannerRanked[0], 'sarah@studio.it');
-  assert.equal(plannerRanked[1], 'hello@studio.it');
-  assert.equal(plannerRanked[2], 'info@studio.it');
+  assert.equal(plannerRanked[0], 'vendors@studio.it');
+  assert.equal(plannerRanked[1], 'sarah@studio.it');
+  assert.equal(plannerRanked[2], 'hello@studio.it');
+  assert.equal(plannerRanked[3], 'info@studio.it');
   assert.ok(!plannerRanked.includes('privacy@studio.it'));
 
   const hotelRanked = rankUsableEmails(

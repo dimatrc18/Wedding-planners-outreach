@@ -554,7 +554,9 @@ export const DISCOVERY_PARTNER_CATALOG = [
   {
     agency_name: 'Morlotti Studio Events Como',
     contact_name: 'Daniele & Team',
-    email: 'events@morlotti.com',
+    email: 'info@morlotti.com',
+    phone: '+39 02 00615321',
+    whatsapp: '+39 3294947613',
     website: 'https://morlotti.com',
     type: 'planner',
     segment: 'boutique_local',
@@ -710,9 +712,9 @@ export const DISCOVERY_PARTNER_CATALOG = [
   },
   {
     agency_name: 'Palazzo Eventi',
-    contact_name: 'Eleonora & Team',
-    email: 'info@palazzoeventi.com',
-    email_status: 'bounced',
+    contact_name: 'Maria & Team',
+    email: 'verona@palazzoeventi.com',
+    email_status: 'mx_ok',
     website: 'https://palazzoeventi.com',
     type: 'planner',
     segment: 'international',
@@ -723,16 +725,15 @@ export const DISCOVERY_PARTNER_CATALOG = [
     verified_reviews_count: 46,
     review_source: 'google',
     source: 'ai_discovery',
-    do_not_contact: true,
-    status: 'do_not_contact',
-    tags: ['manual_touch', 'bounced'],
-    phone: '+39 348 244 8708',
-    whatsapp: '+39 348 244 8708',
+    status: 'ready',
+    tags: ['manually_adjusted_email'],
+    phone: '+39 333 388 7425',
+    whatsapp: '+39 333 388 7425',
     instagram: 'palazzoeventi',
     key_venues: ['Villa Balbiano', 'Villa Sola Cabiati', 'Aman Venice'],
     personalization_hook: 'Увидел ваши роскошные частные проекты на виллах озера Комо и решил предложить прямой контакт с нашим парком на сезон.',
     hook_type: 'venue',
-    notes: 'Email info@palazzoeventi.com hard-bounced (550 No such user). Founders: Eleonora & Victoria. Contact manually via Instagram @palazzoeventi or WhatsApp/phone +39 348 244 8708.',
+    notes: 'Discovered via AI Partner Search · Manually verified: verona@palazzoeventi.com (For Vendors), Maria (+39 333 388 7425).',
   },
   {
     agency_name: 'Sinclair Events',
@@ -1329,15 +1330,18 @@ export function rankUsableEmails(emails = [], siteDomain = '', type = 'planner')
     else score += 5;
 
     const isNamedPerson = /^[a-z]{2,15}([._-][a-z]{2,15})?$/i.test(local) && !GENERIC_ROLE_WORDS_RE.test(local);
+    const isVendorPartnerInbox = /^(vendor|vendors|fornitor[ei]|partner|partnerships?|collab|collaborate|logistics?|ncc)$/i.test(local);
     if (normType === 'concierge_hotel' || normType === 'venue') {
       if (/(events?|weddings?|banqueting|concierge|privateevents?|mice|groups?|celebrations?)/i.test(local)) score += 30;
+      else if (isVendorPartnerInbox) score += 26;
       else if (isNamedPerson) score += 22;
       else if (/^(hello|ciao|welcome|enquiries|inquiries|studio)$/i.test(local)) score += 18;
       else if (/^(info|contact|contatti|office|mail)$/i.test(local)) score += 12;
       else if (/^(reservations?|booking|bookings|reception)$/i.test(local)) score += 6;
       else score += 10;
     } else {
-      if (isNamedPerson) score += 32;
+      if (isVendorPartnerInbox) score += 36;
+      else if (isNamedPerson) score += 32;
       else if (/^(hello|ciao|welcome|events?|weddings?|enquiries|inquiries|studio)$/i.test(local)) score += 24;
       else if (/^(info|contact|contatti|office|mail|team)$/i.test(local)) score += 16;
       else if (/^(reservations?|booking|bookings|reception)$/i.test(local)) score += 8;

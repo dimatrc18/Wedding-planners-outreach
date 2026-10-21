@@ -77,7 +77,7 @@ function resolveVenueOrLocation(prospect = {}, agencyShort = '', lang = 'en') {
 
 function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lang = 'en', variant = 'A') {
   const type = prospect.type === 'wedding_planner' ? 'planner' : (prospect.type || 'planner');
-  const idx = stableHashIndex(`${prospect.id || ''}:${prospect.agency_name || ''}`, 2);
+  const idx = stableHashIndex(`${prospect.id || ''}:${prospect.agency_name || ''}`, 3);
   const hookText = String(prospect.personalization_hook || '');
   const isHookVariantB = /^(The hardest part of a Lake Como wedding's transport|La parte più complessa dei trasporti|Самая сложная часть логистики)/i.test(hookText);
   const effectiveVariant = isHookVariantB ? 'B' : (variant === 'B' ? 'B' : 'A');
@@ -95,10 +95,11 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       };
     }
 
-    const hasSpecificVenueRu = venueOrLoc && !/^(lake como|lago di como|озеро комо|северная италия|milan|милан)$/i.test(venueOrLoc);
-    const ruSubjectsA = hasSpecificVenueRu
-      ? [`Трансферы ${venueOrLoc} / 2027`, 'Трансферы на озере Комо 2027']
-      : ['Трансферы на озере Комо 2027', 'Автопарк Mercedes на Комо 2027'];
+    const ruSubjectsA = [
+      'Трансферы гостей на озере Комо / 2027',
+      'вопрос по трансферам на озере Комо',
+      'резерв V-Class на озере Комо',
+    ];
 
     if (effectiveVariant === 'B') {
       return {
@@ -134,10 +135,11 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       };
     }
 
-    const hasSpecificVenueIt = venueOrLoc && !/^(lago di como|lake como|milano|italia)$/i.test(venueOrLoc);
-    const itSubjectsA = hasSpecificVenueIt
-      ? [`Transfer ${venueOrLoc} / 2027`, 'Transfer ospiti Lago di Como 2027']
-      : ['Transfer ospiti Lago di Como 2027', 'Flotta Mercedes Lago di Como 2027'];
+    const itSubjectsA = [
+      'Transfer ospiti Lago di Como / 2027',
+      'breve domanda sui transfer a Como',
+      'disponibilità flotta Classe V sul lago',
+    ];
 
     if (effectiveVariant === 'B') {
       return {
@@ -174,10 +176,11 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
   }
 
   // English MECE Variant A (Introduction) vs Variant B (Late Returns After the Reception)
-  const hasSpecificVenue = venueOrLoc && !/^(lake como|lago di como|milan|italy)$/i.test(venueOrLoc);
-  const plannerSubjectsA = hasSpecificVenue
-    ? [`${venueOrLoc} transfers / 2027`, 'Lake Como transfers 2027']
-    : ['Lake Como transfers 2027', 'v-class transfers / Lake Como'];
+  const plannerSubjectsA = [
+    'Lake Como guest transfers / 2027',
+    'quick question about Lake Como transport',
+    'backup V-Class fleet on Lake Como',
+  ];
 
   if (effectiveVariant === 'B') {
     return {

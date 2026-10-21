@@ -757,10 +757,26 @@ export async function fetchJinaSignals(rawUrl: string) {
     const r = await fetch(`https://r.jina.ai/${cleanUrl}`, { signal: AbortSignal.timeout(7000) });
     if (!r.ok) return null;
     let md = await r.text();
-    const subMatch = md.match(/https?:\/\/[^\s)]+\/(?:real-weddings|portfolio|weddings|stories|about-me|about|contact|contatti)\/?/i);
-    if (subMatch && core.domainOf(subMatch[0]) === core.domainOf(cleanUrl)) {
+    let contactSubUrl = '';
+    const fullMatch = md.match(/https?:\/\/[^\s)]+\/(?:real-weddings|portfolio|weddings|stories|about-me|about|contact|contacts|contatti|for-vendors|collaborate)\/?/i);
+    if (fullMatch && core.domainOf(fullMatch[0]) === core.domainOf(cleanUrl)) {
+      contactSubUrl = fullMatch[0];
+    } else {
+      const relMatch = md.match(/\[[^\]]*(?:contact|contatti|vendor|fornitor)[^\]]*\]\(([^)]+)\)/i);
+      if (relMatch && relMatch[1]) {
+        const u = relMatch[1].trim();
+        if (u.startsWith('http')) {
+          if (core.domainOf(u) === core.domainOf(cleanUrl)) contactSubUrl = u;
+        } else if (u.startsWith('/')) {
+          try {
+            contactSubUrl = `${new URL(cleanUrl).origin}${u}`;
+          } catch { /* ignore malformed URL */ }
+        }
+      }
+    }
+    if (contactSubUrl) {
       try {
-        const r2 = await fetch(`https://r.jina.ai/${subMatch[0]}`, { signal: AbortSignal.timeout(5500) });
+        const r2 = await fetch(`https://r.jina.ai/${contactSubUrl}`, { signal: AbortSignal.timeout(5500) });
         if (r2.ok) md += `\n${await r2.text()}`;
       } catch { /* ignore subpage timeout */ }
     }
@@ -916,8 +932,11 @@ export async function autoResearchPending(db: any, _settings: any, now = new Dat
       if (mxStatus === 'no_mx' || webStatus === 'broken') continue;
       const jina = await fetchJinaSignals(item.website);
       const sanitized = core.sanitizeCatalogProspect(item);
+      const rankedJinaEmails = core.rankUsableEmails(jina?.emails || [], item.website, item.type);
+      const verifiedEmail = rankedJinaEmails.length ? rankedJinaEmails[0] : sanitized.email;
       const candidate: any = {
         ...sanitized,
+        email: verifiedEmail || sanitized.email,
         key_venues: [...new Set([...(sanitized.key_venues || []), ...(jina?.venues || [])])],
       };
       candidate.language = core.inferLanguage(candidate);
