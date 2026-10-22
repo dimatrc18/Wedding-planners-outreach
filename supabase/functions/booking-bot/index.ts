@@ -244,32 +244,44 @@ async function handleIncomingMessage(msg: any) {
     }
   }
 
-  // Direct prompt reply handler (notes / price / missing info) -> Updates card in-place with ZERO chat clutter
+  // Direct prompt reply handler (full edit / notes / price / missing info) -> Updates card in-place with ZERO chat clutter
   if (
     existingDraft &&
     existingDraft.prompt_message_id &&
     replyTo &&
     (replyTo.message_id === existingDraft.prompt_message_id || replyTo.message_id === existingDraft.card_message_id)
   ) {
-    const priceMatch = text.match(/^(?:€\s*)?(\d+)(?:\s*[\/\-]\s*(?:€\s*)?(\d+))?$/);
-    if (priceMatch) {
-      const p = parseFloat(priceMatch[1]);
-      const dep = priceMatch[2] ? parseFloat(priceMatch[2]) : existingDraft.booking_data.finance.paid_deposit;
-      existingDraft.booking_data.finance.total_price = p;
-      existingDraft.booking_data.finance.paid_deposit = dep;
-      existingDraft.booking_data.finance.balance_due = p - (dep || 0);
+    const isFullBookingUpdate = text.length > 80 || /\[transfer|\btransfer\b|pickup|dropoff|sprinter|v-class|\b€\b|min drive/i.test(text);
+
+    if (isFullBookingUpdate) {
+      await tgApi("sendChatAction", { chat_id: chatId, action: "typing" });
+      const updatedBooking = await extractBookingWithGemini({ text }, GEMINI_API_KEY);
+      updatedBooking.booking_ref = existingDraft.booking_ref;
+      existingDraft.booking_data = updatedBooking;
+      existingDraft.raw_text = text;
     } else {
-      const phoneMatch = text.match(/(\+?\d[\d\s\-()]{6,}\d)/);
-      if (phoneMatch && !existingDraft.booking_data.client.phone) {
-        existingDraft.booking_data.client.phone = phoneMatch[1].replace(/\s+/g, "");
-        existingDraft.booking_data.missing_fields = (existingDraft.booking_data.missing_fields || []).filter((m: string) => !m.includes("phone"));
+      const priceMatch = text.match(/^(?:€\s*)?(\d+)(?:\s*[\/\-]\s*(?:€\s*)?(\d+))?$/);
+      if (priceMatch) {
+        const p = parseFloat(priceMatch[1]);
+        const dep = priceMatch[2] ? parseFloat(priceMatch[2]) : existingDraft.booking_data.finance.paid_deposit;
+        existingDraft.booking_data.finance.total_price = p;
+        existingDraft.booking_data.finance.paid_deposit = dep;
+        existingDraft.booking_data.finance.balance_due = p - (dep || 0);
       } else {
-        existingDraft.booking_data.client_notes = text.trim();
+        const phoneMatch = text.match(/(\+?\d[\d\s\-()]{6,}\d)/);
+        if (phoneMatch && !existingDraft.booking_data.client.phone) {
+          existingDraft.booking_data.client.phone = phoneMatch[1].replace(/\s+/g, "");
+          existingDraft.booking_data.missing_fields = (existingDraft.booking_data.missing_fields || []).filter((m: string) => !m.includes("phone"));
+        } else {
+          existingDraft.booking_data.client_notes = text.trim();
+        }
       }
     }
 
     // Clean up prompt message and user reply message
-    await tgApi("deleteMessage", { chat_id: chatId, message_id: existingDraft.prompt_message_id });
+    if (existingDraft.prompt_message_id) {
+      await tgApi("deleteMessage", { chat_id: chatId, message_id: existingDraft.prompt_message_id });
+    }
     await tgApi("deleteMessage", { chat_id: chatId, message_id: msg.message_id });
 
     // Update card in place
@@ -287,15 +299,8 @@ async function handleIncomingMessage(msg: any) {
     return;
   }
 
-  // Send temporary processing indicator
-  const progressMsg = await tgApi("sendMessage", {
-    chat_id: chatId,
-    text: existingDraft
-      ? "⏳ <i>Applying your edits and updating booking card...</i>"
-      : "⏳ <i>Analyzing booking details and generating draft card...</i>",
-    parse_mode: "HTML",
-    reply_to_message_id: msg.message_id,
-  });
+  // Send native Telegram typing indicator in chat header (Zero chat messages, Zero ghost messages, No draft sync bugs!)
+  await tgApi("sendChatAction", { chat_id: chatId, action: "typing" });
 
   try {
     let booking: BookingData;
@@ -361,21 +366,13 @@ async function handleIncomingMessage(msg: any) {
         booking_data: booking,
       });
     }
-
-    // Delete temporary progress message
-    if (progressMsg.ok) {
-      await tgApi("deleteMessage", { chat_id: chatId, message_id: progressMsg.result.message_id });
-    }
   } catch (err: any) {
     console.error("Extraction error:", err);
-    if (progressMsg.ok) {
-      await tgApi("editMessageText", {
-        chat_id: chatId,
-        message_id: progressMsg.result.message_id,
-        text: `❌ <b>Extraction error:</b>\n<code>${err.message}</code>`,
-        parse_mode: "HTML",
-      });
-    }
+    await tgApi("sendMessage", {
+      chat_id: chatId,
+      text: `❌ <b>Extraction error:</b>\n<code>${esc(err.message)}</code>`,
+      parse_mode: "HTML",
+    });
   }
 }
 
@@ -409,8 +406,39 @@ async function handleCallbackQuery(query: any) {
     return;
   }
 
-  // 2. EDIT NOTES
-  if (action === "edit_notes" || action === "copy_full") {
+  // 2. EDIT FULL BOOKING
+  if (action === "edit_full" || action === "copy_full") {
+    // Answer callback silently (NO alert modal popup!)
+    await tgApi("answerCallbackQuery", { callback_query_id: queryId });
+
+    const ref = draft?.booking_ref || "";
+    const fullText = (draft?.raw_text && draft.raw_text.trim().length > 10)
+      ? draft.raw_text.trim()
+      : (draft?.booking_data ? buildEditableBookingText(draft.booking_data) : "No booking text found");
+
+    const promptMsg = await tgApi("sendMessage", {
+      chat_id: chatId,
+      text: `✏️ <b>Edit Full Booking [${ref}]:</b>\n\n` +
+        `<code>${esc(fullText)}</code>\n\n` +
+        `<i>💡 <b>How to edit:</b>\n` +
+        `1. <b>Tap the box above</b> to copy everything.\n` +
+        `2. <b>Paste into chat (Cmd+V)</b>, edit whatever you want, and send.\n` +
+        `3. The bot will automatically update the card in-place and clean up this prompt.</i>\n\n` +
+        `<i>⚡ <b>Desktop Shortcut:</b> You can also just press <b>↑ (Up Arrow)</b> in chat to edit your original message directly!</i>`,
+      parse_mode: "HTML",
+    });
+
+    if (draft && promptMsg.ok) {
+      await upsertDraft({
+        ...draft,
+        prompt_message_id: promptMsg.result.message_id,
+      });
+    }
+    return;
+  }
+
+  // 3. EDIT NOTES
+  if (action === "edit_notes") {
     // Answer callback silently (NO alert modal popup!)
     await tgApi("answerCallbackQuery", { callback_query_id: queryId });
 
@@ -423,7 +451,6 @@ async function handleCallbackQuery(query: any) {
         `<code>${esc(notesText)}</code>\n\n` +
         `<i>💡 Tap the box above to copy, edit what you need, and send your reply to update the card.</i>`,
       parse_mode: "HTML",
-      reply_to_message_id: messageId,
     });
 
     if (draft && promptMsg.ok) {
