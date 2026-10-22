@@ -1124,7 +1124,8 @@ export const DISCOVERY_PARTNER_CATALOG = [
   {
     agency_name: 'Mandarin Oriental Lago di Como Events',
     contact_name: 'Events & Concierge Desk',
-    email: 'molco-events@mohg.com',
+    email: 'mocmo-reservations@mohg.com',
+    alt_email: 'molco-events@mohg.com',
     website: 'https://www.mandarinoriental.com/en/lake-como/blevio',
     type: 'concierge_hotel',
     segment: 'boutique_local',
@@ -1138,7 +1139,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     key_venues: ['Mandarin Oriental Lago di Como'],
     personalization_hook: 'Sono Dmitri di DOROGO, società di trasporto privato attiva tra il Lago di Como e Milano.',
     hook_type: 'venue',
-    notes: 'Discovered via AI Partner Search (Blevio 5-star lakefront resort & private villa buyout property).',
+    notes: 'Discovered via AI Partner Search (Blevio 5-star lakefront resort & private villa buyout property). Verified published inbox: mocmo-reservations@mohg.com.',
   },
   {
     agency_name: "Villa d'Este Events & Banqueting",

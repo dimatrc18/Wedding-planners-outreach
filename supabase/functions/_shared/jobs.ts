@@ -900,12 +900,14 @@ export async function autoResearchPending(db: any, _settings: any, now = new Dat
     await Promise.all(queue.slice(i, i + 3).map(processOne));
   }
 
-  // 2. Auto-import up to 2 new verified luxury partners (>= 65/100) per run strictly maintaining 50/50 international/local split
+  // 2. Auto-import up to 2 new verified luxury partners (>= 65/100) per run (70% international / 30% local target)
   const isIntl = (p: any) => (p.market && p.market !== 'it') || p.segment === 'international';
   const existingIntl = prospects.filter(isIntl).length;
   const existingLocal = prospects.filter((p: any) => !isIntl(p)).length;
 
-  const available = (core.DISCOVERY_PARTNER_CATALOG || []).filter((c: any) => core.findDuplicates(c, prospects).length === 0);
+  const available = (core.DISCOVERY_PARTNER_CATALOG || [])
+    .filter((c: any) => core.findDuplicates(c, prospects).length === 0)
+    .sort((a: any, b: any) => (core.priorityScore(b).score || 0) - (core.priorityScore(a).score || 0));
   const intlPool = available.filter(isIntl);
   const localPool = available.filter((c: any) => !isIntl(c));
 
@@ -913,16 +915,15 @@ export async function autoResearchPending(db: any, _settings: any, now = new Dat
   const maxPerRun = 2;
 
   for (let step = 0; step < maxPerRun; step++) {
-    const currentIntl = existingIntl + toImport.filter(isIntl).length;
-    const currentLocal = existingLocal + toImport.filter((x: any) => !isIntl(x)).length;
+    const totalNow = (existingIntl + existingLocal + toImport.length) || 1;
+    const intlRatio = (existingIntl + toImport.filter(isIntl).length) / totalNow;
 
-    if (currentIntl < currentLocal && intlPool.length > 0) {
+    if (intlRatio < 0.70 && intlPool.length > 0) {
       toImport.push(intlPool.shift()!);
-    } else if (currentLocal < currentIntl && localPool.length > 0) {
+    } else if (localPool.length > 0) {
       toImport.push(localPool.shift()!);
-    } else {
-      if (intlPool.length > 0) toImport.push(intlPool.shift()!);
-      else if (localPool.length > 0) toImport.push(localPool.shift()!);
+    } else if (intlPool.length > 0) {
+      toImport.push(intlPool.shift()!);
     }
   }
 

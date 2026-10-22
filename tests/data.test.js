@@ -322,6 +322,11 @@ test('DISCOVERY_PARTNER_CATALOG contains verified Easton email and zero dead/par
   const bellagio = DISCOVERY_PARTNER_CATALOG.find((p) => /wpbellagio/i.test(p.website || ''));
   assert.equal(bellagio, undefined, 'wpbellagio.com must not be in catalog');
 
+  const mandarin = DISCOVERY_PARTNER_CATALOG.find((p) => /Mandarin/i.test(p.agency_name));
+  assert.ok(mandarin, 'Mandarin Oriental must exist in catalog');
+  assert.equal(mandarin.email, 'mocmo-reservations@mohg.com', 'Mandarin Oriental email must be live published mocmo-reservations@mohg.com');
+  assert.notEqual(mandarin.email, 'molco-events@mohg.com', 'Bounced molco-events@mohg.com must be removed from catalog');
+
   for (const partner of DISCOVERY_PARTNER_CATALOG) {
     if (partner.website) {
       assert.ok(!isParkedOrDeadDomain(partner.website), `Catalog partner "${partner.agency_name}" has parked/dead domain: ${partner.website}`);
