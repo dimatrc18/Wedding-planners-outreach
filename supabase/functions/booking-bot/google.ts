@@ -1,0 +1,447 @@
+// Google Service Account Authentication and Google Sheets / Calendar API client (Deno WebCrypto)
+import type { BookingData, Ride } from "./schema.ts";
+
+const SCOPES = [
+  "https://www.googleapis.com/auth/spreadsheets",
+  "https://www.googleapis.com/auth/calendar",
+].join(" ");
+
+interface ServiceAccountCredentials {
+  client_email: string;
+  private_key: string;
+}
+
+let cachedAccessToken: { token: string; expiresAt: number } | null = null;
+
+/**
+ * Gets a valid Google OAuth2 Bearer token signed via WebCrypto RSA-SHA256
+ */
+export async function getGoogleAccessToken(creds: ServiceAccountCredentials): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  if (cachedAccessToken && cachedAccessToken.expiresAt > now + 60) {
+    return cachedAccessToken.token;
+  }
+
+  const header = { alg: "RS256", typ: "JWT" };
+  const claimSet = {
+    iss: creds.client_email,
+    scope: SCOPES,
+    aud: "https://oauth2.googleapis.com/token",
+    exp: now + 3600,
+    iat: now,
+  };
+
+  const b64u = (obj: any) =>
+    btoa(JSON.stringify(obj))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+
+  const encHeader = b64u(header);
+  const encClaims = b64u(claimSet);
+  const dataToSign = new TextEncoder().encode(`${encHeader}.${encClaims}`);
+
+  // Import PEM private key
+  const pem = creds.private_key
+    .replace(/-----BEGIN PRIVATE KEY-----/, "")
+    .replace(/-----END PRIVATE KEY-----/, "")
+    .replace(/\s+/g, "");
+  const binaryKey = Uint8Array.from(atob(pem), (c) => c.charCodeAt(0));
+
+  const cryptoKey = await crypto.subtle.importKey(
+    "pkcs8",
+    binaryKey,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+
+  const signature = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", cryptoKey, dataToSign);
+  const encSignature = btoa(String.fromCharCode(...new Uint8Array(signature)))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+
+  const assertion = `${encHeader}.${encClaims}.${encSignature}`;
+
+  // Exchange assertion for token
+  const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion,
+    }),
+  });
+
+  if (!tokenRes.ok) {
+    const err = await tokenRes.text();
+    throw new Error(`Google token exchange failed: ${err}`);
+  }
+
+  const tokenData = await tokenRes.json();
+  cachedAccessToken = {
+    token: tokenData.access_token,
+    expiresAt: now + (tokenData.expires_in || 3600),
+  };
+  return cachedAccessToken.token;
+}
+
+/**
+ * Resolves worksheet name dynamically (CRM or Bookings or first sheet)
+ */
+async function getEffectiveWorksheet(sheetId: string, preferred: string, token: string): Promise<string> {
+  try {
+    const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (metaRes.ok) {
+      const meta = await metaRes.json();
+      const titles: string[] = meta.sheets?.map((s: any) => s.properties?.title) || [];
+      if (titles.includes(preferred)) return preferred;
+      if (titles.includes("CRM")) return "CRM";
+      if (titles.includes("Bookings")) return "Bookings";
+      if (titles.length > 0) return titles[0];
+    }
+  } catch (e) {
+    console.warn("Could not fetch sheet metadata, falling back to:", preferred);
+  }
+  return preferred;
+}
+
+/**
+ * Saves or updates booking rows in the Google Sheet (tab: CRM / Bookings)
+ */
+export async function saveBookingToGoogleSheet(
+  booking: BookingData,
+  sheetId: string,
+  worksheet = "CRM",
+  creds: ServiceAccountCredentials
+): Promise<{ success: boolean; rowsWritten: number; message: string }> {
+  const token = await getGoogleAccessToken(creds);
+  const targetWorksheet = await getEffectiveWorksheet(sheetId, worksheet, token);
+
+  // 1. Fetch Column A to check existing rows for idempotency
+  const colAUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(targetWorksheet)}!A:A`;
+  const colARes = await fetch(colAUrl, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!colARes.ok) {
+    throw new Error(`Failed to read Sheet column A: ${await colARes.text()}`);
+  }
+
+  const colAData = await colARes.json();
+  const existingIds: string[] = (colAData.values || []).map((row: any[]) => String(row[0] || "").trim());
+
+  let headerRowIdx = 1;
+  existingIds.forEach((val, idx) => {
+    if (val.toLowerCase() === "booking_id") headerRowIdx = idx + 1;
+  });
+
+  // Ensure Row 2 headers include "Booked Month" at Column T if not present
+  try {
+    const headerCheckUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(targetWorksheet)}!S2:T2`;
+    const hRes = await fetch(headerCheckUrl, { headers: { Authorization: `Bearer ${token}` } });
+    if (hRes.ok) {
+      const hData = await hRes.json();
+      const sVal = hData.values?.[0]?.[0];
+      const tVal = hData.values?.[0]?.[1];
+      if (!tVal || tVal !== "Booked Month") {
+        const updateHeaderUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(targetWorksheet)}!T2?valueInputOption=USER_ENTERED`;
+        await fetch(updateHeaderUrl, {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ range: `${targetWorksheet}!T2`, values: [["Booked Month"]] }),
+        });
+      }
+    }
+  } catch (e) {
+    console.warn("Failed to check/update T2 header:", e);
+  }
+
+  // Build rows for each ride
+  const rowsToSave: { rowNumber: number | null; values: any[] }[] = [];
+
+  booking.rides.forEach((ride, idx) => {
+    let legId = booking.booking_ref;
+    if (booking.rides.length === 2 && idx === 1) {
+      legId = `${booking.booking_ref}-RET`;
+    } else if (booking.rides.length > 2) {
+      legId = idx === 0 ? booking.booking_ref : `${booking.booking_ref}-${idx + 1}`;
+    }
+
+    // Determine pickup & dropoff
+    const pStop = ride.stops.find((s) => s.kind === "pickup");
+    const dStop = [...ride.stops].reverse().find((s) => s.kind === "dropoff");
+    const pickupStr = pStop ? (pStop.address || pStop.place) : "";
+    const dropoffStr = dStop ? (dStop.address || dStop.place) : "";
+
+    // Build client notes including flight and extra stops
+    const notesParts: string[] = [];
+    if (ride.flight?.number) {
+      notesParts.push(`Flight: ${ride.flight.number}`);
+    }
+    if (ride.stops.length > 2) {
+      const intermediate = ride.stops
+        .slice(1, -1)
+        .map((s) => `${s.kind === "pickup" ? "Pick" : "Drop"} ${s.time ? `(${s.time})` : ""}: ${s.place}`)
+        .join(" -> ");
+      notesParts.push(`Stops: ${intermediate}`);
+    }
+    if (booking.party.children.length > 0) {
+      const seats = booking.party.children
+        .map((c) => (c.age !== null ? `seat (${c.age} y/o)` : `seat (age unknown)`))
+        .join(", ");
+      notesParts.push(`Child seats: ${seats}`);
+    }
+    if (booking.client_notes) {
+      notesParts.push(booking.client_notes);
+    }
+    const combinedNotes = notesParts.join(" | ");
+
+    // Price & Prepayment
+    const priceVal = ride.price !== null ? String(ride.price) : "";
+    const prepayVal = idx === 0 && booking.finance.paid_deposit !== null ? String(booking.finance.paid_deposit) : "";
+
+    const phoneStr = booking.client.phone ? (booking.client.phone.startsWith("+") ? `'${booking.client.phone}` : booking.client.phone) : "";
+
+    const rowValues = [
+      legId,                                          // Col A: booking_id
+      booking.status,                                 // Col B: status
+      booking.service_type,                           // Col C: service_type
+      booking.vehicle.class || "Mercedes-Benz V-Class",// Col D: vehicle
+      ride.date,                                      // Col E: date
+      ride.time || "",                                // Col F: time
+      pickupStr,                                      // Col G: pick_up
+      dropoffStr,                                     // Col H: drop_off
+      booking.party.passengers || 1,                  // Col I: passenger
+      booking.party.luggage || 0,                     // Col J: luggage
+      combinedNotes,                                  // Col K: client_notes
+      booking.client.name || "",                      // Col L: name
+      phoneStr,                                       // Col M: phone
+      booking.client.email || "",                     // Col N: email
+      priceVal,                                       // Col O: price
+      prepayVal,                                      // Col P: prepayment
+      booking.our_notes || "",                        // Col Q: our_notes
+      "",                                             // Col R: Comision received
+      booking.booked_date,                            // Col S: Sale Date
+      booking.booked_month,                           // Col T: Booked Month
+    ];
+
+    // Check if legId already exists in sheet
+    const existingIdx = existingIds.findIndex((val) => val === legId);
+    if (existingIdx !== -1) {
+      rowsToSave.push({ rowNumber: existingIdx + 1, values: rowValues });
+    } else {
+      rowsToSave.push({ rowNumber: null, values: rowValues });
+    }
+  });
+
+  // Execute updates for existing rows and appends for new rows
+  let updatedCount = 0;
+  const newRowValues: any[][] = [];
+
+  for (const item of rowsToSave) {
+    if (item.rowNumber !== null) {
+      const updateRange = `${targetWorksheet}!A${item.rowNumber}:T${item.rowNumber}`;
+      const updateUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(updateRange)}?valueInputOption=USER_ENTERED`;
+      await fetch(updateUrl, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ range: updateRange, values: [item.values] }),
+      });
+      updatedCount++;
+    } else {
+      newRowValues.push(item.values);
+    }
+  }
+
+  if (newRowValues.length > 0) {
+    const startRow = Math.max(headerRowIdx + 1, existingIds.length + 1);
+    const endRow = startRow + newRowValues.length - 1;
+    const writeRange = `${targetWorksheet}!A${startRow}:T${endRow}`;
+    const putUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(writeRange)}?valueInputOption=USER_ENTERED`;
+    const appRes = await fetch(putUrl, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ range: writeRange, values: newRowValues }),
+    });
+    if (!appRes.ok) {
+      throw new Error(`Failed to write rows to Google Sheet: ${await appRes.text()}`);
+    }
+  }
+
+  return {
+    success: true,
+    rowsWritten: rowsToSave.length,
+    message: `Saved ${rowsToSave.length} ride row(s) to Sheet (${updatedCount} updated, ${newRowValues.length} appended)`,
+  };
+}
+
+/**
+ * Creates or updates Google Calendar events for each ride
+ */
+export async function saveBookingToGoogleCalendar(
+  booking: BookingData,
+  calendarId: string,
+  timezone = "Europe/Rome",
+  creds: ServiceAccountCredentials
+): Promise<{ success: boolean; eventLinks: string[] }> {
+  const token = await getGoogleAccessToken(creds);
+  const links: string[] = [];
+
+  for (let idx = 0; idx < booking.rides.length; idx++) {
+    const ride = booking.rides[idx];
+    const isReturn = ride.role === "return";
+    const roleIcon = isReturn ? "🔄" : "🚗";
+    const legSuffix = booking.rides.length === 2 && idx === 1 ? "-RET" : booking.rides.length > 2 ? `-${idx + 1}` : "";
+    const fullRef = `${booking.booking_ref}${legSuffix}`;
+
+    const pStop = ride.stops.find((s) => s.kind === "pickup");
+    const dStop = [...ride.stops].reverse().find((s) => s.kind === "dropoff");
+    const pName = pStop?.place || "Pickup";
+    const dName = dStop?.place || "Dropoff";
+
+    // Smart title format: <Icon> <Vehicle> (<Pax> pax) <Service>: <Route> | <Client> [<Ref>]
+    const paxNum = booking.party.passengers || 1;
+    const vClass = (booking.vehicle.class || "").toLowerCase();
+    const notesCombined = `${vClass} ${booking.service_type || ""} ${booking.client_notes || ""}`.toLowerCase();
+    
+    let icon = "🚗";
+    let vTag = `Sedan (${paxNum} pax)`;
+    if (/bus|sprinter|coach|minibus|24|28/i.test(vClass) || paxNum >= 8) {
+      icon = "🚌";
+      vTag = `Bus (${paxNum} pax)`;
+    } else if (/v-class|van|minivan/i.test(vClass)) {
+      icon = "🚐";
+      vTag = `V-Class (${paxNum} pax)`;
+    } else if (/s-class|first class/i.test(vClass)) {
+      icon = "✨";
+      vTag = `S-Class (${paxNum} pax)`;
+    } else if (/e-class/i.test(vClass)) {
+      icon = "🚗";
+      vTag = `E-Class (${paxNum} pax)`;
+    }
+
+    const isStandby = /standby|10hours|disposal/i.test(notesCombined);
+    const isWedding = /wedding/i.test(notesCombined);
+
+    let summary = "";
+    if (isReturn) {
+      summary = `🔄 ${vTag} Return: ${dName} ➔ ${pName} | ${booking.client.name || "Client"} [${fullRef}]`;
+    } else if (isStandby) {
+      const hMatch = (booking.client_notes || "").match(/(\d+)\s*(?:hours|hour|h|hr)\b/i);
+      const hTag = hMatch ? `${hMatch[1]}h Standby` : "Standby";
+      const svcTag = isWedding ? `Wedding ${hTag}` : hTag;
+      summary = `${icon} ${vTag} ${svcTag}: ${pName} / ${dName} | ${booking.client.name || "Client"} [${fullRef}]`;
+    } else {
+      const svcTag = isWedding ? "Wedding Transfer" : "Transfer";
+      summary = `${icon} ${vTag} ${svcTag}: ${pName} ➔ ${dName} | ${booking.client.name || "Client"} [${fullRef}]`;
+    }
+
+    // Compute Start and End times
+    const startTimeStr = ride.time || "10:00";
+    const startIso = `${ride.date}T${startTimeStr}:00`;
+    
+    // Calculate End ISO
+    let durationMins = ride.est_minutes || 120;
+    if (durationMins < 30) durationMins = 30; // Min 30 mins event length
+
+    const startDt = new Date(`${startIso}`);
+    const endDt = new Date(startDt.getTime() + durationMins * 60 * 1000);
+    const endIso = endDt.toISOString().replace(/\.\d{3}Z$/, "");
+
+    // Build Detailed Description
+    const descLines: string[] = [
+      `Status: ${booking.status}`,
+      `🔖 Reference: ${fullRef}`,
+      `👤 Client: ${booking.client.name || "VIP Guest"}`,
+      `📞 Phone: ${booking.client.phone || "N/A"}`,
+      `✉️ Email: ${booking.client.email || "N/A"}`,
+      "",
+      `🚘 Fleet: ${booking.vehicle.class || "Mercedes-Benz V-Class"}`,
+      `👥 Party: ${booking.party.passengers || 1} Pax | 🧳 Luggage: ${booking.party.luggage || 0}`,
+    ];
+
+    if (ride.flight?.number) {
+      descLines.push(`✈️ Flight: ${ride.flight.number}`);
+    }
+
+    if (booking.party.children.length > 0) {
+      const seats = booking.party.children.map((c) => `${c.age} y/o (${c.seat_type})`).join(", ");
+      descLines.push(`👶 Child Seats: ${seats}`);
+    }
+
+    descLines.push("");
+    descLines.push("📍 ITINERARY & STOPS:");
+    ride.stops.forEach((st) => {
+      const mark = st.kind === "pickup" ? "🟢 Pickup" : "🔴 Dropoff";
+      let sLine = `• ${mark} ${st.time ? `(${st.time})` : ""}: ${st.place}`;
+      if (st.maps_url) sLine += `\n  Link: ${st.maps_url}`;
+      if (st.instructions) sLine += `\n  Note: ${st.instructions}`;
+      descLines.push(sLine);
+    });
+
+    if (ride.price !== null) {
+      descLines.push("");
+      descLines.push(`💶 Fare: €${ride.price}`);
+      if (booking.finance.balance_due !== null && booking.finance.balance_due > 0) {
+        descLines.push(`💵 Collect from client on site: €${booking.finance.balance_due}`);
+      }
+    }
+
+    if (booking.client_notes) {
+      descLines.push("");
+      descLines.push(`📝 Notes: ${booking.client_notes}`);
+    }
+
+    const eventBody = {
+      summary,
+      location: pStop?.address || pStop?.place || "",
+      description: descLines.join("\n"),
+      start: { dateTime: startIso, timeZone: timezone },
+      end: { dateTime: endIso, timeZone: timezone },
+      reminders: {
+        useDefault: false,
+        overrides: [
+          { method: "popup", minutes: 120 },
+          { method: "email", minutes: 1440 },
+        ],
+      },
+    };
+
+    // Use deterministic event ID e.g. "drg" + hex(ref + leg)
+    const rawId = `drg${fullRef.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
+    const eventId = rawId.padEnd(16, "0").substring(0, 32);
+
+    // Try update first (idempotent), then insert
+    const updateUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${eventId}`;
+    const updateRes = await fetch(updateUrl, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(eventBody),
+    });
+
+    if (updateRes.ok) {
+      const data = await updateRes.json();
+      links.push(data.htmlLink || "");
+    } else {
+      // Insert with eventId
+      const insertUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`;
+      const insertRes = await fetch(insertUrl, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ ...eventBody, id: eventId }),
+      });
+      if (insertRes.ok) {
+        const data = await insertRes.json();
+        links.push(data.htmlLink || "");
+      } else {
+        console.error(`Failed to create calendar event: ${await insertRes.text()}`);
+      }
+    }
+  }
+
+  return { success: true, eventLinks: links };
+}

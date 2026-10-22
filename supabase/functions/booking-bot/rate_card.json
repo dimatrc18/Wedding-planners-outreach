@@ -1,0 +1,59 @@
+{
+  "routes": [
+    {
+      "from": ["mxp", "malpensa"],
+      "to": ["bellagio"],
+      "rates": { "eClass": 240, "vClass": 290, "sClass": 370 }
+    },
+    {
+      "from": ["lin", "linate", "milan", "milano"],
+      "to": ["bellagio"],
+      "rates": { "eClass": 230, "vClass": 270, "sClass": 350 }
+    },
+    {
+      "from": ["mxp", "malpensa"],
+      "to": ["como", "cernobbio", "villa deste"],
+      "rates": { "eClass": 160, "vClass": 190, "sClass": 250 }
+    },
+    {
+      "from": ["mxp", "malpensa"],
+      "to": ["tremezzo", "menaggio"],
+      "rates": { "eClass": 230, "vClass": 280, "sClass": 360 }
+    },
+    {
+      "from": ["mxp", "malpensa"],
+      "to": ["cervinia", "breuil-cervinia"],
+      "rates": { "eClass": 450, "vClass": 540, "sClass": 750 }
+    },
+    {
+      "from": ["mxp", "malpensa"],
+      "to": ["courmayeur"],
+      "rates": { "eClass": 490, "vClass": 580, "sClass": 790 }
+    },
+    {
+      "from": ["mxp", "malpensa"],
+      "to": ["st moritz", "st. moritz", "sankt moritz"],
+      "rates": { "eClass": 490, "vClass": 600, "sClass": 900 }
+    },
+    {
+      "from": ["mxp", "malpensa"],
+      "to": ["cortina", "cortina d'ampezzo"],
+      "rates": { "eClass": 900, "vClass": 1000, "sClass": 1400 }
+    },
+    {
+      "from": ["mxp", "malpensa"],
+      "to": ["sirmione", "garda", "lake garda"],
+      "rates": { "eClass": 340, "vClass": 390, "sClass": 520 }
+    },
+    {
+      "from": ["mxp", "malpensa"],
+      "to": ["milan", "milano", "milan city"],
+      "rates": { "eClass": 120, "vClass": 140, "sClass": 190 }
+    },
+    {
+      "from": ["lin", "linate"],
+      "to": ["milan", "milano"],
+      "rates": { "eClass": 80, "vClass": 100, "sClass": 140 }
+    }
+  ]
+}

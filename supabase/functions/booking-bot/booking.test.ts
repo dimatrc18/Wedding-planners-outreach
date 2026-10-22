@@ -1,0 +1,160 @@
+// Comprehensive Deno test suite for Dorogo Booking Copilot
+import { assertEquals, assertNotEquals, assert } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { normalizeDate, normalizeTime, parseGoogleMapsUrl, mapChildSeat, applyBusinessRules } from "./rules.ts";
+import { extractBookingWithGemini } from "./extract.ts";
+import { getGoogleAccessToken } from "./google.ts";
+import defaultCreds from "./service_account.json" with { type: "json" };
+
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") || "";
+
+// 1. UNIT TESTS: Rules & Normalization
+Deno.test("normalizeDate handles multiple formats", () => {
+  const d1 = normalizeDate("Saturday, April 24, 2027");
+  assertEquals(d1, "2027-04-24");
+
+  const d2 = normalizeDate("24 дек 2026");
+  assertEquals(d2, "2026-12-24");
+
+  const d3 = normalizeDate("15/06/2027");
+  assertEquals(d3, "2027-06-15");
+
+  const d4 = normalizeDate("2026-10-25");
+  assertEquals(d4, "2026-10-25");
+});
+
+Deno.test("normalizeTime handles ranges and approx", () => {
+  const t1 = normalizeTime("14:50");
+  assertEquals(t1.time, "14:50");
+  assertEquals(t1.isApprox, false);
+
+  const t2 = normalizeTime("~15:10");
+  assertEquals(t2.time, "15:10");
+  assertEquals(t2.isApprox, true);
+
+  const t3 = normalizeTime("18:10 – 18:15");
+  assertEquals(t3.time, "18:10");
+  assertEquals(t3.isApprox, true);
+  assertEquals(t3.endTime, "18:15");
+});
+
+Deno.test("parseGoogleMapsUrl extracts address and coordinates", () => {
+  const url1 = "https://maps.google.com/?q=Via+Paolo+Carcano+30+Bellagio";
+  const r1 = parseGoogleMapsUrl(url1);
+  assertEquals(r1.address, "Via Paolo Carcano 30 Bellagio");
+  assertEquals(r1.lat, null);
+
+  const url2 = "https://maps.google.com/?q=45.9752932,9.2468878";
+  const r2 = parseGoogleMapsUrl(url2);
+  assertEquals(r2.lat, 45.9752932);
+  assertEquals(r2.lng, 9.2468878);
+});
+
+Deno.test("mapChildSeat follows EU standards", () => {
+  assertEquals(mapChildSeat({ age: 1 }).seat_type, "infant_carrier");
+  assertEquals(mapChildSeat({ age: 3 }).seat_type, "child_seat");
+  assertEquals(mapChildSeat({ age: 6 }).seat_type, "booster");
+  assertEquals(mapChildSeat({ age: null }).seat_type, "unknown");
+});
+
+// 2. INTEGRATION TEST: Google OAuth2 Token Generation
+Deno.test("Google Service Account token exchange via WebCrypto", async () => {
+  const token = await getGoogleAccessToken(defaultCreds);
+  assert(token.length > 20, "Should receive valid bearer token");
+  console.log("✅ Google OAuth2 Token successfully acquired:", token.substring(0, 15) + "...");
+});
+
+// 3. LIVE AI TESTS: Bellagio Multi-Stop Schedule
+Deno.test("Gemini live extraction on Bellagio multi-stop schedule", async () => {
+  const bellagioText = `
+Here is your exact transfer schedule with Google Maps pins for Saturday, April 24, 2027:
+
+[TRANSFER 1, ~10 min drive]
+📍 Pick-up 1 — 14:50
+Villa Lilla
+👉 https://maps.google.com/?q=Via+Paolo+Carcano+30+Bellagio
+(Bus pulls over outside the main gate)
+
+📍 Pick-up 2 — 15:00
+Nenè Bellagio (Parcheggio)
+👉 https://maps.google.com/?q=45.9752932,9.2468878
+(Bus boards at the main parking area)
+
+📍 Drop-off — ~15:10
+Loppia Bus Stop
+👉 https://maps.google.com/?q=Via+Paolo+Carcano+10+Bellagio
+(2-min gentle walk / 130m down to Loppia Dock)
+
+[TRANSFER 2 , ~25 min drive]
+📍 Pick-up — 17:40
+Loppia Bus Stop
+👉 https://maps.google.com/?q=Via+Paolo+Carcano+10+Bellagio
+
+📍 Drop-off — ~18:10 – 18:15
+La Madonnina di Barni
+👉 https://maps.google.com/?q=La+Madonnina+di+Barni
+(Direct drop-off at the restaurant entrance)
+
+[TRANSFER 3, ~25 min drive]
+📍 Pick-up — 23:30
+La Madonnina di Barni
+👉 https://maps.google.com/?q=La+Madonnina+di+Barni
+
+📍 Drop-offs — ~00:00 – 00:05
+•  Nenèè Bellagio (Parcheggio): https://maps.google.com/?q=45.9752932,9.2468878
+•  Villa Lilla: https://maps.google.com/?q=Via+Paolo+Carcano+30+Bellagio
+`;
+
+  const booking = await extractBookingWithGemini({ text: bellagioText }, GEMINI_API_KEY);
+  console.log("Extracted Bellagio Booking:", JSON.stringify(booking, null, 2));
+
+  assertEquals(booking.rides.length, 3, "Should have 3 transfer blocks");
+  assertEquals(booking.rides[0].stops.length, 3, "Transfer 1 should have 3 stops");
+  assertEquals(booking.rides[1].stops.length, 2, "Transfer 2 should have 2 stops");
+  assertEquals(booking.rides[2].stops.length, 3, "Transfer 3 should have 3 stops");
+
+  // Check midnight rollover on transfer 3
+  assertEquals(booking.rides[2].date, "2027-04-24");
+  assertEquals(booking.rides[2].end_date, "2027-04-25");
+
+  // Check missing items list contains name and phone
+  assert(booking.missing_fields.some((m) => m.includes("Client full name")));
+  assert(booking.missing_fields.some((m) => m.includes("Client phone")));
+  console.log("✅ Bellagio multi-stop test passed with 100% accuracy!");
+});
+
+// 4. LIVE AI TEST: Russian WhatsApp Chat with Round Trip and Prepayment
+Deno.test("Gemini live extraction on Russian WhatsApp chat", async () => {
+  const chat = `
+Клиент: Здравствуйте! Нужен трансфер из Мальпенсы в Червинию в отель Hermitage 24 декабря. Прилетаем рейсом AZ123 в 14:15. Нас двое взрослых и ребенок 3 года.
+Вы: Добрый день! Можем предоставить Mercedes V-Class, стоимость 490 евро.
+Клиент: Отлично! Мы также хотим обратный трансфер 30 декабря в 13:00 из того же отеля обратно в Мальпенсу. Перевел 100 евро предоплаты на карту.
+Вы: Принято, обратный трансфер тоже 490 евро. Итого 980, предоплата 100 получена.
+`;
+
+  const booking = await extractBookingWithGemini({ text: chat }, GEMINI_API_KEY);
+  console.log("Extracted Russian Booking:", JSON.stringify(booking, null, 2));
+
+  assertEquals(booking.rides.length, 2, "Should have outbound and return rides");
+  assertEquals(booking.rides[0].role, "outbound");
+  assertEquals(booking.rides[1].role, "return");
+  assertEquals(booking.rides[0].date, "2026-12-24");
+  assertEquals(booking.rides[1].date, "2026-12-30");
+
+  assertEquals(booking.finance.total_price, 980);
+  assertEquals(booking.finance.paid_deposit, 100);
+  assertEquals(booking.finance.balance_due, 880);
+
+  // 50/50 split check
+  assertEquals(booking.rides[0].price, 490);
+  assertEquals(booking.rides[1].price, 490);
+
+  // Child seat check
+  assertEquals(booking.party.children.length, 1);
+  assertEquals(booking.party.children[0].age, 3);
+  assertEquals(booking.party.children[0].seat_type, "child_seat");
+
+  // Flight check
+  assertEquals(booking.rides[0].flight?.number, "AZ123");
+
+  console.log("✅ Russian WhatsApp round-trip test passed with 100% accuracy!");
+});
