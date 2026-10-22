@@ -58,6 +58,7 @@ export async function verifyDnsMx(domain: string): Promise<'mx_ok' | 'no_mx' | '
 
 export async function verifyWebsiteReachability(url: string): Promise<'active' | 'broken' | 'unknown'> {
   if (!url) return 'unknown';
+  if (core.isParkedOrDeadDomain(url)) return 'broken';
   try {
     const u = new URL(url.startsWith('http') ? url : `https://${url}`);
     const res = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(u.hostname)}&type=A`, {
@@ -67,7 +68,8 @@ export async function verifyWebsiteReachability(url: string): Promise<'active' |
     if (!res.ok) return 'unknown';
     const json: any = await res.json();
     if (json.Status === 3) return 'broken'; // NXDOMAIN
-    return (json.Answer || []).length > 0 ? 'active' : 'broken';
+    const hasIp = (json.Answer || []).some((a: any) => (a.type === 1 || a.type === 28) && a.data && !/^(127\.|0\.)/.test(String(a.data).trim()));
+    return hasIp ? 'active' : 'broken';
   } catch {
     return 'unknown';
   }
@@ -752,12 +754,13 @@ export async function sendDigest(db: any, settings: any, now = new Date(), force
 
 // ---------------- Jina Reader (r.jina.ai) + Offline Background Auto-Research ----------------
 export async function fetchJinaSignals(rawUrl: string) {
-  if (!rawUrl) return null;
+  if (!rawUrl || core.isParkedOrDeadDomain(rawUrl)) return null;
   const cleanUrl = rawUrl.startsWith('http') ? rawUrl : `https://${rawUrl}`;
   try {
     const r = await fetch(`https://r.jina.ai/${cleanUrl}`, { signal: AbortSignal.timeout(7000) });
     if (!r.ok) return null;
     let md = await r.text();
+    if (core.isParkedOrDeadDomain(cleanUrl, md)) return null;
     let contactSubUrl = '';
     const fullMatch = md.match(/https?:\/\/[^\s)]+\/(?:real-weddings|portfolio|weddings|stories|about-me|about|contact|contacts|contatti|for-vendors|collaborate)\/?/i);
     if (fullMatch && core.domainOf(fullMatch[0]) === core.domainOf(cleanUrl)) {
@@ -817,18 +820,18 @@ export async function autoResearchPending(db: any, _settings: any, now = new Dat
     researched++;
     checkedMap[p.id] = now.toISOString();
     const seed: any = core.resolveProspectResearchSeed(p);
-    const targetUrl = p.website || seed.website || seed.guessedUrl || '';
+    const targetUrl = p.website || seed.website || '';
     let webStatus = 'unknown';
     if (targetUrl) {
       webStatus = await verifyWebsiteReachability(targetUrl);
     }
-    const jina = (targetUrl && webStatus !== 'broken') ? await fetchJinaSignals(targetUrl) : null;
+    const jina = (targetUrl && webStatus === 'active') ? await fetchJinaSignals(targetUrl) : null;
 
     const patch: Record<string, any> = {};
-    if (targetUrl && !p.website) patch.website = targetUrl;
+    if (targetUrl && !p.website && webStatus === 'active') patch.website = targetUrl;
     if (webStatus === 'broken') {
       patch.email_status = 'invalid';
-      patch.notes = `${p.notes ? p.notes + ' · ' : ''}Website domain unreachable (DNS error)`;
+      patch.notes = `${p.notes ? p.notes + ' · ' : ''}Website domain unreachable or parked`;
     }
     const rankedJinaEmails = core.rankUsableEmails(jina?.emails || [], targetUrl, p.type);
     const bestEmail = p.email || seed.email || rankedJinaEmails[0] || '';

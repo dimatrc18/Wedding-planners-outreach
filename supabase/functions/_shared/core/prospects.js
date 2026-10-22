@@ -736,29 +736,6 @@ export const DISCOVERY_PARTNER_CATALOG = [
     notes: 'Discovered via AI Partner Search · Manually verified: verona@palazzoeventi.com (For Vendors), Maria (+39 333 388 7425).',
   },
   {
-    agency_name: 'Sinclair Events',
-    contact_name: 'Concierge & Team',
-    email: 'concierge@sinclairevents.com',
-    email_status: 'bounced',
-    website: 'https://sinclairevents.com',
-    type: 'planner',
-    segment: 'international',
-    market: 'en',
-    language: 'en',
-    location: 'Milan & Northern Italy',
-    rating: 4.9,
-    verified_reviews_count: 18,
-    review_source: 'google',
-    source: 'inbound_bounce',
-    do_not_contact: true,
-    status: 'do_not_contact',
-    tags: ['manual_touch', 'bounced'],
-    key_venues: ['Villa d\'Este', 'Lake Como', 'Milan'],
-    personalization_hook: 'Reaching out regarding luxury private transfers and Mercedes V-Class chauffeur services for your high-end private and corporate events.',
-    hook_type: 'venue',
-    notes: 'Email concierge@sinclairevents.com bounced (554 Relay access denied). Reach out manually via website contact form or social channels.',
-  },
-  {
     agency_name: 'Для Двоих (Dlya Dvoih)',
     contact_name: 'Dlya Dvoih Studio',
     email: 'info@dlyadvoih.ru',
@@ -952,7 +929,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
   {
     agency_name: 'Easton Events',
     contact_name: 'Lynn Easton',
-    email: 'info@eastonevents.com',
+    email: 'easton@eastonevents.com',
     website: 'https://www.eastonevents.com',
     type: 'planner',
     segment: 'international',
@@ -966,7 +943,7 @@ export const DISCOVERY_PARTNER_CATALOG = [
     key_venues: ['Passalacqua', "Villa d'Este"],
     personalization_hook: "I came across your destination celebrations in Northern Italy and Lake Como and wanted to introduce ourselves.",
     hook_type: 'venue',
-    notes: 'Discovered via AI Partner Search (Premier US destination wedding design & production studio).',
+    notes: 'Discovered via AI Partner Search (Premier US destination wedding design & production studio). Verified contact email from https://www.eastonevents.com/contact: easton@eastonevents.com.',
   },
   {
     agency_name: 'Laurie Arons Special Events',
@@ -1228,15 +1205,58 @@ export function extractUniqueStorySignals(rawText = '') {
   return { couples: uniqueCouples, press, signatureDetails, founderName };
 }
 
+export const PARKED_OR_DEAD_DOMAINS = /(?:^|\.)(sedo\.com|dan\.com|hugedomains\.com|afternic\.com|parkingcrew\.net|bodis\.com|domainmarket\.com|sav\.com)$/i;
+
+export const PARKED_OR_DEAD_PATH_RE = /\/(?:lander(?:\?|\/|$)|parking(?:\/|$)|parked(?:\/|$))/i;
+
+export const PARKED_OR_DEAD_CONTENT_RE = new RegExp(
+  [
+    '\\b(?:buy|purchase|inquire\\s+(?:about|regarding))\\s+this\\s+domain\\b',
+    '\\bthis\\s+domain\\s+(?:is\\s+)?(?:for\\s+sale|parked|expired)\\b',
+    '\\bdomain\\s+(?:is\\s+)?(?:for\\s+sale|parked|expired)\\b',
+    '\\bdomain\\s+has\\s+expired\\b',
+    '\\bthe\\s+domain\\s+.*?is\\s+for\\s+sale\\b',
+    '\\brenew\\s+(?:your|this)\\s+domain\\b',
+    'window\\.LANDER_SYSTEM\\b',
+    'parking-lander',
+    'wsimg\\.com\\/parking-lander',
+    'wsimg\\.com\\/signals',
+    '\\b(?:sedoparking|parkingcrew|hugedomains|afternic|bodis)\\b',
+    '\\bdomain\\s+parking\\b',
+    '\\bparked\\s+domain\\b',
+    '\\bpage\\s+cannot\\s+be\\s+found\\b',
+    '\\bsite\\s+not\\s+found\\b',
+    '\\bdomain\\s+names?\\s+at\\s+godaddy\\b',
+  ].join('|'),
+  'i'
+);
+
+export function isParkedOrDeadDomain(urlOrHostname = '', htmlText = '') {
+  if (!urlOrHostname && !htmlText) return false;
+  const str = String(urlOrHostname || '').trim();
+  if (str) {
+    if (PARKED_OR_DEAD_PATH_RE.test(str)) return true;
+    try {
+      const u = new URL(str.startsWith('http') ? str : `https://${str}`);
+      if (PARKED_OR_DEAD_DOMAINS.test(u.hostname)) return true;
+      if (PARKED_OR_DEAD_PATH_RE.test(u.pathname + u.search)) return true;
+      if (/[?&]oref=/.test(u.search)) return true;
+    } catch {
+      // not a standard URL string
+    }
+  }
+  if (htmlText) {
+    const txt = String(htmlText);
+    if (PARKED_OR_DEAD_CONTENT_RE.test(txt)) return true;
+  }
+  return false;
+}
+
 export function resolveProspectResearchSeed(p = {}) {
   const key = normName(p.agency_name || '');
   const known = KNOWN_LAKE_COMO_DIRECTORY[key] || {};
-  let guessedUrl = p.website || known.website || '';
-  if (!guessedUrl && p.agency_name) {
-    const slug = String(p.agency_name).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
-    if (slug.length >= 4) guessedUrl = `https://www.${slug}.com`;
-  }
-  return { ...known, guessedUrl };
+  const website = p.website || known.website || '';
+  return { ...known, website, guessedUrl: website };
 }
 
 export function buildVerifiedFallbackHook(p = {}, storySignals = null, variantOverride = null) {

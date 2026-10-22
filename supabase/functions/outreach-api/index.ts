@@ -51,7 +51,7 @@ async function findWebsiteByAgencyName(agencyName: string, location = ''): Promi
       }
       for (const u of urls) {
         const dom = core.domainOf(u);
-        if (!dom || DIRECTORY_HOST_RE.test(dom)) continue;
+        if (!dom || DIRECTORY_HOST_RE.test(dom) || core.isParkedOrDeadDomain(u)) continue;
         try {
           const parsed = new URL(u);
           return `${parsed.protocol}//${parsed.hostname}`;
@@ -75,10 +75,16 @@ async function enrich(db: any, body: any) {
   if (DIRECTORY_HOST_RE.test(core.domainOf(fromUrl.website))) {
     return { suggestions: {}, note: 'Listing sites are not fetched (their terms forbid it). Open the listing, copy the planner\'s own website, and paste that.', sources: [] };
   }
+  if (core.isParkedOrDeadDomain(fromUrl.website)) {
+    return { suggestions: {}, note: 'This domain is a parked or dead lander. Please provide an active official website.', sources: [] };
+  }
   const [main, jina] = await Promise.all([
     fetchPage(fromUrl.website).catch(() => ({ html: '', finalUrl: fromUrl.website })),
     fetchJinaSignals(fromUrl.website),
   ]);
+  if (core.isParkedOrDeadDomain(main.finalUrl, main.html)) {
+    return { suggestions: {}, note: 'The website at this domain is parked, expired, or for sale. Please provide an active official website.', sources: [] };
+  }
   const first: any = core.extractFromHtml(main.html, main.finalUrl);
   const sources = [main.finalUrl];
   const merged: any = {

@@ -7,3 +7,10 @@ supabase/.temp/
 
 # filled-in setup SQL with secrets
 *.local.sql
+
+# Service account keys and local secrets
+*service_account*.json
+*.pem
+
+# Generated HTML vouchers and invoices
+DOROGO_*.html

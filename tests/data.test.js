@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   wilson, computeMetrics, tractionVerdict, compareRates, csvToProspects, toCSV, findDuplicates, extractFromHtml,
   priorityScore, parseProfileUrl, quoteNet, commissionFor, getRateCardInfo, rankUsableEmails, inferLanguage,
-  sanitizeCatalogProspect, DISCOVERY_PARTNER_CATALOG, buildSocialOpener,
+  sanitizeCatalogProspect, DISCOVERY_PARTNER_CATALOG, buildSocialOpener, resolveProspectResearchSeed, isParkedOrDeadDomain,
 } from '../supabase/functions/_shared/core/index.js';
 
 test('Wilson interval', () => {
@@ -260,4 +260,71 @@ test('multi-language rate card routing matches communication language (EN, IT, R
   }, 'it');
   assert.equal(custom.path, 'custom/italian_card.pdf');
   assert.equal(custom.filename, 'Custom_Italian_Card.pdf');
+});
+
+test('resolveProspectResearchSeed never hallucinates or guesses unverified domains', () => {
+  // Unknown agencies must NOT synthesize arbitrary www.<agency>.com domains
+  const seedUnknown = resolveProspectResearchSeed({ agency_name: 'WP Bellagio' });
+  assert.equal(seedUnknown.website, '');
+  assert.equal(seedUnknown.guessedUrl, '');
+
+  const seedRandom = resolveProspectResearchSeed({ agency_name: 'Random Unknown Planner' });
+  assert.equal(seedRandom.website, '');
+  assert.equal(seedRandom.guessedUrl, '');
+
+  // Known directory entries return their verified website
+  const seedKnown = resolveProspectResearchSeed({ agency_name: 'Federica Cantù' });
+  assert.equal(seedKnown.website, 'https://www.federicacantuweddingplanner.com');
+  assert.equal(seedKnown.email, 'hello@federicacantuweddingplanner.com');
+
+  // Existing prospect website is preserved
+  const seedExisting = resolveProspectResearchSeed({ agency_name: 'Custom', website: 'https://customplanner.it' });
+  assert.equal(seedExisting.website, 'https://customplanner.it');
+});
+
+test('isParkedOrDeadDomain detects parked landers, expired pages, and domain brokers', () => {
+  // Path & query parked lander detection
+  assert.ok(isParkedOrDeadDomain('https://michellerago.com/lander?oref=https%3A%2F%2Fdimatrc18.github.io%2F'));
+  assert.ok(isParkedOrDeadDomain('https://example.com/lander'));
+  assert.ok(isParkedOrDeadDomain('https://someplanner.com/parking/'));
+  assert.ok(isParkedOrDeadDomain('https://sedo.com/search/details/?domain=example.com'));
+  assert.ok(isParkedOrDeadDomain('https://dan.com/buy-domain/weddingplanner.com'));
+  assert.ok(isParkedOrDeadDomain('https://www.hugedomains.com/domain_profile.cfm?d=planner.com'));
+
+  // HTML content signatures (GoDaddy parking, lander systems, broker ads)
+  const godaddyLanderHtml = '<!doctype html><html><head><script>window.LANDER_SYSTEM="PW"</script><script>window._trfd=window._trfd||[],window._trfd.push({ap:"parking"})</script><script src="https://img1.wsimg.com/parking-lander/static/js/main.js"></script></head><body></body></html>';
+  assert.ok(isParkedOrDeadDomain('https://michellerago.com', godaddyLanderHtml));
+
+  const forSaleHtml = '<html><body><h1>This domain is for sale</h1><p>Inquire about this domain at Afternic</p></body></html>';
+  assert.ok(isParkedOrDeadDomain('https://dormantwedding.com', forSaleHtml));
+
+  const expiredHtml = '<html><body><h1>This domain has expired</h1><p>Renew your domain now.</p></body></html>';
+  assert.ok(isParkedOrDeadDomain('https://expiredagency.com', expiredHtml));
+
+  // Legitimate active wedding planner sites must NOT be flagged
+  assert.ok(!isParkedOrDeadDomain('https://www.eastonevents.com'));
+  assert.ok(!isParkedOrDeadDomain('https://passalacqua.it'));
+  assert.ok(!isParkedOrDeadDomain('https://www.villadeste.com'));
+
+  const validHtml = '<html><head><title>Easton Events | Destination Weddings</title></head><body><h1>Luxury Destination Weddings in Italy</h1><p>Contact easton@eastonevents.com</p></body></html>';
+  assert.ok(!isParkedOrDeadDomain('https://www.eastonevents.com', validHtml));
+});
+
+test('DISCOVERY_PARTNER_CATALOG contains verified Easton email and zero dead/parked domains', () => {
+  const easton = DISCOVERY_PARTNER_CATALOG.find((p) => p.agency_name === 'Easton Events');
+  assert.ok(easton, 'Easton Events must exist in catalog');
+  assert.equal(easton.email, 'easton@eastonevents.com', 'Easton email must match contact page (easton@eastonevents.com)');
+  assert.notEqual(easton.email, 'info@eastonevents.com', 'Old bounced info@eastonevents.com must be removed');
+
+  const sinclair = DISCOVERY_PARTNER_CATALOG.find((p) => p.agency_name === 'Sinclair Events');
+  assert.equal(sinclair, undefined, 'Sinclair Events (dead/bounced) must not be in catalog');
+
+  const bellagio = DISCOVERY_PARTNER_CATALOG.find((p) => /wpbellagio/i.test(p.website || ''));
+  assert.equal(bellagio, undefined, 'wpbellagio.com must not be in catalog');
+
+  for (const partner of DISCOVERY_PARTNER_CATALOG) {
+    if (partner.website) {
+      assert.ok(!isParkedOrDeadDomain(partner.website), `Catalog partner "${partner.agency_name}" has parked/dead domain: ${partner.website}`);
+    }
+  }
 });

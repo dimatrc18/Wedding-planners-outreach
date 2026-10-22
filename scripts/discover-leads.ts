@@ -32,7 +32,7 @@ export interface LeadFilterResult {
   qualified: boolean;
   manualReview?: boolean;
   rejectReason: string | null;
-  stage: 'passed' | 'manual_review_needed' | 'directory_blocked' | 'not_wedding_planner' | 'budget_or_non_luxury' | 'outside_region' | 'no_valid_email' | 'no_mx' | 'duplicate' | 'below_min_score';
+  stage: 'passed' | 'manual_review_needed' | 'directory_blocked' | 'dead_or_parked_domain' | 'not_wedding_planner' | 'budget_or_non_luxury' | 'outside_region' | 'no_valid_email' | 'no_mx' | 'duplicate' | 'below_min_score';
   prospect: Record<string, any> | null;
   signals: {
     venues: string[];
@@ -122,6 +122,17 @@ export async function evaluateLeadCandidate(
       qualified: false,
       stage: 'directory_blocked',
       rejectReason: `Blocked directory/social domain (${siteDomain || finalUrl}); require planner's own website`,
+      prospect: null,
+      signals: { venues: [], towns: [], luxurySignals: [], emails: [], mxStatus: 'unknown' },
+    };
+  }
+
+  // Stage 1b: Dead Domain & Parked Lander Blocklist
+  if (core.isParkedOrDeadDomain(finalUrl, candidate.html)) {
+    return {
+      qualified: false,
+      stage: 'dead_or_parked_domain',
+      rejectReason: `Blocked parked lander or inactive/for-sale domain (${siteDomain || finalUrl})`,
       prospect: null,
       signals: { venues: [], towns: [], luxurySignals: [], emails: [], mxStatus: 'unknown' },
     };
