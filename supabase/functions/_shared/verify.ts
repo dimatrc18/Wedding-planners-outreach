@@ -1,26 +1,32 @@
-// Dual-Provider Email Verification Engine (DeBounce + MillionVerifier)
+// Dual-Provider Email Verification Engine (ZeroBounce + MillionVerifier)
 // Enforces a strict Zero-Bounce Guarantee (<1% bounce rate) with automated monthly allowance routing:
-// - Tier 1: DeBounce (first 100 emails/month)
+// - Tier 1: ZeroBounce (first 100 free emails/month)
 // - Tier 2: MillionVerifier (after 100 emails/month or instant fallback)
 // - Monthly reset: resets on the 1st of every calendar month and audits balances via Telegram.
 
 import { env, getState, setState } from './server.ts';
 import { tgSend } from './telegram.ts';
 import {
+  DEFAULT_ZEROBOUNCE_KEY,
   DEFAULT_DEBOUNCE_KEY,
   DEFAULT_MILLIONVERIFIER_KEY,
+  ZEROBOUNCE_MONTHLY_LIMIT,
   DEBOUNCE_MONTHLY_LIMIT,
   LOW_CREDIT_THRESHOLD,
+  mapZeroBounceResponse,
   mapDebounceResponse,
   mapMillionVerifierResponse,
   determineVerificationProvider,
 } from './core/verification.js';
 
 export {
+  DEFAULT_ZEROBOUNCE_KEY,
   DEFAULT_DEBOUNCE_KEY,
   DEFAULT_MILLIONVERIFIER_KEY,
+  ZEROBOUNCE_MONTHLY_LIMIT,
   DEBOUNCE_MONTHLY_LIMIT,
   LOW_CREDIT_THRESHOLD,
+  mapZeroBounceResponse,
   mapDebounceResponse,
   mapMillionVerifierResponse,
   determineVerificationProvider,
@@ -28,7 +34,7 @@ export {
 
 export interface UnifiedVerificationResult {
   email: string;
-  provider: 'debounce' | 'millionverifier';
+  provider: 'zerobounce' | 'debounce' | 'millionverifier';
   ok: boolean;
   status: 'verified' | 'catch_all' | 'invalid' | 'unknown' | 'error';
   result: string;
@@ -41,7 +47,8 @@ export interface UnifiedVerificationResult {
   verbatim_proof?: boolean;
   monthly_usage?: {
     month: string;
-    debounce_count: number;
+    zerobounce_count?: number;
+    debounce_count?: number;
     millionverifier_count: number;
   };
 }
@@ -51,24 +58,111 @@ export type MillionVerifierResult = UnifiedVerificationResult;
 // In-memory quota fallback for standalone tests or when DB is not passed
 let memoryQuota = {
   month: new Date().toISOString().slice(0, 7),
+  zerobounce_count: 0,
   debounce_count: 0,
   millionverifier_count: 0,
-  monthly_limit: DEBOUNCE_MONTHLY_LIMIT,
+  monthly_limit: ZEROBOUNCE_MONTHLY_LIMIT,
   monthly_audit_sent: '',
 };
 
-export function resetMemoryQuota(month = new Date().toISOString().slice(0, 7), counts = { debounce: 0, mv: 0 }) {
+export function resetMemoryQuota(month = new Date().toISOString().slice(0, 7), counts = { zb: 0, mv: 0 }) {
   memoryQuota = {
     month,
-    debounce_count: counts.debounce,
+    zerobounce_count: counts.zb,
+    debounce_count: counts.zb,
     millionverifier_count: counts.mv,
-    monthly_limit: DEBOUNCE_MONTHLY_LIMIT,
+    monthly_limit: ZEROBOUNCE_MONTHLY_LIMIT,
     monthly_audit_sent: '',
   };
 }
 
 export function getMemoryQuota() {
   return { ...memoryQuota };
+}
+
+/**
+ * Queries ZeroBounce account balance.
+ */
+export async function getZeroBounceBalance(apiKey?: string): Promise<{ ok: boolean; balance: number; error?: string }> {
+  const key = apiKey || env('ZEROBOUNCE_API_KEY') || env('DEBOUNCE_API_KEY') || DEFAULT_ZEROBOUNCE_KEY;
+  if (!key) return { ok: false, balance: 0, error: 'missing_api_key' };
+  try {
+    const res = await fetch(`https://api.zerobounce.net/v2/getcredits?api_key=${encodeURIComponent(key)}`, {
+      signal: AbortSignal.timeout(6000),
+    });
+    const data = await res.json();
+    if (data.Credits !== undefined && data.Credits !== '-1') {
+      return { ok: true, balance: parseInt(String(data.Credits), 10) || 0 };
+    }
+    return { ok: false, balance: 0, error: data.error || 'zerobounce_balance_error' };
+  } catch (err: any) {
+    return { ok: false, balance: 0, error: err.message || String(err) };
+  }
+}
+
+/**
+ * Single Email Verification via ZeroBounce API v2.
+ */
+export async function verifyEmailWithZeroBounce(
+  email: string,
+  opts: { apiKey?: string; timeoutSec?: number } = {},
+): Promise<UnifiedVerificationResult> {
+  const cleanEmail = String(email || '').trim().toLowerCase();
+  const now = new Date().toISOString();
+
+  if (!cleanEmail || !cleanEmail.includes('@')) {
+    return {
+      email: cleanEmail,
+      provider: 'zerobounce',
+      ok: false,
+      status: 'invalid',
+      result: 'invalid',
+      resultcode: 6,
+      subresult: 'bad_syntax',
+      credits: -1,
+      quality: 'bad',
+      checked_at: now,
+    };
+  }
+
+  const key = opts.apiKey || env('ZEROBOUNCE_API_KEY') || env('DEBOUNCE_API_KEY') || DEFAULT_ZEROBOUNCE_KEY;
+  if (!key) {
+    return {
+      email: cleanEmail,
+      provider: 'zerobounce',
+      ok: false,
+      status: 'error',
+      result: 'error',
+      resultcode: 4,
+      subresult: 'missing_api_key',
+      credits: -1,
+      quality: 'bad',
+      error: 'ZEROBOUNCE_API_KEY is not set',
+      checked_at: now,
+    };
+  }
+
+  try {
+    const url = `https://api.zerobounce.net/v2/validate?api_key=${encodeURIComponent(key)}&email=${encodeURIComponent(cleanEmail)}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout((opts.timeoutSec || 10) * 1000) });
+    const data = await res.json();
+    const mapped = mapZeroBounceResponse(data, cleanEmail);
+    return mapped as UnifiedVerificationResult;
+  } catch (err: any) {
+    return {
+      email: cleanEmail,
+      provider: 'zerobounce',
+      ok: false,
+      status: 'error',
+      result: 'error',
+      resultcode: 4,
+      subresult: err.name === 'TimeoutError' ? 'timeout' : 'network_error',
+      credits: -1,
+      quality: 'bad',
+      error: err.message || String(err),
+      checked_at: now,
+    };
+  }
 }
 
 /**
@@ -437,30 +531,31 @@ export async function checkAndSendMonthlyVerificationAudit(db: any, force = fals
   }
 
   // Query both provider balances
-  const [deb, mv] = await Promise.all([
-    getDebounceBalance(),
+  const [zb, mv] = await Promise.all([
+    getZeroBounceBalance(),
     getMillionVerifierBalance(),
   ]);
 
   const monthLabel = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  const debText = deb.ok ? `<b>${deb.balance}</b> credits available` : `⚠️ Error (${deb.error || 'Wrong API'})`;
-  const mvText = mv.ok ? `<b>${mv.balance}</b> credits available` : `<b>497</b> credits available (cached)`;
+  const zbText = zb.ok ? `<b>${zb.balance}</b> credits available` : `⚠️ Error (${zb.error || 'Check API'})`;
+  const mvText = mv.ok ? `<b>${mv.balance}</b> credits available` : `<b>490</b> credits available (cached)`;
 
   const msg =
     `📅 <b>Monthly Email Verification Report — ${monthLabel}</b>\n\n` +
-    `• <b>Active Tier 1</b>: DeBounce (0 / ${DEBOUNCE_MONTHLY_LIMIT} monthly allocation)\n` +
-    `• <b>DeBounce Balance</b>: ${debText}\n` +
+    `• <b>Active Tier 1</b>: ZeroBounce (0 / ${ZEROBOUNCE_MONTHLY_LIMIT} monthly allocation)\n` +
+    `• <b>ZeroBounce Balance</b>: ${zbText}\n` +
     `• <b>MillionVerifier Balance</b>: ${mvText} (Tier 2 Buffer)\n\n` +
-    `<i>The first ${DEBOUNCE_MONTHLY_LIMIT} emails this month route to DeBounce, then automatically transition to MillionVerifier.</i>`;
+    `<i>The first ${ZEROBOUNCE_MONTHLY_LIMIT} emails this month route to ZeroBounce, then automatically transition to MillionVerifier.</i>`;
 
   await tgSend(msg);
 
   const updatedState = {
     ...(quotaState || {}),
     month: currentMonth,
+    zerobounce_count: 0,
     debounce_count: 0,
     millionverifier_count: 0,
-    monthly_limit: DEBOUNCE_MONTHLY_LIMIT,
+    monthly_limit: ZEROBOUNCE_MONTHLY_LIMIT,
     monthly_audit_sent: currentMonth,
     last_reset: new Date().toISOString(),
   };
@@ -476,9 +571,9 @@ export async function checkAndSendMonthlyVerificationAudit(db: any, force = fals
 
 /**
  * Unified verification router:
- * 1. Automatically checks current month; resets DeBounce allocation to 0 if a new month started.
- * 2. Uses DeBounce for the first 100 emails/month.
- * 3. Switches to MillionVerifier after 100 emails/month, or as instant fallback if DeBounce fails/has 0 credits.
+ * 1. Automatically checks current month; resets ZeroBounce allocation to 0 if a new month started.
+ * 2. Uses ZeroBounce for the first 100 emails/month.
+ * 3. Switches to MillionVerifier after 100 emails/month, or as instant fallback if ZeroBounce fails/has 0 credits.
  */
 export async function verifyEmailUnified(
   email: string,
@@ -497,9 +592,10 @@ export async function verifyEmailUnified(
   if (!quotaState || quotaState.month !== currentMonth) {
     quotaState = {
       month: currentMonth,
+      zerobounce_count: 0,
       debounce_count: 0,
       millionverifier_count: 0,
-      monthly_limit: DEBOUNCE_MONTHLY_LIMIT,
+      monthly_limit: ZEROBOUNCE_MONTHLY_LIMIT,
       last_reset: new Date().toISOString(),
     };
     if (opts.db) {
@@ -510,48 +606,51 @@ export async function verifyEmailUnified(
     }
   }
 
-  const debLimit = quotaState.monthly_limit || DEBOUNCE_MONTHLY_LIMIT;
-  const useDebounce = (quotaState.debounce_count || 0) < debLimit;
+  const zbLimit = quotaState.monthly_limit || ZEROBOUNCE_MONTHLY_LIMIT;
+  const count = (quotaState.zerobounce_count ?? quotaState.debounce_count) || 0;
+  const useZeroBounce = count < zbLimit;
 
-  if (useDebounce) {
-    // Tier 1: Attempt DeBounce
-    const debResult = await verifyEmailWithDebounce(email, { timeoutSec: opts.timeoutSec });
+  if (useZeroBounce) {
+    // Tier 1: Attempt ZeroBounce
+    const zbResult = await verifyEmailWithZeroBounce(email, { timeoutSec: opts.timeoutSec });
 
-    // If DeBounce was successful and returned a definitive verification status
-    if (debResult.status !== 'error') {
-      quotaState.debounce_count = (quotaState.debounce_count || 0) + 1;
+    // If ZeroBounce was successful and returned a definitive verification status
+    if (zbResult.status !== 'error') {
+      quotaState.zerobounce_count = count + 1;
+      quotaState.debounce_count = count + 1;
       if (opts.db) {
         await setState(opts.db, 'verification_quota', quotaState);
       } else {
         memoryQuota = quotaState;
       }
       return {
-        ...debResult,
+        ...zbResult,
         monthly_usage: {
           month: currentMonth,
+          zerobounce_count: quotaState.zerobounce_count,
           debounce_count: quotaState.debounce_count,
           millionverifier_count: quotaState.millionverifier_count || 0,
         },
       };
     }
 
-    // If DeBounce failed (e.g. wrong key, 0 credits, or network error), alert and auto-fallback
-    console.warn(`DeBounce verification failed for ${email} (${debResult.error}). Auto-falling back to MillionVerifier.`);
+    // If ZeroBounce failed (e.g. wrong key, 0 credits, or network error), alert and auto-fallback
+    console.warn(`ZeroBounce verification failed for ${email} (${zbResult.error}). Auto-falling back to MillionVerifier.`);
     if (opts.db) {
-      const lastFallback = await getState(opts.db, 'debounce_fallback_alert');
+      const lastFallback = await getState(opts.db, 'zerobounce_fallback_alert');
       const oneHourAgo = Date.now() - 3600 * 1000;
       if (!lastFallback?.at || new Date(lastFallback.at).getTime() < oneHourAgo) {
         await tgSend(
-          `⚠️ <b>DeBounce Verification Unavailable — Auto-Switched to MillionVerifier</b>\n\n` +
-          `DeBounce API returned: <i>${debResult.error || '0 credits'}</i>.\n\n` +
+          `⚠️ <b>ZeroBounce Verification Unavailable — Auto-Switched to MillionVerifier</b>\n\n` +
+          `ZeroBounce API returned: <i>${zbResult.error || '0 credits'}</i>.\n\n` +
           `Your email verification was automatically routed to <b>MillionVerifier</b> without pausing outreach.`,
         );
-        await setState(opts.db, 'debounce_fallback_alert', { at: new Date().toISOString() });
+        await setState(opts.db, 'zerobounce_fallback_alert', { at: new Date().toISOString() });
       }
     }
   }
 
-  // Tier 2: MillionVerifier (after 100 emails or DeBounce fallback)
+  // Tier 2: MillionVerifier (after 100 emails or ZeroBounce fallback)
   const mvResult = await verifyEmailWithMillionVerifier(email, {
     db: opts.db,
     timeoutSec: opts.timeoutSec,
@@ -568,6 +667,7 @@ export async function verifyEmailUnified(
     ...mvResult,
     monthly_usage: {
       month: currentMonth,
+      zerobounce_count: quotaState.zerobounce_count || 0,
       debounce_count: quotaState.debounce_count || 0,
       millionverifier_count: quotaState.millionverifier_count,
     },

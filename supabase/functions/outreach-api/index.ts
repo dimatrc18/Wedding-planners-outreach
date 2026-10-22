@@ -5,7 +5,7 @@ import { handle, json, requireAllowedUser, loadSettings, integrations, getState,
 import { verifySmtp, sendMail } from '../_shared/mail.ts';
 import { tgSend } from '../_shared/telegram.ts';
 import { gemini, checkHook } from '../_shared/ai.ts';
-import { verifyEmailUnified, getDebounceBalance, getMillionVerifierBalance, checkAndSendMonthlyVerificationAudit } from '../_shared/verify.ts';
+import { verifyEmailUnified, getZeroBounceBalance, getDebounceBalance, getMillionVerifierBalance, checkAndSendMonthlyVerificationAudit } from '../_shared/verify.ts';
 import { draftDueSteps, sendDue, syncInbox, sendDigest, approveTouch, fetchJinaSignals, autoResearchPending, loadAll, classifyInboundMessage, applyInbound, formatThreadHistory, verifyDnsMx } from '../_shared/jobs.ts';
 
 const GIF = Uint8Array.from(atob('R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=='), (c) => c.charCodeAt(0));
@@ -350,8 +350,8 @@ Deno.serve((req) => handle(req, async () => {
     }
     case 'verification_status': {
       const quota = await getState(db, 'verification_quota');
-      const [deb, mv] = await Promise.all([getDebounceBalance(), getMillionVerifierBalance()]);
-      return json({ quota, debounce: deb, millionverifier: mv });
+      const [zb, deb, mv] = await Promise.all([getZeroBounceBalance(), getDebounceBalance(), getMillionVerifierBalance()]);
+      return json({ quota, zerobounce: zb, debounce: deb, millionverifier: mv });
     }
     case 'audit_monthly_verification': {
       const res = await checkAndSendMonthlyVerificationAudit(db, true);

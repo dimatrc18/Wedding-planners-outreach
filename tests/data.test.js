@@ -5,7 +5,7 @@ import {
   priorityScore, parseProfileUrl, quoteNet, commissionFor, getRateCardInfo, rankUsableEmails, inferLanguage,
   sanitizeCatalogProspect, DISCOVERY_PARTNER_CATALOG, buildSocialOpener, resolveProspectResearchSeed, isParkedOrDeadDomain,
   canSend, DEFAULT_SETTINGS,
-  mapDebounceResponse, mapMillionVerifierResponse, determineVerificationProvider,
+  mapZeroBounceResponse, mapDebounceResponse, mapMillionVerifierResponse, determineVerificationProvider,
 } from '../supabase/functions/_shared/core/index.js';
 
 test('Wilson interval', () => {
@@ -429,6 +429,62 @@ test('MillionVerifier mailbox gatekeeper and catch-all zero-bounce policy', () =
   assert.equal(gate6.reason, 'invalid_email');
 });
 
+test('ZeroBounce response normalization maps all codes correctly', () => {
+  // Valid inbox
+  const zbValid = mapZeroBounceResponse({
+    address: 'easton@eastonevents.com',
+    status: 'valid',
+    sub_status: '',
+    mx_found: 'true',
+  });
+  assert.equal(zbValid.provider, 'zerobounce');
+  assert.equal(zbValid.ok, true);
+  assert.equal(zbValid.status, 'verified');
+  assert.equal(zbValid.resultcode, 1);
+
+  // Legitimate B2B role account (e.g. hello@, info@) with MX
+  const zbRole = mapZeroBounceResponse({
+    address: 'hello@lenafreitag.com',
+    status: 'do_not_mail',
+    sub_status: 'role_based',
+    mx_found: 'true',
+  });
+  assert.equal(zbRole.ok, true);
+  assert.equal(zbRole.status, 'verified');
+  assert.equal(zbRole.resultcode, 1);
+  assert.equal(zbRole.subresult, 'role_based');
+
+  // Catch-all domain
+  const zbCatch = mapZeroBounceResponse({
+    address: 'info@catchalldomain.com',
+    status: 'catch-all',
+    sub_status: '',
+    mx_found: 'true',
+  });
+  assert.equal(zbCatch.ok, false);
+  assert.equal(zbCatch.status, 'catch_all');
+  assert.equal(zbCatch.resultcode, 2);
+
+  // Invalid / mailbox not found
+  const zbInvalid = mapZeroBounceResponse({
+    address: 'nonexistent@example.com',
+    status: 'invalid',
+    sub_status: 'mailbox_not_found',
+  });
+  assert.equal(zbInvalid.ok, false);
+  assert.equal(zbInvalid.status, 'invalid');
+  assert.equal(zbInvalid.resultcode, 6);
+
+  // Disposable / Spam Trap
+  const zbSpam = mapZeroBounceResponse({
+    address: 'trap@spamtrap.org',
+    status: 'spamtrap',
+  });
+  assert.equal(zbSpam.ok, false);
+  assert.equal(zbSpam.status, 'invalid');
+  assert.equal(zbSpam.resultcode, 6);
+});
+
 test('DeBounce response normalization maps all codes correctly', () => {
   // Code 5: Safe to send -> verified ok
   const deb5 = mapDebounceResponse({
@@ -483,31 +539,31 @@ test('Dual-Provider quota router manages 100/mo allowance and month boundary res
   // 1. New month boundary reset:
   const prevMonthState = {
     month: '2026-10',
-    debounce_count: 85,
+    zerobounce_count: 85,
     millionverifier_count: 12,
     monthly_limit: 100,
   };
   const novCheck = determineVerificationProvider(prevMonthState, '2026-11', 100);
   assert.equal(novCheck.resetNeeded, true, 'Month transition must trigger quota reset');
   assert.equal(novCheck.quotaState.month, '2026-11');
-  assert.equal(novCheck.quotaState.debounce_count, 0, 'DeBounce count must reset to 0 in new month');
-  assert.equal(novCheck.provider, 'debounce', 'Must start new month with DeBounce');
+  assert.equal(novCheck.quotaState.zerobounce_count, 0, 'ZeroBounce count must reset to 0 in new month');
+  assert.equal(novCheck.provider, 'zerobounce', 'Must start new month with ZeroBounce');
 
   // 2. Routing within allowance (< 100):
   const midMonthState = {
     month: '2026-11',
-    debounce_count: 45,
+    zerobounce_count: 45,
     millionverifier_count: 0,
     monthly_limit: 100,
   };
   const midCheck = determineVerificationProvider(midMonthState, '2026-11', 100);
   assert.equal(midCheck.resetNeeded, false);
-  assert.equal(midCheck.provider, 'debounce', 'Email 46 must route to DeBounce');
+  assert.equal(midCheck.provider, 'zerobounce', 'Email 46 must route to ZeroBounce');
 
   // 3. Routing at limit (100 reached):
   const fullMonthState = {
     month: '2026-11',
-    debounce_count: 100,
+    zerobounce_count: 100,
     millionverifier_count: 0,
     monthly_limit: 100,
   };

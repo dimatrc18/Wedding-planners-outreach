@@ -1,10 +1,115 @@
 // Dual-Provider Verification Normalization & Routing Rules
 // Pure business logic shared between Node (unit tests & CLI) and Deno (Supabase Edge Functions)
 
+export const DEFAULT_ZEROBOUNCE_KEY = 'd15fe4de5e33478db50b958cc9eef018';
 export const DEFAULT_DEBOUNCE_KEY = 'c5a1d7317f8e42acb2f1b7bd46dcb832';
 export const DEFAULT_MILLIONVERIFIER_KEY = 'CugoyAcGssnLLZpm2jffWjp0h';
+export const ZEROBOUNCE_MONTHLY_LIMIT = 100;
 export const DEBOUNCE_MONTHLY_LIMIT = 100;
 export const LOW_CREDIT_THRESHOLD = 25;
+
+/**
+ * Normalizes ZeroBounce API v2 response payload into the unified zero-bounce schema.
+ */
+export function mapZeroBounceResponse(data, email = '') {
+  const cleanEmail = String(email || data?.address || '').trim().toLowerCase();
+  const now = new Date().toISOString();
+
+  if (data?.error) {
+    return {
+      email: cleanEmail,
+      provider: 'zerobounce',
+      ok: false,
+      status: 'error',
+      result: 'error',
+      resultcode: 4,
+      subresult: data.error || 'api_error',
+      credits: -1,
+      quality: 'bad',
+      error: data.error,
+      checked_at: now,
+    };
+  }
+
+  const statusRaw = String(data?.status || 'unknown').toLowerCase();
+  const subStatus = String(data?.sub_status || '').toLowerCase();
+
+  let status = 'unknown';
+  let ok = false;
+  let resultCode = 3;
+  let resultStr = 'unknown';
+  let subresult = subStatus || statusRaw;
+
+  switch (statusRaw) {
+    case 'valid':
+      status = 'verified';
+      ok = true;
+      resultCode = 1;
+      resultStr = 'ok';
+      subresult = subStatus || 'deliverable';
+      break;
+    case 'do_not_mail':
+      if (subStatus === 'role_based' && data?.mx_found !== 'false' && data?.mx_found !== false) {
+        // Legitimate B2B role account (e.g. hello@lenafreitag.com, info@exclusiveitalyweddings.com)
+        status = 'verified';
+        ok = true;
+        resultCode = 1;
+        resultStr = 'ok';
+        subresult = 'role_based';
+      } else {
+        status = 'invalid';
+        ok = false;
+        resultCode = 6;
+        resultStr = 'invalid';
+        subresult = subStatus || 'do_not_mail';
+      }
+      break;
+    case 'catch-all':
+    case 'catch_all':
+      status = 'catch_all';
+      ok = false;
+      resultCode = 2;
+      resultStr = 'catch_all';
+      subresult = 'accept_all';
+      break;
+    case 'invalid':
+      status = 'invalid';
+      ok = false;
+      resultCode = 6;
+      resultStr = 'invalid';
+      subresult = subStatus || 'no_mailbox';
+      break;
+    case 'spamtrap':
+    case 'abuse':
+      status = 'invalid';
+      ok = false;
+      resultCode = 6;
+      resultStr = 'invalid';
+      subresult = statusRaw;
+      break;
+    case 'unknown':
+    default:
+      status = 'unknown';
+      ok = false;
+      resultCode = 3;
+      resultStr = 'unknown';
+      subresult = subStatus || 'timeout';
+      break;
+  }
+
+  return {
+    email: cleanEmail,
+    provider: 'zerobounce',
+    ok,
+    status,
+    result: resultStr,
+    resultcode: resultCode,
+    subresult,
+    credits: -1,
+    quality: ok ? 'good' : 'bad',
+    checked_at: now,
+  };
+}
 
 /**
  * Normalizes DeBounce API v1 response payload into the unified zero-bounce schema.
@@ -179,17 +284,18 @@ export function mapMillionVerifierResponse(data, email = '') {
 
 /**
  * Routing logic for the Dual-Provider gateway:
- * - Checks month transition and resets DeBounce allocation when month changes.
- * - Routes to DeBounce for the first 100 emails of each calendar month.
+ * - Checks month transition and resets ZeroBounce allocation when month changes.
+ * - Routes to ZeroBounce for the first 100 emails of each calendar month.
  * - Routes to MillionVerifier once 100 is reached.
  */
-export function determineVerificationProvider(quotaState, currentMonth = new Date().toISOString().slice(0, 7), limit = DEBOUNCE_MONTHLY_LIMIT) {
+export function determineVerificationProvider(quotaState, currentMonth = new Date().toISOString().slice(0, 7), limit = ZEROBOUNCE_MONTHLY_LIMIT) {
   let state = { ...(quotaState || {}) };
   let resetNeeded = false;
 
   if (!state.month || state.month !== currentMonth) {
     state = {
       month: currentMonth,
+      zerobounce_count: 0,
       debounce_count: 0,
       millionverifier_count: 0,
       monthly_limit: limit,
@@ -198,8 +304,9 @@ export function determineVerificationProvider(quotaState, currentMonth = new Dat
     resetNeeded = true;
   }
 
-  const debLimit = state.monthly_limit || limit;
-  const provider = (state.debounce_count || 0) < debLimit ? 'debounce' : 'millionverifier';
+  const zbLimit = state.monthly_limit || limit;
+  const count = (state.zerobounce_count ?? state.debounce_count) || 0;
+  const provider = count < zbLimit ? 'zerobounce' : 'millionverifier';
 
   return {
     provider,
