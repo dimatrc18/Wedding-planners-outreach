@@ -154,10 +154,9 @@ export function renderBookingCard(booking: BookingData, draftId: string): { text
     booking.missing_fields.forEach((m) => lines.push(`• ❓ ${esc(m)}`));
   }
 
-  // Inline Buttons layout:
+  // Inline Buttons layout requested by user:
   // Row 1: Approve and Cancel (Cancel deletes draft completely from chat)
-  // Row 2: Full-width Edit Full Booking (copies full itinerary/text to edit all fields)
-  // Row 3: Quick targeted edits (Edit Notes / Add Missing Info / Edit Price)
+  // Row 2: Full-width Edit Full Booking
   const buttons: any[] = [];
 
   buttons.push([
@@ -177,34 +176,6 @@ export function renderBookingCard(booking: BookingData, draftId: string): { text
       callback_data: `edit_full:${draftId}`,
     },
   ]);
-
-  const row3: any[] = [];
-  if (booking.client_notes) {
-    row3.push({
-      text: "📝 Edit Notes",
-      callback_data: `edit_notes:${draftId}`,
-    });
-  }
-  if (booking.missing_fields.length > 0) {
-    row3.push({
-      text: "➕ Add Missing Info",
-      callback_data: `add_info:${draftId}`,
-    });
-  }
-  if (booking.finance.total_price === null && booking.finance.suggested_price) {
-    row3.push({
-      text: `💶 Confirm €${booking.finance.suggested_price}`,
-      callback_data: `set_price:${draftId}:${booking.finance.suggested_price}`,
-    });
-  } else if (!booking.client_notes || booking.missing_fields.length === 0) {
-    row3.push({
-      text: "💶 Edit Price",
-      callback_data: `edit_price:${draftId}`,
-    });
-  }
-  if (row3.length > 0) {
-    buttons.push(row3);
-  }
 
   return {
     text: lines.join("\n"),
