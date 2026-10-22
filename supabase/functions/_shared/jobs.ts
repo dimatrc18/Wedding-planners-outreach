@@ -85,7 +85,16 @@ export async function draftDueSteps(db: any, settings: any, now = new Date()) {
     const { error } = await db.from('touches').insert(row);
     if (!error) { created++; touches.push(row); } else if (error.code !== '23505') console.error('draft insert', error.message);
   };
-  for (const p of prospects) {
+  const isIntlProspect = (p: any) => Boolean(p && ((p.market && p.market !== 'it') || p.segment === 'international'));
+  const sortedProspects = [...prospects].sort((a: any, b: any) => {
+    const intlA = isIntlProspect(a) ? 1 : 0;
+    const intlB = isIntlProspect(b) ? 1 : 0;
+    if (intlA !== intlB) return intlB - intlA; // Prioritize International leads for earlier schedule slots
+    const scoreA = core.priorityScore(a).score || 0;
+    const scoreB = core.priorityScore(b).score || 0;
+    return scoreB - scoreA;
+  });
+  for (const p of sortedProspects) {
     const list = by.get(p.id) || [];
     const st: any = core.sequenceState(p, list, settings, now);
     if (st.active && st.isDue && !st.pending && !st.blocked) {
@@ -170,6 +179,8 @@ export async function rateCardAttachment(db: any, settings: any, lang: string = 
   return { filename, content: new Uint8Array(await data.arrayBuffer()), contentType: 'application/pdf' };
 }
 
+export const sortDueTouchesWithMarketBalancer = core.sortDueTouchesWithMarketBalancer;
+
 export async function sendDue(db: any, settings: any, now = new Date(), { onlyTouchId = null as string | null, actor = 'cron' } = {}) {
   if (!integrations().smtp) return { sent: 0, skipped: 'smtp_not_configured', results: [] };
   const { prospects, touches } = await loadAll(db);
@@ -186,8 +197,15 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
   const bouncedTotal = windowSent.filter((t: any) => t.bounced).length;
 
   let due = touches.filter((t: any) => t.direction === 'out' && t.state === 'approved' && t.channel === 'email' && (!t.scheduled_at || new Date(t.scheduled_at) <= now));
-  if (onlyTouchId) due = touches.filter((t: any) => t.id === onlyTouchId);
-  due.sort((a: any, b: any) => new Date(a.scheduled_at || a.created_at).getTime() - new Date(b.scheduled_at || b.created_at).getTime());
+  if (onlyTouchId) {
+    due = touches.filter((t: any) => t.id === onlyTouchId);
+  } else {
+    const recentColdT1 = coldSent
+      .filter((t: any) => t.step_name === 'T1_intro' && t.sent_at)
+      .sort((a: any, b: any) => new Date(b.sent_at).getTime() - new Date(a.sent_at).getTime())
+      .slice(0, 20);
+    due = sortDueTouchesWithMarketBalancer(due, pmap, recentColdT1, 0.70);
+  }
 
   const fromEmail = env('OUTREACH_FROM_EMAIL') || settings.sender?.email || 'dmitri@dorogo.eu';
   const fromName = settings.sender?.display_name || 'Dmitri | DOROGO';

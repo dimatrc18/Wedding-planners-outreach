@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   sequenceState, canSend, nextSendSlot, effectiveCap, inSendWindow, zonedTimeToUtc, localParts,
-  DEFAULT_SETTINGS, italianHolidays, nurtureDate,
+  DEFAULT_SETTINGS, italianHolidays, nurtureDate, sortDueTouchesWithMarketBalancer,
 } from '../supabase/functions/_shared/core/index.js';
 
 const rome = (y, m, d, hh = 10, mm = 0) => zonedTimeToUtc(y, m, d, hh, mm, 'Europe/Rome');
@@ -157,5 +157,55 @@ test('approval scheduling and status moves', () => {
   const usLocal = localParts(usSend, 'America/New_York');
   assert.equal(usLocal.dow, 2, 'US Tuesday');
   assert.equal(usLocal.hh, 9, 'US lands at 09:00 local New York time');
+});
+
+test('Market-aware queue balancer enforces 70% International / 30% Local send ratio', () => {
+  const pmap = new Map([
+    ['p_it_1', { id: 'p_it_1', market: 'it', segment: 'boutique_local' }],
+    ['p_it_2', { id: 'p_it_2', market: 'it', segment: 'boutique_local' }],
+    ['p_uk_1', { id: 'p_uk_1', market: 'uk', segment: 'international' }],
+    ['p_us_1', { id: 'p_us_1', market: 'us', segment: 'international' }],
+  ]);
+
+  // Scenario 1: Historical imbalance (15 sent to Italy, only 5 to International = 25% intl < 70% target)
+  const imbalancedHistory = [
+    ...Array.from({ length: 15 }, (_, i) => ({ prospect_id: 'p_it_1', step_name: 'T1_intro', sent_at: '2026-10-10T09:00:00Z' })),
+    ...Array.from({ length: 5 }, (_, i) => ({ prospect_id: 'p_uk_1', step_name: 'T1_intro', sent_at: '2026-10-10T10:00:00Z' })),
+  ];
+
+  // In the due queue, Italian touch was scheduled earlier (09:00) than International touch (10:00)
+  const due = [
+    { id: 't_it_early', prospect_id: 'p_it_1', scheduled_at: '2026-10-22T09:00:00Z' },
+    { id: 't_uk_later', prospect_id: 'p_uk_1', scheduled_at: '2026-10-22T10:00:00Z' },
+    { id: 't_it_late', prospect_id: 'p_it_2', scheduled_at: '2026-10-22T10:30:00Z' },
+    { id: 't_us_later', prospect_id: 'p_us_1', scheduled_at: '2026-10-22T11:00:00Z' },
+  ];
+
+  const balanced = sortDueTouchesWithMarketBalancer(due, pmap, imbalancedHistory, 0.70);
+  assert.equal(balanced[0].id, 't_uk_later', 'First send must be International (UK) to correct ratio');
+  assert.equal(balanced[1].id, 't_us_later', 'Second send must be International (US) to correct ratio');
+  assert.equal(balanced[2].id, 't_it_early', 'Local Italian touch follows after international priority');
+  assert.equal(balanced[3].id, 't_it_late');
+
+  // Scenario 2: Balanced history (15 sent to International, 5 to Italy = 75% intl >= 70% target)
+  const balancedHistory = [
+    ...Array.from({ length: 15 }, (_, i) => ({ prospect_id: 'p_uk_1', step_name: 'T1_intro', sent_at: '2026-10-10T09:00:00Z' })),
+    ...Array.from({ length: 5 }, (_, i) => ({ prospect_id: 'p_it_1', step_name: 'T1_intro', sent_at: '2026-10-10T10:00:00Z' })),
+  ];
+
+  const naturalOrder = sortDueTouchesWithMarketBalancer(due, pmap, balancedHistory, 0.70);
+  assert.equal(naturalOrder[0].id, 't_it_early', 'When 70% target is satisfied, earliest scheduled timestamp is preserved');
+  assert.equal(naturalOrder[1].id, 't_uk_later');
+  assert.equal(naturalOrder[2].id, 't_it_late');
+  assert.equal(naturalOrder[3].id, 't_us_later');
+
+  // Scenario 3: Failsafe - Only Local touches in queue (must not stall or block)
+  const localOnlyDue = [
+    { id: 't_it_1', prospect_id: 'p_it_1', scheduled_at: '2026-10-22T09:00:00Z' },
+    { id: 't_it_2', prospect_id: 'p_it_2', scheduled_at: '2026-10-22T09:30:00Z' },
+  ];
+  const localDispatched = sortDueTouchesWithMarketBalancer(localOnlyDue, pmap, imbalancedHistory, 0.70);
+  assert.equal(localDispatched.length, 2, 'Local touches are never stalled when no international touches exist');
+  assert.equal(localDispatched[0].id, 't_it_1');
 });
 

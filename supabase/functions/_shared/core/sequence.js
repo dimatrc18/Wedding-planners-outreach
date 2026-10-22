@@ -237,3 +237,33 @@ export function statusAfterSend(current, stepName, rank) {
   if (!next) return current;
   return (rank[next] ?? 0) > (rank[current] ?? 0) || (COLD_STEPS.includes(stepName) && SEQUENCE_STAGES.includes(current)) ? next : current;
 }
+
+/**
+ * Market-Aware Queue Balancer:
+ * Prevents local market starvation by tracking rolling cold T1 sends.
+ * When the rolling international ratio is below targetIntlRatio (default 70%),
+ * due touches for international prospects are prioritized ahead of local touches.
+ */
+export function sortDueTouchesWithMarketBalancer(
+  due = [],
+  pmap = new Map(),
+  recentColdT1 = [],
+  targetIntlRatio = 0.70
+) {
+  const isIntl = (p) => Boolean(p && ((p.market && p.market !== 'it') || p.segment === 'international'));
+  const intlSentCount = recentColdT1.filter((t) => isIntl(pmap.get(t.prospect_id))).length;
+  const rollingIntlRatio = recentColdT1.length > 0 ? intlSentCount / recentColdT1.length : 0;
+
+  return [...due].sort((a, b) => {
+    const pA = pmap.get(a.prospect_id);
+    const pB = pmap.get(b.prospect_id);
+    const isIntlA = isIntl(pA);
+    const isIntlB = isIntl(pB);
+
+    if (rollingIntlRatio < targetIntlRatio && isIntlA !== isIntlB) {
+      return isIntlA ? -1 : 1;
+    }
+    return new Date(a.scheduled_at || a.created_at).getTime() - new Date(b.scheduled_at || b.created_at).getTime();
+  });
+}
+

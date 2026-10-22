@@ -134,7 +134,17 @@ export function render(el) {
   const smtp = A.smtpReady();
   const peak = core.isPeakSeason();
   const order = (t) => (t.suggested_for ? 0 : t.step_name === 'rate_card_delivery' ? 1 : t.step_name === 'reply' ? 1 : t.step_name === 'T1_intro' ? 3 : 2);
-  const drafts = d.drafts.sort((a, b) => order(a) - order(b) || core.priorityScore(A.prospectById(b.prospect_id)).score - core.priorityScore(A.prospectById(a.prospect_id)).score);
+  const isIntlProspect = (p) => Boolean(p && ((p.market && p.market !== 'it') || p.segment === 'international'));
+  const drafts = d.drafts.sort((a, b) => {
+    const ord = order(a) - order(b);
+    if (ord !== 0) return ord;
+    const pA = A.prospectById(a.prospect_id);
+    const pB = A.prospectById(b.prospect_id);
+    const intlA = isIntlProspect(pA) ? 1 : 0;
+    const intlB = isIntlProspect(pB) ? 1 : 0;
+    if (intlA !== intlB) return intlB - intlA; // Prioritize high-yield international drafts
+    return (core.priorityScore(pB).score || 0) - (core.priorityScore(pA).score || 0);
+  });
   focusIdx = Math.min(focusIdx, Math.max(0, drafts.length - 1));
   const clean = drafts.filter((t) => { const l = A.lintOf(t); return !l.errors.length && !l.warnings.length; });
   const dueUndrafted = d.due.length;

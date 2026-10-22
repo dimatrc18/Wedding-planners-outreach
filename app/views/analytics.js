@@ -5,7 +5,7 @@ import { esc, attr, icon, eur, pct, download } from '../ui.js';
 import { rateMeter } from './today.js';
 
 const DIM_LABEL = {
-  market: 'Country / Target Market (50/50 Split)',
+  market: 'Country / Target Market (Target: 70% Intl / 30% Local)',
   variant: 'Subject line (T1)', reply_step: 'Touch that got the reply', segment: 'Segment', language: 'Language', type: 'Prospect type',
   hook_type: 'Hook type', location: 'Location', weekday: 'T1 send day', hour: 'T1 send hour (Rome)', reply_channel: 'Reply channel',
 };
@@ -219,7 +219,23 @@ export function render(el) {
       ${steps.map((r) => `<tr><td>${esc(STEP[r.key] || r.key)}</td><td class="num">${r.n}</td><td class="num">${r.replied}</td><td>${ciCell(r.replyRate)}</td></tr>`).join('')}</tbody></table></div></section>
 
     <div class="grid-2 wide">
-      ${['market', 'segment', 'language', 'hook_type', 'type', 'weekday', 'hour', 'location', 'reply_channel'].map((d) => `<section class="card stack"><div class="section-head"><h2>${esc(DIM_LABEL[d])}</h2></div>${breakdownTable(core.breakdown(m.facts, core.DIMENSIONS[d]), (k) => String(k).replace(/_/g, ' '), tg.positive_reply_rate)}</section>`).join('')}
+      ${['market', 'segment', 'language', 'hook_type', 'type', 'weekday', 'hour', 'location', 'reply_channel'].map((d) => {
+        let extraBanner = '';
+        if (d === 'market') {
+          const isIntlProspect = (p) => Boolean(p && ((p.market && p.market !== 'it') || p.segment === 'international'));
+          const recentColdT1 = S.touches
+            .filter((t) => t.direction === 'out' && t.state === 'sent' && t.step_name === 'T1_intro' && t.sent_at)
+            .sort((a, b) => new Date(b.sent_at) - new Date(a.sent_at))
+            .slice(0, 20);
+          const recentIntl = recentColdT1.filter((t) => isIntlProspect(byP.get(t.prospect_id))).length;
+          const rollingIntlPct = recentColdT1.length ? Math.round((recentIntl / recentColdT1.length) * 100) : 0;
+          extraBanner = `<div class="row" style="gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap">
+            <span class="chip gold">⚡ Active Dispatch Balancer</span>
+            <span class="small muted">Rolling 20 sends: <b>${rollingIntlPct}% International</b> · <b>${100 - rollingIntlPct}% Local</b> (Target: 70/30). <i>Historical 31 Italy sends include launch-week catalog.</i></span>
+          </div>`;
+        }
+        return `<section class="card stack"><div class="section-head"><h2>${esc(DIM_LABEL[d])}</h2></div>${extraBanner}${breakdownTable(core.breakdown(m.facts, core.DIMENSIONS[d]), (k) => String(k).replace(/_/g, ' '), tg.positive_reply_rate)}</section>`;
+      }).join('')}
     </div>
 
 
