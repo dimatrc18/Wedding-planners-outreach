@@ -295,7 +295,7 @@ export async function classifyInboundMessage(
   { useAi = false }: { useAi?: boolean } = {},
 ) {
   let cls: any = core.classifyReply({ from: msg.from || '', subject: msg.subject || '', body: msg.body || '' }, now);
-  if (/auto-(replied|generated)/i.test(msg.autoSubmitted || '') && cls.sentiment !== 'ooo') {
+  if (/auto-(replied|generated)/i.test(msg.autoSubmitted || '') && cls.sentiment !== 'ooo' && cls.sentiment !== 'unsubscribe' && !cls.bounce) {
     cls = { ...cls, sentiment: 'ooo', intent: null, ooo_until: new Date(now.getTime() + 7 * 86400000).toISOString() };
   }
   const cleanText = core.stripQuoted(msg.body || '').trim();

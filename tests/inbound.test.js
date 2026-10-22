@@ -29,6 +29,21 @@ test('unsubscribe: do not contact, skip everything', () => {
   assert.equal(e.patch.status, 'do_not_contact');
   assert.equal(e.skipIds.length, 2);
   assert.equal(e.draft, null);
+
+  const apple = inboundEffects({
+    prospect,
+    touches,
+    cls: classifyReply({
+      subject: 'unsubscribe',
+      body: 'Apple Mail sent this email to unsubscribe from the message “unsubscribe”.',
+    }, now),
+    settings: DEFAULT_SETTINGS,
+    now,
+    inbound: { id: 'in_apple', channel: 'email', subject: 'unsubscribe' },
+  });
+  assert.equal(apple.patch.do_not_contact, true);
+  assert.equal(apple.patch.status, 'do_not_contact');
+  assert.equal(apple.draft, null);
 });
 
 test('out of office: no status change, approved sends move after the return date', () => {

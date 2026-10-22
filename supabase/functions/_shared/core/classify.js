@@ -163,7 +163,7 @@ export function classifyReply(msg = {}, now = new Date()) {
     return { sentiment: 'ooo', intent: null, confidence: 'high', ooo_until: resume.toISOString(), matched: ['ooo'] };
   }
   const firstLine = text.split('\n').find((l) => l.trim()) || '';
-  if (any(UNSUB, text) || PLAIN_NO.test(firstLine)) {
+  if (any(UNSUB, all) || PLAIN_NO.test(firstLine)) {
     return { sentiment: 'unsubscribe', intent: null, confidence: 'high', matched: ['unsubscribe'] };
   }
 

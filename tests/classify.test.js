@@ -76,6 +76,21 @@ test('loose dates', () => {
   assert.equal(parseLooseDate('3.1.', now).toISOString().slice(0, 10), '2027-01-03', 'past date rolls to next year');
 });
 
+test('apple mail and automated unsubscribe headers classify as unsubscribe not ooo', () => {
+  const appleMail = classifyReply({
+    subject: 'unsubscribe',
+    body: 'Apple Mail sent this email to unsubscribe from the message “unsubscribe”.',
+  }, now);
+  assert.equal(appleMail.sentiment, 'unsubscribe');
+  assert.equal(appleMail.intent, null);
+
+  const subjectOnly = classifyReply({
+    subject: 'unsubscribe',
+    body: '',
+  }, now);
+  assert.equal(subjectOnly.sentiment, 'unsubscribe');
+});
+
 test('challenging operational questions without pricing/rate-card keywords classify as specific_question', () => {
   const q1 = c('How does your dispatcher handle boat pier delays at Villa del Balbianello when it rains?');
   assert.equal(q1.intent, 'specific_question');
