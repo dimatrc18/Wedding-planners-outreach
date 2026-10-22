@@ -299,8 +299,15 @@ async function handleIncomingMessage(msg: any) {
     return;
   }
 
-  // Send native Telegram typing indicator in chat header (Zero chat messages, Zero ghost messages, No draft sync bugs!)
-  await tgApi("sendChatAction", { chat_id: chatId, action: "typing" });
+  // 1. Send immediate progress indicator without reply anchor (instant visual feedback, zero draft sync bugs)
+  const statusMsg = await tgApi("sendMessage", {
+    chat_id: chatId,
+    text: existingDraft
+      ? "⏳ <i>Применяю изменения и обновляю карточку бронирования...</i>"
+      : "⏳ <i>Обрабатываю детали бронирования и создаю карточку...</i>",
+    parse_mode: "HTML",
+  });
+  const statusMsgId = statusMsg.ok ? statusMsg.result.message_id : null;
 
   try {
     let booking: BookingData;
@@ -344,23 +351,58 @@ async function handleIncomingMessage(msg: any) {
     const draftId = existingDraft?.id || `d_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const card = renderBookingCard(booking, draftId);
 
-    // Send the updated/new interactive booking card
-    const cardMsg = await tgApi("sendMessage", {
-      chat_id: chatId,
-      text: card.text,
-      parse_mode: "HTML",
-      reply_markup: card.replyMarkup,
-      disable_web_page_preview: true,
-    });
+    let finalCardMsgId = statusMsgId;
 
-    if (cardMsg.ok) {
-      const cardMsgId = cardMsg.result.message_id;
-      // Persist in Postgres!
+    // Transform status message directly into interactive booking card
+    if (statusMsgId) {
+      const editRes = await tgApi("editMessageText", {
+        chat_id: chatId,
+        message_id: statusMsgId,
+        text: card.text,
+        parse_mode: "HTML",
+        reply_markup: card.replyMarkup,
+        disable_web_page_preview: true,
+      });
+
+      if (!editRes.ok) {
+        // Fallback to sending new message if edit fails
+        const cardMsg = await tgApi("sendMessage", {
+          chat_id: chatId,
+          text: card.text,
+          parse_mode: "HTML",
+          reply_markup: card.replyMarkup,
+          disable_web_page_preview: true,
+        });
+        if (cardMsg.ok) finalCardMsgId = cardMsg.result.message_id;
+      }
+    } else {
+      const cardMsg = await tgApi("sendMessage", {
+        chat_id: chatId,
+        text: card.text,
+        parse_mode: "HTML",
+        reply_markup: card.replyMarkup,
+        disable_web_page_preview: true,
+      });
+      if (cardMsg.ok) finalCardMsgId = cardMsg.result.message_id;
+    }
+
+    // Automatically delete user's raw message so the chat remains spotless (Zero clutter!)
+    try {
+      await tgApi("deleteMessage", {
+        chat_id: chatId,
+        message_id: msg.message_id,
+      });
+    } catch (delErr) {
+      console.warn("Could not delete user raw message:", delErr);
+    }
+
+    // Persist in Postgres!
+    if (finalCardMsgId) {
       await upsertDraft({
         id: draftId,
         booking_ref: booking.booking_ref,
         chat_id: chatId,
-        card_message_id: cardMsgId,
+        card_message_id: finalCardMsgId,
         prompt_message_id: null,
         raw_text: text,
         booking_data: booking,
@@ -368,11 +410,20 @@ async function handleIncomingMessage(msg: any) {
     }
   } catch (err: any) {
     console.error("Extraction error:", err);
-    await tgApi("sendMessage", {
-      chat_id: chatId,
-      text: `❌ <b>Extraction error:</b>\n<code>${esc(err.message)}</code>`,
-      parse_mode: "HTML",
-    });
+    if (statusMsgId) {
+      await tgApi("editMessageText", {
+        chat_id: chatId,
+        message_id: statusMsgId,
+        text: `❌ <b>Ошибка обработки бронирования:</b>\n<code>${esc(err.message)}</code>`,
+        parse_mode: "HTML",
+      });
+    } else {
+      await tgApi("sendMessage", {
+        chat_id: chatId,
+        text: `❌ <b>Ошибка обработки бронирования:</b>\n<code>${esc(err.message)}</code>`,
+        parse_mode: "HTML",
+      });
+    }
   }
 }
 
