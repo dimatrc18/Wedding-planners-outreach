@@ -134,31 +134,43 @@ export async function saveBookingToGoogleSheet(
   const colAData = await colARes.json();
   const existingIds: string[] = (colAData.values || []).map((row: any[]) => String(row[0] || "").trim());
 
-  let headerRowIdx = 1;
+  let headerRowIdx = 3;
   existingIds.forEach((val, idx) => {
     if (val.toLowerCase() === "booking_id") headerRowIdx = idx + 1;
   });
 
-  // Ensure Row 2 headers include "Booked Month" at Column T if not present
+  // Ensure header row (e.g. Row 3) includes "Booked Month" at Column T if not present
   try {
-    const headerCheckUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(targetWorksheet)}!S2:T2`;
+    const headerCheckUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(targetWorksheet)}!S${headerRowIdx}:T${headerRowIdx}`;
     const hRes = await fetch(headerCheckUrl, { headers: { Authorization: `Bearer ${token}` } });
     if (hRes.ok) {
       const hData = await hRes.json();
-      const sVal = hData.values?.[0]?.[0];
       const tVal = hData.values?.[0]?.[1];
       if (!tVal || tVal !== "Booked Month") {
-        const updateHeaderUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(targetWorksheet)}!T2?valueInputOption=USER_ENTERED`;
+        const updateHeaderUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(targetWorksheet)}!T${headerRowIdx}?valueInputOption=USER_ENTERED`;
         await fetch(updateHeaderUrl, {
           method: "PUT",
           headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ range: `${targetWorksheet}!T2`, values: [["Booked Month"]] }),
+          body: JSON.stringify({ range: `${targetWorksheet}!T${headerRowIdx}`, values: [["Booked Month"]] }),
         });
       }
     }
   } catch (e) {
-    console.warn("Failed to check/update T2 header:", e);
+    console.warn(`Failed to check/update T${headerRowIdx} header:`, e);
   }
+
+  // Helper to format stop with both place name and street address (never replacing place name with raw lat/lng)
+  const formatStopForSheet = (st: { place?: string; address?: string | null } | undefined): string => {
+    if (!st) return "";
+    const place = (st.place || "").trim();
+    const addr = (st.address || "").trim();
+    const isCoords = /^-?\d+\.\d+,\s*-?\d+\.\d+$/.test(addr);
+    if (!addr || isCoords) return place || addr;
+    if (!place) return addr;
+    if (addr.toLowerCase().includes(place.toLowerCase())) return addr;
+    if (place.toLowerCase().includes(addr.toLowerCase())) return place;
+    return `${place} (${addr})`;
+  };
 
   // Build rows for each ride
   const rowsToSave: { rowNumber: number | null; values: any[] }[] = [];
@@ -171,11 +183,11 @@ export async function saveBookingToGoogleSheet(
       legId = idx === 0 ? booking.booking_ref : `${booking.booking_ref}-${idx + 1}`;
     }
 
-    // Determine pickup & dropoff
+    // Determine pickup & dropoff preserving hotel/villa names
     const pStop = ride.stops.find((s) => s.kind === "pickup");
     const dStop = [...ride.stops].reverse().find((s) => s.kind === "dropoff");
-    const pickupStr = pStop ? (pStop.address || pStop.place) : "";
-    const dropoffStr = dStop ? (dStop.address || dStop.place) : "";
+    const pickupStr = formatStopForSheet(pStop);
+    const dropoffStr = formatStopForSheet(dStop);
 
     // Build client notes including flight and extra stops
     const notesParts: string[] = [];
@@ -200,9 +212,19 @@ export async function saveBookingToGoogleSheet(
     }
     const combinedNotes = notesParts.join(" | ");
 
-    // Price & Prepayment
-    const priceVal = ride.price !== null ? String(ride.price) : "";
-    const prepayVal = idx === 0 && booking.finance.paid_deposit !== null ? String(booking.finance.paid_deposit) : "";
+    // Price, Prepayment & Balance Due (our_notes)
+    let priceVal = "";
+    if (ride.price !== null && ride.price !== undefined) {
+      priceVal = `€${ride.price}`;
+    } else if (idx > 0 && booking.finance.total_price !== null) {
+      priceVal = booking.rides.length === 2 ? "Included in Round-Trip" : "Included in Package";
+    }
+    const prepayVal = idx === 0 && booking.finance.paid_deposit !== null ? `€${booking.finance.paid_deposit}` : "";
+    const ourNotesVal =
+      booking.our_notes ||
+      (booking.finance.balance_due !== null && booking.finance.balance_due > 0
+        ? `to be paid: ${booking.finance.balance_due} EUR`
+        : "");
 
     const phoneStr = booking.client.phone ? (booking.client.phone.startsWith("+") ? `'${booking.client.phone}` : booking.client.phone) : "";
 
@@ -223,7 +245,7 @@ export async function saveBookingToGoogleSheet(
       booking.client.email || "",                     // Col N: email
       priceVal,                                       // Col O: price
       prepayVal,                                      // Col P: prepayment
-      booking.our_notes || "",                        // Col Q: our_notes
+      ourNotesVal,                                    // Col Q: our_notes
       "",                                             // Col R: Comision received
       booking.booked_date,                            // Col S: Sale Date
       booking.booked_month,                           // Col T: Booked Month
@@ -280,6 +302,33 @@ export async function saveBookingToGoogleSheet(
 }
 
 /**
+ * Converts any booking reference (including ones with W, X, Y, Z) into a strictly valid
+ * Google Calendar API v3 base32hex ID (only characters [a-v0-9], length 5..1024).
+ */
+export function toCalendarEventId(fullRef: string): string {
+  const hex = Array.from(fullRef.toLowerCase())
+    .map((ch) => ch.charCodeAt(0).toString(16).padStart(2, "0"))
+    .join("");
+  return `drg${hex}`;
+}
+
+/**
+ * Adds minutes to a local date (YYYY-MM-DD) and time (HH:MM) without timezone/UTC shifts
+ */
+function addMinutesLocalIso(dateStr: string, timeStr: string, addMins: number): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const [hh, mm] = timeStr.split(":").map(Number);
+  const dt = new Date(Date.UTC(y, (m || 1) - 1, d || 1, hh || 0, mm || 0, 0));
+  dt.setUTCMinutes(dt.getUTCMinutes() + addMins);
+  const ey = dt.getUTCFullYear();
+  const em = String(dt.getUTCMonth() + 1).padStart(2, "0");
+  const ed = String(dt.getUTCDate()).padStart(2, "0");
+  const eh = String(dt.getUTCHours()).padStart(2, "0");
+  const emi = String(dt.getUTCMinutes()).padStart(2, "0");
+  return `${ey}-${em}-${ed}T${eh}:${emi}:00`;
+}
+
+/**
  * Creates or updates Google Calendar events for each ride
  */
 export async function saveBookingToGoogleCalendar(
@@ -287,14 +336,14 @@ export async function saveBookingToGoogleCalendar(
   calendarId: string,
   timezone = "Europe/Rome",
   creds: ServiceAccountCredentials
-): Promise<{ success: boolean; eventLinks: string[] }> {
+): Promise<{ success: boolean; eventLinks: string[]; error?: string }> {
   const token = await getGoogleAccessToken(creds);
   const links: string[] = [];
+  const errors: string[] = [];
 
   for (let idx = 0; idx < booking.rides.length; idx++) {
     const ride = booking.rides[idx];
     const isReturn = ride.role === "return";
-    const roleIcon = isReturn ? "🔄" : "🚗";
     const legSuffix = booking.rides.length === 2 && idx === 1 ? "-RET" : booking.rides.length > 2 ? `-${idx + 1}` : "";
     const fullRef = `${booking.booking_ref}${legSuffix}`;
 
@@ -331,7 +380,7 @@ export async function saveBookingToGoogleCalendar(
     if (isReturn) {
       summary = `🔄 ${vTag} Return: ${dName} ➔ ${pName} | ${booking.client.name || "Client"} [${fullRef}]`;
     } else if (isStandby) {
-      const hMatch = (booking.client_notes || "").match(/(\d+)\s*(?:hours|hour|h|hr)\b/i);
+      const hMatch = `${booking.service_type || ""} ${booking.client_notes || ""}`.match(/(\d+)\s*(?:hours|hour|h|hr)\b/i);
       const hTag = hMatch ? `${hMatch[1]}h Standby` : "Standby";
       const svcTag = isWedding ? `Wedding ${hTag}` : hTag;
       summary = `${icon} ${vTag} ${svcTag}: ${pName} / ${dName} | ${booking.client.name || "Client"} [${fullRef}]`;
@@ -340,17 +389,28 @@ export async function saveBookingToGoogleCalendar(
       summary = `${icon} ${vTag} ${svcTag}: ${pName} ➔ ${dName} | ${booking.client.name || "Client"} [${fullRef}]`;
     }
 
-    // Compute Start and End times
-    const startTimeStr = ride.time || "10:00";
+    // Compute Start and End times (pure local ISO without UTC drift)
+    const cleanTimeMatch = (ride.time || "10:00").match(/(\d{1,2}):(\d{2})/);
+    const startTimeStr = cleanTimeMatch
+      ? `${String(parseInt(cleanTimeMatch[1], 10)).padStart(2, "0")}:${cleanTimeMatch[2]}`
+      : "10:00";
     const startIso = `${ride.date}T${startTimeStr}:00`;
-    
-    // Calculate End ISO
-    let durationMins = ride.est_minutes || 120;
-    if (durationMins < 30) durationMins = 30; // Min 30 mins event length
 
-    const startDt = new Date(`${startIso}`);
-    const endDt = new Date(startDt.getTime() + durationMins * 60 * 1000);
-    const endIso = endDt.toISOString().replace(/\.\d{3}Z$/, "");
+    let durationMins = ride.est_minutes || 90;
+    if (durationMins < 30) durationMins = 30;
+
+    let endIso = addMinutesLocalIso(ride.date, startTimeStr, durationMins);
+    if (ride.end_time) {
+      const endMatch = ride.end_time.match(/(\d{1,2}):(\d{2})/);
+      if (endMatch) {
+        const endTimeClean = `${String(parseInt(endMatch[1], 10)).padStart(2, "0")}:${endMatch[2]}`;
+        const candidateEndDate = ride.end_date || ride.date;
+        const candidateIso = `${candidateEndDate}T${endTimeClean}:00`;
+        if (candidateIso > startIso) {
+          endIso = candidateIso;
+        }
+      }
+    }
 
     // Build Detailed Description
     const descLines: string[] = [
@@ -411,9 +471,8 @@ export async function saveBookingToGoogleCalendar(
       },
     };
 
-    // Use deterministic event ID e.g. "drg" + hex(ref + leg)
-    const rawId = `drg${fullRef.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
-    const eventId = rawId.padEnd(16, "0").substring(0, 32);
+    // Strictly valid base32hex eventId ([a-v0-9])
+    const eventId = toCalendarEventId(fullRef);
 
     // Try update first (idempotent), then insert
     const updateUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${eventId}`;
@@ -438,10 +497,16 @@ export async function saveBookingToGoogleCalendar(
         const data = await insertRes.json();
         links.push(data.htmlLink || "");
       } else {
-        console.error(`Failed to create calendar event: ${await insertRes.text()}`);
+        const errText = await insertRes.text();
+        console.error(`Failed to create calendar event: ${errText}`);
+        errors.push(errText);
       }
     }
   }
 
-  return { success: true, eventLinks: links };
+  return {
+    success: links.length > 0 && errors.length === 0,
+    eventLinks: links,
+    error: errors.length > 0 ? errors[0] : undefined,
+  };
 }

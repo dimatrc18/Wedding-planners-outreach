@@ -203,11 +203,16 @@ export function applyBusinessRules(
   const todayIso = now.toISOString().split("T")[0];
   const currentMonth = `${MONTH_NAMES[now.getMonth()]} ${now.getFullYear()}`;
 
-  // Generate Reference if not provided
+  // Generate Reference if not provided (Base32Hex-safe alphabet: A-V, 2-9)
+  const SAFE_CHARS = "23456789ABCDEFGHJKLMNPQRSTUV";
+  let randomRef = "DRG-";
+  for (let i = 0; i < 6; i++) {
+    randomRef += SAFE_CHARS[Math.floor(Math.random() * SAFE_CHARS.length)];
+  }
   const bookingRef =
     (sourceText.match(/\b(DRG-[A-Z0-9]{4,10})\b/i)?.[1] ||
     raw.booking_ref ||
-    `DRG-${Math.random().toString(36).substring(2, 8).toUpperCase()}`).toUpperCase();
+    randomRef).toUpperCase();
 
   // 1. Process Rides
   const baseDate = normalizeDate(raw.raw_date || raw.rides?.[0]?.raw_date, now);
@@ -292,17 +297,25 @@ export function applyBusinessRules(
 
   const balanceDue = totalPrice !== null ? (totalPrice - (paidDeposit || 0)) : null;
 
-  // Split prices across rides (e.g. 50/50 for round trips)
+  // Standby / Hourly & Vehicle classification
+  const isStandby = /\b(?:\d+\s*hours?|stand\s*by|disposi(?:zione|tion)|from\s+\d+\s*(?:am|pm)\s*-\s*\d+\s*(?:am|pm))\b/i.test(sourceText);
+  const standbyHoursMatch = sourceText.match(/(\d+)\s*hours?/i);
+  const standbyDuration = standbyHoursMatch ? ` (${standbyHoursMatch[1]}h)` : "";
+
+  const isBusOrSprinter = /\b(?:bus|sprinter|minibus|coach|24\/28)\b/i.test(sourceText);
+  const defaultVehicle = isBusOrSprinter ? "Mercedes-Benz Sprinter (24-28 seats)" : "Mercedes-Benz V-Class";
+
+  // Split prices across rides (50/50 for round trips; full package price on Ride 1 for multi-stop/standby packages)
   if (totalPrice !== null && rides.length > 0) {
-    if (rides.length === 2 && rides[1].role === "return") {
+    if (rides.length === 2 && rides[1].role === "return" && !isStandby) {
       const half = Math.round(totalPrice / 2);
       rides[0].price = half;
       rides[1].price = totalPrice - half;
     } else {
-      const share = Math.round(totalPrice / rides.length);
-      rides.forEach((rd, i) => {
-        rd.price = i === rides.length - 1 ? totalPrice - share * (rides.length - 1) : share;
-      });
+      rides[0].price = totalPrice;
+      for (let i = 1; i < rides.length; i++) {
+        rides[i].price = null;
+      }
     }
   }
 
@@ -325,12 +338,14 @@ export function applyBusinessRules(
     ski_bags: typeof raw.ski_bags === "number" ? raw.ski_bags : null,
   };
 
-  // Client Name & Email fallbacks
+  // Client Name & Email fallbacks (strictly guarded so place names like "Villa Lilla" are never mistaken for client names)
   let clientName = raw.client_name || null;
   if (!clientName) {
-    const nameMatch = sourceText.match(/\b([A-Z][a-z]+(?:\s+[A-Z]['’][A-Za-z]+|\s+[A-Z][a-z]+))\b/);
-    if (nameMatch && !/Google|Maps|Apple|Saturday|Sunday|Monday|Tuesday|Wednesday|Thursday|Friday/i.test(nameMatch[1])) {
-      clientName = nameMatch[1];
+    const labeledName =
+      sourceText.match(/(?:client|name|guest|passenger|клиент|имя|пассажир)\s*[:—–-]\s*([A-ZА-ЯЁ][a-zа-яё]+(?:\s+[A-ZА-ЯЁ]['’]?[A-Za-zА-Яа-яЁё]+)+)/i) ||
+      sourceText.match(/\b([A-Z][a-z]+\s+[A-Z]['’]?[A-Za-z]+)\s*[,|/-]?\s*[a-zA-Z0-9._%+-]+@/);
+    if (labeledName) {
+      clientName = labeledName[1].trim();
     }
   }
 
@@ -340,13 +355,11 @@ export function applyBusinessRules(
     if (emailMatch) clientEmail = emailMatch[1];
   }
 
-  // Standby / Hourly & Vehicle classification
-  const isStandby = /\b(?:\d+\s*hours?|stand\s*by|disposi(?:zione|tion)|from\s+\d+\s*(?:am|pm)\s*-\s*\d+\s*(?:am|pm))\b/i.test(sourceText);
-  const standbyHoursMatch = sourceText.match(/(\d+)\s*hours?/i);
-  const standbyDuration = standbyHoursMatch ? ` (${standbyHoursMatch[1]}h)` : "";
-
-  const isBusOrSprinter = /\b(?:bus|sprinter|minibus|coach|24\/28)\b/i.test(sourceText);
-  const defaultVehicle = isBusOrSprinter ? "Mercedes-Benz Sprinter (24-28 seats)" : "Mercedes-Benz V-Class";
+  let clientPhone = raw.client_phone || null;
+  if (!clientPhone) {
+    const phoneMatch = sourceText.match(/(?:phone|tel|whatsapp|телефон|тел)?\s*[:—–-]?\s*(\+\d[\d\s\-()]{7,18}\d)/i);
+    if (phoneMatch) clientPhone = phoneMatch[1].trim();
+  }
 
   // 4. Missing Fields Audit
   const missing: string[] = [];
@@ -355,7 +368,7 @@ export function applyBusinessRules(
   if (!clientName) {
     missing.push("👤 Client full name (for driver nameboard)");
   }
-  if (!raw.client_phone) {
+  if (!clientPhone) {
     missing.push("📞 Client phone number / WhatsApp");
   }
 
@@ -387,8 +400,9 @@ export function applyBusinessRules(
     }
   }
 
-  // Status computation
+  // Status & Our Notes (balance due) computation
   const status = paidDeposit && paidDeposit > 0 ? "Prepayment Received" : "Confirmed (Unpaid)";
+  const ourNotes = balanceDue !== null && balanceDue > 0 ? `to be paid: ${balanceDue} EUR` : "";
 
   return {
     booking_ref: bookingRef,
@@ -398,7 +412,7 @@ export function applyBusinessRules(
     service_type: raw.service_type || (isStandby ? `Hourly Standby${standbyDuration}` : hasAirport ? "Airport Transfer" : rides.length > 2 ? "Multi-Stop Transfer" : "Chauffeur Transfer"),
     client: {
       name: clientName,
-      phone: raw.client_phone || null,
+      phone: clientPhone,
       email: clientEmail,
     },
     party,
@@ -414,7 +428,7 @@ export function applyBusinessRules(
       payment_method: raw.payment_method || (paidDeposit ? "Deposit Paid" : null),
     },
     client_notes: notes,
-    our_notes: "",
+    our_notes: ourNotes,
     evidence: raw.evidence_map || {},
     missing_fields: missing,
     warnings,

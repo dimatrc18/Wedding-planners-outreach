@@ -2,7 +2,8 @@
 import { assertEquals, assertNotEquals, assert } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { normalizeDate, normalizeTime, parseGoogleMapsUrl, mapChildSeat, applyBusinessRules } from "./rules.ts";
 import { extractBookingWithGemini } from "./extract.ts";
-import { getGoogleAccessToken } from "./google.ts";
+import { getGoogleAccessToken, toCalendarEventId } from "./google.ts";
+import { buildCompactCopyText, buildEditableBookingText } from "./card.ts";
 import defaultCreds from "./service_account.json" with { type: "json" };
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") || "";
@@ -157,4 +158,66 @@ Deno.test("Gemini live extraction on Russian WhatsApp chat", async () => {
   assertEquals(booking.rides[0].flight?.number, "AZ123");
 
   console.log("✅ Russian WhatsApp round-trip test passed with 100% accuracy!");
+});
+
+// 5. UNIT TEST: Google Calendar base32hex Event ID Encoding
+Deno.test("toCalendarEventId produces strictly valid base32hex IDs ([a-v0-9])", () => {
+  // Test booking ref containing characters outside base32hex (like W, X, Y, Z, dashes)
+  const refWithProblemChars = "DRG-P9W31D";
+  const eventId1 = toCalendarEventId(refWithProblemChars);
+
+  // Must match strictly [a-v0-9]{5,1024}
+  assert(/^[a-v0-9]{5,1024}$/.test(eventId1), `Event ID "${eventId1}" must only contain characters in [a-v0-9]`);
+  // Ensure 'w', 'x', 'y', 'z', and '-' are NOT in eventId
+  assert(!/[wxyz\-]/.test(eventId1), `Event ID "${eventId1}" must not contain w, x, y, z or dashes`);
+
+  // Test multi-ride suffix
+  const eventIdRide2 = toCalendarEventId("DRG-P9W31D_R2");
+  assert(/^[a-v0-9]{5,1024}$/.test(eventIdRide2), `Event ID "${eventIdRide2}" must be valid base32hex`);
+
+  // Check deterministic idempotency
+  assertEquals(toCalendarEventId(refWithProblemChars), eventId1);
+  console.log("✅ toCalendarEventId strictly valid base32hex test passed:", eventId1);
+});
+
+// 6. UNIT TEST: buildCompactCopyText length and content constraints
+Deno.test("buildCompactCopyText guarantees <= 256 chars for native Telegram copy_text button", () => {
+  const dummyBooking: any = {
+    booking_ref: "DRG-9A7B3C",
+    client: { name: "Alessandro Michele", phone: "+39 340 123 4567", email: "alessandro@gucci.com" },
+    vehicle: { class: "Mercedes-Benz V-Class", count: 1 },
+    party: { passengers: 4, luggage: 4, children: [] },
+    rides: [
+      {
+        ride_no: 1,
+        date: "2027-05-15",
+        time: "10:00",
+        stops: [
+          { kind: "pickup", place: "Grand Hotel Tremezzo", time: "10:00" },
+          { kind: "dropoff", place: "Milan Malpensa Airport MXP", time: "11:30" },
+        ],
+      },
+    ],
+    finance: { total_price: 350, paid_deposit: 100, balance_due: 250 },
+    client_notes: "Needs English speaking chauffeur and bottled sparkling water",
+  };
+
+  const copyText = buildCompactCopyText(dummyBooking);
+  console.log("Generated Compact Copy Text:\n", copyText);
+
+  // Hard requirement: must never exceed 256 characters for Telegram Bot API CopyTextButton
+  assert(copyText.length <= 256, `Copy text length ${copyText.length} exceeds 256 character Telegram limit!`);
+  assert(copyText.includes("[DRG-9A7B3C]"), "Must contain booking reference");
+  assert(copyText.includes("Alessandro Michele"), "Must contain client name");
+  assert(copyText.includes("350"), "Must contain price");
+
+  // Extreme test: giant notes
+  const bookingWithLongNotes: any = {
+    ...dummyBooking,
+    client_notes: "A".repeat(500),
+  };
+  const truncatedCopyText = buildCompactCopyText(bookingWithLongNotes);
+  assert(truncatedCopyText.length <= 256, "Even with 500 chars of notes, must truncate to <= 256 chars");
+  assert(truncatedCopyText.endsWith("..."), "Truncated text must end with ellipsis");
+  console.log("✅ buildCompactCopyText 256-char limit test passed!");
 });

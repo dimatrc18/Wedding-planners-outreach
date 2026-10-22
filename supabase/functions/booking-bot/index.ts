@@ -219,9 +219,9 @@ async function handleIncomingMessage(msg: any) {
   let existingDraft: StoredDraft | null = null;
 
   // Check A: Explicit booking ref in text (e.g. [DRG-86D0DA] or DRG-86D0DA)
-  const refMatch = text.match(/\b(DRG-[A-Z0-9]{6})\b/);
+  const refMatch = text.match(/\b(DRG-[A-Z0-9]{4,10})\b/i);
   if (refMatch) {
-    existingDraft = await getDraftByBookingRef(refMatch[1]);
+    existingDraft = await getDraftByBookingRef(refMatch[1].toUpperCase());
   }
 
   // Check B: Reply to a previous draft card or prompt message
@@ -230,18 +230,47 @@ async function handleIncomingMessage(msg: any) {
     existingDraft = await getDraftByMessageId(chatId, replyTo.message_id);
   }
 
-  // Check C: If recent unconfirmed draft exists in this chat (< 30 minutes) and text has booking clues
+  // Check C: If recent unconfirmed draft exists in this chat (< 30 minutes) and text has booking/edit clues
   if (!existingDraft) {
     const recent = await getLatestDraftForChat(chatId);
     if (recent && recent.updated_at) {
       const ageMs = Date.now() - new Date(recent.updated_at).getTime();
       if (ageMs < 30 * 60 * 1000) {
-        const isUpdate = /transfer|pickup|dropoff|guests|sprinter|v-class|fare|deposit|\b€\b|flight|phone|\+\d{8,}/i.test(text);
+        const isUpdate = /transfer|pickup|dropoff|guests|sprinter|v-class|fare|deposit|price|notes?|заметк|phone|name|email|\b€\b|flight|\+\d{8,}/i.test(text);
         if (isUpdate) {
           existingDraft = recent;
         }
       }
     }
+  }
+
+  // Fast-path: If user pasted & edited "[DRG-XXXXXX] Notes: ..." from the 1-click Copy Notes button
+  const pureNotesMatch = text.match(/^(?:\[?DRG-[A-Z0-9]{4,10}\]?\s*)?(?:notes?|заметк[иа])\s*[:—–-]\s*([\s\S]+)$/i);
+  if (existingDraft && pureNotesMatch && !/\n\s*(?:name|phone|price|vehicle|\[transfer)\s*:/i.test(text)) {
+    existingDraft.booking_data.client_notes = pureNotesMatch[1].trim();
+
+    // Delete user's message immediately so chat stays clean
+    try {
+      await tgApi("deleteMessage", { chat_id: chatId, message_id: msg.message_id });
+    } catch (_) {}
+
+    if (existingDraft.prompt_message_id) {
+      await tgApi("deleteMessage", { chat_id: chatId, message_id: existingDraft.prompt_message_id });
+    }
+
+    const card = renderBookingCard(existingDraft.booking_data, existingDraft.id);
+    if (existingDraft.card_message_id) {
+      await tgApi("editMessageText", {
+        chat_id: chatId,
+        message_id: existingDraft.card_message_id,
+        text: card.text,
+        parse_mode: "HTML",
+        reply_markup: card.replyMarkup,
+        disable_web_page_preview: true,
+      });
+    }
+    await upsertDraft({ ...existingDraft, prompt_message_id: null });
+    return;
   }
 
   // Direct prompt reply handler (full edit / notes / price / missing info) -> Updates card in-place with ZERO chat clutter
@@ -251,7 +280,7 @@ async function handleIncomingMessage(msg: any) {
     replyTo &&
     (replyTo.message_id === existingDraft.prompt_message_id || replyTo.message_id === existingDraft.card_message_id)
   ) {
-    const isFullBookingUpdate = text.length > 80 || /\[transfer|\btransfer\b|pickup|dropoff|sprinter|v-class|\b€\b|min drive/i.test(text);
+    const isFullBookingUpdate = text.length > 260 && /\[transfer|\bpick-?up\s*\d/i.test(text);
 
     if (isFullBookingUpdate) {
       await tgApi("sendChatAction", { chat_id: chatId, action: "typing" });
@@ -267,9 +296,12 @@ async function handleIncomingMessage(msg: any) {
         existingDraft.booking_data.finance.total_price = p;
         existingDraft.booking_data.finance.paid_deposit = dep;
         existingDraft.booking_data.finance.balance_due = p - (dep || 0);
+        existingDraft.booking_data.our_notes = existingDraft.booking_data.finance.balance_due > 0
+          ? `to be paid: ${existingDraft.booking_data.finance.balance_due} EUR`
+          : "";
       } else {
         const phoneMatch = text.match(/(\+?\d[\d\s\-()]{6,}\d)/);
-        if (phoneMatch && !existingDraft.booking_data.client.phone) {
+        if (phoneMatch && !existingDraft.booking_data.client.phone && text.length < 40) {
           existingDraft.booking_data.client.phone = phoneMatch[1].replace(/\s+/g, "");
           existingDraft.booking_data.missing_fields = (existingDraft.booking_data.missing_fields || []).filter((m: string) => !m.includes("phone"));
         } else {
@@ -311,17 +343,27 @@ async function handleIncomingMessage(msg: any) {
 
   try {
     let booking: BookingData;
+    let preservedRawText = text;
 
     if (existingDraft) {
-      // If short message (< 120 chars) and not a full itinerary, patch existing booking
-      const isShortPatch = text.length < 120 && !/\[transfer|\btransfer\s*\d/i.test(text);
-      if (isShortPatch && existingDraft.booking_data) {
-        booking = await patchBookingWithGemini(existingDraft.booking_data, text, GEMINI_API_KEY);
+      // Determine whether this is a compact template/partial patch vs a brand-new full schedule
+      const isFullScheduleReplacement = text.length > 280 && /\[transfer|\bpick-?up\s*\d|maps\.google\.com/i.test(text);
+      if (!isFullScheduleReplacement && existingDraft.booking_data) {
+        booking = await patchBookingWithGemini(
+          existingDraft.booking_data,
+          text,
+          GEMINI_API_KEY,
+          existingDraft.raw_text || ""
+        );
+        preservedRawText = existingDraft.raw_text
+          ? `${existingDraft.raw_text}\n\n[Update]: ${text}`
+          : text;
       } else {
         booking = await extractBookingWithGemini(
           { text, audioBase64, audioMime, imageBase64, imageMime },
           GEMINI_API_KEY
         );
+        preservedRawText = text;
       }
       // Preserve consistent booking ref
       booking.booking_ref = existingDraft.booking_ref;
@@ -404,7 +446,7 @@ async function handleIncomingMessage(msg: any) {
         chat_id: chatId,
         card_message_id: finalCardMsgId,
         prompt_message_id: null,
-        raw_text: text,
+        raw_text: preservedRawText,
         booking_data: booking,
       });
     }
@@ -603,12 +645,22 @@ async function handleCallbackQuery(query: any) {
       return;
     }
 
+    // Immediately delete draft from DB and update card UI to prevent concurrent duplicate confirmations
+    await deleteDraftById(draft.id);
     await tgApi("answerCallbackQuery", { callback_query_id: queryId, text: "Saving to Google Sheets & Calendar..." });
+    await tgApi("editMessageReplyMarkup", {
+      chat_id: chatId,
+      message_id: messageId,
+      reply_markup: {
+        inline_keyboard: [[{ text: "⏳ Saving to CRM & Calendar...", callback_data: "noop" }]],
+      },
+    });
 
     const creds = getServiceAccountCreds();
     let sheetSuccess = false;
     let sheetMsg = "";
     let calSuccess = false;
+    let calErr = "";
     let eventLinks: string[] = [];
 
     // 1. Google Sheets
@@ -625,7 +677,11 @@ async function handleCallbackQuery(query: any) {
       const calRes = await saveBookingToGoogleCalendar(draft.booking_data, GOOGLE_CALENDAR_ID, "Europe/Rome", creds);
       calSuccess = calRes.success;
       eventLinks = calRes.eventLinks;
+      if (!calSuccess && calRes.error) {
+        calErr = calRes.error;
+      }
     } catch (e: any) {
+      calErr = e.message;
       console.error("Calendar error:", e);
     }
 
@@ -643,7 +699,7 @@ async function handleCallbackQuery(query: any) {
     confirmText += `📅 <b>Booked Month:</b> ${draft.booking_data.booked_month}\n\n`;
     confirmText += `<b>Database Sync:</b>\n`;
     confirmText += `• 📊 Google Sheet (CRM): ${sheetSuccess ? "<b>Saved</b> ✅" : `❌ ${sheetMsg}`}\n`;
-    confirmText += `• 📅 Google Calendar: ${calSuccess ? `<b>${eventLinks.length} Event(s) Created</b> ✅` : "❌ Error"}\n`;
+    confirmText += `• 📅 Google Calendar: ${calSuccess ? `<b>${eventLinks.length} Event(s) Created</b> ✅` : `❌ ${calErr || "Error"}`}\n`;
 
     const buttons: any[] = [];
     const btnRow: any[] = [];
@@ -666,9 +722,6 @@ async function handleCallbackQuery(query: any) {
       parse_mode: "HTML",
       reply_markup: { inline_keyboard: buttons },
     });
-
-    // Delete draft from Postgres table
-    await deleteDraftById(draft.id);
     return;
   }
 }

@@ -21,10 +21,51 @@ CRITICAL RULES:
 8. Output MUST conform strictly to the JSON schema provided.
 `;
 
+const MODEL_CASCADE = [
+  "gemini-3.5-flash",
+  "gemini-3.5-flash-lite",
+  "gemini-flash-lite-latest",
+  "gemini-2.5-flash",
+];
+
+async function callGeminiWithFallback(
+  payload: any,
+  apiKey: string,
+  modelIndex = 0
+): Promise<string> {
+  const model = MODEL_CASCADE[modelIndex] || MODEL_CASCADE[0];
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    if ((res.status === 429 || res.status === 404 || res.status >= 500) && modelIndex < MODEL_CASCADE.length - 1) {
+      console.warn(`[Gemini ${model} Status ${res.status}] Retrying with ${MODEL_CASCADE[modelIndex + 1]}...`);
+      return callGeminiWithFallback(payload, apiKey, modelIndex + 1);
+    }
+    throw new Error(`Gemini API error (${res.status} on ${model}): ${errText}`);
+  }
+
+  const jsonRes = await res.json();
+  const rawText = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!rawText) {
+    if (modelIndex < MODEL_CASCADE.length - 1) {
+      console.warn(`[Gemini ${model} empty response] Retrying with ${MODEL_CASCADE[modelIndex + 1]}...`);
+      return callGeminiWithFallback(payload, apiKey, modelIndex + 1);
+    }
+    throw new Error(`Gemini returned empty candidate response on ${model}`);
+  }
+  return rawText;
+}
+
 export async function extractBookingWithGemini(
   input: { text: string; audioBase64?: string; audioMime?: string; imageBase64?: string; imageMime?: string },
-  apiKey: string,
-  model = "gemini-2.5-flash"
+  apiKey: string
 ): Promise<BookingData> {
   const parts: any[] = [];
 
@@ -60,28 +101,7 @@ export async function extractBookingWithGemini(
     },
   };
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    // If Flash fails with 429 or 5xx, retry with gemini-3.5-flash-lite or gemini-3-flash-preview
-    if (model === "gemini-2.5-flash") {
-      console.warn(`[Gemini Flash Status ${res.status}] Retrying with Gemini 3.5 Flash Lite...`);
-      return extractBookingWithGemini(input, apiKey, "gemini-3.5-flash-lite");
-    } else if (model === "gemini-3.5-flash-lite") {
-      console.warn(`[Gemini Flash Lite Status ${res.status}] Retrying with Gemini 3 Flash Preview...`);
-      return extractBookingWithGemini(input, apiKey, "gemini-3-flash-preview");
-    }
-    throw new Error(`Gemini API error (${res.status}): ${errText}`);
-  }
-
-  const jsonRes = await res.json();
-  const rawText = jsonRes.candidates?.[0]?.content?.parts?.[0]?.text;
+  const rawText = await callGeminiWithFallback(payload, apiKey);
   if (!rawText) {
     throw new Error("Gemini returned empty response content.");
   }
@@ -103,12 +123,13 @@ export async function extractBookingWithGemini(
 }
 
 /**
- * Updates an existing booking with a plain-text correction or additional detail
+ * Updates an existing booking with a plain-text correction or compact template edit
  */
 export async function patchBookingWithGemini(
   existingBooking: BookingData,
   correctionText: string,
-  apiKey: string
+  apiKey: string,
+  originalRawText = ""
 ): Promise<BookingData> {
   const prompt = `
 You are updating an existing chauffeur booking with new corrections or missing details provided by the user.
@@ -119,8 +140,10 @@ ${JSON.stringify(existingBooking, null, 2)}
 USER'S CORRECTION / ADDITIONAL INFO:
 "${correctionText}"
 
-Apply the corrections to the existing booking and return the complete updated booking conforming to the JSON schema.
-Only modify the fields referenced in the correction text; keep all other valid fields intact.
+CRITICAL INSTRUCTIONS:
+1. Apply ONLY the changes mentioned in USER'S CORRECTION to the EXISTING BOOKING.
+2. Keep ALL existing rides, stops, maps_url, instructions, dates, times, client_notes, vehicle_class, and prices intact unless the user explicitly changed them.
+3. Return the complete updated booking conforming strictly to the JSON schema.
 `;
 
   const payload = {
@@ -133,23 +156,78 @@ Only modify the fields referenced in the correction text; keep all other valid f
     },
   };
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  const rawText = await callGeminiWithFallback(payload, apiKey);
+  const rawData = JSON.parse(rawText);
+  const combinedSource = `${originalRawText}\n${correctionText}`.trim();
+  const updated = applyBusinessRules(rawData, combinedSource);
 
-  if (!res.ok) {
-    throw new Error(`Gemini patch error: ${await res.text()}`);
+  // Safeguard: preserve existing rides & Google Maps URLs if the patch did not include full transfer blocks
+  const hasFullTransferOverride = /\[transfer|\bpick-?up\s*\d/i.test(correctionText);
+  if (!hasFullTransferOverride && existingBooking.rides.length > 0) {
+    // Keep existing rides structure and merge any time/flight/date updates
+    if (updated.rides.length === existingBooking.rides.length) {
+      updated.rides = existingBooking.rides.map((origRide, idx) => {
+        const uRide = updated.rides[idx];
+        return {
+          ...origRide,
+          date: uRide?.date || origRide.date,
+          time: uRide?.time || origRide.time,
+          flight: uRide?.flight || origRide.flight,
+          stops: origRide.stops.map((origStop, sIdx) => {
+            const uStop = uRide?.stops?.[sIdx];
+            return {
+              ...origStop,
+              time: uStop?.time || origStop.time,
+              place: uStop?.place || origStop.place,
+              maps_url: origStop.maps_url || uStop?.maps_url || null,
+              address: origStop.address || uStop?.address || null,
+              instructions: origStop.instructions || uStop?.instructions || null,
+            };
+          }),
+        };
+      });
+    } else {
+      updated.rides = existingBooking.rides;
+    }
   }
 
-  const jsonRes = await res.json();
-  const rawData = JSON.parse(jsonRes.candidates[0].content.parts[0].text);
-  const updated = applyBusinessRules(rawData, correctionText);
-
-  // Preserve existing booking ref
+  // Safeguard: preserve non-null fields from existingBooking if omitted
   updated.booking_ref = existingBooking.booking_ref;
+  if (!updated.client.name && existingBooking.client.name) updated.client.name = existingBooking.client.name;
+  if (!updated.client.phone && existingBooking.client.phone) updated.client.phone = existingBooking.client.phone;
+  if (!updated.client.email && existingBooking.client.email) updated.client.email = existingBooking.client.email;
+  if (!updated.client_notes && existingBooking.client_notes) updated.client_notes = existingBooking.client_notes;
+  if (updated.finance.total_price === null && existingBooking.finance.total_price !== null) {
+    updated.finance.total_price = existingBooking.finance.total_price;
+  }
+  if (updated.finance.paid_deposit === null && existingBooking.finance.paid_deposit !== null) {
+    updated.finance.paid_deposit = existingBooking.finance.paid_deposit;
+  }
+  if (updated.finance.total_price !== null) {
+    updated.finance.balance_due = updated.finance.total_price - (updated.finance.paid_deposit || 0);
+    updated.our_notes = updated.finance.balance_due > 0 ? `to be paid: ${updated.finance.balance_due} EUR` : "";
+    updated.status = updated.finance.paid_deposit && updated.finance.paid_deposit > 0 ? "Prepayment Received" : "Confirmed (Unpaid)";
+    // Re-sync ride prices
+    if (updated.rides.length === 2 && updated.rides[1].role === "return" && !/standby/i.test(updated.service_type)) {
+      const half = Math.round(updated.finance.total_price / 2);
+      updated.rides[0].price = half;
+      updated.rides[1].price = updated.finance.total_price - half;
+    } else if (updated.rides.length > 0) {
+      updated.rides[0].price = updated.finance.total_price;
+      for (let i = 1; i < updated.rides.length; i++) updated.rides[i].price = null;
+    }
+  }
+
+  // Re-evaluate missing fields
+  updated.missing_fields = [];
+  if (!updated.client.name) updated.missing_fields.push("👤 Client full name (for driver nameboard)");
+  if (!updated.client.phone) updated.missing_fields.push("📞 Client phone number / WhatsApp");
+  const hasAirport = updated.rides.some((rd) =>
+    rd.stops.some((st) => /airport|malpensa|mxp|linate|lin|bergamo|bgy|terminal/i.test(st.place + " " + (st.address || "")))
+  );
+  const hasFlight = updated.rides.some((rd) => !!rd.flight?.number);
+  if (hasAirport && !hasFlight) updated.missing_fields.push("✈️ Inbound/outbound flight number");
+
   return updated;
 }
 

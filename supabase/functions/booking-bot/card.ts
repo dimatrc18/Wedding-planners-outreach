@@ -154,9 +154,9 @@ export function renderBookingCard(booking: BookingData, draftId: string): { text
     booking.missing_fields.forEach((m) => lines.push(`• ❓ ${esc(m)}`));
   }
 
-  // Inline Buttons layout requested by user:
+  // Inline Buttons layout:
   // Row 1: Approve and Cancel (Cancel deletes draft completely from chat)
-  // Row 2: Full-width Edit Full Booking
+  // Row 2: Native 1-Click CopyTextButton (copies directly to clipboard with Telegram popup, 0 chat messages!)
   const buttons: any[] = [];
 
   buttons.push([
@@ -170,17 +170,63 @@ export function renderBookingCard(booking: BookingData, draftId: string): { text
     },
   ]);
 
-  buttons.push([
-    {
-      text: "✏️ Edit Full Booking",
-      callback_data: `edit_full:${draftId}`,
-    },
-  ]);
+  const compactBookingText = buildCompactCopyText(booking);
+  if (booking.client_notes) {
+    const notesCopy = `[${booking.booking_ref}] Notes: ${booking.client_notes}`.substring(0, 256);
+    buttons.push([
+      {
+        text: "✏️ Copy Booking",
+        copy_text: { text: compactBookingText },
+      },
+      {
+        text: "📋 Copy Notes",
+        copy_text: { text: notesCopy },
+      },
+    ]);
+  } else {
+    buttons.push([
+      {
+        text: "✏️ Copy to Edit",
+        copy_text: { text: compactBookingText },
+      },
+    ]);
+  }
 
   return {
     text: lines.join("\n"),
     replyMarkup: { inline_keyboard: buttons },
   };
+}
+
+/**
+ * Builds a compact editable summary (<= 256 chars) for Telegram's native CopyTextButton.
+ * Clicking the button copies this directly to clipboard with a native popup and 0 chat messages.
+ */
+export function buildCompactCopyText(booking: BookingData): string {
+  const lines: string[] = [];
+  lines.push(`[${booking.booking_ref}]`);
+  if (booking.client.name) lines.push(`Name: ${booking.client.name}`);
+  if (booking.client.phone) lines.push(`Phone: ${booking.client.phone}`);
+  if (booking.finance.total_price !== null) {
+    let f = `Price: €${booking.finance.total_price}`;
+    if (booking.finance.paid_deposit) f += ` | Paid: €${booking.finance.paid_deposit}`;
+    lines.push(f);
+  }
+  const pax = booking.party.passengers ? ` (${booking.party.passengers} pax)` : "";
+  if (booking.vehicle.class) lines.push(`Vehicle: ${booking.vehicle.class}${pax}`);
+  if (booking.rides.length > 0) {
+    const r0 = booking.rides[0];
+    const times = booking.rides.map((r) => r.time || "").filter(Boolean).join(", ");
+    lines.push(`Date: ${r0.date}${times ? ` @ ${times}` : ""}`);
+  }
+  if (booking.client_notes) {
+    lines.push(`Notes: ${booking.client_notes}`);
+  }
+  let res = lines.join("\n").trim();
+  if (res.length > 256) {
+    res = res.substring(0, 253) + "...";
+  }
+  return res || `[${booking.booking_ref}]`;
 }
 
 /**
