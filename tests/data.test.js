@@ -535,11 +535,12 @@ test('DeBounce response normalization maps all codes correctly', () => {
   assert.equal(debErr.resultcode, 4);
 });
 
-test('Dual-Provider quota router manages 100/mo allowance and month boundary reset', () => {
+test('Triple-Tier waterfall router manages 100/mo allowance, DeBounce buffer, and MillionVerifier fallback', () => {
   // 1. New month boundary reset:
   const prevMonthState = {
     month: '2026-10',
     zerobounce_count: 85,
+    debounce_count: 30,
     millionverifier_count: 12,
     monthly_limit: 100,
   };
@@ -553,6 +554,7 @@ test('Dual-Provider quota router manages 100/mo allowance and month boundary res
   const midMonthState = {
     month: '2026-11',
     zerobounce_count: 45,
+    debounce_count: 0,
     millionverifier_count: 0,
     monthly_limit: 100,
   };
@@ -560,16 +562,30 @@ test('Dual-Provider quota router manages 100/mo allowance and month boundary res
   assert.equal(midCheck.resetNeeded, false);
   assert.equal(midCheck.provider, 'zerobounce', 'Email 46 must route to ZeroBounce');
 
-  // 3. Routing at limit (100 reached):
-  const fullMonthState = {
+  // 3. Routing when ZeroBounce limit reached (100 reached -> routes to DeBounce Tier 2 buffer):
+  const fullZBMonthState = {
     month: '2026-11',
     zerobounce_count: 100,
+    debounce_count: 0,
     millionverifier_count: 0,
     monthly_limit: 100,
   };
-  const fullCheck = determineVerificationProvider(fullMonthState, '2026-11', 100);
-  assert.equal(fullCheck.resetNeeded, false);
-  assert.equal(fullCheck.provider, 'millionverifier', 'Email 101 must switch to MillionVerifier');
+  const debCheck = determineVerificationProvider(fullZBMonthState, '2026-11', 100);
+  assert.equal(debCheck.resetNeeded, false);
+  assert.equal(debCheck.provider, 'debounce', 'Email 101 must switch to Tier 2 (DeBounce)');
+
+  // 4. Routing when both ZeroBounce & DeBounce are exhausted -> routes to MillionVerifier Tier 3 buffer:
+  const fullDebMonthState = {
+    month: '2026-11',
+    zerobounce_count: 100,
+    debounce_count: 99,
+    debounce_exhausted: true,
+    millionverifier_count: 0,
+    monthly_limit: 100,
+  };
+  const mvCheck = determineVerificationProvider(fullDebMonthState, '2026-11', 100);
+  assert.equal(mvCheck.resetNeeded, false);
+  assert.equal(mvCheck.provider, 'millionverifier', 'Must switch to Tier 3 (MillionVerifier) when DeBounce is exhausted');
 });
 
 

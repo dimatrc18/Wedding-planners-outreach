@@ -1,8 +1,8 @@
-// Dual-Provider Verification Normalization & Routing Rules
+// Triple-Tier Verification Normalization & Routing Rules (ZeroBounce -> DeBounce -> MillionVerifier)
 // Pure business logic shared between Node (unit tests & CLI) and Deno (Supabase Edge Functions)
 
 export const DEFAULT_ZEROBOUNCE_KEY = 'd15fe4de5e33478db50b958cc9eef018';
-export const DEFAULT_DEBOUNCE_KEY = 'c5a1d7317f8e42acb2f1b7bd46dcb832';
+export const DEFAULT_DEBOUNCE_KEY = '6ada06cf26ef2';
 export const DEFAULT_MILLIONVERIFIER_KEY = 'CugoyAcGssnLLZpm2jffWjp0h';
 export const ZEROBOUNCE_MONTHLY_LIMIT = 100;
 export const DEBOUNCE_MONTHLY_LIMIT = 100;
@@ -283,12 +283,18 @@ export function mapMillionVerifierResponse(data, email = '') {
 }
 
 /**
- * Routing logic for the Dual-Provider gateway:
+ * Routing logic for the Triple-Tier waterfall gateway:
  * - Checks month transition and resets ZeroBounce allocation when month changes.
- * - Routes to ZeroBounce for the first 100 emails of each calendar month.
- * - Routes to MillionVerifier once 100 is reached.
+ * - Routes to Tier 1: ZeroBounce for the first 100 emails of each calendar month.
+ * - Routes to Tier 2: DeBounce (99 bonus buffer) after ZeroBounce 100 is reached.
+ * - Routes to Tier 3: MillionVerifier (490 paid buffer) once DeBounce is exhausted or as instant fallback.
  */
-export function determineVerificationProvider(quotaState, currentMonth = new Date().toISOString().slice(0, 7), limit = ZEROBOUNCE_MONTHLY_LIMIT) {
+export function determineVerificationProvider(
+  quotaState,
+  currentMonth = new Date().toISOString().slice(0, 7),
+  limit = ZEROBOUNCE_MONTHLY_LIMIT,
+  opts = { debounceAvailable: true },
+) {
   let state = { ...(quotaState || {}) };
   let resetNeeded = false;
 
@@ -305,8 +311,16 @@ export function determineVerificationProvider(quotaState, currentMonth = new Dat
   }
 
   const zbLimit = state.monthly_limit || limit;
-  const count = (state.zerobounce_count ?? state.debounce_count) || 0;
-  const provider = count < zbLimit ? 'zerobounce' : 'millionverifier';
+  const zbCount = state.zerobounce_count || 0;
+
+  let provider = 'millionverifier';
+  if (zbCount < zbLimit) {
+    provider = 'zerobounce';
+  } else if (opts?.debounceAvailable !== false && state.debounce_exhausted !== true) {
+    provider = 'debounce';
+  } else {
+    provider = 'millionverifier';
+  }
 
   return {
     provider,

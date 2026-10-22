@@ -164,10 +164,11 @@ export function render(el) {
 
       <section class="card stack">
         <div class="section-head"><h2>Email Verification · Zero-Bounce Gateway</h2><button class="btn sm" data-act="job" data-job="audit_monthly_verification">Audit Balances (Telegram)</button></div>
-        <p class="small muted">Hybrid dual-provider gateway: <b>Tier 1: ZeroBounce</b> (first 100 free emails/month) → <b>Tier 2: MillionVerifier</b> (buffer & failover). Auto-resets on the 1st of every month.</p>
+        <p class="small muted">Triple-tier waterfall gateway: <b>Tier 1: ZeroBounce</b> (first 100 free emails/month) → <b>Tier 2: DeBounce</b> (99 bonus credits) → <b>Tier 3: MillionVerifier</b> (490 buffer & failover). Auto-resets on the 1st of every month.</p>
         <div class="kpis">
           <div class="kpi"><span class="label">Tier 1 · ZeroBounce</span><span class="val">100 / mo</span><span class="ci">Resets 1st of every month</span></div>
-          <div class="kpi"><span class="label">Tier 2 · MillionVerifier</span><span class="val">490 credits</span><span class="ci">Active overflow buffer</span></div>
+          <div class="kpi"><span class="label">Tier 2 · DeBounce</span><span class="val">99 credits</span><span class="ci">Secondary buffer</span></div>
+          <div class="kpi"><span class="label">Tier 3 · MillionVerifier</span><span class="val">490 credits</span><span class="ci">Active overflow buffer</span></div>
         </div>
       </section>
 
