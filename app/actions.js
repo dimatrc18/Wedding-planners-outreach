@@ -202,9 +202,19 @@ export async function eraseProspect(p) {
   log('prospect_erased', { agency: p.agency_name, reason: 'GDPR erase from app' });
 }
 
-// ---------- Email verification (syntax + MX + MX host A-record over DNS-over-HTTPS) ----------
+// ---------- Email verification (MillionVerifier mailbox check + DNS-over-HTTPS fallback) ----------
 export async function verifyEmail(email) {
   if (!core.isValidEmailSyntax(email)) return 'invalid';
+  if (!isDemo()) {
+    try {
+      const res = await api('verify_email', { email });
+      if (res && res.resultcode) {
+        if (res.resultcode === 1) return 'mx_ok';
+        if (res.resultcode === 6 || res.resultcode === 5) return 'invalid';
+        if (res.resultcode === 2) return 'mx_ok';
+      }
+    } catch { /* fallback to DNS MX below */ }
+  }
   try {
     const r = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(core.domainOf(email))}&type=MX`);
     const j = await r.json();

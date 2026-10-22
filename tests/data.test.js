@@ -4,6 +4,7 @@ import {
   wilson, computeMetrics, tractionVerdict, compareRates, csvToProspects, toCSV, findDuplicates, extractFromHtml,
   priorityScore, parseProfileUrl, quoteNet, commissionFor, getRateCardInfo, rankUsableEmails, inferLanguage,
   sanitizeCatalogProspect, DISCOVERY_PARTNER_CATALOG, buildSocialOpener, resolveProspectResearchSeed, isParkedOrDeadDomain,
+  canSend, DEFAULT_SETTINGS,
 } from '../supabase/functions/_shared/core/index.js';
 
 test('Wilson interval', () => {
@@ -333,3 +334,70 @@ test('DISCOVERY_PARTNER_CATALOG contains verified Easton email and zero dead/par
     }
   }
 });
+
+test('MillionVerifier mailbox gatekeeper and catch-all zero-bounce policy', () => {
+  const now = new Date('2026-10-27T10:00:00Z'); // Tuesday 10:00 UTC (inside window)
+  const baseTouch = {
+    step_name: 'T1_intro',
+    channel: 'email',
+    state: 'approved',
+    scheduled_at: now.toISOString(),
+  };
+
+  // Case 1: Invalid mailbox (MillionVerifier resultcode 6)
+  const invalidProspect = {
+    id: 'p-inv',
+    agency_name: 'Sinclair Events',
+    email: 'concierge@sinclairevents.com',
+    email_status: 'invalid',
+    enrichment: {
+      verification: { provider: 'millionverifier', result: 'invalid', resultcode: 6, subresult: 'no_mailbox' },
+    },
+  };
+  const gate1 = canSend(baseTouch, invalidProspect, [], DEFAULT_SETTINGS, { now });
+  assert.equal(gate1.ok, false);
+  assert.equal(gate1.reason, 'invalid_email');
+
+  // Case 2: Catch-all domain without verbatim contact page proof
+  const catchAllUnverified = {
+    id: 'p-ca-unv',
+    agency_name: 'Unknown Agency',
+    email: 'info@catchallagency.com',
+    email_status: 'mx_ok',
+    enrichment: {
+      verification: { provider: 'millionverifier', result: 'catch_all', resultcode: 2, subresult: 'ok' },
+    },
+  };
+  const gate2 = canSend(baseTouch, catchAllUnverified, [], DEFAULT_SETTINGS, { now });
+  assert.equal(gate2.ok, false);
+  assert.equal(gate2.reason, 'catch_all_unverified');
+
+  // Case 3: Catch-all domain WITH verbatim proof from contact page
+  const catchAllVerified = {
+    id: 'p-ca-ver',
+    agency_name: 'Easton Events',
+    email: 'easton@eastonevents.com',
+    email_status: 'mx_ok',
+    hook_source_url: 'https://www.eastonevents.com/contact',
+    source_detail: 'Extracted verbatim from official contact page inquiry link',
+    enrichment: {
+      verification: { provider: 'millionverifier', result: 'catch_all', resultcode: 2, subresult: 'ok', verbatim_proof: true },
+    },
+  };
+  const gate3 = canSend(baseTouch, catchAllVerified, [], DEFAULT_SETTINGS, { now });
+  assert.equal(gate3.ok, true, 'Catch-all with verbatim contact page proof must be approved');
+
+  // Case 4: Mailbox confirmed active (MillionVerifier resultcode 1)
+  const verifiedOk = {
+    id: 'p-ok',
+    agency_name: 'Lena Freitag Weddings',
+    email: 'hello@lenafreitag.com',
+    email_status: 'mx_ok',
+    enrichment: {
+      verification: { provider: 'millionverifier', result: 'ok', resultcode: 1, subresult: 'ok', credits: 497 },
+    },
+  };
+  const gate4 = canSend(baseTouch, verifiedOk, [], DEFAULT_SETTINGS, { now });
+  assert.equal(gate4.ok, true, 'MillionVerifier resultcode 1 must pass gatekeeper');
+});
+

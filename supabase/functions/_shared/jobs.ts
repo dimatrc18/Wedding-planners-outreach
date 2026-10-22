@@ -5,6 +5,7 @@ import { env, logEvent, getState, setState, integrations } from './server.ts';
 import { sendMail, appendToSent, fetchNewMessages } from './mail.ts';
 import { gemini } from './ai.ts';
 import { tgSend, tgEscape, appUrl } from './telegram.ts';
+import { verifyEmailWithMillionVerifier } from './verify.ts';
 
 export async function loadAll(db: any) {
   const [p, t, tpl, o] = await Promise.all([
@@ -198,28 +199,9 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
     if (!gate.ok && gate.reason === 'not_due' && onlyTouchId) gate = { ok: true }; // "Send now" overrides the slot, nothing else
     if (!gate.ok) {
       results.push({ id: t.id, reason: gate.reason });
-      if (['replied', 'do_not_contact', 'invalid_email', 'broken_website', 'no_email'].includes(gate.reason)) {
+      if (['replied', 'do_not_contact', 'invalid_email', 'catch_all_unverified', 'broken_website', 'no_email'].includes(gate.reason)) {
         await db.from('touches').update({ state: 'skipped', error: core.BLOCK_REASONS[gate.reason] }).eq('id', t.id);
       }
-      continue;
-    }
-    // Live DNS MX safeguard before dispatching:
-    const emailDomain = core.domainOf(p.email);
-    if (emailDomain && p.email_status !== 'mx_ok' && p.email_status !== 'valid') {
-      const mxRes = await verifyDnsMx(emailDomain);
-      if (mxRes === 'no_mx') {
-        await db.from('prospects').update({ email_status: 'invalid' }).eq('id', p.id);
-        await db.from('touches').update({ state: 'skipped', error: 'Blocked: Email domain failed DNS MX verification' }).eq('id', t.id);
-        results.push({ id: t.id, reason: 'invalid_email' });
-        continue;
-      } else if (mxRes === 'mx_ok') {
-        await db.from('prospects').update({ email_status: 'mx_ok' }).eq('id', p.id);
-      }
-    }
-    const lint = core.lintMessage({ subject: t.subject, body: t.body, channel: 'email', step: t.step_name });
-    if (lint.errors.length) {
-      await db.from('touches').update({ state: 'draft', lint, error: `Blocked by copy-lint: ${lint.errors[0]}` }).eq('id', t.id);
-      results.push({ id: t.id, reason: 'lint' });
       continue;
     }
     const thread = list.filter((x: any) => x.message_id && x.id !== t.id)
@@ -229,6 +211,71 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
     const threaded = shouldThread && thread.length > 0;
     const lastInbound = [...thread].reverse().find((x: any) => x.direction === 'in');
     const inReplyTo = threaded ? (lastInbound || thread[thread.length - 1]).message_id : null;
+    const targetTo = t.to_address || (t.step_name === 'reply' && lastInbound?.from_address ? lastInbound.from_address : p.email);
+
+    // Strict Zero-Bounce Mailbox Verification Gate (MillionVerifier):
+    const existingVer = p.enrichment?.verification;
+    let isDeliverable = existingVer?.resultcode === 1 || existingVer?.result === 'ok';
+
+    if (existingVer?.resultcode === 2 || existingVer?.result === 'catch_all') {
+      const hasVerbatimProof = Boolean(
+        existingVer.verbatim_proof ||
+        (p.hook_source_url && String(p.hook_source_url).length > 8) ||
+        (p.source_detail && /contact|footer|header|mailto/i.test(p.source_detail)) ||
+        (p.notes && /verbatim/i.test(p.notes))
+      );
+      if (hasVerbatimProof) {
+        isDeliverable = true;
+      } else {
+        await db.from('touches').update({ state: 'skipped', error: 'Blocked: Catch-all domain without verbatim contact page proof' }).eq('id', t.id);
+        results.push({ id: t.id, reason: 'catch_all_unverified' });
+        continue;
+      }
+    }
+
+    if (!isDeliverable) {
+      const verRes = await verifyEmailWithMillionVerifier(targetTo, { db });
+      if (verRes.resultcode === 1) { // ok
+        const updatedEnrichment = { ...(p.enrichment || {}), verification: verRes };
+        await db.from('prospects').update({ email_status: 'mx_ok', enrichment: updatedEnrichment }).eq('id', p.id);
+        p.enrichment = updatedEnrichment;
+        p.email_status = 'mx_ok';
+      } else if (verRes.resultcode === 2) { // catch_all
+        const hasVerbatimProof = Boolean(
+          (p.hook_source_url && String(p.hook_source_url).length > 8) ||
+          (p.source_detail && /contact|footer|header|mailto/i.test(p.source_detail)) ||
+          (p.notes && /verbatim/i.test(p.notes))
+        );
+        const updatedVer = { ...verRes, verbatim_proof: hasVerbatimProof };
+        const updatedEnrichment = { ...(p.enrichment || {}), verification: updatedVer };
+        await db.from('prospects').update({ enrichment: updatedEnrichment }).eq('id', p.id);
+        p.enrichment = updatedEnrichment;
+        if (!hasVerbatimProof) {
+          await db.from('touches').update({ state: 'skipped', error: 'Blocked: Catch-all domain without verbatim contact page proof' }).eq('id', t.id);
+          results.push({ id: t.id, reason: 'catch_all_unverified' });
+          continue;
+        }
+      } else if (verRes.resultcode === 6 || verRes.resultcode === 5) { // invalid / disposable
+        const updatedEnrichment = { ...(p.enrichment || {}), verification: verRes };
+        await db.from('prospects').update({ email_status: 'invalid', enrichment: updatedEnrichment }).eq('id', p.id);
+        await db.from('touches').update({ state: 'skipped', error: `Blocked by MillionVerifier: Invalid mailbox (${verRes.subresult})` }).eq('id', t.id);
+        results.push({ id: t.id, reason: 'invalid_email' });
+        continue;
+      } else {
+        // unknown, timeout, or no credits -> Hold touch, never send unverified email!
+        const reason = (verRes.credits === 0 || verRes.error?.includes('credits')) ? 'unverified_no_credits' : 'unverified';
+        await db.from('touches').update({ error: `Send held: MillionVerifier returned ${verRes.result} (${verRes.subresult || verRes.error || 'unverified'}). Touch will not be sent unverified.` }).eq('id', t.id);
+        results.push({ id: t.id, reason });
+        continue;
+      }
+    }
+
+    const lint = core.lintMessage({ subject: t.subject, body: t.body, channel: 'email', step: t.step_name });
+    if (lint.errors.length) {
+      await db.from('touches').update({ state: 'draft', lint, error: `Blocked by copy-lint: ${lint.errors[0]}` }).eq('id', t.id);
+      results.push({ id: t.id, reason: 'lint' });
+      continue;
+    }
     try {
       const prospectLang = p.language || t.language || 'en';
       const rcAtt = t.attach_rate_card ? await rateCardAttachment(db, settings, prospectLang) : null;

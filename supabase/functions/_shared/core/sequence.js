@@ -144,6 +144,17 @@ export function canSend(touch, prospect, touches, settings, ctx = {}) {
   if (touch.channel !== 'email') return { ok: false, reason: 'manual_channel' };
   if (!prospect.email) return { ok: false, reason: 'no_email' };
   if (prospect.email_status === 'invalid' || prospect.email_status === 'no_mx') return { ok: false, reason: 'invalid_email' };
+  if (prospect.enrichment?.verification?.status === 'invalid' || prospect.enrichment?.verification?.resultcode === 6 || prospect.enrichment?.verification?.resultcode === 5) {
+    return { ok: false, reason: 'invalid_email' };
+  }
+  if (
+    (prospect.enrichment?.verification?.status === 'catch_all' || prospect.enrichment?.verification?.result === 'catch_all' || prospect.enrichment?.verification?.resultcode === 2) &&
+    !prospect.enrichment?.verification?.verbatim_proof &&
+    !prospect.hook_source_url &&
+    !(prospect.source_detail && /contact|footer|header|mailto/i.test(prospect.source_detail))
+  ) {
+    return { ok: false, reason: 'catch_all_unverified' };
+  }
   if (prospect.website_status === 'broken' || prospect.website_status === 'nxdomain') return { ok: false, reason: 'broken_website' };
   if ((ctx.sentTotal || 0) >= s.bounce_min_sample && (ctx.bouncedTotal || 0) / ctx.sentTotal > s.bounce_pause_rate) {
     return { ok: false, reason: 'bounce_pause' };
@@ -166,7 +177,10 @@ export const BLOCK_REASONS = {
   not_approved: 'Not approved yet',
   manual_channel: 'Send this one by hand',
   no_email: 'No email address',
-  invalid_email: 'Email address or domain failed DNS MX verification',
+  invalid_email: 'Email address or domain failed mailbox verification',
+  catch_all_unverified: 'Catch-all domain without verbatim contact page proof',
+  unverified_no_credits: 'Paused: MillionVerifier credits depleted',
+  unverified: 'Email mailbox not verified by MillionVerifier',
   broken_website: 'Agency website returned DNS NXDOMAIN or connection error',
   bounce_pause: 'Paused: bounce rate above limit',
   replied: 'Planner replied, sequence stopped',

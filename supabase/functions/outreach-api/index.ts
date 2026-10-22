@@ -5,6 +5,7 @@ import { handle, json, requireAllowedUser, loadSettings, integrations, getState,
 import { verifySmtp, sendMail } from '../_shared/mail.ts';
 import { tgSend } from '../_shared/telegram.ts';
 import { gemini, checkHook } from '../_shared/ai.ts';
+import { verifyEmailWithMillionVerifier } from '../_shared/verify.ts';
 import { draftDueSteps, sendDue, syncInbox, sendDigest, approveTouch, fetchJinaSignals, autoResearchPending, loadAll, classifyInboundMessage, applyInbound, formatThreadHistory, verifyDnsMx } from '../_shared/jobs.ts';
 
 const GIF = Uint8Array.from(atob('R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=='), (c) => c.charCodeAt(0));
@@ -341,6 +342,11 @@ Deno.serve((req) => handle(req, async () => {
     case 'test_telegram': {
       const res = await tgSend('🔔 <b>DOROGO Partner System</b>: Test ping from Outreach API. Bot is connected and online.');
       return json({ ok: Boolean(res?.ok), result: res });
+    }
+    case 'verify_email': {
+      const email = body.email;
+      const res = await verifyEmailWithMillionVerifier(email, { db });
+      return json(res);
     }
     case 'enrich':
       return json(await enrich(db, body));
