@@ -594,7 +594,8 @@ export const DISCOVERY_PARTNER_CATALOG = [
   {
     agency_name: 'Villa Balbiano Buyout Desk',
     contact_name: 'Buyout Events Desk',
-    email: 'events@theheritage-collection.com',
+    email: 'hello@theheritage-collection.com',
+    alt_email: 'events@theheritage-collection.com',
     website: 'https://theheritage-collection.com/villa-balbiano/',
     type: 'venue',
     segment: 'boutique_local',
@@ -632,7 +633,8 @@ export const DISCOVERY_PARTNER_CATALOG = [
   {
     agency_name: 'Grand Hotel Villa Serbelloni Events',
     contact_name: 'Concierge & Wedding Desk',
-    email: 'events@villaserbelloni.com',
+    email: 'info@villaserbelloni.com',
+    alt_email: 'events@villaserbelloni.com',
     website: 'https://villaserbelloni.com',
     type: 'concierge_hotel',
     segment: 'boutique_local',
@@ -814,7 +816,8 @@ export const DISCOVERY_PARTNER_CATALOG = [
   {
     agency_name: 'Snapdragon Parties',
     contact_name: 'Julia Dowling',
-    email: 'info@snapdragonparties.com',
+    email: 'info@snapdragon.london',
+    alt_email: 'info@snapdragonparties.com',
     website: 'https://snapdragonparties.com',
     type: 'planner',
     segment: 'international',
@@ -1044,7 +1047,8 @@ export const DISCOVERY_PARTNER_CATALOG = [
   {
     agency_name: 'Eventoile Wedding Planning',
     contact_name: 'Fabiana & Team',
-    email: 'info@eventoile.com',
+    email: 'eventoile@gmail.com',
+    alt_email: 'info@eventoile.com',
     website: 'https://www.eventoile.com',
     type: 'planner',
     segment: 'boutique_local',
