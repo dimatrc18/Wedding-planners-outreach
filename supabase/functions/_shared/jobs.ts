@@ -5,7 +5,7 @@ import { env, logEvent, getState, setState, integrations } from './server.ts';
 import { sendMail, appendToSent, fetchNewMessages } from './mail.ts';
 import { gemini } from './ai.ts';
 import { tgSend, tgEscape, appUrl } from './telegram.ts';
-import { verifyEmailWithMillionVerifier } from './verify.ts';
+import { verifyEmailUnified, checkAndSendMonthlyVerificationAudit } from './verify.ts';
 
 export async function loadAll(db: any) {
   const [p, t, tpl, o] = await Promise.all([
@@ -234,7 +234,7 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
     }
 
     if (!isDeliverable) {
-      const verRes = await verifyEmailWithMillionVerifier(targetTo, { db });
+      const verRes = await verifyEmailUnified(targetTo, { db });
       if (verRes.resultcode === 1) { // ok
         const updatedEnrichment = { ...(p.enrichment || {}), verification: verRes };
         await db.from('prospects').update({ email_status: 'mx_ok', enrichment: updatedEnrichment }).eq('id', p.id);
@@ -258,13 +258,13 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
       } else if (verRes.resultcode === 6 || verRes.resultcode === 5) { // invalid / disposable
         const updatedEnrichment = { ...(p.enrichment || {}), verification: verRes };
         await db.from('prospects').update({ email_status: 'invalid', enrichment: updatedEnrichment }).eq('id', p.id);
-        await db.from('touches').update({ state: 'skipped', error: `Blocked by MillionVerifier: Invalid mailbox (${verRes.subresult})` }).eq('id', t.id);
+        await db.from('touches').update({ state: 'skipped', error: `Blocked by verification (${verRes.provider}): Invalid mailbox (${verRes.subresult})` }).eq('id', t.id);
         results.push({ id: t.id, reason: 'invalid_email' });
         continue;
       } else {
         // unknown, timeout, or no credits -> Hold touch, never send unverified email!
         const reason = (verRes.credits === 0 || verRes.error?.includes('credits')) ? 'unverified_no_credits' : 'unverified';
-        await db.from('touches').update({ error: `Send held: MillionVerifier returned ${verRes.result} (${verRes.subresult || verRes.error || 'unverified'}). Touch will not be sent unverified.` }).eq('id', t.id);
+        await db.from('touches').update({ error: `Send held: Verification (${verRes.provider}) returned ${verRes.result} (${verRes.subresult || verRes.error || 'unverified'}). Touch will not be sent unverified.` }).eq('id', t.id);
         results.push({ id: t.id, reason });
         continue;
       }
@@ -789,6 +789,7 @@ export async function sendDigest(db: any, settings: any, now = new Date(), force
   if (!force && (st.last_date === today || local.hh * 60 + local.mm < 8 * 60 + 30)) return { skipped: 'not_time' };
   const d = await buildDigest(db, settings, now);
   await tgSend(d.text, [[{ text: 'Open Today', url: appUrl('today') }]]);
+  await checkAndSendMonthlyVerificationAudit(db);
   for (const t of d.drafts) {
     const p: any = d.pmap.get(t.prospect_id);
     const lintNote = t.lint?.errors?.length ? `\n⚠️ ${tgEscape(t.lint.errors[0])}` : '';

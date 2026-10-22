@@ -5,6 +5,7 @@ import {
   priorityScore, parseProfileUrl, quoteNet, commissionFor, getRateCardInfo, rankUsableEmails, inferLanguage,
   sanitizeCatalogProspect, DISCOVERY_PARTNER_CATALOG, buildSocialOpener, resolveProspectResearchSeed, isParkedOrDeadDomain,
   canSend, DEFAULT_SETTINGS,
+  mapDebounceResponse, mapMillionVerifierResponse, determineVerificationProvider,
 } from '../supabase/functions/_shared/core/index.js';
 
 test('Wilson interval', () => {
@@ -399,5 +400,120 @@ test('MillionVerifier mailbox gatekeeper and catch-all zero-bounce policy', () =
   };
   const gate4 = canSend(baseTouch, verifiedOk, [], DEFAULT_SETTINGS, { now });
   assert.equal(gate4.ok, true, 'MillionVerifier resultcode 1 must pass gatekeeper');
+
+  // Case 5: DeBounce verified safe to send
+  const debounceVerified = {
+    id: 'p-deb-ok',
+    agency_name: 'Italian Wedding Company',
+    email: 'info@italianweddingcompany.com',
+    email_status: 'mx_ok',
+    enrichment: {
+      verification: { provider: 'debounce', result: 'ok', resultcode: 1, subresult: 'deliverable', credits: 100 },
+    },
+  };
+  const gate5 = canSend(baseTouch, debounceVerified, [], DEFAULT_SETTINGS, { now });
+  assert.equal(gate5.ok, true, 'DeBounce safe to send must pass gatekeeper');
+
+  // Case 6: DeBounce invalid mailbox
+  const debounceInvalid = {
+    id: 'p-deb-inv',
+    agency_name: 'Old Agency',
+    email: 'fake@oldagency.com',
+    email_status: 'invalid',
+    enrichment: {
+      verification: { provider: 'debounce', result: 'invalid', resultcode: 6, subresult: 'no_mailbox' },
+    },
+  };
+  const gate6 = canSend(baseTouch, debounceInvalid, [], DEFAULT_SETTINGS, { now });
+  assert.equal(gate6.ok, false);
+  assert.equal(gate6.reason, 'invalid_email');
 });
+
+test('DeBounce response normalization maps all codes correctly', () => {
+  // Code 5: Safe to send -> verified ok
+  const deb5 = mapDebounceResponse({
+    debounce: { email: 'planner@example.com', code: '5', result: 'Safe to Send', reason: 'Deliverable' },
+    success: '1',
+    balance: '95',
+  });
+  assert.equal(deb5.provider, 'debounce');
+  assert.equal(deb5.ok, true);
+  assert.equal(deb5.status, 'verified');
+  assert.equal(deb5.resultcode, 1);
+  assert.equal(deb5.credits, 95);
+
+  // Code 4: Accept-All -> catch_all
+  const deb4 = mapDebounceResponse({
+    debounce: { email: 'planner@example.com', code: '4', result: 'Risky', reason: 'Accept_All' },
+    success: '1',
+    balance: '94',
+  });
+  assert.equal(deb4.ok, false);
+  assert.equal(deb4.status, 'catch_all');
+  assert.equal(deb4.resultcode, 2);
+
+  // Code 6: Invalid / Undeliverable
+  const deb6 = mapDebounceResponse({
+    debounce: { email: 'bad@example.com', code: '6', result: 'Invalid', reason: 'Bounce' },
+    success: '1',
+  });
+  assert.equal(deb6.ok, false);
+  assert.equal(deb6.status, 'invalid');
+  assert.equal(deb6.resultcode, 6);
+
+  // Code 3: Disposable
+  const deb3 = mapDebounceResponse({
+    debounce: { email: 'temp@mailinator.com', code: '3', result: 'Risky', reason: 'Disposable' },
+    success: '1',
+  });
+  assert.equal(deb3.ok, false);
+  assert.equal(deb3.resultcode, 5);
+
+  // Error response: Wrong API / zero credits
+  const debErr = mapDebounceResponse({
+    debounce: { error: 'Wrong API', code: '0' },
+    success: '0',
+  });
+  assert.equal(debErr.ok, false);
+  assert.equal(debErr.status, 'error');
+  assert.equal(debErr.resultcode, 4);
+});
+
+test('Dual-Provider quota router manages 100/mo allowance and month boundary reset', () => {
+  // 1. New month boundary reset:
+  const prevMonthState = {
+    month: '2026-10',
+    debounce_count: 85,
+    millionverifier_count: 12,
+    monthly_limit: 100,
+  };
+  const novCheck = determineVerificationProvider(prevMonthState, '2026-11', 100);
+  assert.equal(novCheck.resetNeeded, true, 'Month transition must trigger quota reset');
+  assert.equal(novCheck.quotaState.month, '2026-11');
+  assert.equal(novCheck.quotaState.debounce_count, 0, 'DeBounce count must reset to 0 in new month');
+  assert.equal(novCheck.provider, 'debounce', 'Must start new month with DeBounce');
+
+  // 2. Routing within allowance (< 100):
+  const midMonthState = {
+    month: '2026-11',
+    debounce_count: 45,
+    millionverifier_count: 0,
+    monthly_limit: 100,
+  };
+  const midCheck = determineVerificationProvider(midMonthState, '2026-11', 100);
+  assert.equal(midCheck.resetNeeded, false);
+  assert.equal(midCheck.provider, 'debounce', 'Email 46 must route to DeBounce');
+
+  // 3. Routing at limit (100 reached):
+  const fullMonthState = {
+    month: '2026-11',
+    debounce_count: 100,
+    millionverifier_count: 0,
+    monthly_limit: 100,
+  };
+  const fullCheck = determineVerificationProvider(fullMonthState, '2026-11', 100);
+  assert.equal(fullCheck.resetNeeded, false);
+  assert.equal(fullCheck.provider, 'millionverifier', 'Email 101 must switch to MillionVerifier');
+});
+
 

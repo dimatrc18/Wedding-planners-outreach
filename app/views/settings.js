@@ -163,6 +163,15 @@ export function render(el) {
       </section>
 
       <section class="card stack">
+        <div class="section-head"><h2>Email Verification · Zero-Bounce Gateway</h2><button class="btn sm" data-act="job" data-job="audit_monthly_verification">Audit Balances (Telegram)</button></div>
+        <p class="small muted">Hybrid dual-provider gateway: <b>Tier 1: DeBounce</b> (first 100 emails/month) → <b>Tier 2: MillionVerifier</b> (buffer & failover). Auto-resets on the 1st of every month.</p>
+        <div class="kpis">
+          <div class="kpi"><span class="label">Tier 1 · DeBounce</span><span class="val">100 / mo</span><span class="ci">Resets 1st of every month</span></div>
+          <div class="kpi"><span class="label">Tier 2 · MillionVerifier</span><span class="val">497 credits</span><span class="ci">Active overflow buffer</span></div>
+        </div>
+      </section>
+
+      <section class="card stack">
         <div class="section-head"><h2>Data</h2><span class="hint">B2B outreach under GDPR legitimate interest: every contact keeps its source; erase a prospect from its page.</span></div>
         <div class="actions">
           <button class="btn sm" data-act="csv">${icon('download', 15)} Prospects (CSV)</button>
