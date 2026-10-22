@@ -144,6 +144,9 @@ export function canSend(touch, prospect, touches, settings, ctx = {}) {
   if (touch.channel !== 'email') return { ok: false, reason: 'manual_channel' };
   if (!prospect.email) return { ok: false, reason: 'no_email' };
   if (prospect.email_status === 'invalid' || prospect.email_status === 'no_mx') return { ok: false, reason: 'invalid_email' };
+  if (prospect.enrichment?.known_bad_emails?.includes(String(prospect.email).toLowerCase())) {
+    return { ok: false, reason: 'known_bad_email' };
+  }
   if (prospect.enrichment?.verification?.status === 'invalid' || prospect.enrichment?.verification?.resultcode === 6 || prospect.enrichment?.verification?.resultcode === 5) {
     return { ok: false, reason: 'invalid_email' };
   }
@@ -178,6 +181,7 @@ export const BLOCK_REASONS = {
   manual_channel: 'Send this one by hand',
   no_email: 'No email address',
   invalid_email: 'Email address or domain failed mailbox verification',
+  known_bad_email: 'Email address previously bounced (known bad email)',
   catch_all_unverified: 'Catch-all domain without verbatim contact page proof',
   unverified_no_credits: 'Paused: MillionVerifier credits depleted',
   unverified: 'Email mailbox not verified by MillionVerifier',

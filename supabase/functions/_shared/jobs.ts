@@ -178,10 +178,12 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
   const today = core.localDateKey(now, settings.timezone);
   const coldSent = touches.filter((t: any) => t.direction === 'out' && t.state === 'sent' && t.channel === 'email' && core.COLD_STEPS.includes(t.step_name));
   let sentToday = coldSent.filter((t: any) => t.sent_at && core.localDateKey(new Date(t.sent_at), settings.timezone) === today).length;
-  const emailsSent = touches.filter((t: any) => t.direction === 'out' && t.state === 'sent' && t.channel === 'email');
-  let sentTotal = emailsSent.length;
-  // Count only unremediated bounces (where prospect has not already been quarantined via do_not_contact)
-  const bouncedTotal = emailsSent.filter((t: any) => t.bounced && !pmap.get(t.prospect_id)?.do_not_contact).length;
+  const emailsSent = touches.filter((t: any) => t.direction === 'out' && t.state === 'sent' && t.channel === 'email')
+    .sort((a: any, b: any) => new Date(b.sent_at || b.created_at).getTime() - new Date(a.sent_at || a.created_at).getTime());
+  const windowSent = emailsSent.slice(0, 100);
+  const sentTotal = windowSent.length;
+  // Count EVERY bounce in the rolling 100 window (never exclude quarantined leads)
+  const bouncedTotal = windowSent.filter((t: any) => t.bounced).length;
 
   let due = touches.filter((t: any) => t.direction === 'out' && t.state === 'approved' && t.channel === 'email' && (!t.scheduled_at || new Date(t.scheduled_at) <= now));
   if (onlyTouchId) due = touches.filter((t: any) => t.id === onlyTouchId);
@@ -556,17 +558,64 @@ export async function syncInbox(db: any, settings: any, now = new Date()) {
       const viaThread = [m.inReplyTo, ...m.references].map((id: string) => byMsg.get(id)).find(Boolean);
       const bounce = core.detectBounce({ from: m.from, subject: m.subject, body: m.text });
       if (bounce) {
-        const failed = (m.failedRecipients || '').toLowerCase();
-        const p: any = (failed && byEmail.get(failed)) || (viaThread && pById.get(viaThread.prospect_id)) ||
-          prospects.find((x: any) => x.email && m.text.toLowerCase().includes(x.email.toLowerCase()));
-        if (!p) continue;
-        const lastOut = [...touches].reverse().find((t: any) => t.prospect_id === p.id && t.direction === 'out' && t.state === 'sent' && t.channel === 'email');
+        let failed = (m.failedRecipients || '').toLowerCase().trim();
+        if (!failed) {
+          const match = (m.text || '').match(/(?:failed recipient|undeliverable to|to:\s*|<)([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})>/i) ||
+            (m.text || '').match(/\b([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b/);
+          if (match) failed = match[1].toLowerCase();
+        }
+
+        // Tier A: Match by outgoing sent touches to_address
+        const sentTouch = failed ? touches.find((t: any) => t.direction === 'out' && t.to_address?.toLowerCase() === failed) : null;
+        // Tier B: Match by In-Reply-To / References thread
+        const viaThreadTouch = viaThread;
+        // Tier C: Match by byEmail or known_bad_emails
+        const pByEmail = failed ? (byEmail.get(failed) || prospects.find((x: any) => x.enrichment?.known_bad_emails?.includes(failed))) : null;
+        // Tier D: Match by email occurrence in bounce body
+        const pByBody = prospects.find((x: any) => x.email && m.text.toLowerCase().includes(x.email.toLowerCase()));
+
+        const p: any = (sentTouch && pById.get(sentTouch.prospect_id)) ||
+          (viaThreadTouch && pById.get(viaThreadTouch.prospect_id)) ||
+          pByEmail ||
+          pByBody;
+
+        if (!p) {
+          await logEvent(db, 'bounce_unmatched', { failed, from: m.from, subject: m.subject, text: m.text?.slice(0, 500) });
+          await tgSend(
+            `⚠️ <b>Unmatched Email Bounce Received</b>\n\n` +
+            `A bounce notice arrived for <code>${failed || m.from}</code> but could not be matched to an active prospect in the CRM.\n\n` +
+            `Subject: <i>${tgEscape(m.subject)}</i>`,
+          );
+          continue;
+        }
+
+        const lastOut = sentTouch || [...touches].reverse().find((t: any) => t.prospect_id === p.id && t.direction === 'out' && t.state === 'sent' && t.channel === 'email');
         if (lastOut) await db.from('touches').update({ bounced: true }).eq('id', lastOut.id);
-        const patch: any = { email_status: 'bounced' };
-        if (bounce.hard) Object.assign(patch, { do_not_contact: true, status: 'do_not_contact' });
+
+        const knownBad = Array.from(new Set([...(p.enrichment?.known_bad_emails || []), ...(failed ? [failed] : [])]));
+        const updatedEnrichment = { ...(p.enrichment || {}), known_bad_emails: knownBad };
+
+        const isCurrentEmail = !failed || p.email?.toLowerCase() === failed;
+        const patch: any = {
+          enrichment: updatedEnrichment,
+        };
+        if (isCurrentEmail) {
+          patch.email_status = 'bounced';
+          if (bounce.hard) {
+            patch.do_not_contact = true;
+            patch.status = 'do_not_contact';
+          }
+        }
         await db.from('prospects').update(patch).eq('id', p.id);
-        await db.from('touches').update({ state: 'skipped', error: 'Address bounced' }).eq('prospect_id', p.id).in('state', ['draft', 'approved']);
-        await logEvent(db, 'bounce', { hard: bounce.hard, subject: m.subject }, p.id);
+        await db.from('touches').update({ state: 'skipped', error: `Address bounced: ${failed || p.email}` }).eq('prospect_id', p.id).in('state', ['draft', 'approved']);
+        await logEvent(db, 'bounce', { hard: bounce.hard, failed, subject: m.subject }, p.id);
+        await tgSend(
+          `⚠️ <b>Email Bounce Recorded</b>\n\n` +
+          `Recipient: <code>${failed || p.email}</code>\n` +
+          `Prospect: <b>${tgEscape(p.agency_name)}</b>\n` +
+          `Type: ${bounce.hard ? 'Hard bounce (mailbox rejected)' : 'Soft bounce'}\n` +
+          `Status: Quarantined, pending touches cancelled.`,
+        );
         bounces++;
         continue;
       }

@@ -79,13 +79,14 @@ test('canSend gates: approval, kill switch, window, holiday, cap, season, bounce
   assert.equal(canSend(t, P(), [], S, { now: tue10, sentToday: 6 }).reason, 'daily_cap', 'warm-up week 1 cap is 6');
   assert.equal(canSend(t, P(), [], { ...S, season_mode: 'paused' }, { now: tue10 }).reason, 'season_paused');
   assert.equal(canSend(t, P(), [], S, { now: tue10, sentTotal: 40, bouncedTotal: 2 }).reason, 'bounce_pause');
-  assert.equal(canSend(t, P(), [], S, { now: tue10, sentTotal: 40, bouncedTotal: 1 }).ok, true, '2.5% is under the 3% limit');
+  assert.equal(canSend(t, P(), [], S, { now: tue10, sentTotal: 60, bouncedTotal: 1 }).ok, true, '1.67% is under the 2% limit');
   const reply = { direction: 'in', reply_sentiment: 'neutral' };
   assert.equal(canSend(t, P(), [reply], S, { now: tue10 }).reason, 'replied');
   assert.equal(canSend({ ...t, scheduled_at: rome(2026, 10, 6, 11).toISOString() }, P(), [], S, { now: tue10 }).reason, 'not_due');
   assert.equal(canSend(t, P({ email_status: 'invalid' }), [], S, { now: tue10 }).reason, 'invalid_email');
   assert.equal(canSend(t, P({ email_status: 'no_mx' }), [], S, { now: tue10 }).reason, 'invalid_email');
   assert.equal(canSend(t, P({ website_status: 'broken' }), [], S, { now: tue10 }).reason, 'broken_website');
+  assert.equal(canSend(t, P({ enrichment: { known_bad_emails: ['anna@studio.it'] } }), [], S, { now: tue10 }).reason, 'known_bad_email');
 });
 
 test('replies to a planner skip windows and caps but never DND or the kill switch', () => {

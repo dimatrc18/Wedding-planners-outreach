@@ -72,7 +72,7 @@ export const DEFAULT_SETTINGS = {
   jitter_min: 4, // minutes between two sends, minimum
   jitter_max: 11,
   season_mode: 'auto', // auto | normal | slow | paused  (auto = half speed May to September)
-  bounce_pause_rate: 0.03,
+  bounce_pause_rate: 0.02,
   bounce_min_sample: 15,
   steps: DEFAULT_STEPS,
   sender: { name: 'Dmitri', email: 'dmitri@dorogo.eu', reply_to: 'dmitri@dorogo.eu' },
