@@ -12,6 +12,7 @@ import * as partners from './views/partners.js?v=3.7';
 import * as tools from './views/tools.js?v=3.7';
 import * as visibility from './views/visibility.js?v=3.7';
 import * as settings from './views/settings.js?v=3.7';
+import * as busPartners from './views/bus_partners.js?v=3.9';
 
 const ROUTES = {
   today: { view: today, label: 'Today', icon: 'today' },
@@ -22,6 +23,7 @@ const ROUTES = {
   coverage: { view: partners, label: 'Coverage', icon: 'map', sub: 'coverage' },
   templates: { view: templates, label: 'Sequence & templates', icon: 'template' },
   settings: { view: settings, label: 'Settings', icon: 'settings' },
+  bus_partners: { view: busPartners, label: 'Bus Fleet Partners', icon: 'partners', hidden: true },
   tools: { view: tools, label: 'Tools', icon: 'sparkle', hidden: true },
   add: { view: add, label: 'Add prospects', icon: 'plus', hidden: true },
   prospect: { view: prospect, label: 'Prospect', hidden: true },
@@ -68,6 +70,8 @@ function shell() {
       ` : `
         ${links.map(([k, v]) => `<a class="nav-link ${r.name === k ? 'active' : ''}" href="#${k}">${icon(v.icon)}<span>${esc(v.label)}</span>${k === 'today' && n ? `<span class="count">${n}</span>` : ''}</a>`).join('')}
         <a class="nav-link" href="#add" style="margin-top:10px">${icon('plus')}<span>Add prospects</span></a>
+        <div class="divider" style="margin: 12px 10px;"></div>
+        <a class="nav-link ${r.name === 'bus_partners' ? 'active' : ''}" href="#bus_partners" style="font-weight:600;display:flex;align-items:center"><span style="font-size:1.15rem;margin-right:8px;line-height:1">🚌</span><span>Bus Fleet Partners</span></a>
       `}
       <div class="rail-foot">
         <span class="tiny faint">${esc(S.user?.email || '')}</span>

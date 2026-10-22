@@ -1,0 +1,186 @@
+[
+  {
+    "id": "partner_moveolux",
+    "name": "Moveolux",
+    "base_city": "Milano",
+    "website": "https://www.moveolux.com",
+    "fleet_url": "https://www.moveolux.com/fleet/luxury-bus-hire/",
+    "relevance_score": 98,
+    "score_breakdown": {
+      "discretion_unbranded": 35,
+      "fleet_luxury": 25,
+      "territory_permits": 20,
+      "corporate_sla": 18
+    },
+    "status": "VETTED",
+    "unbranded_status": "100% Guaranteed Unbranded / Total Black",
+    "fleet_categories": [
+      "Limobus Exclusive (18-28 seats)",
+      "Mercedes Sprinter VIP (8-16 seats)",
+      "Setra VIP Lounge"
+    ],
+    "phone": "+39 02 4004 7799",
+    "email": "booking@moveolux.com",
+    "notes": "Pioneer of Limobus. Lounge seating, bar, hostess, champagne service. Highest price in Italy, but gold standard for ultra-VIP."
+  },
+  {
+    "id": "partner_vip_limousine",
+    "name": "VIP Limousine Milan",
+    "base_city": "Milano",
+    "website": "https://www.viplimousine.it",
+    "fleet_url": "https://www.car-rental-with-driver.com/en/services/luxury-coach-and-minibus-rental-with-driver-milan.html",
+    "relevance_score": 94,
+    "score_breakdown": {
+      "discretion_unbranded": 35,
+      "fleet_luxury": 22,
+      "territory_permits": 20,
+      "corporate_sla": 17
+    },
+    "status": "VETTED",
+    "unbranded_status": "100% Guaranteed Unbranded / NCC Black",
+    "fleet_categories": [
+      "Mercedes Sprinter Luxury (8-20 seats)",
+      "Executive Coaches (21, 28, 30, 56, 64 seats)"
+    ],
+    "phone": "+39 02 546 5555",
+    "email": "info@viplimousine.it",
+    "notes": "Replaces vehicles every 2 years / 20k km. Strictly unbranded black/dark grey fleet. Suited chauffeurs, 24/7 central dispatch."
+  },
+  {
+    "id": "partner_transervice",
+    "name": "Transervice Limousine",
+    "base_city": "Milano",
+    "website": "https://www.transervicelimousine.com",
+    "fleet_url": "https://www.transervicelimousine.com/",
+    "relevance_score": 91,
+    "score_breakdown": {
+      "discretion_unbranded": 35,
+      "fleet_luxury": 20,
+      "territory_permits": 18,
+      "corporate_sla": 18
+    },
+    "status": "VETTED",
+    "unbranded_status": "100% Guaranteed Unbranded",
+    "fleet_categories": [
+      "Mercedes Sprinter Executive (16-19 seats)",
+      "Setra TopClass VIP Coaches (30-50 seats)"
+    ],
+    "phone": "+39 02 8951 6852",
+    "email": "info@transervicelimousine.com",
+    "notes": "Diplomatic and VIP FBO (Linate Prime) specialists. Dark monochromatic vehicles with zero company decals."
+  },
+  {
+    "id": "partner_cima_luxury",
+    "name": "Cima Luxury",
+    "base_city": "Milano",
+    "website": "https://cimaluxury.com",
+    "fleet_url": "https://cimaluxury.com/",
+    "relevance_score": 86,
+    "score_breakdown": {
+      "discretion_unbranded": 32,
+      "fleet_luxury": 22,
+      "territory_permits": 16,
+      "corporate_sla": 16
+    },
+    "status": "TO_REVIEW",
+    "unbranded_status": "Unbranded Luxury Line",
+    "fleet_categories": [
+      "Mercedes Sprinter VIP Lounge",
+      "Executive Minicoaches"
+    ],
+    "phone": "+39 02 3656 4050",
+    "email": "info@cimaluxury.com",
+    "notes": "Concierge and luxury mobility fleet. High-end leather interiors, privacy tinting."
+  },
+  {
+    "id": "partner_perletti_topclass",
+    "name": "Perletti Autoservizi (Top Class Line)",
+    "base_city": "Bergamo / Milano",
+    "website": "https://www.perlettibus.it",
+    "fleet_url": "https://www.perlettibus.it/flotta/",
+    "relevance_score": 81,
+    "score_breakdown": {
+      "discretion_unbranded": 25,
+      "fleet_luxury": 22,
+      "territory_permits": 18,
+      "corporate_sla": 16
+    },
+    "status": "TO_REVIEW",
+    "unbranded_status": "Unbranded on Request (Specify Top Class)",
+    "fleet_categories": [
+      "Setra TopClass 515/516 HD (30-54 seats)",
+      "Mercedes Tourismo Black Series",
+      "Mercedes Sprinter Minibus"
+    ],
+    "phone": "+39 035 830 148",
+    "email": "info@perlettibus.it",
+    "notes": "Large fleet. Must specify 'Top Class / Senza Livrea' in booking notes to guarantee unbranded dark vehicle."
+  },
+  {
+    "id": "partner_lariobus",
+    "name": "Lariobus",
+    "base_city": "Lecco (Lake Como)",
+    "website": "https://www.lariobus.com",
+    "fleet_url": "https://www.lariobus.com/flotta/",
+    "relevance_score": 79,
+    "score_breakdown": {
+      "discretion_unbranded": 20,
+      "fleet_luxury": 20,
+      "territory_permits": 20,
+      "corporate_sla": 19
+    },
+    "status": "TO_REVIEW",
+    "unbranded_status": "Unbranded on Request (Must Demand in Quote)",
+    "fleet_categories": [
+      "Midi-coaches 13-30 seats",
+      "GT Coaches 36-56 seats"
+    ],
+    "phone": "+39 0341 581 600",
+    "email": "info@lariobus.com",
+    "notes": "Best local driver knowledge for Lake Como villas (Villa d'Este, Balbianello). Must request unbranded coach without decals."
+  },
+  {
+    "id": "partner_linea_azzurra",
+    "name": "Linea Azzurra Bus",
+    "base_city": "Milano / Monza",
+    "website": "https://www.lineaazzurrabus.com",
+    "fleet_url": "https://www.lineaazzurrabus.com/la-nostra-flotta/",
+    "relevance_score": 70,
+    "score_breakdown": {
+      "discretion_unbranded": 15,
+      "fleet_luxury": 20,
+      "territory_permits": 18,
+      "corporate_sla": 17
+    },
+    "status": "TO_REVIEW",
+    "unbranded_status": "Neutral White / Custom B2B Fleet",
+    "fleet_categories": [
+      "Setra & Mercedes Coaches 30-75 seats"
+    ],
+    "phone": "+39 02 905 5406",
+    "email": "info@lineaazzurrabus.com",
+    "notes": "Mass capacity operator for Fiera Milano Rho & corporate conventions. Modern Euro 6 fleet, good for large congress shuttles."
+  },
+  {
+    "id": "partner_rosa_bus",
+    "name": "Rosa Bus",
+    "base_city": "Milano / Brianza",
+    "website": "https://www.rosabus.it",
+    "fleet_url": "https://www.rosabus.it/flotta/",
+    "relevance_score": 68,
+    "score_breakdown": {
+      "discretion_unbranded": 15,
+      "fleet_luxury": 18,
+      "territory_permits": 18,
+      "corporate_sla": 17
+    },
+    "status": "TO_REVIEW",
+    "unbranded_status": "Standard Tour Livery (Needs Request for Plain)",
+    "fleet_categories": [
+      "Mercedes Tourismo 30-53 seats"
+    ],
+    "phone": "+39 039 601 2284",
+    "email": "info@rosabus.it",
+    "notes": "Reliable Mercedes fleet for regional transfers, Monza F1, and airport groups."
+  }
+]

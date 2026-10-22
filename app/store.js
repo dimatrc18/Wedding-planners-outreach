@@ -3,11 +3,13 @@
 //   demo: in-memory sample data, nothing leaves the browser
 import { DEFAULT_SETTINGS, DEFAULT_TEMPLATES, withDefaults, priorityScore } from '../supabase/functions/_shared/core/index.js';
 import { buildDemoData } from './demo.js';
+import { INITIAL_BUS_PARTNERS, loadStoredBusPartners, saveStoredBusPartners } from './bus_partners_data.js';
 
 export const S = {
   mode: 'loading', // loading | signed_out | live | demo
   user: null,
   prospects: [], touches: [], opps: [], templates: [], events: [],
+  busPartners: [],
   settings: withDefaults(DEFAULT_SETTINGS),
   health: null,
 };
@@ -31,6 +33,7 @@ function setData(d) {
   const rawTemplates = d.templates && d.templates.length ? d.templates : DEFAULT_TEMPLATES.map((t) => ({ id: uuid(), active: true, ...t }));
   S.templates = rawTemplates.filter((t) => t.key !== 'T2_ig_dm');
   S.events = d.events || [];
+  S.busPartners = (d.busPartners && d.busPartners.length) ? d.busPartners : loadStoredBusPartners();
   S.settings = withDefaults(d.settings || {});
 }
 
@@ -47,7 +50,13 @@ function liveBackend() {
         T('templates').select('*'), sb.from('outreach_settings').select('data').eq('id', 1).maybeSingle(),
         sb.from('events_log').select('*').order('at', { ascending: false }).limit(400),
       ]);
-      return { prospects: check(p), touches: check(t), opps: check(o), templates: check(tpl), settings: check(s)?.data || {}, events: check(ev) };
+      let busPartners = [];
+      try {
+        const { data, error } = await sb.from('bus_partners').select('*').order('relevance_score', { ascending: false });
+        if (!error && data && data.length) busPartners = data;
+      } catch (_) {}
+      if (!busPartners.length) busPartners = loadStoredBusPartners();
+      return { prospects: check(p), touches: check(t), opps: check(o), templates: check(tpl), settings: check(s)?.data || {}, events: check(ev), busPartners };
     },
     async insert(name, rows) { return check(await T(name).insert(rows).select()); },
     async update(name, id, patch) { return check(await T(name).update(patch).eq('id', id).select().single()); },
@@ -96,7 +105,7 @@ function liveBackend() {
 // ---------------- Demo backend ----------------
 function demoBackend() {
   return {
-    async load() { return buildDemoData(); },
+    async load() { return { ...buildDemoData(), busPartners: loadStoredBusPartners() }; },
     async insert(name, rows) { const arr = Array.isArray(rows) ? rows : [rows]; return arr.map((r) => ({ id: uuid(), created_at: nowIso(), updated_at: nowIso(), ...r })); },
     async update(name, id, patch) { const row = S[name].find((x) => x.id === id); return { ...row, ...patch, updated_at: nowIso() }; },
     async updateMany() {},
@@ -232,3 +241,54 @@ export async function syncScores() {
 
 export const isDemo = () => S.mode === 'demo';
 export { uuid, nowIso };
+
+// --- Bus Fleet Partners Store Actions ---
+export async function updateBusPartner(id, patch) {
+  const i = (S.busPartners || []).findIndex((x) => x.id === id);
+  if (i >= 0) {
+    S.busPartners[i] = { ...S.busPartners[i], ...patch, updated_at: nowIso() };
+    saveStoredBusPartners(S.busPartners);
+    if (S.mode === 'live' && sb) {
+      try {
+        await sb.from('bus_partners').update(patch).eq('id', id);
+      } catch (_) {}
+    }
+    emit('bus_partners:updated');
+    return S.busPartners[i];
+  }
+}
+
+export async function addBusPartner(partner) {
+  const newRow = {
+    id: partner.id || `partner_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    status: partner.status || 'TO_REVIEW',
+    created_at: nowIso(),
+    updated_at: nowIso(),
+    ...partner,
+  };
+  S.busPartners = [newRow, ...(S.busPartners || [])];
+  saveStoredBusPartners(S.busPartners);
+  if (S.mode === 'live' && sb) {
+    try {
+      await sb.from('bus_partners').insert([newRow]);
+    } catch (_) {}
+  }
+  emit('bus_partners:added');
+  return newRow;
+}
+
+export async function removeBusPartner(id) {
+  const i = (S.busPartners || []).findIndex((x) => x.id === id);
+  if (i >= 0) {
+    const [removed] = S.busPartners.splice(i, 1);
+    saveStoredBusPartners(S.busPartners);
+    if (S.mode === 'live' && sb) {
+      try {
+        await sb.from('bus_partners').delete().eq('id', id);
+      } catch (_) {}
+    }
+    emit('bus_partners:deleted');
+    return removed;
+  }
+}
+
