@@ -34,7 +34,13 @@ import {
   DISCRETION_LEVELS,
   FLEET_TIERS,
   TERRITORY_PERMITS,
-  CORPORATE_SLA
+  CORPORATE_SLA,
+  inferBusSegment,
+  canSendBusOutreach,
+  nextBusSendSlot,
+  buildBusOutreachDraft,
+  parseBusPartnerReply,
+  buildBusSankeyFlow
 } from '../supabase/functions/_shared/core/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -498,3 +504,109 @@ test('Store Deletion & Batch Deletion with Exclusion Memory', async () => {
   // Cleanup
   saveExcludedBusPartners([]);
 });
+
+test('CEO Outreach Schedule Rule: Mon-Sat allowed, Sunday blocked unless operator replied on Sunday', () => {
+  const verifiedPartner = {
+    id: 'p_moveo',
+    name: 'Moveolux',
+    email: 'info@moveolux.com',
+    email_status: 'verified'
+  };
+
+  // Saturday 2026-10-24 at 10:30 Europe/Rome -> Allowed (dow = 6)
+  const saturdayMorning = new Date('2026-10-24T08:30:00Z');
+  const satCheck = canSendBusOutreach(verifiedPartner, saturdayMorning);
+  assert.equal(satCheck.ok, true, 'Saturday morning must be allowed for bus outreach');
+  assert.equal(satCheck.reason, 'allowed_mon_sat');
+
+  // Sunday 2026-10-25 at 11:00 Europe/Rome -> Blocked for cold outreach (dow = 7)
+  const sundayMorning = new Date('2026-10-25T10:00:00Z');
+  const sunColdCheck = canSendBusOutreach(verifiedPartner, sundayMorning);
+  assert.equal(sunColdCheck.ok, false, 'Sunday cold outreach must be blocked');
+  assert.equal(sunColdCheck.reason, 'sunday_blocked');
+
+  // Sunday Reply Exception: operator replied on Sunday -> Allowed!
+  const sunReplyCheck = canSendBusOutreach(verifiedPartner, sundayMorning, { isReplyToSundayInbound: true });
+  assert.equal(sunReplyCheck.ok, true, 'Sunday outreach must be allowed when operator replied on Sunday');
+  assert.equal(sunReplyCheck.reason, 'sunday_reply_exception');
+
+  // Invalid / no-MX email -> Blocked even on weekdays
+  const invalidEmailPartner = {
+    id: 'p_bad_mx',
+    name: 'Bad Domain Bus',
+    email: 'info@nonexistentdomain999.it',
+    email_status: 'no_mx'
+  };
+  const badEmailCheck = canSendBusOutreach(invalidEmailPartner, saturdayMorning);
+  assert.equal(badEmailCheck.ok, false, 'Invalid/no_mx email must be blocked by anti-spam gate');
+  assert.equal(badEmailCheck.reason, 'invalid_email');
+
+  // nextBusSendSlot on Sunday automatically skips to Monday morning
+  const nextSlot = nextBusSendSlot(sundayMorning, 0);
+  assert(nextSlot > sundayMorning, 'Next slot from Sunday must be in the future (Monday)');
+});
+
+test('CEO-Level Short Italian Outreach Templates: generates concise Italian B2B copy asking for models, capacity, standby/hourly rates & WA', () => {
+  const partner = {
+    name: 'Cattaneo Autoservizi',
+    base_city: 'Como',
+    fleet_segment: 'both',
+    fleet_categories: ['Mercedes-Benz V-Class VIP (7–8 seats)', 'Setra & Mercedes GT Coach (50–56 seats)']
+  };
+
+  const t1 = buildBusOutreachDraft(partner, 'T1_intro');
+  assert(t1.subject.includes('Como'), 'Subject must mention operator city');
+  assert(t1.subject.includes('DOROGO'), 'Subject must mention DOROGO');
+  assert(t1.body.includes('Cattaneo'), 'Body greeting must mention operator name');
+  assert(t1.body.includes('Modelli bus disponibili e quanti passeggeri portano'), 'T1 body must ask for bus models and pax capacity');
+  assert(t1.body.includes('Prezzi B2B indicativi per servizio orario e a disposizione (4h / 8h)'), 'T1 body must ask for hourly and standby rates');
+  assert(t1.body.includes('contatto WhatsApp diretto'), 'T1 body must ask for direct WhatsApp contact');
+  assert(t1.word_count < 130, `CEO template must remain ultra-short (<130 words), got ${t1.word_count}`);
+
+  const t2 = buildBusOutreachDraft(partner, 'T2_followup');
+  assert(t2.subject.startsWith('Re:'), 'Follow-up subject must thread with Re:');
+  assert(t2.body.includes('WhatsApp'), 'Follow-up must ask for WhatsApp');
+
+  const wa = buildBusOutreachDraft(partner, 'WA_pitch');
+  assert(wa.body.includes('Buongiorno'), 'WhatsApp pitch must be in Italian');
+  assert(wa.body.includes('servizio orario e a disposizione (4h/8h)'), 'WhatsApp pitch must ask for hourly and standby rates');
+});
+
+test('parseBusPartnerReply: automatically extracts bus models, pax capacity, hourly/standby rates, and WhatsApp from Italian reply', () => {
+  const sampleItalianReply = `
+    Buongiorno,
+    grazie per il contatto. Per i vostri servizi sul Lago di Como e Milano abbiamo disponibili:
+    - Mercedes-Benz V-Class VIP (7 pax) e Mercedes Sprinter VIP (16 posti)
+    - Setra GT Coach (54 pax) per grandi gruppi
+    Le nostre tariffe B2B sono: €95/h (min 4h), €420 per 4h / €780 per 8h.
+    Per urgenze e disponibilità rapida potete scrivermi su WhatsApp al +39 348 912 3456.
+    Cordiali saluti
+  `;
+
+  const extracted = parseBusPartnerReply(sampleItalianReply);
+  assert(extracted.bus_models.includes('Sprinter') && extracted.bus_models.includes('V-Class'), 'Must extract bus models from reply');
+  assert(extracted.pax_capacity.includes('7') && extracted.pax_capacity.includes('16') && extracted.pax_capacity.includes('54'), 'Must extract passenger capacities');
+  assert(extracted.rate_hourly.includes('95'), 'Must extract hourly rate (€95/h)');
+  assert(extracted.rate_standby.includes('420') || extracted.rate_standby.includes('780'), 'Must extract 4h/8h standby rate');
+  assert(extracted.whatsapp.includes('+39 348 912 3456'), 'Must extract direct WhatsApp number');
+});
+
+test('buildBusSankeyFlow: builds 4-column visual pipeline flow (Class -> Town -> Fit -> Stage) with interactive node filtering', () => {
+  const samplePartners = [
+    { id: '1', name: 'Moveolux', base_city: 'Milano', relevance_score: 98, status: 'APPROVED_PARTNER', fleet_segment: 'luxury', rate_hourly: '€95/h' },
+    { id: '2', name: 'Carnelli', base_city: 'Como', relevance_score: 76, status: 'WANT_TO_CONTACT', fleet_segment: 'both' },
+    { id: '3', name: 'Cima', base_city: 'Roma (Central Italy)', relevance_score: 0, status: 'NOT_RELEVANT', fleet_segment: 'luxury' }
+  ];
+
+  const flowAll = buildBusSankeyFlow(samplePartners, {});
+  assert.equal(flowAll.columns[0].total, 3);
+  assert.equal(flowAll.matchedIds.size, 3);
+  assert.equal(flowAll.columns.length, 4);
+
+  // Filter by column 0 = 'seg:luxury'
+  const flowLux = buildBusSankeyFlow(samplePartners, { 0: 'seg:luxury' });
+  assert.equal(flowLux.matchedIds.size, 2);
+  assert(flowLux.matchedIds.has('1'));
+  assert(!flowLux.matchedIds.has('2'));
+});
+

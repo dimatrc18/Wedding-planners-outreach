@@ -254,11 +254,62 @@ export const isDemo = () => S.mode === 'demo';
 export { uuid, nowIso };
 
 // --- Bus Fleet Partners Store Actions ---
+const BUS_DB_COLS = new Set([
+  'id', 'name', 'base_city', 'website', 'fleet_url', 'relevance_score',
+  'score_breakdown', 'status', 'unbranded_status', 'fleet_categories',
+  'phone', 'email', 'notes', 'source', 'created_at', 'updated_at'
+]);
+
+function syncBusPartnerCardFields(merged) {
+  const card = {
+    ...(merged.score_breakdown?.partner_card || {}),
+    fleet_segment: merged.fleet_segment ?? merged.score_breakdown?.partner_card?.fleet_segment ?? 'luxury',
+    bus_models: merged.bus_models ?? merged.score_breakdown?.partner_card?.bus_models ?? '',
+    pax_capacity: merged.pax_capacity ?? merged.score_breakdown?.partner_card?.pax_capacity ?? '',
+    rate_hourly: merged.rate_hourly ?? merged.score_breakdown?.partner_card?.rate_hourly ?? '',
+    rate_standby: merged.rate_standby ?? merged.score_breakdown?.partner_card?.rate_standby ?? '',
+    whatsapp: merged.whatsapp ?? merged.score_breakdown?.partner_card?.whatsapp ?? merged.phone ?? '',
+    email_status: merged.email_status ?? merged.score_breakdown?.partner_card?.email_status ?? 'unknown',
+    outreach_stage: merged.outreach_stage ?? merged.score_breakdown?.partner_card?.outreach_stage ?? 'to_check',
+    replied_at: merged.replied_at ?? merged.score_breakdown?.partner_card?.replied_at ?? null,
+    last_outreach_at: merged.last_outreach_at ?? merged.score_breakdown?.partner_card?.last_outreach_at ?? null,
+    user_set_status: Boolean(merged.user_set_status ?? merged.score_breakdown?.partner_card?.user_set_status),
+  };
+  return {
+    ...merged,
+    ...card,
+    score_breakdown: {
+      ...(merged.score_breakdown || { discretion_unbranded: 20, fleet_luxury: 18, territory_permits: 15, corporate_sla: 15 }),
+      partner_card: card,
+    },
+  };
+}
+
+function pickBusDbColumns(obj) {
+  const out = {};
+  for (const [k, v] of Object.entries(obj || {})) {
+    if (BUS_DB_COLS.has(k)) out[k] = v;
+  }
+  return out;
+}
+
 export async function updateBusPartner(id, patch) {
   const i = (S.busPartners || []).findIndex((x) => x.id === id);
   if (i >= 0) {
     const existing = S.busPartners[i];
     const finalPatch = { ...patch };
+
+    if (patch.status) {
+      finalPatch.user_set_status = true;
+      if (patch.status === 'APPROVED_PARTNER' && !patch.outreach_stage) finalPatch.outreach_stage = 'partner_won';
+      else if (patch.status === 'WANT_TO_CONTACT' && !patch.outreach_stage) finalPatch.outreach_stage = 'ready';
+      else if (patch.status === 'TO_REVIEW' && !patch.outreach_stage) finalPatch.outreach_stage = 'to_check';
+      else if (patch.status === 'CONTACTED' && !patch.outreach_stage && (!existing.outreach_stage || ['to_check', 'ready'].includes(existing.outreach_stage))) {
+        finalPatch.outreach_stage = 't1_sent';
+      } else if ((patch.status === 'REJECTED' || patch.status === 'NOT_RELEVANT') && !patch.outreach_stage) {
+        finalPatch.outreach_stage = 'closed';
+      }
+    }
 
     // When flagged as NOT_RELEVANT, pull score to 0 and save previous score for undo/restore
     if (patch.status === 'NOT_RELEVANT') {
@@ -273,11 +324,12 @@ export async function updateBusPartner(id, patch) {
       }
     }
 
-    S.busPartners[i] = { ...existing, ...finalPatch, updated_at: nowIso() };
+    const updatedObj = syncBusPartnerCardFields({ ...existing, ...finalPatch, updated_at: nowIso() });
+    S.busPartners[i] = updatedObj;
     saveStoredBusPartners(S.busPartners);
     if (S.mode === 'live' && sb) {
       try {
-        await sb.from('bus_partners').update(finalPatch).eq('id', id);
+        await sb.from('bus_partners').update(pickBusDbColumns(updatedObj)).eq('id', id);
       } catch (_) {}
     }
     emit('bus_partners:updated');
@@ -286,18 +338,18 @@ export async function updateBusPartner(id, patch) {
 }
 
 export async function addBusPartner(partner) {
-  const newRow = {
+  const newRow = syncBusPartnerCardFields({
     id: partner.id || `partner_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
     ...partner,
     status: partner.status || 'TO_REVIEW',
     created_at: partner.created_at || nowIso(),
     updated_at: nowIso(),
-  };
+  });
   S.busPartners = [newRow, ...(S.busPartners || [])];
   saveStoredBusPartners(S.busPartners);
   if (S.mode === 'live' && sb) {
     try {
-      await sb.from('bus_partners').insert([newRow]);
+      await sb.from('bus_partners').insert([pickBusDbColumns(newRow)]);
     } catch (_) {}
   }
   emit('bus_partners:added');

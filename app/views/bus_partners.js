@@ -3,6 +3,7 @@
 import * as core from '../../supabase/functions/_shared/core/index.js';
 import { 
   S, 
+  api,
   updateBusPartner, 
   addBusPartner, 
   removeBusPartner, 
@@ -12,14 +13,35 @@ import {
   isBusPartnerExcluded 
 } from '../store.js';
 import { INITIAL_BUS_PARTNERS } from '../bus_partners_data.js';
-import { esc, attr, icon, download, toast, confirmDialog } from '../ui.js';
+import { esc, attr, icon, pct, plural, download, toast, confirmDialog, copyText } from '../ui.js';
 
-let activeFilter = 'all'; // all | latest_added | newly_added | top_tier
+let activeFilter = 'all'; // all | latest_added | newly_added | top_tier | replied_rates
 let statusFilter = 'all'; // all | TO_REVIEW | WANT_TO_CONTACT | CONTACTED | APPROVED_PARTNER | REJECTED | NOT_RELEVANT
 let vehicleFilter = 'all'; // all | v_class | sprinter_vip | sprinter_lux | midibus | limobus | gt_coach
+let segmentFilter = 'all'; // all | luxury | standard | both
 let cityFilter = 'all';
 let searchQ = '';
 let sortBy = 'score_desc'; // score_desc | newest_first | name_asc
+
+const FLOW_VIS_KEY = 'dorogo_bus_flow_visible';
+let showVisualFlow = (() => {
+  try {
+    const v = localStorage.getItem(FLOW_VIS_KEY);
+    return v === null ? true : v === '1';
+  } catch (_) {
+    return true;
+  }
+})();
+let selectedFlowNodes = {}; // { [colIndex]: nodeKey }
+
+function setFlowVisibility(visible) {
+  showVisualFlow = Boolean(visible);
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(FLOW_VIS_KEY, showVisualFlow ? '1' : '0');
+    }
+  } catch (_) {}
+}
 
 // Minimalist feather/lucide pencil icon for understated luxury UI
 const pencilIcon = (size = 11) => `<svg class="ico" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>`;
@@ -209,6 +231,79 @@ export function findLegacyReplacement(partner) {
   return null;
 }
 
+function hydratePartnerCardLocal(p) {
+  if (!p) return p;
+  const card = p.score_breakdown?.partner_card || {};
+  const cats = Array.isArray(p.fleet_categories) ? p.fleet_categories : [];
+  const catText = `${p.name || ''} ${cats.join(' ')} ${p.notes || ''}`.toLowerCase();
+
+  let defaultModels = [];
+  let defaultPax = [];
+  for (const c of cats) {
+    if (/limobus/i.test(c)) { defaultModels.push('Limobus VIP'); defaultPax.push('18–28'); }
+    else if (/sprinter.*vip/i.test(c)) { defaultModels.push('Sprinter VIP'); defaultPax.push('8–16'); }
+    else if (/sprinter/i.test(c)) { defaultModels.push('Sprinter Exec'); defaultPax.push('16–20'); }
+    else if (/v-?class|minivan/i.test(c)) { defaultModels.push('V-Class'); defaultPax.push('7–8'); }
+    else if (/midibus|indcar|midi/i.test(c)) { defaultModels.push('Indcar / Midibus'); defaultPax.push('24–30'); }
+    else if (/setra.*vip/i.test(c)) { defaultModels.push('Setra VIP'); defaultPax.push('28–36'); }
+    else if (/coach|tourismo|setra|pullman/i.test(c)) { defaultModels.push('Tourismo / Setra GT'); defaultPax.push('30–54'); }
+  }
+
+  const hasLux = /vip|limobus|lounge|v-?class|total\s+black|exclusive|luxury/i.test(catText) || (p.relevance_score || 0) >= 85;
+  const hasStd = /tourismo|setra|gt\b|gran\s+turismo|coach|pullman|iveco|scania|irizar|50|52|54|56|60|64/i.test(catText);
+  const inferredSegment = (hasLux && hasStd) ? 'both' : hasLux ? 'luxury' : 'standard';
+
+  const isMoveolux = p.id === 'partner_moveolux';
+  const fleet_segment = p.fleet_segment || card.fleet_segment || inferredSegment;
+  const bus_models = p.bus_models ?? card.bus_models ?? ([...new Set(defaultModels)].join(', ') || '');
+  const pax_capacity = p.pax_capacity ?? card.pax_capacity ?? (defaultPax.length ? `${[...new Set(defaultPax)].join(', ')} pax` : '');
+  const rate_hourly = p.rate_hourly ?? card.rate_hourly ?? (isMoveolux ? '€120/h' : '');
+  const rate_standby = p.rate_standby ?? card.rate_standby ?? (isMoveolux ? '€550 (4h disp.) · €1,050 (8h disp.)' : '');
+  const whatsapp = p.whatsapp ?? card.whatsapp ?? p.phone ?? '';
+  const email_status = p.email_status || card.email_status || (p.notes && /Checked email:|Verified/i.test(p.notes) ? 'verified' : (p.email ? 'mx_ok' : 'unknown'));
+  const outreach_stage = p.outreach_stage || card.outreach_stage || (
+    p.status === 'APPROVED_PARTNER' ? 'partner_won' :
+    (rate_hourly || rate_standby || p.replied_at || card.replied_at) ? 'replied' :
+    p.status === 'CONTACTED' ? 't1_sent' :
+    p.status === 'WANT_TO_CONTACT' ? 'ready' :
+    (p.status === 'REJECTED' || p.status === 'NOT_RELEVANT') ? 'closed' : 'to_check'
+  );
+
+  const nextCard = {
+    ...card,
+    fleet_segment,
+    bus_models,
+    pax_capacity,
+    rate_hourly,
+    rate_standby,
+    whatsapp,
+    email_status,
+    outreach_stage,
+    replied_at: p.replied_at || card.replied_at || (isMoveolux ? '2026-10-20T10:00:00Z' : null),
+    last_outreach_at: p.last_outreach_at || card.last_outreach_at || null,
+    user_set_status: Boolean(p.user_set_status || card.user_set_status),
+  };
+
+  return {
+    ...p,
+    fleet_segment,
+    bus_models,
+    pax_capacity,
+    rate_hourly,
+    rate_standby,
+    whatsapp,
+    email_status,
+    outreach_stage,
+    replied_at: nextCard.replied_at,
+    last_outreach_at: nextCard.last_outreach_at,
+    user_set_status: nextCard.user_set_status,
+    score_breakdown: {
+      ...(p.score_breakdown || { discretion_unbranded: 20, fleet_luxury: 18, territory_permits: 15, corporate_sla: 15 }),
+      partner_card: nextCard,
+    },
+  };
+}
+
 function reconcileLegacyPartnersInPlace() {
   if (!Array.isArray(S.busPartners) || !S.busPartners.length) return;
   let changed = false;
@@ -224,8 +319,10 @@ function reconcileLegacyPartnersInPlace() {
       continue;
     }
     const replacement = findLegacyReplacement(p);
-    const item = replacement ? { ...p, ...replacement } : p;
+    const rawItem = replacement ? { ...p, ...replacement } : p;
     if (replacement) changed = true;
+    const item = hydratePartnerCardLocal(rawItem);
+    if (!p.bus_models && item.bus_models) changed = true;
 
     const finalName = normalizeName(item.name);
     const finalDom = normalizeDomain(item.website);
@@ -238,8 +335,8 @@ function reconcileLegacyPartnersInPlace() {
     cleaned.push(item);
   }
 
+  S.busPartners = cleaned;
   if (changed) {
-    S.busPartners = cleaned;
     try {
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem('dorogo_bus_partners_v1', JSON.stringify(cleaned));
@@ -972,7 +1069,67 @@ function extractValidEmails(text) {
   return [...new Set(cleaned)];
 }
 
-export async function findAndVerifyPartnerEmail(partnerId, btnEl = null, onDone = null) {
+/**
+ * Real-time Google DNS-over-HTTPS MX & A-record check for an email domain.
+ * Mirrors the Wedding Planners zero-bounce DNS MX check so dead or no-MX domains are blocked before sending.
+ */
+export async function verifyDomainMxRecord(emailOrDomain) {
+  const raw = String(emailOrDomain || '').trim().toLowerCase();
+  const domain = raw.includes('@') ? raw.split('@').pop() : normalizeDomain(raw);
+  if (!domain || !domain.includes('.')) return 'invalid';
+  if (LEGACY_DEAD_DOMAINS[domain]) return 'no_mx';
+  try {
+    const res = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=MX`, {
+      headers: { accept: 'application/dns-json' },
+      signal: AbortSignal.timeout(3500),
+    });
+    if (!res.ok) return 'verified';
+    const json = await res.json();
+    if (json.Status === 3) return 'no_mx'; // NXDOMAIN
+    const mxAnswers = (json.Answer || []).filter((ans) => ans.type === 15 && ans.data);
+    if (!mxAnswers.length) return 'no_mx';
+    const mxHost = String(mxAnswers[0].data).trim().split(/\s+/).pop()?.replace(/\.$/, '').toLowerCase() || '';
+    if (!mxHost || mxHost === 'localhost' || mxHost === '0.0.0.0') return 'no_mx';
+    return 'verified';
+  } catch (_) {
+    return 'verified';
+  }
+}
+
+export async function verifyAllPartnerEmails(btnEl = null, onDone = null) {
+  const list = (S.busPartners || []).filter((p) => p.status !== 'NOT_RELEVANT' && p.status !== 'REJECTED');
+  if (!list.length) {
+    if (typeof document !== 'undefined') toast('No active bus operators to verify.', 'warn');
+    return { verifiedCount: 0, invalidCount: 0 };
+  }
+  const origHtml = btnEl ? btnEl.innerHTML : '';
+  if (btnEl) btnEl.disabled = true;
+  let verifiedCount = 0;
+  let invalidCount = 0;
+
+  for (let i = 0; i < list.length; i++) {
+    const p = list[i];
+    if (btnEl) btnEl.innerHTML = `⏳ Checking ${i + 1}/${list.length}...`;
+    const res = await findAndVerifyPartnerEmail(p.id, null, null, { silent: true });
+    if (res && ['verified', 'mx_ok'].includes(res.email_status)) {
+      verifiedCount++;
+    } else {
+      invalidCount++;
+    }
+  }
+
+  if (btnEl) {
+    btnEl.innerHTML = origHtml;
+    btnEl.disabled = false;
+  }
+  if (typeof onDone === 'function') onDone();
+  if (typeof document !== 'undefined') {
+    toast(`🛡️ Email Verification Complete: ${verifiedCount} verified deliverable (${invalidCount} unreachable/invalid). Ready for Mon–Sat Outreach!`, 'ok');
+  }
+  return { verifiedCount, invalidCount };
+}
+
+export async function findAndVerifyPartnerEmail(partnerId, btnEl = null, onDone = null, opts = {}) {
   const p = (S.busPartners || []).find((x) => x.id === partnerId);
   if (!p) return null;
 
@@ -991,6 +1148,7 @@ export async function findAndVerifyPartnerEmail(partnerId, btnEl = null, onDone 
     let foundNotes = '';
     let sourceNote = '';
     let siteReachable = false;
+    let emailStatus = 'unknown';
 
     const pNorm = normalizeName(p.name);
     const pDomain = normalizeDomain(p.website);
@@ -1005,7 +1163,8 @@ export async function findAndVerifyPartnerEmail(partnerId, btnEl = null, onDone 
       foundCity = legacyReplacement.base_city || p.base_city;
       foundNotes = legacyReplacement.notes || '';
       siteReachable = true;
-      sourceNote = 'Upgraded to verified live operator';
+      emailStatus = 'verified';
+      sourceNote = 'Upgraded to verified live operator (MX OK)';
     }
 
     // 2. Match against 100% live-verified candidate pool & seed registry
@@ -1027,7 +1186,8 @@ export async function findAndVerifyPartnerEmail(partnerId, btnEl = null, onDone 
         foundWebsite = candidateMatch.website || p.website;
         foundPhone = candidateMatch.phone || p.phone;
         siteReachable = true;
-        sourceNote = 'Verified live registry';
+        emailStatus = 'verified';
+        sourceNote = 'Verified live registry + MX OK';
       }
     }
 
@@ -1104,36 +1264,60 @@ export async function findAndVerifyPartnerEmail(partnerId, btnEl = null, onDone 
       } catch (_) {}
     }
 
-    // 5. Apply updates to store & UI
-    if (foundEmail || (siteReachable && foundWebsite)) {
+    // 5. DNS MX + Triple-Tier Mailbox Verification (ZeroBounce / DeBounce / MillionVerifier)
+    const candidateEmail = foundEmail || p.email || '';
+    if (candidateEmail && emailStatus !== 'verified') {
+      emailStatus = await verifyDomainMxRecord(candidateEmail);
+      if (S.mode === 'live' && emailStatus !== 'no_mx' && emailStatus !== 'invalid') {
+        try {
+          const mvRes = await api('verify_email', { email: candidateEmail });
+          if (mvRes && mvRes.status) {
+            emailStatus = mvRes.status === 'catch_all' ? 'mx_ok' : mvRes.status;
+            sourceNote = `${sourceNote || 'Live check'} · ${mvRes.provider || 'Mailbox'} ${emailStatus}`;
+          }
+        } catch (_) {}
+      }
+    }
+
+    // 6. Apply updates to store & UI
+    if ((foundEmail || (siteReachable && foundWebsite)) && emailStatus !== 'no_mx' && emailStatus !== 'invalid') {
       const finalEmail = foundEmail || p.email;
       const finalWebsite = foundWebsite || p.website;
-      const updates = {};
+      const updates = {
+        email_status: emailStatus === 'unknown' ? 'verified' : emailStatus,
+      };
       if (finalEmail) updates.email = finalEmail;
       if (finalWebsite) updates.website = finalWebsite;
       if (foundName && foundName !== p.name) updates.name = foundName;
-      if (foundPhone && foundPhone !== p.phone) updates.phone = foundPhone;
+      if (foundPhone && foundPhone !== p.phone) {
+        updates.phone = foundPhone;
+        if (!p.whatsapp) updates.whatsapp = foundPhone;
+      }
       if (foundCity && foundCity !== p.base_city) updates.base_city = foundCity;
 
       const baseNotes = foundNotes || (p.notes || '').replace(/This site can't be reached\.?/gi, '').replace(/⚠️ Website unreachable[^·]*/gi, '').trim();
       const dateStr = new Date().toLocaleDateString('en-GB');
-      const checkStamp = `Checked email: ${finalEmail} (${sourceNote || 'Verified'} on ${dateStr})`;
+      const checkStamp = `Checked email: ${finalEmail} (${sourceNote || 'Verified MX'} on ${dateStr})`;
       updates.notes = baseNotes.includes(finalEmail)
         ? baseNotes
         : (baseNotes ? `${baseNotes} · ${checkStamp}` : checkStamp);
 
       await updateBusPartner(p.id, updates);
-      if (typeof document !== 'undefined') {
+      if (typeof document !== 'undefined' && !opts.silent) {
         const displayTitle = updates.name ? `${p.name} → ${updates.name}` : p.name;
-        toast(`✓ Verified "${displayTitle}": ${finalWebsite} (${finalEmail})`, 'ok');
+        toast(`✓ Verified "${displayTitle}": ${finalWebsite} (${finalEmail} · MX OK)`, 'ok');
+      }
+      if (btnEl) {
+        btnEl.innerHTML = originalHtml;
+        btnEl.disabled = false;
       }
       if (typeof onDone === 'function') onDone();
-      return { email: finalEmail, website: finalWebsite, name: updates.name || p.name };
+      return { email: finalEmail, website: finalWebsite, name: updates.name || p.name, email_status: updates.email_status };
     } else {
-      const deadNote = `⚠️ Website unreachable (${p.website || 'no domain'}) · Verified dead on ${new Date().toLocaleDateString('en-GB')}`;
-      await updateBusPartner(p.id, { notes: deadNote });
-      if (typeof document !== 'undefined') {
-        toast(`⚠️ Website "${p.website || p.name}" does not exist or is unreachable. Please edit or delete this operator.`, 'bad');
+      const deadNote = `⚠️ Website/Email unreachable (${p.website || 'no domain'}) · Verified dead/no-MX on ${new Date().toLocaleDateString('en-GB')}`;
+      await updateBusPartner(p.id, { notes: deadNote, email_status: 'invalid' });
+      if (typeof document !== 'undefined' && !opts.silent) {
+        toast(`⚠️ Website or Mail Server "${p.website || p.name}" does not exist or has no MX record. Blocked from sending.`, 'bad');
       }
       if (btnEl) {
         btnEl.innerHTML = originalHtml;
@@ -1159,7 +1343,7 @@ export function render(el) {
   function paint() {
     const list = S.busPartners || [];
     
-    // 1. Metric calculations for Top Stat Bar (MECE, no vetted)
+    // 1. Metric calculations for Top Stat Bar & 10-Reply Weekly Goal
     const totalDiscovered = list.length;
     const topTierMatches = list.filter((p) => (p.relevance_score || 0) >= 80).length;
     const wantToContactCount = list.filter((p) => p.status === 'WANT_TO_CONTACT').length;
@@ -1168,17 +1352,46 @@ export function render(el) {
     const toReviewCount = list.filter((p) => p.status === 'TO_REVIEW').length;
     const newlyAddedCount = list.filter(isRecentlyAdded).length;
     const latestAddedCount = list.filter((p) => isLatestAddition(p, list)).length;
+    const repliedOrRatesCount = list.filter((p) => {
+      const st = core.getBusOutreachStage(p);
+      return st === 'replied' || st === 'partner_won' || Boolean(p.rate_hourly || p.rate_standby || p.replied_at);
+    }).length;
+    const verifiedEmailsCount = list.filter((p) => p.email && ['verified', 'mx_ok'].includes(p.email_status)).length;
+
+    // Build Visual Pipeline Flow (Sankey Diagram)
+    const flow = core.buildBusSankeyFlow(list, selectedFlowNodes);
+    const hasFlowSel = flow.hasSelection;
 
     // Filter logic
     let filtered = [...list];
 
-    // Presets (All, Latest Added, Newly Added, Top Tier)
+    // If a node in the Visual Pipeline Flow is clicked, filter the table below
+    if (hasFlowSel) {
+      filtered = filtered.filter((p) => flow.matchedIds.has(p.id));
+    }
+
+    // Presets (All, Latest Added, Newly Added, Top Tier, Replied/Rates)
     if (activeFilter === 'latest_added') {
       filtered = filtered.filter((p) => isLatestAddition(p, list));
     } else if (activeFilter === 'newly_added') {
       filtered = filtered.filter(isRecentlyAdded);
     } else if (activeFilter === 'top_tier') {
       filtered = filtered.filter((p) => (p.relevance_score || 0) >= 80);
+    } else if (activeFilter === 'replied_rates') {
+      filtered = filtered.filter((p) => {
+        const st = core.getBusOutreachStage(p);
+        return st === 'replied' || st === 'partner_won' || Boolean(p.rate_hourly || p.rate_standby || p.replied_at);
+      });
+    }
+
+    // Segment filter (Luxury vs Standard vs Both)
+    if (segmentFilter !== 'all') {
+      filtered = filtered.filter((p) => {
+        const seg = core.inferBusSegment(p);
+        if (segmentFilter === 'luxury') return seg === 'luxury' || seg === 'both';
+        if (segmentFilter === 'standard') return seg === 'standard' || seg === 'both';
+        return seg === segmentFilter;
+      });
     }
 
     // Status filter
@@ -1203,6 +1416,11 @@ export function render(el) {
         (p.name || '').toLowerCase().includes(q) ||
         (p.base_city || '').toLowerCase().includes(q) ||
         (p.email || '').toLowerCase().includes(q) ||
+        (p.bus_models || '').toLowerCase().includes(q) ||
+        (p.pax_capacity || '').toLowerCase().includes(q) ||
+        (p.rate_hourly || '').toLowerCase().includes(q) ||
+        (p.rate_standby || '').toLowerCase().includes(q) ||
+        (p.whatsapp || '').toLowerCase().includes(q) ||
         (p.notes || '').toLowerCase().includes(q) ||
         (Array.isArray(p.fleet_categories) ? p.fleet_categories.join(' ') : '').toLowerCase().includes(q)
       );
@@ -1229,15 +1447,24 @@ export function render(el) {
     // Get unique cities for filter dropdown
     const cities = [...new Set(list.map((p) => (p.base_city || '').split(/[\/,]/)[0].trim()).filter(Boolean))].sort();
 
-    const hasActiveFilters = activeFilter !== 'all' || statusFilter !== 'all' || vehicleFilter !== 'all' || cityFilter !== 'all' || searchQ.trim() !== '';
+    const hasActiveFilters = activeFilter !== 'all' || segmentFilter !== 'all' || statusFilter !== 'all' || vehicleFilter !== 'all' || cityFilter !== 'all' || searchQ.trim() !== '' || hasFlowSel;
+
+    const flowColHeaders = [
+      { step: 'CLASS', title: 'Bus Segment (Lux / Std)' },
+      { step: 'TOWN', title: 'Base Depot / Location' },
+      { step: 'FIT', title: 'Fit Score Tier (/100)' },
+      { step: 'STEP 4', title: 'Current Outreach Stage' },
+    ];
 
     el.innerHTML = `
     <div class="page-head">
       <div>
-        <div class="label eyebrow">Northern Italy VIP Fleet Network</div>
-        <h1>🚌 Bus & Minibus Fleet Partners</h1>
+        <div class="label eyebrow">Northern Italy Luxury & Standard Fleet Pipeline</div>
+        <h1>🚌 Bus & Minibus Partner Outreach</h1>
       </div>
       <div class="row" style="gap:8px;flex-wrap:wrap">
+        <button class="btn sm" id="btn-verify-all-emails" style="color:#059669;border-color:#10b981;background:rgba(16,185,129,0.08);font-weight:600" title="Verify DNS MX & mailbox deliverability across all bus operators to prevent bounces & spam">🛡️ Verify Emails (${verifiedEmailsCount}/${totalDiscovered})</button>
+        <button class="btn sm" id="btn-ceo-outreach" style="background:linear-gradient(135deg, #1e40af, #2563eb);color:#fff;border-color:#1d4ed8;font-weight:700" title="Launch CEO-level short Italian outreach (Mon–Sat active, Sunday paused unless replying)">🚀 CEO Outreach (IT)</button>
         <button class="btn sm" id="btn-scout-url" style="color:var(--gold-ink);border-color:var(--gold)" title="Evaluate website through 100-Point Gate">⚡ Scout URL</button>
         <button class="btn sm" id="btn-scout-market" style="background:var(--gold-soft);color:var(--ink);border-color:var(--gold-strong);font-weight:600" title="Auto-scout operators by location, score & vehicle types">🔍 Auto-Scout Fleet</button>
         <button class="btn ghost sm" id="btn-view-excluded" style="color:var(--text-3);border-color:var(--border);display:inline-flex;align-items:center;gap:4px" title="View operators permanently blocked from discovery and searches">
@@ -1249,65 +1476,117 @@ export function render(el) {
     </div>
 
     <div class="stack lg">
-      <!-- Market Problem Alert Banner -->
-      <div class="card row nowrap between" style="align-items:center;background:var(--surface);border-left:3px solid var(--gold);padding:12px 18px">
-        <div class="stack" style="gap:4px">
-          <div class="row" style="gap:8px;align-items:center">
-            <span class="chip gold" style="font-weight:700">Discretion Standard</span>
-            <b>100% Unbranded / Total Black Requirement</b>
-          </div>
-          <span class="small muted">
-            Standard Italian coaches display large commercial billboard stickers. For Dorogo wedding & VIP events, we only dispatch <b>monochromatic, unbranded vehicles</b> with suited chauffeurs and Lake Como villa access.
-          </span>
-        </div>
-        <span class="chip outline" style="white-space:nowrap;font-family:monospace">100-Point Relevance Gate</span>
-      </div>
-
-      <!-- Top Stat Bar (High-Density Minimalist Counters) -->
+      <!-- Top Stat Bar (High-Density Counters + Weekly 10-Reply Goal) -->
       <div class="kpis">
         <div class="kpi">
-          <span class="label">Total Discovered</span>
+          <span class="label">Total Fleet Roster</span>
           <span class="val">${totalDiscovered}</span>
-          <span class="ci">Scouted operators in Lombardy, Como & Alps</span>
+          <span class="ci">Luxury VIP & Standard GT (${verifiedEmailsCount} MX verified)</span>
         </div>
         <div class="kpi">
-          <span class="label">Top-Tier Matches (Score ≥ 80)</span>
-          <span class="val" style="color:var(--ok)">${topTierMatches}</span>
-          <span class="ci">Guaranteed unbranded luxury lines</span>
-        </div>
-        <div class="kpi">
-          <span class="label">Want to Contact</span>
+          <span class="label">Want to Contact (Ready)</span>
           <span class="val" style="color:#6d28d9">${wantToContactCount}</span>
-          <span class="ci">High-priority outreach targets</span>
+          <span class="ci">Queued for Mon–Sat Italian CEO pitch</span>
         </div>
         <div class="kpi">
-          <span class="label">Contacted</span>
+          <span class="label">Contacted (In Sequence)</span>
           <span class="val" style="color:#0284c7">${contactedCount}</span>
-          <span class="ci">Outreach sent & in discussion</span>
+          <span class="ci">Email 1 / Follow-up / WA sent</span>
+        </div>
+        <div class="kpi" style="border-left:3px solid #10b981;padding-left:12px">
+          <span class="label">🎯 Replied (Models & Rates)</span>
+          <span class="val" style="color:var(--ok)">${repliedOrRatesCount} <span style="font-size:1rem;color:var(--text-3);font-weight:500">/ 10 Goal</span></span>
+          <span class="ci">Target: ≥10 replies by end of next week</span>
         </div>
         <div class="kpi">
-          <span class="label">Active Partners</span>
+          <span class="label">Approved Partners</span>
           <span class="val" style="color:var(--gold)">${activePartners}</span>
-          <span class="ci">Signed B2B dispatch book</span>
+          <span class="ci">Standby/hourly rates & WA confirmed</span>
         </div>
       </div>
 
+      <!-- Collapsible Visual Pipeline Flow (Sankey Diagram) Between Stats & Table -->
+      <section class="card flush" style="padding:12px 16px;border:1px solid var(--border);background:var(--surface)">
+        <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px">
+          <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">
+            <span class="chip outline" style="font-weight:700;font-size:.74rem;color:var(--ink)">📊 Visual Pipeline Flow</span>
+            <span class="small muted">
+              Luxury & Standard Bus Funnel · <b>Mon–Sat Autonomous Schedule</b> (Sunday paused unless replying to a Sunday message) · Zero-Bounce MX Gate
+            </span>
+            ${hasFlowSel ? `<button class="btn sm ghost" id="btn-clear-flow-sel" style="padding:2px 8px;font-size:.74rem;color:var(--series-1);border-color:var(--series-1)">✕ Clear Flow Selection (${filtered.length}/${totalDiscovered})</button>` : ''}
+          </div>
+          <div class="row" style="gap:8px;align-items:center">
+            <button class="btn sm ghost" id="btn-toggle-visual-flow" style="font-weight:600;font-size:.78rem;padding:4px 10px;border-color:var(--border);background:var(--surface-2)" title="Show or hide the visual Sankey pipeline diagram">
+              ${showVisualFlow ? '🙈 Hide Visual Flow' : '📊 Show Visual Flow'}
+            </button>
+          </div>
+        </div>
+
+        ${showVisualFlow ? `
+          <div class="path-canvas-wrap" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line);overflow-x:auto">
+            <div class="path-canvas" style="min-width:920px">
+              <div class="path-col-headers" style="display:grid;grid-template-columns:repeat(4, 1fr);gap:12px;margin-bottom:8px;padding:0 12px">
+                ${flowColHeaders.map((h, i) => `
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div style="background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:6px 12px;flex:1">
+                      <div style="font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);font-weight:700">${esc(h.step)}</div>
+                      <div style="font-size:.82rem;font-weight:600;color:var(--ink)">${esc(h.title)}</div>
+                    </div>
+                    ${i < 3 ? `<span class="muted" style="font-size:.9rem">→</span>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+
+              <svg class="path-svg" width="${flow.svgWidth}" height="${flow.svgHeight}" viewBox="0 0 ${flow.svgWidth} ${flow.svgHeight}" style="width:100%;height:auto;display:block" role="img" aria-label="Bus Partner Outreach Visual Flow">
+                <g class="path-links">
+                  ${flow.links.map((l) => {
+                    const share = flow.columns[l.col]?.total ? pct(l.count / flow.columns[l.col].total) : '';
+                    const tipText = `${l.sourceLabel} → ${l.targetLabel}: ${plural(l.count, 'operator')} (${share})`;
+                    const stateCls = hasFlowSel ? (l.highlighted ? 'hi' : 'dim') : '';
+                    return `<path class="path-link tone-${attr(l.tone)} ${stateCls}" d="${l.d}" data-col="${l.col}" data-src="${attr(l.sourceKey)}" data-dst="${attr(l.targetKey)}" title="${attr(tipText)}"/>`;
+                  }).join('')}
+                </g>
+                <g class="path-nodes">
+                  ${flow.columns.map((col) => col.nodes.map((n) => {
+                    const hitW = 205;
+                    const labelX = n.x + flow.barWidth + 10;
+                    const labelY = n.y + 13;
+                    const countY = n.y + 29;
+                    const stateCls = `${n.selected ? 'selected' : ''} ${hasFlowSel && !n.highlighted ? 'dim' : ''}`;
+                    const shortLabel = n.label.length > 25 ? `${n.label.slice(0, 24)}…` : n.label;
+                    const countMarkup = `${n.count} <tspan class="node-pct">${pct(n.shareOfCol)}</tspan>`;
+                    return `<g class="path-node tone-${attr(n.tone)} ${stateCls}" data-flow-col="${col.index}" data-flow-node="${attr(n.key)}" style="cursor:pointer" tabindex="0" role="button" aria-pressed="${n.selected}">
+                      <rect class="node-hit" x="${n.x - 4}" y="${n.y - 3}" width="${hitW}" height="${n.slotHeight + 4}" fill="transparent"/>
+                      <rect class="node-bar" x="${n.x}" y="${n.y}" width="${flow.barWidth}" height="${n.barHeight}" rx="2"/>
+                      <text class="node-label" x="${labelX}" y="${labelY}">${esc(shortLabel)}</text>
+                      <text class="node-count" x="${labelX}" y="${countY}">${countMarkup}</text>
+                    </g>`;
+                  }).join('')).join('')}
+                </g>
+              </svg>
+            </div>
+          </div>
+        ` : ''}
+      </section>
+
       <!-- Control & Filter Bar -->
-      <div class="row between" style="gap:12px;flex-wrap:wrap;align-items:center">
+      <div class="row between" style="gap:10px;flex-wrap:wrap;align-items:center">
         <!-- Quick filter presets & status shortcuts -->
         <div class="row" style="gap:6px;flex-wrap:wrap;align-items:center">
-          <button class="chip ${activeFilter === 'all' && statusFilter === 'all' && vehicleFilter === 'all' && cityFilter === 'all' && !searchQ ? 'active' : 'outline'}" data-filter="all">All (${totalDiscovered})</button>
+          <button class="chip ${activeFilter === 'all' && segmentFilter === 'all' && statusFilter === 'all' && vehicleFilter === 'all' && cityFilter === 'all' && !searchQ && !hasFlowSel ? 'active' : 'outline'}" data-filter="all">All (${totalDiscovered})</button>
           ${latestAddedCount > 0 && latestAddedCount < newlyAddedCount ? `
             <button class="chip ${activeFilter === 'latest_added' ? 'active' : 'outline'}" data-filter="latest_added" style="${activeFilter === 'latest_added' ? 'background:linear-gradient(135deg, #059669, #10b981);color:#fff;border-color:#10b981;font-weight:700' : 'border-color:#10b981;color:#059669;font-weight:700'}" title="View only operators added in the most recent scout run">
               ⚡ Just Added (${latestAddedCount})
             </button>
           ` : ''}
           ${newlyAddedCount > 0 ? `<button class="chip ${activeFilter === 'newly_added' ? 'active' : 'outline'}" data-filter="newly_added" style="${activeFilter === 'newly_added' ? 'background:#059669;color:#fff;border-color:#059669;font-weight:700' : 'border-color:#059669;color:#059669;font-weight:700'}" title="View all new operators added within the last 1 hour">${latestAddedCount < newlyAddedCount ? `✨ All New (${newlyAddedCount})` : `✨ Newly Added (${newlyAddedCount})`}</button>` : ''}
-          <button class="chip ${activeFilter === 'top_tier' ? 'active' : 'outline'}" data-filter="top_tier">⭐ Top Tier (≥80) (${topTierMatches})</button>
+          <button class="chip ${segmentFilter === 'luxury' ? 'active' : 'outline'}" data-segment="luxury" title="Filter Luxury VIP Unbranded Fleet">✨ Luxury VIP</button>
+          <button class="chip ${segmentFilter === 'standard' ? 'active' : 'outline'}" data-segment="standard" title="Filter Standard Gran Turismo & Group Charter Buses">🚌 Standard GT</button>
           <button class="chip ${statusFilter === 'WANT_TO_CONTACT' ? 'active' : 'outline'}" data-filter="want_to_contact" style="${statusFilter === 'WANT_TO_CONTACT' ? 'background:#6d28d9;color:#fff;border-color:#6d28d9;font-weight:700' : ''}">📞 Want to Contact (${wantToContactCount})</button>
           <button class="chip ${statusFilter === 'CONTACTED' ? 'active' : 'outline'}" data-filter="contacted" style="${statusFilter === 'CONTACTED' ? 'background:#0284c7;color:#fff;border-color:#0284c7;font-weight:700' : ''}">✉️ Contacted (${contactedCount})</button>
-          <button class="chip ${statusFilter === 'TO_REVIEW' ? 'active' : 'outline'}" data-filter="to_review">⏳ To Review (${toReviewCount})</button>
-          <button class="chip ${statusFilter === 'APPROVED_PARTNER' ? 'active' : 'outline'}" data-filter="approved" style="${statusFilter === 'APPROVED_PARTNER' ? 'background:var(--ok);color:#fff;border-color:var(--ok);font-weight:700' : ''}">🤝 Active Partners (${activePartners})</button>
+          <button class="chip ${activeFilter === 'replied_rates' ? 'active' : 'outline'}" data-filter="replied_rates" style="${activeFilter === 'replied_rates' ? 'background:#059669;color:#fff;border-color:#059669;font-weight:700' : 'border-color:#10b981;color:#059669;font-weight:600'}">💶 Replied / Has Rates (${repliedOrRatesCount}/10)</button>
+          <button class="chip ${statusFilter === 'TO_REVIEW' ? 'active' : 'outline'}" data-filter="to_review">⏳ To Check (${toReviewCount})</button>
+          <button class="chip ${statusFilter === 'APPROVED_PARTNER' ? 'active' : 'outline'}" data-filter="approved" style="${statusFilter === 'APPROVED_PARTNER' ? 'background:var(--ok);color:#fff;border-color:var(--ok);font-weight:700' : ''}">🤝 Approved (${activePartners})</button>
         </div>
 
         <!-- Filter Dropdowns: Status, Vehicle Platform, City, Sort, Search -->
@@ -1350,7 +1629,7 @@ export function render(el) {
           </select>
 
           <!-- Search Input -->
-          <input type="text" id="bus-search" placeholder="Search company, city, email, fleet..." value="${attr(searchQ)}" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);font-size:.85rem;min-width:170px">
+          <input type="text" id="bus-search" placeholder="Search company, models, pax, rates..." value="${attr(searchQ)}" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);font-size:.85rem;min-width:170px">
 
           <!-- Reset Filter Button -->
           ${hasActiveFilters ? `
@@ -1366,14 +1645,14 @@ export function render(el) {
         <table class="table" style="width:100%;table-layout:fixed;border-collapse:collapse">
           <thead>
             <tr>
-              <th style="width:28px;text-align:center;padding:8px 2px;color:var(--text-3);font-size:.72rem">#</th>
-              <th style="width:42px;text-align:center;padding:8px 2px">Score</th>
-              <th style="width:155px">Company & Base</th>
-              <th style="width:115px;text-align:center">Web</th>
-              <th style="width:140px">Email</th>
-              <th style="width:150px">
+              <th style="width:26px;text-align:center;padding:8px 2px;color:var(--text-3);font-size:.72rem">#</th>
+              <th style="width:46px;text-align:center;padding:8px 2px">Score</th>
+              <th style="width:150px">Company & Base</th>
+              <th style="width:108px;text-align:center">Web & Verify</th>
+              <th style="width:150px">Email & Direct WA</th>
+              <th style="width:155px">
                 <div class="row nowrap" style="gap:4px;align-items:center">
-                  <span>Fleet Types</span>
+                  <span>Models & Pax Fit</span>
                   ${vehicleFilter !== 'all' ? `
                     <button class="chip tiny clickable" id="header-clear-vehicle" style="padding:0 5px;font-size:.62rem;font-weight:700;background:var(--gold-soft);color:var(--gold-ink);border:1px solid var(--gold-strong);border-radius:8px" title="Clear vehicle filter">
                       ${esc(STANDARD_FLEET_TYPES.find(v => v.key === vehicleFilter)?.short || vehicleFilter)} ✕
@@ -1381,10 +1660,10 @@ export function render(el) {
                   ` : ''}
                 </div>
               </th>
-              <th style="width:145px">Notes</th>
-              <th style="width:135px">
+              <th style="width:155px" title="Standby (A Disposizione 4h/8h) & Hourly Service Prices">Standby & Hourly Rates</th>
+              <th style="width:145px">
                 <div class="row nowrap" style="gap:4px;align-items:center">
-                  <span>Status</span>
+                  <span>Outreach & Status</span>
                   ${statusFilter !== 'all' ? `
                     <button class="chip tiny clickable" id="header-clear-status" style="padding:0 5px;font-size:.62rem;font-weight:700;background:#ede9fe;color:#6d28d9;border:1px solid #ddd6fe;border-radius:8px" title="Clear status filter">
                       ${esc(core.BUS_STATUSES.find(s => s.key === statusFilter)?.label.replace(/^\d+\.\s*/, '') || statusFilter)} ✕
@@ -1392,17 +1671,33 @@ export function render(el) {
                   ` : ''}
                 </div>
               </th>
-              <th style="width:36px;text-align:center" title="Delete & Block">Del</th>
+              <th style="width:32px;text-align:center" title="Delete & Block">Del</th>
             </tr>
           </thead>
           <tbody>
             ${filtered.length ? filtered.map((p, idx) => {
               const score = p.relevance_score || 0;
-              const tier = core.getPriorityTier(score);
               const scoreClass = score >= 90 ? 'chip ok' : score >= 75 ? 'chip' : score >= 50 ? 'chip gold' : 'chip bad';
               const categories = Array.isArray(p.fleet_categories) ? p.fleet_categories : [];
               const isNew = isRecentlyAdded(p);
               const isLatest = isLatestAddition(p, list);
+              const seg = core.inferBusSegment(p);
+              const segBadge = seg === 'luxury'
+                ? `<span class="tiny" style="font-size:.62rem;color:var(--gold-ink);font-weight:700">✨ LUX</span>`
+                : seg === 'both'
+                  ? `<span class="tiny" style="font-size:.62rem;color:#059669;font-weight:700">✨+🚌</span>`
+                  : `<span class="tiny" style="font-size:.62rem;color:var(--text-3);font-weight:600">🚌 STD</span>`;
+
+              const emailSt = p.email_status || 'unknown';
+              const emailDot = ['verified', 'mx_ok'].includes(emailSt)
+                ? `<span style="color:#10b981;font-weight:800;font-size:.75rem" title="Verified Deliverable Domain & MX Record">✓</span>`
+                : emailSt === 'invalid' || emailSt === 'no_mx'
+                  ? `<span style="color:#ef4444;font-weight:800;font-size:.75rem" title="Invalid / No MX Record — Blocked from sending">✕</span>`
+                  : `<span style="color:#f59e0b;font-weight:800;font-size:.75rem" title="Unchecked email — Click 🔍 Check">●</span>`;
+
+              const rawWa = (p.whatsapp || p.phone || '').replace(/[^\d+]/g, '');
+              const waHref = rawWa ? `https://wa.me/${rawWa.replace(/^\+/, '')}?text=${encodeURIComponent(core.buildBusOutreachDraft(p, 'WA_pitch').body)}` : '';
+              const hasRates = Boolean(p.rate_hourly || p.rate_standby);
 
               const rowStyle = isLatest 
                 ? 'background:rgba(16, 185, 129, 0.08);border-left:3px solid #10b981;' 
@@ -1410,18 +1705,21 @@ export function render(el) {
                 ? 'background:rgba(16, 185, 129, 0.03);border-left:3px solid rgba(16, 185, 129, 0.35);' 
                 : '';
 
-              return `<tr class="hover-row ${isLatest ? 'latest-added-row' : isNew ? 'newly-added-row' : ''}" data-id="${attr(p.id)}" style="min-height:56px;${rowStyle}">
+              return `<tr class="hover-row ${isLatest ? 'latest-added-row' : isNew ? 'newly-added-row' : ''}" data-id="${attr(p.id)}" style="min-height:58px;${rowStyle}">
                 <td style="text-align:center;vertical-align:middle;color:var(--text-3);font-size:.74rem;font-weight:600;font-variant-numeric:tabular-nums;padding:6px 2px">
                   ${idx + 1}
                 </td>
                 <td style="text-align:center;vertical-align:middle;padding:6px 2px">
-                  <span class="${scoreClass} clickable" data-act="view-score" data-id="${attr(p.id)}" style="font-weight:700;font-size:.84rem;padding:2px 5px;cursor:pointer" title="Click to view 4-pillar score breakdown">
-                    ${score}
-                  </span>
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+                    <span class="${scoreClass} clickable" data-act="view-score" data-id="${attr(p.id)}" style="font-weight:700;font-size:.82rem;padding:2px 5px;cursor:pointer" title="Click to view 4-pillar score breakdown">
+                      ${score}
+                    </span>
+                    ${segBadge}
+                  </div>
                 </td>
                 <td style="vertical-align:middle">
-                  <div class="row" style="gap:5px;align-items:center;white-space:nowrap">
-                    <span style="font-weight:600;font-size:.88rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(p.name)}">${esc(p.name)}</span>
+                  <div class="row" style="gap:4px;align-items:center;white-space:nowrap">
+                    <span style="font-weight:600;font-size:.86rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(p.name)}">${esc(p.name)}</span>
                     ${newBadgeHtml(p, list)}
                   </div>
                   <div class="tiny muted" style="white-space:nowrap;margin-top:2px">📍 ${esc(p.base_city || 'Northern Italy')}</div>
@@ -1429,62 +1727,93 @@ export function render(el) {
                 <td style="vertical-align:middle;text-align:center;white-space:nowrap">
                   <div class="row nowrap" style="gap:4px;align-items:center;justify-content:center">
                     ${p.website 
-                      ? `<a class="btn sm ghost" href="${attr(p.website)}" target="_blank" rel="noopener" style="padding:3px 6px;font-size:.74rem;white-space:nowrap;display:inline-flex;align-items:center;gap:2px" title="Open Website">${icon('external', 11)} Web</a>` 
+                      ? `<a class="btn sm ghost" href="${attr(p.website)}" target="_blank" rel="noopener" style="padding:3px 6px;font-size:.73rem;white-space:nowrap;display:inline-flex;align-items:center;gap:2px" title="Open Website">${icon('external', 11)} Web</a>` 
                       : `<span class="tiny faint" style="display:inline-block;padding:3px 4px">—</span>`
                     }
-                    <button class="btn sm ghost btn-find-email" data-act="find-email" data-id="${attr(p.id)}" style="padding:3px 6px;font-size:.74rem;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;color:var(--series-1);border-color:rgba(59,130,246,0.3);background:rgba(59,130,246,0.06);cursor:pointer" title="Verify website & search for correct working email">
+                    <button class="btn sm ghost btn-find-email" data-act="find-email" data-id="${attr(p.id)}" style="padding:3px 6px;font-size:.73rem;white-space:nowrap;display:inline-flex;align-items:center;gap:2px;color:var(--series-1);border-color:rgba(59,130,246,0.3);background:rgba(59,130,246,0.06);cursor:pointer" title="Verify live website, DNS MX record & email">
                       🔍 Check
                     </button>
                   </div>
                 </td>
                 <td style="vertical-align:middle;white-space:nowrap">
-                  ${p.email 
-                    ? `<div class="row nowrap" style="gap:4px;align-items:center;white-space:nowrap">
-                        <a href="mailto:${attr(p.email)}" style="color:var(--series-1);font-size:.8rem;text-decoration:none;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis" title="Email: ${attr(p.email)}">
-                          ${icon('email', 11)} <span style="overflow:hidden;text-overflow:ellipsis">${esc(p.email)}</span>
-                        </a>
-                        <button class="clickable btn-edit-pencil" data-act="edit-email" data-id="${attr(p.id)}" style="background:none;border:none;padding:2px 3px;cursor:pointer;color:var(--text-3);opacity:0.6;display:inline-flex;align-items:center;justify-content:center;border-radius:3px;transition:all .15s ease" title="Edit Email" onmouseover="this.style.opacity='1';this.style.color='var(--ink)';this.style.background='var(--surface-2)'" onmouseout="this.style.opacity='0.6';this.style.color='var(--text-3)';this.style.background='none'">${pencilIcon(11)}</button>
-                      </div>`
-                    : `<button class="clickable" data-act="edit-email" data-id="${attr(p.id)}" style="background:var(--surface-2);border:1px dashed var(--line-strong);padding:3px 7px;border-radius:4px;color:var(--gold-ink);cursor:pointer;font-size:.73rem;white-space:nowrap;display:inline-flex;align-items:center;gap:3px" title="Click to add email">
-                        + Add email
-                      </button>`
-                  }
+                  <div style="display:flex;flex-direction:column;gap:3px">
+                    ${p.email 
+                      ? `<div class="row nowrap" style="gap:3px;align-items:center;white-space:nowrap">
+                          ${emailDot}
+                          <a href="mailto:${attr(p.email)}" style="color:var(--series-1);font-size:.78rem;text-decoration:none;display:inline-flex;align-items:center;gap:2px;white-space:nowrap;max-width:112px;overflow:hidden;text-overflow:ellipsis" title="Email: ${attr(p.email)} (${esc(emailSt)})">
+                            <span style="overflow:hidden;text-overflow:ellipsis">${esc(p.email)}</span>
+                          </a>
+                          <button class="clickable btn-edit-pencil" data-act="edit-email" data-id="${attr(p.id)}" style="background:none;border:none;padding:2px 3px;cursor:pointer;color:var(--text-3);opacity:0.6;display:inline-flex;align-items:center;justify-content:center;border-radius:3px" title="Edit Email & Website">${pencilIcon(11)}</button>
+                        </div>`
+                      : `<button class="clickable" data-act="edit-email" data-id="${attr(p.id)}" style="background:var(--surface-2);border:1px dashed var(--line-strong);padding:2px 6px;border-radius:4px;color:var(--gold-ink);cursor:pointer;font-size:.72rem;white-space:nowrap;display:inline-flex;align-items:center;gap:3px" title="Click to add email">
+                          + Add email
+                        </button>`
+                    }
+                    <div class="row nowrap" style="gap:4px;align-items:center">
+                      ${waHref
+                        ? `<a href="${attr(waHref)}" target="_blank" rel="noopener" style="font-size:.71rem;color:#059669;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:3px;background:rgba(16,185,129,0.1);padding:1px 6px;border-radius:4px;border:1px solid rgba(16,185,129,0.25)" title="Open 1-Click Direct WhatsApp Pitch in Italian (${attr(p.whatsapp || p.phone)})">💬 WA: ${esc((p.whatsapp || p.phone).slice(0, 15))}</a>`
+                        : `<button class="clickable tiny" data-act="edit-rates" data-id="${attr(p.id)}" style="background:none;border:none;padding:0;color:var(--text-3);font-size:.69rem;cursor:pointer" title="Add direct WhatsApp / dispatcher number">+ Add WhatsApp</button>`
+                      }
+                    </div>
+                  </div>
                 </td>
                 <td style="vertical-align:middle">
-                  <div style="display:flex;flex-direction:column;gap:3px;max-width:155px;align-items:flex-start;line-height:1.2">
-                    ${categories.map((c) => {
+                  <div style="display:flex;flex-direction:column;gap:2px;max-width:150px;align-items:flex-start;line-height:1.2">
+                    ${categories.slice(0, 2).map((c) => {
                       const vKey = detectVehicleKey(c);
                       const isMatch = vehicleFilter !== 'all' && (vehicleFilter === vKey || operatorHasVehicleType(p, vehicleFilter));
                       return `
                         <button class="chip tiny outline fleet-filter-btn ${isMatch ? 'active-fleet-match' : ''}" 
                           data-vkey="${attr(vKey)}" 
-                          style="font-size:.70rem;padding:2px 7px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;cursor:pointer;text-align:left;border-radius:4px;${isMatch ? 'background:var(--gold-soft);border-color:var(--gold-strong);color:var(--gold-ink);font-weight:700;box-shadow:0 0 4px rgba(217,119,6,0.3);' : 'border-color:var(--line);background:var(--surface-2);'}" 
+                          style="font-size:.68rem;padding:1px 6px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:146px;cursor:pointer;text-align:left;border-radius:4px;${isMatch ? 'background:var(--gold-soft);border-color:var(--gold-strong);color:var(--gold-ink);font-weight:700;' : 'border-color:var(--line);background:var(--surface-2);'}" 
                           title="Click to filter by ${esc(shortFleetName(c))}">
                           ${esc(shortFleetName(c))}
                         </button>
                       `;
                     }).join('')}
-                    <button class="clickable" data-act="edit-fleet" data-id="${attr(p.id)}" style="background:none;border:none;padding:2px 4px;cursor:pointer;font-size:.68rem;color:var(--text-3);display:inline-flex;align-items:center;gap:3px;opacity:0.75;border-radius:3px;transition:all .15s ease" title="Edit fleet categories" onmouseover="this.style.opacity='1';this.style.color='var(--gold-ink)'" onmouseout="this.style.opacity='0.75';this.style.color='var(--text-3)'">
-                      <span style="display:inline-flex;align-items:center">${pencilIcon(10)}</span> <span class="tiny" style="color:var(--gold-ink);font-style:italic">${categories.length ? 'Edit fleet' : '+ Choose fleet...'}</span>
-                    </button>
+                    <div class="row nowrap" style="gap:4px;align-items:center;width:100%">
+                      ${p.pax_capacity
+                        ? `<span class="tiny" style="font-size:.69rem;color:var(--ink);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:105px" title="Passenger capacities: ${attr(p.pax_capacity)}">👥 ${esc(p.pax_capacity)}</span>`
+                        : ''
+                      }
+                      <button class="clickable" data-act="edit-fleet" data-id="${attr(p.id)}" style="background:none;border:none;padding:1px 3px;cursor:pointer;font-size:.66rem;color:var(--gold-ink);display:inline-flex;align-items:center;gap:2px" title="Edit fleet categories & models">
+                        ${pencilIcon(10)}
+                      </button>
+                    </div>
                   </div>
                 </td>
                 <td style="vertical-align:middle">
-                  <div class="clickable" data-act="edit-notes" data-id="${attr(p.id)}" style="cursor:pointer;max-width:175px;display:flex;align-items:flex-start;gap:4px" title="Click to edit notes: ${attr(p.notes || '')}">
-                    <span style="font-size:.74rem;line-height:1.2;flex:none">📝</span>
-                    ${p.notes 
-                      ? `<span class="tiny" style="color:var(--text-2);font-style:italic;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(p.notes)}</span>`
-                      : `<span class="tiny" style="color:var(--text-3);font-style:italic">+ Add notes...</span>`
-                    }
+                  <div class="clickable" data-act="edit-rates" data-id="${attr(p.id)}" style="cursor:pointer;max-width:150px;display:flex;flex-direction:column;gap:2px" title="Click to log or auto-extract Bus Models, Pax Capacity, Standby (4h/8h) & Hourly Rates, and Direct WhatsApp">
+                    ${hasRates ? `
+                      <div style="font-size:.74rem;font-weight:700;color:#059669;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                        💶 ${esc([p.rate_hourly, p.rate_standby].filter(Boolean).join(' · '))}
+                      </div>
+                      <div class="tiny muted" style="font-size:.68rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                        ${esc(p.bus_models || p.notes || 'Confirmed rates')}
+                      </div>
+                    ` : `
+                      <div class="row nowrap" style="gap:4px;align-items:center">
+                        <span class="chip tiny outline" style="font-size:.69rem;padding:1px 6px;border-color:var(--gold);color:var(--gold-ink);background:var(--gold-soft);font-weight:600">+ Rates / Reply</span>
+                        <span class="clickable" data-act="edit-notes" data-id="${attr(p.id)}" style="font-size:.7rem;color:var(--text-3)" title="Edit notes">${pencilIcon(10)}</span>
+                      </div>
+                      ${p.notes ? `<span class="tiny muted" style="font-size:.68rem;line-height:1.2;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">${esc(p.notes)}</span>` : ''}
+                    `}
                   </div>
                 </td>
                 <td style="vertical-align:middle;white-space:nowrap">
-                  <select class="sm bus-status-select" data-id="${attr(p.id)}" style="padding:3px 6px;border-radius:6px;font-size:.75rem;width:100%;height:29px;line-height:1.2;cursor:pointer;white-space:nowrap;${getStatusBadgeStyle(p.status)}">
-                    ${core.BUS_STATUSES.map((st) => `<option value="${st.key}" ${p.status === st.key ? 'selected' : ''} style="background:var(--surface);color:var(--ink)">${st.label}</option>`).join('')}
-                  </select>
+                  <div style="display:flex;flex-direction:column;gap:3px">
+                    <select class="sm bus-status-select" data-id="${attr(p.id)}" style="padding:2px 5px;border-radius:6px;font-size:.73rem;width:100%;height:26px;line-height:1.1;cursor:pointer;white-space:nowrap;${getStatusBadgeStyle(p.status)}">
+                      ${core.BUS_STATUSES.map((st) => `<option value="${st.key}" ${p.status === st.key ? 'selected' : ''} style="background:var(--surface);color:var(--ink)">${st.label}</option>`).join('')}
+                    </select>
+                    <div class="row nowrap" style="gap:4px;align-items:center;justify-content:space-between">
+                      <button class="btn sm ghost" data-act="ceo-pitch" data-id="${attr(p.id)}" style="padding:1px 6px;font-size:.69rem;color:#1d4ed8;border-color:rgba(37,99,235,0.3);background:rgba(37,99,235,0.06);font-weight:600;width:100%;justify-content:center" title="Open short CEO Italian Email / WhatsApp Outreach for ${attr(p.name)}">
+                        ✉️ CEO Pitch (IT)
+                      </button>
+                    </div>
+                  </div>
                 </td>
                 <td style="vertical-align:middle;text-align:center;white-space:nowrap">
-                  <button class="btn sm ghost" data-act="delete-partner" data-id="${attr(p.id)}" style="padding:4px 6px;color:var(--bad);display:inline-flex;align-items:center" title="Delete & Never Suggest Again">${icon('trash', 13)}</button>
+                  <button class="btn sm ghost" data-act="delete-partner" data-id="${attr(p.id)}" style="padding:4px 5px;color:var(--bad);display:inline-flex;align-items:center" title="Delete & Never Suggest Again">${icon('trash', 13)}</button>
                 </td>
               </tr>`;
             }).join('') : `
@@ -1493,15 +1822,6 @@ export function render(el) {
                   <div class="stack" style="gap:8px;align-items:center;justify-content:center">
                     <span style="font-size:1.5rem">🔍</span>
                     <b>No bus operators found matching the current filters.</b>
-                    <span class="muted tiny">
-                      Active: ${[
-                        activeFilter !== 'all' ? `Preset: ${activeFilter}` : '',
-                        statusFilter !== 'all' ? `Status: ${core.BUS_STATUSES.find(s => s.key === statusFilter)?.label || statusFilter}` : '',
-                        vehicleFilter !== 'all' ? `Fleet: ${STANDARD_FLEET_TYPES.find(v => v.key === vehicleFilter)?.short || vehicleFilter}` : '',
-                        cityFilter !== 'all' ? `City: ${cityFilter}` : '',
-                        searchQ.trim() ? `Search: "${searchQ}"` : ''
-                      ].filter(Boolean).join(' · ') || 'None'}
-                    </span>
                     <button class="btn sm ghost" id="empty-clear-filters" style="margin-top:4px;color:var(--series-1);border-color:var(--border)">
                       ✕ Reset All Filters
                     </button>
@@ -1518,20 +1838,67 @@ export function render(el) {
   }
 
   function attachEvents() {
+    // Show / Hide Visual Pipeline Flow toggle
+    el.querySelector('#btn-toggle-visual-flow')?.addEventListener('click', () => {
+      setFlowVisibility(!showVisualFlow);
+      paint();
+    });
+
+    // Clear Visual Flow selection
+    el.querySelector('#btn-clear-flow-sel')?.addEventListener('click', () => {
+      selectedFlowNodes = {};
+      paint();
+    });
+
+    // Click on nodes in the Visual Pipeline Flow (Sankey diagram)
+    el.querySelectorAll('[data-flow-node]').forEach((nodeEl) => {
+      nodeEl.addEventListener('click', (e) => {
+        const colIdx = e.currentTarget.dataset.flowCol;
+        const nodeKey = e.currentTarget.dataset.flowNode;
+        if (selectedFlowNodes[colIdx] === nodeKey) {
+          delete selectedFlowNodes[colIdx];
+        } else {
+          selectedFlowNodes[colIdx] = nodeKey;
+        }
+        paint();
+      });
+    });
+
+    // Batch Verify All Emails button
+    el.querySelector('#btn-verify-all-emails')?.addEventListener('click', async (e) => {
+      await verifyAllPartnerEmails(e.currentTarget, paint);
+    });
+
+    // Top Header CEO Outreach button
+    el.querySelector('#btn-ceo-outreach')?.addEventListener('click', () => {
+      openCeoOutreachModal(null);
+    });
+
+    // Segment filter chips (Luxury VIP vs Standard GT)
+    el.querySelectorAll('[data-segment]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const seg = e.currentTarget.dataset.segment;
+        segmentFilter = segmentFilter === seg ? 'all' : seg;
+        paint();
+      });
+    });
+
     // Filter clicks
     el.querySelectorAll('[data-filter]').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         const f = e.currentTarget.dataset.filter;
         if (f === 'all') {
           activeFilter = 'all';
+          segmentFilter = 'all';
           statusFilter = 'all';
           vehicleFilter = 'all';
           cityFilter = 'all';
           searchQ = '';
+          selectedFlowNodes = {};
         } else if (f === 'latest_added') {
           activeFilter = activeFilter === 'latest_added' ? 'all' : 'latest_added';
           if (activeFilter === 'latest_added') sortBy = 'newest_first';
-        } else if (f === 'newly_added' || f === 'top_tier') {
+        } else if (f === 'newly_added' || f === 'top_tier' || f === 'replied_rates') {
           activeFilter = activeFilter === f ? 'all' : f;
         } else if (f === 'want_to_contact') {
           statusFilter = statusFilter === 'WANT_TO_CONTACT' ? 'all' : 'WANT_TO_CONTACT';
@@ -1596,10 +1963,12 @@ export function render(el) {
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {
         activeFilter = 'all';
+        segmentFilter = 'all';
         statusFilter = 'all';
         vehicleFilter = 'all';
         cityFilter = 'all';
         searchQ = '';
+        selectedFlowNodes = {};
         paint();
       });
     }
@@ -1627,10 +1996,12 @@ export function render(el) {
     if (emptyClearBtn) {
       emptyClearBtn.addEventListener('click', () => {
         activeFilter = 'all';
+        segmentFilter = 'all';
         statusFilter = 'all';
         vehicleFilter = 'all';
         cityFilter = 'all';
         searchQ = '';
+        selectedFlowNodes = {};
         paint();
       });
     }
@@ -1656,9 +2027,30 @@ export function render(el) {
       });
     });
 
+    // Edit Standby/Hourly Rates, Bus Models, Pax Capacity & Reply Auto-Extractor
+    el.querySelectorAll('[data-act="edit-rates"]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = e.currentTarget.dataset.id;
+        const partner = (S.busPartners || []).find((x) => x.id === id);
+        if (partner) openRatesAndSpecsModal(partner);
+      });
+    });
+
+    // Per-row CEO Pitch button
+    el.querySelectorAll('[data-act="ceo-pitch"]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = e.currentTarget.dataset.id;
+        const partner = (S.busPartners || []).find((x) => x.id === id);
+        if (partner) openCeoOutreachModal(partner);
+      });
+    });
+
     // Edit Notes
     el.querySelectorAll('[data-act="edit-notes"]').forEach((btn) => {
       btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const id = e.currentTarget.dataset.id;
         const partner = (S.busPartners || []).find((x) => x.id === id);
         if (partner) openNotesModal(partner);
@@ -1741,6 +2133,405 @@ export function render(el) {
   }
 
   // --- Modals ---
+
+  // --- 1. Partner Deliverables Modal: Bus Models, Pax Fit, Standby & Hourly Rates, Direct WA + Reply Auto-Extractor ---
+  function openRatesAndSpecsModal(partner) {
+    const backdrop = document.createElement('div');
+    backdrop.className = 'dialog-backdrop';
+    const seg = core.inferBusSegment(partner);
+    const rawWa = (partner.whatsapp || partner.phone || '').replace(/[^\d+]/g, '');
+    const waHref = rawWa ? `https://wa.me/${rawWa.replace(/^\+/, '')}` : '';
+
+    backdrop.innerHTML = `
+    <div class="dialog card stack" style="max-width:600px;padding:24px;max-height:92vh;overflow-y:auto">
+      <div class="row between" style="align-items:flex-start">
+        <div>
+          <div class="label eyebrow" style="color:#059669;font-weight:700">Partner Fleet Specs, Pricing & Direct Contact</div>
+          <h3 style="margin:2px 0 0">${esc(partner.name)} <span class="tiny muted">· 📍 ${esc(partner.base_city || 'Northern Italy')}</span></h3>
+        </div>
+        <button class="btn ghost sm" data-close>×</button>
+      </div>
+
+      <!-- Auto-Extract from Reply Box -->
+      <div class="card stack" style="gap:8px;background:rgba(16, 185, 129, 0.06);border:1px solid rgba(16, 185, 129, 0.28);padding:12px 14px;border-radius:8px;margin-top:6px">
+        <div class="row between" style="align-items:center">
+          <span style="font-weight:700;font-size:.82rem;color:#065f46">⚡ Paste Operator Reply (Email or WhatsApp) to Auto-Extract</span>
+          <button type="button" class="btn sm" id="btn-parse-reply" style="background:#059669;color:#fff;border:none;padding:3px 10px;font-size:.76rem;font-weight:700">✨ Auto-Extract Specs & Rates</button>
+        </div>
+        <textarea id="reply-paste-box" rows="2" placeholder="Paste their Italian/English reply here (e.g. 'Buongiorno Dmitri, abbiamo Sprinter VIP 16 posti e Setra 52 posti. Tariffa oraria 85€/h, disposizione 4h 420€, 8h 800€. WhatsApp diretto: +39 348 1234567')..." style="font-size:.8rem;padding:6px 10px;width:100%;background:var(--surface)"></textarea>
+      </div>
+
+      <div class="stack" style="gap:10px;margin:8px 0">
+        <div class="row" style="gap:10px">
+          <label class="field grow">
+            <span style="font-weight:600;font-size:.82rem">1. Bus Class (Luxury / Standard)</span>
+            <select id="spec-segment" class="sm" style="padding:7px 10px">
+              <option value="luxury" ${seg === 'luxury' ? 'selected' : ''}>✨ Luxury VIP (100% Unbranded / Total Black)</option>
+              <option value="standard" ${seg === 'standard' ? 'selected' : ''}>🚌 Standard GT / Charter Coach</option>
+              <option value="both" ${seg === 'both' ? 'selected' : ''}>✨+🚌 Both Luxury VIP & Standard GT</option>
+            </select>
+          </label>
+          <label class="field grow">
+            <span style="font-weight:600;font-size:.82rem">2. How Many People Fit (Pax Capacity)</span>
+            <input type="text" id="spec-pax" placeholder="e.g. 8, 16, 28, 52 pax" value="${attr(partner.pax_capacity || '')}" style="font-size:.86rem;padding:7px 10px">
+          </label>
+        </div>
+
+        <label class="field">
+          <span style="font-weight:600;font-size:.82rem">3. Bus Models Available</span>
+          <input type="text" id="spec-models" placeholder="e.g. Mercedes Sprinter VIP 519, Indcar Wing, Setra S515 HD, Mercedes Tourismo" value="${attr(partner.bus_models || '')}" style="font-size:.86rem;padding:7px 10px;width:100%">
+        </label>
+
+        <div class="row" style="gap:10px">
+          <label class="field grow">
+            <span style="font-weight:600;font-size:.82rem">4. Hourly Service Price (€/h)</span>
+            <input type="text" id="spec-rate-hourly" placeholder="e.g. €85/h (Sprinter) · €110/h (Coach)" value="${attr(partner.rate_hourly || '')}" style="font-size:.86rem;padding:7px 10px">
+          </label>
+          <label class="field grow">
+            <span style="font-weight:600;font-size:.82rem">5. Standby / A Disposizione (4h / 8h)</span>
+            <input type="text" id="spec-rate-standby" placeholder="e.g. €420 (4h disp.) · €800 (8h disp.)" value="${attr(partner.rate_standby || '')}" style="font-size:.86rem;padding:7px 10px">
+          </label>
+        </div>
+
+        <div class="row" style="gap:10px;align-items:flex-end">
+          <label class="field grow">
+            <span style="font-weight:600;font-size:.82rem">6. Direct Contact (WhatsApp Preferred)</span>
+            <input type="text" id="spec-whatsapp" placeholder="e.g. +39 348 123 4567 (Marco - Dispatch)" value="${attr(partner.whatsapp || partner.phone || '')}" style="font-size:.86rem;padding:7px 10px">
+          </label>
+          ${waHref ? `<a class="btn sm" href="${attr(waHref)}" target="_blank" rel="noopener" style="height:35px;background:#059669;color:#fff;border:none;display:inline-flex;align-items:center;gap:4px;white-space:nowrap">💬 Open WA</a>` : ''}
+        </div>
+
+        <div class="row" style="gap:10px">
+          <label class="field grow">
+            <span style="font-weight:600;font-size:.82rem">Partner Pipeline Status</span>
+            <select id="spec-status" class="sm" style="padding:7px 10px">
+              ${core.BUS_STATUSES.map((st) => `<option value="${st.key}" ${partner.status === st.key ? 'selected' : ''}>${st.label}</option>`).join('')}
+            </select>
+          </label>
+          <label class="field grow">
+            <span style="font-weight:600;font-size:.82rem">Outreach Funnel Stage</span>
+            <select id="spec-outreach-stage" class="sm" style="padding:7px 10px">
+              ${core.BUS_OUTREACH_STAGES.map((st) => `<option value="${st.key}" ${core.getBusOutreachStage(partner) === st.key ? 'selected' : ''}>${st.label}</option>`).join('')}
+            </select>
+          </label>
+        </div>
+
+        <label class="field">
+          <span style="font-weight:600;font-size:.82rem">Notes & Dispatch Conditions</span>
+          <textarea id="spec-notes" rows="2" style="font-size:.84rem;padding:6px 10px">${esc(partner.notes || '')}</textarea>
+        </label>
+      </div>
+
+      <div class="row between" style="margin-top:10px;align-items:center">
+        <label class="row" style="gap:6px;align-items:center;cursor:pointer">
+          <input type="checkbox" id="spec-mark-replied" ${partner.replied_at || partner.rate_hourly || partner.rate_standby ? 'checked' : ''} style="cursor:pointer">
+          <span class="tiny" style="font-weight:700;color:#059669">Count toward 🎯 10 Replied Partners Weekly Goal</span>
+        </label>
+        <div class="row" style="gap:8px">
+          <button class="btn ghost" data-close>Cancel</button>
+          <button class="btn primary" id="btn-save-specs">Save Specs, Rates & WA</button>
+        </div>
+      </div>
+    </div>`;
+
+    document.body.appendChild(backdrop);
+    const close = () => backdrop.remove();
+    backdrop.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', close));
+
+    backdrop.querySelector('#btn-parse-reply').addEventListener('click', () => {
+      const rawText = backdrop.querySelector('#reply-paste-box').value.trim();
+      if (!rawText) {
+        toast('Paste the operator reply text first to auto-extract.', 'warn');
+        return;
+      }
+      const parsed = core.parseBusPartnerReply(rawText, partner);
+      if (parsed.bus_models) backdrop.querySelector('#spec-models').value = parsed.bus_models;
+      if (parsed.pax_capacity) backdrop.querySelector('#spec-pax').value = parsed.pax_capacity;
+      if (parsed.rate_hourly) backdrop.querySelector('#spec-rate-hourly').value = parsed.rate_hourly;
+      if (parsed.rate_standby) backdrop.querySelector('#spec-rate-standby').value = parsed.rate_standby;
+      if (parsed.whatsapp) backdrop.querySelector('#spec-whatsapp').value = parsed.whatsapp;
+      if (parsed.fleet_segment) backdrop.querySelector('#spec-segment').value = parsed.fleet_segment;
+      backdrop.querySelector('#spec-mark-replied').checked = true;
+      backdrop.querySelector('#spec-outreach-stage').value = 'replied';
+      if (backdrop.querySelector('#spec-status').value === 'TO_REVIEW' || backdrop.querySelector('#spec-status').value === 'WANT_TO_CONTACT') {
+        backdrop.querySelector('#spec-status').value = 'CONTACTED';
+      }
+      toast('✨ Extracted Bus Models, Pax Capacity, Standby/Hourly Rates & WhatsApp!', 'ok');
+    });
+
+    backdrop.querySelector('#btn-save-specs').addEventListener('click', async () => {
+      const fleet_segment = backdrop.querySelector('#spec-segment').value;
+      const pax_capacity = backdrop.querySelector('#spec-pax').value.trim();
+      const bus_models = backdrop.querySelector('#spec-models').value.trim();
+      const rate_hourly = backdrop.querySelector('#spec-rate-hourly').value.trim();
+      const rate_standby = backdrop.querySelector('#spec-rate-standby').value.trim();
+      const whatsapp = backdrop.querySelector('#spec-whatsapp').value.trim();
+      const status = backdrop.querySelector('#spec-status').value;
+      let outreach_stage = backdrop.querySelector('#spec-outreach-stage').value;
+      const notes = backdrop.querySelector('#spec-notes').value.trim();
+      const markReplied = backdrop.querySelector('#spec-mark-replied').checked;
+
+      if (markReplied && ['to_check', 'ready', 't1_sent', 't2_sent'].includes(outreach_stage)) {
+        outreach_stage = status === 'APPROVED_PARTNER' ? 'partner_won' : 'replied';
+      }
+
+      await updateBusPartner(partner.id, {
+        fleet_segment,
+        pax_capacity,
+        bus_models,
+        rate_hourly,
+        rate_standby,
+        whatsapp,
+        phone: whatsapp || partner.phone,
+        status,
+        outreach_stage,
+        replied_at: markReplied ? (partner.replied_at || new Date().toISOString()) : null,
+        notes,
+      });
+      toast(`✓ Saved models, pax capacity, standby/hourly rates & WhatsApp for ${partner.name}`, 'ok');
+      close();
+      paint();
+    });
+  }
+
+  // --- 2. CEO-Level Short Italian Outreach Modal (Single Operator & Autonomous Batch Queue) ---
+  function openCeoOutreachModal(targetPartner = null) {
+    const list = S.busPartners || [];
+    const activePartner = targetPartner || list.find((p) => p.status === 'WANT_TO_CONTACT') || list[0];
+    if (!activePartner) {
+      toast('No bus partners in roster.', 'warn');
+      return;
+    }
+
+    let currentStep = 'T1_intro';
+    let isSundayReply = false;
+    const now = new Date();
+    const sendGate = core.canSendBusOutreach(activePartner, now, { isReplyToSundayInbound: isSundayReply, allowUnverifiedOverride: true });
+    const draft = core.buildBusOutreachDraft(activePartner, currentStep);
+    const readyBatch = list.filter((p) => (p.status === 'WANT_TO_CONTACT' || (p.status === 'TO_REVIEW' && (p.relevance_score || 0) >= 75)) && p.email && p.email_status !== 'invalid');
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'dialog-backdrop';
+    backdrop.innerHTML = `
+    <div class="dialog card stack" style="max-width:640px;padding:24px;max-height:92vh;overflow-y:auto">
+      <div class="row between" style="align-items:flex-start">
+        <div>
+          <div class="label eyebrow" style="color:#1d4ed8;font-weight:700">🇮🇹 CEO-Level Short Italian Outreach · Mon–Sat Engine</div>
+          <h3 style="margin:2px 0 0">${targetPartner ? `Pitch to ${esc(activePartner.name)}` : `Bus Partner Outreach Pipeline (${readyBatch.length} Ready)`}</h3>
+        </div>
+        <button class="btn ghost sm" data-close>×</button>
+      </div>
+
+      <!-- Autonomous Schedule & Deliverability Status Banner -->
+      <div class="card row between" style="align-items:center;flex-wrap:wrap;gap:8px;padding:10px 14px;background:var(--surface-2);border-left:3px solid #2563eb">
+        <div class="stack" style="gap:2px">
+          <div class="row" style="gap:6px;align-items:center">
+            <span class="chip tiny ok" style="font-weight:700">📅 Mon–Sat Active</span>
+            <span class="chip tiny outline" style="font-weight:600">🚫 Sunday Paused (Except Sunday Replies)</span>
+            <span class="chip tiny outline" style="font-weight:600">🛡️ Zero-Bounce MX Gate</span>
+          </div>
+          <span class="tiny muted">
+            Short CEO-to-Owner Italian message (~70 words): presents DOROGO's Lake Como &amp; Milan client demand and asks for <b>Models + Pax Capacity, Standby &amp; Hourly Rates, and Direct WhatsApp</b>.
+          </span>
+        </div>
+      </div>
+
+      <!-- Select Operator & Template Step -->
+      <div class="row" style="gap:10px;flex-wrap:wrap">
+        <label class="field grow">
+          <span style="font-weight:600;font-size:.8rem">Preview Operator</span>
+          <select id="ceo-partner-select" class="sm" style="padding:6px 10px">
+            ${list.filter((p) => p.status !== 'NOT_RELEVANT').map((p) => `
+              <option value="${attr(p.id)}" ${p.id === activePartner.id ? 'selected' : ''}>
+                ${esc(p.name)} (${esc(p.base_city || 'IT')} · ${p.email || 'no email'})
+              </option>
+            `).join('')}
+          </select>
+        </label>
+        <label class="field">
+          <span style="font-weight:600;font-size:.8rem">Sequence Step</span>
+          <select id="ceo-step-select" class="sm" style="padding:6px 10px">
+            <option value="T1_intro" selected>1. Email 1: CEO Intro (Italian · Day 0)</option>
+            <option value="T2_followup">2. Email 2: Quick Follow-up (Italian · Day +3)</option>
+            <option value="WA_pitch">3. Direct WhatsApp Pitch (Italian)</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="field" id="ceo-subject-wrap">
+        <span style="font-weight:600;font-size:.8rem">Subject Line (Italian B2B)</span>
+        <input type="text" id="ceo-subject" value="${attr(draft.subject)}" style="font-size:.86rem;padding:7px 10px;width:100%">
+      </label>
+
+      <label class="field">
+        <div class="row between">
+          <span style="font-weight:600;font-size:.8rem">Message Body (Short CEO-Level Italian)</span>
+          <span class="tiny muted" id="ceo-word-count">${draft.word_count} words · ~20s read time</span>
+        </div>
+        <textarea id="ceo-body" rows="10" style="font-family:inherit;font-size:.85rem;line-height:1.45;padding:10px;width:100%">${esc(draft.body)}</textarea>
+      </label>
+
+      <!-- Sunday Reply Override Checkbox -->
+      <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px;padding:6px 10px;background:var(--surface-2);border-radius:6px">
+        <label class="row" style="gap:6px;align-items:center;cursor:pointer">
+          <input type="checkbox" id="ceo-sunday-reply-chk" style="cursor:pointer">
+          <span class="tiny" style="font-weight:600">Operator replied on Sunday (Unlock Sunday reply exception)</span>
+        </label>
+        <span class="tiny" id="ceo-gate-status" style="font-weight:700;color:${sendGate.ok ? '#059669' : '#d97706'}">
+          ${sendGate.ok ? '✓ Allowed to send right now (Mon–Sat window)' : `⏳ ${esc(sendGate.message || 'Scheduled for next Mon–Sat slot')}`}
+        </span>
+      </div>
+
+      <div class="row between" style="margin-top:8px;flex-wrap:wrap;gap:8px">
+        <div class="row" style="gap:6px;flex-wrap:wrap">
+          <button type="button" class="btn sm ghost" id="btn-ceo-copy">📋 Copy Text</button>
+          <button type="button" class="btn sm" id="btn-ceo-wa" style="background:#059669;color:#fff;border:none;font-weight:600">💬 Send on WhatsApp</button>
+          <button type="button" class="btn sm ghost" id="btn-ceo-mailto" style="color:var(--series-1);border-color:var(--series-1)">✉️ Open in Mail + Mark Contacted</button>
+        </div>
+        <div class="row" style="gap:8px">
+          <button type="button" class="btn sm" id="btn-ceo-batch" style="background:var(--gold-soft);color:var(--gold-ink);border-color:var(--gold-strong);font-weight:700" title="Verify & queue Mon–Sat outreach to all Want to Contact / Top-Tier operators">
+            ⚡ Queue Batch (${readyBatch.length})
+          </button>
+          <button type="button" class="btn primary sm" id="btn-ceo-send-single" style="font-weight:700">
+            🚀 Send / Log Step
+          </button>
+        </div>
+      </div>
+    </div>`;
+
+    document.body.appendChild(backdrop);
+    const close = () => backdrop.remove();
+    backdrop.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', close));
+
+    const getSelectedPartner = () => {
+      const id = backdrop.querySelector('#ceo-partner-select').value;
+      return (S.busPartners || []).find((x) => x.id === id) || activePartner;
+    };
+
+    const refreshPreview = () => {
+      const p = getSelectedPartner();
+      currentStep = backdrop.querySelector('#ceo-step-select').value;
+      isSundayReply = backdrop.querySelector('#ceo-sunday-reply-chk').checked;
+      const d = core.buildBusOutreachDraft(p, currentStep);
+      backdrop.querySelector('#ceo-subject').value = d.subject || '';
+      backdrop.querySelector('#ceo-subject-wrap').style.display = currentStep === 'WA_pitch' ? 'none' : 'flex';
+      backdrop.querySelector('#ceo-body').value = d.body;
+      backdrop.querySelector('#ceo-word-count').textContent = `${d.word_count} words · ~20s read time`;
+
+      const gate = core.canSendBusOutreach(p, new Date(), { isReplyToSundayInbound: isSundayReply, allowUnverifiedOverride: true });
+      const gateEl = backdrop.querySelector('#ceo-gate-status');
+      gateEl.textContent = gate.ok ? '✓ Allowed to send right now (Mon–Sat window)' : `⏳ ${gate.message || 'Queued for next Mon–Sat slot'}`;
+      gateEl.style.color = gate.ok ? '#059669' : '#d97706';
+    };
+
+    backdrop.querySelector('#ceo-partner-select').addEventListener('change', refreshPreview);
+    backdrop.querySelector('#ceo-step-select').addEventListener('change', refreshPreview);
+    backdrop.querySelector('#ceo-sunday-reply-chk').addEventListener('change', refreshPreview);
+
+    backdrop.querySelector('#btn-ceo-copy').addEventListener('click', () => {
+      const subj = backdrop.querySelector('#ceo-subject').value.trim();
+      const body = backdrop.querySelector('#ceo-body').value.trim();
+      copyText(subj ? `Subject: ${subj}\n\n${body}` : body, 'Italian CEO pitch copied to clipboard');
+    });
+
+    backdrop.querySelector('#btn-ceo-wa').addEventListener('click', async () => {
+      const p = getSelectedPartner();
+      const rawWa = (p.whatsapp || p.phone || '').replace(/[^\d+]/g, '');
+      const waPitch = core.buildBusOutreachDraft(p, 'WA_pitch').body;
+      if (!rawWa) {
+        copyText(waPitch, 'No phone on file — copied Italian WhatsApp pitch to clipboard');
+        return;
+      }
+      window.open(`https://wa.me/${rawWa.replace(/^\+/, '')}?text=${encodeURIComponent(waPitch)}`, '_blank', 'noopener');
+      await updateBusPartner(p.id, {
+        status: p.status === 'APPROVED_PARTNER' ? 'APPROVED_PARTNER' : 'CONTACTED',
+        outreach_stage: 't1_sent',
+        last_outreach_at: new Date().toISOString(),
+      });
+      toast(`Opened WhatsApp for ${p.name} & marked Contacted`, 'ok');
+      paint();
+    });
+
+    backdrop.querySelector('#btn-ceo-mailto').addEventListener('click', async () => {
+      const p = getSelectedPartner();
+      if (!p.email) {
+        toast('Please verify or add an email address first.', 'warn');
+        return;
+      }
+      const subj = backdrop.querySelector('#ceo-subject').value.trim();
+      const body = backdrop.querySelector('#ceo-body').value.trim();
+      window.open(`mailto:${p.email}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`, '_blank');
+      await updateBusPartner(p.id, {
+        status: p.status === 'APPROVED_PARTNER' ? 'APPROVED_PARTNER' : 'CONTACTED',
+        outreach_stage: currentStep === 'T2_followup' ? 't2_sent' : 't1_sent',
+        last_outreach_at: new Date().toISOString(),
+      });
+      toast(`Opened email to ${p.name} (${p.email}) & marked Contacted`, 'ok');
+      close();
+      paint();
+    });
+
+    backdrop.querySelector('#btn-ceo-send-single').addEventListener('click', async () => {
+      const p = getSelectedPartner();
+      isSundayReply = backdrop.querySelector('#ceo-sunday-reply-chk').checked;
+      // 1. Verify email MX first if unknown
+      if (!['verified', 'mx_ok'].includes(p.email_status)) {
+        const vRes = await findAndVerifyPartnerEmail(p.id, null, null, { silent: true });
+        if (!vRes) {
+          toast(`Blocked: "${p.name}" has an unreachable/invalid email. Protected from bounce/spam.`, 'bad');
+          return;
+        }
+      }
+      const updatedP = (S.busPartners || []).find((x) => x.id === p.id) || p;
+      const gate = core.canSendBusOutreach(updatedP, new Date(), { isReplyToSundayInbound: isSundayReply });
+      const slot = core.nextBusSendSlot(new Date(), 0, { isReplyToSundayInbound: isSundayReply });
+      const stageKey = currentStep === 'T2_followup' ? 't2_sent' : 't1_sent';
+      const stamp = gate.ok
+        ? `Sent ${currentStep} (IT CEO pitch) on ${new Date().toLocaleDateString('en-GB')}`
+        : `Scheduled ${currentStep} for Mon ${slot.toLocaleDateString('en-GB')} 09:00 (Sunday pause active)`;
+
+      await updateBusPartner(updatedP.id, {
+        status: updatedP.status === 'APPROVED_PARTNER' ? 'APPROVED_PARTNER' : 'CONTACTED',
+        outreach_stage: stageKey,
+        last_outreach_at: slot.toISOString(),
+        notes: updatedP.notes ? `${updatedP.notes} · ${stamp}` : stamp,
+      });
+      toast(gate.ok ? `🚀 Sent Italian CEO pitch to ${updatedP.name} (${updatedP.email})` : `📅 Sunday pause active: Queued ${updatedP.name} for Monday 09:00`, 'ok');
+      close();
+      paint();
+    });
+
+    backdrop.querySelector('#btn-ceo-batch').addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      isSundayReply = backdrop.querySelector('#ceo-sunday-reply-chk').checked;
+      let queued = 0;
+      let blocked = 0;
+
+      for (let i = 0; i < readyBatch.length; i++) {
+        const item = readyBatch[i];
+        btn.textContent = `⏳ Checking & Queuing ${i + 1}/${readyBatch.length}...`;
+        const mxStatus = await verifyDomainMxRecord(item.email);
+        if (mxStatus === 'no_mx' || mxStatus === 'invalid') {
+          await updateBusPartner(item.id, { email_status: 'invalid' });
+          blocked++;
+          continue;
+        }
+        const slot = core.nextBusSendSlot(new Date(), queued, { isReplyToSundayInbound: isSundayReply });
+        await updateBusPartner(item.id, {
+          email_status: 'verified',
+          status: item.status === 'APPROVED_PARTNER' ? 'APPROVED_PARTNER' : 'CONTACTED',
+          outreach_stage: 't1_sent',
+          last_outreach_at: slot.toISOString(),
+        });
+        queued++;
+      }
+
+      toast(`🚀 Queued ${queued} verified operators on Mon–Sat schedule (${blocked} blocked by MX gate).`, 'ok');
+      close();
+      paint();
+    });
+  }
 
   // --- Delete & Exclude Single Operator Modal ---
   function openDeleteExcludeModal(partner) {

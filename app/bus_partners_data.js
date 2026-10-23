@@ -504,11 +504,87 @@ export function findLegacyReplacement(partner) {
   return null;
 }
 
+export function hydratePartnerCard(p) {
+  if (!p) return p;
+  const card = p.score_breakdown?.partner_card || {};
+  const cats = Array.isArray(p.fleet_categories) ? p.fleet_categories : [];
+  const catText = `${p.name || ''} ${cats.join(' ')} ${p.notes || ''}`.toLowerCase();
+
+  // Infer default bus models & pax capacities from fleet_categories if not explicitly set
+  let defaultModels = [];
+  let defaultPax = [];
+  for (const c of cats) {
+    if (/limobus/i.test(c)) { defaultModels.push('Limobus VIP'); defaultPax.push('18–28'); }
+    else if (/sprinter.*vip/i.test(c)) { defaultModels.push('Mercedes Sprinter VIP'); defaultPax.push('8–16'); }
+    else if (/sprinter/i.test(c)) { defaultModels.push('Mercedes Sprinter Exec'); defaultPax.push('16–20'); }
+    else if (/v-?class|minivan/i.test(c)) { defaultModels.push('Mercedes V-Class'); defaultPax.push('7–8'); }
+    else if (/midibus|indcar|midi/i.test(c)) { defaultModels.push('Indcar / Executive Midibus'); defaultPax.push('24–30'); }
+    else if (/setra.*vip/i.test(c)) { defaultModels.push('Setra TopClass VIP'); defaultPax.push('28–36'); }
+    else if (/coach|tourismo|setra|pullman/i.test(c)) { defaultModels.push('Mercedes Tourismo / Setra GT'); defaultPax.push('30–54'); }
+  }
+
+  const hasLux = /vip|limobus|lounge|v-?class|total\s+black|exclusive|luxury/i.test(catText) || (p.relevance_score || 0) >= 85;
+  const hasStd = /tourismo|setra|gt\b|gran\s+turismo|coach|pullman|iveco|scania|irizar|50|52|54|56|60|64/i.test(catText);
+  const inferredSegment = (hasLux && hasStd) ? 'both' : hasLux ? 'luxury' : 'standard';
+
+  const isMoveolux = p.id === 'partner_moveolux';
+  const fleet_segment = p.fleet_segment || card.fleet_segment || inferredSegment;
+  const bus_models = p.bus_models ?? card.bus_models ?? ([...new Set(defaultModels)].join(', ') || '');
+  const pax_capacity = p.pax_capacity ?? card.pax_capacity ?? (defaultPax.length ? `${[...new Set(defaultPax)].join(', ')} pax` : '');
+  const rate_hourly = p.rate_hourly ?? card.rate_hourly ?? (isMoveolux ? '€120/h' : '');
+  const rate_standby = p.rate_standby ?? card.rate_standby ?? (isMoveolux ? '€550 (4h disp.) · €1,050 (8h disp.)' : '');
+  const whatsapp = p.whatsapp ?? card.whatsapp ?? p.phone ?? '';
+  const email_status = p.email_status || card.email_status || (p.notes && /Checked email:|Verified/i.test(p.notes) ? 'verified' : (p.email ? 'mx_ok' : 'unknown'));
+  const outreach_stage = p.outreach_stage || card.outreach_stage || (
+    p.status === 'APPROVED_PARTNER' ? 'partner_won' :
+    (rate_hourly || rate_standby || p.replied_at || card.replied_at) ? 'replied' :
+    p.status === 'CONTACTED' ? 't1_sent' :
+    p.status === 'WANT_TO_CONTACT' ? 'ready' :
+    (p.status === 'REJECTED' || p.status === 'NOT_RELEVANT') ? 'closed' : 'to_check'
+  );
+
+  const nextCard = {
+    ...card,
+    fleet_segment,
+    bus_models,
+    pax_capacity,
+    rate_hourly,
+    rate_standby,
+    whatsapp,
+    email_status,
+    outreach_stage,
+    replied_at: p.replied_at || card.replied_at || (isMoveolux ? '2026-10-20T10:00:00Z' : null),
+    last_outreach_at: p.last_outreach_at || card.last_outreach_at || null,
+    user_set_status: Boolean(p.user_set_status || card.user_set_status),
+  };
+
+  return {
+    ...p,
+    fleet_segment,
+    bus_models,
+    pax_capacity,
+    rate_hourly,
+    rate_standby,
+    whatsapp,
+    email_status,
+    outreach_stage,
+    replied_at: nextCard.replied_at,
+    last_outreach_at: nextCard.last_outreach_at,
+    user_set_status: nextCard.user_set_status,
+    score_breakdown: {
+      ...(p.score_breakdown || { discretion_unbranded: 20, fleet_luxury: 18, territory_permits: 15, corporate_sla: 15 }),
+      partner_card: nextCard,
+    },
+  };
+}
+
 export function loadStoredBusPartners() {
   const excluded = loadExcludedBusPartners();
   try {
     if (typeof localStorage !== 'undefined') {
       const raw = localStorage.getItem(STORAGE_KEY);
+      const statusMigratedKey = 'dorogo_bus_status_reconciled_v2';
+      const alreadyReconciledStatus = localStorage.getItem(statusMigratedKey) === '1';
       if (raw) {
         let parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -528,17 +604,17 @@ export function loadStoredBusPartners() {
             const replacement = findLegacyReplacement(p);
             if (replacement) {
               changed = true;
-              return {
+              return hydratePartnerCard({
                 ...p,
                 ...replacement,
-                status: (p.status === 'WANT_TO_CONTACT' && p.id !== 'partner_vip_limousine' && p.id !== 'partner_transervice') ? 'TO_REVIEW' : (p.status || 'TO_REVIEW')
-              };
+                status: (!alreadyReconciledStatus && p.status === 'WANT_TO_CONTACT' && p.id !== 'partner_vip_limousine' && p.id !== 'partner_transervice') ? 'TO_REVIEW' : (p.status || 'TO_REVIEW')
+              });
             }
 
             // 2. Reconcile Cima Luxury if stored with old erroneous Milano city
             if (p.id === 'partner_cima_luxury' || (p.name === 'Cima Luxury' && (p.base_city === 'Milano' || !p.base_city.includes('Roma')))) {
               changed = true;
-              return {
+              return hydratePartnerCard({
                 ...p,
                 base_city: 'Roma (Central Italy)',
                 phone: '+39 06 35 34 83 45',
@@ -546,22 +622,29 @@ export function loadStoredBusPartners() {
                 score_breakdown: { discretion_unbranded: 32, fleet_luxury: 22, territory_permits: 0, corporate_sla: 16 },
                 status: 'NOT_RELEVANT',
                 notes: 'Headquartered at Waldorf Astoria Rome Cavalieri (00136 Rome). Out-of-region depot (+39 06) located 570km from Milan/Lake Como with no local Lombardy depot. Disqualified from local Northern Italy dispatch.'
-              };
+              });
             }
-            // 3. Reconcile scouted operators that erroneously defaulted to WANT_TO_CONTACT
+            // 3. One-time reconciliation of scouted operators that erroneously defaulted to WANT_TO_CONTACT
             if (
+              !alreadyReconciledStatus &&
+              !p.user_set_status &&
+              !p.score_breakdown?.partner_card?.user_set_status &&
               p.status === 'WANT_TO_CONTACT' &&
               p.id !== 'partner_vip_limousine' &&
               p.id !== 'partner_transervice'
             ) {
               changed = true;
-              return {
+              return hydratePartnerCard({
                 ...p,
                 status: 'TO_REVIEW'
-              };
+              });
             }
-            return p;
+            return hydratePartnerCard(p);
           });
+
+          if (!alreadyReconciledStatus) {
+            try { localStorage.setItem(statusMigratedKey, '1'); } catch (_) {}
+          }
 
           // Deduplicate by normalized name or domain after upgrades
           const seenNames = new Set();
@@ -591,7 +674,7 @@ export function loadStoredBusPartners() {
       }
     }
   } catch (_) {}
-  return INITIAL_BUS_PARTNERS.filter((p) => !isBusPartnerExcluded(p, excluded));
+  return INITIAL_BUS_PARTNERS.filter((p) => !isBusPartnerExcluded(p, excluded)).map(hydratePartnerCard);
 }
 
 export function saveStoredBusPartners(list) {
