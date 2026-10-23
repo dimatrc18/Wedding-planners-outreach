@@ -133,7 +133,7 @@ export function render(el) {
               <th style="width:160px;min-width:160px">Discretion / Livery</th>
               <th style="width:165px;min-width:165px">Status</th>
               <th style="width:185px;min-width:185px">Direct Links</th>
-              <th style="width:100px;min-width:100px;text-align:right">Actions</th>
+              <th style="width:130px;min-width:130px;text-align:right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -199,9 +199,9 @@ export function render(el) {
                   </div>
                 </td>
                 <td style="vertical-align:middle;text-align:right;white-space:nowrap">
-                  <div class="row nowrap end" style="gap:4px;flex-wrap:nowrap;white-space:nowrap;justify-content:flex-end;align-items:center">
-                    <button class="btn sm ghost" data-act="edit-notes" data-id="${attr(p.id)}" style="padding:3px 8px;font-size:.75rem;white-space:nowrap" title="Edit Email & Dispatch Notes">✏️ Notes</button>
-                    <button class="btn sm ghost" data-act="delete-partner" data-id="${attr(p.id)}" style="padding:3px 6px;font-size:.85rem;color:var(--bad);white-space:nowrap" title="Delete Partner">×</button>
+                  <div style="display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:nowrap;white-space:nowrap">
+                    <button class="btn sm ghost" data-act="edit-notes" data-id="${attr(p.id)}" style="padding:4px 9px;font-size:.76rem;white-space:nowrap;display:inline-flex;align-items:center;gap:4px" title="Edit Email & Dispatch Notes">✏️ Notes</button>
+                    <button class="btn sm ghost" data-act="delete-partner" data-id="${attr(p.id)}" style="padding:4px 7px;color:var(--bad);white-space:nowrap;display:inline-flex;align-items:center" title="Delete Operator">${icon('trash', 14)}</button>
                   </div>
                 </td>
               </tr>`;
