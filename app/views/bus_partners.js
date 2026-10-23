@@ -151,8 +151,20 @@ export function render(el) {
                 </td>
                 <td>
                   <div style="font-weight:600;font-size:.95rem">${esc(p.name)}</div>
-                  <div class="small muted">📍 ${esc(p.base_city || 'Northern Italy')}</div>
-                  ${p.notes ? `<div class="tiny" style="color:var(--text-2);margin-top:2px;font-style:italic">${esc(p.notes.slice(0, 75))}${p.notes.length > 75 ? '…' : ''}</div>` : ''}
+                  <div class="row" style="gap:8px;align-items:center;margin-top:2px;font-size:.78rem">
+                    <span class="muted">📍 ${esc(p.base_city || 'Northern Italy')}</span>
+                    ${p.email 
+                      ? `<a href="mailto:${attr(p.email)}" class="clickable" style="color:var(--series-1);text-decoration:none;display:inline-flex;align-items:center;gap:3px" title="Email: ${attr(p.email)}">${icon('email', 12)} ${esc(p.email)}</a>`
+                      : `<button class="clickable" data-act="edit-notes" data-id="${attr(p.id)}" style="background:none;border:none;padding:0;color:var(--gold);cursor:pointer;font-size:.76rem;text-decoration:underline" title="Click to add email">+ Add email</button>`
+                    }
+                  </div>
+                  <div class="row clickable" data-act="edit-notes" data-id="${attr(p.id)}" style="margin-top:4px;cursor:pointer;align-items:flex-start;gap:4px" title="Click to edit notes">
+                    <span style="font-size:.72rem">📝</span>
+                    ${p.notes 
+                      ? `<span class="tiny" style="color:var(--text-2);font-style:italic">${esc(p.notes.slice(0, 80))}${p.notes.length > 80 ? '…' : ''}</span>`
+                      : `<span class="tiny" style="color:var(--text-3);font-style:italic">+ Write dispatch notes...</span>`
+                    }
+                  </div>
                 </td>
                 <td>
                   <div class="row" style="gap:4px;flex-wrap:wrap">
@@ -167,7 +179,7 @@ export function render(el) {
                       : `<span class="chip tiny outline">${esc(p.unbranded_status || 'Standard Tour Livery')}</span>`}
                 </td>
                 <td>
-                  <select class="sm bus-status-select" data-id="${attr(p.id)}" style="padding:3px 6px;border-radius:4px;border:1px solid var(--border);font-size:.78rem;width:100%;background:var(--surface)">
+                  <select class="sm bus-status-select" data-id="${attr(p.id)}" style="padding:3px 6px;border-radius:4px;border:1px solid var(--border);font-size:.78rem;width:100%;background:var(--surface);${p.status === 'NOT_RELEVANT' ? 'color:var(--bad);font-weight:600' : ''}">
                     ${core.BUS_STATUSES.map((st) => `<option value="${st.key}" ${p.status === st.key ? 'selected' : ''}>${st.label}</option>`).join('')}
                   </select>
                 </td>
@@ -175,12 +187,16 @@ export function render(el) {
                   <div class="row" style="gap:6px">
                     ${p.website ? `<a class="btn sm ghost" href="${attr(p.website)}" target="_blank" rel="noopener" style="padding:2px 6px;font-size:.75rem" title="Open Website">${icon('external', 13)} Web</a>` : ''}
                     ${p.fleet_url ? `<a class="btn sm ghost" href="${attr(p.fleet_url)}" target="_blank" rel="noopener" style="padding:2px 6px;font-size:.75rem" title="Open Fleet Gallery">Fleet ↗</a>` : ''}
+                    ${p.email 
+                      ? `<a class="btn sm ghost" href="mailto:${attr(p.email)}" style="padding:2px 6px;font-size:.75rem" title="Email: ${attr(p.email)}">${icon('email', 13)}</a>` 
+                      : `<button class="btn sm ghost" data-act="edit-notes" data-id="${attr(p.id)}" style="padding:2px 6px;font-size:.75rem;color:var(--gold)" title="Add Email">+✉️</button>`
+                    }
                     ${p.phone ? `<a class="btn sm ghost" href="tel:${attr(p.phone)}" style="padding:2px 6px;font-size:.75rem" title="${attr(p.phone)}">${icon('phone', 13)}</a>` : ''}
                   </div>
                 </td>
                 <td style="text-align:right">
                   <div class="row" style="gap:4px;justify-content:flex-end">
-                    <button class="btn sm ghost" data-act="edit-notes" data-id="${attr(p.id)}" style="padding:3px 8px;font-size:.78rem" title="Edit Dispatch Notes">Notes</button>
+                    <button class="btn sm ghost" data-act="edit-notes" data-id="${attr(p.id)}" style="padding:3px 8px;font-size:.78rem" title="Edit Email & Dispatch Notes">✏️ Notes</button>
                     <button class="btn sm ghost" data-act="delete-partner" data-id="${attr(p.id)}" style="padding:3px 6px;color:var(--bad)" title="Delete Partner">×</button>
                   </div>
                 </td>
@@ -227,7 +243,8 @@ export function render(el) {
         const id = e.target.dataset.id;
         const newStatus = e.target.value;
         await updateBusPartner(id, { status: newStatus });
-        toast(`Status updated to ${newStatus}`);
+        toast(newStatus === 'NOT_RELEVANT' ? 'Marked Not Relevant (Score set to 0)' : `Status updated to ${newStatus}`);
+        paint();
       });
     });
 
@@ -281,26 +298,45 @@ export function render(el) {
     const backdrop = document.createElement('div');
     backdrop.className = 'modal-backdrop';
     backdrop.innerHTML = `
-    <div class="modal card stack" style="max-width:520px;padding:24px">
+    <div class="modal card stack" style="max-width:540px;padding:24px">
       <div class="row between">
-        <h3>Dispatch Notes: ${esc(partner.name)}</h3>
+        <div>
+          <div class="label eyebrow">Partner Details & Dispatch</div>
+          <h3>${esc(partner.name)}</h3>
+        </div>
         <button class="btn ghost sm" data-close>×</button>
       </div>
       <div class="stack" style="gap:12px;margin:12px 0">
-        <label class="field">
-          <span>Booking & Discretion Notes</span>
-          <textarea id="modal-notes" rows="4" style="font-family:inherit;font-size:.88rem">${esc(partner.notes || '')}</textarea>
-        </label>
         <div class="row" style="gap:8px">
           <label class="field grow">
-            <span>Direct Phone</span>
-            <input type="text" id="modal-phone" value="${attr(partner.phone || '')}">
+            <span>Direct Email</span>
+            <input type="email" id="modal-email" placeholder="e.g. booking@operator.it" value="${attr(partner.email || '')}">
           </label>
           <label class="field grow">
-            <span>Direct Email</span>
-            <input type="email" id="modal-email" value="${attr(partner.email || '')}">
+            <span>Direct Phone / WhatsApp</span>
+            <input type="text" id="modal-phone" placeholder="e.g. +39 02 ..." value="${attr(partner.phone || '')}">
           </label>
         </div>
+        <div class="row" style="gap:8px">
+          <label class="field grow">
+            <span>Website URL</span>
+            <input type="url" id="modal-website" placeholder="https://..." value="${attr(partner.website || '')}">
+          </label>
+          <label class="field grow">
+            <span>Fleet URL</span>
+            <input type="url" id="modal-fleet" placeholder="https://.../flotta" value="${attr(partner.fleet_url || '')}">
+          </label>
+        </div>
+        <label class="field">
+          <span>Status & Relevance</span>
+          <select id="modal-status" class="sm" style="padding:5px 8px;border-radius:4px;border:1px solid var(--border);background:var(--surface)">
+            ${core.BUS_STATUSES.map((st) => `<option value="${st.key}" ${partner.status === st.key ? 'selected' : ''}>${st.label}</option>`).join('')}
+          </select>
+        </label>
+        <label class="field">
+          <span>Booking & Discretion Notes</span>
+          <textarea id="modal-notes" rows="4" style="font-family:inherit;font-size:.88rem" placeholder="e.g. Suited chauffeurs, zero decals, villa access experience...">${esc(partner.notes || '')}</textarea>
+        </label>
       </div>
       <div class="row" style="justify-content:flex-end;gap:8px">
         <button class="btn ghost" data-close>Cancel</button>
@@ -313,12 +349,15 @@ export function render(el) {
     backdrop.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', close));
 
     backdrop.querySelector('#modal-save-notes').addEventListener('click', async () => {
-      const notes = backdrop.querySelector('#modal-notes').value.trim();
-      const phone = backdrop.querySelector('#modal-phone').value.trim();
       const email = backdrop.querySelector('#modal-email').value.trim();
+      const phone = backdrop.querySelector('#modal-phone').value.trim();
+      const website = backdrop.querySelector('#modal-website').value.trim();
+      const fleet_url = backdrop.querySelector('#modal-fleet').value.trim();
+      const status = backdrop.querySelector('#modal-status').value;
+      const notes = backdrop.querySelector('#modal-notes').value.trim();
 
-      await updateBusPartner(partner.id, { notes, phone, email });
-      toast('Notes and contact details saved');
+      await updateBusPartner(partner.id, { email, phone, website, fleet_url, status, notes });
+      toast('Partner details and notes saved');
       close();
       paint();
     });

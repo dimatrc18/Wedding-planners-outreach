@@ -246,11 +246,27 @@ export { uuid, nowIso };
 export async function updateBusPartner(id, patch) {
   const i = (S.busPartners || []).findIndex((x) => x.id === id);
   if (i >= 0) {
-    S.busPartners[i] = { ...S.busPartners[i], ...patch, updated_at: nowIso() };
+    const existing = S.busPartners[i];
+    const finalPatch = { ...patch };
+
+    // When flagged as NOT_RELEVANT, pull score to 0 and save previous score for undo/restore
+    if (patch.status === 'NOT_RELEVANT') {
+      if (typeof existing.relevance_score === 'number' && existing.relevance_score > 0) {
+        finalPatch.prev_score = existing.relevance_score;
+      }
+      finalPatch.relevance_score = 0;
+    } else if (patch.status && existing.status === 'NOT_RELEVANT' && patch.status !== 'NOT_RELEVANT') {
+      // Restoring from NOT_RELEVANT
+      if (typeof finalPatch.relevance_score !== 'number') {
+        finalPatch.relevance_score = existing.prev_score || 70;
+      }
+    }
+
+    S.busPartners[i] = { ...existing, ...finalPatch, updated_at: nowIso() };
     saveStoredBusPartners(S.busPartners);
     if (S.mode === 'live' && sb) {
       try {
-        await sb.from('bus_partners').update(patch).eq('id', id);
+        await sb.from('bus_partners').update(finalPatch).eq('id', id);
       } catch (_) {}
     }
     emit('bus_partners:updated');

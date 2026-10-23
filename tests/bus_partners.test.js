@@ -138,9 +138,26 @@ test('Seed Partners Data Integrity: verified Northern Italy luxury operators loa
   }
 });
 
+test('Bus Relevance Score: NOT_RELEVANT status pulls score to 0 and Tier 4', () => {
+  const partner = {
+    status: 'NOT_RELEVANT',
+    score_breakdown: {
+      discretion_unbranded: 35,
+      fleet_luxury: 25,
+      territory_permits: 20,
+      corporate_sla: 20
+    }
+  };
+  const res = calculateBusRelevanceScore(partner);
+  assert.equal(res.total_score, 0);
+  assert.equal(res.tier, 'tier_4');
+  assert.equal(res.tier_info.badge, 'Tier 4: Incompatible');
+});
+
 test('Isolation Principle: existing CRM tables and core workflows remain unaffected', () => {
   // Ensure bus partners scoring does not interfere with wedding planner priorities or settings
-  assert.equal(BUS_STATUSES.length, 5);
+  assert.equal(BUS_STATUSES.length, 6);
+  assert(BUS_STATUSES.find(s => s.key === 'NOT_RELEVANT'), 'Must include NOT_RELEVANT');
   assert.equal(DISCRETION_LEVELS.length, 3);
   assert.equal(FLEET_TIERS.length, 3);
   assert.equal(TERRITORY_PERMITS.length, 3);

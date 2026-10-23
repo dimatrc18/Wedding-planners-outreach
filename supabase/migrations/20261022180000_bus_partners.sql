@@ -14,7 +14,7 @@ create table if not exists public.bus_partners (
     "territory_permits": 15,
     "corporate_sla": 15
   }'::jsonb,
-  status text not null default 'TO_REVIEW' check (status in ('TO_REVIEW', 'VETTED', 'CONTACTED', 'APPROVED_PARTNER', 'REJECTED')),
+  status text not null default 'TO_REVIEW' check (status in ('TO_REVIEW', 'VETTED', 'CONTACTED', 'APPROVED_PARTNER', 'REJECTED', 'NOT_RELEVANT')),
   unbranded_status text,
   fleet_categories jsonb not null default '[]'::jsonb,
   phone text,

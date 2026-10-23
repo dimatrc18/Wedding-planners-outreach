@@ -7,6 +7,7 @@ export const BUS_STATUSES = [
   { key: 'CONTACTED', label: 'Contacted', tone: 'gold', desc: 'Dorogo B2B outreach inquiry sent' },
   { key: 'APPROVED_PARTNER', label: 'Approved Partner', tone: 'ok', desc: 'Rates agreed, zero-decal rule confirmed' },
   { key: 'REJECTED', label: 'Rejected', tone: 'bad', desc: 'Disqualified (decals, rude, no NCC)' },
+  { key: 'NOT_RELEVANT', label: 'Not Relevant (Score 0)', tone: 'bad', desc: 'Not relevant for Dorogo; score pulled to 0' },
 ];
 
 export const DISCRETION_LEVELS = [
@@ -143,6 +144,22 @@ export function getPriorityTier(score = 0) {
  * Computes the 100-point score based on explicit criteria or existing breakdown.
  */
 export function calculateBusRelevanceScore(partner = {}) {
+  // If explicitly flagged as Not Relevant, score is immediately pulled to 0
+  if (partner.status === 'NOT_RELEVANT') {
+    const tierInfo = getPriorityTier(0);
+    return {
+      total_score: 0,
+      tier: 'tier_4',
+      tier_info: tierInfo,
+      breakdown: {
+        discretion_unbranded: 0,
+        fleet_luxury: 0,
+        territory_permits: 0,
+        corporate_sla: 0
+      }
+    };
+  }
+
   const bd = partner.score_breakdown || {};
   let discretion = typeof bd.discretion_unbranded === 'number' ? bd.discretion_unbranded : 20;
   let fleet = typeof bd.fleet_luxury === 'number' ? bd.fleet_luxury : 18;
