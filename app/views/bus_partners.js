@@ -4,9 +4,11 @@ import * as core from '../../supabase/functions/_shared/core/index.js';
 import { S, updateBusPartner, addBusPartner, removeBusPartner } from '../store.js';
 import { esc, attr, icon, download, toast, confirmDialog } from '../ui.js';
 
-let activeFilter = 'all'; // all | top_tier | want_to_contact | approved | to_review
-let searchQ = '';
+let activeFilter = 'all'; // all | newly_added | top_tier
+let statusFilter = 'all'; // all | TO_REVIEW | WANT_TO_CONTACT | CONTACTED | APPROVED_PARTNER | REJECTED | NOT_RELEVANT
+let vehicleFilter = 'all'; // all | v_class | sprinter_vip | sprinter_lux | midibus | limobus | gt_coach
 let cityFilter = 'all';
+let searchQ = '';
 
 function getStatusBadgeStyle(status) {
   switch (status) {
@@ -98,6 +100,41 @@ export function shortFleetName(str) {
   const match = STANDARD_FLEET_TYPES.find((f) => f.label.toLowerCase() === str.toLowerCase() || f.short.toLowerCase() === str.toLowerCase());
   if (match) return match.short;
   return str.length > 22 ? str.slice(0, 20) + '…' : str;
+}
+
+export function detectVehicleKey(str) {
+  if (!str) return '';
+  const s = str.toLowerCase();
+  if (/limobus/i.test(s)) return 'limobus';
+  if (/v-?class|minivan|vito/i.test(s)) return 'v_class';
+  if (/sprinter.*vip/i.test(s)) return 'sprinter_vip';
+  if (/sprinter/i.test(s)) return 'sprinter_lux';
+  if (/midi|minicoach|21.*28.*30|24.*30|28.*seat/i.test(s)) return 'midibus';
+  if (/coach|tourismo|setra|pullman/i.test(s)) return 'gt_coach';
+  return '';
+}
+
+export function operatorHasVehicleType(p, key) {
+  if (!key || key === 'all') return true;
+  const categories = Array.isArray(p.fleet_categories) ? p.fleet_categories : [];
+  const catStr = categories.join(' ').toLowerCase();
+
+  switch (key) {
+    case 'v_class':
+      return /v-?class|minivan|vito/i.test(catStr);
+    case 'sprinter_vip':
+      return /sprinter.*vip/i.test(catStr);
+    case 'sprinter_lux':
+      return /sprinter.*(lux|exec|minibus|16|19|20)/i.test(catStr) || (/sprinter/i.test(catStr) && !/sprinter.*vip/i.test(catStr));
+    case 'midibus':
+      return /midi|minicoach|21,\s*28,\s*30|(24|28)\s*[-–]\s*30\s*seat/i.test(catStr);
+    case 'limobus':
+      return /limobus/i.test(catStr);
+    case 'gt_coach':
+      return /coach|tourismo|setra|pullman|50.*56|36.*56|30.*75|30.*53/i.test(catStr);
+    default:
+      return catStr.includes(key.toLowerCase());
+  }
 }
 
 // Northern Italy Candidate Knowledge Base for Market Auto-Scout
@@ -243,26 +280,35 @@ export function render(el) {
     const topTierMatches = list.filter((p) => (p.relevance_score || 0) >= 80).length;
     const wantToContactCount = list.filter((p) => p.status === 'WANT_TO_CONTACT').length;
     const activePartners = list.filter((p) => p.status === 'APPROVED_PARTNER').length;
+    const toReviewCount = list.filter((p) => p.status === 'TO_REVIEW').length;
     const newlyAddedCount = list.filter(isRecentlyAdded).length;
 
     // Filter logic
     let filtered = [...list];
+
+    // Presets (All, Newly Added, Top Tier)
     if (activeFilter === 'newly_added') {
       filtered = filtered.filter(isRecentlyAdded);
     } else if (activeFilter === 'top_tier') {
       filtered = filtered.filter((p) => (p.relevance_score || 0) >= 80);
-    } else if (activeFilter === 'want_to_contact') {
-      filtered = filtered.filter((p) => p.status === 'WANT_TO_CONTACT');
-    } else if (activeFilter === 'approved') {
-      filtered = filtered.filter((p) => p.status === 'APPROVED_PARTNER');
-    } else if (activeFilter === 'to_review') {
-      filtered = filtered.filter((p) => p.status === 'TO_REVIEW');
     }
 
+    // Status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter((p) => p.status === statusFilter);
+    }
+
+    // Vehicle platform filter
+    if (vehicleFilter !== 'all') {
+      filtered = filtered.filter((p) => operatorHasVehicleType(p, vehicleFilter));
+    }
+
+    // City filter
     if (cityFilter !== 'all') {
       filtered = filtered.filter((p) => (p.base_city || '').toLowerCase().includes(cityFilter.toLowerCase()));
     }
 
+    // Search query
     if (searchQ.trim()) {
       const q = searchQ.trim().toLowerCase();
       filtered = filtered.filter((p) =>
@@ -279,6 +325,8 @@ export function render(el) {
 
     // Get unique cities for filter dropdown
     const cities = [...new Set(list.map((p) => (p.base_city || '').split(/[\/,]/)[0].trim()).filter(Boolean))].sort();
+
+    const hasActiveFilters = activeFilter !== 'all' || statusFilter !== 'all' || vehicleFilter !== 'all' || cityFilter !== 'all' || searchQ.trim() !== '';
 
     el.innerHTML = `
     <div class="page-head">
@@ -335,21 +383,57 @@ export function render(el) {
 
       <!-- Control & Filter Bar -->
       <div class="row between" style="gap:12px;flex-wrap:wrap;align-items:center">
-        <div class="row" style="gap:6px;flex-wrap:wrap">
-          <button class="chip ${activeFilter === 'all' ? 'active' : 'outline'}" data-filter="all">All (${totalDiscovered})</button>
+        <!-- Quick filter presets & status shortcuts -->
+        <div class="row" style="gap:6px;flex-wrap:wrap;align-items:center">
+          <button class="chip ${activeFilter === 'all' && statusFilter === 'all' && vehicleFilter === 'all' && cityFilter === 'all' && !searchQ ? 'active' : 'outline'}" data-filter="all">All (${totalDiscovered})</button>
           ${newlyAddedCount > 0 ? `<button class="chip ${activeFilter === 'newly_added' ? 'active' : 'outline'}" data-filter="newly_added" style="${activeFilter === 'newly_added' ? 'background:#059669;color:#fff;border-color:#059669;font-weight:700' : 'border-color:#059669;color:#059669;font-weight:700'}">✨ Newly Added (${newlyAddedCount})</button>` : ''}
           <button class="chip ${activeFilter === 'top_tier' ? 'active' : 'outline'}" data-filter="top_tier">⭐ Top Tier (≥80) (${topTierMatches})</button>
-          <button class="chip ${activeFilter === 'want_to_contact' ? 'active' : 'outline'}" data-filter="want_to_contact">📞 Want to Contact (${wantToContactCount})</button>
-          <button class="chip ${activeFilter === 'to_review' ? 'active' : 'outline'}" data-filter="to_review">⏳ To Review (${list.filter(p => p.status === 'TO_REVIEW').length})</button>
-          <button class="chip ${activeFilter === 'approved' ? 'active' : 'outline'}" data-filter="approved">🤝 Active Partners (${activePartners})</button>
+          <button class="chip ${statusFilter === 'WANT_TO_CONTACT' ? 'active' : 'outline'}" data-filter="want_to_contact" style="${statusFilter === 'WANT_TO_CONTACT' ? 'background:#6d28d9;color:#fff;border-color:#6d28d9;font-weight:700' : ''}">📞 Want to Contact (${wantToContactCount})</button>
+          <button class="chip ${statusFilter === 'TO_REVIEW' ? 'active' : 'outline'}" data-filter="to_review">⏳ To Review (${toReviewCount})</button>
+          <button class="chip ${statusFilter === 'APPROVED_PARTNER' ? 'active' : 'outline'}" data-filter="approved" style="${statusFilter === 'APPROVED_PARTNER' ? 'background:var(--ok);color:#fff;border-color:var(--ok);font-weight:700' : ''}">🤝 Active Partners (${activePartners})</button>
         </div>
 
-        <div class="row" style="gap:8px">
-          <select id="select-city" class="sm" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface)">
-            <option value="all">📍 All Cities</option>
-            ${cities.map((c) => `<option value="${attr(c)}" ${cityFilter.toLowerCase() === c.toLowerCase() ? 'selected' : ''}>${esc(c)}</option>`).join('')}
+        <!-- Filter Dropdowns: Status, Vehicle Platform, City, Search -->
+        <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">
+          <!-- Status Dropdown -->
+          <select id="select-status" class="sm" style="padding:4px 8px;border-radius:6px;border:1px solid ${statusFilter !== 'all' ? '#6d28d9' : 'var(--border)'};background:${statusFilter !== 'all' ? '#f5f3ff' : 'var(--surface)'};font-size:.82rem;font-weight:${statusFilter !== 'all' ? '700' : '500'}" title="Filter by Status">
+            <option value="all">🏷️ All Statuses</option>
+            ${core.BUS_STATUSES.map((st) => `
+              <option value="${attr(st.key)}" ${statusFilter === st.key ? 'selected' : ''}>
+                ${st.label} (${list.filter((p) => p.status === st.key).length})
+              </option>
+            `).join('')}
           </select>
-          <input type="text" id="bus-search" placeholder="Search company, city, email, fleet..." value="${attr(searchQ)}" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);font-size:.85rem;min-width:200px">
+
+          <!-- Vehicle Type Dropdown -->
+          <select id="select-vehicle" class="sm" style="padding:4px 8px;border-radius:6px;border:1px solid ${vehicleFilter !== 'all' ? 'var(--gold-strong)' : 'var(--border)'};background:${vehicleFilter !== 'all' ? 'var(--gold-soft)' : 'var(--surface)'};font-size:.82rem;font-weight:${vehicleFilter !== 'all' ? '700' : '500'}" title="Filter by Fleet Type">
+            <option value="all">🚐 All Fleet Types</option>
+            ${STANDARD_FLEET_TYPES.map((vt) => `
+              <option value="${attr(vt.key)}" ${vehicleFilter === vt.key ? 'selected' : ''}>
+                ${vt.icon} ${esc(vt.short)} (${list.filter((p) => operatorHasVehicleType(p, vt.key)).length})
+              </option>
+            `).join('')}
+          </select>
+
+          <!-- City Dropdown -->
+          <select id="select-city" class="sm" style="padding:4px 8px;border-radius:6px;border:1px solid ${cityFilter !== 'all' ? 'var(--gold-strong)' : 'var(--border)'};background:${cityFilter !== 'all' ? 'var(--gold-soft)' : 'var(--surface)'};font-size:.82rem;font-weight:${cityFilter !== 'all' ? '700' : '500'}" title="Filter by City">
+            <option value="all">📍 All Cities</option>
+            ${cities.map((c) => `
+              <option value="${attr(c)}" ${cityFilter.toLowerCase() === c.toLowerCase() ? 'selected' : ''}>
+                📍 ${esc(c)} (${list.filter((p) => (p.base_city || '').toLowerCase().includes(c.toLowerCase())).length})
+              </option>
+            `).join('')}
+          </select>
+
+          <!-- Search Input -->
+          <input type="text" id="bus-search" placeholder="Search company, city, email, fleet..." value="${attr(searchQ)}" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);font-size:.85rem;min-width:180px">
+
+          <!-- Reset Filter Button -->
+          ${hasActiveFilters ? `
+            <button class="btn sm ghost" id="btn-clear-filters" style="padding:3px 8px;font-size:.78rem;color:var(--bad);border-color:var(--bad);display:inline-flex;align-items:center;gap:3px" title="Reset all filters">
+              ✕ Reset (${filtered.length}/${totalDiscovered})
+            </button>
+          ` : ''}
         </div>
       </div>
 
@@ -363,9 +447,27 @@ export function render(el) {
               <th style="width:150px">Company & Base</th>
               <th style="width:55px;text-align:center">Web</th>
               <th style="width:140px">Email</th>
-              <th style="width:160px">Fleet Types</th>
+              <th style="width:160px">
+                <div class="row nowrap" style="gap:4px;align-items:center">
+                  <span>Fleet Types</span>
+                  ${vehicleFilter !== 'all' ? `
+                    <button class="chip tiny clickable" id="header-clear-vehicle" style="padding:0 5px;font-size:.62rem;font-weight:700;background:var(--gold-soft);color:var(--gold-ink);border:1px solid var(--gold-strong);border-radius:8px" title="Clear vehicle filter">
+                      ${esc(STANDARD_FLEET_TYPES.find(v => v.key === vehicleFilter)?.short || vehicleFilter)} ✕
+                    </button>
+                  ` : ''}
+                </div>
+              </th>
               <th style="width:150px">Notes</th>
-              <th style="width:138px">Status</th>
+              <th style="width:138px">
+                <div class="row nowrap" style="gap:4px;align-items:center">
+                  <span>Status</span>
+                  ${statusFilter !== 'all' ? `
+                    <button class="chip tiny clickable" id="header-clear-status" style="padding:0 5px;font-size:.62rem;font-weight:700;background:#ede9fe;color:#6d28d9;border:1px solid #ddd6fe;border-radius:8px" title="Clear status filter">
+                      ${esc(core.BUS_STATUSES.find(s => s.key === statusFilter)?.label.replace(/^\d+\.\s*/, '') || statusFilter)} ✕
+                    </button>
+                  ` : ''}
+                </div>
+              </th>
               <th style="width:36px;text-align:center" title="Delete">Del</th>
             </tr>
           </thead>
@@ -413,9 +515,22 @@ export function render(el) {
                   }
                 </td>
                 <td style="vertical-align:middle">
-                  <div class="clickable" data-act="edit-fleet" data-id="${attr(p.id)}" style="cursor:pointer;display:flex;flex-direction:column;gap:3px;max-width:155px;align-items:flex-start;line-height:1.2" title="Click to choose/edit fleet categories: ${attr(categories.join(', '))}">
-                    ${categories.map((c) => `<span class="chip tiny outline" style="font-size:.70rem;padding:2px 7px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px" title="${attr(c)}">${esc(shortFleetName(c))}</span>`).join('')}
-                    ${!categories.length ? '<span class="tiny" style="color:var(--gold-ink);font-style:italic;padding:1px 4px;border:1px dashed var(--line);border-radius:4px">+ Choose fleet...</span>' : ''}
+                  <div style="display:flex;flex-direction:column;gap:3px;max-width:155px;align-items:flex-start;line-height:1.2">
+                    ${categories.map((c) => {
+                      const vKey = detectVehicleKey(c);
+                      const isMatch = vehicleFilter !== 'all' && (vehicleFilter === vKey || operatorHasVehicleType(p, vehicleFilter));
+                      return `
+                        <button class="chip tiny outline fleet-filter-btn ${isMatch ? 'active-fleet-match' : ''}" 
+                          data-vkey="${attr(vKey)}" 
+                          style="font-size:.70rem;padding:2px 7px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;cursor:pointer;text-align:left;border-radius:4px;${isMatch ? 'background:var(--gold-soft);border-color:var(--gold-strong);color:var(--gold-ink);font-weight:700;box-shadow:0 0 4px rgba(217,119,6,0.3);' : 'border-color:var(--line);background:var(--surface-2);'}" 
+                          title="Click to filter by ${esc(shortFleetName(c))}">
+                          ${esc(shortFleetName(c))}
+                        </button>
+                      `;
+                    }).join('')}
+                    <button class="clickable" data-act="edit-fleet" data-id="${attr(p.id)}" style="background:none;border:none;padding:1px 2px;cursor:pointer;font-size:.68rem;color:var(--text-3);display:inline-flex;align-items:center;gap:3px" title="Edit fleet categories">
+                      ✏️ <span class="tiny" style="color:var(--gold-ink);font-style:italic">${categories.length ? 'Edit fleet' : '+ Choose fleet...'}</span>
+                    </button>
                   </div>
                 </td>
                 <td style="vertical-align:middle">
@@ -436,7 +551,28 @@ export function render(el) {
                   <button class="btn sm ghost" data-act="delete-partner" data-id="${attr(p.id)}" style="padding:4px 6px;color:var(--bad);display:inline-flex;align-items:center" title="Delete Operator">${icon('trash', 13)}</button>
                 </td>
               </tr>`;
-            }).join('') : `<tr><td colspan="9" class="empty small">No bus operators found matching the current filters.</td></tr>`}
+            }).join('') : `
+              <tr>
+                <td colspan="9" class="empty small" style="padding:28px 16px;text-align:center">
+                  <div class="stack" style="gap:8px;align-items:center;justify-content:center">
+                    <span style="font-size:1.5rem">🔍</span>
+                    <b>No bus operators found matching the current filters.</b>
+                    <span class="muted tiny">
+                      Active: ${[
+                        activeFilter !== 'all' ? `Preset: ${activeFilter}` : '',
+                        statusFilter !== 'all' ? `Status: ${core.BUS_STATUSES.find(s => s.key === statusFilter)?.label || statusFilter}` : '',
+                        vehicleFilter !== 'all' ? `Fleet: ${STANDARD_FLEET_TYPES.find(v => v.key === vehicleFilter)?.short || vehicleFilter}` : '',
+                        cityFilter !== 'all' ? `City: ${cityFilter}` : '',
+                        searchQ.trim() ? `Search: "${searchQ}"` : ''
+                      ].filter(Boolean).join(' · ') || 'None'}
+                    </span>
+                    <button class="btn sm ghost" id="empty-clear-filters" style="margin-top:4px;color:var(--series-1);border-color:var(--border)">
+                      ✕ Reset All Filters
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            `}
           </tbody>
         </table>
       </div>
@@ -449,10 +585,43 @@ export function render(el) {
     // Filter clicks
     el.querySelectorAll('[data-filter]').forEach((btn) => {
       btn.addEventListener('click', (e) => {
-        activeFilter = e.currentTarget.dataset.filter;
+        const f = e.currentTarget.dataset.filter;
+        if (f === 'all') {
+          activeFilter = 'all';
+          statusFilter = 'all';
+          vehicleFilter = 'all';
+          cityFilter = 'all';
+          searchQ = '';
+        } else if (f === 'newly_added' || f === 'top_tier') {
+          activeFilter = activeFilter === f ? 'all' : f;
+        } else if (f === 'want_to_contact') {
+          statusFilter = statusFilter === 'WANT_TO_CONTACT' ? 'all' : 'WANT_TO_CONTACT';
+        } else if (f === 'to_review') {
+          statusFilter = statusFilter === 'TO_REVIEW' ? 'all' : 'TO_REVIEW';
+        } else if (f === 'approved') {
+          statusFilter = statusFilter === 'APPROVED_PARTNER' ? 'all' : 'APPROVED_PARTNER';
+        }
         paint();
       });
     });
+
+    // Status dropdown filter
+    const statusSelect = el.querySelector('#select-status');
+    if (statusSelect) {
+      statusSelect.addEventListener('change', (e) => {
+        statusFilter = e.target.value;
+        paint();
+      });
+    }
+
+    // Vehicle platform dropdown filter
+    const vehicleSelect = el.querySelector('#select-vehicle');
+    if (vehicleSelect) {
+      vehicleSelect.addEventListener('change', (e) => {
+        vehicleFilter = e.target.value;
+        paint();
+      });
+    }
 
     // City dropdown filter
     const citySelect = el.querySelector('#select-city');
@@ -471,6 +640,60 @@ export function render(el) {
         paint();
       });
     }
+
+    // Clear filters button
+    const clearBtn = el.querySelector('#btn-clear-filters');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        activeFilter = 'all';
+        statusFilter = 'all';
+        vehicleFilter = 'all';
+        cityFilter = 'all';
+        searchQ = '';
+        paint();
+      });
+    }
+
+    // Header clear vehicle button
+    const headerClearVehicle = el.querySelector('#header-clear-vehicle');
+    if (headerClearVehicle) {
+      headerClearVehicle.addEventListener('click', () => {
+        vehicleFilter = 'all';
+        paint();
+      });
+    }
+
+    // Header clear status button
+    const headerClearStatus = el.querySelector('#header-clear-status');
+    if (headerClearStatus) {
+      headerClearStatus.addEventListener('click', () => {
+        statusFilter = 'all';
+        paint();
+      });
+    }
+
+    // Empty state clear filters button
+    const emptyClearBtn = el.querySelector('#empty-clear-filters');
+    if (emptyClearBtn) {
+      emptyClearBtn.addEventListener('click', () => {
+        activeFilter = 'all';
+        statusFilter = 'all';
+        vehicleFilter = 'all';
+        cityFilter = 'all';
+        searchQ = '';
+        paint();
+      });
+    }
+
+    // Click on individual fleet tags inside table rows
+    el.querySelectorAll('.fleet-filter-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const vKey = e.currentTarget.dataset.vkey;
+        if (!vKey) return;
+        vehicleFilter = vehicleFilter === vKey ? 'all' : vKey;
+        paint();
+      });
+    });
 
     // Status change
     el.querySelectorAll('.bus-status-select').forEach((sel) => {
@@ -880,6 +1103,10 @@ export function render(el) {
       toast(`✨ Added "${evaluatedPartner.name}" to CRM Manifest (Score: ${evaluatedPartner.relevance_score})`);
       close();
       activeFilter = 'newly_added';
+      statusFilter = 'all';
+      vehicleFilter = 'all';
+      cityFilter = 'all';
+      searchQ = '';
       paint();
       openScoutSummaryModal([added || evaluatedPartner]);
     });
@@ -1033,6 +1260,10 @@ export function render(el) {
       toast(`⚡ Scout complete: Added ${toAdd.length} verified operator${toAdd.length === 1 ? '' : 's'} to CRM!`);
       close();
       activeFilter = 'newly_added';
+      statusFilter = 'all';
+      vehicleFilter = 'all';
+      cityFilter = 'all';
+      searchQ = '';
       paint();
       openScoutSummaryModal(addedList);
     });
@@ -1100,12 +1331,20 @@ export function render(el) {
 
     backdrop.querySelector('#btn-modal-view-all').addEventListener('click', () => {
       activeFilter = 'all';
+      statusFilter = 'all';
+      vehicleFilter = 'all';
+      cityFilter = 'all';
+      searchQ = '';
       close();
       paint();
     });
 
     backdrop.querySelector('#btn-modal-view-new').addEventListener('click', () => {
       activeFilter = 'newly_added';
+      statusFilter = 'all';
+      vehicleFilter = 'all';
+      cityFilter = 'all';
+      searchQ = '';
       close();
       paint();
     });

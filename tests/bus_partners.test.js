@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { isRecentlyAdded } from '../app/views/bus_partners.js';
+import { isRecentlyAdded, operatorHasVehicleType, detectVehicleKey, STANDARD_FLEET_TYPES } from '../app/views/bus_partners.js';
 import {
   calculateBusRelevanceScore,
   getPriorityTier,
@@ -182,4 +182,43 @@ test('isRecentlyAdded detects newly scouted partners within 1 hour and expires a
   // Missing or invalid created_at
   assert.equal(isRecentlyAdded({}), false);
   assert.equal(isRecentlyAdded(null), false);
+});
+
+test('operatorHasVehicleType and detectVehicleKey: accurately categorize and filter platforms', () => {
+  assert.equal(detectVehicleKey('Mercedes-Benz V-Class VIP (7–8 seats)'), 'v_class');
+  assert.equal(detectVehicleKey('Mercedes Sprinter VIP (8–16 seats)'), 'sprinter_vip');
+  assert.equal(detectVehicleKey('Mercedes Sprinter Luxury (16–20 seats)'), 'sprinter_lux');
+  assert.equal(detectVehicleKey('Executive Midibus (24–30 seats)'), 'midibus');
+  assert.equal(detectVehicleKey('Limobus Exclusive (18-28 seats)'), 'limobus');
+  assert.equal(detectVehicleKey('Setra & Mercedes GT Coach (50–56 seats)'), 'gt_coach');
+
+  const partnerWithMidi = {
+    fleet_categories: ['Executive Midibus (24–30 seats)', 'Mercedes Sprinter VIP (8–16 seats)']
+  };
+
+  assert.equal(operatorHasVehicleType(partnerWithMidi, 'all'), true);
+  assert.equal(operatorHasVehicleType(partnerWithMidi, 'midibus'), true);
+  assert.equal(operatorHasVehicleType(partnerWithMidi, 'sprinter_vip'), true);
+  assert.equal(operatorHasVehicleType(partnerWithMidi, 'v_class'), false);
+  assert.equal(operatorHasVehicleType(partnerWithMidi, 'limobus'), false);
+  assert.equal(operatorHasVehicleType(partnerWithMidi, 'gt_coach'), false);
+});
+
+test('Multi-filter combination: status AND vehicle platform filters apply simultaneously', () => {
+  const dataset = [
+    { id: '1', name: 'Alpha', status: 'WANT_TO_CONTACT', fleet_categories: ['Executive Midibus (24–30 seats)'], relevance_score: 90 },
+    { id: '2', name: 'Beta', status: 'TO_REVIEW', fleet_categories: ['Executive Midibus (24–30 seats)'], relevance_score: 85 },
+    { id: '3', name: 'Gamma', status: 'WANT_TO_CONTACT', fleet_categories: ['Limobus Exclusive (18-28 seats)'], relevance_score: 95 },
+    { id: '4', name: 'Delta', status: 'APPROVED_PARTNER', fleet_categories: ['Mercedes-Benz V-Class VIP (7–8 seats)'], relevance_score: 88 },
+  ];
+
+  // Filter: status = WANT_TO_CONTACT AND vehicle = midibus
+  const filtered = dataset.filter(p => 
+    (p.status === 'WANT_TO_CONTACT') &&
+    operatorHasVehicleType(p, 'midibus')
+  );
+
+  assert.equal(filtered.length, 1);
+  assert.equal(filtered[0].id, '1');
+  assert.equal(filtered[0].name, 'Alpha');
 });
