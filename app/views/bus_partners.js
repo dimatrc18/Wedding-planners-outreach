@@ -123,17 +123,17 @@ export function render(el) {
       </div>
 
       <!-- Minimalist Bus Partner Manifest Table -->
-      <div class="card flush table-wrap">
-        <table class="table">
+      <div class="card flush table-wrap" style="overflow-x:auto">
+        <table class="table" style="width:100%;min-width:1120px;border-collapse:collapse">
           <thead>
             <tr>
-              <th style="width:70px">Score</th>
-              <th style="min-width:180px">Company & Base</th>
-              <th style="min-width:200px">Fleet Types</th>
-              <th style="min-width:170px">Discretion / Livery</th>
-              <th style="width:160px">Status</th>
-              <th style="width:130px">Direct Links</th>
-              <th style="width:110px;text-align:right">Actions</th>
+              <th style="width:60px;min-width:60px;text-align:center">Score</th>
+              <th style="width:280px;min-width:280px">Company & Base</th>
+              <th style="width:220px;min-width:220px">Fleet Types</th>
+              <th style="width:160px;min-width:160px">Discretion / Livery</th>
+              <th style="width:165px;min-width:165px">Status</th>
+              <th style="width:185px;min-width:185px">Direct Links</th>
+              <th style="width:100px;min-width:100px;text-align:right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -143,61 +143,65 @@ export function render(el) {
               const scoreClass = score >= 90 ? 'chip ok' : score >= 75 ? 'chip' : score >= 50 ? 'chip gold' : 'chip bad';
               const categories = Array.isArray(p.fleet_categories) ? p.fleet_categories : [];
 
-              return `<tr class="hover-row" data-id="${attr(p.id)}">
-                <td>
-                  <span class="${scoreClass} clickable" data-act="view-score" data-id="${attr(p.id)}" style="font-weight:700;font-size:.9rem;padding:2px 8px;cursor:pointer" title="Click to view 4-pillar score breakdown">
+              return `<tr class="hover-row" data-id="${attr(p.id)}" style="height:48px">
+                <td style="text-align:center;vertical-align:middle">
+                  <span class="${scoreClass} clickable" data-act="view-score" data-id="${attr(p.id)}" style="font-weight:700;font-size:.88rem;padding:3px 8px;cursor:pointer" title="Click to view 4-pillar score breakdown">
                     ${score}
                   </span>
                 </td>
-                <td>
-                  <div style="font-weight:600;font-size:.95rem">${esc(p.name)}</div>
-                  <div class="row" style="gap:8px;align-items:center;margin-top:2px;font-size:.78rem">
-                    <span class="muted">📍 ${esc(p.base_city || 'Northern Italy')}</span>
+                <td style="vertical-align:middle">
+                  <div class="row nowrap" style="gap:6px;align-items:baseline;white-space:nowrap">
+                    <span style="font-weight:600;font-size:.92rem;color:var(--ink)">${esc(p.name)}</span>
+                    <span class="tiny muted" style="white-space:nowrap">📍 ${esc(p.base_city || 'Northern Italy')}</span>
+                  </div>
+                  <div class="row nowrap" style="gap:8px;align-items:center;margin-top:3px;font-size:.76rem;white-space:nowrap">
                     ${p.email 
-                      ? `<a href="mailto:${attr(p.email)}" class="clickable" style="color:var(--series-1);text-decoration:none;display:inline-flex;align-items:center;gap:3px" title="Email: ${attr(p.email)}">${icon('email', 12)} ${esc(p.email)}</a>`
-                      : `<button class="clickable" data-act="edit-notes" data-id="${attr(p.id)}" style="background:none;border:none;padding:0;color:var(--gold);cursor:pointer;font-size:.76rem;text-decoration:underline" title="Click to add email">+ Add email</button>`
+                      ? `<a href="mailto:${attr(p.email)}" class="clickable" style="color:var(--series-1);text-decoration:none;display:inline-flex;align-items:center;gap:3px;white-space:nowrap" title="Email: ${attr(p.email)}">${icon('email', 11)} ${esc(p.email)}</a>`
+                      : `<button class="clickable" data-act="edit-notes" data-id="${attr(p.id)}" style="background:none;border:none;padding:0;color:var(--gold);cursor:pointer;font-size:.74rem;text-decoration:underline;white-space:nowrap" title="Click to add email">+ Add email</button>`
                     }
-                  </div>
-                  <div class="row clickable" data-act="edit-notes" data-id="${attr(p.id)}" style="margin-top:4px;cursor:pointer;align-items:flex-start;gap:4px" title="Click to edit notes">
-                    <span style="font-size:.72rem">📝</span>
-                    ${p.notes 
-                      ? `<span class="tiny" style="color:var(--text-2);font-style:italic">${esc(p.notes.slice(0, 80))}${p.notes.length > 80 ? '…' : ''}</span>`
-                      : `<span class="tiny" style="color:var(--text-3);font-style:italic">+ Write dispatch notes...</span>`
-                    }
+                    <span class="faint">·</span>
+                    <div class="clickable" data-act="edit-notes" data-id="${attr(p.id)}" style="cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px" title="Click to edit notes: ${attr(p.notes || '')}">
+                      ${p.notes 
+                        ? `<span style="color:var(--text-2);font-style:italic">📝 ${esc(p.notes)}</span>`
+                        : `<span style="color:var(--text-3);font-style:italic">+ Notes</span>`
+                      }
+                    </div>
                   </div>
                 </td>
-                <td>
-                  <div class="row" style="gap:4px;flex-wrap:wrap">
-                    ${categories.map((c) => `<span class="chip tiny outline" style="font-size:.72rem">${esc(c)}</span>`).join('') || '<span class="faint tiny">Minibus / GT Coaches</span>'}
+                <td style="vertical-align:middle">
+                  <div class="row nowrap" style="gap:4px;flex-wrap:nowrap;overflow:hidden;white-space:nowrap">
+                    ${categories.slice(0, 2).map((c) => `<span class="chip tiny outline" style="font-size:.72rem;white-space:nowrap" title="${attr(c)}">${esc(c.length > 24 ? c.slice(0, 23) + '…' : c)}</span>`).join('')}
+                    ${categories.length > 2 ? `<span class="chip tiny outline faint" title="${attr(categories.slice(2).join(', '))}">+${categories.length - 2}</span>` : ''}
+                    ${!categories.length ? '<span class="faint tiny">Minibus / GT Coaches</span>' : ''}
                   </div>
                 </td>
-                <td>
+                <td style="vertical-align:middle;white-space:nowrap">
                   ${p.unbranded_status?.includes('Total Black') || p.unbranded_status?.includes('Guaranteed')
-                    ? `<span class="chip tiny ok" style="font-weight:600">🛡️ Total Black (Guaranteed)</span>`
+                    ? `<span class="chip tiny ok" style="font-weight:600;white-space:nowrap">🛡️ Total Black</span>`
                     : p.unbranded_status?.includes('On Request')
-                      ? `<span class="chip tiny gold">⚠️ On Request (Must specify)</span>`
-                      : `<span class="chip tiny outline">${esc(p.unbranded_status || 'Standard Tour Livery')}</span>`}
+                      ? `<span class="chip tiny gold" style="white-space:nowrap">⚠️ On Request</span>`
+                      : `<span class="chip tiny outline" style="white-space:nowrap">${esc(p.unbranded_status ? (p.unbranded_status.length > 20 ? p.unbranded_status.slice(0, 19) + '…' : p.unbranded_status) : 'Standard Livery')}</span>`}
                 </td>
-                <td>
-                  <select class="sm bus-status-select" data-id="${attr(p.id)}" style="padding:3px 6px;border-radius:4px;border:1px solid var(--border);font-size:.78rem;width:100%;background:var(--surface);${p.status === 'NOT_RELEVANT' ? 'color:var(--bad);font-weight:600' : ''}">
+                <td style="vertical-align:middle;white-space:nowrap">
+                  <select class="sm bus-status-select" data-id="${attr(p.id)}" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);font-size:.78rem;width:100%;min-width:148px;background:var(--surface);white-space:nowrap;${p.status === 'NOT_RELEVANT' ? 'color:var(--bad);font-weight:600' : ''}">
                     ${core.BUS_STATUSES.map((st) => `<option value="${st.key}" ${p.status === st.key ? 'selected' : ''}>${st.label}</option>`).join('')}
                   </select>
                 </td>
-                <td>
-                  <div class="row" style="gap:6px">
-                    ${p.website ? `<a class="btn sm ghost" href="${attr(p.website)}" target="_blank" rel="noopener" style="padding:2px 6px;font-size:.75rem" title="Open Website">${icon('external', 13)} Web</a>` : ''}
-                    ${p.fleet_url ? `<a class="btn sm ghost" href="${attr(p.fleet_url)}" target="_blank" rel="noopener" style="padding:2px 6px;font-size:.75rem" title="Open Fleet Gallery">Fleet ↗</a>` : ''}
+                <td style="vertical-align:middle;white-space:nowrap">
+                  <div class="row nowrap" style="gap:4px;flex-wrap:nowrap;white-space:nowrap;align-items:center">
+                    ${p.website ? `<a class="btn sm ghost" href="${attr(p.website)}" target="_blank" rel="noopener" style="padding:3px 7px;font-size:.74rem;white-space:nowrap" title="Open Website">${icon('external', 12)} Web</a>` : ''}
+                    ${p.fleet_url ? `<a class="btn sm ghost" href="${attr(p.fleet_url)}" target="_blank" rel="noopener" style="padding:3px 7px;font-size:.74rem;white-space:nowrap" title="Open Fleet Gallery">Fleet ↗</a>` : ''}
                     ${p.email 
-                      ? `<a class="btn sm ghost" href="mailto:${attr(p.email)}" style="padding:2px 6px;font-size:.75rem" title="Email: ${attr(p.email)}">${icon('email', 13)}</a>` 
-                      : `<button class="btn sm ghost" data-act="edit-notes" data-id="${attr(p.id)}" style="padding:2px 6px;font-size:.75rem;color:var(--gold)" title="Add Email">+✉️</button>`
+                      ? `<a class="btn sm ghost" href="mailto:${attr(p.email)}" style="padding:3px 6px;font-size:.74rem;white-space:nowrap" title="Email: ${attr(p.email)}">${icon('email', 12)}</a>` 
+                      : `<button class="btn sm ghost" data-act="edit-notes" data-id="${attr(p.id)}" style="padding:3px 6px;font-size:.74rem;color:var(--gold);white-space:nowrap" title="Add Email">+✉️</button>`
                     }
-                    ${p.phone ? `<a class="btn sm ghost" href="tel:${attr(p.phone)}" style="padding:2px 6px;font-size:.75rem" title="${attr(p.phone)}">${icon('phone', 13)}</a>` : ''}
+                    ${p.phone ? `<a class="btn sm ghost" href="tel:${attr(p.phone)}" style="padding:3px 6px;font-size:.74rem;white-space:nowrap" title="${attr(p.phone)}">${icon('phone', 12)}</a>` : ''}
                   </div>
                 </td>
-                <td style="text-align:right">
-                  <div class="row" style="gap:4px;justify-content:flex-end">
-                    <button class="btn sm ghost" data-act="edit-notes" data-id="${attr(p.id)}" style="padding:3px 8px;font-size:.78rem" title="Edit Email & Dispatch Notes">✏️ Notes</button>
-                    <button class="btn sm ghost" data-act="delete-partner" data-id="${attr(p.id)}" style="padding:3px 6px;color:var(--bad)" title="Delete Partner">×</button>
+                <td style="vertical-align:middle;text-align:right;white-space:nowrap">
+                  <div class="row nowrap end" style="gap:4px;flex-wrap:nowrap;white-space:nowrap;justify-content:flex-end;align-items:center">
+                    <button class="btn sm ghost" data-act="edit-notes" data-id="${attr(p.id)}" style="padding:3px 8px;font-size:.75rem;white-space:nowrap" title="Edit Email & Dispatch Notes">✏️ Notes</button>
+                    <button class="btn sm ghost" data-act="delete-partner" data-id="${attr(p.id)}" style="padding:3px 6px;font-size:.85rem;color:var(--bad);white-space:nowrap" title="Delete Partner">×</button>
                   </div>
                 </td>
               </tr>`;
