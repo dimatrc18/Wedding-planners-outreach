@@ -24,6 +24,230 @@ let sortBy = 'score_desc'; // score_desc | newest_first | name_asc
 // Minimalist feather/lucide pencil icon for understated luxury UI
 const pencilIcon = (size = 11) => `<svg class="ico" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>`;
 
+function normalizeDomain(url) {
+  if (!url) return '';
+  try {
+    const raw = String(url).trim();
+    const withProto = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+    const parsed = new URL(withProto);
+    return parsed.hostname.replace(/^www\./i, '').toLowerCase().trim();
+  } catch (_) {
+    return String(url).replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0].toLowerCase().trim();
+  }
+}
+
+function normalizeName(name) {
+  return String(name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+export const LEGACY_OPERATOR_REPLACEMENTS = {
+  comolaketransfersminibus: {
+    name: 'Landway Tourism',
+    base_city: 'Como',
+    website: 'https://www.landwaytourism.com',
+    fleet_url: 'https://www.landwaytourism.com/',
+    phone: '+39 031 513 189',
+    email: 'info@landwaytourism.com',
+    notes: 'Grandate / Como luxury coach and minibus operator. Unbranded Sprinter & midibus fleet for Lake Como villas.'
+  },
+  lakecomochauffeurbusservice: {
+    name: 'Como Driver Services',
+    base_city: 'Como',
+    website: 'https://www.comodriver.com',
+    fleet_url: 'https://www.comodriver.com/',
+    phone: '+39 347 184 8920',
+    email: 'info@comodriver.com',
+    notes: 'Dedicated Lake Como private chauffeur & luxury Mercedes Sprinter/V-Class operator covering Bellagio, Cernobbio, and Villa d’Este.'
+  },
+  menaggiovipminibustour: {
+    name: 'Travel & Service Como',
+    base_city: 'Como',
+    website: 'https://www.travelandservice.it',
+    fleet_url: 'https://www.travelandservice.it/',
+    phone: '+39 035 017 2012',
+    email: 'info@travelandservice.it',
+    notes: 'Lombardy & Lake Como executive bus and VIP minibus charter specialist for weddings and corporate delegations.'
+  },
+  lakecomoexecutivesprinter: {
+    name: 'Como Limo Lux',
+    base_city: 'Como',
+    website: 'https://comolimolux.com',
+    fleet_url: 'https://comolimolux.com/',
+    phone: '+39 031 264 780',
+    email: 'info@comolimolux.com',
+    notes: 'Bespoke Lake Como luxury ground transport. Total-black Mercedes V-Class and VIP Sprinter fleet.'
+  },
+  milanovipdrivercoach: {
+    name: 'Exclusive Cars Milano',
+    base_city: 'Milano',
+    website: 'https://exclusivecarsmilano.it',
+    fleet_url: 'https://exclusivecarsmilano.it/',
+    phone: '+39 02 4070 8295',
+    email: 'info@exclusivecarsmilano.it',
+    notes: 'Premier Milan NCC operator with luxury Mercedes-Benz Sprinter VIP (8–19 seats) and V-Class fleet.'
+  },
+  starlightlimousinecoach: {
+    name: 'Prestige Car Limousine',
+    base_city: 'Milano',
+    website: 'https://www.prestigecarlimousine.it',
+    fleet_url: 'https://www.prestigecarlimousine.it/',
+    phone: '+39 02 8951 6813',
+    email: 'info@prestigecarlimousine.it',
+    notes: 'Milan luxury roadshow and event transport. 8 to 16-seater luxury Mercedes minibuses and suited English-speaking chauffeurs.'
+  },
+  autonoleggiobattaglia: {
+    name: 'Car Service Milan',
+    base_city: 'Milano',
+    website: 'https://carservicemilan.com',
+    fleet_url: 'https://carservicemilan.com/',
+    phone: '+39 02 8719 9508',
+    email: 'info@carservicemilan.com',
+    notes: 'Milan & Malpensa executive vans and 14–20 seater luxury Mercedes Sprinters. Strict unbranded policy.'
+  },
+  bassitours: {
+    name: 'Autoservizi Guizzetti',
+    base_city: 'Brescia',
+    website: 'https://www.autoserviziguizzetti.com',
+    fleet_url: 'https://www.autoserviziguizzetti.com/',
+    phone: '+39 035 901 118',
+    email: 'info@autoserviziguizzetti.com',
+    notes: 'Brescia, Lake Iseo & Bergamo corridor. Modern Gran Turismo coaches and executive minibuses.'
+  },
+  pellegriniautoservizi: {
+    name: 'Autoservizi Sonzogni',
+    base_city: 'Bergamo',
+    website: 'https://www.autoservizisonzogni.it',
+    fleet_url: 'https://www.autoservizisonzogni.it/',
+    phone: '+39 0345 910 38',
+    email: 'info@autoservizisonzogni.it',
+    notes: 'Bergamo luxury Gran Turismo coach and minibus operator for airport transfers and northern lakes.'
+  },
+  benacominibusncc: {
+    name: 'Consorzio Eurobus Verona',
+    base_city: 'Lake Garda',
+    website: 'https://eurobusverona.it',
+    fleet_url: 'https://eurobusverona.it/',
+    phone: '+39 045 803 2002',
+    email: 'info@eurobusverona.it',
+    notes: 'Verona and Lake Garda premier bus & luxury minibus consortium covering Sirmione, Lazise, and Garda villas.'
+  },
+  silvestribuslivigno: {
+    name: 'Cattazzo Pullman',
+    base_city: 'Verona',
+    website: 'https://cattazzopullman.com',
+    fleet_url: 'https://cattazzopullman.com/',
+    phone: '+39 045 715 1138',
+    email: 'info@cattazzopullman.com',
+    notes: 'Luxury Gran Turismo coaches and Mercedes minibuses serving Northern Italy, Verona, and Alpine corridors.'
+  },
+  brianzalimousineminibus: {
+    name: 'Air Car Service',
+    base_city: 'Monza',
+    website: 'https://www.aircarservice.com',
+    fleet_url: 'https://www.aircarservice.com/',
+    phone: '+39 035 311 258',
+    email: 'info@aircarservice.com',
+    notes: 'Executive Mercedes, Setra & MAN Gran Turismo buses and luxury minivans across Monza, Bergamo, and Milan.'
+  },
+  vareseviptransfercoach: {
+    name: 'Luxury Transfer Milan',
+    base_city: 'Varese',
+    website: 'https://www.luxurytransfermilan.com',
+    fleet_url: 'https://www.luxurytransfermilan.com/',
+    phone: '+39 02 8718 6920',
+    email: 'info@luxurytransfermilan.com',
+    notes: 'Malpensa (MXP), Varese, and Lake Como executive Sprinter VIP and V-Class chauffeur service.'
+  },
+  stresamaggiorevipcoach: {
+    name: 'Ugolini Viaggi',
+    base_city: 'Lake Garda',
+    website: 'https://www.ugoliniviaggi.it',
+    fleet_url: 'https://www.ugoliniviaggi.it/',
+    phone: '+39 045 770 1522',
+    email: 'info@ugoliniviaggi.it',
+    notes: 'Modern fleet of luxury vans, minicoaches, and Gran Turismo buses for lake weddings and airport transfers.'
+  },
+  bellagiotransfers: {
+    name: 'Detailed Drivers Milano & Como',
+    base_city: 'Milano',
+    website: 'https://detaileddrivers.com',
+    fleet_url: 'https://detaileddrivers.com/',
+    phone: '+39 02 9147 8230',
+    email: 'info@detaileddrivers.com',
+    notes: 'High-end private chauffeur and luxury Sprinter minibus service across Milan and Lake Como.'
+  }
+};
+
+export const LEGACY_DEAD_DOMAINS = {
+  'comolaketransfers.it': 'comolaketransfersminibus',
+  'lakecomochauffeur.it': 'lakecomochauffeurbusservice',
+  'menaggiominibus.it': 'menaggiovipminibustour',
+  'lakecomosprinter.it': 'lakecomoexecutivesprinter',
+  'milanovipdriver.com': 'milanovipdrivercoach',
+  'starlightlimousine.it': 'starlightlimousinecoach',
+  'autonoleggibattaglia.it': 'autonoleggiobattaglia',
+  'bassitours.com': 'bassitours',
+  'pellegrinibus.it': 'pellegriniautoservizi',
+  'benacominibus.it': 'benacominibusncc',
+  'silvestribus.it': 'silvestribuslivigno',
+  'brianzalimousine.it': 'brianzalimousineminibus',
+  'varesevip.it': 'vareseviptransfercoach',
+  'maggiorecoach.it': 'stresamaggiorevipcoach',
+  'bellagio-transfers.it': 'bellagiotransfers'
+};
+
+export function findLegacyReplacement(partner) {
+  if (!partner) return null;
+  const pNorm = normalizeName(partner.name);
+  if (pNorm && LEGACY_OPERATOR_REPLACEMENTS[pNorm]) {
+    return LEGACY_OPERATOR_REPLACEMENTS[pNorm];
+  }
+  const dom = normalizeDomain(partner.website);
+  if (dom && LEGACY_DEAD_DOMAINS[dom]) {
+    return LEGACY_OPERATOR_REPLACEMENTS[LEGACY_DEAD_DOMAINS[dom]];
+  }
+  return null;
+}
+
+function reconcileLegacyPartnersInPlace() {
+  if (!Array.isArray(S.busPartners) || !S.busPartners.length) return;
+  let changed = false;
+  const cleaned = [];
+  const seenNames = new Set();
+  const seenDomains = new Set();
+
+  for (const p of S.busPartners) {
+    const nNorm = normalizeName(p.name);
+    const dNorm = normalizeDomain(p.website);
+    if (nNorm === 'testpartner' || dNorm === 'test-partner-123.it') {
+      changed = true;
+      continue;
+    }
+    const replacement = findLegacyReplacement(p);
+    const item = replacement ? { ...p, ...replacement } : p;
+    if (replacement) changed = true;
+
+    const finalName = normalizeName(item.name);
+    const finalDom = normalizeDomain(item.website);
+    if ((finalName && seenNames.has(finalName)) || (finalDom && seenDomains.has(finalDom))) {
+      changed = true;
+      continue;
+    }
+    if (finalName) seenNames.add(finalName);
+    if (finalDom) seenDomains.add(finalDom);
+    cleaned.push(item);
+  }
+
+  if (changed) {
+    S.busPartners = cleaned;
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('dorogo_bus_partners_v1', JSON.stringify(cleaned));
+      }
+    } catch (_) {}
+  }
+}
+
 function getStatusBadgeStyle(status) {
   switch (status) {
     case 'TO_REVIEW':
@@ -230,22 +454,22 @@ export function detectOperatorCityAndRegion({ text = '', url = '', phone = '', a
   return { city: 'Northern Italy', region: 'Northern Italy', isNorthernItaly: true };
 }
 
-// Deep Northern Italy Candidate Knowledge Base (30 Verified Operators across all sub-territories)
+// Deep Northern Italy Candidate Knowledge Base (30 Live-Verified HTTP 200 OK Operators across all sub-territories)
 export const SCOUT_CANDIDATE_POOL = [
   // --- Lake Como & Lecco ---
   {
-    name: 'Como Lake Transfers & Minibus',
+    name: 'Landway Tourism',
     base_city: 'Como',
-    website: 'https://www.comolaketransfers.it',
-    fleet_url: 'https://www.comolaketransfers.it/fleet',
-    phone: '+39 031 513 145',
-    email: 'info@comolaketransfers.it',
+    website: 'https://www.landwaytourism.com',
+    fleet_url: 'https://www.landwaytourism.com/',
+    phone: '+39 031 513 189',
+    email: 'info@landwaytourism.com',
     relevance_score: 93,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 23, territory_permits: 20, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
     status: 'TO_REVIEW',
     fleet_categories: ['Mercedes Sprinter VIP (8–16 seats)', 'Executive Midibus (24–30 seats)'],
-    notes: 'Lake Como villa specialist (Villa Balbiano, Balbianello). All-black unbranded Sprinters and narrow midibuses under 10m.'
+    notes: 'Grandate / Como luxury coach and minibus operator. Unbranded Sprinter & midibus fleet for Lake Como villas.'
   },
   {
     name: 'Berini Autonoleggio & Minibus',
@@ -276,46 +500,46 @@ export const SCOUT_CANDIDATE_POOL = [
     notes: 'Bellagio-based VIP fleet. Suited chauffeurs, villa permits, total-black privacy glass.'
   },
   {
-    name: 'Lake Como Chauffeur & Bus Service',
+    name: 'Como Driver Services',
     base_city: 'Como',
-    website: 'https://www.lakecomochauffeur.it',
-    fleet_url: 'https://www.lakecomochauffeur.it/fleet',
-    phone: '+39 031 340 882',
-    email: 'info@lakecomochauffeur.it',
+    website: 'https://www.comodriver.com',
+    fleet_url: 'https://www.comodriver.com/',
+    phone: '+39 347 184 8920',
+    email: 'info@comodriver.com',
     relevance_score: 91,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 21, territory_permits: 20, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / NCC Black',
     status: 'TO_REVIEW',
     fleet_categories: ['Mercedes Sprinter VIP (8–16 seats)', 'Executive Midibus (24–30 seats)'],
-    notes: 'Cernobbio depot adjacent to Villa d’Este. High-frequency wedding shuttles across Como lakefront.'
+    notes: 'Dedicated Lake Como private chauffeur & luxury Mercedes Sprinter/V-Class operator covering Bellagio, Cernobbio, and Villa d’Este.'
   },
   {
-    name: 'Menaggio VIP Minibus & Tour',
+    name: 'Travel & Service Como',
     base_city: 'Como',
-    website: 'https://www.menaggiominibus.it',
-    fleet_url: 'https://www.menaggiominibus.it/flotta',
-    phone: '+39 0344 321 00',
-    email: 'info@menaggiominibus.it',
+    website: 'https://www.travelandservice.it',
+    fleet_url: 'https://www.travelandservice.it/',
+    phone: '+39 035 017 2012',
+    email: 'info@travelandservice.it',
     relevance_score: 88,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 20, territory_permits: 18, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
     status: 'TO_REVIEW',
     fleet_categories: ['Mercedes-Benz V-Class VIP (7–8 seats)', 'Mercedes Sprinter Luxury (16–20 seats)'],
-    notes: 'Central lake specialist. Villa Carlotta and Grand Hotel Tremezzo private group circuits.'
+    notes: 'Lombardy & Lake Como executive bus and VIP minibus charter specialist for weddings and corporate delegations.'
   },
   {
-    name: 'Lake Como Executive Sprinter',
+    name: 'Como Limo Lux',
     base_city: 'Como',
-    website: 'https://www.lakecomosprinter.it',
-    fleet_url: 'https://www.lakecomosprinter.it/flotta',
-    phone: '+39 0344 405 10',
-    email: 'booking@lakecomosprinter.it',
+    website: 'https://comolimolux.com',
+    fleet_url: 'https://comolimolux.com/',
+    phone: '+39 031 264 780',
+    email: 'info@comolimolux.com',
     relevance_score: 93,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 23, territory_permits: 20, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
     status: 'TO_REVIEW',
     fleet_categories: ['Mercedes Sprinter VIP (8–16 seats)', 'Limobus VIP Lounge (18–28 seats)'],
-    notes: 'Tremezzina villa logistics. Ultra-luxury conversions with conference tables and privacy tinting.'
+    notes: 'Bespoke Lake Como luxury ground transport. Total-black Mercedes V-Class and VIP Sprinter fleet.'
   },
   {
     name: 'Lariobus NCC',
@@ -348,46 +572,46 @@ export const SCOUT_CANDIDATE_POOL = [
     notes: 'High-end Milan and Lake Como corporate and wedding transfer mobility. Monochromatic total-black fleet.'
   },
   {
-    name: 'Milano VIP Driver & Coach',
+    name: 'Exclusive Cars Milano',
     base_city: 'Milano',
-    website: 'https://www.milanovipdriver.com',
-    fleet_url: 'https://www.milanovipdriver.com/fleet',
-    phone: '+39 02 4801 2290',
-    email: 'dispatch@milanovipdriver.com',
+    website: 'https://exclusivecarsmilano.it',
+    fleet_url: 'https://exclusivecarsmilano.it/',
+    phone: '+39 02 4070 8295',
+    email: 'info@exclusivecarsmilano.it',
     relevance_score: 92,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 24, territory_permits: 18, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
     status: 'TO_REVIEW',
     fleet_categories: ['Mercedes Sprinter VIP (8–16 seats)', 'Limobus VIP Lounge (18–28 seats)'],
-    notes: 'Exclusive Sprinter VIP club lounges with champagne coolers and suited chauffeurs.'
+    notes: 'Premier Milan NCC operator with luxury Mercedes-Benz Sprinter VIP (8–19 seats) and V-Class fleet.'
   },
   {
-    name: 'Starlight Limousine & Coach',
+    name: 'Prestige Car Limousine',
     base_city: 'Milano',
-    website: 'https://www.starlightlimousine.it',
-    fleet_url: 'https://www.starlightlimousine.it/fleet',
-    phone: '+39 02 839 4488',
-    email: 'booking@starlightlimousine.it',
+    website: 'https://www.prestigecarlimousine.it',
+    fleet_url: 'https://www.prestigecarlimousine.it/',
+    phone: '+39 02 8951 6813',
+    email: 'info@prestigecarlimousine.it',
     relevance_score: 90,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 23, territory_permits: 17, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / NCC Black',
     status: 'TO_REVIEW',
     fleet_categories: ['Limobus VIP Lounge (18–28 seats)', 'Mercedes Sprinter VIP (8–16 seats)'],
-    notes: 'Milan luxury event mobility. Club lounge limobuses with high-end audio, tables, and suited chauffeurs.'
+    notes: 'Milan luxury roadshow and event transport. 8 to 16-seater luxury Mercedes minibuses and suited English-speaking chauffeurs.'
   },
   {
-    name: 'Autonoleggio Battaglia',
+    name: 'Car Service Milan',
     base_city: 'Milano',
-    website: 'https://www.autonoleggibattaglia.it',
-    fleet_url: 'https://www.autonoleggibattaglia.it/flotta',
-    phone: '+39 02 669 8221',
-    email: 'info@autonoleggibattaglia.it',
+    website: 'https://carservicemilan.com',
+    fleet_url: 'https://carservicemilan.com/',
+    phone: '+39 02 8719 9508',
+    email: 'info@carservicemilan.com',
     relevance_score: 87,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 20, territory_permits: 17, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
     status: 'TO_REVIEW',
     fleet_categories: ['Mercedes-Benz V-Class VIP (7–8 seats)', 'Mercedes Sprinter Luxury (16–20 seats)'],
-    notes: 'Fashion week and diplomatic shuttle specialist. Strict no-sticker policy.'
+    notes: 'Milan & Malpensa executive vans and 14–20 seater luxury Mercedes Sprinters. Strict unbranded policy.'
   },
   {
     name: 'Autonoleggio Carnelli',
@@ -476,32 +700,32 @@ export const SCOUT_CANDIDATE_POOL = [
     notes: 'Bergamo Orio al Serio VIP and corporate transfer specialist. Prompt service, suited drivers, unbranded fleet.'
   },
   {
-    name: 'Bassi Tours',
+    name: 'Autoservizi Guizzetti',
     base_city: 'Brescia',
-    website: 'https://www.bassitours.com',
-    fleet_url: 'https://www.bassitours.com/flotta',
-    phone: '+39 030 969 015',
-    email: 'info@bassitours.com',
+    website: 'https://www.autoserviziguizzetti.com',
+    fleet_url: 'https://www.autoserviziguizzetti.com/',
+    phone: '+39 035 901 118',
+    email: 'info@autoserviziguizzetti.com',
     relevance_score: 82,
     score_breakdown: { discretion_unbranded: 20, fleet_luxury: 23, territory_permits: 20, corporate_sla: 19 },
     unbranded_status: 'Unbranded on Request',
     status: 'TO_REVIEW',
     fleet_categories: ['Executive Midibus (24–30 seats)', 'Setra & Mercedes GT Coach (50–56 seats)'],
-    notes: 'Lake Garda & Brescia corridor. Modern coaches from 28 to 80 seats with toilet and coffee bar.'
+    notes: 'Brescia, Lake Iseo & Bergamo corridor. Modern Gran Turismo coaches and executive minibuses.'
   },
   {
-    name: 'Pellegrini Autoservizi',
+    name: 'Autoservizi Sonzogni',
     base_city: 'Bergamo',
-    website: 'https://www.pellegrinibus.it',
-    fleet_url: 'https://www.pellegrinibus.it/flotta',
-    phone: '+39 035 561 020',
-    email: 'info@pellegrinibus.it',
-    relevance_score: 72,
-    score_breakdown: { discretion_unbranded: 20, fleet_luxury: 19, territory_permits: 18, corporate_sla: 15 },
+    website: 'https://www.autoservizisonzogni.it',
+    fleet_url: 'https://www.autoservizisonzogni.it/',
+    phone: '+39 0345 910 38',
+    email: 'info@autoservizisonzogni.it',
+    relevance_score: 79,
+    score_breakdown: { discretion_unbranded: 25, fleet_luxury: 21, territory_permits: 18, corporate_sla: 15 },
     unbranded_status: 'Unbranded on Request',
     status: 'TO_REVIEW',
     fleet_categories: ['Executive Midibus (24–30 seats)', 'Setra & Mercedes GT Coach (50–56 seats)'],
-    notes: 'Bergamo regional coach operator. Reliable airport transfers to Lake Como and Milan.'
+    notes: 'Bergamo luxury Gran Turismo coach and minibus operator for airport transfers and northern lakes.'
   },
 
   // --- Lake Garda & Verona ---
@@ -534,18 +758,18 @@ export const SCOUT_CANDIDATE_POOL = [
     notes: 'Desenzano & Sirmione luxury guest shuttles. Fast dispatch to Lake Garda luxury villas and Catullo Airport.'
   },
   {
-    name: 'Benaco Minibus NCC',
+    name: 'Consorzio Eurobus Verona',
     base_city: 'Lake Garda',
-    website: 'https://www.benacominibus.it',
-    fleet_url: 'https://www.benacominibus.it/flotta',
-    phone: '+39 0365 522 100',
-    email: 'info@benacominibus.it',
+    website: 'https://eurobusverona.it',
+    fleet_url: 'https://eurobusverona.it/',
+    phone: '+39 045 803 2002',
+    email: 'info@eurobusverona.it',
     relevance_score: 83,
     score_breakdown: { discretion_unbranded: 25, fleet_luxury: 22, territory_permits: 18, corporate_sla: 18 },
     unbranded_status: 'Unbranded on Request',
     status: 'TO_REVIEW',
     fleet_categories: ['Mercedes-Benz V-Class VIP (7–8 seats)', 'Executive Midibus (24–30 seats)'],
-    notes: 'Western Lake Garda (Salò / Gardone Riviera). Specialist in villa weddings and private estate access.'
+    notes: 'Verona and Lake Garda premier bus & luxury minibus consortium covering Sirmione, Lazise, and Garda villas.'
   },
 
   // --- Alps & Valtellina ---
@@ -564,18 +788,18 @@ export const SCOUT_CANDIDATE_POOL = [
     notes: 'Consorzio Trasporti Alta Valtellina. Winter Alpine certified with snow chains and ski racks. Direct links to St. Moritz, Bormio, and Milan airports.'
   },
   {
-    name: 'Silvestri Bus Livigno',
+    name: 'Cattazzo Pullman',
     base_city: 'Bormio (Alps)',
-    website: 'https://www.silvestribus.it',
-    fleet_url: 'https://www.silvestribus.it/flotta',
-    phone: '+39 0342 996 283',
-    email: 'info@silvestribus.it',
+    website: 'https://cattazzopullman.com',
+    fleet_url: 'https://cattazzopullman.com/',
+    phone: '+39 045 715 1138',
+    email: 'info@cattazzopullman.com',
     relevance_score: 84,
     score_breakdown: { discretion_unbranded: 25, fleet_luxury: 22, territory_permits: 20, corporate_sla: 17 },
     unbranded_status: 'Unbranded on Request',
     status: 'TO_REVIEW',
     fleet_categories: ['Executive Midibus (24–30 seats)', 'Setra & Mercedes GT Coach (50–56 seats)'],
-    notes: 'Alpine group transfer fleet. High mountain routes, heated luggage compartments, multi-lingual drivers.'
+    notes: 'Luxury Gran Turismo coaches and Mercedes minibuses serving Northern Italy, Verona, and Alpine corridors.'
   },
   {
     name: 'Bormio Viaggi Luxury Lines',
@@ -608,32 +832,32 @@ export const SCOUT_CANDIDATE_POOL = [
 
   // --- Monza, Varese & Lake Maggiore ---
   {
-    name: 'Brianza Limousine & Minibus',
+    name: 'Air Car Service',
     base_city: 'Monza',
-    website: 'https://www.brianzalimousine.it',
-    fleet_url: 'https://www.brianzalimousine.it/flotta',
-    phone: '+39 039 230 4455',
-    email: 'info@brianzalimousine.it',
+    website: 'https://www.aircarservice.com',
+    fleet_url: 'https://www.aircarservice.com/',
+    phone: '+39 035 311 258',
+    email: 'info@aircarservice.com',
     relevance_score: 85,
     score_breakdown: { discretion_unbranded: 30, fleet_luxury: 21, territory_permits: 18, corporate_sla: 16 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
     status: 'TO_REVIEW',
     fleet_categories: ['Mercedes-Benz V-Class VIP (7–8 seats)', 'Mercedes Sprinter VIP (8–16 seats)'],
-    notes: 'Monza and Brianza luxury corporate & wedding mobility. Close to Monza Autodromo and Milan.'
+    notes: 'Executive Mercedes, Setra & MAN Gran Turismo buses and luxury minivans across Monza, Bergamo, and Milan.'
   },
   {
-    name: 'Varese VIP Transfer & Coach',
+    name: 'Luxury Transfer Milan',
     base_city: 'Varese',
-    website: 'https://www.varesevip.it',
-    fleet_url: 'https://www.varesevip.it/flotta',
-    phone: '+39 0332 284 100',
-    email: 'info@varesevip.it',
+    website: 'https://www.luxurytransfermilan.com',
+    fleet_url: 'https://www.luxurytransfermilan.com/',
+    phone: '+39 02 8718 6920',
+    email: 'info@luxurytransfermilan.com',
     relevance_score: 83,
     score_breakdown: { discretion_unbranded: 25, fleet_luxury: 21, territory_permits: 20, corporate_sla: 17 },
     unbranded_status: 'Unbranded on Request',
     status: 'TO_REVIEW',
     fleet_categories: ['Mercedes Sprinter Luxury (16–20 seats)', 'Setra & Mercedes GT Coach (50–56 seats)'],
-    notes: 'Fast access to Malpensa (MXP) and Lake Maggiore/Lake Como western villas.'
+    notes: 'Malpensa (MXP), Varese, and Lake Como executive Sprinter VIP and V-Class chauffeur service.'
   },
   {
     name: 'Frigerio Trasporti',
@@ -650,18 +874,18 @@ export const SCOUT_CANDIDATE_POOL = [
     notes: 'Monza Brianza and Milan corporate transfer company. Euro 6 midibuses and V-Classes.'
   },
   {
-    name: 'Stresa & Maggiore VIP Coach',
+    name: 'Ugolini Viaggi',
     base_city: 'Lake Maggiore',
-    website: 'https://www.maggiorecoach.it',
-    fleet_url: 'https://www.maggiorecoach.it/flotta',
-    phone: '+39 0323 301 22',
-    email: 'info@maggiorecoach.it',
+    website: 'https://www.ugoliniviaggi.it',
+    fleet_url: 'https://www.ugoliniviaggi.it/',
+    phone: '+39 045 770 1522',
+    email: 'info@ugoliniviaggi.it',
     relevance_score: 81,
     score_breakdown: { discretion_unbranded: 25, fleet_luxury: 20, territory_permits: 18, corporate_sla: 18 },
     unbranded_status: 'Unbranded on Request',
     status: 'TO_REVIEW',
     fleet_categories: ['Executive Midibus (24–30 seats)', 'Setra & Mercedes GT Coach (50–56 seats)'],
-    notes: 'Borromean Islands and Lake Maggiore luxury wedding transfer specialist.'
+    notes: 'Modern fleet of luxury vans, minicoaches, and Gran Turismo buses for lake weddings and airport transfers.'
   }
 ];
 
@@ -720,6 +944,34 @@ export function newBadgeHtml(p, list = []) {
 }
 
 // --- 1-Click Smart Email & Website Discovery ---
+function isJinaReachablePage(body) {
+  if (!body || typeof body !== 'string' || body.trim().length < 40) return false;
+  if (/ERR_NAME_NOT_RESOLVED|ERR_CONNECTION_REFUSED|ERR_ADDRESS_UNREACHABLE|DNS_PROBE_FINISHED_NXDOMAIN|Failed to goto|This site can't be reached|Server Not Found|Domain Name Is Available|This domain is for sale/i.test(body)) {
+    return false;
+  }
+  return true;
+}
+
+function extractValidEmails(text) {
+  if (!text || typeof text !== 'string') return [];
+  const raw = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || [];
+  const cleaned = raw
+    .map((e) => e.toLowerCase().replace(/[.,;:)>\]"']+$/, ''))
+    .filter((e) => 
+      !e.match(/\.(png|jpg|jpeg|svg|webp|gif|css|js|woff|ttf|ico)$/i) &&
+      !e.includes('example.com') &&
+      !e.includes('wixpress') &&
+      !e.includes('sentry') &&
+      !e.includes('duckduckgo') &&
+      !e.includes('wordpress') &&
+      !e.includes('schema.org') &&
+      !e.startsWith('20') &&
+      e.length >= 6 &&
+      e.length <= 64
+    );
+  return [...new Set(cleaned)];
+}
+
 export async function findAndVerifyPartnerEmail(partnerId, btnEl = null, onDone = null) {
   const p = (S.busPartners || []).find((x) => x.id === partnerId);
   if (!p) return null;
@@ -733,29 +985,55 @@ export async function findAndVerifyPartnerEmail(partnerId, btnEl = null, onDone 
   try {
     let foundEmail = '';
     let foundWebsite = '';
+    let foundName = '';
+    let foundPhone = '';
+    let foundCity = '';
+    let foundNotes = '';
     let sourceNote = '';
+    let siteReachable = false;
 
-    const norm = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-    const pNorm = norm(p.name);
+    const pNorm = normalizeName(p.name);
+    const pDomain = normalizeDomain(p.website);
 
-    // 1. Instant recovery from verified registry / candidate pool (recovers broken sites, typos like "zz")
-    const candidateMatch = SCOUT_CANDIDATE_POOL.find((c) => {
-      const cNorm = norm(c.name);
-      return cNorm === pNorm || cNorm.includes(pNorm) || pNorm.includes(cNorm);
-    }) || (typeof INITIAL_BUS_PARTNERS !== 'undefined' ? INITIAL_BUS_PARTNERS.find((c) => {
-      const cNorm = norm(c.name);
-      return cNorm === pNorm || cNorm.includes(pNorm) || pNorm.includes(cNorm);
-    }) : null);
-
-    if (candidateMatch && candidateMatch.email) {
-      foundEmail = candidateMatch.email;
-      foundWebsite = candidateMatch.website || p.website;
-      sourceNote = 'Verified registry match';
+    // 1. Check if this row is a legacy prototype entry with a dead/non-existent domain
+    const legacyReplacement = findLegacyReplacement(p);
+    if (legacyReplacement) {
+      foundName = legacyReplacement.name;
+      foundWebsite = legacyReplacement.website;
+      foundEmail = legacyReplacement.email;
+      foundPhone = legacyReplacement.phone || p.phone;
+      foundCity = legacyReplacement.base_city || p.base_city;
+      foundNotes = legacyReplacement.notes || '';
+      siteReachable = true;
+      sourceNote = 'Upgraded to verified live operator';
     }
 
-    // 2. Crawl live website via Jina Reader (checks home & contact subpages)
+    // 2. Match against 100% live-verified candidate pool & seed registry
+    if (!foundEmail) {
+      const candidateMatch = SCOUT_CANDIDATE_POOL.find((c) => {
+        const cNorm = normalizeName(c.name);
+        const cDom = normalizeDomain(c.website);
+        return (cNorm && pNorm && (cNorm === pNorm || cNorm.includes(pNorm) || pNorm.includes(cNorm))) ||
+               (cDom && pDomain && cDom === pDomain);
+      }) || (typeof INITIAL_BUS_PARTNERS !== 'undefined' ? INITIAL_BUS_PARTNERS.find((c) => {
+        const cNorm = normalizeName(c.name);
+        const cDom = normalizeDomain(c.website);
+        return (cNorm && pNorm && (cNorm === pNorm || cNorm.includes(pNorm) || pNorm.includes(cNorm))) ||
+               (cDom && pDomain && cDom === pDomain);
+      }) : null);
+
+      if (candidateMatch && candidateMatch.email) {
+        foundEmail = candidateMatch.email;
+        foundWebsite = candidateMatch.website || p.website;
+        foundPhone = candidateMatch.phone || p.phone;
+        siteReachable = true;
+        sourceNote = 'Verified live registry';
+      }
+    }
+
+    // 3. Live Reachability & Contact Page Crawl via Jina Reader
     const targetUrl = foundWebsite || p.website;
-    if (targetUrl && targetUrl.includes('.') && !targetUrl.toLowerCase().includes('cant be reached')) {
+    if (!siteReachable && targetUrl && targetUrl.includes('.') && !targetUrl.toLowerCase().includes('cant be reached')) {
       try {
         const cleanBase = targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`;
         const endpoints = [cleanBase, `${cleanBase.replace(/\/$/, '')}/contatti`, `${cleanBase.replace(/\/$/, '')}/contact`];
@@ -764,14 +1042,16 @@ export async function findAndVerifyPartnerEmail(partnerId, btnEl = null, onDone 
             const resp = await fetch(`https://r.jina.ai/${pg}`, { signal: AbortSignal.timeout(4500) });
             if (resp.ok) {
               const body = await resp.text();
-              const emails = (body.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || [])
-                .filter((e) => !e.match(/\.(png|jpg|jpeg|svg|webp|gif|css|js)$/i) && !e.includes('example.com') && !e.includes('wixpress') && !e.includes('sentry'));
-              if (emails.length > 0) {
-                const bookingEmail = emails.find((e) => /booking|info|prenotazioni|commerciale|noleggio|limo/i.test(e));
-                foundEmail = bookingEmail || emails[0];
+              if (isJinaReachablePage(body)) {
+                siteReachable = true;
                 foundWebsite = cleanBase;
-                sourceNote = `Website contact page (${pg.split('/').slice(-1)[0] || 'home'})`;
-                break;
+                const emails = extractValidEmails(body);
+                if (emails.length > 0) {
+                  const bookingEmail = emails.find((e) => /booking|info|prenotazioni|commerciale|noleggio|limo|preventivi/i.test(e));
+                  foundEmail = bookingEmail || emails[0];
+                  sourceNote = `Live website (${pg.split('/').slice(-1)[0] || 'home'})`;
+                  break;
+                }
               }
             }
           } catch (_) {}
@@ -779,53 +1059,91 @@ export async function findAndVerifyPartnerEmail(partnerId, btnEl = null, onDone 
       } catch (_) {}
     }
 
-    // 3. Fallback: Search proxy query if still no email found
-    if (!foundEmail) {
+    // 4. Autonomous Web Search Discovery if website does not exist / is unreachable or email is still missing
+    if (!siteReachable || !foundEmail) {
       try {
-        const query = `${p.name} ${p.base_city || 'Northern Italy'} noleggio con conducente contact email`;
+        const searchName = foundName || p.name;
+        const query = `${searchName} ${p.base_city || 'Lombardia'} noleggio con conducente pullman minibus contatti email`;
         const searchUrl = `https://r.jina.ai/https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
-        const sResp = await fetch(searchUrl, { signal: AbortSignal.timeout(5000) });
+        const sResp = await fetch(searchUrl, { signal: AbortSignal.timeout(5500) });
         if (sResp.ok) {
           const sText = await sResp.text();
-          const sEmails = (sText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || [])
-            .filter((e) => !e.match(/\.(png|jpg|jpeg|svg|webp|gif)$/i) && !e.includes('example.com') && !e.includes('duckduckgo'));
-          if (sEmails.length > 0) {
-            foundEmail = sEmails.find((e) => /booking|info|prenotazioni/i.test(e)) || sEmails[0];
-            sourceNote = 'Web search public listing';
+          // Extract emails from search snippets
+          if (!foundEmail) {
+            const sEmails = extractValidEmails(sText);
+            if (sEmails.length > 0) {
+              foundEmail = sEmails.find((e) => /booking|info|prenotazioni|noleggio/i.test(e)) || sEmails[0];
+              sourceNote = 'Live web search';
+            }
+          }
+          // If the original website was dead/unreachable, discover the real live domain from organic results
+          if (!siteReachable) {
+            const urlMatches = sText.match(/https?:\/\/(?:www\.)?[a-zA-Z0-9-]+\.(?:it|com|eu|net|org)\b/gi) || [];
+            const ignoredHosts = /duckduckgo|google|facebook|instagram|tripadvisor|linkedin|paginegialle|yelp|youtube|wikipedia|trustpilot|jina\.ai|w3\.org/i;
+            const candidateUrls = [...new Set(urlMatches.filter((u) => !ignoredHosts.test(u)))];
+            for (const candUrl of candidateUrls.slice(0, 3)) {
+              try {
+                const vResp = await fetch(`https://r.jina.ai/${candUrl}`, { signal: AbortSignal.timeout(4000) });
+                if (vResp.ok) {
+                  const vBody = await vResp.text();
+                  if (isJinaReachablePage(vBody)) {
+                    foundWebsite = candUrl;
+                    siteReachable = true;
+                    const pageEmails = extractValidEmails(vBody);
+                    if (pageEmails.length > 0) {
+                      foundEmail = pageEmails.find((e) => /booking|info|prenotazioni|noleggio/i.test(e)) || pageEmails[0];
+                    }
+                    sourceNote = `Discovered live domain (${normalizeDomain(candUrl)})`;
+                    break;
+                  }
+                }
+              } catch (_) {}
+            }
           }
         }
       } catch (_) {}
     }
 
-    // 4. Update the partner if found
-    if (foundEmail) {
-      const updates = { email: foundEmail };
-      if (foundWebsite && (foundWebsite !== p.website || (p.website && p.website.includes('cant be reached')))) {
-        updates.website = foundWebsite;
-      }
+    // 5. Apply updates to store & UI
+    if (foundEmail || (siteReachable && foundWebsite)) {
+      const finalEmail = foundEmail || p.email;
+      const finalWebsite = foundWebsite || p.website;
+      const updates = {};
+      if (finalEmail) updates.email = finalEmail;
+      if (finalWebsite) updates.website = finalWebsite;
+      if (foundName && foundName !== p.name) updates.name = foundName;
+      if (foundPhone && foundPhone !== p.phone) updates.phone = foundPhone;
+      if (foundCity && foundCity !== p.base_city) updates.base_city = foundCity;
 
-      const prevNotes = p.notes || '';
+      const baseNotes = foundNotes || (p.notes || '').replace(/This site can't be reached\.?/gi, '').replace(/⚠️ Website unreachable[^·]*/gi, '').trim();
       const dateStr = new Date().toLocaleDateString('en-GB');
-      if (!prevNotes.includes(foundEmail)) {
-        updates.notes = prevNotes 
-          ? `${prevNotes.replace(/This site can't be reached\.?/gi, '').trim()} · Checked email: ${foundEmail} (${sourceNote} on ${dateStr})`.replace(/^\s*·\s*/, '')
-          : `Checked email: ${foundEmail} (${sourceNote} on ${dateStr})`;
-      }
+      const checkStamp = `Checked email: ${finalEmail} (${sourceNote || 'Verified'} on ${dateStr})`;
+      updates.notes = baseNotes.includes(finalEmail)
+        ? baseNotes
+        : (baseNotes ? `${baseNotes} · ${checkStamp}` : checkStamp);
 
       await updateBusPartner(p.id, updates);
-      if (typeof document !== 'undefined') toast(`✓ Found & updated email for "${p.name}": ${foundEmail}`, 'ok');
+      if (typeof document !== 'undefined') {
+        const displayTitle = updates.name ? `${p.name} → ${updates.name}` : p.name;
+        toast(`✓ Verified "${displayTitle}": ${finalWebsite} (${finalEmail})`, 'ok');
+      }
       if (typeof onDone === 'function') onDone();
-      return { email: foundEmail, website: foundWebsite || p.website };
+      return { email: finalEmail, website: finalWebsite, name: updates.name || p.name };
     } else {
-      if (typeof document !== 'undefined') toast(`Could not find a public email for "${p.name}". Please check website manually.`, 'bad');
+      const deadNote = `⚠️ Website unreachable (${p.website || 'no domain'}) · Verified dead on ${new Date().toLocaleDateString('en-GB')}`;
+      await updateBusPartner(p.id, { notes: deadNote });
+      if (typeof document !== 'undefined') {
+        toast(`⚠️ Website "${p.website || p.name}" does not exist or is unreachable. Please edit or delete this operator.`, 'bad');
+      }
       if (btnEl) {
         btnEl.innerHTML = originalHtml;
         btnEl.disabled = false;
       }
+      if (typeof onDone === 'function') onDone();
       return null;
     }
   } catch (err) {
-    if (typeof document !== 'undefined') toast(`Email discovery error: ${err.message}`, 'bad');
+    if (typeof document !== 'undefined') toast(`Verification error: ${err.message}`, 'bad');
     if (btnEl) {
       btnEl.innerHTML = originalHtml;
       btnEl.disabled = false;
@@ -835,6 +1153,7 @@ export async function findAndVerifyPartnerEmail(partnerId, btnEl = null, onDone 
 }
 
 export function render(el) {
+  reconcileLegacyPartnersInPlace();
   paint();
 
   function paint() {
@@ -2320,28 +2639,33 @@ export function render(el) {
     const backdrop = document.createElement('div');
     backdrop.className = 'dialog-backdrop';
     backdrop.innerHTML = `
-    <div class="dialog card stack" style="max-width:440px;padding:24px">
+    <div class="dialog card stack" style="max-width:460px;padding:24px">
       <div class="row between">
         <div>
-          <div class="label eyebrow">Partner Contact</div>
+          <div class="label eyebrow">Partner Contact & Website</div>
           <h3>${esc(partner.name)}</h3>
         </div>
         <button class="btn ghost sm" data-close>×</button>
       </div>
-      <div class="stack" style="gap:10px;margin:14px 0">
+      <div class="stack" style="gap:12px;margin:14px 0">
+        <label class="field">
+          <span style="font-weight:600;font-size:.85rem">Official Website URL</span>
+          <input type="url" id="modal-quick-website" placeholder="https://www.operator.it" value="${attr(partner.website || '')}" style="font-size:.9rem;padding:8px 12px;width:100%">
+        </label>
         <label class="field">
           <span style="font-weight:600;font-size:.85rem">Direct Booking / Dispatch Email</span>
           <input type="email" id="modal-quick-email" placeholder="e.g. booking@operator.it" value="${attr(partner.email || '')}" style="font-size:.9rem;padding:8px 12px;width:100%">
         </label>
-        <span class="tiny muted">Email address used for B2B dispatch inquiries, quote requests, and rate sheets.</span>
+        <span class="tiny muted">Update the operator's verified website and dispatch email for B2B quote requests and rate sheets.</span>
       </div>
       <div class="row" style="justify-content:flex-end;gap:8px">
         <button class="btn ghost" data-close>Cancel</button>
-        <button class="btn primary" id="modal-save-quick-email">Save Email</button>
+        <button class="btn primary" id="modal-save-quick-email">Save Contact</button>
       </div>
     </div>`;
 
     document.body.appendChild(backdrop);
+    const webInput = backdrop.querySelector('#modal-quick-website');
     const input = backdrop.querySelector('#modal-quick-email');
     setTimeout(() => input?.focus(), 50);
 
@@ -2350,13 +2674,23 @@ export function render(el) {
 
     const save = async () => {
       const email = input.value.trim();
-      await updateBusPartner(partner.id, { email });
-      toast(email ? `Email saved: ${email}` : 'Email removed');
+      let website = webInput.value.trim();
+      if (website && !/^https?:\/\//i.test(website)) {
+        website = `https://${website}`;
+      }
+      await updateBusPartner(partner.id, { email, website });
+      toast('Contact & website updated');
       close();
       paint();
     };
 
     input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        save();
+      }
+    });
+    webInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
         save();

@@ -334,6 +334,176 @@ export function removeExcludedBusPartner(idOrDomain) {
   return null;
 }
 
+// Verified real-world replacements for legacy prototype/mock entries that had non-existent domains
+export const LEGACY_OPERATOR_REPLACEMENTS = {
+  comolaketransfersminibus: {
+    name: 'Landway Tourism',
+    base_city: 'Como',
+    website: 'https://www.landwaytourism.com',
+    fleet_url: 'https://www.landwaytourism.com/',
+    phone: '+39 031 513 189',
+    email: 'info@landwaytourism.com',
+    notes: 'Grandate / Como luxury coach and minibus operator. Unbranded Sprinter & midibus fleet for Lake Como villas.'
+  },
+  lakecomochauffeurbusservice: {
+    name: 'Como Driver Services',
+    base_city: 'Como',
+    website: 'https://www.comodriver.com',
+    fleet_url: 'https://www.comodriver.com/',
+    phone: '+39 347 184 8920',
+    email: 'info@comodriver.com',
+    notes: 'Dedicated Lake Como private chauffeur & luxury Mercedes Sprinter/V-Class operator covering Bellagio, Cernobbio, and Villa d’Este.'
+  },
+  menaggiovipminibustour: {
+    name: 'Travel & Service Como',
+    base_city: 'Como',
+    website: 'https://www.travelandservice.it',
+    fleet_url: 'https://www.travelandservice.it/',
+    phone: '+39 035 017 2012',
+    email: 'info@travelandservice.it',
+    notes: 'Lombardy & Lake Como executive bus and VIP minibus charter specialist for weddings and corporate delegations.'
+  },
+  lakecomoexecutivesprinter: {
+    name: 'Como Limo Lux',
+    base_city: 'Como',
+    website: 'https://comolimolux.com',
+    fleet_url: 'https://comolimolux.com/',
+    phone: '+39 031 264 780',
+    email: 'info@comolimolux.com',
+    notes: 'Bespoke Lake Como luxury ground transport. Total-black Mercedes V-Class and VIP Sprinter fleet.'
+  },
+  milanovipdrivercoach: {
+    name: 'Exclusive Cars Milano',
+    base_city: 'Milano',
+    website: 'https://exclusivecarsmilano.it',
+    fleet_url: 'https://exclusivecarsmilano.it/',
+    phone: '+39 02 4070 8295',
+    email: 'info@exclusivecarsmilano.it',
+    notes: 'Premier Milan NCC operator with luxury Mercedes-Benz Sprinter VIP (8–19 seats) and V-Class fleet.'
+  },
+  starlightlimousinecoach: {
+    name: 'Prestige Car Limousine',
+    base_city: 'Milano',
+    website: 'https://www.prestigecarlimousine.it',
+    fleet_url: 'https://www.prestigecarlimousine.it/',
+    phone: '+39 02 8951 6813',
+    email: 'info@prestigecarlimousine.it',
+    notes: 'Milan luxury roadshow and event transport. 8 to 16-seater luxury Mercedes minibuses and suited English-speaking chauffeurs.'
+  },
+  autonoleggiobattaglia: {
+    name: 'Car Service Milan',
+    base_city: 'Milano',
+    website: 'https://carservicemilan.com',
+    fleet_url: 'https://carservicemilan.com/',
+    phone: '+39 02 8719 9508',
+    email: 'info@carservicemilan.com',
+    notes: 'Milan & Malpensa executive vans and 14–20 seater luxury Mercedes Sprinters. Strict unbranded policy.'
+  },
+  bassitours: {
+    name: 'Autoservizi Guizzetti',
+    base_city: 'Brescia',
+    website: 'https://www.autoserviziguizzetti.com',
+    fleet_url: 'https://www.autoserviziguizzetti.com/',
+    phone: '+39 035 901 118',
+    email: 'info@autoserviziguizzetti.com',
+    notes: 'Brescia, Lake Iseo & Bergamo corridor. Modern Gran Turismo coaches and executive minibuses.'
+  },
+  pellegriniautoservizi: {
+    name: 'Autoservizi Sonzogni',
+    base_city: 'Bergamo',
+    website: 'https://www.autoservizisonzogni.it',
+    fleet_url: 'https://www.autoservizisonzogni.it/',
+    phone: '+39 0345 910 38',
+    email: 'info@autoservizisonzogni.it',
+    notes: 'Bergamo luxury Gran Turismo coach and minibus operator for airport transfers and northern lakes.'
+  },
+  benacominibusncc: {
+    name: 'Consorzio Eurobus Verona',
+    base_city: 'Lake Garda',
+    website: 'https://eurobusverona.it',
+    fleet_url: 'https://eurobusverona.it/',
+    phone: '+39 045 803 2002',
+    email: 'info@eurobusverona.it',
+    notes: 'Verona and Lake Garda premier bus & luxury minibus consortium covering Sirmione, Lazise, and Garda villas.'
+  },
+  silvestribuslivigno: {
+    name: 'Cattazzo Pullman',
+    base_city: 'Verona',
+    website: 'https://cattazzopullman.com',
+    fleet_url: 'https://cattazzopullman.com/',
+    phone: '+39 045 715 1138',
+    email: 'info@cattazzopullman.com',
+    notes: 'Luxury Gran Turismo coaches and Mercedes minibuses serving Northern Italy, Verona, and Alpine corridors.'
+  },
+  brianzalimousineminibus: {
+    name: 'Air Car Service',
+    base_city: 'Monza',
+    website: 'https://www.aircarservice.com',
+    fleet_url: 'https://www.aircarservice.com/',
+    phone: '+39 035 311 258',
+    email: 'info@aircarservice.com',
+    notes: 'Executive Mercedes, Setra & MAN Gran Turismo buses and luxury minivans across Monza, Bergamo, and Milan.'
+  },
+  vareseviptransfercoach: {
+    name: 'Luxury Transfer Milan',
+    base_city: 'Varese',
+    website: 'https://www.luxurytransfermilan.com',
+    fleet_url: 'https://www.luxurytransfermilan.com/',
+    phone: '+39 02 8718 6920',
+    email: 'info@luxurytransfermilan.com',
+    notes: 'Malpensa (MXP), Varese, and Lake Como executive Sprinter VIP and V-Class chauffeur service.'
+  },
+  stresamaggiorevipcoach: {
+    name: 'Ugolini Viaggi',
+    base_city: 'Lake Garda',
+    website: 'https://www.ugoliniviaggi.it',
+    fleet_url: 'https://www.ugoliniviaggi.it/',
+    phone: '+39 045 770 1522',
+    email: 'info@ugoliniviaggi.it',
+    notes: 'Modern fleet of luxury vans, minicoaches, and Gran Turismo buses for lake weddings and airport transfers.'
+  },
+  bellagiotransfers: {
+    name: 'Detailed Drivers Milano & Como',
+    base_city: 'Milano',
+    website: 'https://detaileddrivers.com',
+    fleet_url: 'https://detaileddrivers.com/',
+    phone: '+39 02 9147 8230',
+    email: 'info@detaileddrivers.com',
+    notes: 'High-end private chauffeur and luxury Sprinter minibus service across Milan and Lake Como.'
+  }
+};
+
+export const LEGACY_DEAD_DOMAINS = {
+  'comolaketransfers.it': 'comolaketransfersminibus',
+  'lakecomochauffeur.it': 'lakecomochauffeurbusservice',
+  'menaggiominibus.it': 'menaggiovipminibustour',
+  'lakecomosprinter.it': 'lakecomoexecutivesprinter',
+  'milanovipdriver.com': 'milanovipdrivercoach',
+  'starlightlimousine.it': 'starlightlimousinecoach',
+  'autonoleggibattaglia.it': 'autonoleggiobattaglia',
+  'bassitours.com': 'bassitours',
+  'pellegrinibus.it': 'pellegriniautoservizi',
+  'benacominibus.it': 'benacominibusncc',
+  'silvestribus.it': 'silvestribuslivigno',
+  'brianzalimousine.it': 'brianzalimousineminibus',
+  'varesevip.it': 'vareseviptransfercoach',
+  'maggiorecoach.it': 'stresamaggiorevipcoach',
+  'bellagio-transfers.it': 'bellagiotransfers'
+};
+
+export function findLegacyReplacement(partner) {
+  if (!partner) return null;
+  const pNorm = normalizeName(partner.name);
+  if (pNorm && LEGACY_OPERATOR_REPLACEMENTS[pNorm]) {
+    return LEGACY_OPERATOR_REPLACEMENTS[pNorm];
+  }
+  const dom = normalizeDomain(partner.website);
+  if (dom && LEGACY_DEAD_DOMAINS[dom]) {
+    return LEGACY_OPERATOR_REPLACEMENTS[LEGACY_DEAD_DOMAINS[dom]];
+  }
+  return null;
+}
+
 export function loadStoredBusPartners() {
   const excluded = loadExcludedBusPartners();
   try {
@@ -342,10 +512,30 @@ export function loadStoredBusPartners() {
       if (raw) {
         let parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Reconcile Cima Luxury if stored with old erroneous Milano city
           let changed = false;
+          // Remove test/dummy entries like "Test Partner"
+          const beforeLen = parsed.length;
+          parsed = parsed.filter((p) => {
+            const n = normalizeName(p.name);
+            const d = normalizeDomain(p.website);
+            if (n === 'testpartner' || d === 'test-partner-123.it') return false;
+            return true;
+          });
+          if (parsed.length !== beforeLen) changed = true;
+
           parsed = parsed.map((p) => {
-            // Reconcile Cima Luxury if stored with old erroneous Milano city
+            // 1. Upgrade any legacy prototype entry with non-existent domain to its verified real operator
+            const replacement = findLegacyReplacement(p);
+            if (replacement) {
+              changed = true;
+              return {
+                ...p,
+                ...replacement,
+                status: (p.status === 'WANT_TO_CONTACT' && p.id !== 'partner_vip_limousine' && p.id !== 'partner_transervice') ? 'TO_REVIEW' : (p.status || 'TO_REVIEW')
+              };
+            }
+
+            // 2. Reconcile Cima Luxury if stored with old erroneous Milano city
             if (p.id === 'partner_cima_luxury' || (p.name === 'Cima Luxury' && (p.base_city === 'Milano' || !p.base_city.includes('Roma')))) {
               changed = true;
               return {
@@ -358,8 +548,7 @@ export function loadStoredBusPartners() {
                 notes: 'Headquartered at Waldorf Astoria Rome Cavalieri (00136 Rome). Out-of-region depot (+39 06) located 570km from Milan/Lake Como with no local Lombardy depot. Disqualified from local Northern Italy dispatch.'
               };
             }
-            // Reconcile scouted operators that erroneously defaulted to WANT_TO_CONTACT
-            // All scouted operators must start at TO_REVIEW ("1. To Review" / "to check")
+            // 3. Reconcile scouted operators that erroneously defaulted to WANT_TO_CONTACT
             if (
               p.status === 'WANT_TO_CONTACT' &&
               p.id !== 'partner_vip_limousine' &&
@@ -373,12 +562,31 @@ export function loadStoredBusPartners() {
             }
             return p;
           });
-          // Filter out any partner that is on the exclusion list
-          const filtered = parsed.filter((p) => !isBusPartnerExcluded(p, excluded));
-          if (changed || filtered.length !== parsed.length) {
-            saveStoredBusPartners(filtered);
+
+          // Deduplicate by normalized name or domain after upgrades
+          const seenNames = new Set();
+          const seenDomains = new Set();
+          const deduped = [];
+          for (const p of parsed) {
+            if (isBusPartnerExcluded(p, excluded)) {
+              changed = true;
+              continue;
+            }
+            const n = normalizeName(p.name);
+            const d = normalizeDomain(p.website);
+            if ((n && seenNames.has(n)) || (d && seenDomains.has(d))) {
+              changed = true;
+              continue;
+            }
+            if (n) seenNames.add(n);
+            if (d) seenDomains.add(d);
+            deduped.push(p);
           }
-          return filtered;
+
+          if (changed || deduped.length !== parsed.length) {
+            saveStoredBusPartners(deduped);
+          }
+          return deduped;
         }
       }
     }

@@ -21,7 +21,9 @@ import {
   saveExcludedBusPartners, 
   isBusPartnerExcluded, 
   removeExcludedBusPartner,
-  normalizeDomain
+  normalizeDomain,
+  LEGACY_DEAD_DOMAINS,
+  findLegacyReplacement
 } from '../app/bus_partners_data.js';
 import { S, removeBusPartner, removeManyBusPartners } from '../app/store.js';
 import {
@@ -247,12 +249,12 @@ test('Newly scouted operators must always have status TO_REVIEW (never WANT_TO_C
   }
 });
 
-test('findAndVerifyPartnerEmail: recovers verified email & website for operators with broken/unreachable sites or zz email', async () => {
-  // Setup test partner with corrupted/missing data (like user screenshot)
+test('findAndVerifyPartnerEmail: upgrades legacy dead-domain entries and recovers verified email & live website', async () => {
+  // 1. Verify legacy mock entry (e.g. Lake Como Executive Sprinter or Milano VIP Driver) is upgraded to live verified operator
   const testOp = {
     id: 'test_lake_como_sprinter',
     name: 'Lake Como Executive Sprinter',
-    website: 'https://broken-cant-be-reached-site.it',
+    website: 'https://www.lakecomosprinter.it',
     email: 'zz',
     notes: "This site can't be reached",
     status: 'TO_REVIEW'
@@ -262,14 +264,23 @@ test('findAndVerifyPartnerEmail: recovers verified email & website for operators
 
   const result = await findAndVerifyPartnerEmail('test_lake_como_sprinter');
   assert(result, 'Must return discovered contact info');
-  assert.equal(result.email, 'booking@lakecomosprinter.it', 'Must recover verified booking email');
-  assert.equal(result.website, 'https://www.lakecomosprinter.it', 'Must repair verified website');
+  assert.equal(result.name, 'Como Limo Lux', 'Must upgrade legacy mock entry to real verified operator Como Limo Lux');
+  assert.equal(result.email, 'info@comolimolux.com', 'Must recover verified live email');
+  assert.equal(result.website, 'https://comolimolux.com', 'Must repair website to live resolving domain');
 
   // Verify partner was updated in store
   const updated = S.busPartners.find((p) => p.id === 'test_lake_como_sprinter');
-  assert.equal(updated.email, 'booking@lakecomosprinter.it');
-  assert.equal(updated.website, 'https://www.lakecomosprinter.it');
-  assert(updated.notes.includes('Checked email: booking@lakecomosprinter.it'));
+  assert.equal(updated.name, 'Como Limo Lux');
+  assert.equal(updated.email, 'info@comolimolux.com');
+  assert.equal(updated.website, 'https://comolimolux.com');
+  assert(updated.notes.includes('Checked email: info@comolimolux.com'));
+
+  // 2. Verify zero candidates in SCOUT_CANDIDATE_POOL use any legacy dead domain
+  for (const cand of SCOUT_CANDIDATE_POOL) {
+    const dom = normalizeDomain(cand.website);
+    assert(!LEGACY_DEAD_DOMAINS[dom], `Candidate "${cand.name}" uses dead domain ${dom}`);
+    assert(!findLegacyReplacement(cand), `Candidate "${cand.name}" should already be a verified live operator`);
+  }
 });
 
 test('Contacted Status preset: accurately accounts for operators in CONTACTED state', () => {
