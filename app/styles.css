@@ -272,9 +272,11 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--g
 /* Path Exploration (Flow Pipeline) — Vibrant colors scoped strictly to the flow chart */
 .path-wrap { display: flex; flex-direction: column; gap: 16px; }
 .path-card {
-  --path-info: #3B82F6;
+  --path-info: #2563EB;
   --path-gold: #D97706;
   --path-gold-soft: rgba(217, 119, 6, .12);
+  --path-purple: #7C3AED;
+  --path-teal: #0D9488;
   --path-ok: #10B981;
   --path-warn: #F59E0B;
   --path-bad: #EF4444;
@@ -318,27 +320,31 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--g
 .step-arrow { color: var(--ink-3); flex: none; display: inline-grid; place-items: center; }
 
 .path-svg { display: block; user-select: none; overflow: visible; }
-.path-link { fill: var(--path-info); fill-opacity: .22; stroke: none; cursor: pointer; transition: fill-opacity .15s, fill .15s; }
+.path-link { fill: var(--path-info); fill-opacity: .24; stroke: none; cursor: pointer; transition: fill-opacity .15s, fill .15s; }
 .path-link.tone-gold { fill: var(--path-gold); }
+.path-link.tone-purple { fill: var(--path-purple); }
+.path-link.tone-teal { fill: var(--path-teal); }
 .path-link.tone-ok { fill: var(--path-ok); }
 .path-link.tone-warn { fill: var(--path-warn); }
 .path-link.tone-bad { fill: var(--path-bad); }
 .path-link.tone-muted { fill: var(--path-muted); }
 .path-link.tone-more { fill: var(--path-more); }
-.path-link.dim { fill-opacity: .05; }
-.path-link.hi { fill-opacity: .32; }
-.path-link:hover, .path-link.hover { fill-opacity: .48 !important; }
+.path-link.dim { fill-opacity: .06; }
+.path-link.hi { fill-opacity: .38; }
+.path-link:hover, .path-link.hover { fill-opacity: .52 !important; }
 
 .path-node { cursor: pointer; outline: none; }
 .path-node .node-hit { fill: transparent; rx: 6px; transition: fill .12s, stroke .12s; }
 .path-node:hover .node-hit, .path-node.hover .node-hit, .path-node:focus-visible .node-hit { fill: rgba(59, 130, 246, .08); fill-opacity: 1; }
-.path-node.selected .node-hit { fill: var(--path-gold-soft); stroke: var(--path-gold); stroke-width: 1.2px; }
+.path-node.selected .node-hit { fill: var(--path-gold-soft); stroke: var(--path-gold); stroke-width: 1.5px; }
 .is-dragging .path-node[data-drop-stage] .node-hit { stroke: var(--path-info); stroke-width: 1.2px; stroke-dasharray: 4 2; }
 .path-node.drop-hover .node-hit { fill: var(--path-gold-soft); stroke: var(--path-gold) !important; stroke-width: 2px !important; stroke-dasharray: 4 2; }
 .path-node.dim { opacity: .42; }
 .path-node.dim.hover { opacity: .85; }
 .path-node .node-bar { fill: var(--path-info); transition: filter .15s; }
 .path-node.tone-gold .node-bar { fill: var(--path-gold); }
+.path-node.tone-purple .node-bar { fill: var(--path-purple); }
+.path-node.tone-teal .node-bar { fill: var(--path-teal); }
 .path-node.tone-ok .node-bar { fill: var(--path-ok); }
 .path-node.tone-warn .node-bar { fill: var(--path-warn); }
 .path-node.tone-bad .node-bar { fill: var(--path-bad); }

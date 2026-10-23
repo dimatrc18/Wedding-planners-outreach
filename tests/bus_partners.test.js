@@ -618,3 +618,26 @@ test('buildBusSankeyFlow: builds 4-column visual pipeline flow (Class -> Town ->
   assert(!flowLux.matchedIds.has('2'));
 });
 
+test('inferBusSegment: classifies Luxury VIP vs Standard GT vs Both directly from allocated buses', () => {
+  const onlyLuxuryAllocated = {
+    name: 'Bellagio Chauffeurs',
+    fleet_categories: ['Mercedes-Benz V-Class VIP (7–8 seats)', 'Mercedes Sprinter VIP (8–16 seats)'],
+  };
+  assert.equal(inferBusSegment(onlyLuxuryAllocated), 'luxury');
+
+  const onlyStandardAllocated = {
+    name: 'Lario Charter',
+    relevance_score: 92, // Even with a high score, allocated standard buses must classify as 'standard'
+    notes: 'High-end luxury wedding charter experience',
+    fleet_categories: ['Executive Midibus (24–30 seats)', 'Setra & Mercedes GT Coach (50–56 seats)'],
+  };
+  assert.equal(inferBusSegment(onlyStandardAllocated), 'standard');
+
+  const bothAllocated = {
+    name: 'Berini Autonoleggio',
+    fleet_categories: ['Mercedes-Benz V-Class VIP (7–8 seats)', 'Executive Midibus (24–30 seats)'],
+  };
+  assert.equal(inferBusSegment(bothAllocated), 'both');
+});
+
+

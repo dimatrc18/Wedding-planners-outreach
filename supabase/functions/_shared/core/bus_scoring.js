@@ -289,18 +289,67 @@ export const DEFAULT_BUS_OUTREACH_SETTINGS = {
 };
 
 /**
- * Infers whether a bus operator offers Luxury VIP, Standard GT/Charter, or Both.
+ * Classifies a single bus/vehicle string as 'luxury' (VIP Vans, Sprinter VIP/Lux/Exec, Limobus, Setra VIP Lounge)
+ * or 'standard' (Executive Midibus 24–30 pax, Setra/Mercedes Tourismo GT Coach 50–56 pax, Pullman).
+ */
+export function classifySingleBusAllocation(busStr = '') {
+  const s = String(busStr || '').toLowerCase();
+  if (!s.trim()) return null;
+
+  // Luxury VIP vehicles: V-Class, Sprinter VIP/Lux/Exec, Limobus, or VIP Lounge conversions
+  if (/limobus|vip\s*lounge|v-?class|classe\s*v|vito|minivan|sprinter.*(vip|lux|exec)|setra.*vip/i.test(s)) {
+    return 'luxury';
+  }
+  // Standard GT / Group Charter vehicles: Midibus (24-30 pax), Tourismo/Setra GT Coaches (50-56 pax), standard Sprinter minibus
+  if (/midibus|midi-?coach|minicoach|indcar|tourismo|setra|gt\b|gran\s*turismo|coach|pullman|iveco|scania|irizar|sprinter|30.*54|50.*56|36.*56|30.*75|24.*30/i.test(s)) {
+    return 'standard';
+  }
+  if (/vip|luxury|exclusive/i.test(s)) return 'luxury';
+  return 'standard';
+}
+
+/**
+ * Infers whether a bus operator offers Luxury VIP, Standard GT/Charter, or Both
+ * directly from the allocation of buses selected for that partner (`fleet_categories` and `bus_models`).
  */
 export function inferBusSegment(partner = {}) {
-  const explicit = partner.fleet_segment || partner.score_breakdown?.partner_card?.fleet_segment;
+  const card = partner.score_breakdown?.partner_card || {};
+  const explicit = partner.fleet_segment || card.fleet_segment;
+  const userOverrode = Boolean(partner.user_set_segment || card.user_set_segment);
+
+  if (userOverrode && explicit && ['luxury', 'standard', 'both'].includes(explicit)) {
+    return explicit;
+  }
+
+  // Check allocated buses first (`fleet_categories` + `bus_models`)
+  const categories = Array.isArray(partner.fleet_categories) ? partner.fleet_categories : [];
+  const modelsStr = String(partner.bus_models || card.bus_models || '').trim();
+  const allocatedBuses = [
+    ...categories,
+    ...(modelsStr ? modelsStr.split(/[,;/•\n]+/).map((x) => x.trim()).filter(Boolean) : []),
+  ];
+
+  if (allocatedBuses.length > 0) {
+    let hasLux = false;
+    let hasStd = false;
+    for (const item of allocatedBuses) {
+      const cls = classifySingleBusAllocation(item);
+      if (cls === 'luxury') hasLux = true;
+      else if (cls === 'standard') hasStd = true;
+    }
+    if (hasLux && hasStd) return 'both';
+    if (hasLux) return 'luxury';
+    if (hasStd) return 'standard';
+  }
+
   if (explicit && ['luxury', 'standard', 'both'].includes(explicit)) return explicit;
 
-  const text = `${partner.name || ''} ${(partner.fleet_categories || []).join(' ')} ${partner.unbranded_status || ''} ${partner.notes || ''}`.toLowerCase();
-  const hasLux = /vip|limobus|lounge|v-?class|total\s+black|exclusive|luxury/i.test(text) || (partner.relevance_score || 0) >= 85;
-  const hasStd = /tourismo|setra|gt\b|gran\s+turismo|coach|pullman|iveco|scania|irizar|50|52|54|56|60|64/i.test(text);
+  const text = `${partner.name || ''} ${partner.unbranded_status || ''} ${partner.notes || ''}`.toLowerCase();
+  const hasLuxText = /vip|limobus|lounge|v-?class|total\s+black|exclusive|luxury/i.test(text);
+  const hasStdText = /tourismo|setra|gt\b|gran\s+turismo|coach|pullman|iveco|scania|irizar/i.test(text);
 
-  if (hasLux && hasStd) return 'both';
-  if (hasLux) return 'luxury';
+  if (hasLuxText && hasStdText) return 'both';
+  if (hasLuxText) return 'luxury';
   return 'standard';
 }
 
@@ -723,11 +772,12 @@ export function parseBusPartnerReply(replyText = '', existingPartner = {}) {
 }
 
 /**
- * Builds the 4-Column Interactive Visual Pipeline Flow (Sankey Diagram) for Bus Partners:
- * Column 0 (CLASS): Bus Segment (Luxury VIP vs Standard GT vs Both)
- * Column 1 (TOWN): Base Depot Town (Milano, Como, Bergamo, Verona/Garda, etc.)
- * Column 2 (FIT): Relevance Score Tier (/100)
- * Column 3 (STAGE): Current Outreach & Rate Stage
+ * Builds the 4-Column Interactive Visual Pipeline Flow (Sankey Diagram) for Bus Partners,
+ * focusing strictly on high-signal decision steps with semantic color coding:
+ * Column 0 (1. BUS CLASS): Allocated Bus Segment (Luxury VIP vs Luxury & Standard vs Standard GT)
+ * Column 1 (2. VEHICLES & PAX): Allocated Bus Size & Passenger Capacity (7–20 pax Vans/Sprinters, 18–30 pax Midibus/Limobus, 50–56 pax GT Coaches)
+ * Column 2 (3. OUTREACH STAGE): Current Pipeline Status (Want to Contact, Contacted, To Check, Approved)
+ * Column 3 (4. GOAL: RATES & WA): Deliverables Progress toward 10-Reply Target (Has Rates & WA, Waiting Reply, Ready to Pitch, Needs Email Check)
  */
 export function buildBusSankeyFlow(partners = [], selectedNodes = {}) {
   const list = Array.isArray(partners) ? partners : [];
@@ -740,30 +790,47 @@ export function buildBusSankeyFlow(partners = [], selectedNodes = {}) {
   const classifyCol = (p, colIdx) => {
     if (colIdx === 0) {
       const seg = inferBusSegment(p);
-      if (seg === 'luxury') return { key: 'seg:luxury', label: 'Luxury VIP Unbranded', tone: 'gold', order: 1 };
-      if (seg === 'both') return { key: 'seg:both', label: 'Luxury & Standard Fleet', tone: 'ok', order: 2 };
-      return { key: 'seg:standard', label: 'Standard GT / Charter', tone: 'info', order: 3 };
+      if (seg === 'luxury') return { key: 'seg:luxury', label: '✨ Luxury VIP Fleet', tone: 'gold', order: 1 };
+      if (seg === 'both') return { key: 'seg:both', label: '✨+🚌 Luxury & Standard', tone: 'purple', order: 2 };
+      return { key: 'seg:standard', label: '🚌 Standard GT Charter', tone: 'info', order: 3 };
     }
     if (colIdx === 1) {
-      const rawCity = String(p.base_city || 'Northern Italy').split(/[\/,]/)[0].trim();
-      if (/milan|monza/i.test(rawCity)) return { key: 'city:milano', label: 'Milano & Monza', tone: 'info', order: 1 };
-      if (/como|bellagio|cernobbio|lecco|lari/i.test(rawCity)) return { key: 'city:como', label: 'Lake Como & Lecco', tone: 'ok', order: 2 };
-      if (/bergamo|brescia/i.test(rawCity)) return { key: 'city:bergamo', label: 'Bergamo & Brescia', tone: 'gold', order: 3 };
-      if (/verona|garda|peschiera/i.test(rawCity)) return { key: 'city:garda', label: 'Verona & Lake Garda', tone: 'info', order: 4 };
-      if (/bormio|sondrio|alps/i.test(rawCity)) return { key: 'city:alps', label: 'Alps & Valtellina', tone: 'muted', order: 5 };
-      return { key: 'city:other', label: 'Other Northern Hubs', tone: 'muted', order: 6 };
+      const busText = `${(p.fleet_categories || []).join(' ')} ${p.bus_models || ''}`.toLowerCase();
+      const hasSmall = /v-?class|vito|minivan|sprinter/i.test(busText);
+      const hasMid = /midibus|midi-?coach|minicoach|indcar|limobus/i.test(busText);
+      const hasLarge = /tourismo|setra|gt\b|gran\s*turismo|coach|pullman|50|52|54|56/i.test(busText);
+
+      if (hasSmall && hasLarge) return { key: 'pax:mixed', label: '🚐+🚍 Vans & GT Coaches', tone: 'purple', order: 2 };
+      if (hasSmall && hasMid) return { key: 'pax:small_mid', label: '🚐 Sprinters & Midibus (8–30p)', tone: 'gold', order: 1 };
+      if (hasSmall) return { key: 'pax:minibus', label: '🚐 VIP Vans & Sprinters (7–20p)', tone: 'gold', order: 1 };
+      if (hasMid && !hasLarge) return { key: 'pax:midibus', label: '🚌 Midibus & Limobus (18–30p)', tone: 'teal', order: 3 };
+      if (hasLarge) return { key: 'pax:coach', label: '🚍 GT Coaches (30–56 pax)', tone: 'info', order: 4 };
+      return { key: 'pax:minibus', label: '🚐 VIP Vans & Sprinters (7–20p)', tone: 'gold', order: 1 };
     }
     if (colIdx === 2) {
-      const sc = p.relevance_score || 0;
-      if (sc >= 80) return { key: 'fit:high', label: 'Top Fit (80–100)', tone: 'ok', order: 1 };
-      if (sc >= 65) return { key: 'fit:mid', label: 'Good Fit (65–79)', tone: 'gold', order: 2 };
-      return { key: 'fit:std', label: 'Standard Reserve (<65)', tone: 'muted', order: 3 };
+      const st = p.status || 'TO_REVIEW';
+      if (st === 'APPROVED_PARTNER') return { key: 'status:APPROVED_PARTNER', label: '🤝 4. Approved Partner', tone: 'ok', order: 1 };
+      if (st === 'CONTACTED') return { key: 'status:CONTACTED', label: '✉️ 3. Contacted', tone: 'info', order: 2 };
+      if (st === 'WANT_TO_CONTACT') return { key: 'status:WANT_TO_CONTACT', label: '📞 2. Want to Contact', tone: 'purple', order: 3 };
+      if (st === 'REJECTED' || st === 'NOT_RELEVANT') return { key: 'status:CLOSED', label: '🚫 Closed / Disqualified', tone: 'bad', order: 5 };
+      return { key: 'status:TO_REVIEW', label: '⏳ 1. To Check', tone: 'warn', order: 4 };
     }
-    // colIdx === 3: Outreach & Rate Stage
-    const st = getBusOutreachStage(p);
-    const meta = BUS_OUTREACH_STAGES.find((s) => s.key === st) || BUS_OUTREACH_STAGES[0];
-    const orderMap = { partner_won: 1, replied: 2, t2_sent: 3, t1_sent: 4, ready: 5, to_check: 6, closed: 7 };
-    return { key: `stage:${meta.key}`, rawKey: meta.key, label: meta.label, tone: meta.tone, order: orderMap[meta.key] || 9 };
+    // colIdx === 3: Deliverables & Weekly 10-Reply Goal
+    const stage = getBusOutreachStage(p);
+    const hasRates = Boolean(p.rate_hourly || p.rate_standby || p.replied_at || stage === 'replied' || stage === 'partner_won');
+    if (hasRates) {
+      return { key: 'goal:replied_rates', label: '💶 Replied · Rates & WA 🎯', tone: 'ok', order: 1 };
+    }
+    if (p.status === 'CONTACTED' || stage === 't1_sent' || stage === 't2_sent') {
+      return { key: 'goal:waiting_reply', label: '📨 Sent · Waiting Reply', tone: 'info', order: 2 };
+    }
+    if (p.status === 'WANT_TO_CONTACT' || stage === 'ready') {
+      return { key: 'goal:ready_pitch', label: '🚀 Ready to Pitch (Mon–Sat)', tone: 'purple', order: 3 };
+    }
+    if (p.status === 'REJECTED' || p.status === 'NOT_RELEVANT' || stage === 'closed') {
+      return { key: 'goal:closed', label: '🚫 Skipped / Not Local', tone: 'bad', order: 5 };
+    }
+    return { key: 'goal:needs_check', label: '🔍 Check Email First', tone: 'warn', order: 4 };
   };
 
   // Determine which partners match the current node selection across columns

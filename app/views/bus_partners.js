@@ -249,15 +249,14 @@ function hydratePartnerCardLocal(p) {
     else if (/coach|tourismo|setra|pullman/i.test(c)) { defaultModels.push('Mercedes Tourismo / Setra GT (50–56 pax)'); defaultPax.push('50–56'); }
   }
 
-  const hasLux = /vip|limobus|lounge|v-?class|total\s+black|exclusive|luxury/i.test(catText) || (p.relevance_score || 0) >= 85;
-  const hasStd = /tourismo|setra|gt\b|gran\s+turismo|coach|pullman|iveco|scania|irizar|50|52|54|56|60|64/i.test(catText);
-  const inferredSegment = (hasLux && hasStd) ? 'both' : hasLux ? 'luxury' : 'standard';
-
   const isMoveolux = p.id === 'partner_moveolux';
-  const fleet_segment = p.fleet_segment || card.fleet_segment || inferredSegment;
   const rawBusModels = p.bus_models ?? card.bus_models ?? ([...new Set(defaultModels)].join(', ') || '');
   const paxAudit = core.verifyPerBusPaxCapacity({ bus_models: rawBusModels, fleet_categories: cats }, { autoInferKnownStandards: true });
   const bus_models = paxAudit.formattedBusModels || rawBusModels;
+  const user_set_segment = Boolean(p.user_set_segment || card.user_set_segment);
+  const fleet_segment = user_set_segment
+    ? (p.fleet_segment || card.fleet_segment || core.inferBusSegment({ ...p, bus_models, user_set_segment: false }))
+    : core.inferBusSegment({ ...p, bus_models, user_set_segment: false });
   const pax_capacity = p.pax_capacity || card.pax_capacity || paxAudit.formattedPaxSummary || (defaultPax.length ? `${[...new Set(defaultPax)].join(', ')} pax` : '');
   const rate_hourly = p.rate_hourly ?? card.rate_hourly ?? (isMoveolux ? '€120/h' : '');
   const rate_standby = p.rate_standby ?? card.rate_standby ?? (isMoveolux ? '€550 (4h disp.) · €1,050 (8h disp.)' : '');
@@ -324,7 +323,7 @@ function reconcileLegacyPartnersInPlace() {
     const rawItem = replacement ? { ...p, ...replacement } : p;
     if (replacement) changed = true;
     const item = hydratePartnerCardLocal(rawItem);
-    if (p.bus_models !== item.bus_models) changed = true;
+    if (p.bus_models !== item.bus_models || p.fleet_segment !== item.fleet_segment) changed = true;
 
     const finalName = normalizeName(item.name);
     const finalDom = normalizeDomain(item.website);
@@ -1500,10 +1499,10 @@ export function render(el) {
     const hasActiveFilters = activeFilter !== 'all' || segmentFilter !== 'all' || statusFilter !== 'all' || vehicleFilter !== 'all' || cityFilter !== 'all' || searchQ.trim() !== '' || hasFlowSel;
 
     const flowColHeaders = [
-      { step: 'CLASS', title: 'Bus Segment (Lux / Std)' },
-      { step: 'TOWN', title: 'Base Depot / Location' },
-      { step: 'FIT', title: 'Fit Score Tier (/100)' },
-      { step: 'STEP 4', title: 'Current Outreach Stage' },
+      { step: '1. BUS CLASS', title: 'Allocated Segment (Lux / Std)', color: '#d97706', bg: 'rgba(217, 119, 6, 0.07)', border: 'rgba(217, 119, 6, 0.35)' },
+      { step: '2. VEHICLES & PAX', title: 'Fleet Size & Passenger Fit', color: '#0d9488', bg: 'rgba(13, 148, 136, 0.07)', border: 'rgba(13, 148, 136, 0.35)' },
+      { step: '3. OUTREACH STAGE', title: 'Current Pipeline Step', color: '#7c3aed', bg: 'rgba(124, 58, 237, 0.07)', border: 'rgba(124, 58, 237, 0.35)' },
+      { step: '4. GOAL: RATES & WA', title: 'Replied · Rates & WA (10 Goal)', color: '#059669', bg: 'rgba(16, 185, 129, 0.08)', border: 'rgba(16, 185, 129, 0.4)' },
     ];
 
     el.innerHTML = `
@@ -1543,25 +1542,31 @@ export function render(el) {
         </div>
         <div class="kpi" style="border-left:3px solid #10b981;padding-left:12px">
           <span class="label">🎯 Replied (Models & Rates)</span>
-          <span class="val" style="color:var(--ok)">${repliedOrRatesCount} <span style="font-size:1rem;color:var(--text-3);font-weight:500">/ 10 Goal</span></span>
+          <span class="val" style="color:#059669">${repliedOrRatesCount} <span style="font-size:1rem;color:var(--text-3);font-weight:500">/ 10 Goal</span></span>
           <span class="ci">Target: ≥10 replies by end of next week</span>
         </div>
         <div class="kpi">
           <span class="label">Approved Partners</span>
-          <span class="val" style="color:var(--gold)">${activePartners}</span>
+          <span class="val" style="color:#d97706">${activePartners}</span>
           <span class="ci">Standby/hourly rates & WA confirmed</span>
         </div>
       </div>
 
       <!-- Collapsible Visual Pipeline Flow (Sankey Diagram) Between Stats & Table -->
-      <section class="card flush" style="padding:12px 16px;border:1px solid var(--border);background:var(--surface)">
+      <section class="path-card" style="padding:12px 16px;border:1px solid var(--border);background:var(--surface)">
         <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px">
           <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">
-            <span class="chip outline" style="font-weight:700;font-size:.74rem;color:var(--ink)">📊 Visual Pipeline Flow</span>
+            <span class="chip outline" style="font-weight:700;font-size:.74rem;color:#1e40af;border-color:#93c5fd;background:#eff6ff">📊 Visual Pipeline Flow</span>
             <span class="small muted">
-              Luxury & Standard Bus Funnel · <b>Mon–Sat Autonomous Schedule</b> (Sunday paused unless replying to a Sunday message) · Zero-Bounce MX Gate
+              <b>Click any bar to filter</b> · Class auto-detected from allocated buses · <b>Mon–Sat Schedule</b>
             </span>
-            ${hasFlowSel ? `<button class="btn sm ghost" id="btn-clear-flow-sel" style="padding:2px 8px;font-size:.74rem;color:var(--series-1);border-color:var(--series-1)">✕ Clear Flow Selection (${filtered.length}/${totalDiscovered})</button>` : ''}
+            <div class="row" style="gap:8px;align-items:center;font-size:.72rem;color:var(--ink-2);margin-left:4px">
+              <span style="display:inline-flex;align-items:center;gap:4px"><i style="width:8px;height:8px;border-radius:50%;background:#d97706;display:inline-block"></i>Luxury VIP</span>
+              <span style="display:inline-flex;align-items:center;gap:4px"><i style="width:8px;height:8px;border-radius:50%;background:#7c3aed;display:inline-block"></i>Lux+Std / Ready</span>
+              <span style="display:inline-flex;align-items:center;gap:4px"><i style="width:8px;height:8px;border-radius:50%;background:#2563eb;display:inline-block"></i>Standard GT / Sent</span>
+              <span style="display:inline-flex;align-items:center;gap:4px"><i style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block"></i>Replied / Rates 🎯</span>
+            </div>
+            ${hasFlowSel ? `<button class="btn sm ghost" id="btn-clear-flow-sel" style="padding:2px 8px;font-size:.74rem;color:#2563eb;border-color:#2563eb;background:#eff6ff;font-weight:600">✕ Clear Flow Filter (${filtered.length}/${totalDiscovered})</button>` : ''}
           </div>
           <div class="row" style="gap:8px;align-items:center">
             <button class="btn sm ghost" id="btn-toggle-visual-flow" style="font-weight:600;font-size:.78rem;padding:4px 10px;border-color:var(--border);background:var(--surface-2)" title="Show or hide the visual Sankey pipeline diagram">
@@ -1576,11 +1581,11 @@ export function render(el) {
               <div class="path-col-headers" style="display:grid;grid-template-columns:repeat(4, 1fr);gap:12px;margin-bottom:8px;padding:0 12px">
                 ${flowColHeaders.map((h, i) => `
                   <div style="display:flex;align-items:center;gap:8px">
-                    <div style="background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:6px 12px;flex:1">
-                      <div style="font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);font-weight:700">${esc(h.step)}</div>
-                      <div style="font-size:.82rem;font-weight:600;color:var(--ink)">${esc(h.title)}</div>
+                    <div style="background:${h.bg};border:1px solid ${h.border};border-left:3px solid ${h.color};border-radius:6px;padding:6px 12px;flex:1">
+                      <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.06em;color:${h.color};font-weight:800">${esc(h.step)}</div>
+                      <div style="font-size:.81rem;font-weight:600;color:var(--ink)">${esc(h.title)}</div>
                     </div>
-                    ${i < 3 ? `<span class="muted" style="font-size:.9rem">→</span>` : ''}
+                    ${i < 3 ? `<span style="font-size:.95rem;color:${h.color};font-weight:700">→</span>` : ''}
                   </div>
                 `).join('')}
               </div>
@@ -1601,7 +1606,7 @@ export function render(el) {
                     const labelY = n.y + 13;
                     const countY = n.y + 29;
                     const stateCls = `${n.selected ? 'selected' : ''} ${hasFlowSel && !n.highlighted ? 'dim' : ''}`;
-                    const shortLabel = n.label.length > 25 ? `${n.label.slice(0, 24)}…` : n.label;
+                    const shortLabel = n.label.length > 26 ? `${n.label.slice(0, 25)}…` : n.label;
                     const countMarkup = `${n.count} <tspan class="node-pct">${pct(n.shareOfCol)}</tspan>`;
                     return `<g class="path-node tone-${attr(n.tone)} ${stateCls}" data-flow-col="${col.index}" data-flow-node="${attr(n.key)}" style="cursor:pointer" tabindex="0" role="button" aria-pressed="${n.selected}">
                       <rect class="node-hit" x="${n.x - 4}" y="${n.y - 3}" width="${hitW}" height="${n.slotHeight + 4}" fill="transparent"/>
@@ -1617,41 +1622,25 @@ export function render(el) {
         ` : ''}
       </section>
 
-      <!-- Control & Filter Bar -->
-      <div class="row between" style="gap:10px;flex-wrap:wrap;align-items:center">
-        <!-- Quick filter presets & status shortcuts -->
-        <div class="row" style="gap:6px;flex-wrap:wrap;align-items:center">
-          <button class="chip ${activeFilter === 'all' && segmentFilter === 'all' && statusFilter === 'all' && vehicleFilter === 'all' && cityFilter === 'all' && !searchQ && !hasFlowSel ? 'active' : 'outline'}" data-filter="all">All (${totalDiscovered})</button>
-          ${latestAddedCount > 0 && latestAddedCount < newlyAddedCount ? `
-            <button class="chip ${activeFilter === 'latest_added' ? 'active' : 'outline'}" data-filter="latest_added" style="${activeFilter === 'latest_added' ? 'background:linear-gradient(135deg, #059669, #10b981);color:#fff;border-color:#10b981;font-weight:700' : 'border-color:#10b981;color:#059669;font-weight:700'}" title="View only operators added in the most recent scout run">
-              ⚡ Just Added (${latestAddedCount})
-            </button>
-          ` : ''}
-          ${newlyAddedCount > 0 ? `<button class="chip ${activeFilter === 'newly_added' ? 'active' : 'outline'}" data-filter="newly_added" style="${activeFilter === 'newly_added' ? 'background:#059669;color:#fff;border-color:#059669;font-weight:700' : 'border-color:#059669;color:#059669;font-weight:700'}" title="View all new operators added within the last 1 hour">${latestAddedCount < newlyAddedCount ? `✨ All New (${newlyAddedCount})` : `✨ Newly Added (${newlyAddedCount})`}</button>` : ''}
-          <button class="chip ${segmentFilter === 'luxury' ? 'active' : 'outline'}" data-segment="luxury" title="Filter Luxury VIP Unbranded Fleet">✨ Luxury VIP</button>
-          <button class="chip ${segmentFilter === 'standard' ? 'active' : 'outline'}" data-segment="standard" title="Filter Standard Gran Turismo & Group Charter Buses">🚌 Standard GT</button>
-          <button class="chip ${statusFilter === 'WANT_TO_CONTACT' ? 'active' : 'outline'}" data-filter="want_to_contact" style="${statusFilter === 'WANT_TO_CONTACT' ? 'background:#6d28d9;color:#fff;border-color:#6d28d9;font-weight:700' : ''}">📞 Want to Contact (${wantToContactCount})</button>
-          <button class="chip ${statusFilter === 'CONTACTED' ? 'active' : 'outline'}" data-filter="contacted" style="${statusFilter === 'CONTACTED' ? 'background:#0284c7;color:#fff;border-color:#0284c7;font-weight:700' : ''}">✉️ Contacted (${contactedCount})</button>
-          <button class="chip ${activeFilter === 'replied_rates' ? 'active' : 'outline'}" data-filter="replied_rates" style="${activeFilter === 'replied_rates' ? 'background:#059669;color:#fff;border-color:#059669;font-weight:700' : 'border-color:#10b981;color:#059669;font-weight:600'}">💶 Replied / Has Rates (${repliedOrRatesCount}/10)</button>
-          <button class="chip ${statusFilter === 'TO_REVIEW' ? 'active' : 'outline'}" data-filter="to_review">⏳ To Check (${toReviewCount})</button>
-          <button class="chip ${statusFilter === 'APPROVED_PARTNER' ? 'active' : 'outline'}" data-filter="approved" style="${statusFilter === 'APPROVED_PARTNER' ? 'background:var(--ok);color:#fff;border-color:var(--ok);font-weight:700' : ''}">🤝 Approved (${activePartners})</button>
+      <!-- Single-Row Colorful Filter & Search Bar -->
+      <div class="row between" style="gap:8px;flex-wrap:wrap;align-items:center">
+        <!-- Quick filter pills with semantic colors -->
+        <div class="row" style="gap:5px;flex-wrap:wrap;align-items:center">
+          <button class="chip clickable ${activeFilter === 'all' && segmentFilter === 'all' && statusFilter === 'all' && vehicleFilter === 'all' && cityFilter === 'all' && !searchQ && !hasFlowSel ? 'active' : 'outline'}" data-filter="all" style="${activeFilter === 'all' && segmentFilter === 'all' && statusFilter === 'all' && vehicleFilter === 'all' && cityFilter === 'all' && !searchQ && !hasFlowSel ? 'background:#0f172a;color:#fff;border-color:#0f172a;font-weight:700' : ''}">All (${totalDiscovered})</button>
+          <button class="chip clickable ${segmentFilter === 'luxury' ? 'active' : 'outline'}" data-segment="luxury" style="${segmentFilter === 'luxury' ? 'background:#d97706;color:#fff;border-color:#d97706;font-weight:700' : 'border-color:#f59e0b;color:#b45309;background:#fffbeb;font-weight:600'}" title="Filter operators with Luxury VIP buses allocated (V-Class, Sprinter VIP/Lux, Limobus)">✨ Luxury VIP</button>
+          <button class="chip clickable ${segmentFilter === 'standard' ? 'active' : 'outline'}" data-segment="standard" style="${segmentFilter === 'standard' ? 'background:#2563eb;color:#fff;border-color:#2563eb;font-weight:700' : 'border-color:#93c5fd;color:#1d4ed8;background:#eff6ff;font-weight:600'}" title="Filter operators with Standard GT / Midibus fleet allocated (24–56 pax)">🚌 Standard GT</button>
+          <button class="chip clickable ${statusFilter === 'TO_REVIEW' ? 'active' : 'outline'}" data-filter="to_review" style="${statusFilter === 'TO_REVIEW' ? 'background:#d97706;color:#fff;border-color:#d97706;font-weight:700' : 'border-color:#fde68a;color:#b45309;background:#fffbeb'}">⏳ To Check (${toReviewCount})</button>
+          <button class="chip clickable ${statusFilter === 'WANT_TO_CONTACT' ? 'active' : 'outline'}" data-filter="want_to_contact" style="${statusFilter === 'WANT_TO_CONTACT' ? 'background:#6d28d9;color:#fff;border-color:#6d28d9;font-weight:700' : 'border-color:#ddd6fe;color:#6d28d9;background:#f5f3ff;font-weight:600'}">📞 Want to Contact (${wantToContactCount})</button>
+          <button class="chip clickable ${statusFilter === 'CONTACTED' ? 'active' : 'outline'}" data-filter="contacted" style="${statusFilter === 'CONTACTED' ? 'background:#0284c7;color:#fff;border-color:#0284c7;font-weight:700' : 'border-color:#bae6fd;color:#0369a1;background:#f0f9ff;font-weight:600'}">✉️ Contacted (${contactedCount})</button>
+          <button class="chip clickable ${activeFilter === 'replied_rates' ? 'active' : 'outline'}" data-filter="replied_rates" style="${activeFilter === 'replied_rates' ? 'background:#059669;color:#fff;border-color:#059669;font-weight:700' : 'border-color:#10b981;color:#059669;background:#ecfdf5;font-weight:700'}">💶 Replied / Rates (${repliedOrRatesCount}/10)</button>
+          <button class="chip clickable ${statusFilter === 'APPROVED_PARTNER' ? 'active' : 'outline'}" data-filter="approved" style="${statusFilter === 'APPROVED_PARTNER' ? 'background:#15803d;color:#fff;border-color:#15803d;font-weight:700' : 'border-color:#bbf7d0;color:#15803d;background:#f0fdf4;font-weight:600'}">🤝 Approved (${activePartners})</button>
         </div>
 
-        <!-- Filter Dropdowns: Status, Vehicle Platform, City, Sort, Search -->
-        <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">
-          <!-- Status Dropdown -->
-          <select id="select-status" class="sm" style="padding:4px 8px;border-radius:6px;border:1px solid ${statusFilter !== 'all' ? '#6d28d9' : 'var(--border)'};background:${statusFilter !== 'all' ? '#f5f3ff' : 'var(--surface)'};font-size:.82rem;font-weight:${statusFilter !== 'all' ? '700' : '500'}" title="Filter by Status">
-            <option value="all">🏷️ All Statuses</option>
-            ${core.BUS_STATUSES.map((st) => `
-              <option value="${attr(st.key)}" ${statusFilter === st.key ? 'selected' : ''}>
-                ${st.label} (${list.filter((p) => p.status === st.key).length})
-              </option>
-            `).join('')}
-          </select>
-
+        <!-- Inline Compact Filter Controls (width:auto so they never stack full-width) -->
+        <div class="row" style="gap:6px;flex-wrap:wrap;align-items:center">
           <!-- Vehicle Type Dropdown -->
-          <select id="select-vehicle" class="sm" style="padding:4px 8px;border-radius:6px;border:1px solid ${vehicleFilter !== 'all' ? 'var(--gold-strong)' : 'var(--border)'};background:${vehicleFilter !== 'all' ? 'var(--gold-soft)' : 'var(--surface)'};font-size:.82rem;font-weight:${vehicleFilter !== 'all' ? '700' : '500'}" title="Filter by Fleet Type">
-            <option value="all">🚐 All Fleet Types</option>
+          <select id="select-vehicle" class="sm" style="width:auto;padding:4px 8px;border-radius:6px;border:1px solid ${vehicleFilter !== 'all' ? '#d97706' : 'var(--border)'};background:${vehicleFilter !== 'all' ? '#fffbeb' : 'var(--surface)'};font-size:.78rem;font-weight:${vehicleFilter !== 'all' ? '700' : '500'}" title="Filter by Allocated Bus Type">
+            <option value="all">🚐 All Bus Types</option>
             ${STANDARD_FLEET_TYPES.map((vt) => `
               <option value="${attr(vt.key)}" ${vehicleFilter === vt.key ? 'selected' : ''}>
                 ${vt.icon} ${esc(vt.short)} (${list.filter((p) => operatorHasVehicleType(p, vt.key)).length})
@@ -1660,7 +1649,7 @@ export function render(el) {
           </select>
 
           <!-- City Dropdown -->
-          <select id="select-city" class="sm" style="padding:4px 8px;border-radius:6px;border:1px solid ${cityFilter !== 'all' ? 'var(--gold-strong)' : 'var(--border)'};background:${cityFilter !== 'all' ? 'var(--gold-soft)' : 'var(--surface)'};font-size:.82rem;font-weight:${cityFilter !== 'all' ? '700' : '500'}" title="Filter by City">
+          <select id="select-city" class="sm" style="width:auto;padding:4px 8px;border-radius:6px;border:1px solid ${cityFilter !== 'all' ? '#2563eb' : 'var(--border)'};background:${cityFilter !== 'all' ? '#eff6ff' : 'var(--surface)'};font-size:.78rem;font-weight:${cityFilter !== 'all' ? '700' : '500'}" title="Filter by City">
             <option value="all">📍 All Cities</option>
             ${cities.map((c) => `
               <option value="${attr(c)}" ${cityFilter.toLowerCase() === c.toLowerCase() ? 'selected' : ''}>
@@ -1669,19 +1658,12 @@ export function render(el) {
             `).join('')}
           </select>
 
-          <!-- Sort Order Dropdown -->
-          <select id="select-sort" class="sm" style="padding:4px 8px;border-radius:6px;border:1px solid ${sortBy !== 'score_desc' ? 'var(--gold-strong)' : 'var(--border)'};background:${sortBy !== 'score_desc' ? 'var(--gold-soft)' : 'var(--surface)'};font-size:.82rem;font-weight:${sortBy !== 'score_desc' ? '700' : '500'}" title="Sort bus partners">
-            <option value="score_desc" ${sortBy === 'score_desc' ? 'selected' : ''}>Sort: Score ↓</option>
-            <option value="newest_first" ${sortBy === 'newest_first' ? 'selected' : ''}>Sort: Newest First ⚡</option>
-            <option value="name_asc" ${sortBy === 'name_asc' ? 'selected' : ''}>Sort: Name (A–Z)</option>
-          </select>
-
           <!-- Search Input -->
-          <input type="text" id="bus-search" placeholder="Search company, models, pax, rates..." value="${attr(searchQ)}" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);font-size:.85rem;min-width:170px">
+          <input type="text" id="bus-search" placeholder="Search company, models, pax, rates..." value="${attr(searchQ)}" style="width:210px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);font-size:.8rem">
 
           <!-- Reset Filter Button -->
           ${hasActiveFilters ? `
-            <button class="btn sm ghost" id="btn-clear-filters" style="padding:3px 8px;font-size:.78rem;color:var(--bad);border-color:var(--bad);display:inline-flex;align-items:center;gap:3px" title="Reset all filters">
+            <button class="btn sm ghost" id="btn-clear-filters" style="padding:3px 8px;font-size:.76rem;color:#dc2626;border-color:#fca5a5;background:#fef2f2;display:inline-flex;align-items:center;gap:3px;font-weight:600" title="Reset all filters">
               ✕ Reset (${filtered.length}/${totalDiscovered})
             </button>
           ` : ''}
@@ -2870,13 +2852,16 @@ export function render(el) {
         <button class="btn ghost sm" data-close>×</button>
       </div>
 
-      <p class="small muted" style="margin:8px 0 14px">
-        Select the vehicle categories available in this partner's luxury fleet for VIP wedding and corporate transfers:
+      <p class="small muted" style="margin:8px 0 10px">
+        Select the buses available in this partner's fleet. <b>Bus Class (✨ Luxury VIP vs 🚌 Standard GT)</b> and passenger capacities are automatically calculated from the buses selected below:
       </p>
+
+      <div id="fleet-allocation-class-banner" style="padding:8px 12px;border-radius:6px;margin-bottom:10px;font-size:.8rem"></div>
 
       <div class="stack" style="gap:8px;margin-bottom:14px" id="fleet-category-list">
         ${STANDARD_FLEET_TYPES.map((f) => {
           const checked = isChecked(f);
+          const isLuxBus = core.classifySingleBusAllocation(f.label) === 'luxury';
           return `
           <label class="row" style="align-items:center;justify-content:space-between;padding:9px 12px;background:${checked ? 'var(--gold-soft)' : 'var(--surface-2)'};border-radius:6px;cursor:pointer;border:1px solid ${checked ? 'var(--gold)' : 'var(--line)'};transition:all .15s">
             <div class="row" style="gap:10px;align-items:center">
@@ -2886,7 +2871,7 @@ export function render(el) {
                 <div class="tiny muted">${esc(f.desc)}</div>
               </div>
             </div>
-            <span class="chip tiny outline" style="font-family:monospace;white-space:nowrap">${esc(f.badge)}</span>
+            <span class="chip tiny outline" style="font-size:.66rem;font-weight:700;white-space:nowrap;${isLuxBus ? 'background:#fffbeb;color:#b45309;border-color:#f59e0b' : 'background:#eff6ff;color:#1d4ed8;border-color:#93c5fd'}">${isLuxBus ? '✨ Luxury VIP' : '🚌 Standard GT'}</span>
           </label>`;
         }).join('')}
       </div>
@@ -2894,7 +2879,7 @@ export function render(el) {
       <!-- Custom Fleet Tag Input -->
       <div class="label eyebrow" style="margin-top:6px">Custom Fleet Type</div>
       <div class="row" style="gap:8px;margin-bottom:8px">
-        <input type="text" id="custom-fleet-input" placeholder="e.g. Vintage Alfa Romeo, 35-seat Midi..." style="font-size:.85rem;padding:6px 10px;flex:1">
+        <input type="text" id="custom-fleet-input" placeholder="e.g. Setra VIP (32 pax), Sprinter VIP (16 pax)..." style="font-size:.85rem;padding:6px 10px;flex:1">
         <button class="btn sm" id="btn-add-custom-fleet" type="button">+ Add</button>
       </div>
 
@@ -2902,13 +2887,37 @@ export function render(el) {
 
       <div class="row" style="justify-content:flex-end;gap:8px">
         <button class="btn ghost" data-close>Cancel</button>
-        <button class="btn primary" id="modal-save-fleet">Save Fleet Categories</button>
+        <button class="btn primary" id="modal-save-fleet">Save Fleet & Update Class</button>
       </div>
     </div>`;
 
     document.body.appendChild(backdrop);
     const close = () => backdrop.remove();
     backdrop.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', close));
+
+    const updateAllocationBanner = () => {
+      const selected = Array.from(backdrop.querySelectorAll('.fleet-type-checkbox:checked')).map((cb) => cb.value);
+      const allBuses = [...selected, ...customTags];
+      const detectedSeg = core.inferBusSegment({ fleet_categories: allBuses, user_set_segment: false });
+      const banner = backdrop.querySelector('#fleet-allocation-class-banner');
+      if (!banner) return;
+      if (detectedSeg === 'luxury') {
+        banner.style.background = '#fffbeb';
+        banner.style.border = '1px solid #f59e0b';
+        banner.style.color = '#b45309';
+        banner.innerHTML = `<b>Allocated Class: ✨ Luxury VIP Only</b> — All selected buses are VIP / Luxury models.`;
+      } else if (detectedSeg === 'both') {
+        banner.style.background = '#f5f3ff';
+        banner.style.border = '1px solid #c4b5fd';
+        banner.style.color = '#6d28d9';
+        banner.innerHTML = `<b>Allocated Class: ✨+🚌 Luxury VIP & Standard GT</b> — Partner has both VIP minibuses and Standard/Midibus coaches allocated.`;
+      } else {
+        banner.style.background = '#eff6ff';
+        banner.style.border = '1px solid #93c5fd';
+        banner.style.color = '#1d4ed8';
+        banner.innerHTML = `<b>Allocated Class: 🚌 Standard GT / Charter</b> — Selected buses are Midibus (24–30 pax) or Full GT Coaches (50–56 pax).`;
+      }
+    };
 
     // Dynamic style update for checkboxes
     backdrop.querySelectorAll('.fleet-type-checkbox').forEach((cb) => {
@@ -2921,6 +2930,7 @@ export function render(el) {
           parentLabel.style.borderColor = 'var(--line)';
           parentLabel.style.background = 'var(--surface-2)';
         }
+        updateAllocationBanner();
       });
     });
 
@@ -2938,10 +2948,12 @@ export function render(el) {
           const idx = customTags.indexOf(name);
           if (idx >= 0) customTags.splice(idx, 1);
           renderCustomTags();
+          updateAllocationBanner();
         });
       });
     };
     renderCustomTags();
+    updateAllocationBanner();
 
     backdrop.querySelector('#btn-add-custom-fleet').addEventListener('click', () => {
       const inp = backdrop.querySelector('#custom-fleet-input');
@@ -2950,6 +2962,7 @@ export function render(el) {
       if (!customTags.includes(val)) {
         customTags.push(val);
         renderCustomTags();
+        updateAllocationBanner();
       }
       inp.value = '';
     });
@@ -2959,8 +2972,16 @@ export function render(el) {
       customTags.forEach((t) => {
         if (!selected.includes(t)) selected.push(t);
       });
-      await updateBusPartner(partner.id, { fleet_categories: selected });
-      toast('Fleet categories updated');
+      const fleet_segment = core.inferBusSegment({ fleet_categories: selected, user_set_segment: false });
+      const paxAudit = core.verifyPerBusPaxCapacity({ fleet_categories: selected }, { autoInferKnownStandards: true });
+      await updateBusPartner(partner.id, {
+        fleet_categories: selected,
+        fleet_segment,
+        user_set_segment: false,
+        bus_models: paxAudit.formattedBusModels || selected.join(', '),
+        pax_capacity: paxAudit.formattedPaxSummary || partner.pax_capacity,
+      });
+      toast(`✓ Fleet updated (${core.formatBusSegmentLabel(fleet_segment)} · ${paxAudit.formattedPaxSummary || 'pax verified'})`, 'ok');
       close();
       paint();
     });

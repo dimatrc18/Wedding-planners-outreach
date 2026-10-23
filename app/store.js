@@ -264,6 +264,7 @@ function syncBusPartnerCardFields(merged) {
   const card = {
     ...(merged.score_breakdown?.partner_card || {}),
     fleet_segment: merged.fleet_segment ?? merged.score_breakdown?.partner_card?.fleet_segment ?? 'luxury',
+    user_set_segment: Boolean(merged.user_set_segment ?? merged.score_breakdown?.partner_card?.user_set_segment),
     bus_models: merged.bus_models ?? merged.score_breakdown?.partner_card?.bus_models ?? '',
     pax_capacity: merged.pax_capacity ?? merged.score_breakdown?.partner_card?.pax_capacity ?? '',
     rate_hourly: merged.rate_hourly ?? merged.score_breakdown?.partner_card?.rate_hourly ?? '',
