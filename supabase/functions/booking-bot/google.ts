@@ -175,32 +175,43 @@ export async function saveBookingToGoogleSheet(
   // Build rows for each ride
   const rowsToSave: { rowNumber: number | null; values: any[] }[] = [];
 
-  booking.rides.forEach((ride, idx) => {
-    let legId = booking.booking_ref;
-    if (booking.rides.length === 2 && idx === 1) {
-      legId = `${booking.booking_ref}-RET`;
-    } else if (booking.rides.length > 2) {
-      legId = idx === 0 ? booking.booking_ref : `${booking.booking_ref}-${idx + 1}`;
-    }
+  const isStandbyBooking = Boolean(booking.standby_hours) ||
+    /standby|hourly|disposal/i.test(`${booking.service_type || ""} ${booking.client_notes || ""}`);
 
-    // Determine pickup & dropoff preserving hotel/villa names
-    const pStop = ride.stops.find((s) => s.kind === "pickup");
-    const dStop = [...ride.stops].reverse().find((s) => s.kind === "dropoff");
+  if (isStandbyBooking) {
+    const firstRide = booking.rides[0] || {
+      date: booking.booked_date,
+      time: "10:00",
+      stops: [],
+    };
+    const pStop = firstRide.stops.find((s) => s.kind === "pickup");
     const pickupStr = formatStopForSheet(pStop);
-    const dropoffStr = formatStopForSheet(dStop);
 
-    // Build client notes including flight and extra stops
+    // Collect distinct dropoff places across all rides
+    const dropPlaces: string[] = [];
+    booking.rides.forEach((r) => {
+      r.stops.filter((s) => s.kind === "dropoff").forEach((s) => {
+        if (s.place && !dropPlaces.includes(s.place)) dropPlaces.push(s.place);
+      });
+    });
+    const hours = booking.standby_hours || 10;
+    const dropoffStr = dropPlaces.length > 0
+      ? `${dropPlaces.join(" ➔ ")} (Standby ${hours}h)`
+      : "Multiple Locations (Standby)";
+
+    // Compile concise itinerary for client_notes
+    let itinerarySummary = "";
+    if (booking.rides.length > 1) {
+      const stopsSummary = booking.rides.map((r, rIdx) => {
+        const p = r.stops.find((s) => s.kind === "pickup")?.place || "Pickup";
+        const d = [...r.stops].reverse().find((s) => s.kind === "dropoff")?.place || "Dropoff";
+        return `[T${rIdx + 1}] ${r.time || ""} ${p} ➔ ${d}${r.end_time ? ` (~${r.end_time})` : ""}`;
+      }).join(" | ");
+      itinerarySummary = `Schedule: ${stopsSummary}`;
+    }
+
     const notesParts: string[] = [];
-    if (ride.flight?.number) {
-      notesParts.push(`Flight: ${ride.flight.number}`);
-    }
-    if (ride.stops.length > 2) {
-      const intermediate = ride.stops
-        .slice(1, -1)
-        .map((s) => `${s.kind === "pickup" ? "Pick" : "Drop"} ${s.time ? `(${s.time})` : ""}: ${s.place}`)
-        .join(" -> ");
-      notesParts.push(`Stops: ${intermediate}`);
-    }
+    if (itinerarySummary) notesParts.push(itinerarySummary);
     if (booking.party.children.length > 0) {
       const seats = booking.party.children
         .map((c) => (c.age !== null ? `seat (${c.age} y/o)` : `seat (age unknown)`))
@@ -212,53 +223,137 @@ export async function saveBookingToGoogleSheet(
     }
     const combinedNotes = notesParts.join(" | ");
 
-    // Price, Prepayment & Balance Due (our_notes)
-    let priceVal = "";
-    if (ride.price !== null && ride.price !== undefined) {
-      priceVal = `€${ride.price}`;
-    } else if (idx > 0 && booking.finance.total_price !== null) {
-      priceVal = booking.rides.length === 2 ? "Included in Round-Trip" : "Included in Package";
-    }
-    const prepayVal = idx === 0 && booking.finance.paid_deposit !== null ? `€${booking.finance.paid_deposit}` : "";
+    const priceVal = booking.finance.total_price !== null && booking.finance.total_price !== undefined
+      ? `€${booking.finance.total_price}`
+      : "";
+    const prepayVal = booking.finance.paid_deposit !== null && booking.finance.paid_deposit !== undefined
+      ? `€${booking.finance.paid_deposit}`
+      : "";
     const ourNotesVal =
       booking.our_notes ||
       (booking.finance.balance_due !== null && booking.finance.balance_due > 0
         ? `to be paid: ${booking.finance.balance_due} EUR`
         : "");
 
-    const phoneStr = booking.client.phone ? (booking.client.phone.startsWith("+") ? `'${booking.client.phone}` : booking.client.phone) : "";
+    const phoneStr = booking.client.phone
+      ? (booking.client.phone.startsWith("+") ? `'${booking.client.phone}` : booking.client.phone)
+      : "";
 
     const rowValues = [
-      legId,                                          // Col A: booking_id
-      booking.status,                                 // Col B: status
-      booking.service_type,                           // Col C: service_type
-      booking.vehicle.class || "Mercedes-Benz V-Class",// Col D: vehicle
-      ride.date,                                      // Col E: date
-      ride.time || "",                                // Col F: time
-      pickupStr,                                      // Col G: pick_up
-      dropoffStr,                                     // Col H: drop_off
-      booking.party.passengers || 1,                  // Col I: passenger
-      booking.party.luggage || 0,                     // Col J: luggage
-      combinedNotes,                                  // Col K: client_notes
-      booking.client.name || "",                      // Col L: name
-      phoneStr,                                       // Col M: phone
-      booking.client.email || "",                     // Col N: email
-      priceVal,                                       // Col O: price
-      prepayVal,                                      // Col P: prepayment
-      ourNotesVal,                                    // Col Q: our_notes
-      "",                                             // Col R: Comision received
-      booking.booked_date,                            // Col S: Sale Date
-      booking.booked_month,                           // Col T: Booked Month
+      booking.booking_ref,                             // Col A: booking_id
+      booking.status,                                  // Col B: status
+      booking.service_type,                            // Col C: service_type
+      booking.vehicle.class || "Mercedes-Benz Sprinter",// Col D: vehicle
+      firstRide.date,                                  // Col E: date
+      firstRide.time || "",                            // Col F: time
+      pickupStr,                                       // Col G: pick_up
+      dropoffStr,                                      // Col H: drop_off
+      booking.party.passengers || 1,                   // Col I: passenger
+      booking.party.luggage || 0,                      // Col J: luggage
+      combinedNotes,                                   // Col K: client_notes
+      booking.client.name || "",                       // Col L: name
+      phoneStr,                                        // Col M: phone
+      booking.client.email || "",                      // Col N: email
+      priceVal,                                        // Col O: price
+      prepayVal,                                       // Col P: prepayment
+      ourNotesVal,                                     // Col Q: our_notes
+      "",                                              // Col R: Comision received
+      booking.booked_date,                             // Col S: Sale Date
+      booking.booked_month,                            // Col T: Booked Month
     ];
 
-    // Check if legId already exists in sheet
-    const existingIdx = existingIds.findIndex((val) => val === legId);
+    const existingIdx = existingIds.findIndex((val) => val === booking.booking_ref);
     if (existingIdx !== -1) {
       rowsToSave.push({ rowNumber: existingIdx + 1, values: rowValues });
     } else {
       rowsToSave.push({ rowNumber: null, values: rowValues });
     }
-  });
+  } else {
+    booking.rides.forEach((ride, idx) => {
+      let legId = booking.booking_ref;
+      if (booking.rides.length === 2 && idx === 1) {
+        legId = `${booking.booking_ref}-RET`;
+      } else if (booking.rides.length > 2) {
+        legId = idx === 0 ? booking.booking_ref : `${booking.booking_ref}-${idx + 1}`;
+      }
+
+      // Determine pickup & dropoff preserving hotel/villa names
+      const pStop = ride.stops.find((s) => s.kind === "pickup");
+      const dStop = [...ride.stops].reverse().find((s) => s.kind === "dropoff");
+      const pickupStr = formatStopForSheet(pStop);
+      const dropoffStr = formatStopForSheet(dStop);
+
+      // Build client notes including flight and extra stops
+      const notesParts: string[] = [];
+      if (ride.flight?.number) {
+        notesParts.push(`Flight: ${ride.flight.number}`);
+      }
+      if (ride.stops.length > 2) {
+        const intermediate = ride.stops
+          .slice(1, -1)
+          .map((s) => `${s.kind === "pickup" ? "Pick" : "Drop"} ${s.time ? `(${s.time})` : ""}: ${s.place}`)
+          .join(" -> ");
+        notesParts.push(`Stops: ${intermediate}`);
+      }
+      if (booking.party.children.length > 0) {
+        const seats = booking.party.children
+          .map((c) => (c.age !== null ? `seat (${c.age} y/o)` : `seat (age unknown)`))
+          .join(", ");
+        notesParts.push(`Child seats: ${seats}`);
+      }
+      if (booking.client_notes) {
+        notesParts.push(booking.client_notes);
+      }
+      const combinedNotes = notesParts.join(" | ");
+
+      // Price, Prepayment & Balance Due (our_notes)
+      let priceVal = "";
+      if (ride.price !== null && ride.price !== undefined) {
+        priceVal = `€${ride.price}`;
+      } else if (idx > 0 && booking.finance.total_price !== null) {
+        priceVal = booking.rides.length === 2 ? "Included in Round-Trip" : "Included in Package";
+      }
+      const prepayVal = idx === 0 && booking.finance.paid_deposit !== null ? `€${booking.finance.paid_deposit}` : "";
+      const ourNotesVal =
+        booking.our_notes ||
+        (booking.finance.balance_due !== null && booking.finance.balance_due > 0
+          ? `to be paid: ${booking.finance.balance_due} EUR`
+          : "");
+
+      const phoneStr = booking.client.phone ? (booking.client.phone.startsWith("+") ? `'${booking.client.phone}` : booking.client.phone) : "";
+
+      const rowValues = [
+        legId,                                          // Col A: booking_id
+        booking.status,                                 // Col B: status
+        booking.service_type,                           // Col C: service_type
+        booking.vehicle.class || "Mercedes-Benz V-Class",// Col D: vehicle
+        ride.date,                                      // Col E: date
+        ride.time || "",                                // Col F: time
+        pickupStr,                                      // Col G: pick_up
+        dropoffStr,                                     // Col H: drop_off
+        booking.party.passengers || 1,                  // Col I: passenger
+        booking.party.luggage || 0,                     // Col J: luggage
+        combinedNotes,                                  // Col K: client_notes
+        booking.client.name || "",                      // Col L: name
+        phoneStr,                                       // Col M: phone
+        booking.client.email || "",                     // Col N: email
+        priceVal,                                       // Col O: price
+        prepayVal,                                      // Col P: prepayment
+        ourNotesVal,                                    // Col Q: our_notes
+        "",                                             // Col R: Comision received
+        booking.booked_date,                            // Col S: Sale Date
+        booking.booked_month,                           // Col T: Booked Month
+      ];
+
+      // Check if legId already exists in sheet
+      const existingIdx = existingIds.findIndex((val) => val === legId);
+      if (existingIdx !== -1) {
+        rowsToSave.push({ rowNumber: existingIdx + 1, values: rowValues });
+      } else {
+        rowsToSave.push({ rowNumber: null, values: rowValues });
+      }
+    });
+  }
 
   // Execute updates for existing rows and appends for new rows
   let updatedCount = 0;
@@ -341,6 +436,170 @@ export async function saveBookingToGoogleCalendar(
   const links: string[] = [];
   const errors: string[] = [];
 
+  const notesCombined = `${booking.vehicle.class || ""} ${booking.service_type || ""} ${booking.client_notes || ""}`.toLowerCase();
+  const isStandby = Boolean(booking.standby_hours) || /standby|10hours|disposal|hourly/i.test(notesCombined) || /standby|hourly/i.test(booking.service_type || "");
+  const isWedding = /wedding/i.test(notesCombined);
+  const paxNum = booking.party.passengers || 1;
+  const vClass = (booking.vehicle.class || "").toLowerCase();
+
+  let icon = "🚗";
+  let vTag = `Sedan (${paxNum} pax)`;
+  if (/bus|sprinter|coach|minibus|24|28/i.test(vClass) || paxNum >= 8) {
+    icon = "🚌";
+    vTag = `Bus (${paxNum} pax)`;
+  } else if (/v-class|van|minivan/i.test(vClass)) {
+    icon = "🚐";
+    vTag = `V-Class (${paxNum} pax)`;
+  } else if (/s-class|first class/i.test(vClass)) {
+    icon = "✨";
+    vTag = `S-Class (${paxNum} pax)`;
+  } else if (/e-class/i.test(vClass)) {
+    icon = "🚗";
+    vTag = `E-Class (${paxNum} pax)`;
+  }
+
+  // 1. STANDBY SERVICE: Create a SINGLE continuous block event for the entire duration
+  if (isStandby) {
+    const hours = booking.standby_hours || (function () {
+      const hMatch = `${booking.service_type || ""} ${booking.client_notes || ""}`.match(/(\d+)\s*(?:hours|hour|h|hr)\b/i);
+      return hMatch ? parseInt(hMatch[1], 10) : 10;
+    })();
+    const hTag = `${hours}h Standby`;
+    const svcTag = isWedding ? `Wedding ${hTag}` : hTag;
+
+    const firstRide = booking.rides[0] || {
+      date: booking.booked_date,
+      time: "10:00",
+      stops: [],
+    };
+    const pStop = firstRide.stops.find((s) => s.kind === "pickup");
+    const pName = pStop?.place || "Pickup";
+
+    const destPlaces: string[] = [];
+    booking.rides.forEach((r) => {
+      r.stops.filter((s) => s.kind === "dropoff").forEach((s) => {
+        if (s.place && !destPlaces.includes(s.place)) destPlaces.push(s.place);
+      });
+    });
+    const dScope = destPlaces.length > 0 ? destPlaces.join(" / ") : "At Disposal";
+
+    const summary = `${icon} ${vTag} ${svcTag}: ${pName} ➔ ${dScope} | ${booking.client.name || "Client"} [${booking.booking_ref}]`;
+
+    const cleanTimeMatch = (firstRide.time || "10:00").match(/(\d{1,2}):(\d{2})/);
+    const startTimeStr = cleanTimeMatch
+      ? `${String(parseInt(cleanTimeMatch[1], 10)).padStart(2, "0")}:${cleanTimeMatch[2]}`
+      : "10:00";
+    const startIso = `${firstRide.date}T${startTimeStr}:00`;
+
+    const durationMins = hours * 60;
+    const endIso = addMinutesLocalIso(firstRide.date, startTimeStr, durationMins);
+
+    const descLines: string[] = [
+      `Status: ${booking.status}`,
+      `🔖 Reference: ${booking.booking_ref}`,
+      `👤 Client: ${booking.client.name || "VIP Guest"}`,
+      `📞 Phone: ${booking.client.phone || "N/A"}`,
+      `✉️ Email: ${booking.client.email || "N/A"}`,
+      "",
+      `🚘 Fleet: ${booking.vehicle.class || "Mercedes-Benz"}`,
+      `👥 Party: ${booking.party.passengers || 1} Pax | 🧳 Luggage: ${booking.party.luggage || 0}`,
+      `⏱ Service: ${hours}-Hour Standby Service (${startTimeStr} - ${endIso.split("T")[1]?.substring(0, 5) || ""})`,
+      "",
+      `📍 ITINERARY & TRANSFERS SCHEDULE:`,
+    ];
+
+    booking.rides.forEach((r, rIdx) => {
+      descLines.push(`• Leg ${rIdx + 1} (${r.time || ""}${r.end_time ? ` — ~${r.end_time}` : ""}):`);
+      r.stops.forEach((st) => {
+        const arrow = st.kind === "pickup" ? "  ↳ Pickup:" : "  ↳ Dropoff:";
+        const mapStr = st.maps_url ? ` (${st.maps_url})` : "";
+        descLines.push(`${arrow} ${st.place}${mapStr}`);
+        if (st.instructions) descLines.push(`    ℹ️ ${st.instructions}`);
+      });
+    });
+
+    if (booking.party.children.length > 0) {
+      const seats = booking.party.children.map((c) => `${c.age} y/o (${c.seat_type})`).join(", ");
+      descLines.push(`👶 Child Seats: ${seats}`);
+    }
+
+    if (booking.finance.total_price !== null) {
+      descLines.push("");
+      descLines.push(`💶 FINANCIALS:`);
+      descLines.push(`• Fare: €${booking.finance.total_price}`);
+      if (booking.finance.paid_deposit !== null) {
+        descLines.push(`• Paid Deposit: €${booking.finance.paid_deposit}`);
+        descLines.push(`• Balance Due: €${booking.finance.balance_due || 0}`);
+      }
+    }
+
+    if (booking.client_notes) {
+      descLines.push("");
+      descLines.push(`📝 Notes: ${booking.client_notes}`);
+    }
+
+    const eventId = toCalendarEventId(booking.booking_ref);
+    const eventBody = {
+      summary,
+      location: pStop?.address || pStop?.place || "",
+      description: descLines.join("\n"),
+      start: { dateTime: startIso, timeZone: timezone },
+      end: { dateTime: endIso, timeZone: timezone },
+      reminders: {
+        useDefault: false,
+        overrides: [
+          { method: "popup", minutes: 120 },
+          { method: "email", minutes: 1440 },
+        ],
+      },
+    };
+
+    const targetUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${eventId}`;
+    const checkRes = await fetch(targetUrl, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(eventBody),
+    });
+
+    if (checkRes.ok) {
+      const data = await checkRes.json();
+      links.push(data.htmlLink || "");
+    } else {
+      const insertUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`;
+      const insertRes = await fetch(insertUrl, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ ...eventBody, id: eventId }),
+      });
+      if (insertRes.ok) {
+        const data = await insertRes.json();
+        links.push(data.htmlLink || "");
+      } else {
+        const errText = await insertRes.text();
+        console.error(`Failed to create standby calendar event: ${errText}`);
+        errors.push(errText);
+      }
+    }
+
+    // Clean up any legacy sub-events created with suffixes (-2, -3, -4)
+    if (booking.rides.length > 1) {
+      for (let leg = 2; leg <= 6; leg++) {
+        const subEventId = toCalendarEventId(`${booking.booking_ref}-${leg}`);
+        fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${subEventId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => {});
+      }
+    }
+
+    return {
+      success: errors.length === 0,
+      eventLinks: links,
+      error: errors.join(", "),
+    };
+  }
+
+  // 2. STANDARD POINT-TO-POINT / ROUND-TRIP TRANSFERS (Individual events per ride)
   for (let idx = 0; idx < booking.rides.length; idx++) {
     const ride = booking.rides[idx];
     const isReturn = ride.role === "return";
@@ -352,39 +611,9 @@ export async function saveBookingToGoogleCalendar(
     const pName = pStop?.place || "Pickup";
     const dName = dStop?.place || "Dropoff";
 
-    // Smart title format: <Icon> <Vehicle> (<Pax> pax) <Service>: <Route> | <Client> [<Ref>]
-    const paxNum = booking.party.passengers || 1;
-    const vClass = (booking.vehicle.class || "").toLowerCase();
-    const notesCombined = `${vClass} ${booking.service_type || ""} ${booking.client_notes || ""}`.toLowerCase();
-    
-    let icon = "🚗";
-    let vTag = `Sedan (${paxNum} pax)`;
-    if (/bus|sprinter|coach|minibus|24|28/i.test(vClass) || paxNum >= 8) {
-      icon = "🚌";
-      vTag = `Bus (${paxNum} pax)`;
-    } else if (/v-class|van|minivan/i.test(vClass)) {
-      icon = "🚐";
-      vTag = `V-Class (${paxNum} pax)`;
-    } else if (/s-class|first class/i.test(vClass)) {
-      icon = "✨";
-      vTag = `S-Class (${paxNum} pax)`;
-    } else if (/e-class/i.test(vClass)) {
-      icon = "🚗";
-      vTag = `E-Class (${paxNum} pax)`;
-    }
-
-    const isStandby = Boolean(booking.standby_hours) || /standby|10hours|disposal/i.test(notesCombined) || /standby/i.test(booking.service_type || "");
-    const isWedding = /wedding/i.test(notesCombined);
-
     let summary = "";
     if (isReturn) {
       summary = `🔄 ${vTag} Return: ${dName} ➔ ${pName} | ${booking.client.name || "Client"} [${fullRef}]`;
-    } else if (isStandby) {
-      const hMatch = `${booking.service_type || ""} ${booking.client_notes || ""}`.match(/(\d+)\s*(?:hours|hour|h|hr)\b/i);
-      const hours = booking.standby_hours || (hMatch ? parseInt(hMatch[1], 10) : null);
-      const hTag = hours ? `${hours}h Standby` : "Standby";
-      const svcTag = isWedding ? `Wedding ${hTag}` : hTag;
-      summary = `${icon} ${vTag} ${svcTag}: ${pName} / ${dName} | ${booking.client.name || "Client"} [${fullRef}]`;
     } else {
       const svcTag = isWedding ? "Wedding Transfer" : "Transfer";
       summary = `${icon} ${vTag} ${svcTag}: ${pName} ➔ ${dName} | ${booking.client.name || "Client"} [${fullRef}]`;

@@ -379,7 +379,10 @@ export function applyBusinessRules(
   // 2. Financials & Fallbacks
   let totalPrice = typeof raw.price_total === "number" ? raw.price_total : null;
   if (totalPrice === null) {
-    const priceMatch = sourceText.match(/(\d+)\s*€|€\s*(\d+)/);
+    const priceMatch =
+      sourceText.match(/(?:итого|total|fare|всего|стоимость)\s*[:—–-]?\s*(?:€\s*)?(\d+)/i) ||
+      sourceText.match(/(\d+)\s*€|€\s*(\d+)/) ||
+      sourceText.match(/(\d+)\s*(?:евро|eur)\b/i);
     if (priceMatch) totalPrice = parseFloat(priceMatch[1] || priceMatch[2]);
   }
 
@@ -501,12 +504,20 @@ export function applyBusinessRules(
   const status = paidDeposit && paidDeposit > 0 ? "Prepayment Received" : "Confirmed (Unpaid)";
   const ourNotes = balanceDue !== null && balanceDue > 0 ? `to be paid: ${balanceDue} EUR` : "";
 
+  // Standby / Hourly service type normalization
+  let serviceType = raw.service_type;
+  if (isStandby) {
+    serviceType = standbyHours ? `Standby (${standbyHours} hours)` : "Standby Service";
+  } else if (!serviceType) {
+    serviceType = hasAirport ? "Airport Transfer" : rides.length > 2 ? "Multi-Stop Transfer" : "Chauffeur Transfer";
+  }
+
   return {
     booking_ref: bookingRef,
     booked_date: todayIso,
     booked_month: currentMonth,
     status,
-    service_type: raw.service_type || (isStandby ? `Hourly Standby${standbyDuration}` : hasAirport ? "Airport Transfer" : rides.length > 2 ? "Multi-Stop Transfer" : "Chauffeur Transfer"),
+    service_type: serviceType,
     standby_hours: standbyHours,
     client: {
       name: clientName,

@@ -358,3 +358,47 @@ Deno.test("calculateStandbyHours calculates standby hours accurately from regex,
 
   console.log("✅ calculateStandbyHours test passed!");
 });
+
+// 9. UNIT TEST: Standby service_type normalization
+Deno.test("applyBusinessRules normalizes service_type to Standby (10 hours)", () => {
+  const rawData: any = {
+    service_type: "Hourly (10 hours)",
+    rides: [
+      {
+        ride_no: 1,
+        role: "transfer",
+        raw_date: "2027-04-24",
+        stops: [
+          { seq: 1, kind: "pickup", place: "Nenè Bellagio", time: "14:00", time_approx: false, evidence: "14:00" },
+          { seq: 2, kind: "dropoff", place: "Loppia", time: "15:10", time_approx: true, evidence: "15:10" },
+        ],
+      },
+      {
+        ride_no: 2,
+        role: "transfer",
+        raw_date: "2027-04-24",
+        stops: [
+          { seq: 1, kind: "pickup", place: "Loppia", time: "17:40", time_approx: false, evidence: "17:40" },
+          { seq: 2, kind: "dropoff", place: "La Madonnina di Barni", time: "18:10", time_approx: true, evidence: "18:10" },
+        ],
+      },
+      {
+        ride_no: 3,
+        role: "transfer",
+        raw_date: "2027-04-24",
+        stops: [
+          { seq: 1, kind: "pickup", place: "La Madonnina di Barni", time: "23:30", time_approx: false, evidence: "23:30" },
+          { seq: 2, kind: "dropoff", place: "Villa Lilla", time: "00:00", time_approx: true, evidence: "00:00" },
+        ],
+      },
+    ],
+    price_total: 1610,
+    paid_deposit: 483,
+  };
+
+  const booking = applyBusinessRules(rawData, "Standby 10 hours Bellagio wedding transfers");
+  assertEquals(booking.standby_hours, 10);
+  assertEquals(booking.service_type, "Standby (10 hours)");
+  assertEquals(booking.rides.length, 3);
+  console.log("✅ applyBusinessRules normalized standby service_type passed!");
+});
