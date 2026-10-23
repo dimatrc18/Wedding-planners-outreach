@@ -5,7 +5,7 @@ import { COLD_STEPS, nurtureDate, nextSendSlot, withDefaults } from './sequence.
 import { FUNNEL_RANK } from './constants.js';
 import { buildDraft, replyTemplateFor } from './drafts.js';
 
-const PENDING = ['draft', 'approved'];
+const PENDING = ['draft', 'approved', 'failed'];
 
 /**
  * inboundEffects({ prospect, touches, cls, templates, settings, now, inbound })
