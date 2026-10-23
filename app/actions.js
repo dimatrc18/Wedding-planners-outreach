@@ -27,7 +27,9 @@ function draftRow(p, key, step, extra = {}) {
     prospect_id: p.id, channel: d.channel, direction: 'out', step_name: extra.step_name || key, state: 'draft', subject: d.subject, body: d.body,
     template_key: d.template_key, variant: d.variant, lint: d.lint, attach_rate_card: d.attach_rate_card, suggested_for: extra.suggested_for || null,
   };
-  if (step && step.require_approval === false && !d.lint.errors.length && d.channel === 'email') {
+  const isFollowup = (extra.step_name || key) !== 'T1_intro';
+  const autoApprove = (step?.require_approval === false || isFollowup || S.settings?.auto_approve_followups) && !d.lint.errors?.length && d.channel === 'email';
+  if (autoApprove) {
     const now = new Date();
     row.state = 'approved';
     row.approved_by = 'auto';

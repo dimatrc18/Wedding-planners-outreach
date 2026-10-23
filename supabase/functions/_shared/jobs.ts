@@ -105,7 +105,9 @@ export async function draftDueSteps(db: any, settings: any, now = new Date()) {
           prospect_id: p.id, channel: d.channel, direction: 'out', step_name: st.step.key, state: 'draft',
           subject: d.subject, body: d.body, template_key: d.template_key, variant: d.variant, lint: d.lint, attach_rate_card: d.attach_rate_card,
         };
-        if (st.step.require_approval === false && !d.lint.errors.length && d.channel === 'email') {
+        const isFollowup = st.step.key !== 'T1_intro';
+        const autoApprove = (st.step.require_approval === false || isFollowup || (settings as any).auto_approve_followups) && !d.lint.errors.length && d.channel === 'email';
+        if (autoApprove) {
           row.state = 'approved'; row.approved_by = 'auto'; row.approved_at = now.toISOString();
           row.scheduled_at = core.scheduleApproved(row, p, settings, core.takenSlots(touches, now), { now, firstSendAt: core.firstColdSend(touches) })?.toISOString() || null;
         }
@@ -117,16 +119,30 @@ export async function draftDueSteps(db: any, settings: any, now = new Date()) {
     if (p.status === 'rate_card_sent' && !list.some((t: any) => t.step_name === 'ratecard_nudge')) {
       const rc = [...list].reverse().find((t: any) => t.step_name === 'rate_card_delivery' && t.state === 'sent');
       const answered = rc && list.some((t: any) => core.isRealReply(t) && new Date(t.replied_at || t.created_at) > new Date(rc.sent_at));
-      if (rc && !answered && core.daysBetween(rc.sent_at, now) >= settings.ratecard_nudge_days) {
+      if (rc && !answered && core.daysBetween(rc.sent_at, now) >= (settings.ratecard_nudge_days || 5)) {
         const d: any = core.buildDraft({ prospect: p, key: 'ratecard_nudge', templates, threadSubject: rc.subject || '' });
-        if (d) await insert({ prospect_id: p.id, channel: 'email', direction: 'out', step_name: 'ratecard_nudge', state: 'draft', subject: d.subject, body: d.body, template_key: d.template_key, lint: d.lint });
+        if (d) {
+          const row: any = { prospect_id: p.id, channel: 'email', direction: 'out', step_name: 'ratecard_nudge', state: 'draft', subject: d.subject, body: d.body, template_key: d.template_key, lint: d.lint };
+          if (!d.lint.errors?.length) {
+            row.state = 'approved'; row.approved_by = 'auto'; row.approved_at = now.toISOString();
+            row.scheduled_at = core.scheduleApproved(row, p, settings, core.takenSlots(touches, now), { now, firstSendAt: core.firstColdSend(touches) })?.toISOString() || null;
+          }
+          await insert(row);
+        }
       }
     }
     // FAM transfer completed → thank-you draft within 24 h.
     if (p.fam_status === 'completed' && p.fam_at && core.daysBetween(p.fam_at, now) <= 2 && !list.some((t: any) => t.step_name === 'fam_followup')) {
       const last = [...list].reverse().find((t: any) => t.subject);
       const d: any = core.buildDraft({ prospect: p, key: 'fam_followup', templates, threadSubject: last?.subject || 'Your DOROGO transfer' });
-      if (d) await insert({ prospect_id: p.id, channel: 'email', direction: 'out', step_name: 'fam_followup', state: 'draft', subject: d.subject, body: d.body, template_key: d.template_key, lint: d.lint });
+      if (d) {
+        const row: any = { prospect_id: p.id, channel: 'email', direction: 'out', step_name: 'fam_followup', state: 'draft', subject: d.subject, body: d.body, template_key: d.template_key, lint: d.lint };
+        if (!d.lint.errors?.length) {
+          row.state = 'approved'; row.approved_by = 'auto'; row.approved_at = now.toISOString();
+          row.scheduled_at = core.scheduleApproved(row, p, settings, core.takenSlots(touches, now), { now, firstSendAt: core.firstColdSend(touches) })?.toISOString() || null;
+        }
+        await insert(row);
+      }
     }
   }
   if (created > 0 && integrations().telegram && (settings as any).notify_drafts_ready === true) {
@@ -870,11 +886,14 @@ export async function sendDigest(db: any, settings: any, now = new Date(), force
   const d = await buildDigest(db, settings, now);
   await tgSend(d.text, [[{ text: 'Open Today', url: appUrl('today') }]]);
   await checkAndSendMonthlyVerificationAudit(db);
-  for (const t of d.drafts) {
-    const p: any = d.pmap.get(t.prospect_id);
-    const lintNote = t.lint?.errors?.length ? `\n⚠️ ${tgEscape(t.lint.errors[0])}` : '';
-    await tgSend(`<b>${tgEscape(p?.agency_name)}</b> · ${tgEscape(t.step_name)}${t.subject ? `\n<i>${tgEscape(t.subject)}</i>` : ''}\n\n${tgEscape((t.body || '').slice(0, 700))}${lintNote}`,
-      [[{ text: '✅ Approve', data: `approve:${t.id}` }, { text: '⏭ Skip', data: `skip:${t.id}` }, { text: 'Edit', url: appUrl(`prospect/${t.prospect_id}`) }]]);
+  if ((settings as any).notify_draft_cards === true) {
+    for (const t of d.drafts) {
+      if (t.step_name !== 'T1_intro') continue; // Never spam Telegram with approval cards for follow-ups
+      const p: any = d.pmap.get(t.prospect_id);
+      const lintNote = t.lint?.errors?.length ? `\n⚠️ ${tgEscape(t.lint.errors[0])}` : '';
+      await tgSend(`<b>${tgEscape(p?.agency_name)}</b> · ${tgEscape(t.step_name)}${t.subject ? `\n<i>${tgEscape(t.subject)}</i>` : ''}\n\n${tgEscape((t.body || '').slice(0, 700))}${lintNote}`,
+        [[{ text: '✅ Approve', data: `approve:${t.id}` }, { text: '⏭ Skip', data: `skip:${t.id}` }, { text: 'Edit', url: appUrl(`prospect/${t.prospect_id}`) }]]);
+    }
   }
   await setState(db, 'digest', { last_date: today, sent_at: now.toISOString() });
   return { sent: true, drafts: d.drafts.length };

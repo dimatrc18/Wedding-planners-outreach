@@ -40,7 +40,7 @@ export const STEP_STATUS = {
 export const DEFAULT_STEPS = [
   { key: 'T1_intro', label: 'Step 1 (Intro email)', day: 0, channel: 'email', thread: false, require_approval: false, enabled: true },
   { key: 'T3_followup', label: 'Step 2 (Follow-up 1)', day: 4, channel: 'email', thread: true, require_approval: false, enabled: true },
-  { key: 'T4_breakup', label: 'Step 3 (Follow-up 2 · disabled)', day: 9, channel: 'email', thread: false, require_approval: true, enabled: false },
+  { key: 'T4_breakup', label: 'Step 3 (Follow-up 2 · disabled)', day: 9, channel: 'email', thread: false, require_approval: false, enabled: false },
 ];
 
 export const SIGNATURE = `Dmitri Traciuc
@@ -79,7 +79,9 @@ export const DEFAULT_SETTINGS = {
   track_opens: false,
   stale_days: 10,
   ratecard_nudge_days: 5,
+  auto_approve_followups: true, // Follow-up messages (T3, T4, nudges) auto-approve and send without manual review
   notify_drafts_ready: false, // Do not spam telegram for background draft generation
+  notify_draft_cards: false, // Do not send individual draft approval cards in Telegram; only alert on real partner replies
   human_escalation_hours: 2,
   nurture_month_day: '10-01',
   targets: { open_rate: 0.5, positive_reply_rate: 0.10, positive_reply_rate_high: 0.15, ratecard_to_quote: 0.25, partners_won: 5, partners_won_high: 10 },
