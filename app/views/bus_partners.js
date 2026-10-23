@@ -240,7 +240,7 @@ export const SCOUT_CANDIDATE_POOL = [
     relevance_score: 93,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 23, territory_permits: 20, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
-    status: 'WANT_TO_CONTACT',
+    status: 'TO_REVIEW',
     fleet_categories: ['Mercedes Sprinter VIP (8–16 seats)', 'Executive Midibus (24–30 seats)'],
     notes: 'Lake Como villa specialist (Villa Balbiano, Balbianello). All-black unbranded Sprinters and narrow midibuses under 10m.'
   },
@@ -254,7 +254,7 @@ export const SCOUT_CANDIDATE_POOL = [
     relevance_score: 92,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 22, territory_permits: 20, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
-    status: 'WANT_TO_CONTACT',
+    status: 'TO_REVIEW',
     fleet_categories: ['Mercedes-Benz V-Class VIP (7–8 seats)', 'Executive Midibus (24–30 seats)', 'Mercedes Sprinter VIP (8–16 seats)'],
     notes: 'Based in Guanzate/Como. Historic carrier with luxury 26-seater midibuses and black V-Classes for Villa d’Este.'
   },
@@ -268,7 +268,7 @@ export const SCOUT_CANDIDATE_POOL = [
     relevance_score: 94,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 24, territory_permits: 20, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
-    status: 'WANT_TO_CONTACT',
+    status: 'TO_REVIEW',
     fleet_categories: ['Mercedes-Benz V-Class VIP (7–8 seats)', 'Mercedes Sprinter VIP (8–16 seats)'],
     notes: 'Bellagio-based VIP fleet. Suited chauffeurs, villa permits, total-black privacy glass.'
   },
@@ -282,7 +282,7 @@ export const SCOUT_CANDIDATE_POOL = [
     relevance_score: 91,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 21, territory_permits: 20, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / NCC Black',
-    status: 'WANT_TO_CONTACT',
+    status: 'TO_REVIEW',
     fleet_categories: ['Mercedes Sprinter VIP (8–16 seats)', 'Executive Midibus (24–30 seats)'],
     notes: 'Cernobbio depot adjacent to Villa d’Este. High-frequency wedding shuttles across Como lakefront.'
   },
@@ -310,7 +310,7 @@ export const SCOUT_CANDIDATE_POOL = [
     relevance_score: 93,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 23, territory_permits: 20, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
-    status: 'WANT_TO_CONTACT',
+    status: 'TO_REVIEW',
     fleet_categories: ['Mercedes Sprinter VIP (8–16 seats)', 'Limobus VIP Lounge (18–28 seats)'],
     notes: 'Tremezzina villa logistics. Ultra-luxury conversions with conference tables and privacy tinting.'
   },
@@ -340,7 +340,7 @@ export const SCOUT_CANDIDATE_POOL = [
     relevance_score: 91,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 22, territory_permits: 19, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
-    status: 'WANT_TO_CONTACT',
+    status: 'TO_REVIEW',
     fleet_categories: ['Mercedes Sprinter VIP (8–16 seats)', 'Mercedes-Benz V-Class VIP (7–8 seats)'],
     notes: 'High-end Milan and Lake Como corporate and wedding transfer mobility. Monochromatic total-black fleet.'
   },
@@ -354,7 +354,7 @@ export const SCOUT_CANDIDATE_POOL = [
     relevance_score: 92,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 24, territory_permits: 18, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
-    status: 'WANT_TO_CONTACT',
+    status: 'TO_REVIEW',
     fleet_categories: ['Mercedes Sprinter VIP (8–16 seats)', 'Limobus VIP Lounge (18–28 seats)'],
     notes: 'Exclusive Sprinter VIP club lounges with champagne coolers and suited chauffeurs.'
   },
@@ -440,7 +440,7 @@ export const SCOUT_CANDIDATE_POOL = [
     relevance_score: 88,
     score_breakdown: { discretion_unbranded: 30, fleet_luxury: 23, territory_permits: 18, corporate_sla: 17 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
-    status: 'WANT_TO_CONTACT',
+    status: 'TO_REVIEW',
     fleet_categories: ['Mercedes Sprinter VIP (8–16 seats)', 'Setra & Mercedes GT Coach (50–56 seats)'],
     notes: 'Brescia and Lake Garda luxury fleet. Modern Mercedes Sprinter VIP configurations with leather recliners and dark privacy glass.'
   },
@@ -556,7 +556,7 @@ export const SCOUT_CANDIDATE_POOL = [
     relevance_score: 89,
     score_breakdown: { discretion_unbranded: 30, fleet_luxury: 23, territory_permits: 20, corporate_sla: 16 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
-    status: 'WANT_TO_CONTACT',
+    status: 'TO_REVIEW',
     fleet_categories: ['Mercedes Sprinter VIP (8–16 seats)', 'Executive Midibus (24–30 seats)'],
     notes: 'Consorzio Trasporti Alta Valtellina. Winter Alpine certified with snow chains and ski racks. Direct links to St. Moritz, Bormio, and Milan airports.'
   },
@@ -1815,7 +1815,7 @@ export function render(el) {
       }
 
       const isNonLocal = pCity.toLowerCase().includes('roma') || pCity.toLowerCase().includes('central') || pCity.toLowerCase().includes('tuscany');
-      const partnerStatus = isNonLocal ? 'NOT_RELEVANT' : res.total_score >= 80 ? 'WANT_TO_CONTACT' : 'TO_REVIEW';
+      const partnerStatus = isNonLocal ? 'NOT_RELEVANT' : 'TO_REVIEW';
 
       const excluded = loadExcludedBusPartners();
       const isExcluded = isBusPartnerExcluded({ website: url, name: pName }, excluded);
@@ -1906,6 +1906,7 @@ export function render(el) {
       if (!evaluatedPartner) return;
       const added = await addBusPartner({
         ...evaluatedPartner,
+        status: evaluatedPartner.status === 'NOT_RELEVANT' ? 'NOT_RELEVANT' : 'TO_REVIEW',
         created_at: new Date().toISOString(),
       });
       toast(`✨ Added "${evaluatedPartner.name}" to CRM Manifest (Score: ${evaluatedPartner.relevance_score})`);
@@ -2195,6 +2196,7 @@ export function render(el) {
       for (const op of toAdd) {
         const added = await addBusPartner({
           ...op,
+          status: 'TO_REVIEW', // Newly scouted operators must ALWAYS start at TO_REVIEW ("1. To Review") for human verification
           created_at: new Date().toISOString(),
           notes: op.notes || `Scouted on ${new Date().toLocaleDateString('en-GB')}: 100-Point Score ${op.relevance_score || 0}/100`,
         });

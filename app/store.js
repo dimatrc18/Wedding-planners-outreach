@@ -288,8 +288,8 @@ export async function updateBusPartner(id, patch) {
 export async function addBusPartner(partner) {
   const newRow = {
     id: partner.id || `partner_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-    status: partner.status || 'TO_REVIEW',
     ...partner,
+    status: partner.status || 'TO_REVIEW',
     created_at: partner.created_at || nowIso(),
     updated_at: nowIso(),
   };

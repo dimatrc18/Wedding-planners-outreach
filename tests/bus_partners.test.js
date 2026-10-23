@@ -235,6 +235,17 @@ test('Batch Recency Differentiation: distinguishes operators added in the latest
   assert(!earlierBadge.includes('⚡ LATEST'));
 });
 
+test('Newly scouted operators must always have status TO_REVIEW (never WANT_TO_CONTACT)', () => {
+  // 1. Verify every candidate in the candidate pool has status TO_REVIEW ("1. To Review" / "to check")
+  for (const candidate of SCOUT_CANDIDATE_POOL) {
+    assert.equal(
+      candidate.status,
+      'TO_REVIEW',
+      `Candidate "${candidate.name}" must have status TO_REVIEW, found: ${candidate.status}`
+    );
+  }
+});
+
 test('operatorHasVehicleType and detectVehicleKey: accurately categorize and filter platforms', () => {
   assert.equal(detectVehicleKey('Mercedes-Benz V-Class VIP (7–8 seats)'), 'v_class');
   assert.equal(detectVehicleKey('Mercedes Sprinter VIP (8–16 seats)'), 'sprinter_vip');
