@@ -97,7 +97,16 @@ export async function approve(t) {
   return at;
 }
 
-export async function unapprove(t) { await update('touches', t.id, { state: 'draft', scheduled_at: null, approved_at: null, approved_by: null }); }
+export async function unapprove(t) { await update('touches', t.id, { state: 'draft', scheduled_at: null, approved_at: null, approved_by: null, error: null, send_attempts: 0 }); }
+
+export async function retryFailed(t) {
+  const p = prospectById(t.prospect_id);
+  if (core.isBlocked(p)) { toast('This prospect is marked Do Not Contact', 'error'); return false; }
+  const at = core.scheduleApproved(t, p, S.settings, core.takenSlots(S.touches), { firstSendAt: core.firstColdSend(S.touches) });
+  await update('touches', t.id, { state: 'approved', approved_by: me(), approved_at: nowIso(), scheduled_at: at ? at.toISOString() : null, error: null, send_attempts: 0 });
+  log('draft_approved', { touch_id: t.id, step: t.step_name, scheduled_at: at, retried: true }, p.id);
+  return at;
+}
 
 export async function skip(t) {
   await update('touches', t.id, { state: 'skipped' });

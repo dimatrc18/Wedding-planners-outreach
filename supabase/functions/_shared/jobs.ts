@@ -192,7 +192,7 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
   const emailsSent = touches.filter((t: any) => t.direction === 'out' && t.state === 'sent' && t.channel === 'email')
     .sort((a: any, b: any) => new Date(b.sent_at || b.created_at).getTime() - new Date(a.sent_at || a.created_at).getTime());
   const windowSent = emailsSent.slice(0, 100);
-  const sentTotal = windowSent.length;
+  let sentTotal = windowSent.length;
   // Count EVERY bounce in the rolling 100 window (never exclude quarantined leads)
   const bouncedTotal = windowSent.filter((t: any) => t.bounced).length;
 

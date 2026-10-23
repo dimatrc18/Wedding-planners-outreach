@@ -218,8 +218,16 @@ export function render(el) {
           <button class="btn ghost sm" data-act="unapprove" data-id="${attr(t.id)}">Back to drafts</button></div>`;
       }).join('')}</div></section>` : ''}
 
-    ${d.failed.length ? `<section class="section"><div class="section-head"><h2>Failed sends <span class="count">${d.failed.length}</span></h2></div>
-      <div class="card flush list">${d.failed.map((t) => `<div class="list-item"><div class="t"><b>${esc(A.prospectById(t.prospect_id)?.agency_name)}</b><span class="small" style="color:var(--bad)">${esc(t.error || '')}</span></div><button class="btn sm" data-act="unapprove" data-id="${attr(t.id)}">Back to drafts</button></div>`).join('')}</div></section>` : ''}
+    ${d.failed.length ? `<section class="section"><div class="section-head"><h2>Failed sends <span class="count">${d.failed.length}</span></h2>
+      <div class="row gap-xs">
+        <button class="btn sm" data-act="retry-all-failed">${icon('send', 14)} Retry all (${d.failed.length})</button>
+        <button class="btn ghost sm" data-act="unapprove-all-failed">${icon('undo', 14)} Move all to drafts</button>
+      </div></div>
+      <div class="card flush list">${d.failed.map((t) => `<div class="list-item"><div class="t"><b>${esc(A.prospectById(t.prospect_id)?.agency_name)}</b><span class="small" style="color:var(--bad)">${esc(t.error || '')}</span></div>
+        <div class="row gap-xs">
+          <button class="btn sm" data-act="retry-failed" data-id="${attr(t.id)}">Retry</button>
+          <button class="btn ghost sm" data-act="unapprove" data-id="${attr(t.id)}">Back to drafts</button>
+        </div></div>`).join('')}</div></section>` : ''}
 
     ${d.reminders.length ? `<section class="section"><div class="section-head"><h2>Follow-ups & reminders <span class="count">${d.reminders.length}</span></h2></div>
       <div class="card flush list">${d.reminders.map((r) => `<a class="list-item clickable" href="#prospect/${attr(r.p.id)}" style="color:inherit;text-decoration:none"><span class="dot ${r.kind === 'stale' || r.kind === 'quote' ? 'warn' : 'gold'}"></span><div class="t"><b>${esc(r.p.agency_name)}</b><span class="small muted">${esc(r.text)}</span></div><span class="chip">${esc(core.stageLabel(r.p.status))}</span></a>`).join('')}</div></section>` : ''}
@@ -321,6 +329,21 @@ export function render(el) {
         case 'mark-sent': await A.markSent(t); toast('Marked as sent'); break;
         case 'send-now': await A.sendNow(t); break;
         case 'unapprove': await A.unapprove(t); break;
+        case 'retry-failed': await A.retryFailed(t); toast('Touch re-approved'); paint(); break;
+        case 'retry-all-failed': {
+          const failed = d.failed;
+          for (const item of failed) await A.retryFailed(item);
+          toast(`${plural(failed.length, 'failed send')} re-approved`);
+          paint();
+          break;
+        }
+        case 'unapprove-all-failed': {
+          const failed = d.failed;
+          for (const item of failed) await A.unapprove(item);
+          toast(`${plural(failed.length, 'failed send')} moved back to drafts`);
+          paint();
+          break;
+        }
         case 'handled': await A.markHandled(t); toast('Marked handled'); break;
         case 'goto-draft': {
           const i = cards().findIndex((c) => c.dataset.card === id);
