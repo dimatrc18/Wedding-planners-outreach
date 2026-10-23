@@ -147,26 +147,30 @@ export function render(el) {
         <table class="table" style="width:100%;table-layout:fixed;border-collapse:collapse">
           <thead>
             <tr>
-              <th style="width:44px;text-align:center">Score</th>
-              <th style="width:165px">Company & Base</th>
-              <th style="width:55px;text-align:center">Web</th>
-              <th style="width:155px">Email</th>
-              <th style="width:120px">Fleet Types</th>
-              <th style="width:180px">Notes</th>
-              <th style="width:145px">Status</th>
-              <th style="width:36px;text-align:center" title="Delete">Del</th>
+              <th style="width:26px;text-align:center;padding:8px 2px">#</th>
+              <th style="width:40px;text-align:center;padding:8px 2px">Score</th>
+              <th style="width:155px">Company & Base</th>
+              <th style="width:65px;text-align:center">Web</th>
+              <th style="width:145px">Email</th>
+              <th style="width:115px">Fleet Types</th>
+              <th style="width:165px">Notes</th>
+              <th style="width:140px">Status</th>
+              <th style="width:38px;text-align:center" title="Delete">Del</th>
             </tr>
           </thead>
           <tbody>
-            ${filtered.length ? filtered.map((p) => {
+            ${filtered.length ? filtered.map((p, idx) => {
               const score = p.relevance_score || 0;
               const tier = core.getPriorityTier(score);
               const scoreClass = score >= 90 ? 'chip ok' : score >= 75 ? 'chip' : score >= 50 ? 'chip gold' : 'chip bad';
               const categories = Array.isArray(p.fleet_categories) ? p.fleet_categories : [];
 
               return `<tr class="hover-row" data-id="${attr(p.id)}" style="height:52px">
-                <td style="text-align:center;vertical-align:middle">
-                  <span class="${scoreClass} clickable" data-act="view-score" data-id="${attr(p.id)}" style="font-weight:700;font-size:.85rem;padding:3px 6px;cursor:pointer" title="Click to view 4-pillar score breakdown">
+                <td style="text-align:center;vertical-align:middle;color:var(--ink-3);font-size:.76rem;font-weight:600;font-variant-numeric:tabular-nums;padding:6px 2px">
+                  ${idx + 1}
+                </td>
+                <td style="text-align:center;vertical-align:middle;padding:6px 2px">
+                  <span class="${scoreClass} clickable" data-act="view-score" data-id="${attr(p.id)}" style="font-weight:700;font-size:.84rem;padding:2px 5px;cursor:pointer" title="Click to view 4-pillar score breakdown">
                     ${score}
                   </span>
                 </td>
@@ -218,7 +222,7 @@ export function render(el) {
                   <button class="btn sm ghost" data-act="delete-partner" data-id="${attr(p.id)}" style="padding:4px 6px;color:var(--bad);display:inline-flex;align-items:center" title="Delete Operator">${icon('trash', 13)}</button>
                 </td>
               </tr>`;
-            }).join('') : `<tr><td colspan="8" class="empty small">No bus operators found matching the current filters.</td></tr>`}
+            }).join('') : `<tr><td colspan="9" class="empty small">No bus operators found matching the current filters.</td></tr>`}
           </tbody>
         </table>
       </div>
