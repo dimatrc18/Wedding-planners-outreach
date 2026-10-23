@@ -189,40 +189,193 @@ export const INITIAL_BUS_PARTNERS = [
 ];
 
 const STORAGE_KEY = 'dorogo_bus_partners_v1';
+export const STORAGE_EXCLUDED_KEY = 'dorogo_bus_partners_excluded_v1';
 
-export function loadStoredBusPartners() {
+let _memoryExcluded = [];
+
+export function normalizeDomain(url) {
+  if (!url) return '';
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      let parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        // Reconcile Cima Luxury if stored with old erroneous Milano city
-        let changed = false;
-        parsed = parsed.map((p) => {
-          if (p.id === 'partner_cima_luxury' || (p.name === 'Cima Luxury' && (p.base_city === 'Milano' || !p.base_city.includes('Roma')))) {
-            changed = true;
-            return {
-              ...p,
-              base_city: 'Roma (Central Italy)',
-              phone: '+39 06 35 34 83 45',
-              relevance_score: 0,
-              score_breakdown: { discretion_unbranded: 32, fleet_luxury: 22, territory_permits: 0, corporate_sla: 16 },
-              status: 'NOT_RELEVANT',
-              notes: 'Headquartered at Waldorf Astoria Rome Cavalieri (00136 Rome). Out-of-region depot (+39 06) located 570km from Milan/Lake Como with no local Lombardy depot. Disqualified from local Northern Italy dispatch.'
-            };
-          }
-          return p;
-        });
-        if (changed) saveStoredBusPartners(parsed);
-        return parsed;
+    const raw = String(url).trim();
+    const withProto = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+    const parsed = new URL(withProto);
+    return parsed.hostname.replace(/^www\./i, '').toLowerCase().trim();
+  } catch (_) {
+    return String(url).replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0].toLowerCase().trim();
+  }
+}
+
+export function normalizePhone(phone) {
+  return String(phone || '').replace(/\D/g, '');
+}
+
+export function normalizeName(name) {
+  return String(name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+export function loadExcludedBusPartners() {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const raw = localStorage.getItem(STORAGE_EXCLUDED_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
       }
     }
   } catch (_) {}
-  return INITIAL_BUS_PARTNERS;
+  return _memoryExcluded;
+}
+
+export function saveExcludedBusPartners(list) {
+  _memoryExcluded = Array.isArray(list) ? list : [];
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(STORAGE_EXCLUDED_KEY, JSON.stringify(_memoryExcluded));
+    }
+  } catch (_) {}
+}
+
+export function isBusPartnerExcluded(partner, excludedList = null) {
+  if (!partner) return false;
+  const excluded = excludedList || loadExcludedBusPartners();
+  if (!excluded || !excluded.length) return false;
+
+  const pId = partner.id || '';
+  const pNameNorm = normalizeName(partner.name);
+  const pDomain = normalizeDomain(partner.website);
+  const pPhoneNorm = normalizePhone(partner.phone);
+
+  return excluded.some((ex) => {
+    // 1. Direct ID match
+    if (pId && ex.id && pId === ex.id) return true;
+
+    // 2. Exact or substring domain match (e.g. cimaluxury.com)
+    if (pDomain && ex.domain) {
+      if (pDomain === ex.domain || pDomain.endsWith(`.${ex.domain}`) || ex.domain.endsWith(`.${pDomain}`)) {
+        return true;
+      }
+    }
+
+    // 3. Normalized name match (e.g. 'cimaluxury' or 'cimaluxurysrl')
+    if (pNameNorm && ex.normalized_name) {
+      if (pNameNorm === ex.normalized_name) return true;
+      if (pNameNorm.length >= 6 && ex.normalized_name.length >= 6) {
+        if (pNameNorm.includes(ex.normalized_name) || ex.normalized_name.includes(pNameNorm)) return true;
+      }
+    }
+
+    // 4. Normalized phone match (matching last 7+ digits)
+    if (pPhoneNorm && ex.normalized_phone && pPhoneNorm.length >= 7 && ex.normalized_phone.length >= 7) {
+      const pTail = pPhoneNorm.slice(-7);
+      const exTail = ex.normalized_phone.slice(-7);
+      if (pTail === exTail) return true;
+    }
+
+    return false;
+  });
+}
+
+export function addExcludedBusPartner(partner, reason = 'Dismissed by user') {
+  if (!partner) return null;
+  const list = [...loadExcludedBusPartners()];
+  const domain = normalizeDomain(partner.website);
+  const normalized_name = normalizeName(partner.name);
+  const normalized_phone = normalizePhone(partner.phone);
+
+  const existingIdx = list.findIndex((ex) => 
+    (partner.id && ex.id === partner.id) ||
+    (domain && ex.domain && domain === ex.domain) ||
+    (normalized_name && ex.normalized_name && normalized_name === ex.normalized_name)
+  );
+
+  const entry = {
+    id: partner.id || `excluded_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    name: partner.name || 'Unknown Operator',
+    normalized_name,
+    website: partner.website || '',
+    domain,
+    phone: partner.phone || '',
+    normalized_phone,
+    base_city: partner.base_city || '',
+    fleet_categories: Array.isArray(partner.fleet_categories) ? partner.fleet_categories : [],
+    relevance_score: partner.relevance_score || 0,
+    reason: reason || 'Dismissed by user',
+    excluded_at: new Date().toISOString()
+  };
+
+  if (existingIdx >= 0) {
+    list[existingIdx] = { ...list[existingIdx], ...entry };
+  } else {
+    list.unshift(entry);
+  }
+
+  saveExcludedBusPartners(list);
+  return entry;
+}
+
+export function removeExcludedBusPartner(idOrDomain) {
+  if (!idOrDomain) return null;
+  const list = [...loadExcludedBusPartners()];
+  const target = String(idOrDomain).toLowerCase().trim();
+  const targetNorm = normalizeName(target);
+  const targetDomain = normalizeDomain(target);
+
+  const idx = list.findIndex((ex) => 
+    ex.id === idOrDomain || 
+    (ex.domain && (ex.domain === target || ex.domain === targetDomain)) || 
+    (ex.normalized_name && ex.normalized_name === targetNorm)
+  );
+
+  if (idx >= 0) {
+    const [removed] = list.splice(idx, 1);
+    saveExcludedBusPartners(list);
+    return removed;
+  }
+  return null;
+}
+
+export function loadStoredBusPartners() {
+  const excluded = loadExcludedBusPartners();
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        let parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Reconcile Cima Luxury if stored with old erroneous Milano city
+          let changed = false;
+          parsed = parsed.map((p) => {
+            if (p.id === 'partner_cima_luxury' || (p.name === 'Cima Luxury' && (p.base_city === 'Milano' || !p.base_city.includes('Roma')))) {
+              changed = true;
+              return {
+                ...p,
+                base_city: 'Roma (Central Italy)',
+                phone: '+39 06 35 34 83 45',
+                relevance_score: 0,
+                score_breakdown: { discretion_unbranded: 32, fleet_luxury: 22, territory_permits: 0, corporate_sla: 16 },
+                status: 'NOT_RELEVANT',
+                notes: 'Headquartered at Waldorf Astoria Rome Cavalieri (00136 Rome). Out-of-region depot (+39 06) located 570km from Milan/Lake Como with no local Lombardy depot. Disqualified from local Northern Italy dispatch.'
+              };
+            }
+            return p;
+          });
+          // Filter out any partner that is on the exclusion list
+          const filtered = parsed.filter((p) => !isBusPartnerExcluded(p, excluded));
+          if (changed || filtered.length !== parsed.length) {
+            saveStoredBusPartners(filtered);
+          }
+          return filtered;
+        }
+      }
+    }
+  } catch (_) {}
+  return INITIAL_BUS_PARTNERS.filter((p) => !isBusPartnerExcluded(p, excluded));
 }
 
 export function saveStoredBusPartners(list) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    }
   } catch (_) {}
 }

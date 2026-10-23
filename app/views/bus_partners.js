@@ -1,7 +1,16 @@
 // Minimalist Bus Partner Manifest Table & 100-Point Scoring View
 // Luxury unbranded minibus and coach operators across Northern Italy.
 import * as core from '../../supabase/functions/_shared/core/index.js';
-import { S, updateBusPartner, addBusPartner, removeBusPartner } from '../store.js';
+import { 
+  S, 
+  updateBusPartner, 
+  addBusPartner, 
+  removeBusPartner, 
+  removeManyBusPartners, 
+  unexcludeBusPartner, 
+  loadExcludedBusPartners, 
+  isBusPartnerExcluded 
+} from '../store.js';
 import { esc, attr, icon, download, toast, confirmDialog } from '../ui.js';
 
 let activeFilter = 'all'; // all | newly_added | top_tier
@@ -9,6 +18,7 @@ let statusFilter = 'all'; // all | TO_REVIEW | WANT_TO_CONTACT | CONTACTED | APP
 let vehicleFilter = 'all'; // all | v_class | sprinter_vip | sprinter_lux | midibus | limobus | gt_coach
 let cityFilter = 'all';
 let searchQ = '';
+const selectedPartnerIds = new Set();
 
 function getStatusBadgeStyle(status) {
   switch (status) {
@@ -722,6 +732,13 @@ export function render(el) {
     // Sort by relevance score descending
     filtered.sort((a, b) => (b.relevance_score || 0) - (a.relevance_score || 0));
 
+    // Excluded operators memory & selection cleanup
+    const excludedList = loadExcludedBusPartners();
+    const validIds = new Set(list.map((p) => p.id));
+    for (const id of selectedPartnerIds) {
+      if (!validIds.has(id)) selectedPartnerIds.delete(id);
+    }
+
     // Get unique cities for filter dropdown
     const cities = [...new Set(list.map((p) => (p.base_city || '').split(/[\/,]/)[0].trim()).filter(Boolean))].sort();
 
@@ -736,6 +753,9 @@ export function render(el) {
       <div class="row" style="gap:8px;flex-wrap:wrap">
         <button class="btn sm" id="btn-scout-url" style="color:var(--gold-ink);border-color:var(--gold)" title="Evaluate website through 100-Point Gate">⚡ Scout URL</button>
         <button class="btn sm" id="btn-scout-market" style="background:var(--gold-soft);color:var(--ink);border-color:var(--gold-strong);font-weight:600" title="Auto-scout operators by location, score & vehicle types">🔍 Auto-Scout Fleet</button>
+        <button class="btn ghost sm" id="btn-view-excluded" style="color:var(--text-3);border-color:var(--border);display:inline-flex;align-items:center;gap:4px" title="View operators permanently blocked from discovery and searches">
+          🚫 Excluded (${excludedList.length})
+        </button>
         <button class="btn ghost sm" id="btn-export">${icon('download', 14)} Export</button>
         <button class="btn primary sm" id="btn-add-partner">${icon('plus', 14)} + Add Operator</button>
       </div>
@@ -836,12 +856,30 @@ export function render(el) {
         </div>
       </div>
 
+      <!-- Batch Actions Bar (visible when 1+ rows selected) -->
+      ${selectedPartnerIds.size > 0 ? `
+        <div class="card row between" id="bus-batch-actions-bar" style="background:#fef3c7;border:1px solid #f59e0b;padding:8px 14px;border-radius:6px;align-items:center;margin-bottom:8px">
+          <div class="row" style="gap:10px;align-items:center">
+            <span class="chip tiny gold" style="font-weight:700">${selectedPartnerIds.size} Selected</span>
+            <span class="small" style="color:#92400e;font-weight:600">Select operators to delete or permanently exclude</span>
+          </div>
+          <div class="row" style="gap:8px;align-items:center">
+            <button class="btn sm ghost" id="btn-batch-deselect" style="padding:4px 8px;font-size:.78rem;background:#fff">Deselect All</button>
+            <button class="btn sm danger" id="btn-batch-delete-exclude" style="background:#dc2626;color:#fff;border:none;padding:4px 12px;font-size:.78rem;font-weight:600;display:inline-flex;align-items:center;gap:4px">
+              🗑️ Delete & Exclude Selected (${selectedPartnerIds.size})
+            </button>
+          </div>
+        </div>
+      ` : ''}
+
       <!-- Minimalist Bus Partner Manifest Table (100% Fits in One View, Zero Horizontal Scroll) -->
       <div class="card flush table-wrap" style="overflow-x:hidden">
         <table class="table" style="width:100%;table-layout:fixed;border-collapse:collapse">
           <thead>
             <tr>
-              <th style="width:26px;text-align:center;padding:8px 2px">#</th>
+              <th style="width:30px;text-align:center;padding:8px 2px">
+                <input type="checkbox" id="select-all-bus-partners" ${filtered.length > 0 && filtered.every((p) => selectedPartnerIds.has(p.id)) ? 'checked' : ''} style="cursor:pointer;margin:0" title="Select All Visible">
+              </th>
               <th style="width:40px;text-align:center;padding:8px 2px">Score</th>
               <th style="width:150px">Company & Base</th>
               <th style="width:55px;text-align:center">Web</th>
@@ -867,7 +905,7 @@ export function render(el) {
                   ` : ''}
                 </div>
               </th>
-              <th style="width:36px;text-align:center" title="Delete">Del</th>
+              <th style="width:36px;text-align:center" title="Delete & Block">Del</th>
             </tr>
           </thead>
           <tbody>
@@ -877,10 +915,11 @@ export function render(el) {
               const scoreClass = score >= 90 ? 'chip ok' : score >= 75 ? 'chip' : score >= 50 ? 'chip gold' : 'chip bad';
               const categories = Array.isArray(p.fleet_categories) ? p.fleet_categories : [];
               const isNew = isRecentlyAdded(p);
+              const isChecked = selectedPartnerIds.has(p.id);
 
-              return `<tr class="hover-row ${isNew ? 'newly-added-row' : ''}" data-id="${attr(p.id)}" style="min-height:56px;${isNew ? 'background:rgba(16, 185, 129, 0.05);' : ''}">
-                <td style="text-align:center;vertical-align:middle;color:var(--ink-3);font-size:.76rem;font-weight:600;font-variant-numeric:tabular-nums;padding:6px 2px">
-                  ${idx + 1}
+              return `<tr class="hover-row ${isNew ? 'newly-added-row' : ''}" data-id="${attr(p.id)}" style="min-height:56px;${isChecked ? 'background:rgba(245, 158, 11, 0.08);' : isNew ? 'background:rgba(16, 185, 129, 0.05);' : ''}">
+                <td style="text-align:center;vertical-align:middle;padding:6px 2px">
+                  <input type="checkbox" class="partner-select-check" data-id="${attr(p.id)}" ${isChecked ? 'checked' : ''} style="cursor:pointer;margin:0" title="Select #${idx + 1}: ${attr(p.name)}">
                 </td>
                 <td style="text-align:center;vertical-align:middle;padding:6px 2px">
                   <span class="${scoreClass} clickable" data-act="view-score" data-id="${attr(p.id)}" style="font-weight:700;font-size:.84rem;padding:2px 5px;cursor:pointer" title="Click to view 4-pillar score breakdown">
@@ -947,7 +986,7 @@ export function render(el) {
                   </select>
                 </td>
                 <td style="vertical-align:middle;text-align:center;white-space:nowrap">
-                  <button class="btn sm ghost" data-act="delete-partner" data-id="${attr(p.id)}" style="padding:4px 6px;color:var(--bad);display:inline-flex;align-items:center" title="Delete Operator">${icon('trash', 13)}</button>
+                  <button class="btn sm ghost" data-act="delete-partner" data-id="${attr(p.id)}" style="padding:4px 6px;color:var(--bad);display:inline-flex;align-items:center" title="Delete & Never Suggest Again">${icon('trash', 13)}</button>
                 </td>
               </tr>`;
             }).join('') : `
@@ -1132,17 +1171,53 @@ export function render(el) {
       });
     });
 
-    // Delete Partner
+    // Delete & Exclude Partner (Single Row)
     el.querySelectorAll('[data-act="delete-partner"]').forEach((btn) => {
-      btn.addEventListener('click', async (e) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const id = e.currentTarget.dataset.id;
         const partner = (S.busPartners || []).find((x) => x.id === id);
-        if (partner && await confirmDialog('Remove Bus Partner', `Remove "${partner.name}" from the bus partner roster?`, 'Remove')) {
-          await removeBusPartner(id);
-          toast('Partner removed');
-          paint();
-        }
+        if (partner) openDeleteExcludeModal(partner);
       });
+    });
+
+    // Select All Checkbox
+    el.querySelector('#select-all-bus-partners')?.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        filtered.forEach((p) => selectedPartnerIds.add(p.id));
+      } else {
+        selectedPartnerIds.clear();
+      }
+      paint();
+    });
+
+    // Individual Partner Checkboxes
+    el.querySelectorAll('.partner-select-check').forEach((chk) => {
+      chk.addEventListener('change', (e) => {
+        const id = e.target.dataset.id;
+        if (e.target.checked) {
+          selectedPartnerIds.add(id);
+        } else {
+          selectedPartnerIds.delete(id);
+        }
+        paint();
+      });
+    });
+
+    // Batch Actions: Deselect All
+    el.querySelector('#btn-batch-deselect')?.addEventListener('click', () => {
+      selectedPartnerIds.clear();
+      paint();
+    });
+
+    // Batch Actions: Delete & Exclude Selected
+    el.querySelector('#btn-batch-delete-exclude')?.addEventListener('click', () => {
+      openBatchDeleteModal();
+    });
+
+    // View Excluded / Blocked Operators Modal
+    el.querySelector('#btn-view-excluded')?.addEventListener('click', () => {
+      openExcludedModal();
     });
 
     // Edit fleet categories modal
@@ -1179,6 +1254,211 @@ export function render(el) {
   }
 
   // --- Modals ---
+
+  // --- Delete & Exclude Single Operator Modal ---
+  function openDeleteExcludeModal(partner) {
+    const backdrop = document.createElement('div');
+    backdrop.className = 'dialog-backdrop';
+    backdrop.innerHTML = `
+    <div class="dialog card stack" style="max-width:480px;padding:24px">
+      <div class="row between" style="align-items:flex-start">
+        <div class="row" style="gap:10px;align-items:center">
+          <span style="font-size:1.6rem">🗑️</span>
+          <div>
+            <div class="label eyebrow" style="color:var(--bad)">Remove Operator</div>
+            <h3 style="margin:2px 0 0">Delete & Exclude Operator</h3>
+          </div>
+        </div>
+        <button class="btn ghost sm" data-close>×</button>
+      </div>
+
+      <p class="small" style="margin:10px 0 6px;color:var(--ink)">
+        Are you sure you want to remove <b>${esc(partner.name)}</b> (📍 ${esc(partner.base_city || 'Northern Italy')}) from your CRM roster?
+      </p>
+
+      <!-- Persistent Exclusion Banner -->
+      <div class="card stack" style="gap:6px;background:rgba(239, 68, 68, 0.06);border:1px solid rgba(239, 68, 68, 0.25);padding:12px;border-radius:6px">
+        <div class="row" style="gap:6px;align-items:center;color:#b91c1c;font-weight:700;font-size:.84rem">
+          <span>🛡️ Persistent Exclusion Memory</span>
+        </div>
+        <div class="tiny" style="color:var(--text-2);line-height:1.4">
+          The system will remember this operator (<code>${esc(partner.website || 'N/A')}</code>) and <b>will never discover, recommend, or save them</b> back in future Auto-Scout searches.
+        </div>
+        <label class="row" style="align-items:center;gap:8px;margin-top:4px;cursor:pointer">
+          <input type="checkbox" id="modal-chk-exclude" checked style="cursor:pointer">
+          <span class="tiny" style="font-weight:600;color:var(--ink)">Remember and permanently block from future searches</span>
+        </label>
+      </div>
+
+      <!-- Optional Reason -->
+      <label class="field" style="margin-top:8px">
+        <span class="tiny" style="font-weight:600">Reason for exclusion (optional)</span>
+        <select id="modal-select-reason" class="sm" style="padding:6px 10px;width:100%">
+          <option value="Not interested / Don't like" selected>Not interested / Don't like</option>
+          <option value="Out of region / Non-local depot">Out of region / Non-local depot</option>
+          <option value="Commercial branded fleet / Billboard decals">Commercial branded fleet / Billboard decals</option>
+          <option value="Unresponsive / Poor communication">Unresponsive / Poor communication</option>
+          <option value="Rates too high">Rates too high</option>
+        </select>
+      </label>
+
+      <div class="row" style="justify-content:flex-end;gap:8px;margin-top:16px">
+        <button class="btn ghost" data-close>Cancel</button>
+        <button class="btn danger" id="modal-btn-confirm-delete" style="background:#dc2626;color:#fff;border:none;padding:6px 14px;font-weight:600">
+          Delete & Exclude
+        </button>
+      </div>
+    </div>`;
+
+    document.body.appendChild(backdrop);
+    const close = () => backdrop.remove();
+    backdrop.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', close));
+
+    backdrop.querySelector('#modal-btn-confirm-delete').addEventListener('click', async () => {
+      const doExclude = backdrop.querySelector('#modal-chk-exclude').checked;
+      const reason = backdrop.querySelector('#modal-select-reason').value;
+      await removeBusPartner(partner.id, { exclude: doExclude, reason });
+      selectedPartnerIds.delete(partner.id);
+      close();
+      toast(`"${partner.name}" removed${doExclude ? ' and permanently blocked from future searches' : ''}`, 'ok');
+      paint();
+    });
+  }
+
+  // --- Batch Delete & Exclude Modal ---
+  function openBatchDeleteModal() {
+    const ids = Array.from(selectedPartnerIds);
+    if (!ids.length) return;
+    const selectedPartners = (S.busPartners || []).filter((p) => selectedPartnerIds.has(p.id));
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'dialog-backdrop';
+    backdrop.innerHTML = `
+    <div class="dialog card stack" style="max-width:500px;padding:24px">
+      <div class="row between" style="align-items:flex-start">
+        <div class="row" style="gap:10px;align-items:center">
+          <span style="font-size:1.6rem">🗑️</span>
+          <div>
+            <div class="label eyebrow" style="color:var(--bad)">Batch Removal</div>
+            <h3 style="margin:2px 0 0">Delete & Exclude ${ids.length} Operators</h3>
+          </div>
+        </div>
+        <button class="btn ghost sm" data-close>×</button>
+      </div>
+
+      <p class="small" style="margin:10px 0 6px;color:var(--ink)">
+        Are you sure you want to remove the <b>${ids.length}</b> selected operators from your CRM?
+      </p>
+
+      <div class="stack" style="gap:4px;max-height:120px;overflow-y:auto;background:var(--surface-2);padding:8px 12px;border-radius:4px;border:1px solid var(--line)">
+        ${selectedPartners.map((p) => `
+          <div class="row between tiny" style="padding:2px 0">
+            <span style="font-weight:600">${esc(p.name)}</span>
+            <span class="muted">📍 ${esc(p.base_city || 'Northern Italy')}</span>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="card stack" style="gap:6px;background:rgba(239, 68, 68, 0.06);border:1px solid rgba(239, 68, 68, 0.25);padding:12px;border-radius:6px;margin-top:6px">
+        <div class="row" style="gap:6px;align-items:center;color:#b91c1c;font-weight:700;font-size:.84rem">
+          <span>🛡️ Persistent Exclusion Memory</span>
+        </div>
+        <div class="tiny" style="color:var(--text-2);line-height:1.4">
+          All ${ids.length} operators will be remembered and <b>permanently blocked</b> from future Auto-Scout discovery, recommendations, and saving.
+        </div>
+      </div>
+
+      <div class="row" style="justify-content:flex-end;gap:8px;margin-top:16px">
+        <button class="btn ghost" data-close>Cancel</button>
+        <button class="btn danger" id="modal-btn-confirm-batch-delete" style="background:#dc2626;color:#fff;border:none;padding:6px 14px;font-weight:600">
+          Delete & Exclude All (${ids.length})
+        </button>
+      </div>
+    </div>`;
+
+    document.body.appendChild(backdrop);
+    const close = () => backdrop.remove();
+    backdrop.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', close));
+
+    backdrop.querySelector('#modal-btn-confirm-batch-delete').addEventListener('click', async () => {
+      await removeManyBusPartners(ids, { exclude: true, reason: 'Batch removed by user' });
+      selectedPartnerIds.clear();
+      close();
+      toast(`${ids.length} operators removed and permanently blocked from searches`, 'ok');
+      paint();
+    });
+  }
+
+  // --- View Excluded & Blocked Operators Modal ---
+  function openExcludedModal() {
+    const list = loadExcludedBusPartners();
+    const backdrop = document.createElement('div');
+    backdrop.className = 'dialog-backdrop';
+    backdrop.innerHTML = `
+    <div class="dialog card stack" style="max-width:620px;padding:24px">
+      <div class="row between" style="align-items:flex-start">
+        <div class="row" style="gap:10px;align-items:center">
+          <span style="font-size:1.6rem">🚫</span>
+          <div>
+            <div class="label eyebrow" style="color:var(--gold-ink)">Exclusion Memory</div>
+            <h3 style="margin:2px 0 0">Blocked & Excluded Operators (${list.length})</h3>
+          </div>
+        </div>
+        <button class="btn ghost sm" data-close>×</button>
+      </div>
+
+      <p class="small muted" style="margin:8px 0 14px">
+        These operators were deleted and are remembered by the system. Auto-Scout and URL discovery will <b>never</b> search, recommend, or save them back into your CRM unless you unblock them here.
+      </p>
+
+      ${list.length ? `
+        <div class="stack" style="gap:8px;max-height:360px;overflow-y:auto;padding-right:4px">
+          ${list.map((item) => `
+            <div class="row between" style="align-items:center;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:10px 14px">
+              <div class="stack" style="gap:2px">
+                <div class="row" style="gap:8px;align-items:center">
+                  <span style="font-weight:600;font-size:.88rem;color:var(--ink)">${esc(item.name)}</span>
+                  <span class="chip tiny outline">${esc(item.base_city || 'Northern Italy')}</span>
+                  ${item.website ? `<a href="${attr(item.website)}" target="_blank" rel="noopener" class="tiny" style="color:var(--series-1);text-decoration:none">${esc(item.domain || 'Web')} ↗</a>` : ''}
+                </div>
+                <div class="tiny muted">
+                  Reason: <i>${esc(item.reason || 'Dismissed by user')}</i> · Blocked on ${new Date(item.excluded_at).toLocaleDateString()}
+                </div>
+              </div>
+              <button class="btn sm ghost btn-unblock-operator" data-id="${attr(item.id)}" style="font-size:.76rem;padding:3px 8px;white-space:nowrap" title="Unblock this operator so they can be scouted again">
+                ↩️ Unblock
+              </button>
+            </div>
+          `).join('')}
+        </div>
+      ` : `
+        <div class="card empty small" style="padding:28px 16px;text-align:center">
+          <span style="font-size:1.8rem">✅</span>
+          <div style="font-weight:600;margin-top:6px">No operators currently excluded.</div>
+          <span class="tiny muted">When you delete an operator from the roster, they will be remembered here and blocked from future Auto-Scout searches.</span>
+        </div>
+      `}
+
+      <div class="row between" style="margin-top:16px;align-items:center">
+        <span class="tiny muted">${list.length} operator${list.length === 1 ? '' : 's'} permanently blocked</span>
+        <button class="btn ghost sm" data-close>Close</button>
+      </div>
+    </div>`;
+
+    document.body.appendChild(backdrop);
+    const close = () => backdrop.remove();
+    backdrop.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', close));
+
+    backdrop.querySelectorAll('.btn-unblock-operator').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        const id = e.currentTarget.dataset.id;
+        const unblocked = await unexcludeBusPartner(id);
+        toast(`"${unblocked?.name || 'Operator'}" unblocked.`, 'ok');
+        close();
+        paint();
+      });
+    });
+  }
 
   // --- Dedicated Fleet Categories Modal ---
   function openFleetModal(partner) {
@@ -1451,6 +1731,9 @@ export function render(el) {
       const isNonLocal = pCity.toLowerCase().includes('roma') || pCity.toLowerCase().includes('central') || pCity.toLowerCase().includes('tuscany');
       const partnerStatus = isNonLocal ? 'NOT_RELEVANT' : res.total_score >= 80 ? 'WANT_TO_CONTACT' : 'TO_REVIEW';
 
+      const excluded = loadExcludedBusPartners();
+      const isExcluded = isBusPartnerExcluded({ website: url, name: pName }, excluded);
+
       evaluatedPartner = {
         name: pName,
         base_city: pCity,
@@ -1468,6 +1751,16 @@ export function render(el) {
 
       previewEl.style.display = 'block';
       previewEl.innerHTML = `
+        ${isExcluded ? `
+          <div class="row between" style="background:#fef2f2;border:1px solid #fecaca;padding:8px 12px;border-radius:6px;align-items:center;margin-bottom:10px">
+            <div class="row" style="gap:6px;align-items:center">
+              <span>🚫</span>
+              <span class="tiny" style="color:#b91c1c;font-weight:600">This operator was previously deleted and excluded from searches.</span>
+            </div>
+            <button class="btn sm ghost" id="scout-btn-unblock" style="padding:2px 8px;font-size:.72rem;background:#fff;border-color:#fca5a5;color:#b91c1c">↩️ Unblock</button>
+          </div>
+        ` : ''}
+
         <div class="row between" style="align-items:center;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:10px">
           <div>
             <div class="label eyebrow">Score &amp; Classification</div>
@@ -1507,6 +1800,12 @@ export function render(el) {
             ${pCats.map((c) => `<span class="chip tiny outline">${esc(c)}</span>`).join('')}
           </div>
         </div>`;
+
+      previewEl.querySelector('#scout-btn-unblock')?.addEventListener('click', async () => {
+        await unexcludeBusPartner(url);
+        toast(`"${pName}" unblocked from exclusion memory.`, 'ok');
+        runEval();
+      });
 
       addBtn.style.display = 'inline-flex';
       addBtn.textContent = `Add ${pName} to CRM`;
@@ -1632,8 +1931,13 @@ export function render(el) {
       const existingDomains = new Set(existing.map((p) => {
         try { return new URL(p.website).hostname.replace(/^www\./, '').toLowerCase(); } catch (_) { return ''; }
       }).filter(Boolean));
+      const excluded = loadExcludedBusPartners();
 
       let candidates = SCOUT_CANDIDATE_POOL.filter((c) => {
+        // 1. NEVER include any operator the user deleted/excluded!
+        if (isBusPartnerExcluded(c, excluded)) return false;
+
+        // 2. Already in active CRM roster
         if (existingNames.has(c.name.toLowerCase())) return false;
         try {
           const dom = new URL(c.website).hostname.replace(/^www\./, '').toLowerCase();
@@ -1741,8 +2045,18 @@ export function render(el) {
       // Phase 2 (800ms - 1700ms): Depot verification & filtering out Rome / non-local
       progressFill.style.width = '50%';
       phaseBadge.textContent = 'Phase 2/4';
-      phaseText.innerHTML = `<span>📍 Verifying true operating depot locations (filtering out Rome/out-of-region fleets)...</span>`;
-      statusNote.textContent = 'Enforcing local Northern Italy depot radius (max 50km from event corridors)...';
+      phaseText.innerHTML = `<span>📍 Verifying operating depot locations & enforcing persistent exclusions...</span>`;
+      statusNote.textContent = 'Enforcing local depot radius and skipping user-excluded operators...';
+
+      const excludedCount = SCOUT_CANDIDATE_POOL.filter((c) => isBusPartnerExcluded(c, excluded)).length;
+      if (excludedCount > 0) {
+        ticker.innerHTML += `
+          <div class="row between" style="font-size:.76rem;padding:5px 8px;background:rgba(239, 68, 68, 0.08);border-radius:4px;border:1px solid rgba(239, 68, 68, 0.2);color:#b91c1c;animation:fadeIn .3s">
+            <span style="font-weight:600">🛡️ Blocked ${excludedCount} operator${excludedCount > 1 ? 's' : ''} from memory</span>
+            <span class="tiny">Remembered exclusions</span>
+          </div>
+        `;
+      }
 
       if (toAdd[0]) {
         ticker.innerHTML += `

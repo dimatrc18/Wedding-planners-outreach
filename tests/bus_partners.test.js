@@ -4,7 +4,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { isRecentlyAdded, operatorHasVehicleType, detectVehicleKey, detectOperatorCityAndRegion, STANDARD_FLEET_TYPES } from '../app/views/bus_partners.js';
+import { isRecentlyAdded, operatorHasVehicleType, detectVehicleKey, detectOperatorCityAndRegion, STANDARD_FLEET_TYPES, SCOUT_CANDIDATE_POOL } from '../app/views/bus_partners.js';
+import { 
+  addExcludedBusPartner, 
+  loadExcludedBusPartners, 
+  saveExcludedBusPartners, 
+  isBusPartnerExcluded, 
+  removeExcludedBusPartner,
+  normalizeDomain
+} from '../app/bus_partners_data.js';
+import { S, removeBusPartner, removeManyBusPartners } from '../app/store.js';
 import {
   calculateBusRelevanceScore,
   getPriorityTier,
@@ -288,4 +297,99 @@ test('Cima Luxury Data Verification: properly classified as Rome / NOT_RELEVANT 
   assert.equal(cima.relevance_score, 0);
   assert.equal(cima.score_breakdown.territory_permits, 0);
   assert(cima.notes.includes('Rome') || cima.notes.includes('570km'));
+});
+
+test('Persistent Exclusion Registry: remembers deleted operators and matches across ID, domain, name, and phone', () => {
+  // Clear any existing excluded entries for this test
+  saveExcludedBusPartners([]);
+
+  const operatorToExclude = {
+    id: 'partner_test_bad_fleet',
+    name: 'EuroCoach Milan Tours',
+    website: 'https://www.eurocoach-tours.it/fleet',
+    phone: '+39 02 8900 1234',
+    base_city: 'Milano',
+    relevance_score: 45
+  };
+
+  // Add to exclusion registry
+  addExcludedBusPartner(operatorToExclude, 'Commercial decals and unresponsive');
+  const excludedList = loadExcludedBusPartners();
+  assert.equal(excludedList.length, 1);
+  assert.equal(excludedList[0].domain, 'eurocoach-tours.it');
+  assert.equal(excludedList[0].reason, 'Commercial decals and unresponsive');
+
+  // Test match by exact ID
+  assert.equal(isBusPartnerExcluded({ id: 'partner_test_bad_fleet' }, excludedList), true);
+
+  // Test match by website domain variations
+  assert.equal(isBusPartnerExcluded({ website: 'https://eurocoach-tours.it' }, excludedList), true);
+  assert.equal(isBusPartnerExcluded({ website: 'http://www.eurocoach-tours.it/contact' }, excludedList), true);
+
+  // Test match by name variations
+  assert.equal(isBusPartnerExcluded({ name: 'EuroCoach Milan Tours' }, excludedList), true);
+  assert.equal(isBusPartnerExcluded({ name: 'eurocoach milan tours' }, excludedList), true);
+
+  // Test match by phone
+  assert.equal(isBusPartnerExcluded({ phone: '+39 02 8900 1234' }, excludedList), true);
+  assert.equal(isBusPartnerExcluded({ phone: '0289001234' }, excludedList), true);
+
+  // Non-matching clean operator should NOT be excluded
+  assert.equal(isBusPartnerExcluded({ id: 'clean_operator', name: 'Moveolux', website: 'https://www.moveolux.com' }, excludedList), false);
+
+  // Unblock / restore
+  const unblocked = removeExcludedBusPartner('partner_test_bad_fleet');
+  assert(unblocked);
+  assert.equal(loadExcludedBusPartners().length, 0);
+  assert.equal(isBusPartnerExcluded({ id: 'partner_test_bad_fleet' }), false);
+});
+
+test('Auto-Scout Exclusion Gate: deleted operators in exclusion registry are NEVER scouted or added', () => {
+  saveExcludedBusPartners([]);
+
+  // Take a real candidate from SCOUT_CANDIDATE_POOL
+  const candidate = SCOUT_CANDIDATE_POOL[0];
+  assert(candidate, 'SCOUT_CANDIDATE_POOL must have candidates');
+
+  // Before exclusion: candidate is eligible
+  let filtered = SCOUT_CANDIDATE_POOL.filter(c => !isBusPartnerExcluded(c));
+  assert(filtered.some(c => c.name === candidate.name));
+
+  // Exclude candidate
+  addExcludedBusPartner(candidate, 'User removed this operator');
+
+  // After exclusion: Auto-Scout gate strictly drops the candidate
+  const currentExcluded = loadExcludedBusPartners();
+  filtered = SCOUT_CANDIDATE_POOL.filter(c => !isBusPartnerExcluded(c, currentExcluded));
+  assert(!filtered.some(c => c.name === candidate.name), `Excluded candidate "${candidate.name}" must not appear in scout candidates`);
+
+  // Cleanup
+  removeExcludedBusPartner(candidate.id);
+});
+
+test('Store Deletion & Batch Deletion with Exclusion Memory', async () => {
+  saveExcludedBusPartners([]);
+
+  S.busPartners = [
+    { id: 'bp_1', name: 'Alpha Coach', website: 'https://alphacoach.it', phone: '+39 02 1111 2222', relevance_score: 80 },
+    { id: 'bp_2', name: 'Beta Chauffeur', website: 'https://betachauffeur.com', phone: '+39 031 3333 4444', relevance_score: 85 },
+    { id: 'bp_3', name: 'Gamma Minibus', website: 'https://gammabus.it', phone: '+39 035 5555 6666', relevance_score: 90 },
+  ];
+
+  // 1. Single delete with exclusion
+  await removeBusPartner('bp_1', { exclude: true, reason: 'Rates too high' });
+  assert.equal(S.busPartners.length, 2);
+  assert(!S.busPartners.find(p => p.id === 'bp_1'));
+  assert.equal(isBusPartnerExcluded({ id: 'bp_1' }), true);
+  assert.equal(isBusPartnerExcluded({ website: 'https://alphacoach.it' }), true);
+
+  // 2. Batch delete with exclusion
+  await removeManyBusPartners(['bp_2', 'bp_3'], { exclude: true, reason: 'Batch removed by user' });
+  assert.equal(S.busPartners.length, 0);
+  assert.equal(isBusPartnerExcluded({ id: 'bp_2' }), true);
+  assert.equal(isBusPartnerExcluded({ id: 'bp_3' }), true);
+  assert.equal(loadExcludedBusPartners().length, 3);
+
+  // Cleanup
+  saveExcludedBusPartners([]);
 });

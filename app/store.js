@@ -3,13 +3,23 @@
 //   demo: in-memory sample data, nothing leaves the browser
 import { DEFAULT_SETTINGS, DEFAULT_TEMPLATES, withDefaults, priorityScore } from '../supabase/functions/_shared/core/index.js';
 import { buildDemoData } from './demo.js';
-import { INITIAL_BUS_PARTNERS, loadStoredBusPartners, saveStoredBusPartners } from './bus_partners_data.js';
+import { 
+  INITIAL_BUS_PARTNERS, 
+  loadStoredBusPartners, 
+  saveStoredBusPartners,
+  loadExcludedBusPartners,
+  saveExcludedBusPartners,
+  addExcludedBusPartner,
+  removeExcludedBusPartner,
+  isBusPartnerExcluded
+} from './bus_partners_data.js';
 
 export const S = {
   mode: 'loading', // loading | signed_out | live | demo
   user: null,
   prospects: [], touches: [], opps: [], templates: [], events: [],
   busPartners: [],
+  excludedBusPartners: [],
   settings: withDefaults(DEFAULT_SETTINGS),
   health: null,
 };
@@ -34,6 +44,7 @@ function setData(d) {
   S.templates = rawTemplates.filter((t) => t.key !== 'T2_ig_dm');
   S.events = d.events || [];
   S.busPartners = (d.busPartners && d.busPartners.length) ? d.busPartners : loadStoredBusPartners();
+  S.excludedBusPartners = loadExcludedBusPartners();
   S.settings = withDefaults(d.settings || {});
 }
 
@@ -293,11 +304,17 @@ export async function addBusPartner(partner) {
   return newRow;
 }
 
-export async function removeBusPartner(id) {
+export async function removeBusPartner(id, options = { exclude: true, reason: 'Dismissed by user' }) {
   const i = (S.busPartners || []).findIndex((x) => x.id === id);
   if (i >= 0) {
     const [removed] = S.busPartners.splice(i, 1);
     saveStoredBusPartners(S.busPartners);
+
+    if (options?.exclude !== false) {
+      addExcludedBusPartner(removed, options?.reason || 'Dismissed by user');
+      S.excludedBusPartners = loadExcludedBusPartners();
+    }
+
     if (S.mode === 'live' && sb) {
       try {
         await sb.from('bus_partners').delete().eq('id', id);
@@ -307,4 +324,36 @@ export async function removeBusPartner(id) {
     return removed;
   }
 }
+
+export async function removeManyBusPartners(ids, options = { exclude: true, reason: 'Batch dismissed by user' }) {
+  if (!Array.isArray(ids) || !ids.length) return [];
+  const idSet = new Set(ids);
+  const toRemove = (S.busPartners || []).filter((p) => idSet.has(p.id));
+  S.busPartners = (S.busPartners || []).filter((p) => !idSet.has(p.id));
+  saveStoredBusPartners(S.busPartners);
+
+  if (options?.exclude !== false) {
+    for (const p of toRemove) {
+      addExcludedBusPartner(p, options?.reason || 'Batch dismissed by user');
+    }
+    S.excludedBusPartners = loadExcludedBusPartners();
+  }
+
+  if (S.mode === 'live' && sb) {
+    try {
+      await sb.from('bus_partners').delete().in('id', ids);
+    } catch (_) {}
+  }
+  emit('bus_partners:deleted');
+  return toRemove;
+}
+
+export async function unexcludeBusPartner(idOrDomain) {
+  const restored = removeExcludedBusPartner(idOrDomain);
+  S.excludedBusPartners = loadExcludedBusPartners();
+  emit('bus_partners:unexcluded');
+  return restored;
+}
+
+export { loadExcludedBusPartners, saveExcludedBusPartners, isBusPartnerExcluded, addExcludedBusPartner, removeExcludedBusPartner };
 
