@@ -1047,11 +1047,12 @@ export function render(el) {
         <table class="table" style="width:100%;table-layout:fixed;border-collapse:collapse">
           <thead>
             <tr>
-              <th style="width:44px;text-align:center;padding:8px 2px">Score</th>
-              <th style="width:160px">Company & Base</th>
+              <th style="width:28px;text-align:center;padding:8px 2px;color:var(--text-3);font-size:.72rem">#</th>
+              <th style="width:42px;text-align:center;padding:8px 2px">Score</th>
+              <th style="width:155px">Company & Base</th>
               <th style="width:115px;text-align:center">Web</th>
-              <th style="width:145px">Email</th>
-              <th style="width:155px">
+              <th style="width:140px">Email</th>
+              <th style="width:150px">
                 <div class="row nowrap" style="gap:4px;align-items:center">
                   <span>Fleet Types</span>
                   ${vehicleFilter !== 'all' ? `
@@ -1061,8 +1062,8 @@ export function render(el) {
                   ` : ''}
                 </div>
               </th>
-              <th style="width:150px">Notes</th>
-              <th style="width:138px">
+              <th style="width:145px">Notes</th>
+              <th style="width:135px">
                 <div class="row nowrap" style="gap:4px;align-items:center">
                   <span>Status</span>
                   ${statusFilter !== 'all' ? `
@@ -1091,6 +1092,9 @@ export function render(el) {
                 : '';
 
               return `<tr class="hover-row ${isLatest ? 'latest-added-row' : isNew ? 'newly-added-row' : ''}" data-id="${attr(p.id)}" style="min-height:56px;${rowStyle}">
+                <td style="text-align:center;vertical-align:middle;color:var(--text-3);font-size:.74rem;font-weight:600;font-variant-numeric:tabular-nums;padding:6px 2px">
+                  ${idx + 1}
+                </td>
                 <td style="text-align:center;vertical-align:middle;padding:6px 2px">
                   <span class="${scoreClass} clickable" data-act="view-score" data-id="${attr(p.id)}" style="font-weight:700;font-size:.84rem;padding:2px 5px;cursor:pointer" title="Click to view 4-pillar score breakdown">
                     ${score}
