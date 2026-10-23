@@ -40,6 +40,7 @@ import {
   nextBusSendSlot,
   buildBusOutreachDraft,
   parseBusPartnerReply,
+  verifyPerBusPaxCapacity,
   buildBusSankeyFlow
 } from '../supabase/functions/_shared/core/index.js';
 
@@ -584,11 +585,18 @@ test('parseBusPartnerReply: automatically extracts bus models, pax capacity, hou
   `;
 
   const extracted = parseBusPartnerReply(sampleItalianReply);
-  assert(extracted.bus_models.includes('Sprinter') && extracted.bus_models.includes('V-Class'), 'Must extract bus models from reply');
+  assert(extracted.bus_models.includes('Sprinter VIP (16 pax)') && extracted.bus_models.includes('Mercedes V-Class (7 pax)'), `Must pair each bus model with its exact passenger count, got: ${extracted.bus_models}`);
+  assert.equal(extracted.all_models_have_pax, true, 'All extracted bus models must have passenger counts attached');
   assert(extracted.pax_capacity.includes('7') && extracted.pax_capacity.includes('16') && extracted.pax_capacity.includes('54'), 'Must extract passenger capacities');
   assert(extracted.rate_hourly.includes('95'), 'Must extract hourly rate (€95/h)');
   assert(extracted.rate_standby.includes('420') || extracted.rate_standby.includes('780'), 'Must extract 4h/8h standby rate');
   assert(extracted.whatsapp.includes('+39 348 912 3456'), 'Must extract direct WhatsApp number');
+
+  // Verify AI Per-Bus Passenger Gate catches any bus model that is missing its passenger count
+  const incompleteAudit = verifyPerBusPaxCapacity('Mercedes Sprinter VIP (16 pax), Setra TopClass');
+  assert.equal(incompleteAudit.allModelsHavePax, false, 'Must flag false when any bus model lacks an explicit passenger count');
+  assert.deepEqual(incompleteAudit.modelsMissingPax, ['Setra TopClass']);
+  assert(incompleteAudit.followUpQuestionIt.includes('Setra TopClass'), 'Must generate Italian follow-up question asking for exact passenger capacity of Setra TopClass');
 });
 
 test('buildBusSankeyFlow: builds 4-column visual pipeline flow (Class -> Town -> Fit -> Stage) with interactive node filtering', () => {

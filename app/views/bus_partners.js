@@ -240,13 +240,13 @@ function hydratePartnerCardLocal(p) {
   let defaultModels = [];
   let defaultPax = [];
   for (const c of cats) {
-    if (/limobus/i.test(c)) { defaultModels.push('Limobus VIP'); defaultPax.push('18–28'); }
-    else if (/sprinter.*vip/i.test(c)) { defaultModels.push('Sprinter VIP'); defaultPax.push('8–16'); }
-    else if (/sprinter/i.test(c)) { defaultModels.push('Sprinter Exec'); defaultPax.push('16–20'); }
-    else if (/v-?class|minivan/i.test(c)) { defaultModels.push('V-Class'); defaultPax.push('7–8'); }
-    else if (/midibus|indcar|midi/i.test(c)) { defaultModels.push('Indcar / Midibus'); defaultPax.push('24–30'); }
-    else if (/setra.*vip/i.test(c)) { defaultModels.push('Setra VIP'); defaultPax.push('28–36'); }
-    else if (/coach|tourismo|setra|pullman/i.test(c)) { defaultModels.push('Tourismo / Setra GT'); defaultPax.push('30–54'); }
+    if (/limobus/i.test(c)) { defaultModels.push('Limobus VIP (18–28 pax)'); defaultPax.push('18–28'); }
+    else if (/sprinter.*vip/i.test(c)) { defaultModels.push('Mercedes Sprinter VIP (8–16 pax)'); defaultPax.push('8–16'); }
+    else if (/sprinter/i.test(c)) { defaultModels.push('Mercedes Sprinter Exec (16–20 pax)'); defaultPax.push('16–20'); }
+    else if (/v-?class|minivan/i.test(c)) { defaultModels.push('Mercedes V-Class (7–8 pax)'); defaultPax.push('7–8'); }
+    else if (/midibus|indcar|midi/i.test(c)) { defaultModels.push('Indcar / Executive Midibus (24–30 pax)'); defaultPax.push('24–30'); }
+    else if (/setra.*vip/i.test(c)) { defaultModels.push('Setra TopClass VIP (28–36 pax)'); defaultPax.push('28–36'); }
+    else if (/coach|tourismo|setra|pullman/i.test(c)) { defaultModels.push('Mercedes Tourismo / Setra GT (50–56 pax)'); defaultPax.push('50–56'); }
   }
 
   const hasLux = /vip|limobus|lounge|v-?class|total\s+black|exclusive|luxury/i.test(catText) || (p.relevance_score || 0) >= 85;
@@ -255,8 +255,10 @@ function hydratePartnerCardLocal(p) {
 
   const isMoveolux = p.id === 'partner_moveolux';
   const fleet_segment = p.fleet_segment || card.fleet_segment || inferredSegment;
-  const bus_models = p.bus_models ?? card.bus_models ?? ([...new Set(defaultModels)].join(', ') || '');
-  const pax_capacity = p.pax_capacity ?? card.pax_capacity ?? (defaultPax.length ? `${[...new Set(defaultPax)].join(', ')} pax` : '');
+  const rawBusModels = p.bus_models ?? card.bus_models ?? ([...new Set(defaultModels)].join(', ') || '');
+  const paxAudit = core.verifyPerBusPaxCapacity({ bus_models: rawBusModels, fleet_categories: cats }, { autoInferKnownStandards: true });
+  const bus_models = paxAudit.formattedBusModels || rawBusModels;
+  const pax_capacity = p.pax_capacity || card.pax_capacity || paxAudit.formattedPaxSummary || (defaultPax.length ? `${[...new Set(defaultPax)].join(', ')} pax` : '');
   const rate_hourly = p.rate_hourly ?? card.rate_hourly ?? (isMoveolux ? '€120/h' : '');
   const rate_standby = p.rate_standby ?? card.rate_standby ?? (isMoveolux ? '€550 (4h disp.) · €1,050 (8h disp.)' : '');
   const whatsapp = p.whatsapp ?? card.whatsapp ?? p.phone ?? '';
@@ -322,7 +324,7 @@ function reconcileLegacyPartnersInPlace() {
     const rawItem = replacement ? { ...p, ...replacement } : p;
     if (replacement) changed = true;
     const item = hydratePartnerCardLocal(rawItem);
-    if (!p.bus_models && item.bus_models) changed = true;
+    if (p.bus_models !== item.bus_models) changed = true;
 
     const finalName = normalizeName(item.name);
     const finalDom = normalizeDomain(item.website);
@@ -418,23 +420,23 @@ export const STANDARD_FLEET_TYPES = [
 
 export function shortFleetName(str) {
   if (!str) return '';
-  if (/limobus/i.test(str)) return 'Limobus (18-28s)';
-  if (/sprinter.*vip.*lounge/i.test(str)) return 'Sprinter VIP Lounge';
-  if (/sprinter.*vip/i.test(str)) return 'Sprinter VIP (8-16s)';
-  if (/sprinter.*exec/i.test(str)) return 'Sprinter Exec (16-19s)';
-  if (/sprinter.*lux/i.test(str)) return 'Sprinter Lux (8-20s)';
-  if (/sprinter.*minibus|sprinter/i.test(str)) return 'Sprinter Minibus';
-  if (/midi/i.test(str)) return 'Midibus (24-30s)';
-  if (/setra.*vip/i.test(str)) return 'Setra VIP Lounge';
-  if (/setra.*topclass/i.test(str)) return 'Setra TopClass (30-54)';
-  if (/tourismo.*black/i.test(str)) return 'Tourismo Black Series';
-  if (/tourismo/i.test(str)) return 'Tourismo GT (30-53)';
-  if (/v-?class/i.test(str)) return 'V-Class VIP (7-8s)';
-  if (/coach.*36.*56/i.test(str)) return 'GT Coach (36-56s)';
-  if (/coach|pullman/i.test(str)) return 'Executive GT Coach';
+  if (/limobus/i.test(str)) return 'Limobus (18–28 pax)';
+  if (/sprinter.*vip.*lounge/i.test(str)) return 'Sprinter VIP (8–16 pax)';
+  if (/sprinter.*vip/i.test(str)) return 'Sprinter VIP (8–16 pax)';
+  if (/sprinter.*exec/i.test(str)) return 'Sprinter Exec (16–19 pax)';
+  if (/sprinter.*lux/i.test(str)) return 'Sprinter Lux (16–20 pax)';
+  if (/sprinter.*minibus|sprinter/i.test(str)) return 'Sprinter (16–20 pax)';
+  if (/midi/i.test(str)) return 'Midibus (24–30 pax)';
+  if (/setra.*vip/i.test(str)) return 'Setra VIP (28–36 pax)';
+  if (/setra.*topclass/i.test(str)) return 'Setra TopClass (30–54 pax)';
+  if (/tourismo.*black/i.test(str)) return 'Tourismo Black (30–52 pax)';
+  if (/tourismo/i.test(str)) return 'Tourismo GT (30–53 pax)';
+  if (/v-?class/i.test(str)) return 'V-Class VIP (7–8 pax)';
+  if (/coach.*36.*56/i.test(str)) return 'GT Coach (36–56 pax)';
+  if (/coach|pullman/i.test(str)) return 'GT Coach (50–56 pax)';
   const match = STANDARD_FLEET_TYPES.find((f) => f.label.toLowerCase() === str.toLowerCase() || f.short.toLowerCase() === str.toLowerCase());
   if (match) return match.short;
-  return str.length > 22 ? str.slice(0, 20) + '…' : str;
+  return str.length > 24 ? str.slice(0, 22) + '…' : str;
 }
 
 export function detectVehicleKey(str) {
@@ -1756,29 +1758,32 @@ export function render(el) {
                   </div>
                 </td>
                 <td style="vertical-align:middle">
-                  <div style="display:flex;flex-direction:column;gap:2px;max-width:150px;align-items:flex-start;line-height:1.2">
-                    ${categories.slice(0, 2).map((c) => {
-                      const vKey = detectVehicleKey(c);
-                      const isMatch = vehicleFilter !== 'all' && (vehicleFilter === vKey || operatorHasVehicleType(p, vehicleFilter));
-                      return `
-                        <button class="chip tiny outline fleet-filter-btn ${isMatch ? 'active-fleet-match' : ''}" 
-                          data-vkey="${attr(vKey)}" 
-                          style="font-size:.68rem;padding:1px 6px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:146px;cursor:pointer;text-align:left;border-radius:4px;${isMatch ? 'background:var(--gold-soft);border-color:var(--gold-strong);color:var(--gold-ink);font-weight:700;' : 'border-color:var(--line);background:var(--surface-2);'}" 
-                          title="Click to filter by ${esc(shortFleetName(c))}">
-                          ${esc(shortFleetName(c))}
+                  ${(() => {
+                    const paxCheck = core.verifyPerBusPaxCapacity(p);
+                    return `<div style="display:flex;flex-direction:column;gap:2px;max-width:150px;align-items:flex-start;line-height:1.2">
+                      ${categories.slice(0, 2).map((c) => {
+                        const vKey = detectVehicleKey(c);
+                        const isMatch = vehicleFilter !== 'all' && (vehicleFilter === vKey || operatorHasVehicleType(p, vehicleFilter));
+                        return `
+                          <button class="chip tiny outline fleet-filter-btn ${isMatch ? 'active-fleet-match' : ''}" 
+                            data-vkey="${attr(vKey)}" 
+                            style="font-size:.68rem;padding:1px 6px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:146px;cursor:pointer;text-align:left;border-radius:4px;${isMatch ? 'background:var(--gold-soft);border-color:var(--gold-strong);color:var(--gold-ink);font-weight:700;' : 'border-color:var(--line);background:var(--surface-2);'}" 
+                            title="Click to filter by ${esc(shortFleetName(c))} · Per-bus passenger count verified">
+                            ${esc(shortFleetName(c))}
+                          </button>
+                        `;
+                      }).join('')}
+                      <div class="row nowrap" style="gap:4px;align-items:center;width:100%">
+                        ${paxCheck.allModelsHavePax
+                          ? `<span class="tiny" style="font-size:.69rem;color:#059669;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:118px" title="AI Verified: Exact passenger capacity known for every bus (${attr(paxCheck.formattedBusModels)})">👥 ${esc(p.pax_capacity || paxCheck.formattedPaxSummary)} ✓</span>`
+                          : `<button class="clickable tiny" data-act="edit-rates" data-id="${attr(p.id)}" style="background:#fef3c7;border:1px solid #f59e0b;color:#b45309;font-weight:700;font-size:.65rem;padding:1px 5px;border-radius:4px;cursor:pointer" title="AI Alert: Missing passenger count for ${attr(paxCheck.modelsMissingPax.join(', ') || 'bus')} — Click to verify pax per bus">⚠️ Verify Pax/Bus</button>`
+                        }
+                        <button class="clickable" data-act="edit-fleet" data-id="${attr(p.id)}" style="background:none;border:none;padding:1px 3px;cursor:pointer;font-size:.66rem;color:var(--gold-ink);display:inline-flex;align-items:center;gap:2px" title="Edit fleet categories & models">
+                          ${pencilIcon(10)}
                         </button>
-                      `;
-                    }).join('')}
-                    <div class="row nowrap" style="gap:4px;align-items:center;width:100%">
-                      ${p.pax_capacity
-                        ? `<span class="tiny" style="font-size:.69rem;color:var(--ink);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:105px" title="Passenger capacities: ${attr(p.pax_capacity)}">👥 ${esc(p.pax_capacity)}</span>`
-                        : ''
-                      }
-                      <button class="clickable" data-act="edit-fleet" data-id="${attr(p.id)}" style="background:none;border:none;padding:1px 3px;cursor:pointer;font-size:.66rem;color:var(--gold-ink);display:inline-flex;align-items:center;gap:2px" title="Edit fleet categories & models">
-                        ${pencilIcon(10)}
-                      </button>
-                    </div>
-                  </div>
+                      </div>
+                    </div>`;
+                  })()}
                 </td>
                 <td style="vertical-align:middle">
                   <div class="clickable" data-act="edit-rates" data-id="${attr(p.id)}" style="cursor:pointer;max-width:150px;display:flex;flex-direction:column;gap:2px" title="Click to log or auto-extract Bus Models, Pax Capacity, Standby (4h/8h) & Hourly Rates, and Direct WhatsApp">
@@ -2176,9 +2181,15 @@ export function render(el) {
         </div>
 
         <label class="field">
-          <span style="font-weight:600;font-size:.82rem">3. Bus Models Available</span>
-          <input type="text" id="spec-models" placeholder="e.g. Mercedes Sprinter VIP 519, Indcar Wing, Setra S515 HD, Mercedes Tourismo" value="${attr(partner.bus_models || '')}" style="font-size:.86rem;padding:7px 10px;width:100%">
+          <div class="row between" style="align-items:center">
+            <span style="font-weight:600;font-size:.82rem">3. Bus Models Available (with Passenger Capacity per Bus)</span>
+            <button type="button" class="btn ghost sm" id="btn-auto-pair-pax" style="font-size:.71rem;padding:2px 7px;color:#059669;border-color:#10b981;font-weight:600" title="Ensure every bus model has its exact passenger capacity attached">🤖 AI Pair Pax per Bus</button>
+          </div>
+          <input type="text" id="spec-models" placeholder="e.g. Mercedes Sprinter VIP (16 pax), Indcar Wing (28 pax), Setra S515 HD (52 pax)" value="${attr(partner.bus_models || '')}" style="font-size:.86rem;padding:7px 10px;width:100%">
         </label>
+
+        <!-- Live AI Per-Bus Passenger Capacity Verification Box -->
+        <div id="ai-per-bus-pax-status" style="padding:9px 12px;border-radius:8px;font-size:.78rem"></div>
 
         <div class="row" style="gap:10px">
           <label class="field grow">
@@ -2236,6 +2247,94 @@ export function render(el) {
     const close = () => backdrop.remove();
     backdrop.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', close));
 
+    const renderAiPaxStatus = () => {
+      const modelsVal = backdrop.querySelector('#spec-models').value.trim();
+      const audit = core.verifyPerBusPaxCapacity({ bus_models: modelsVal, fleet_categories: partner.fleet_categories });
+      const box = backdrop.querySelector('#ai-per-bus-pax-status');
+      if (!box) return;
+
+      if (audit.allModelsHavePax) {
+        box.style.background = 'rgba(16, 185, 129, 0.08)';
+        box.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+        box.innerHTML = `
+          <div class="row between" style="align-items:center;margin-bottom:5px">
+            <span style="font-weight:700;color:#065f46">🤖 AI Per-Bus Passenger Check: ✓ Every bus has its exact passenger count</span>
+            <span class="tiny" style="color:#059669;font-weight:700">${audit.modelsWithPax.length} bus${audit.modelsWithPax.length === 1 ? '' : 'es'} verified</span>
+          </div>
+          <div class="row" style="gap:6px;flex-wrap:wrap">
+            ${audit.modelsWithPax.map((m) => `
+              <span class="chip tiny" style="background:#fff;border:1px solid #10b981;color:#065f46;font-weight:600;font-size:.72rem;padding:2px 8px">
+                🚌 ${esc(m.model)} → <b>👥 ${esc(m.pax)}</b>
+              </span>
+            `).join('')}
+          </div>
+        `;
+      } else {
+        box.style.background = '#fffbeb';
+        box.style.border = '1px solid #f59e0b';
+        box.innerHTML = `
+          <div class="row between" style="align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-weight:700;color:#b45309">
+              ⚠️ AI Alert: Missing passenger count for ${audit.modelsMissingPax.length ? `<b>${esc(audit.modelsMissingPax.join(', '))}</b>` : 'bus models'}! We must always know how many passengers fit in each bus.
+            </span>
+            <div class="row" style="gap:6px">
+              <button type="button" class="btn sm" id="btn-fix-missing-pax" style="background:#f59e0b;color:#fff;border:none;font-size:.71rem;padding:2px 8px;font-weight:700">✨ Auto-Fill Standard Pax</button>
+              <button type="button" class="btn ghost sm" id="btn-copy-pax-followup" style="font-size:.71rem;padding:2px 8px;border-color:#d97706;color:#b45309;font-weight:600">📋 Copy Italian Follow-Up</button>
+            </div>
+          </div>
+          ${audit.modelsWithPax.length ? `
+            <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px">
+              ${audit.modelsWithPax.map((m) => `
+                <span class="chip tiny" style="background:#fff;border:1px solid #10b981;color:#065f46;font-weight:600;font-size:.72rem;padding:2px 8px">
+                  🚌 ${esc(m.model)} → <b>👥 ${esc(m.pax)}</b>
+                </span>
+              `).join('')}
+              ${audit.modelsMissingPax.map((m) => `
+                <span class="chip tiny" style="background:#fef2f2;border:1px solid #ef4444;color:#b91c1c;font-weight:700;font-size:.72rem;padding:2px 8px">
+                  🚌 ${esc(m)} → ❓ ? pax
+                </span>
+              `).join('')}
+            </div>
+          ` : ''}
+        `;
+        box.querySelector('#btn-fix-missing-pax')?.addEventListener('click', () => {
+          const inferred = core.verifyPerBusPaxCapacity(
+            { bus_models: backdrop.querySelector('#spec-models').value.trim(), fleet_categories: partner.fleet_categories },
+            { autoInferKnownStandards: true }
+          );
+          if (inferred.formattedBusModels) {
+            backdrop.querySelector('#spec-models').value = inferred.formattedBusModels;
+          }
+          if (inferred.formattedPaxSummary) {
+            backdrop.querySelector('#spec-pax').value = inferred.formattedPaxSummary;
+          }
+          renderAiPaxStatus();
+          toast('🤖 AI paired passenger capacity to each bus model!', 'ok');
+        });
+        box.querySelector('#btn-copy-pax-followup')?.addEventListener('click', () => {
+          copyText(audit.followUpQuestionIt, 'Copied Italian follow-up asking for exact passenger count per bus!');
+        });
+      }
+    };
+
+    renderAiPaxStatus();
+    backdrop.querySelector('#spec-models').addEventListener('input', renderAiPaxStatus);
+
+    backdrop.querySelector('#btn-auto-pair-pax')?.addEventListener('click', () => {
+      const inferred = core.verifyPerBusPaxCapacity(
+        { bus_models: backdrop.querySelector('#spec-models').value.trim(), fleet_categories: partner.fleet_categories },
+        { autoInferKnownStandards: true }
+      );
+      if (inferred.formattedBusModels) {
+        backdrop.querySelector('#spec-models').value = inferred.formattedBusModels;
+      }
+      if (inferred.formattedPaxSummary) {
+        backdrop.querySelector('#spec-pax').value = inferred.formattedPaxSummary;
+      }
+      renderAiPaxStatus();
+      toast('🤖 AI verified & paired passenger count for every bus!', 'ok');
+    });
+
     backdrop.querySelector('#btn-parse-reply').addEventListener('click', () => {
       const rawText = backdrop.querySelector('#reply-paste-box').value.trim();
       if (!rawText) {
@@ -2254,7 +2353,12 @@ export function render(el) {
       if (backdrop.querySelector('#spec-status').value === 'TO_REVIEW' || backdrop.querySelector('#spec-status').value === 'WANT_TO_CONTACT') {
         backdrop.querySelector('#spec-status').value = 'CONTACTED';
       }
-      toast('✨ Extracted Bus Models, Pax Capacity, Standby/Hourly Rates & WhatsApp!', 'ok');
+      renderAiPaxStatus();
+      if (!parsed.all_models_have_pax && parsed.models_missing_pax?.length) {
+        toast(`⚠️ Extracted specs, but ${parsed.models_missing_pax.join(', ')} is missing its exact passenger count!`, 'warn');
+      } else {
+        toast('✨ Extracted Bus Models (with Pax per Bus), Standby/Hourly Rates & WhatsApp!', 'ok');
+      }
     });
 
     backdrop.querySelector('#btn-save-specs').addEventListener('click', async () => {

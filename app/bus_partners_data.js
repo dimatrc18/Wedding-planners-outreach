@@ -1,5 +1,5 @@
 // Default verified seed data for luxury bus & minibus partners in Northern Italy
-import { calculateBusRelevanceScore } from '../supabase/functions/_shared/core/index.js';
+import { calculateBusRelevanceScore, verifyPerBusPaxCapacity } from '../supabase/functions/_shared/core/index.js';
 
 export const INITIAL_BUS_PARTNERS = [
   {
@@ -514,13 +514,13 @@ export function hydratePartnerCard(p) {
   let defaultModels = [];
   let defaultPax = [];
   for (const c of cats) {
-    if (/limobus/i.test(c)) { defaultModels.push('Limobus VIP'); defaultPax.push('18–28'); }
-    else if (/sprinter.*vip/i.test(c)) { defaultModels.push('Mercedes Sprinter VIP'); defaultPax.push('8–16'); }
-    else if (/sprinter/i.test(c)) { defaultModels.push('Mercedes Sprinter Exec'); defaultPax.push('16–20'); }
-    else if (/v-?class|minivan/i.test(c)) { defaultModels.push('Mercedes V-Class'); defaultPax.push('7–8'); }
-    else if (/midibus|indcar|midi/i.test(c)) { defaultModels.push('Indcar / Executive Midibus'); defaultPax.push('24–30'); }
-    else if (/setra.*vip/i.test(c)) { defaultModels.push('Setra TopClass VIP'); defaultPax.push('28–36'); }
-    else if (/coach|tourismo|setra|pullman/i.test(c)) { defaultModels.push('Mercedes Tourismo / Setra GT'); defaultPax.push('30–54'); }
+    if (/limobus/i.test(c)) { defaultModels.push('Limobus VIP (18–28 pax)'); defaultPax.push('18–28'); }
+    else if (/sprinter.*vip/i.test(c)) { defaultModels.push('Mercedes Sprinter VIP (8–16 pax)'); defaultPax.push('8–16'); }
+    else if (/sprinter/i.test(c)) { defaultModels.push('Mercedes Sprinter Exec (16–20 pax)'); defaultPax.push('16–20'); }
+    else if (/v-?class|minivan/i.test(c)) { defaultModels.push('Mercedes V-Class (7–8 pax)'); defaultPax.push('7–8'); }
+    else if (/midibus|indcar|midi/i.test(c)) { defaultModels.push('Indcar / Executive Midibus (24–30 pax)'); defaultPax.push('24–30'); }
+    else if (/setra.*vip/i.test(c)) { defaultModels.push('Setra TopClass VIP (28–36 pax)'); defaultPax.push('28–36'); }
+    else if (/coach|tourismo|setra|pullman/i.test(c)) { defaultModels.push('Mercedes Tourismo / Setra GT (50–56 pax)'); defaultPax.push('50–56'); }
   }
 
   const hasLux = /vip|limobus|lounge|v-?class|total\s+black|exclusive|luxury/i.test(catText) || (p.relevance_score || 0) >= 85;
@@ -529,8 +529,10 @@ export function hydratePartnerCard(p) {
 
   const isMoveolux = p.id === 'partner_moveolux';
   const fleet_segment = p.fleet_segment || card.fleet_segment || inferredSegment;
-  const bus_models = p.bus_models ?? card.bus_models ?? ([...new Set(defaultModels)].join(', ') || '');
-  const pax_capacity = p.pax_capacity ?? card.pax_capacity ?? (defaultPax.length ? `${[...new Set(defaultPax)].join(', ')} pax` : '');
+  const rawBusModels = p.bus_models ?? card.bus_models ?? ([...new Set(defaultModels)].join(', ') || '');
+  const paxAudit = verifyPerBusPaxCapacity({ bus_models: rawBusModels, fleet_categories: cats }, { autoInferKnownStandards: true });
+  const bus_models = paxAudit.formattedBusModels || rawBusModels;
+  const pax_capacity = p.pax_capacity || card.pax_capacity || paxAudit.formattedPaxSummary || (defaultPax.length ? `${[...new Set(defaultPax)].join(', ')} pax` : '');
   const rate_hourly = p.rate_hourly ?? card.rate_hourly ?? (isMoveolux ? '€120/h' : '');
   const rate_standby = p.rate_standby ?? card.rate_standby ?? (isMoveolux ? '€550 (4h disp.) · €1,050 (8h disp.)' : '');
   const whatsapp = p.whatsapp ?? card.whatsapp ?? p.phone ?? '';

@@ -420,7 +420,7 @@ export function buildBusOutreachDraft(partner = {}, stepKey = 'T1_intro') {
 Vi scrivo rapidamente in merito alla mia precedente email per capire se avete disponibilità per collaborazioni B2B su Como e Milano in questa stagione.
 
 Se per voi è più veloce, potete scrivermi direttamente su WhatsApp al +32 456 14 14 97 indicandomi:
-- Modelli bus e capienza posti
+- Modelli bus e capienza posti esatta per ciascun mezzo (quanti passeggeri porta ogni bus)
 - Tariffa indicativa oraria e a disposizione (4h / 8h)
 
 Grazie e buon lavoro,
@@ -437,7 +437,7 @@ DOROGO · Lago di Como & Milano | WhatsApp: +32 456 14 14 97`;
   }
 
   if (stepKey === 'WA_pitch') {
-    const body = `Buongiorno ${cleanName}, sono Dmitri di DOROGO (trasferimenti eventi e matrimoni sul Lago di Como e Milano). Abbiamo moltissime richieste dai nostri clienti per ${segmentPhrase} e vorremmo affidare i servizi a un partner di fiducia in zona ${city}. Potreste indicarmi brevemente qui su WhatsApp quali modelli avete (e quanti passeggeri portano) e i vostri prezzi B2B indicativi per servizio orario e a disposizione (4h/8h)? Grazie mille!`;
+    const body = `Buongiorno ${cleanName}, sono Dmitri di DOROGO (trasferimenti eventi e matrimoni sul Lago di Como e Milano). Abbiamo moltissime richieste dai nostri clienti per ${segmentPhrase} e vorremmo affidare i servizi a un partner di fiducia in zona ${city}. Potreste indicarmi brevemente qui su WhatsApp quali modelli avete (e quanti passeggeri portano per ciascun bus) e i vostri prezzi B2B indicativi per servizio orario e a disposizione (4h/8h)? Grazie mille!`;
     return {
       step_name: 'WA_pitch',
       language: 'it',
@@ -447,13 +447,13 @@ DOROGO · Lago di Como & Milano | WhatsApp: +32 456 14 14 97`;
     };
   }
 
-  // Default: T1_intro (CEO-level Italian Intro, ~75 words)
+  // Default: T1_intro (CEO-level Italian Intro, ~80 words)
   const body = `Buongiorno Team ${cleanName},
 
 Sono Dmitri di DOROGO. Gestiamo i trasferimenti per eventi privati e matrimoni sul Lago di Como e Milano con la nostra flotta V-Class e S-Class, e abbiamo un forte volume di clienti che ci richiedono ${segmentPhrase} che vorremmo affidare a un partner di fiducia.
 
 Per collaborare sulle prossime date, potreste indicarmi brevemente:
-1. Modelli bus disponibili e quanti passeggeri portano
+1. Modelli bus disponibili e quanti passeggeri portano (capienza esatta per ciascun mezzo)
 2. Prezzi B2B indicativi per servizio orario e a disposizione (4h / 8h)
 3. Un vostro contatto WhatsApp diretto per le disponibilità rapide
 
@@ -472,26 +472,132 @@ dmitri@dorogo.eu | WhatsApp: +32 456 14 14 97`;
 }
 
 /**
+ * Infers standard passenger capacity for a bus model when not explicitly attached.
+ */
+export function inferDefaultPaxForModel(modelStr = '') {
+  const s = String(modelStr || '').toLowerCase();
+  const explicitMatch = s.match(/(\d{1,2}\s*(?:[-–]\s*\d{1,2})?)\s*(?:\+1\s*)?(?:pax|posti|passeggeri|seats|s\b)/i);
+  if (explicitMatch) return `${explicitMatch[1].replace(/\s+/g, '')} pax`;
+
+  if (/v-?class|classe\s*v|vito|minivan/i.test(s)) return '7–8 pax';
+  if (/limobus/i.test(s)) return '18–28 pax';
+  if (/sprinter.*vip/i.test(s)) return '8–16 pax';
+  if (/sprinter.*(exec|519|516)/i.test(s)) return '16–19 pax';
+  if (/sprinter/i.test(s)) return '16–20 pax';
+  if (/indcar|midibus|minicoach|daily|navigo|vectio|mago/i.test(s)) return '24–30 pax';
+  if (/setra.*vip/i.test(s)) return '28–36 pax';
+  if (/setra|tourismo|irizar|scania|lion|neoplan|magelys|evadys|coach|pullman|gt\b/i.test(s)) return '50–56 pax';
+  return '';
+}
+
+/**
+ * AI Verification Gate: Ensures every bus model listed for a partner has an explicit passenger count (how many passengers fit in EACH bus).
+ * Accepts either a partner object or `{ bus_models, pax_capacity, fleet_categories }`.
+ */
+export function verifyPerBusPaxCapacity(input = {}, opts = {}) {
+  const isString = typeof input === 'string';
+  const rawModelsStr = isString
+    ? input
+    : String(input.bus_models || input.score_breakdown?.partner_card?.bus_models || '').trim();
+  const categories = !isString && Array.isArray(input.fleet_categories) ? input.fleet_categories : [];
+  const rawSource = rawModelsStr || categories.join(', ');
+
+  const entries = rawSource
+    .split(/[,;/•\n]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const modelsWithPax = [];
+  const modelsMissingPax = [];
+  const paxSummaryList = [];
+
+  for (const entry of entries) {
+    // Check if entry already contains an explicit passenger count e.g. "(16 pax)" or "16 posti" or "(8–16 seats)"
+    const explicitMatch =
+      entry.match(/\(?\b(\d{1,2}(?:\s*[-–]\s*\d{1,2})?)\s*(?:\+\s*1\s*)?(?:pax|posti|passeggeri|seats|persone|s)\b\)?/i) ||
+      entry.match(/\((\d{1,2}\s*[-–]\s*\d{1,2})\)/);
+
+    const cleanModelName = entry
+      .replace(/\s*\(?\b\d{1,2}(?:\s*[-–]\s*\d{1,2})?\s*(?:\+\s*1\s*)?(?:pax|posti|passeggeri|seats|persone|s)\b\)?/gi, '')
+      .replace(/\s*\(\d{1,2}\s*[-–]\s*\d{1,2}\)/g, '')
+      .replace(/[()]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim() || entry;
+
+    if (explicitMatch) {
+      const paxVal = `${explicitMatch[1].replace(/\s+/g, '').replace(/-/g, '–')} pax`;
+      modelsWithPax.push({
+        model: cleanModelName,
+        pax: paxVal,
+        formatted: `${cleanModelName} (${paxVal})`,
+        inferred: false,
+      });
+      paxSummaryList.push(paxVal.replace(/\s*pax$/i, ''));
+    } else if (opts.autoInferKnownStandards) {
+      const stdPax = inferDefaultPaxForModel(cleanModelName);
+      if (stdPax) {
+        modelsWithPax.push({
+          model: cleanModelName,
+          pax: stdPax,
+          formatted: `${cleanModelName} (${stdPax})`,
+          inferred: true,
+        });
+        paxSummaryList.push(stdPax.replace(/\s*pax$/i, ''));
+      } else {
+        modelsMissingPax.push(cleanModelName);
+      }
+    } else {
+      modelsMissingPax.push(cleanModelName);
+    }
+  }
+
+  const allModelsHavePax = entries.length > 0 && modelsMissingPax.length === 0;
+  const formattedBusModels = [
+    ...modelsWithPax.map((m) => m.formatted),
+    ...modelsMissingPax,
+  ].join(', ');
+
+  const uniquePaxRanges = [...new Set(paxSummaryList)];
+  const formattedPaxSummary = uniquePaxRanges.length ? `${uniquePaxRanges.join(', ')} pax` : '';
+
+  const followUpQuestionIt = modelsMissingPax.length > 0
+    ? `Grazie per la disponibilità! Per registrare correttamente i mezzi, potreste confermarmi quanti passeggeri portano esattamente ciascuno dei seguenti bus: ${modelsMissingPax.join(', ')}?`
+    : entries.length === 0
+      ? `Grazie! Potreste indicarmi i modelli dei vostri bus e quanti passeggeri porta esattamente ciascun mezzo?`
+      : '';
+
+  return {
+    allModelsHavePax,
+    modelsWithPax,
+    modelsMissingPax,
+    formattedBusModels,
+    formattedPaxSummary,
+    followUpQuestionIt,
+  };
+}
+
+/**
  * Parses an inbound email or WhatsApp reply from a bus operator to extract:
- * - bus_models (e.g. "Mercedes Sprinter VIP, Setra S515 HD, Indcar Wing")
- * - pax_capacity (e.g. "16, 28, 52 pax")
+ * - bus_models with per-bus passenger counts attached (e.g. "Mercedes V-Class (7 pax), Sprinter Vip (16 pax), Setra Gt Coach (54 pax)")
+ * - pax_capacity (e.g. "7, 16, 54 pax")
  * - rate_hourly (e.g. "€85/h")
  * - rate_standby (e.g. "€420 (4h) · €800 (8h)")
  * - whatsapp (e.g. "+39 348 123 4567")
  * - fleet_segment ('luxury' | 'standard' | 'both')
+ * - all_models_have_pax (boolean) & models_missing_pax (array) & follow_up_pax_question (string)
  */
 export function parseBusPartnerReply(replyText = '', existingPartner = {}) {
   const text = String(replyText || '').trim();
   if (!text) return {};
 
-  // 1. Extract Bus Models
+  // 1. Extract Bus Models AND pair each model with the passenger count mentioned near it
   const modelPatterns = [
     { re: /sprinter\s*(?:vip|luxury|executive|519|516|416|316)?/gi, label: (m) => m[0].replace(/\s+/g, ' ').trim() },
-    { re: /v-?class|classe\s*v|mercedes\s*v\b/gi, label: () => 'Mercedes V-Class' },
-    { re: /setra\s*(?:s\s*\d{3}\s*(?:hd|hdh|ul)?|topclass|comfortclass|vip)?/gi, label: (m) => m[0].replace(/\s+/g, ' ').trim() },
-    { re: /tourismo\s*(?:rhd|m|l)?/gi, label: () => 'Mercedes Tourismo GT' },
+    { re: /v-?class(?:\s*vip|\s*luxury|\s*executive)?|classe\s*v(?:\s*vip)?|mercedes\s*v\b/gi, label: () => 'Mercedes V-Class' },
+    { re: /setra\s*(?:s\s*\d{3}\s*(?:hd|hdh|ul)?|topclass|comfortclass|vip|gt\s*coach)?/gi, label: (m) => m[0].replace(/\s+/g, ' ').trim() },
+    { re: /tourismo\s*(?:rhd|m|l|gt)?/gi, label: () => 'Mercedes Tourismo GT' },
     { re: /indcar\s*(?:wing|next|mago\s*2?)?/gi, label: (m) => m[0].replace(/\s+/g, ' ').trim() },
-    { re: /limobus/gi, label: () => 'Limobus VIP Lounge' },
+    { re: /limobus(?:\s*vip|\s*lounge)?/gi, label: () => 'Limobus VIP Lounge' },
     { re: /irizar\s*(?:i6s?|i8|pb)?/gi, label: (m) => m[0].replace(/\s+/g, ' ').trim() },
     { re: /iveco\s*(?:daily|magelys|evadys)?/gi, label: (m) => m[0].replace(/\s+/g, ' ').trim() },
     { re: /scania\s*(?:touring|irizar)?/gi, label: (m) => m[0].replace(/\s+/g, ' ').trim() },
@@ -500,14 +606,37 @@ export function parseBusPartnerReply(replyText = '', existingPartner = {}) {
     { re: /otokar\s*(?:navigo|vectio|ulyso)?/gi, label: (m) => m[0].replace(/\s+/g, ' ').trim() },
     { re: /midibus|minibus\s*(?:vip|lusso|gran\s*turismo)?|pullman\s*gt/gi, label: (m) => m[0].replace(/\s+/g, ' ').trim() },
   ];
+
   const modelsFound = [];
+  const modelsSeenBase = new Set();
+
   for (const pat of modelPatterns) {
     const matches = [...text.matchAll(pat.re)];
     for (const m of matches) {
-      const formatted = pat.label(m).replace(/\b\w/g, (c) => c.toUpperCase());
-      if (!modelsFound.some((x) => x.toLowerCase() === formatted.toLowerCase())) {
-        modelsFound.push(formatted);
+      const baseName = pat.label(m).replace(/\b\w/g, (c) => c.toUpperCase());
+      const normKey = baseName.toLowerCase();
+      if (modelsSeenBase.has(normKey)) continue;
+      modelsSeenBase.add(normKey);
+
+      // Look immediately after (up to 38 chars) or immediately before (up to 18 chars) this model match for its specific passenger count
+      const startIdx = m.index || 0;
+      const endIdx = startIdx + m[0].length;
+      const afterSlice = text.slice(endIdx, endIdx + 38);
+      const beforeSlice = text.slice(Math.max(0, startIdx - 18), startIdx);
+
+      const localPaxAfter = afterSlice.match(/^[^,\n;•]{0,20}?\b(\d{1,2}(?:\s*[-–/]\s*\d{1,2})?)\s*(?:\+\s*1\s*)?(?:posti|pax|passeggeri|seats|persone|p\.?\b)/i);
+      const localPaxBefore = beforeSlice.match(/\b(\d{1,2}(?:\s*[-–/]\s*\d{1,2})?)\s*(?:posti|pax|passeggeri|seats)?\s*$/i);
+
+      let pairedModel = baseName;
+      if (localPaxAfter) {
+        const pVal = localPaxAfter[1].replace(/\s+/g, '').replace(/[/-]/g, '–');
+        pairedModel = `${baseName} (${pVal} pax)`;
+      } else if (localPaxBefore && parseInt(localPaxBefore[1], 10) >= 6 && parseInt(localPaxBefore[1], 10) <= 85) {
+        const pVal = localPaxBefore[1].replace(/\s+/g, '').replace(/[/-]/g, '–');
+        pairedModel = `${baseName} (${pVal} pax)`;
       }
+
+      modelsFound.push(pairedModel);
     }
   }
 
@@ -527,6 +656,11 @@ export function parseBusPartnerReply(replyText = '', existingPartner = {}) {
   }
   const sortedPax = [...paxSet].sort((a, b) => a - b);
   const pax_capacity = sortedPax.length ? `${sortedPax.join(', ')} pax` : '';
+
+  // If exactly 1 model was found without local pax, and exactly 1 pax number was found in the reply, pair them automatically
+  if (modelsFound.length === 1 && !/\(\d/.test(modelsFound[0]) && sortedPax.length === 1) {
+    modelsFound[0] = `${modelsFound[0]} (${sortedPax[0]} pax)`;
+  }
 
   // 3. Extract Hourly Rate (servizio orario)
   let rate_hourly = '';
@@ -569,17 +703,22 @@ export function parseBusPartnerReply(replyText = '', existingPartner = {}) {
     whatsapp = rawPhone;
   }
 
-  const bus_models = modelsFound.join(', ');
+  const bus_models = modelsFound.join(', ') || existingPartner.bus_models || '';
+  const paxAudit = verifyPerBusPaxCapacity({ bus_models });
   const combined = { ...existingPartner, notes: `${existingPartner.notes || ''} ${text}` };
   const fleet_segment = inferBusSegment(combined);
 
   return {
-    bus_models: bus_models || existingPartner.bus_models || '',
-    pax_capacity: pax_capacity || existingPartner.pax_capacity || '',
+    bus_models: paxAudit.formattedBusModels || bus_models,
+    pax_capacity: pax_capacity || paxAudit.formattedPaxSummary || existingPartner.pax_capacity || '',
     rate_hourly: rate_hourly || existingPartner.rate_hourly || '',
     rate_standby: rate_standby || existingPartner.rate_standby || '',
     whatsapp: whatsapp || existingPartner.whatsapp || existingPartner.phone || '',
     fleet_segment,
+    all_models_have_pax: paxAudit.allModelsHavePax,
+    models_with_pax: paxAudit.modelsWithPax,
+    models_missing_pax: paxAudit.modelsMissingPax,
+    follow_up_pax_question: paxAudit.followUpQuestionIt,
   };
 }
 
