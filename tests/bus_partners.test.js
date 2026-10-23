@@ -156,7 +156,8 @@ test('Bus Relevance Score: NOT_RELEVANT status pulls score to 0 and Tier 4', () 
 
 test('Isolation Principle: existing CRM tables and core workflows remain unaffected', () => {
   // Ensure bus partners scoring does not interfere with wedding planner priorities or settings
-  assert.equal(BUS_STATUSES.length, 6);
+  assert.equal(BUS_STATUSES.length, 7);
+  assert(BUS_STATUSES.find(s => s.key === 'WANT_TO_CONTACT'), 'Must include WANT_TO_CONTACT');
   assert(BUS_STATUSES.find(s => s.key === 'NOT_RELEVANT'), 'Must include NOT_RELEVANT');
   assert.equal(DISCRETION_LEVELS.length, 3);
   assert.equal(FLEET_TIERS.length, 3);

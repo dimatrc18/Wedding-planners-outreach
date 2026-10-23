@@ -12,7 +12,7 @@ import * as partners from './views/partners.js?v=3.7';
 import * as tools from './views/tools.js?v=3.7';
 import * as visibility from './views/visibility.js?v=3.7';
 import * as settings from './views/settings.js?v=3.7';
-import * as busPartners from './views/bus_partners.js?v=4.3';
+import * as busPartners from './views/bus_partners.js?v=4.4';
 
 const ROUTES = {
   today: { view: today, label: 'Today', icon: 'today' },

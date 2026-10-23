@@ -4,9 +4,30 @@ import * as core from '../../supabase/functions/_shared/core/index.js';
 import { S, updateBusPartner, addBusPartner, removeBusPartner } from '../store.js';
 import { esc, attr, icon, download, toast, confirmDialog } from '../ui.js';
 
-let activeFilter = 'all'; // all | top_tier | vetted | approved | to_review
+let activeFilter = 'all'; // all | top_tier | want_to_contact | vetted | approved | to_review
 let searchQ = '';
 let cityFilter = 'all';
+
+function getStatusBadgeStyle(status) {
+  switch (status) {
+    case 'TO_REVIEW':
+      return 'background:#fffbeb;color:#b45309;border:1px solid #fde68a;font-weight:600';
+    case 'WANT_TO_CONTACT':
+      return 'background:#ede9fe;color:#6d28d9;border:1px solid #ddd6fe;font-weight:600';
+    case 'CONTACTED':
+      return 'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-weight:600';
+    case 'APPROVED_PARTNER':
+      return 'background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;font-weight:600';
+    case 'REJECTED':
+      return 'background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;font-weight:600';
+    case 'NOT_RELEVANT':
+      return 'background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;font-weight:600';
+    case 'VETTED':
+      return 'background:#ccfbf1;color:#0f766e;border:1px solid #99f6e4;font-weight:600';
+    default:
+      return 'background:var(--surface);color:var(--ink);border:1px solid var(--border);';
+  }
+}
 
 export function render(el) {
   paint();
@@ -17,6 +38,7 @@ export function render(el) {
     // 1. Metric calculations for Top Stat Bar
     const totalDiscovered = list.length;
     const topTierMatches = list.filter((p) => (p.relevance_score || 0) >= 80).length;
+    const wantToContactCount = list.filter((p) => p.status === 'WANT_TO_CONTACT').length;
     const vettedCount = list.filter((p) => ['VETTED', 'APPROVED_PARTNER'].includes(p.status)).length;
     const activePartners = list.filter((p) => p.status === 'APPROVED_PARTNER').length;
 
@@ -24,6 +46,8 @@ export function render(el) {
     let filtered = [...list];
     if (activeFilter === 'top_tier') {
       filtered = filtered.filter((p) => (p.relevance_score || 0) >= 80);
+    } else if (activeFilter === 'want_to_contact') {
+      filtered = filtered.filter((p) => p.status === 'WANT_TO_CONTACT');
     } else if (activeFilter === 'vetted') {
       filtered = filtered.filter((p) => p.status === 'VETTED');
     } else if (activeFilter === 'approved') {
@@ -41,6 +65,7 @@ export function render(el) {
       filtered = filtered.filter((p) =>
         (p.name || '').toLowerCase().includes(q) ||
         (p.base_city || '').toLowerCase().includes(q) ||
+        (p.email || '').toLowerCase().includes(q) ||
         (p.notes || '').toLowerCase().includes(q) ||
         (Array.isArray(p.fleet_categories) ? p.fleet_categories.join(' ') : '').toLowerCase().includes(q)
       );
@@ -108,9 +133,10 @@ export function render(el) {
         <div class="row" style="gap:6px;flex-wrap:wrap">
           <button class="chip ${activeFilter === 'all' ? 'active' : 'outline'}" data-filter="all">All (${totalDiscovered})</button>
           <button class="chip ${activeFilter === 'top_tier' ? 'active' : 'outline'}" data-filter="top_tier">⭐ Top Tier (≥80) (${topTierMatches})</button>
+          <button class="chip ${activeFilter === 'want_to_contact' ? 'active' : 'outline'}" data-filter="want_to_contact">📞 Want to Contact (${wantToContactCount})</button>
+          <button class="chip ${activeFilter === 'to_review' ? 'active' : 'outline'}" data-filter="to_review">⏳ To Review (${list.filter(p => p.status === 'TO_REVIEW').length})</button>
           <button class="chip ${activeFilter === 'vetted' ? 'active' : 'outline'}" data-filter="vetted">🛡️ Vetted (${list.filter(p => p.status === 'VETTED').length})</button>
           <button class="chip ${activeFilter === 'approved' ? 'active' : 'outline'}" data-filter="approved">🤝 Active Partners (${activePartners})</button>
-          <button class="chip ${activeFilter === 'to_review' ? 'active' : 'outline'}" data-filter="to_review">⏳ To Review (${list.filter(p => p.status === 'TO_REVIEW').length})</button>
         </div>
 
         <div class="row" style="gap:8px">
@@ -118,22 +144,23 @@ export function render(el) {
             <option value="all">📍 All Cities</option>
             ${cities.map((c) => `<option value="${attr(c)}" ${cityFilter.toLowerCase() === c.toLowerCase() ? 'selected' : ''}>${esc(c)}</option>`).join('')}
           </select>
-          <input type="text" id="bus-search" placeholder="Search company, city, fleet..." value="${attr(searchQ)}" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);font-size:.85rem;min-width:200px">
+          <input type="text" id="bus-search" placeholder="Search company, city, email, fleet..." value="${attr(searchQ)}" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);font-size:.85rem;min-width:200px">
         </div>
       </div>
 
       <!-- Minimalist Bus Partner Manifest Table -->
       <div class="card flush table-wrap" style="overflow-x:auto">
-        <table class="table" style="width:100%;min-width:1120px;border-collapse:collapse">
+        <table class="table" style="width:100%;min-width:1160px;border-collapse:collapse">
           <thead>
             <tr>
-              <th style="width:60px;min-width:60px;text-align:center">Score</th>
-              <th style="width:250px;min-width:220px">Company & Base</th>
-              <th style="width:210px;min-width:190px">Fleet Types</th>
-              <th style="width:240px;min-width:200px">Notes</th>
+              <th style="width:55px;min-width:55px;text-align:center">Score</th>
+              <th style="width:220px;min-width:200px">Company & Base</th>
+              <th style="width:200px;min-width:180px">Email</th>
+              <th style="width:180px;min-width:160px">Fleet Types</th>
+              <th style="width:210px;min-width:180px">Notes</th>
               <th style="width:165px;min-width:155px">Status</th>
-              <th style="width:180px;min-width:170px">Direct Links</th>
-              <th style="width:120px;min-width:115px;text-align:right">Actions</th>
+              <th style="width:85px;min-width:80px">Web</th>
+              <th style="width:130px;min-width:120px;text-align:right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -150,26 +177,31 @@ export function render(el) {
                   </span>
                 </td>
                 <td style="vertical-align:middle">
-                  <div class="row nowrap" style="gap:6px;align-items:baseline;white-space:nowrap">
-                    <span style="font-weight:600;font-size:.92rem;color:var(--ink)">${esc(p.name)}</span>
-                    <span class="tiny muted" style="white-space:nowrap">📍 ${esc(p.base_city || 'Northern Italy')}</span>
-                  </div>
-                  <div class="row nowrap" style="gap:6px;align-items:center;margin-top:3px;font-size:.76rem;white-space:nowrap">
-                    ${p.email 
-                      ? `<a href="mailto:${attr(p.email)}" class="clickable" style="color:var(--series-1);text-decoration:none;display:inline-flex;align-items:center;gap:3px;white-space:nowrap" title="Email: ${attr(p.email)}">${icon('email', 11)} ${esc(p.email)}</a>`
-                      : `<button class="clickable" data-act="edit-notes" data-id="${attr(p.id)}" style="background:none;border:none;padding:0;color:var(--gold);cursor:pointer;font-size:.74rem;text-decoration:underline;white-space:nowrap" title="Click to add email">+ Add email</button>`
-                    }
-                  </div>
+                  <div style="font-weight:600;font-size:.9rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(p.name)}">${esc(p.name)}</div>
+                  <div class="tiny muted" style="white-space:nowrap;margin-top:2px">📍 ${esc(p.base_city || 'Northern Italy')}</div>
+                </td>
+                <td style="vertical-align:middle;white-space:nowrap">
+                  ${p.email 
+                    ? `<div class="row nowrap" style="gap:5px;align-items:center;white-space:nowrap">
+                        <a href="mailto:${attr(p.email)}" style="color:var(--series-1);font-size:.82rem;text-decoration:none;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;max-width:145px;overflow:hidden;text-overflow:ellipsis" title="Email: ${attr(p.email)}">
+                          ${icon('email', 12)} <span style="overflow:hidden;text-overflow:ellipsis">${esc(p.email)}</span>
+                        </a>
+                        <button class="clickable" data-act="edit-email" data-id="${attr(p.id)}" style="background:none;border:none;padding:2px 4px;cursor:pointer;color:var(--text-3);font-size:.76rem" title="Edit Email">✏️</button>
+                      </div>`
+                    : `<button class="clickable" data-act="edit-email" data-id="${attr(p.id)}" style="background:var(--surface-2);border:1px dashed var(--line-strong);padding:4px 9px;border-radius:5px;color:var(--gold-ink);cursor:pointer;font-size:.75rem;white-space:nowrap;display:inline-flex;align-items:center;gap:4px" title="Click to add email">
+                        + Add email
+                      </button>`
+                  }
                 </td>
                 <td style="vertical-align:middle">
                   <div class="row nowrap" style="gap:4px;flex-wrap:nowrap;overflow:hidden;white-space:nowrap">
-                    ${categories.slice(0, 2).map((c) => `<span class="chip tiny outline" style="font-size:.72rem;white-space:nowrap" title="${attr(c)}">${esc(c.length > 24 ? c.slice(0, 23) + '…' : c)}</span>`).join('')}
+                    ${categories.slice(0, 2).map((c) => `<span class="chip tiny outline" style="font-size:.72rem;white-space:nowrap" title="${attr(c)}">${esc(c.length > 20 ? c.slice(0, 19) + '…' : c)}</span>`).join('')}
                     ${categories.length > 2 ? `<span class="chip tiny outline faint" title="${attr(categories.slice(2).join(', '))}">+${categories.length - 2}</span>` : ''}
                     ${!categories.length ? '<span class="faint tiny">Minibus / GT Coaches</span>' : ''}
                   </div>
                 </td>
                 <td style="vertical-align:middle">
-                  <div class="clickable" data-act="edit-notes" data-id="${attr(p.id)}" style="cursor:pointer;max-width:240px;display:flex;align-items:flex-start;gap:5px" title="Click to edit notes: ${attr(p.notes || '')}">
+                  <div class="clickable" data-act="edit-notes" data-id="${attr(p.id)}" style="cursor:pointer;max-width:210px;display:flex;align-items:flex-start;gap:5px" title="Click to edit notes: ${attr(p.notes || '')}">
                     <span style="font-size:.76rem;line-height:1.2;flex:none">📝</span>
                     ${p.notes 
                       ? `<span class="tiny" style="color:var(--text-2);font-style:italic;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(p.notes)}</span>`
@@ -178,29 +210,24 @@ export function render(el) {
                   </div>
                 </td>
                 <td style="vertical-align:middle;white-space:nowrap">
-                  <select class="sm bus-status-select" data-id="${attr(p.id)}" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);font-size:.78rem;width:100%;min-width:148px;background:var(--surface);white-space:nowrap;${p.status === 'NOT_RELEVANT' ? 'color:var(--bad);font-weight:600' : ''}">
-                    ${core.BUS_STATUSES.map((st) => `<option value="${st.key}" ${p.status === st.key ? 'selected' : ''}>${st.label}</option>`).join('')}
+                  <select class="sm bus-status-select" data-id="${attr(p.id)}" style="padding:4px 8px;border-radius:6px;font-size:.78rem;width:100%;min-width:155px;height:30px;line-height:1.2;cursor:pointer;white-space:nowrap;${getStatusBadgeStyle(p.status)}">
+                    ${core.BUS_STATUSES.map((st) => `<option value="${st.key}" ${p.status === st.key ? 'selected' : ''} style="background:var(--surface);color:var(--ink)">${st.label}</option>`).join('')}
                   </select>
                 </td>
                 <td style="vertical-align:middle;white-space:nowrap">
-                  <div class="row nowrap" style="gap:4px;flex-wrap:nowrap;white-space:nowrap;align-items:center">
-                    ${p.website ? `<a class="btn sm ghost" href="${attr(p.website)}" target="_blank" rel="noopener" style="padding:3px 7px;font-size:.74rem;white-space:nowrap" title="Open Website">${icon('external', 12)} Web</a>` : ''}
-                    ${p.fleet_url ? `<a class="btn sm ghost" href="${attr(p.fleet_url)}" target="_blank" rel="noopener" style="padding:3px 7px;font-size:.74rem;white-space:nowrap" title="Open Fleet Gallery">Fleet ↗</a>` : ''}
-                    ${p.email 
-                      ? `<a class="btn sm ghost" href="mailto:${attr(p.email)}" style="padding:3px 6px;font-size:.74rem;white-space:nowrap" title="Email: ${attr(p.email)}">${icon('email', 12)}</a>` 
-                      : `<button class="btn sm ghost" data-act="edit-notes" data-id="${attr(p.id)}" style="padding:3px 6px;font-size:.74rem;color:var(--gold);white-space:nowrap" title="Add Email">+✉️</button>`
-                    }
-                    ${p.phone ? `<a class="btn sm ghost" href="tel:${attr(p.phone)}" style="padding:3px 6px;font-size:.74rem;white-space:nowrap" title="${attr(p.phone)}">${icon('phone', 12)}</a>` : ''}
-                  </div>
+                  ${p.website 
+                    ? `<a class="btn sm ghost" href="${attr(p.website)}" target="_blank" rel="noopener" style="padding:4px 8px;font-size:.76rem;white-space:nowrap;display:inline-flex;align-items:center;gap:4px" title="Open Website">${icon('external', 12)} Web</a>` 
+                    : `<span class="tiny faint">—</span>`
+                  }
                 </td>
                 <td style="vertical-align:middle;text-align:right;white-space:nowrap">
                   <div style="display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:nowrap;white-space:nowrap">
-                    <button class="btn sm ghost" data-act="edit-notes" data-id="${attr(p.id)}" style="padding:4px 9px;font-size:.76rem;white-space:nowrap;display:inline-flex;align-items:center;gap:4px" title="Edit Email & Dispatch Notes">✏️ Notes</button>
+                    <button class="btn sm ghost" data-act="edit-notes" data-id="${attr(p.id)}" style="padding:4px 9px;font-size:.76rem;white-space:nowrap;display:inline-flex;align-items:center;gap:4px" title="Edit Dispatch Notes">✏️ Notes</button>
                     <button class="btn sm ghost" data-act="delete-partner" data-id="${attr(p.id)}" style="padding:4px 7px;color:var(--bad);white-space:nowrap;display:inline-flex;align-items:center" title="Delete Operator">${icon('trash', 14)}</button>
                   </div>
                 </td>
               </tr>`;
-            }).join('') : `<tr><td colspan="7" class="empty small">No bus operators found matching the current filters.</td></tr>`}
+            }).join('') : `<tr><td colspan="8" class="empty small">No bus operators found matching the current filters.</td></tr>`}
           </tbody>
         </table>
       </div>
@@ -256,6 +283,15 @@ export function render(el) {
       });
     });
 
+    // Edit Email (Dedicated)
+    el.querySelectorAll('[data-act="edit-email"]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const id = e.currentTarget.dataset.id;
+        const partner = (S.busPartners || []).find((x) => x.id === id);
+        if (partner) openEmailModal(partner);
+      });
+    });
+
     // View Score Breakdown Modal
     el.querySelectorAll('[data-act="view-score"]').forEach((btn) => {
       btn.addEventListener('click', (e) => {
@@ -292,6 +328,55 @@ export function render(el) {
   }
 
   // --- Modals ---
+
+  function openEmailModal(partner) {
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+    backdrop.innerHTML = `
+    <div class="modal card stack" style="max-width:440px;padding:24px">
+      <div class="row between">
+        <div>
+          <div class="label eyebrow">Partner Contact</div>
+          <h3>${esc(partner.name)}</h3>
+        </div>
+        <button class="btn ghost sm" data-close>×</button>
+      </div>
+      <div class="stack" style="gap:10px;margin:14px 0">
+        <label class="field">
+          <span style="font-weight:600;font-size:.85rem">Direct Booking / Dispatch Email</span>
+          <input type="email" id="modal-quick-email" placeholder="e.g. booking@operator.it" value="${attr(partner.email || '')}" style="font-size:.9rem;padding:8px 12px;width:100%">
+        </label>
+        <span class="tiny muted">Email address used for B2B dispatch inquiries, quote requests, and rate sheets.</span>
+      </div>
+      <div class="row" style="justify-content:flex-end;gap:8px">
+        <button class="btn ghost" data-close>Cancel</button>
+        <button class="btn primary" id="modal-save-quick-email">Save Email</button>
+      </div>
+    </div>`;
+
+    document.body.appendChild(backdrop);
+    const input = backdrop.querySelector('#modal-quick-email');
+    setTimeout(() => input?.focus(), 50);
+
+    const close = () => backdrop.remove();
+    backdrop.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', close));
+
+    const save = async () => {
+      const email = input.value.trim();
+      await updateBusPartner(partner.id, { email });
+      toast(email ? `Email saved: ${email}` : 'Email removed');
+      close();
+      paint();
+    };
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        save();
+      }
+    });
+    backdrop.querySelector('#modal-save-quick-email').addEventListener('click', save);
+  }
 
   function openNotesModal(partner) {
     const backdrop = document.createElement('div');

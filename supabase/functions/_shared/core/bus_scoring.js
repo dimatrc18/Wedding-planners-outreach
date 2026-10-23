@@ -2,12 +2,13 @@
 // Pillars: Discretion (35) + Fleet Tier (25) + Territory (20) + SLA (20)
 
 export const BUS_STATUSES = [
-  { key: 'TO_REVIEW', label: 'To Review', tone: 'warn', desc: 'Discovered; awaiting manual check' },
+  { key: 'TO_REVIEW', label: '1. To Review', tone: 'warn', desc: 'Discovered; awaiting manual check' },
+  { key: 'WANT_TO_CONTACT', label: '2. Want to Contact', tone: 'gold', desc: 'Priority prospect Dorogo intends to contact' },
+  { key: 'CONTACTED', label: '3. Contacted', tone: 'series-1', desc: 'Dorogo B2B outreach inquiry sent' },
+  { key: 'APPROVED_PARTNER', label: '4. Approved Partner', tone: 'ok', desc: 'Rates agreed, zero-decal rule confirmed' },
+  { key: 'REJECTED', label: '5. Rejected', tone: 'bad', desc: 'Disqualified (decals, rude, no NCC)' },
+  { key: 'NOT_RELEVANT', label: '6. Not Relevant', tone: 'bad', desc: 'Not relevant for Dorogo; score pulled to 0' },
   { key: 'VETTED', label: 'Vetted', tone: 'info', desc: 'Confirmed unbranded dark fleet' },
-  { key: 'CONTACTED', label: 'Contacted', tone: 'gold', desc: 'Dorogo B2B outreach inquiry sent' },
-  { key: 'APPROVED_PARTNER', label: 'Approved Partner', tone: 'ok', desc: 'Rates agreed, zero-decal rule confirmed' },
-  { key: 'REJECTED', label: 'Rejected', tone: 'bad', desc: 'Disqualified (decals, rude, no NCC)' },
-  { key: 'NOT_RELEVANT', label: 'Not Relevant (Score 0)', tone: 'bad', desc: 'Not relevant for Dorogo; score pulled to 0' },
 ];
 
 export const DISCRETION_LEVELS = [
