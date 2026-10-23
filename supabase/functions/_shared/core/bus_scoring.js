@@ -225,10 +225,16 @@ export function scoreFromWebSignals(text = '', meta = {}) {
   // Pillar 3: Territory & Permits (Max 20)
   let territory = 12;
   const city = (meta.base_city || '').toLowerCase();
-  if (/milan|milano|como|lecco|bellagio|cernobbio/i.test(city) || /area\s+c|ztl|corsie\s+preferenziali|ville\s+del\s+lago|lago\s+di\s+como|catene\s+da\s+neve/i.test(lower)) {
+  const isRomeOrCentral = /roma|rome|lazio|napoli|firenze|florence|palermo|catania|central\s+italy/i.test(city) ||
+    (/\b(001\d\d|rome cavalieri|via alberto cadlolo)\b/i.test(lower) && !/depot.*milan|filiale.*milano|sede.*como/i.test(lower));
+
+  if (isRomeOrCentral) {
+    territory = 0;
+    notes.push('Disqualified / non-local: headquarters in Rome/Central Italy (500+ km from Milan/Como). No local Lombardy depot.');
+  } else if (/milan|milano|como|lecco|bellagio|cernobbio|menaggio|laglio|bormio/i.test(city) || (/area\s+c|ztl|corsie\s+preferenziali|ville\s+del\s+lago|lago\s+di\s+como|catene\s+da\s+neve/i.test(lower) && !isRomeOrCentral)) {
     territory = 20;
     notes.push('Prime Milan/Lake Como base with ZTL/NCC lane access');
-  } else if (/bergamo|brescia|monza|varese|verona|torino|turin/i.test(city)) {
+  } else if (/bergamo|brescia|monza|varese|verona|torino|turin|garda|sondrio|livigno/i.test(city)) {
     territory = 15;
     notes.push('Lombardy/Piedmont regional base');
   }

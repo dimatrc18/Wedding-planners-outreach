@@ -75,25 +75,25 @@ export const INITIAL_BUS_PARTNERS = [
   {
     "id": "partner_cima_luxury",
     "name": "Cima Luxury",
-    "base_city": "Milano",
+    "base_city": "Roma (Central Italy)",
     "website": "https://cimaluxury.com",
     "fleet_url": "https://cimaluxury.com/",
-    "relevance_score": 86,
+    "relevance_score": 0,
     "score_breakdown": {
       "discretion_unbranded": 32,
       "fleet_luxury": 22,
-      "territory_permits": 16,
+      "territory_permits": 0,
       "corporate_sla": 16
     },
-    "status": "TO_REVIEW",
+    "status": "NOT_RELEVANT",
     "unbranded_status": "Unbranded Luxury Line",
     "fleet_categories": [
       "Mercedes Sprinter VIP Lounge",
       "Executive Minicoaches"
     ],
-    "phone": "+39 02 3656 4050",
+    "phone": "+39 06 35 34 83 45",
     "email": "info@cimaluxury.com",
-    "notes": "Concierge and luxury mobility fleet. High-end leather interiors, privacy tinting."
+    "notes": "Headquartered at Waldorf Astoria Rome Cavalieri (00136 Rome). Out-of-region depot (+39 06) located 570km from Milan/Lake Como with no local Lombardy depot. Disqualified from local Northern Italy dispatch."
   },
   {
     "id": "partner_perletti_topclass",
@@ -194,8 +194,28 @@ export function loadStoredBusPartners() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      let parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Reconcile Cima Luxury if stored with old erroneous Milano city
+        let changed = false;
+        parsed = parsed.map((p) => {
+          if (p.id === 'partner_cima_luxury' || (p.name === 'Cima Luxury' && (p.base_city === 'Milano' || !p.base_city.includes('Roma')))) {
+            changed = true;
+            return {
+              ...p,
+              base_city: 'Roma (Central Italy)',
+              phone: '+39 06 35 34 83 45',
+              relevance_score: 0,
+              score_breakdown: { discretion_unbranded: 32, fleet_luxury: 22, territory_permits: 0, corporate_sla: 16 },
+              status: 'NOT_RELEVANT',
+              notes: 'Headquartered at Waldorf Astoria Rome Cavalieri (00136 Rome). Out-of-region depot (+39 06) located 570km from Milan/Lake Como with no local Lombardy depot. Disqualified from local Northern Italy dispatch.'
+            };
+          }
+          return p;
+        });
+        if (changed) saveStoredBusPartners(parsed);
+        return parsed;
+      }
     }
   } catch (_) {}
   return INITIAL_BUS_PARTNERS;

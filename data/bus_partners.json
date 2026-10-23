@@ -72,25 +72,25 @@
   {
     "id": "partner_cima_luxury",
     "name": "Cima Luxury",
-    "base_city": "Milano",
+    "base_city": "Roma (Central Italy)",
     "website": "https://cimaluxury.com",
     "fleet_url": "https://cimaluxury.com/",
-    "relevance_score": 86,
+    "relevance_score": 0,
     "score_breakdown": {
       "discretion_unbranded": 32,
       "fleet_luxury": 22,
-      "territory_permits": 16,
+      "territory_permits": 0,
       "corporate_sla": 16
     },
-    "status": "TO_REVIEW",
+    "status": "NOT_RELEVANT",
     "unbranded_status": "Unbranded Luxury Line",
     "fleet_categories": [
       "Mercedes Sprinter VIP Lounge",
       "Executive Minicoaches"
     ],
-    "phone": "+39 02 3656 4050",
+    "phone": "+39 06 35 34 83 45",
     "email": "info@cimaluxury.com",
-    "notes": "Concierge and luxury mobility fleet. High-end leather interiors, privacy tinting."
+    "notes": "Headquartered at Waldorf Astoria Rome Cavalieri (00136 Rome). Out-of-region depot (+39 06) located 570km from Milan/Lake Como with no local Lombardy depot. Disqualified from local Northern Italy dispatch."
   },
   {
     "id": "partner_perletti_topclass",

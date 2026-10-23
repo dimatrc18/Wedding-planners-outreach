@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { isRecentlyAdded, operatorHasVehicleType, detectVehicleKey, STANDARD_FLEET_TYPES } from '../app/views/bus_partners.js';
+import { isRecentlyAdded, operatorHasVehicleType, detectVehicleKey, detectOperatorCityAndRegion, STANDARD_FLEET_TYPES } from '../app/views/bus_partners.js';
 import {
   calculateBusRelevanceScore,
   getPriorityTier,
@@ -221,4 +221,71 @@ test('Multi-filter combination: status AND vehicle platform filters apply simult
   assert.equal(filtered.length, 1);
   assert.equal(filtered[0].id, '1');
   assert.equal(filtered[0].name, 'Alpha');
+});
+
+test('detectOperatorCityAndRegion: accurately detects non-Northern Italy depots (Rome, Florence, Naples) vs local hubs', () => {
+  // Cima Luxury case: Rome phone (+39 06) and address (Via Alberto Cadlolo / Cavalieri)
+  const cimaResult = detectOperatorCityAndRegion({
+    phone: '+39 06 35 34 83 45',
+    address: 'Via Alberto Cadlolo 101, 00136 Roma',
+    text: 'Cima Luxury Limousine and Coach service, luxury mobility',
+    url: 'https://cimaluxury.com/'
+  });
+  assert.equal(cimaResult.isNorthernItaly, false);
+  assert.equal(cimaResult.city, 'Roma (Central Italy)');
+  assert.equal(cimaResult.region, 'Lazio');
+  assert(cimaResult.depotWarning.includes('Rome'));
+
+  // Florence operator with 055 prefix
+  const florenceResult = detectOperatorCityAndRegion({
+    phone: '+39 055 210000',
+    address: 'Via de Tornabuoni, Firenze'
+  });
+  assert.equal(florenceResult.isNorthernItaly, false);
+  assert.equal(florenceResult.city, 'Firenze (Tuscany)');
+
+  // Como operator with 031 prefix and Bellagio / Como cues
+  const comoResult = detectOperatorCityAndRegion({
+    phone: '+39 031 950234',
+    text: 'Servizi transfer e minivan Lago di Como Bellagio e Tremezzo'
+  });
+  assert.equal(comoResult.isNorthernItaly, true);
+  assert.equal(comoResult.city, 'Como');
+  assert.equal(comoResult.region, 'Lake Como');
+
+  // Milan operator with 02 prefix
+  const milanResult = detectOperatorCityAndRegion({
+    phone: '+39 02 87199123',
+    text: 'Noleggio con conducente Milano Linate Malpensa'
+  });
+  assert.equal(milanResult.isNorthernItaly, true);
+  assert.equal(milanResult.city, 'Milano');
+  assert.equal(milanResult.region, 'Lombardy');
+});
+
+test('scoreFromWebSignals: Rome signals disqualify territory permits (Pillar 3 = 0)', () => {
+  const romeWebText = `
+    Cima Luxury Chauffeur & Bus Service.
+    Sede: Via Alberto Cadlolo 101, Roma. Telefono: +39 06 35 34 83 45.
+    Flotta Mercedes Sprinter e bus GT total black unbranded con vetri oscurati.
+    Autisti h24 in abito scuro.
+  `;
+  const result = scoreFromWebSignals(romeWebText, { base_city: 'Roma' });
+
+  // Discretion and luxury might be high, but territory permits must be 0 due to 570km deadhead from Lake Como
+  assert.equal(result.breakdown.territory_permits, 0, 'Central Italy depot must yield 0 territory permits for Northern Italy');
+  assert(result.notes.includes('Central Italy') || result.notes.includes('Rome'), 'Notes must explicitly mention Rome/Central Italy depot disqualification');
+});
+
+test('Cima Luxury Data Verification: properly classified as Rome / NOT_RELEVANT in seed data', () => {
+  const jsonPath = path.resolve(__dirname, '../data/bus_partners.json');
+  const partners = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+  const cima = partners.find(p => p.id === 'partner_cima_luxury');
+
+  assert(cima, 'Cima Luxury must exist in bus_partners.json');
+  assert.equal(cima.base_city, 'Roma (Central Italy)');
+  assert.equal(cima.status, 'NOT_RELEVANT');
+  assert.equal(cima.relevance_score, 0);
+  assert.equal(cima.score_breakdown.territory_permits, 0);
+  assert(cima.notes.includes('Rome') || cima.notes.includes('570km'));
 });
