@@ -289,22 +289,19 @@ export const DEFAULT_BUS_OUTREACH_SETTINGS = {
 };
 
 /**
- * Classifies a single bus/vehicle string as 'luxury' (VIP Vans, Sprinter VIP/Lux/Exec, Limobus, Setra VIP Lounge)
- * or 'standard' (Executive Midibus 24–30 pax, Setra/Mercedes Tourismo GT Coach 50–56 pax, Pullman).
+ * Classifies a single bus/vehicle string as 'luxury' (ONLY when explicitly marked VIP, Luxury, Lusso,
+ * Limobus, VIP Lounge, V-Class / Classe V, Exclusive, or Top Class)
+ * or 'standard' (Minivan NCC, Viano/Vito standard, Sprinter standard, Midibus 24–30 pax, Setra/Tourismo/Irizar GT Coach 50–56 pax).
  */
 export function classifySingleBusAllocation(busStr = '') {
   const s = String(busStr || '').toLowerCase();
   if (!s.trim()) return null;
 
-  // Luxury VIP vehicles: V-Class, Sprinter VIP/Lux/Exec, Limobus, or VIP Lounge conversions
-  if (/limobus|vip\s*lounge|v-?class|classe\s*v|vito|minivan|sprinter.*(vip|lux|exec)|setra.*vip/i.test(s)) {
+  // Strict Zero-Hallucination Luxury check: only classify as 'luxury' when explicitly stated
+  if (/limobus|vip\s*lounge|v-?class|classe\s*v|\bvip\b|luxury|\blusso\b|\bgtl\b|exclusive|top\s*class|total\s*black|tomassini|\balis\b/i.test(s)) {
     return 'luxury';
   }
-  // Standard GT / Group Charter vehicles: Midibus (24-30 pax), Tourismo/Setra GT Coaches (50-56 pax), standard Sprinter minibus
-  if (/midibus|midi-?coach|minicoach|indcar|tourismo|setra|gt\b|gran\s*turismo|coach|pullman|iveco|scania|irizar|sprinter|30.*54|50.*56|36.*56|30.*75|24.*30/i.test(s)) {
-    return 'standard';
-  }
-  if (/vip|luxury|exclusive/i.test(s)) return 'luxury';
+  // Standard GT / Group Charter vehicles: standard Minivan/Viano/Vito, Sprinter minibus, Midibus (20-36 pax), Tourismo/Setra/Irizar/Neoplan GT Coaches (40-80+ pax)
   return 'standard';
 }
 
@@ -463,18 +460,36 @@ export function buildBusOutreachDraft(partner = {}, stepKey = 'T1_intro') {
 
   const subjectBase = `Collaborazione B2B minibus/pullman · ${city} — DOROGO`;
 
+  // Notes-aware personalization: AI inspects Dmitri's pre-contact comments and known fleet
+  const userNotes = String(partner.notes || '').trim();
+  const lowerNotes = userNotes.toLowerCase();
+  let personalizedFleetNote = '';
+
+  if (/19\s*seat|19\s*posti/i.test(lowerNotes)) {
+    personalizedFleetNote = `In particolare ho notato il vostro Sprinter 19 posti; vorrei verificare tariffe e disponibilità (e se avete altri modelli).`;
+  } else if (/minibus\s*extra-?long|20\s*seat|26\s*seat|20\s*posti|26\s*posti/i.test(lowerNotes)) {
+    personalizedFleetNote = `In particolare ho notato i vostri minibus 20/26 posti ed extra-long; vorrei verificare tariffe e disponibilità per questi mezzi.`;
+  } else if (/adesiv|sticker|senza\s*scritte|livrea/i.test(lowerNotes)) {
+    personalizedFleetNote = `Per i nostri clienti cerchiamo veicoli eleganti senza scritte commerciali.`;
+  } else if (Array.isArray(partner.fleet_categories) && partner.fleet_categories.length >= 2) {
+    const busNames = partner.fleet_categories.slice(0, 2).map((c) => c.split('(')[0].replace(/mercedes-benz/i, 'Mercedes').trim()).join(' e ');
+    if (busNames) {
+      personalizedFleetNote = `In particolare ho notato i vostri ${busNames}; vorremmo valutare tariffe e disponibilità per questi mezzi.`;
+    }
+  }
+
   if (stepKey === 'T2_followup') {
     const body = `Buongiorno Team ${cleanName},
 
-Vi scrivo rapidamente in merito alla mia precedente email per capire se avete disponibilità per collaborazioni B2B su Como e Milano in questa stagione.
+Vi scrivo rapidamente in merito alla mia email per verificare disponibilità B2B su Como e Milano.
 
-Se per voi è più veloce, potete scrivermi direttamente su WhatsApp al +32 456 14 14 97 indicandomi:
-- Modelli bus e capienza posti esatta per ciascun mezzo (quanti passeggeri porta ogni bus)
-- Tariffa indicativa oraria e a disposizione (4h / 8h)
+Se per voi è più rapido, potete rispondermi su WhatsApp al +32 456 14 14 97:
+- Modelli bus e quanti passeggeri portano per ciascun mezzo
+- Prezzi B2B per servizio orario e a disposizione (4h / 8h)
+- Tariffe per transfer (es. Malpensa – Como/Milano), costo a km e minimo d'ordine
 
 Grazie e buon lavoro,
-Dmitri Traciuc
-DOROGO · Lago di Como & Milano | WhatsApp: +32 456 14 14 97`;
+Dmitri Traciuc`;
 
     return {
       step_name: 'T2_followup',
@@ -486,7 +501,8 @@ DOROGO · Lago di Como & Milano | WhatsApp: +32 456 14 14 97`;
   }
 
   if (stepKey === 'WA_pitch') {
-    const body = `Buongiorno ${cleanName}, sono Dmitri di DOROGO (trasferimenti eventi e matrimoni sul Lago di Como e Milano). Abbiamo moltissime richieste dai nostri clienti per ${segmentPhrase} e vorremmo affidare i servizi a un partner di fiducia in zona ${city}. Potreste indicarmi brevemente qui su WhatsApp quali modelli avete (e quanti passeggeri portano per ciascun bus) e i vostri prezzi B2B indicativi per servizio orario e a disposizione (4h/8h)? Grazie mille!`;
+    const extraPersonal = personalizedFleetNote ? ` ${personalizedFleetNote}` : '';
+    const body = `Buongiorno ${cleanName}, sono Dmitri di DOROGO (trasferimenti eventi e matrimoni su Lago di Como e Milano). Abbiamo forte richiesta clienti per ${segmentPhrase} e vorremmo collaborare con voi.${extraPersonal} Potreste indicarmi qui su WhatsApp modelli, quanti passeggeri portano e prezzi B2B indicativi per servizio orario e a disposizione (4h/8h)? Grazie mille!\n\nDmitri Traciuc`;
     return {
       step_name: 'WA_pitch',
       language: 'it',
@@ -496,20 +512,19 @@ DOROGO · Lago di Como & Milano | WhatsApp: +32 456 14 14 97`;
     };
   }
 
-  // Default: T1_intro (CEO-level Italian Intro, ~80 words)
+  // Default: T1_intro (CEO-level Italian Intro, ultra-concise, NO hardcoded footer)
+  const personalLine = personalizedFleetNote ? `\n\n${personalizedFleetNote}` : '';
   const body = `Buongiorno Team ${cleanName},
 
-Sono Dmitri di DOROGO. Gestiamo i trasferimenti per eventi privati e matrimoni sul Lago di Como e Milano con la nostra flotta V-Class e S-Class, e abbiamo un forte volume di clienti che ci richiedono ${segmentPhrase} che vorremmo affidare a un partner di fiducia.
+Sono Dmitri di DOROGO. Gestiamo trasferimenti per eventi privati e matrimoni sul Lago di Como e Milano con flotta V-Class ed S-Class. Abbiamo frequente richiesta per ${segmentPhrase} che vorremmo affidare a un partner di fiducia in zona ${city}.${personalLine}
 
-Per collaborare sulle prossime date, potreste indicarmi brevemente:
-1. Modelli bus disponibili e quanti passeggeri portano (capienza esatta per ciascun mezzo)
+Per collaborare, potreste indicarmi brevemente:
+1. Modelli bus disponibili e quanti passeggeri portano (capienza esatta per mezzo)
 2. Prezzi B2B indicativi per servizio orario e a disposizione (4h / 8h)
 3. Un vostro contatto WhatsApp diretto per le disponibilità rapide
 
 Grazie e buon lavoro,
-Dmitri Traciuc
-DOROGO · Lago di Como & Milano
-dmitri@dorogo.eu | WhatsApp: +32 456 14 14 97`;
+Dmitri Traciuc`;
 
   return {
     step_name: 'T1_intro',
@@ -768,6 +783,273 @@ export function parseBusPartnerReply(replyText = '', existingPartner = {}) {
     models_with_pax: paxAudit.modelsWithPax,
     models_missing_pax: paxAudit.modelsMissingPax,
     follow_up_pax_question: paxAudit.followUpQuestionIt,
+  };
+}
+
+/**
+ * Decodes Cloudflare `data-cfemail="..."` hex-encoded email addresses.
+ */
+export function decodeCloudflareEmail(hex = '') {
+  try {
+    const clean = String(hex || '').trim();
+    if (clean.length < 6 || clean.length % 2 !== 0) return '';
+    const key = parseInt(clean.slice(0, 2), 16);
+    if (Number.isNaN(key)) return '';
+    let out = '';
+    for (let i = 2; i < clean.length; i += 2) {
+      const byte = parseInt(clean.slice(i, i + 2), 16) ^ key;
+      out += String.fromCharCode(byte);
+    }
+    return out.toLowerCase().trim();
+  } catch (_) {
+    return '';
+  }
+}
+
+/**
+ * Extracts and ranks real business emails printed on an operator's website or Jina Reader output.
+ * - Decodes Cloudflare `data-cfemail`, HTML entities (`&#64;`, `&#46;`), and `mailto:` links.
+ * - Cleans trailing markdown/HTML link text (e.g. `berini@beriniautonoleggio.com)scrivici`).
+ * - Filters out PEC/certified legal mail (`legalmail.it`, `pec.`), web agencies, and placeholders.
+ * - Prioritizes emails matching the operator's website domain or official contact prefixes (`info@`, `booking@`, `noleggio@`, `preventivi@`).
+ */
+export function extractEmailsFromWebsiteHtml(htmlOrText = '', websiteDomain = '') {
+  const raw = String(htmlOrText || '');
+  if (!raw.trim()) return [];
+
+  const candidates = [];
+
+  // 1. Decode Cloudflare data-cfemail attributes
+  const cfMatches = raw.matchAll(/data-cfemail=["']([0-9a-fA-F]+)["']/g);
+  for (const m of cfMatches) {
+    const decoded = decodeCloudflareEmail(m[1]);
+    if (decoded) candidates.push(decoded);
+  }
+
+  // 2. Normalize HTML entities & common obfuscations
+  const normalized = raw
+    .replace(/&#64;|&#x40;|&commat;/gi, '@')
+    .replace(/&#46;|&#x2e;|&period;/gi, '.')
+    .replace(/\s*(?:\[at\]|\(at\))\s*/gi, '@')
+    .replace(/\s*(?:\[dot\]|\(dot\))\s*/gi, '.');
+
+  // 3. Extract explicit mailto: links first (highest confidence)
+  const mailtoMatches = normalized.matchAll(/mailto:([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,12})/gi);
+  for (const m of mailtoMatches) {
+    candidates.push(m[1]);
+  }
+
+  // 4. Extract plain-text email patterns
+  const textMatches = normalized.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,12}/g) || [];
+  candidates.push(...textMatches);
+
+  const blockedPatterns = /example\.|sentry|wixpress|cloudflare|googleapis|w3\.org|schema\.org|wordpress|jquery|bootstrap|fontawesome|doubleclick|facebook\.com|instagram\.com|2x\.|@2x|\.png$|\.jpg$|\.jpeg$|\.webp$|\.svg$|\.gif$|\.css$|\.js$|legalmail\.it|@pec\.|postacertificata|cert\.|sicurezzapostale|sitebysite\.it|madeinmagic\.it|solutiongroupcomunication\.com|pierobizzotto\.it|your@email|nome@|email@|user@|test@/i;
+
+  const cleanDomain = String(websiteDomain || '')
+    .toLowerCase()
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .split('/')[0]
+    .trim();
+  const domainCore = cleanDomain.replace(/\.(it|com|eu|net|org|ch)$/i, '').replace(/[-_]/g, '');
+
+  const cleanedSet = new Set();
+  for (let c of candidates) {
+    // Strip markdown/HTML suffixes that may glue onto TLD (e.g. `.com)scrivici` -> `.com`)
+    c = String(c || '')
+      .toLowerCase()
+      .replace(/^mailto:/i, '')
+      .split(/[?#)\s"'<>*,;]/)[0]
+      .replace(/\.(it|com|eu|net|org|ch)[a-z]+$/i, (m, tld) => `.${tld}`)
+      .replace(/^\.+|\.+$/g, '')
+      .trim();
+
+    if (!c || !c.includes('@')) continue;
+    const [local, dom] = c.split('@');
+    if (!local || !dom || !dom.includes('.')) continue;
+    if (local.length < 2 || dom.length < 4) continue;
+    if (blockedPatterns.test(c)) continue;
+    cleanedSet.add(c);
+  }
+
+  const unique = [...cleanedSet];
+  // Score and sort candidates so the official website email comes first
+  unique.sort((a, b) => {
+    const scoreEmail = (em) => {
+      let s = 0;
+      const [loc, dom] = em.split('@');
+      const domCore = dom.replace(/\.(it|com|eu|net|org|ch)$/i, '').replace(/[-_]/g, '');
+      if (cleanDomain && dom === cleanDomain) s += 50;
+      else if (domainCore && domainCore.length >= 4 && (domCore.includes(domainCore) || domainCore.includes(domCore))) s += 35;
+      if (/^(info|booking|prenotazioni|noleggio|preventivi|commerciale|contatti|limo|bus|office)$/i.test(loc)) s += 20;
+      if (/^(amministrazione|fatture|privacy|dpo|hr|jobs|lavora)$/i.test(loc)) s -= 15;
+      return s;
+    };
+    return scoreEmail(b) - scoreEmail(a);
+  });
+
+  return unique;
+}
+
+/**
+ * Zero-Hallucination Fleet & Passenger Capacity Extractor from live website / fleet page text.
+ * - Extracts ONLY vehicle categories & models explicitly mentioned on the website, along with their exact passenger capacities (`posti`, `pax`, `seats`, `passeggeri`).
+ * - Marks a vehicle or operator as `'luxury'` ONLY when the website explicitly uses luxury/VIP terminology (`lusso`, `luxury`, `vip`, `limobus`, `top class`, `total black`, `poltrone in pelle`, `classe v`) for that vehicle.
+ */
+export function extractFleetFromWebsiteText(text = '') {
+  const raw = String(text || '')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!raw) {
+    return {
+      fleet_categories: [],
+      bus_models: '',
+      pax_capacity: '',
+      fleet_segment: 'standard',
+      has_explicit_luxury: false,
+    };
+  }
+
+  const lower = raw.toLowerCase();
+  const hasExplicitLuxuryPage = /\b(vip|luxury|lusso|limobus|vip\s*lounge|top\s*class|allestimento\s*vip|total\s*black|poltrone\s*in\s*pelle)\b/i.test(lower);
+
+  // Extract all explicit passenger seat numbers mentioned next to posti/pax/seats/passeggeri (between 5 and 94 pax for vans/buses)
+  const paxSet = new Set();
+  const rangeRegex = /\b(\d{1,2})\s*(?:[-/–a]|fino\s+a|or|to)\s*(\d{1,2})\s*(?:posti|pax|passeggeri|seats|persone)\b/gi;
+  for (const m of raw.matchAll(rangeRegex)) {
+    const a = parseInt(m[1], 10);
+    const b = parseInt(m[2], 10);
+    if (a >= 5 && a <= 95 && b >= 5 && b <= 95 && a < b) {
+      paxSet.add(`${a}–${b}`);
+    }
+  }
+
+  const singleRegex = /\b(?:da\s+|fino\s+a\s+|up\s+to\s+)?(\d{1,2})\s*(?:\+\s*\d\s*(?:guida|autista|hostess)\s*)*\s*(?:posti|pax|passeggeri|seats)\b/gi;
+  for (const m of raw.matchAll(singleRegex)) {
+    const n = parseInt(m[1], 10);
+    if (n >= 5 && n <= 95) {
+      paxSet.add(String(n));
+    }
+  }
+
+  const categories = [];
+  const models = [];
+
+  // 1. V-Class / Viano / Minivan (5–8 pax)
+  if (/\b(classe\s*v|v-?class|viano|vito|minivan|monovolume)\b/i.test(raw)) {
+    const isVClass = /\b(classe\s*v|v-?class)\b/i.test(raw);
+    const isLuxVan = isVClass || /(?:viano|minivan|monovolume|van)[^.]{0,50}(?:lusso|luxury|vip|exclusive|pelle)/i.test(raw) || /(?:lusso|luxury|vip)[^.]{0,50}(?:viano|minivan|monovolume|classe\s*v|v-?class)/i.test(raw);
+    const vanPax = [...paxSet].filter((p) => {
+      const n = parseInt(p, 10);
+      return n >= 5 && n <= 8;
+    });
+    const paxLabel = vanPax.length > 0 ? `${vanPax.join('/')} pax` : '7–8 pax';
+    if (isLuxVan) {
+      categories.push(`Mercedes-Benz V-Class Luxury (${paxLabel.replace('pax', 'seats')})`);
+      models.push(`Mercedes-Benz V-Class Luxury (${paxLabel})`);
+    } else {
+      const vanName = /\bviano\b/i.test(raw) ? 'Mercedes Viano' : 'Minivan NCC';
+      categories.push(`${vanName} (${paxLabel.replace('pax', 'seats')})`);
+      models.push(`${vanName} (${paxLabel})`);
+    }
+  }
+
+  // 2. Mercedes Sprinter / Daily / Transit Minibus (8–22 pax)
+  if (/\b(sprinter|minibus|pulmino|pulmini|iveco\s*daily|ford\s*transit|gran\s*capri)\b/i.test(raw)) {
+    const isLuxSprinter = /(?:sprinter|minibus|pulmin[oi])[^.]{0,65}(?:vip|luxury|lusso|total\s*black|tomassini|pelle|lounge)/i.test(raw) ||
+      /(?:vip|luxury|lusso)[^.]{0,65}(?:sprinter|minibus|pulmin[oi])/i.test(raw);
+    const miniPax = [...paxSet].filter((p) => {
+      const n = parseInt(p.split(/[–-]/)[0], 10);
+      return n >= 8 && n <= 22;
+    });
+    const paxLabel = miniPax.length > 0 ? `${miniPax.slice(0, 3).join(', ')} pax` : '8–20 pax';
+    const brand = /\bsprinter\b/i.test(raw)
+      ? 'Mercedes-Benz Sprinter'
+      : /\biveco\s*daily\b/i.test(raw)
+        ? 'Iveco Daily Minibus'
+        : /\bford\s*transit\b/i.test(raw)
+          ? 'Ford Transit Minibus'
+          : 'Minibus';
+
+    if (isLuxSprinter) {
+      categories.push(`${brand} VIP / Luxury (${paxLabel.replace('pax', 'seats')})`);
+      models.push(`${brand} VIP / Luxury (${paxLabel})`);
+    } else {
+      categories.push(`${brand} (${paxLabel.replace('pax', 'seats')})`);
+      models.push(`${brand} (${paxLabel})`);
+    }
+  }
+
+  // 3. Limobus / Custom VIP Lounge Bus (18–35 pax) — strictly only when explicitly mentioned!
+  if (/\b(limobus|bus\s*lusso|bus\s*di\s*lusso|allestimento\s*vip\s*lounge)\b/i.test(raw)) {
+    const limoPax = [...paxSet].filter((p) => {
+      const n = parseInt(p.split(/[–-]/)[0], 10);
+      return n >= 18 && n <= 35;
+    });
+    const paxLabel = limoPax.length > 0 ? `${limoPax.slice(0, 2).join(', ')} pax` : '19–30 pax';
+    categories.push(`Limobus / Bus di Lusso VIP (${paxLabel.replace('pax', 'seats')})`);
+    models.push(`Limobus VIP (${paxLabel})`);
+  }
+
+  // 4. Midibus (24–40 pax)
+  const midiPax = [...paxSet].filter((p) => {
+    const n = parseInt(p.split(/[–-]/)[0], 10);
+    return n >= 24 && n <= 40;
+  });
+  if (/\b(midibus|midi-?coach|minicoach|tourengo|mago\s*2|iveco\s*wing|temsa|king\s*long|calipso|smile)\b/i.test(raw) || midiPax.length > 0) {
+    const paxLabel = midiPax.length > 0 ? `${midiPax.slice(0, 3).join(', ')} pax` : '25–32 pax';
+    const midiBrand = /\btourengo\b/i.test(raw)
+      ? 'Mercedes Tourengo Midibus'
+      : /\btemsa\b/i.test(raw)
+        ? 'Temsa Midibus'
+        : /\biveco\b/i.test(raw)
+          ? 'Iveco Midibus'
+          : 'Midibus';
+    categories.push(`${midiBrand} (${paxLabel.replace('pax', 'seats')})`);
+    models.push(`${midiBrand} (${paxLabel})`);
+  }
+
+  // 5. Large GT Coaches / Pullman (42–94 pax)
+  const gtPax = [...paxSet].filter((p) => {
+    const n = parseInt(p.split(/[–-]/)[0], 10);
+    return n >= 42 && n <= 95;
+  });
+  if (/\b(tourismo|setra|irizar|neoplan|magelys|gran\s*turismo|pullman|autobus\s*gt|volvo\s*9700)\b/i.test(raw) || gtPax.length > 0) {
+    const paxLabel = gtPax.length > 0 ? `${gtPax.slice(0, 4).join(', ')} pax` : '50–56 pax';
+    const gtBrands = [];
+    if (/\bsetra\b/i.test(raw)) gtBrands.push('Setra');
+    if (/\btourismo\b/i.test(raw)) gtBrands.push('Mercedes Tourismo');
+    if (/\birizar\b/i.test(raw)) gtBrands.push('Irizar');
+    if (/\bneoplan\b/i.test(raw)) gtBrands.push('Neoplan');
+    if (/\bmagelys\b/i.test(raw)) gtBrands.push('Iveco Magelys');
+    const brandTitle = gtBrands.length > 0 ? `${gtBrands.join(' / ')} GT Coach` : 'Pullman Gran Turismo';
+    const isLuxCoach = /\b(pullman\s*di\s*lusso|pullman\s*lusso|gran\s*turismo\s*lusso|\bgtl\b|top\s*class)\b/i.test(raw);
+    const label = isLuxCoach ? `${brandTitle} Lusso` : brandTitle;
+    categories.push(`${label} (${paxLabel.replace('pax', 'seats')})`);
+    models.push(`${label} (${paxLabel})`);
+  }
+
+  const bus_models = models.join(', ');
+  const pax_capacity = paxSet.size > 0 ? `${[...paxSet].join(', ')} pax` : '';
+  const fleet_segment = inferBusSegment({ fleet_categories: categories, bus_models });
+
+  const has_explicit_luxury = hasExplicitLuxuryPage && (fleet_segment === 'luxury' || fleet_segment === 'both');
+
+  return {
+    fleet_categories: categories,
+    fleetCategories: categories,
+    bus_models,
+    busModels: bus_models,
+    pax_capacity,
+    paxCapacity: pax_capacity,
+    fleet_segment,
+    fleetSegment: fleet_segment,
+    has_explicit_luxury,
+    hasExplicitLuxury: has_explicit_luxury,
   };
 }
 

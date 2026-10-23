@@ -13,7 +13,8 @@ import {
   detectVehicleKey, 
   detectOperatorCityAndRegion, 
   STANDARD_FLEET_TYPES, 
-  SCOUT_CANDIDATE_POOL 
+  SCOUT_CANDIDATE_POOL,
+  shortFleetName 
 } from '../app/views/bus_partners.js';
 import { 
   addExcludedBusPartner, 
@@ -36,6 +37,10 @@ import {
   TERRITORY_PERMITS,
   CORPORATE_SLA,
   inferBusSegment,
+  classifySingleBusAllocation,
+  decodeCloudflareEmail,
+  extractEmailsFromWebsiteHtml,
+  extractFleetFromWebsiteText,
   canSendBusOutreach,
   nextBusSendSlot,
   buildBusOutreachDraft,
@@ -638,6 +643,110 @@ test('inferBusSegment: classifies Luxury VIP vs Standard GT vs Both directly fro
     fleet_categories: ['Mercedes-Benz V-Class VIP (7–8 seats)', 'Executive Midibus (24–30 seats)'],
   };
   assert.equal(inferBusSegment(bothAllocated), 'both');
+
+  // Zero-hallucination: Standard Minivan / Viano / Vito without Luxury/VIP/V-Class is 'standard'
+  assert.equal(classifySingleBusAllocation('Minivan NCC (7 pax)'), 'standard');
+  assert.equal(classifySingleBusAllocation('Mercedes Viano XL (7 pax)'), 'standard');
+  assert.equal(classifySingleBusAllocation('Mercedes Sprinter (16-20 pax)'), 'standard');
+  assert.equal(classifySingleBusAllocation('Mercedes Classe V VIP (7 pax)'), 'luxury');
+  assert.equal(classifySingleBusAllocation('Mercedes Sprinter Luxury (16 pax)'), 'luxury');
 });
+
+test('extractEmailsFromWebsiteHtml: extracts real website emails, decodes Cloudflare cfemail, and prioritizes domain/booking addresses', () => {
+  // Encode "info@i-vivaldi.com" with key 0x2a
+  const target = 'info@i-vivaldi.com';
+  const key = 0x2a;
+  const cfHex = key.toString(16).padStart(2, '0') +
+    Array.from(target).map(ch => (ch.charCodeAt(0) ^ key).toString(16).padStart(2, '0')).join('');
+
+  assert.equal(decodeCloudflareEmail(cfHex), 'info@i-vivaldi.com');
+
+  const html = `
+    <html>
+      <body>
+        <a href="/cdn-cgi/l/email-protection" data-cfemail="${cfHex}">Email Us</a>
+        <a href="mailto:berini@beriniautonoleggio.com?subject=Info">Scrivici</a>
+        <p>Per preventivi: roberto.pancheri.viaggi@gmail.com oppure info [at] rosa-autoservizi [dot] it</p>
+        <img src="banner@2x.png" />
+      </body>
+    </html>
+  `;
+
+  const extractedVivaldi = extractEmailsFromWebsiteHtml(html, 'https://www.i-vivaldi.com');
+  assert.equal(extractedVivaldi[0], 'info@i-vivaldi.com', 'Must decode Cloudflare email and rank domain match #1');
+  assert(extractedVivaldi.includes('berini@beriniautonoleggio.com'));
+  assert(extractedVivaldi.includes('roberto.pancheri.viaggi@gmail.com'));
+  assert(extractedVivaldi.includes('info@rosa-autoservizi.it'));
+  assert(!extractedVivaldi.some(e => e.includes('banner@2x.png')), 'Must ignore image filenames');
+});
+
+test('extractFleetFromWebsiteText: zero-hallucination fleet and passenger extractor distinguishes Standard vs explicit Luxury', () => {
+  // 1. Standard operator fleet page (no luxury/VIP claim)
+  const standardFleetText = `
+    La nostra flotta per noleggio con conducente:
+    - Minivan da 7 a 8 posti per trasferimenti aeroportuali
+    - Mercedes Sprinter minibus 19 - 20 posti
+    - Midibus Iveco 30 posti
+    - Autobus Gran Turismo da 54 posti e 64 posti
+  `;
+  const stdParsed = extractFleetFromWebsiteText(standardFleetText);
+  assert.equal(stdParsed.hasExplicitLuxury, false, 'Must NOT hallucinate luxury when page has no explicit luxury/VIP claims');
+  assert.equal(stdParsed.fleetSegment, 'standard');
+  assert(stdParsed.paxCapacity.includes('7-8') || stdParsed.paxCapacity.includes('7'));
+  assert(stdParsed.paxCapacity.includes('54'));
+
+  // 2. Explicit Luxury + Standard fleet page
+  const luxuryAndStdFleetText = `
+    Parco Mezzi:
+    - Mercedes Classe V Luxury Van 7 posti con sedili in pelle Nappa
+    - Mercedes Sprinter VIP 16 posti Total Black con tavolini
+    - Pullman Gran Turismo 54 posti
+  `;
+  const mixedParsed = extractFleetFromWebsiteText(luxuryAndStdFleetText);
+  assert.equal(mixedParsed.hasExplicitLuxury, true, 'Must detect explicit Luxury/VIP/Classe V claims');
+  assert.equal(mixedParsed.fleetSegment, 'both', 'Operator with both V-Class/Sprinter VIP and 54-pax GT Coach is classified as both');
+  assert(mixedParsed.fleetCategories.some(c => (c.includes('V-Class') || c.includes('Classe V')) && c.includes('7')));
+  assert(mixedParsed.fleetCategories.some(c => c.includes('Sprinter VIP') && c.includes('16')));
+  assert(mixedParsed.fleetCategories.some(c => c.includes('54')));
+});
+
+test('Smart Personalization from user notes: AI incorporates specific fleet comments and questions into CEO outreach', () => {
+  // 1. Partner with specific note about 19 seats
+  const partner19p = {
+    name: 'Vivaldi Driver',
+    base_city: 'Como',
+    notes: '- do they have only 19 seats or other\n- prices',
+    fleet_categories: ['Mercedes-Benz V-Class VIP (7 seats)', 'Mercedes Sprinter VIP (19 seats)']
+  };
+  const draft19p = buildBusOutreachDraft(partner19p, 'T1_intro');
+  assert(draft19p.body.includes('19 posti') || draft19p.body.includes('Sprinter'), 'Must personalize with the 19 seats question from user notes');
+  assert(draft19p.body.includes('Grazie e buon lavoro,\nDmitri Traciuc'), 'Must end with clean CEO sign-off');
+  assert(!draft19p.body.includes('dmitri@dorogo.eu | WhatsApp:'), 'Must NOT hardcode phone/email footer directly in body text');
+
+  // 2. Partner with specific note about minibus extra-long & 20/26 seaters
+  const partnerBerini = {
+    name: 'Berini Autonoleggio',
+    base_city: 'Como',
+    notes: '- I am interested in his minibus, minibus extra-long, bus 20 seater, bus 26 seater\n- their prices for stand-by and hourly?',
+    fleet_categories: ['Minibus Extralong (8 seats)', 'Bus (20 seats)', 'Bus (26 seats)']
+  };
+  const draftBerini = buildBusOutreachDraft(partnerBerini, 'T1_intro');
+  assert(draftBerini.body.includes('extra-long') || draftBerini.body.includes('20/26 posti'), 'Must personalize with user notes about extra-long and 20/26 seaters');
+
+  // 3. Follow-up asks for transfer cost, per-km rates, and minimum order (after direct contact info)
+  const followUp = buildBusOutreachDraft(partnerBerini, 'T2_followup');
+  assert(followUp.body.includes('transfer') || followUp.body.includes('Malpensa'), 'Follow-up must ask for point-to-point transfer rates');
+  assert(followUp.body.includes('costo a km') || followUp.body.includes('minimo d\'ordine'), 'Follow-up must ask for per-km rates and minimum order');
+});
+
+test('shortFleetName: pairs model and passenger capacity in one compact tag for non-repetitive table display', () => {
+  assert.equal(shortFleetName('Mercedes-Benz V-Class Luxury Minivan (7 pax)'), 'V-Class VIP (7p)');
+  assert.equal(shortFleetName('Mercedes-Benz Sprinter VIP (16 seats)'), 'Sprinter VIP (16p)');
+  assert.equal(shortFleetName('Mercedes-Benz Sprinter Luxury Long (16 seats)'), 'Sprinter Lux (16p)');
+  assert.equal(shortFleetName('Iveco Wing Midibus (28 posti)'), 'Iveco Wing (28p)');
+  assert.equal(shortFleetName('Setra S515 HD GT Coach (54 pax)'), 'Setra (54p)');
+});
+
+
 
 

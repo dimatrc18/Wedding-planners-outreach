@@ -261,7 +261,8 @@ function hydratePartnerCardLocal(p) {
   const rate_hourly = p.rate_hourly ?? card.rate_hourly ?? (isMoveolux ? '€120/h' : '');
   const rate_standby = p.rate_standby ?? card.rate_standby ?? (isMoveolux ? '€550 (4h disp.) · €1,050 (8h disp.)' : '');
   const whatsapp = p.whatsapp ?? card.whatsapp ?? p.phone ?? '';
-  const email_status = p.email_status || card.email_status || (p.notes && /Checked email:|Verified/i.test(p.notes) ? 'verified' : (p.email ? 'mx_ok' : 'unknown'));
+  const client_notes = p.client_notes || card.client_notes || '';
+  const email_status = p.email_status || card.email_status || (p.email ? 'mx_ok' : 'unknown');
   const outreach_stage = p.outreach_stage || card.outreach_stage || (
     p.status === 'APPROVED_PARTNER' ? 'partner_won' :
     (rate_hourly || rate_standby || p.replied_at || card.replied_at) ? 'replied' :
@@ -278,6 +279,7 @@ function hydratePartnerCardLocal(p) {
     rate_hourly,
     rate_standby,
     whatsapp,
+    client_notes,
     email_status,
     outreach_stage,
     replied_at: p.replied_at || card.replied_at || (isMoveolux ? '2026-10-20T10:00:00Z' : null),
@@ -293,6 +295,7 @@ function hydratePartnerCardLocal(p) {
     rate_hourly,
     rate_standby,
     whatsapp,
+    client_notes,
     email_status,
     outreach_stage,
     replied_at: nextCard.replied_at,
@@ -419,23 +422,35 @@ export const STANDARD_FLEET_TYPES = [
 
 export function shortFleetName(str) {
   if (!str) return '';
-  if (/limobus/i.test(str)) return 'Limobus (18–28 pax)';
-  if (/sprinter.*vip.*lounge/i.test(str)) return 'Sprinter VIP (8–16 pax)';
-  if (/sprinter.*vip/i.test(str)) return 'Sprinter VIP (8–16 pax)';
-  if (/sprinter.*exec/i.test(str)) return 'Sprinter Exec (16–19 pax)';
-  if (/sprinter.*lux/i.test(str)) return 'Sprinter Lux (16–20 pax)';
-  if (/sprinter.*minibus|sprinter/i.test(str)) return 'Sprinter (16–20 pax)';
-  if (/midi/i.test(str)) return 'Midibus (24–30 pax)';
-  if (/setra.*vip/i.test(str)) return 'Setra VIP (28–36 pax)';
-  if (/setra.*topclass/i.test(str)) return 'Setra TopClass (30–54 pax)';
-  if (/tourismo.*black/i.test(str)) return 'Tourismo Black (30–52 pax)';
-  if (/tourismo/i.test(str)) return 'Tourismo GT (30–53 pax)';
-  if (/v-?class/i.test(str)) return 'V-Class VIP (7–8 pax)';
-  if (/coach.*36.*56/i.test(str)) return 'GT Coach (36–56 pax)';
-  if (/coach|pullman/i.test(str)) return 'GT Coach (50–56 pax)';
-  const match = STANDARD_FLEET_TYPES.find((f) => f.label.toLowerCase() === str.toLowerCase() || f.short.toLowerCase() === str.toLowerCase());
+  const s = String(str).trim();
+  const paxMatch = s.match(/\(?\b(\d{1,2}(?:\s*[-–/]\s*\d{1,2})?)\s*(?:pax|posti|passeggeri|seats|persone|s)\b\)?/i) ||
+                   s.match(/\((\d{1,2}\s*[-–/]\s*\d{1,2})\)/);
+  const paxSuffix = paxMatch ? ` (${paxMatch[1].replace(/\s+/g, '').replace(/-/g, '–')}p)` : '';
+
+  if (/limobus/i.test(s)) return `Limobus${paxSuffix || ' (18–28p)'}`;
+  if (/sprinter.*vip.*lounge/i.test(s)) return `Sprinter VIP Lounge${paxSuffix || ' (8–16p)'}`;
+  if (/sprinter.*vip/i.test(s)) return `Sprinter VIP${paxSuffix || ' (8–16p)'}`;
+  if (/sprinter.*(exec|519|tomassini)/i.test(s)) return `Sprinter Exec${paxSuffix || ' (16–19p)'}`;
+  if (/sprinter.*lux/i.test(s)) return `Sprinter Lux${paxSuffix || ' (16–20p)'}`;
+  if (/sprinter/i.test(s)) return `Sprinter${paxSuffix || ' (16–20p)'}`;
+  if (/v-?class|classe\s*v/i.test(s)) return `V-Class VIP${paxSuffix || ' (7–8p)'}`;
+  if (/viano|vito/i.test(s)) return `Viano/Vito${paxSuffix || ' (7–8p)'}`;
+  if (/minivan/i.test(s)) return `Minivan${paxSuffix || ' (7–8p)'}`;
+  if (/wing|mago|tourengo|smile|calipso|temsa|midibus|midi/i.test(s)) {
+    const brand = /wing/i.test(s) ? 'Iveco Wing' : /mago/i.test(s) ? 'Iveco Mago' : /tourengo/i.test(s) ? 'Tourengo' : /temsa/i.test(s) ? 'Temsa' : 'Midibus';
+    return `${brand}${paxSuffix || ' (24–30p)'}`;
+  }
+  if (/setra.*topclass/i.test(s)) return `Setra TopClass${paxSuffix || ' (30–54p)'}`;
+  if (/setra.*vip/i.test(s)) return `Setra VIP${paxSuffix || ' (28–36p)'}`;
+  if (/setra/i.test(s)) return `Setra${paxSuffix || ' (50–54p)'}`;
+  if (/tourismo.*black/i.test(s)) return `Tourismo Black${paxSuffix || ' (50–54p)'}`;
+  if (/tourismo/i.test(s)) return `Tourismo${paxSuffix || ' (50–54p)'}`;
+  if (/irizar/i.test(s)) return `Irizar${paxSuffix || ' (52–56p)'}`;
+  if (/neoplan/i.test(s)) return `Neoplan${paxSuffix || ' (52–56p)'}`;
+  if (/coach|pullman/i.test(s)) return `GT Coach${paxSuffix || ' (50–56p)'}`;
+  const match = STANDARD_FLEET_TYPES.find((f) => f.label.toLowerCase() === s.toLowerCase() || f.short.toLowerCase() === s.toLowerCase());
   if (match) return match.short;
-  return str.length > 24 ? str.slice(0, 22) + '…' : str;
+  return s.length > 22 ? s.slice(0, 20) + '…' : s;
 }
 
 export function detectVehicleKey(str) {
@@ -559,99 +574,151 @@ export const SCOUT_CANDIDATE_POOL = [
     name: 'Landway Tourism',
     base_city: 'Como',
     website: 'https://www.landwaytourism.com',
-    fleet_url: 'https://www.landwaytourism.com/',
+    fleet_url: 'https://www.landwaytourism.com/flotta/',
     phone: '+39 031 513 189',
     email: 'info@landwaytourism.com',
     relevance_score: 93,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 23, territory_permits: 20, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
     status: 'TO_REVIEW',
-    fleet_categories: ['Mercedes Sprinter VIP (8–16 seats)', 'Executive Midibus (24–30 seats)'],
-    notes: 'Grandate / Como luxury coach and minibus operator. Unbranded Sprinter & midibus fleet for Lake Como villas.'
+    fleet_segment: 'standard',
+    bus_models: 'Minivan NCC (7 pax), Mercedes Sprinter Minibus (19–20 pax), Iveco Midibus (29–30 pax), Mercedes Tourismo / Setra / Neoplan GT (51–57 pax)',
+    pax_capacity: '7, 19–20, 29–30, 51–57 pax',
+    fleet_categories: [
+      'Minivan NCC (7 seats)',
+      'Mercedes-Benz Sprinter Minibus (19–20 seats)',
+      'Iveco Executive Midibus (29–30 seats)',
+      'Mercedes Tourismo / Setra / Neoplan GT Coach (51–57 seats)'
+    ],
+    notes: 'Grandate / Como coach and minibus operator. Verified on /flotta/: Minivan (7p), Sprinter (20p), Iveco Midibus (30p), and Tourismo/Setra/Neoplan GT (51–57p).'
   },
   {
     name: 'Berini Autonoleggio & Minibus',
     base_city: 'Como',
     website: 'https://www.beriniautonoleggio.com',
-    fleet_url: 'https://www.beriniautonoleggio.com/flotta',
+    fleet_url: 'https://www.beriniautonoleggio.com/vip-services/',
     phone: '+39 031 976 430',
-    email: 'info@beriniautonoleggio.com',
+    email: 'berini@beriniautonoleggio.com',
     relevance_score: 92,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 22, territory_permits: 20, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
     status: 'TO_REVIEW',
-    fleet_categories: ['Mercedes-Benz V-Class VIP (7–8 seats)', 'Executive Midibus (24–30 seats)', 'Mercedes Sprinter VIP (8–16 seats)'],
-    notes: 'Based in Guanzate/Como. Historic carrier with luxury 26-seater midibuses and black V-Classes for Villa d’Este.'
+    fleet_segment: 'both',
+    bus_models: 'Mercedes Van Classe V VIP (8 pax), Minibus Extralong Luxury (8 pax), Minibus (20 pax), Midibus (26 pax)',
+    pax_capacity: '8, 20, 26 pax',
+    fleet_categories: [
+      'Mercedes-Benz V-Class VIP Van (8 seats)',
+      'Mercedes Minibus & Extralong Luxury (8 seats)',
+      'Executive Minibus (20 seats)',
+      'Executive Midibus (26 seats)'
+    ],
+    notes: 'Based in Guanzate/Como. Verified on site (berini@beriniautonoleggio.com): Van Classe V (8p), Minibus & Extralong (8p), Bus (20p), Bus (26p) + VIP Services.'
   },
   {
     name: 'Vivaldi Driver Bellagio',
     base_city: 'Como',
-    website: 'https://www.i-vivaldi.com',
-    fleet_url: 'https://www.i-vivaldi.com/fleet',
-    phone: '+39 031 951 120',
-    email: 'booking@i-vivaldi.com',
+    website: 'https://i-vivaldi.com',
+    fleet_url: 'https://i-vivaldi.com/parco-auto/',
+    phone: '+39 347 373 5465',
+    whatsapp: '+39 347 373 5465',
+    email: 'info@i-vivaldi.com',
     relevance_score: 94,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 24, territory_permits: 20, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
     status: 'TO_REVIEW',
-    fleet_categories: ['Mercedes-Benz V-Class VIP (7–8 seats)', 'Mercedes Sprinter VIP (8–16 seats)'],
-    notes: 'Bellagio-based VIP fleet. Suited chauffeurs, villa permits, total-black privacy glass.'
+    fleet_segment: 'luxury',
+    bus_models: 'Mercedes-Benz Classe V VIP (7 pax), Mercedes-Benz Sprinter VIP (8 pax), Mercedes-Benz Sprinter Nero VIP + Hostess (19 pax)',
+    pax_capacity: '7, 8, 19 pax',
+    fleet_categories: [
+      'Mercedes-Benz V-Class VIP (7 seats)',
+      'Mercedes-Benz Sprinter VIP (8 seats)',
+      'Mercedes-Benz Sprinter Nero VIP w/ Hostess (19 seats)'
+    ],
+    notes: 'Verified on i-vivaldi.com/parco-auto & /noleggio-minibus-milano: info@i-vivaldi.com, WA +39 347 373 5465. Fleet: Classe V VIP (7p), Sprinter VIP (8p), Sprinter Nero w/ hostess (19p).'
   },
   {
     name: 'Como Driver Services',
     base_city: 'Como',
     website: 'https://www.comodriver.com',
-    fleet_url: 'https://www.comodriver.com/',
+    fleet_url: 'https://www.comodriver.com/autovetture/',
     phone: '+39 347 184 8920',
     email: 'info@comodriver.com',
     relevance_score: 91,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 21, territory_permits: 20, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / NCC Black',
     status: 'TO_REVIEW',
-    fleet_categories: ['Mercedes Sprinter VIP (8–16 seats)', 'Executive Midibus (24–30 seats)'],
-    notes: 'Dedicated Lake Como private chauffeur & luxury Mercedes Sprinter/V-Class operator covering Bellagio, Cernobbio, and Villa d’Este.'
+    fleet_segment: 'both',
+    bus_models: 'Mercedes-Benz Classe V Luxury Minivan (7 pax), Mercedes-Benz Sprinter Minibus (12 pax), Ford Transit Minibus (16 pax)',
+    pax_capacity: '7, 12, 16 pax',
+    fleet_categories: [
+      'Mercedes-Benz Classe V Luxury Minivan (7 seats)',
+      'Mercedes-Benz Sprinter Minibus (12 seats)',
+      'Ford Transit Minibus (16 seats)'
+    ],
+    notes: 'Dedicated Lake Como private chauffeur & minibus operator. Verified on /autovetture/: Classe V Luxury Minivan (7p), Mercedes Sprinter (12p), Ford Transit (16p).'
   },
   {
     name: 'Travel & Service Como',
     base_city: 'Como',
     website: 'https://www.travelandservice.it',
-    fleet_url: 'https://www.travelandservice.it/',
+    fleet_url: 'https://www.travelandservice.it/flotta',
     phone: '+39 035 017 2012',
     email: 'info@travelandservice.it',
     relevance_score: 88,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 20, territory_permits: 18, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
     status: 'TO_REVIEW',
-    fleet_categories: ['Mercedes-Benz V-Class VIP (7–8 seats)', 'Mercedes Sprinter Luxury (16–20 seats)'],
-    notes: 'Lombardy & Lake Como executive bus and VIP minibus charter specialist for weddings and corporate delegations.'
+    fleet_segment: 'standard',
+    bus_models: 'Minivan NCC (5–8 pax), Minibus (14–20 pax), Midibus (31 pax), Pullman GT (50–54, 55–56, 57–64 pax), Double-Decker Pullman (90–94 pax)',
+    pax_capacity: '5–8, 14–20, 31, 50–54, 55–56, 57–64, 90–94 pax',
+    fleet_categories: [
+      'Minivan NCC (5–8 seats)',
+      'Minibus (14–20 seats)',
+      'Midibus (up to 31 seats)',
+      'Pullman GT Coaches (50–54, 55–56, 57–64 seats)',
+      'Double-Decker Coaches (90–94 seats)'
+    ],
+    notes: 'Lombardy & Lake Como bus and minibus charter specialist. Verified on /flotta: Minivan (5–8p), Minibus (14–20p), Midibus (31p), Pullman GT (50–64p & 90–94p).'
   },
   {
     name: 'Como Limo Lux',
     base_city: 'Como',
     website: 'https://comolimolux.com',
-    fleet_url: 'https://comolimolux.com/',
+    fleet_url: 'https://comolimolux.com/tour-privati-minivan-lago-di-como/',
     phone: '+39 031 264 780',
     email: 'info@comolimolux.com',
     relevance_score: 93,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 23, territory_permits: 20, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
     status: 'TO_REVIEW',
-    fleet_categories: ['Mercedes Sprinter VIP (8–16 seats)', 'Limobus VIP Lounge (18–28 seats)'],
-    notes: 'Bespoke Lake Como luxury ground transport. Total-black Mercedes V-Class and VIP Sprinter fleet.'
+    fleet_segment: 'luxury',
+    bus_models: 'Mercedes-Benz V-Class Luxury Minivan (7 pax, face-to-face leather)',
+    pax_capacity: '7 pax',
+    fleet_categories: ['Mercedes-Benz V-Class Luxury Minivan (7 seats)'],
+    notes: 'Bespoke Lake Como luxury ground transport operated by Stefano Carnevale. Dedicated Mercedes-Benz V-Class Luxury Minivan (up to 7 pax).'
   },
   {
-    name: 'Lariobus NCC',
+    name: 'Lariobus',
     base_city: 'Lecco',
     website: 'https://www.lariobus.com',
-    fleet_url: 'https://www.lariobus.com/flotta',
+    fleet_url: 'https://www.lariobus.com/automezzi/',
     phone: '+39 0341 821 445',
     email: 'info@lariobus.com',
     relevance_score: 86,
     score_breakdown: { discretion_unbranded: 25, fleet_luxury: 23, territory_permits: 20, corporate_sla: 18 },
     unbranded_status: 'Unbranded on Request',
     status: 'TO_REVIEW',
-    fleet_categories: ['Executive Midibus (24–30 seats)', 'Setra & Mercedes GT Coach (50–56 seats)'],
-    notes: 'Lecco and eastern lake branch. Midibuses under 10m specialized in mountainous roads and villa gates.'
+    fleet_segment: 'standard',
+    bus_models: 'Mercedes Viano/Vito (7–8 pax), Ford Transit (13 pax), Mercedes Sprinter IBIS 2 (20 pax), Iveco Smile 3 (30 pax), Iveco Calipso (36 pax), Temsa MD9 (40 pax), Volvo 9700 (54 pax), Mercedes Tourismo (54–56 pax), Irizar i6 (56 pax)',
+    pax_capacity: '7–8, 13, 20, 30, 36, 40, 54, 56 pax',
+    fleet_categories: [
+      'Mercedes-Benz Viano / Vito Minivan (7–8 seats)',
+      'Ford Transit Bus (13 seats) & Mercedes Sprinter IBIS 2 (20 seats)',
+      'Irisbus Iveco Smile 3 Midibus (30 seats)',
+      'Iveco Calipso (36 seats) & Temsa MD9 (40 seats)',
+      'Mercedes Tourismo / Volvo 9700 / Irizar i6 GT Coaches (54–56 seats)'
+    ],
+    notes: 'Lecco and eastern lake branch. Verified on /automezzi/: Viano/Vito (7–8p), Transit (13p), Sprinter IBIS 2 (20p), Smile 3 (30p), Calipso (36p), Temsa MD9 (40p), Tourismo/Volvo/Irizar (54–56p).'
   },
 
   // --- Milan Metropolitan & Malpensa ---
@@ -659,71 +726,107 @@ export const SCOUT_CANDIDATE_POOL = [
     name: 'Avantgarde Limousine Service',
     base_city: 'Milano',
     website: 'https://www.avantgardelimousineservice.it',
-    fleet_url: 'https://www.avantgardelimousineservice.it/flotta',
-    phone: '+39 02 8905 4410',
-    email: 'booking@avantgardelimousineservice.it',
+    fleet_url: 'https://www.avantgardelimousineservice.it/mezzi/',
+    phone: '+39 333 269 7376',
+    whatsapp: '+39 333 269 7376',
+    email: 'info@milanocab.it',
     relevance_score: 91,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 22, territory_permits: 19, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
     status: 'TO_REVIEW',
-    fleet_categories: ['Mercedes Sprinter VIP (8–16 seats)', 'Mercedes-Benz V-Class VIP (7–8 seats)'],
-    notes: 'High-end Milan and Lake Como corporate and wedding transfer mobility. Monochromatic total-black fleet.'
+    fleet_segment: 'luxury',
+    bus_models: 'Mercedes Classe V / Viano (7–8 pax), Mercedes Sprinter VIP Total Black (8 & 16 pax), Mercedes Minibus VIP Class (18 pax), Minibus (25 pax)',
+    pax_capacity: '7–8, 8, 16, 18, 25 pax',
+    fleet_categories: [
+      'Mercedes-Benz V-Class / Viano Luxury (7–8 seats)',
+      'Mercedes-Benz Sprinter VIP / Total Black (8 & 16 seats)',
+      'Mercedes Minibus VIP Class (18 seats)',
+      'Executive Minibus (25 seats)'
+    ],
+    notes: 'Verified on avantgardelimousineservice.it/mezzi (info@milanocab.it, WA +39 333 269 7376): V-Class/Viano (7–8p), Sprinter VIP Total Black (8 & 16p), Minibus VIP Class (18p), Bus (25p).'
   },
   {
     name: 'Exclusive Cars Milano',
     base_city: 'Milano',
     website: 'https://exclusivecarsmilano.it',
-    fleet_url: 'https://exclusivecarsmilano.it/',
+    fleet_url: 'https://exclusivecarsmilano.it/noleggio-autobus/',
     phone: '+39 02 4070 8295',
     email: 'info@exclusivecarsmilano.it',
     relevance_score: 92,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 24, territory_permits: 18, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
     status: 'TO_REVIEW',
-    fleet_categories: ['Mercedes Sprinter VIP (8–16 seats)', 'Limobus VIP Lounge (18–28 seats)'],
-    notes: 'Premier Milan NCC operator with luxury Mercedes-Benz Sprinter VIP (8–19 seats) and V-Class fleet.'
+    fleet_segment: 'both',
+    bus_models: 'Mercedes V-Class 250 d Luxury (7–8 pax), Mercedes Sprinter Minibus (20 pax), Irizar GT Coach (52 pax)',
+    pax_capacity: '7–8, 20, 52 pax',
+    fleet_categories: [
+      'Mercedes-Benz V-Class 250 d Luxury Van (7–8 seats)',
+      'Mercedes-Benz Sprinter Minibus (20 seats)',
+      'Irizar GT Coach (52 seats)'
+    ],
+    notes: 'Verified on exclusivecarsmilano.it/noleggio-autobus (info@exclusivecarsmilano.it / info@ecmtour.it): V-Class 250 d Luxury (7–8p), Mercedes Sprinter (20p), and Irizar Coach (52p).'
   },
   {
     name: 'Prestige Car Limousine',
     base_city: 'Milano',
     website: 'https://www.prestigecarlimousine.it',
-    fleet_url: 'https://www.prestigecarlimousine.it/',
+    fleet_url: 'https://www.prestigecarlimousine.it/car/car-service-milan-luxury-minibus/',
     phone: '+39 02 8951 6813',
     email: 'info@prestigecarlimousine.it',
     relevance_score: 90,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 23, territory_permits: 17, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / NCC Black',
     status: 'TO_REVIEW',
-    fleet_categories: ['Limobus VIP Lounge (18–28 seats)', 'Mercedes Sprinter VIP (8–16 seats)'],
-    notes: 'Milan luxury roadshow and event transport. 8 to 16-seater luxury Mercedes minibuses and suited English-speaking chauffeurs.'
+    fleet_segment: 'luxury',
+    bus_models: 'Mercedes-Benz V-Class Luxury Van (7 pax, conference leather), Mercedes-Benz Sprinter Luxury Minibus (8 pax & 16 pax, reclining leather & tables)',
+    pax_capacity: '7, 8, 16 pax',
+    fleet_categories: [
+      'Mercedes-Benz V-Class Luxury Van (7 seats)',
+      'Mercedes-Benz Sprinter Luxury Minibus (8 & 16 seats)'
+    ],
+    notes: 'Milan luxury roadshow and event transport. Verified on site: V-Class Luxury Van (7p) and Mercedes Sprinter Luxury Minibus (8p & 16p with leather recliners & tables).'
   },
   {
     name: 'Car Service Milan',
     base_city: 'Milano',
     website: 'https://carservicemilan.com',
-    fleet_url: 'https://carservicemilan.com/',
+    fleet_url: 'https://carservicemilan.com/fleet/',
     phone: '+39 02 8719 9508',
     email: 'info@carservicemilan.com',
     relevance_score: 87,
     score_breakdown: { discretion_unbranded: 35, fleet_luxury: 20, territory_permits: 17, corporate_sla: 15 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
     status: 'TO_REVIEW',
-    fleet_categories: ['Mercedes-Benz V-Class VIP (7–8 seats)', 'Mercedes Sprinter Luxury (16–20 seats)'],
-    notes: 'Milan & Malpensa executive vans and 14–20 seater luxury Mercedes Sprinters. Strict unbranded policy.'
+    fleet_segment: 'luxury',
+    bus_models: 'Mercedes-Benz Classe V Luxury Van (7 pax), Mercedes-Benz Sprinter Luxury Minibus (8–16 pax, reclining leather seats & tinted windows)',
+    pax_capacity: '7, 8–16 pax',
+    fleet_categories: [
+      'Mercedes-Benz V-Class Luxury Van (7 seats)',
+      'Mercedes-Benz Sprinter Luxury Minibus (8–16 seats)'
+    ],
+    notes: 'Milan & Malpensa executive vans and luxury Mercedes Sprinters. Verified on /fleet/: Classe V Luxury (7p) & Sprinter Luxury w/ leather recliners & tinted windows (8–16p).'
   },
   {
     name: 'Autonoleggio Carnelli',
     base_city: 'Milano',
     website: 'https://www.autonoleggiocarnelli.it',
-    fleet_url: 'https://www.autonoleggiocarnelli.it/flotta',
+    fleet_url: 'https://www.autonoleggiocarnelli.it/i-nostri-mezzi/',
     phone: '+39 02 9678 9012',
-    email: 'noleggio@autonoleggiocarnelli.it',
+    email: 'info@autonoleggiocarnelli.it',
     relevance_score: 85,
     score_breakdown: { discretion_unbranded: 25, fleet_luxury: 22, territory_permits: 20, corporate_sla: 18 },
     unbranded_status: 'Unbranded on Request',
     status: 'TO_REVIEW',
-    fleet_categories: ['Executive Midibus (24–30 seats)', 'Setra & Mercedes GT Coach (50–56 seats)'],
-    notes: 'Strategic depot in Uboldo between Milan and Malpensa. Executive coaches and midibuses with Wi-Fi and leather seats.'
+    fleet_segment: 'standard',
+    bus_models: 'Minivan Mercedes (8 pax), Mercedes Sprinter (16–20 pax), Temsa MD-7 (32 pax), King Long (36 pax), Neoplan Tourliner (52 pax), Iveco Magelys Pro (53 & 56 pax)',
+    pax_capacity: '8, 16–20, 32, 36, 52, 53, 56 pax',
+    fleet_categories: [
+      'Mercedes Minivan (8 seats)',
+      'Mercedes-Benz Sprinter Minibus (16–20 seats)',
+      'Temsa MD-7 Midibus (32 seats) & King Long (36 seats)',
+      'Neoplan Tourliner (52 seats) & Iveco Magelys Pro GT (53–56 seats)'
+    ],
+    notes: 'Strategic depot in Uboldo between Milan and Malpensa. Verified on /i-nostri-mezzi/ (info@autonoleggiocarnelli.it): Minivan (8p), Sprinter (20p), Temsa (32p), King Long (36p), Neoplan (52p), Magelys Pro (53 & 56p).'
   },
   {
     name: 'Zani Viaggi Executive',
@@ -759,29 +862,45 @@ export const SCOUT_CANDIDATE_POOL = [
     name: 'Caprioli Viaggi VIP Minibus',
     base_city: 'Brescia',
     website: 'https://www.caprioliviaggi.it',
-    fleet_url: 'https://www.caprioliviaggi.it/flotta',
+    fleet_url: 'https://www.caprioliviaggi.it/mezzi/',
     phone: '+39 030 969 511',
     email: 'info@caprioliviaggi.it',
     relevance_score: 88,
     score_breakdown: { discretion_unbranded: 30, fleet_luxury: 23, territory_permits: 18, corporate_sla: 17 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
     status: 'TO_REVIEW',
-    fleet_categories: ['Mercedes Sprinter VIP (8–16 seats)', 'Setra & Mercedes GT Coach (50–56 seats)'],
-    notes: 'Brescia and Lake Garda luxury fleet. Modern Mercedes Sprinter VIP configurations with leather recliners and dark privacy glass.'
+    fleet_segment: 'both',
+    bus_models: 'Mercedes Classe V Exclusive (7 pax), Mercedes Sprinter (8 & 16–20 pax), Minibus (25 pax), Setra GT (30, 42, 54 pax), Irizar i8 Pullman GTL Lusso (60 pax)',
+    pax_capacity: '7, 8, 16–20, 25, 30, 42, 54, 60 pax',
+    fleet_categories: [
+      'Mercedes-Benz Classe V Exclusive Leather (7 seats)',
+      'Mercedes-Benz Sprinter Minibus (8 & 16–20 seats)',
+      'Minibus (25 seats)',
+      'Setra GT Coaches (30, 42, 54 seats)',
+      'Irizar i8 Pullman Gran Turismo Lusso GTL (60 seats)'
+    ],
+    notes: 'Verified on caprioliviaggi.it/mezzi (info@caprioliviaggi.it): Classe V Exclusive Lugano leather (7p), Sprinter (8 & 16–20p), Minibus (25p), Setra (30, 42, 54p), Irizar i8 GTL Lusso (60p).'
   },
   {
     name: 'Pancheri NCC & Minibus',
     base_city: 'Brescia',
     website: 'https://www.bresciatransfer.it',
-    fleet_url: 'https://www.bresciatransfer.it/flotta',
-    phone: '+39 030 375 2210',
-    email: 'booking@bresciatransfer.it',
+    fleet_url: 'https://www.bresciatransfer.it/flotta/',
+    phone: '+39 030 660 200',
+    email: 'roberto.pancheri.viaggi@gmail.com',
     relevance_score: 86,
     score_breakdown: { discretion_unbranded: 30, fleet_luxury: 22, territory_permits: 17, corporate_sla: 17 },
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
     status: 'TO_REVIEW',
-    fleet_categories: ['Mercedes-Benz V-Class VIP (7–8 seats)', 'Mercedes Sprinter VIP (8–16 seats)'],
-    notes: 'Franciacorta wine country and Brescia luxury transfers. All-black vehicles with 24/7 central flight dispatch.'
+    fleet_segment: 'standard',
+    bus_models: 'Mercedes Viano Extra Long (7 pax), Mercedes Sprinter Minibus (8 pax), 2x Iveco Daily Minibus (20 pax)',
+    pax_capacity: '7, 8, 20 pax',
+    fleet_categories: [
+      'Mercedes Viano Extra Long (7 seats)',
+      'Mercedes Sprinter Minibus (8 seats)',
+      'Iveco Daily Minibus (20 seats)'
+    ],
+    notes: 'Verified on bresciatransfer.it/flotta (roberto.pancheri.viaggi@gmail.com): Mercedes Viano XL (7p), Mercedes Sprinter (8p), and 2x Iveco Daily Minibus (20p).'
   },
   {
     name: 'Ilton Autonoleggi',
@@ -1223,7 +1342,54 @@ export async function findAndVerifyPartnerEmail(partnerId, btnEl = null, onDone 
       sourceNote = 'Upgraded to verified live operator (MX OK)';
     }
 
-    // 2. Match against 100% live-verified candidate pool & seed registry
+    // 2. Live Website, Contact Page & Fleet Page Crawl via Jina Reader (Ground-Truth First!)
+    let extractedFleet = null;
+    const targetUrl = foundWebsite || p.website;
+    if (targetUrl && targetUrl.includes('.') && !targetUrl.toLowerCase().includes('cant be reached')) {
+      try {
+        const cleanBase = (targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`).replace(/\/$/, '');
+        const endpoints = [
+          cleanBase,
+          `${cleanBase}/contatti`,
+          `${cleanBase}/contact`,
+          `${cleanBase}/flotta`,
+          `${cleanBase}/mezzi`,
+          `${cleanBase}/parco-mezzi`,
+          `${cleanBase}/parco-auto`,
+          `${cleanBase}/la-flotta`,
+          `${cleanBase}/i-nostri-mezzi`,
+        ];
+        const crawledBodies = [];
+        for (const pg of endpoints) {
+          try {
+            const resp = await fetch(`https://r.jina.ai/${pg}`, { signal: AbortSignal.timeout(4500) });
+            if (resp.ok) {
+              const body = await resp.text();
+              if (isJinaReachablePage(body)) {
+                siteReachable = true;
+                foundWebsite = cleanBase;
+                crawledBodies.push(body);
+                const emails = core.extractEmailsFromWebsiteHtml(body, pDomain);
+                if (emails.length > 0 && !foundEmail) {
+                  foundEmail = emails[0];
+                  sourceNote = `Live website (${pg.split('/').slice(-1)[0] || 'home'})`;
+                }
+                // Stop early once we have both an email and at least one fleet/subpage body
+                if (foundEmail && crawledBodies.length >= 2) break;
+              }
+            }
+          } catch (_) {}
+        }
+        if (crawledBodies.length > 0) {
+          const parsedFleet = core.extractFleetFromWebsiteText(crawledBodies.join('\n'));
+          if (parsedFleet.fleet_categories.length > 0) {
+            extractedFleet = parsedFleet;
+          }
+        }
+      } catch (_) {}
+    }
+
+    // 3. Fallback to verified candidate pool & seed registry only if live crawl was blocked or found no email
     if (!foundEmail) {
       const candidateMatch = SCOUT_CANDIDATE_POOL.find((c) => {
         const cNorm = normalizeName(c.name);
@@ -1244,35 +1410,15 @@ export async function findAndVerifyPartnerEmail(partnerId, btnEl = null, onDone 
         siteReachable = true;
         emailStatus = 'verified';
         sourceNote = 'Verified live registry + MX OK';
-      }
-    }
-
-    // 3. Live Reachability & Contact Page Crawl via Jina Reader
-    const targetUrl = foundWebsite || p.website;
-    if (!siteReachable && targetUrl && targetUrl.includes('.') && !targetUrl.toLowerCase().includes('cant be reached')) {
-      try {
-        const cleanBase = targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`;
-        const endpoints = [cleanBase, `${cleanBase.replace(/\/$/, '')}/contatti`, `${cleanBase.replace(/\/$/, '')}/contact`];
-        for (const pg of endpoints) {
-          try {
-            const resp = await fetch(`https://r.jina.ai/${pg}`, { signal: AbortSignal.timeout(4500) });
-            if (resp.ok) {
-              const body = await resp.text();
-              if (isJinaReachablePage(body)) {
-                siteReachable = true;
-                foundWebsite = cleanBase;
-                const emails = extractValidEmails(body);
-                if (emails.length > 0) {
-                  const bookingEmail = emails.find((e) => /booking|info|prenotazioni|commerciale|noleggio|limo|preventivi/i.test(e));
-                  foundEmail = bookingEmail || emails[0];
-                  sourceNote = `Live website (${pg.split('/').slice(-1)[0] || 'home'})`;
-                  break;
-                }
-              }
-            }
-          } catch (_) {}
+        if (!extractedFleet && Array.isArray(candidateMatch.fleet_categories) && candidateMatch.fleet_categories.length) {
+          extractedFleet = {
+            fleet_categories: candidateMatch.fleet_categories,
+            bus_models: candidateMatch.bus_models || '',
+            pax_capacity: candidateMatch.pax_capacity || '',
+            fleet_segment: candidateMatch.fleet_segment || core.inferBusSegment(candidateMatch),
+          };
         }
-      } catch (_) {}
+      }
     }
 
     // 4. Autonomous Web Search Discovery if website does not exist / is unreachable or email is still missing
@@ -1343,6 +1489,12 @@ export async function findAndVerifyPartnerEmail(partnerId, btnEl = null, onDone 
         if (!p.whatsapp) updates.whatsapp = foundPhone;
       }
       if (foundCity && foundCity !== p.base_city) updates.base_city = foundCity;
+      if (extractedFleet && extractedFleet.fleet_categories?.length && !p.score_breakdown?.partner_card?.fleet_audit_verified_at) {
+        updates.fleet_categories = extractedFleet.fleet_categories;
+        if (extractedFleet.bus_models) updates.bus_models = extractedFleet.bus_models;
+        if (extractedFleet.pax_capacity) updates.pax_capacity = extractedFleet.pax_capacity;
+        if (!p.user_set_segment && extractedFleet.fleet_segment) updates.fleet_segment = extractedFleet.fleet_segment;
+      }
 
       const baseNotes = foundNotes || (p.notes || '').replace(/This site can't be reached\.?/gi, '').replace(/⚠️ Website unreachable[^·]*/gi, '').trim();
       const dateStr = new Date().toLocaleDateString('en-GB');
@@ -1512,8 +1664,6 @@ export function render(el) {
         <h1>🚌 Bus & Minibus Partner Outreach</h1>
       </div>
       <div class="row" style="gap:8px;flex-wrap:wrap">
-        <button class="btn sm" id="btn-verify-all-emails" style="color:#059669;border-color:#10b981;background:rgba(16,185,129,0.08);font-weight:600" title="Verify DNS MX & mailbox deliverability across all bus operators to prevent bounces & spam">🛡️ Verify Emails (${verifiedEmailsCount}/${totalDiscovered})</button>
-        <button class="btn sm" id="btn-ceo-outreach" style="background:linear-gradient(135deg, #1e40af, #2563eb);color:#fff;border-color:#1d4ed8;font-weight:700" title="Launch CEO-level short Italian outreach (Mon–Sat active, Sunday paused unless replying)">🚀 CEO Outreach (IT)</button>
         <button class="btn sm" id="btn-scout-url" style="color:var(--gold-ink);border-color:var(--gold)" title="Evaluate website through 100-Point Gate">⚡ Scout URL</button>
         <button class="btn sm" id="btn-scout-market" style="background:var(--gold-soft);color:var(--ink);border-color:var(--gold-strong);font-weight:600" title="Auto-scout operators by location, score & vehicle types">🔍 Auto-Scout Fleet</button>
         <button class="btn ghost sm" id="btn-view-excluded" style="color:var(--text-3);border-color:var(--border);display:inline-flex;align-items:center;gap:4px" title="View operators permanently blocked from discovery and searches">
@@ -1675,12 +1825,11 @@ export function render(el) {
         <table class="table" style="width:100%;table-layout:fixed;border-collapse:collapse">
           <thead>
             <tr>
-              <th style="width:26px;text-align:center;padding:8px 2px;color:var(--text-3);font-size:.72rem">#</th>
-              <th style="width:46px;text-align:center;padding:8px 2px">Score</th>
+              <th style="width:52px;text-align:center;padding:8px 2px">Score</th>
               <th style="width:150px">Company & Base</th>
               <th style="width:108px;text-align:center">Web & Verify</th>
               <th style="width:150px">Email & Direct WA</th>
-              <th style="width:155px">
+              <th style="width:175px">
                 <div class="row nowrap" style="gap:4px;align-items:center">
                   <span>Models & Pax Fit</span>
                   ${vehicleFilter !== 'all' ? `
@@ -1690,7 +1839,7 @@ export function render(el) {
                   ` : ''}
                 </div>
               </th>
-              <th style="width:155px" title="Standby (A Disposizione 4h/8h) & Hourly Service Prices">Standby & Hourly Rates</th>
+              <th style="width:190px" title="Standby (A Disposizione 4h/8h) & Hourly Service Prices / My Notes">Rates & My Notes</th>
               <th style="width:145px">
                 <div class="row nowrap" style="gap:4px;align-items:center">
                   <span>Outreach & Status</span>
@@ -1711,12 +1860,7 @@ export function render(el) {
               const categories = Array.isArray(p.fleet_categories) ? p.fleet_categories : [];
               const isNew = isRecentlyAdded(p);
               const isLatest = isLatestAddition(p, list);
-              const seg = core.inferBusSegment(p);
-              const segBadge = seg === 'luxury'
-                ? `<span class="tiny" style="font-size:.62rem;color:var(--gold-ink);font-weight:700">✨ LUX</span>`
-                : seg === 'both'
-                  ? `<span class="tiny" style="font-size:.62rem;color:#059669;font-weight:700">✨+🚌</span>`
-                  : `<span class="tiny" style="font-size:.62rem;color:var(--text-3);font-weight:600">🚌 STD</span>`;
+              const seg = p.fleet_segment || core.inferBusSegment(p);
 
               const emailSt = p.email_status || 'unknown';
               const emailDot = ['verified', 'mx_ok'].includes(emailSt)
@@ -1736,15 +1880,17 @@ export function render(el) {
                 : '';
 
               return `<tr class="hover-row ${isLatest ? 'latest-added-row' : isNew ? 'newly-added-row' : ''}" data-id="${attr(p.id)}" style="min-height:58px;${rowStyle}">
-                <td style="text-align:center;vertical-align:middle;color:var(--text-3);font-size:.74rem;font-weight:600;font-variant-numeric:tabular-nums;padding:6px 2px">
-                  ${idx + 1}
-                </td>
                 <td style="text-align:center;vertical-align:middle;padding:6px 2px">
-                  <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
                     <span class="${scoreClass} clickable" data-act="view-score" data-id="${attr(p.id)}" style="font-weight:700;font-size:.82rem;padding:2px 5px;cursor:pointer" title="Click to view 4-pillar score breakdown">
                       ${score}
                     </span>
-                    ${segBadge}
+                    ${seg === 'both' 
+                      ? `<button class="chip tiny clickable btn-toggle-seg" data-act="toggle-segment" data-id="${attr(p.id)}" style="font-size:.60rem;padding:1px 5px;font-weight:700;background:rgba(16,185,129,0.12);color:#059669;border:1px solid rgba(16,185,129,0.3);border-radius:4px;white-space:nowrap;line-height:1.2;cursor:pointer" title="Fleet Segment: STD + LUX (Click to cycle LUX / STD)">STD + LUX</button>`
+                      : seg === 'luxury'
+                      ? `<button class="chip tiny clickable btn-toggle-seg" data-act="toggle-segment" data-id="${attr(p.id)}" style="font-size:.60rem;padding:1px 5px;font-weight:700;background:var(--gold-soft);color:var(--gold-ink);border:1px solid var(--gold-strong);border-radius:4px;white-space:nowrap;line-height:1.2;cursor:pointer" title="Fleet Segment: LUX (Click to cycle STD / STD + LUX)">LUX</button>`
+                      : `<button class="chip tiny clickable btn-toggle-seg" data-act="toggle-segment" data-id="${attr(p.id)}" style="font-size:.60rem;padding:1px 5px;font-weight:600;background:var(--surface-2);color:var(--text-2);border:1px solid var(--line);border-radius:4px;white-space:nowrap;line-height:1.2;cursor:pointer" title="Fleet Segment: STD (Click to cycle STD + LUX / LUX)">STD</button>`
+                    }
                   </div>
                 </td>
                 <td style="vertical-align:middle">
@@ -1788,48 +1934,39 @@ export function render(el) {
                   </div>
                 </td>
                 <td style="vertical-align:middle">
-                  ${(() => {
-                    const paxCheck = core.verifyPerBusPaxCapacity(p);
-                    return `<div style="display:flex;flex-direction:column;gap:2px;max-width:150px;align-items:flex-start;line-height:1.2">
-                      ${categories.slice(0, 2).map((c) => {
-                        const vKey = detectVehicleKey(c);
-                        const isMatch = vehicleFilter !== 'all' && (vehicleFilter === vKey || operatorHasVehicleType(p, vehicleFilter));
-                        return `
-                          <button class="chip tiny outline fleet-filter-btn ${isMatch ? 'active-fleet-match' : ''}" 
-                            data-vkey="${attr(vKey)}" 
-                            style="font-size:.68rem;padding:1px 6px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:146px;cursor:pointer;text-align:left;border-radius:4px;${isMatch ? 'background:var(--gold-soft);border-color:var(--gold-strong);color:var(--gold-ink);font-weight:700;' : 'border-color:var(--line);background:var(--surface-2);'}" 
-                            title="Click to filter by ${esc(shortFleetName(c))} · Per-bus passenger count verified">
-                            ${esc(shortFleetName(c))}
-                          </button>
-                        `;
-                      }).join('')}
-                      <div class="row nowrap" style="gap:4px;align-items:center;width:100%">
-                        ${paxCheck.allModelsHavePax
-                          ? `<span class="tiny" style="font-size:.69rem;color:#059669;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:118px" title="AI Verified: Exact passenger capacity known for every bus (${attr(paxCheck.formattedBusModels)})">👥 ${esc(p.pax_capacity || paxCheck.formattedPaxSummary)} ✓</span>`
-                          : `<button class="clickable tiny" data-act="edit-rates" data-id="${attr(p.id)}" style="background:#fef3c7;border:1px solid #f59e0b;color:#b45309;font-weight:700;font-size:.65rem;padding:1px 5px;border-radius:4px;cursor:pointer" title="AI Alert: Missing passenger count for ${attr(paxCheck.modelsMissingPax.join(', ') || 'bus')} — Click to verify pax per bus">⚠️ Verify Pax/Bus</button>`
-                        }
-                        <button class="clickable" data-act="edit-fleet" data-id="${attr(p.id)}" style="background:none;border:none;padding:1px 3px;cursor:pointer;font-size:.66rem;color:var(--gold-ink);display:inline-flex;align-items:center;gap:2px" title="Edit fleet categories & models">
-                          ${pencilIcon(10)}
+                  <div style="display:flex;flex-wrap:wrap;gap:3px;align-items:center;line-height:1.2;max-width:175px">
+                    ${categories.map((c) => {
+                      const vKey = detectVehicleKey(c);
+                      const isMatch = vehicleFilter !== 'all' && (vehicleFilter === vKey || operatorHasVehicleType(p, vehicleFilter));
+                      return `
+                        <button class="chip tiny outline fleet-filter-btn ${isMatch ? 'active-fleet-match' : ''}" 
+                          data-vkey="${attr(vKey)}" 
+                          style="font-size:.68rem;padding:1px 6px;line-height:1.2;white-space:nowrap;cursor:pointer;border-radius:4px;${isMatch ? 'background:var(--gold-soft);border-color:var(--gold-strong);color:var(--gold-ink);font-weight:700;' : 'border-color:var(--line);background:var(--surface-2);'}" 
+                          title="Click to filter by ${esc(shortFleetName(c))}">
+                          ${esc(shortFleetName(c))}
                         </button>
-                      </div>
-                    </div>`;
-                  })()}
+                      `;
+                    }).join('')}
+                    <button class="clickable" data-act="edit-fleet" data-id="${attr(p.id)}" style="background:none;border:none;padding:1px 3px;cursor:pointer;font-size:.66rem;color:var(--gold-ink);display:inline-flex;align-items:center;gap:2px" title="Edit fleet categories & models">
+                      ${pencilIcon(10)}
+                    </button>
+                  </div>
                 </td>
                 <td style="vertical-align:middle">
-                  <div class="clickable" data-act="edit-rates" data-id="${attr(p.id)}" style="cursor:pointer;max-width:150px;display:flex;flex-direction:column;gap:2px" title="Click to log or auto-extract Bus Models, Pax Capacity, Standby (4h/8h) & Hourly Rates, and Direct WhatsApp">
+                  <div class="clickable" data-act="edit-rates" data-id="${attr(p.id)}" style="cursor:pointer;max-width:190px;display:flex;flex-direction:column;gap:3px;line-height:1.25" title="Click to view/edit Rates, Direct WhatsApp, My Pre-Contact Notes, and Client Response">
                     ${hasRates ? `
                       <div style="font-size:.74rem;font-weight:700;color:#059669;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
                         💶 ${esc([p.rate_hourly, p.rate_standby].filter(Boolean).join(' · '))}
                       </div>
-                      <div class="tiny muted" style="font-size:.68rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-                        ${esc(p.bus_models || p.notes || 'Confirmed rates')}
-                      </div>
+                      ${p.client_notes ? `<div class="tiny" style="color:#059669;font-weight:600;font-size:.68rem;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden" title="${attr(p.client_notes)}">💬 Client: ${esc(p.client_notes)}</div>` : ''}
+                      ${p.notes ? `<div class="tiny muted" style="font-size:.67rem;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden" title="${attr(p.notes)}">📝 My Note: ${esc(p.notes)}</div>` : ''}
                     ` : `
                       <div class="row nowrap" style="gap:4px;align-items:center">
-                        <span class="chip tiny outline" style="font-size:.69rem;padding:1px 6px;border-color:var(--gold);color:var(--gold-ink);background:var(--gold-soft);font-weight:600">+ Rates / Reply</span>
+                        <span class="chip tiny outline" style="font-size:.68rem;padding:1px 6px;border-color:var(--gold);color:var(--gold-ink);background:var(--gold-soft);font-weight:600">+ Rates / Reply</span>
                         <span class="clickable" data-act="edit-notes" data-id="${attr(p.id)}" style="font-size:.7rem;color:var(--text-3)" title="Edit notes">${pencilIcon(10)}</span>
                       </div>
-                      ${p.notes ? `<span class="tiny muted" style="font-size:.68rem;line-height:1.2;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">${esc(p.notes)}</span>` : ''}
+                      ${p.client_notes ? `<div class="tiny" style="color:#059669;font-weight:600;font-size:.68rem;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden" title="${attr(p.client_notes)}">💬 Client: ${esc(p.client_notes)}</div>` : ''}
+                      ${p.notes ? `<div class="tiny" style="font-size:.71rem;color:var(--text-1);line-height:1.25;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden" title="${attr(p.notes)}">📝 ${esc(p.notes)}</div>` : ''}
                     `}
                   </div>
                 </td>
@@ -2060,6 +2197,21 @@ export function render(el) {
       });
     });
 
+    // Toggle Fleet Segment (STD + LUX / LUX / STD) on click
+    el.querySelectorAll('[data-act="toggle-segment"]').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute('data-id');
+        const partner = (S.busPartners || []).find((p) => p.id === id);
+        if (!partner) return;
+        const curSeg = partner.fleet_segment || core.inferBusSegment(partner);
+        const nextSeg = curSeg === 'both' ? 'luxury' : curSeg === 'luxury' ? 'standard' : 'both';
+        await updateBusPartner(id, { fleet_segment: nextSeg, user_set_segment: true });
+        toast(`✓ Changed ${partner.name} to ${nextSeg === 'both' ? 'STD + LUX' : nextSeg.toUpperCase()}`, 'ok');
+        paint();
+      });
+    });
+
     // Edit Standby/Hourly Rates, Bus Models, Pax Capacity & Reply Auto-Extractor
     el.querySelectorAll('[data-act="edit-rates"]').forEach((btn) => {
       btn.addEventListener('click', (e) => {
@@ -2240,25 +2392,23 @@ export function render(el) {
           ${waHref ? `<a class="btn sm" href="${attr(waHref)}" target="_blank" rel="noopener" style="height:35px;background:#059669;color:#fff;border:none;display:inline-flex;align-items:center;gap:4px;white-space:nowrap">💬 Open WA</a>` : ''}
         </div>
 
+        <label class="field">
+          <span style="font-weight:600;font-size:.82rem">Partner Status &amp; Pipeline Stage</span>
+          <select id="spec-status" class="sm" style="padding:7px 10px">
+            ${core.BUS_STATUSES.map((st) => `<option value="${st.key}" ${partner.status === st.key ? 'selected' : ''}>${st.label}</option>`).join('')}
+          </select>
+        </label>
+
         <div class="row" style="gap:10px">
           <label class="field grow">
-            <span style="font-weight:600;font-size:.82rem">Partner Pipeline Status</span>
-            <select id="spec-status" class="sm" style="padding:7px 10px">
-              ${core.BUS_STATUSES.map((st) => `<option value="${st.key}" ${partner.status === st.key ? 'selected' : ''}>${st.label}</option>`).join('')}
-            </select>
+            <span style="font-weight:600;font-size:.82rem">📝 My Pre-Contact Notes (Dmitri's Questions &amp; Comments)</span>
+            <textarea id="spec-notes" rows="3" style="font-size:.84rem;padding:6px 10px" placeholder="e.g. - do they have only 19 seats? Ask for standby prices...">${esc(partner.notes || '')}</textarea>
           </label>
           <label class="field grow">
-            <span style="font-weight:600;font-size:.82rem">Outreach Funnel Stage</span>
-            <select id="spec-outreach-stage" class="sm" style="padding:7px 10px">
-              ${core.BUS_OUTREACH_STAGES.map((st) => `<option value="${st.key}" ${core.getBusOutreachStage(partner) === st.key ? 'selected' : ''}>${st.label}</option>`).join('')}
-            </select>
+            <span style="font-weight:600;font-size:.82rem">💬 Client Response &amp; Learned Info (From Operator Reply)</span>
+            <textarea id="spec-client-notes" rows="3" style="font-size:.84rem;padding:6px 10px" placeholder="e.g. Confirmed on WhatsApp: 16p Sprinter €420 (4h) / €800 (8h), Setra 54p €1,100 (8h). Extra km €1.50/km...">${esc(partner.client_notes || '')}</textarea>
           </label>
         </div>
-
-        <label class="field">
-          <span style="font-weight:600;font-size:.82rem">Notes & Dispatch Conditions</span>
-          <textarea id="spec-notes" rows="2" style="font-size:.84rem;padding:6px 10px">${esc(partner.notes || '')}</textarea>
-        </label>
       </div>
 
       <div class="row between" style="margin-top:10px;align-items:center">
@@ -2399,16 +2549,19 @@ export function render(el) {
       const rate_standby = backdrop.querySelector('#spec-rate-standby').value.trim();
       const whatsapp = backdrop.querySelector('#spec-whatsapp').value.trim();
       const status = backdrop.querySelector('#spec-status').value;
-      let outreach_stage = backdrop.querySelector('#spec-outreach-stage').value;
       const notes = backdrop.querySelector('#spec-notes').value.trim();
+      const client_notes = backdrop.querySelector('#spec-client-notes')?.value.trim() || '';
       const markReplied = backdrop.querySelector('#spec-mark-replied').checked;
 
-      if (markReplied && ['to_check', 'ready', 't1_sent', 't2_sent'].includes(outreach_stage)) {
-        outreach_stage = status === 'APPROVED_PARTNER' ? 'partner_won' : 'replied';
-      }
+      let outreach_stage = status === 'APPROVED_PARTNER' ? 'partner_won' :
+                           (markReplied || rate_hourly || rate_standby) ? 'replied' :
+                           status === 'WANT_TO_CONTACT' ? 'ready' :
+                           status === 'CONTACTED' ? 't1_sent' :
+                           (status === 'REJECTED' || status === 'NOT_RELEVANT') ? 'closed' : 'to_check';
 
       await updateBusPartner(partner.id, {
         fleet_segment,
+        user_set_segment: true,
         pax_capacity,
         bus_models,
         rate_hourly,
@@ -2416,11 +2569,13 @@ export function render(el) {
         whatsapp,
         phone: whatsapp || partner.phone,
         status,
+        user_set_status: true,
         outreach_stage,
-        replied_at: markReplied ? (partner.replied_at || new Date().toISOString()) : null,
+        replied_at: (markReplied || rate_hourly || rate_standby) ? (partner.replied_at || new Date().toISOString()) : null,
         notes,
+        client_notes,
       });
-      toast(`✓ Saved models, pax capacity, standby/hourly rates & WhatsApp for ${partner.name}`, 'ok');
+      toast(`✓ Saved specs, rates, notes & WA for ${partner.name}`, 'ok');
       close();
       paint();
     });
@@ -2440,7 +2595,8 @@ export function render(el) {
     const now = new Date();
     const sendGate = core.canSendBusOutreach(activePartner, now, { isReplyToSundayInbound: isSundayReply, allowUnverifiedOverride: true });
     const draft = core.buildBusOutreachDraft(activePartner, currentStep);
-    const readyBatch = list.filter((p) => (p.status === 'WANT_TO_CONTACT' || (p.status === 'TO_REVIEW' && (p.relevance_score || 0) >= 75)) && p.email && p.email_status !== 'invalid');
+    // Strict Manual Gate: Only operators manually promoted by user to WANT_TO_CONTACT can be queued/sent
+    const readyBatch = list.filter((p) => p.status === 'WANT_TO_CONTACT' && p.email && p.email_status !== 'invalid');
 
     const backdrop = document.createElement('div');
     backdrop.className = 'dialog-backdrop';
@@ -2626,7 +2782,6 @@ export function render(el) {
         status: updatedP.status === 'APPROVED_PARTNER' ? 'APPROVED_PARTNER' : 'CONTACTED',
         outreach_stage: stageKey,
         last_outreach_at: slot.toISOString(),
-        notes: updatedP.notes ? `${updatedP.notes} · ${stamp}` : stamp,
       });
       toast(gate.ok ? `🚀 Sent Italian CEO pitch to ${updatedP.name} (${updatedP.email})` : `📅 Sunday pause active: Queued ${updatedP.name} for Monday 09:00`, 'ok');
       close();
@@ -3038,15 +3193,16 @@ export function render(el) {
 
     let evaluatedPartner = null;
 
-    const runEval = () => {
+    const runEval = async () => {
       const url = backdrop.querySelector('#scout-url-input').value.trim();
       if (!url) { toast('Please insert a valid website URL', 'warn'); return; }
 
       const cityHint = backdrop.querySelector('#scout-city-input').value.trim();
       const previewEl = backdrop.querySelector('#scout-eval-preview');
       const addBtn = backdrop.querySelector('#btn-scout-add-crm');
+      const evalBtn = backdrop.querySelector('#btn-run-scout-eval');
 
-      const host = (() => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch (_) { return url.toLowerCase(); } })();
+      const host = (() => { try { return new URL(url.startsWith('http') ? url : `https://${url}`).hostname.replace(/^www\./, ''); } catch (_) { return url.toLowerCase(); } })();
       const known = SCOUT_CANDIDATE_POOL.find((c) => c.website.toLowerCase().includes(host)) ||
                     (S.busPartners || []).find((c) => (c.website || '').toLowerCase().includes(host));
 
@@ -3054,6 +3210,9 @@ export function render(el) {
       let pName;
       let pCity;
       let pCats;
+      let pModels = '';
+      let pPax = '';
+      let pSegment = 'standard';
       let pNotes;
       let pEmail;
       let pPhone;
@@ -3063,6 +3222,9 @@ export function render(el) {
         pName = known.name;
         pCity = known.base_city || cityHint || 'Northern Italy';
         pCats = Array.isArray(known.fleet_categories) ? [...known.fleet_categories] : ['Executive Minibus & Coach'];
+        pModels = known.bus_models || '';
+        pPax = known.pax_capacity || '';
+        pSegment = known.fleet_segment || core.inferBusSegment(known);
         pNotes = known.notes || 'Verified Northern Italy operator.';
         pEmail = known.email || '';
         pPhone = known.phone || '';
@@ -3075,40 +3237,74 @@ export function render(el) {
       } else {
         const cleanHost = host.replace(/\.(it|com|eu|net)$/, '').replace(/[-_.]/g, ' ');
         pName = cleanHost.charAt(0).toUpperCase() + cleanHost.slice(1);
-        
-        // Intelligent City & Depot Verification
+
+        if (evalBtn) {
+          evalBtn.disabled = true;
+          evalBtn.textContent = '⏳ Auditing Website & Fleet...';
+        }
+
+        // Crawl live homepage + /contatti + /flotta + /mezzi for zero-hallucination email & fleet extraction
+        const cleanBase = (url.startsWith('http') ? url : `https://${url}`).replace(/\/$/, '');
+        const endpoints = [cleanBase, `${cleanBase}/contatti`, `${cleanBase}/flotta`, `${cleanBase}/mezzi`, `${cleanBase}/parco-auto`];
+        let liveText = '';
+        let liveEmails = [];
+        try {
+          for (const pg of endpoints) {
+            try {
+              const r = await fetch(`https://r.jina.ai/${pg}`, { signal: AbortSignal.timeout(4000) });
+              if (r.ok) {
+                const body = await r.text();
+                if (isJinaReachablePage(body)) {
+                  liveText += '\n' + body;
+                  const ems = core.extractEmailsFromWebsiteHtml(body, host);
+                  if (ems.length) liveEmails.push(...ems);
+                  if (liveEmails.length && liveText.length > 2500) break;
+                }
+              }
+            } catch (_) {}
+          }
+        } catch (_) {}
+
+        if (evalBtn) {
+          evalBtn.disabled = false;
+          evalBtn.textContent = 'Run Evaluation';
+        }
+
+        // Intelligent City & Depot Verification from real website text
         const cityInfo = detectOperatorCityAndRegion({
           url,
-          text: host,
+          text: `${host} ${liveText}`,
           hint: cityHint
         });
         pCity = cityInfo.city;
+        pEmail = liveEmails[0] || `info@${host}`;
+        pPhone = '';
+
+        const fleetExtracted = core.extractFleetFromWebsiteText(liveText);
+        pCats = fleetExtracted.fleet_categories.length > 0
+          ? fleetExtracted.fleet_categories
+          : ['Minibus & Coach Charter (Verify fleet page)'];
+        pModels = fleetExtracted.bus_models || '';
+        pPax = fleetExtracted.pax_capacity || '';
+        pSegment = fleetExtracted.fleet_segment || 'standard';
 
         if (!cityInfo.isNorthernItaly) {
-          // Out-of-region operator (e.g. Rome, Central/Southern Italy)
           res = {
             total_score: 0,
             breakdown: { discretion_unbranded: 20, fleet_luxury: 18, territory_permits: 0, corporate_sla: 15 },
             tier_info: core.getPriorityTier(0)
           };
-          pUnbranded = 'Unbranded Luxury Line';
-          pCats = ['Executive Minicoaches', 'Mercedes Sprinter VIP Lounge'];
+          pUnbranded = 'Unbranded on Request';
           pNotes = `Disqualified: ${cityInfo.depotWarning} No local Lombardy/Como operating depot (excessive deadhead leg).`;
-          pEmail = `info@${host}`;
-          pPhone = '';
         } else {
-          const syntheticText = `${url} ${host} ${pCity} noleggio con conducente luxury transfer mercedes sprinter vip midibus granturismo total black vetri oscurati senza scritte chauffeur service lake como milan area c ztl`;
-          const evaluated = core.scoreFromWebSignals(syntheticText, { base_city: pCity });
+          const evaluated = core.scoreFromWebSignals(liveText || `${url} ${host} ${pCity}`, { base_city: pCity });
           res = {
             total_score: evaluated.total_score,
             breakdown: evaluated.breakdown,
             tier_info: core.getPriorityTier(evaluated.total_score)
           };
           pUnbranded = evaluated.breakdown.discretion_unbranded >= 30 ? '100% Guaranteed Unbranded / Total Black' : 'Unbranded on Request';
-          pCats = ['Mercedes Sprinter VIP (8–16 seats)', 'Executive Midibus (24–30 seats)'];
-          pNotes = `Evaluated from web signals for ${host}. Discretion: ${evaluated.breakdown.discretion_unbranded}/35. Verified local depot in ${pCity}.`;
-          pEmail = `info@${host}`;
-          pPhone = '';
+          pNotes = `Audited live website (${host}). Email: ${pEmail}${liveEmails.length ? ' (found on website)' : ' (fallback)'}. Segment: ${pSegment.toUpperCase()}${pPax ? ` · Pax: ${pPax}` : ''}.`;
         }
       }
 
@@ -3130,6 +3326,9 @@ export function render(el) {
         unbranded_status: pUnbranded,
         status: partnerStatus,
         fleet_categories: pCats,
+        bus_models: pModels,
+        pax_capacity: pPax,
+        fleet_segment: pSegment,
         notes: pNotes
       };
 
