@@ -21,7 +21,11 @@ CRITICAL RULES:
 8. For Standby / Disposal / Hourly / Multi-Transfer packages:
    - If the booking involves standby/disposal/hourly service (e.g. "standby", "disposal", "disposizione", "hourly", "в распоряжение", or dedicated chauffeur booked across a block of hours):
      - Calculate or extract total hours into "standby_hours" (e.g. 10 if explicitly mentioned, or calculate duration from start time to finish time across transfers, e.g. 14:00 to 00:00 -> 10 hours).
-9. Output MUST conform strictly to the JSON schema provided.
+9. Vehicle Seating Capacity vs Passenger Party Count:
+   - Phrases like "sprinter 24/28 pax", "24/8 pax", "sprinter on 24/28 people", or "V-Class 7 pax" describe the VEHICLE MODEL / CAPACITY, NOT the party count.
+   - Extract the vehicle specification into "vehicle_class".
+   - ONLY set "passengers" if the text explicitly states the number of traveling guests (e.g. "22 guests", "transfer all 22 passengers", "we are 4 people"). If no party size is stated, return null for "passengers".
+10. Output MUST conform strictly to the JSON schema provided.
 `;
 
 const MODEL_CASCADE = [

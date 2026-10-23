@@ -402,3 +402,25 @@ Deno.test("applyBusinessRules normalizes service_type to Standby (10 hours)", ()
   assertEquals(booking.rides.length, 3);
   console.log("✅ applyBusinessRules normalized standby service_type passed!");
 });
+
+// 10. UNIT TEST: Vehicle capacity vs passenger count
+Deno.test("applyBusinessRules avoids mistaking vehicle capacity for party size", () => {
+  // Case A: Only vehicle capacity in notes, no party size -> passengers should be null
+  const rawWithOnlyVehCap: any = {
+    passengers: 8,
+    client_notes: "We promised a standard sprinter, 24/8 pax (white).",
+    rides: [],
+  };
+  const b1 = applyBusinessRules(rawWithOnlyVehCap, "Notes: We promised a standard sprinter, 24/8 pax (white).");
+  assertEquals(b1.party.passengers, null, "Should not treat '24/8 pax' vehicle size as 8 passengers");
+
+  // Case B: Explicit party size alongside vehicle capacity -> extracts 22 passengers
+  const rawWithBoth: any = {
+    passengers: 28,
+    client_notes: "Transfer all 22 guests. We promised a sprinter 24/28 pax.",
+    rides: [],
+  };
+  const b2 = applyBusinessRules(rawWithBoth, "Transfer all 22 guests. We promised a sprinter 24/28 pax.");
+  assertEquals(b2.party.passengers, 22, "Should extract 22 guests, ignoring vehicle capacity 24/28");
+  console.log("✅ Vehicle capacity vs party size test passed!");
+});

@@ -425,8 +425,21 @@ export function applyBusinessRules(
     : [];
 
   let pax = typeof raw.passengers === "number" ? raw.passengers : null;
+
+  // Safeguard: distinguish between vehicle seating capacity (e.g. "sprinter, 24/8 pax", "sprinter 24/28 pax") vs actual passenger count
+  const vehCapacityMatch = sourceText.match(/\b(?:sprinter|bus|coach|van|minibus)[^.\n]*?(\d{1,2})\s*[/–-]\s*(\d{1,2})\s*(?:pax|people|seats?)/i);
+  if (vehCapacityMatch && (pax === parseInt(vehCapacityMatch[1], 10) || pax === parseInt(vehCapacityMatch[2], 10))) {
+    const explicitPartyMatch = sourceText.match(/(?:all|party of|total of|group of)?\s*(\d{1,3})\s*(?:guests?|passengers?|клиентов|пассажиров)/i);
+    if (explicitPartyMatch && parseInt(explicitPartyMatch[1], 10) !== pax) {
+      pax = parseInt(explicitPartyMatch[1], 10);
+    } else {
+      pax = null;
+    }
+  }
+
   if (pax === null) {
-    const paxMatch = sourceText.match(/(\d{1,3})\s*(?:guests?|people|pax|passengers?|человек)/i);
+    const paxMatch = sourceText.match(/(?:^|[^\d/–-])(\d{1,3})\s*(?:guests?|people|passengers?|человек|пассажир)/i) ||
+                     sourceText.match(/(?:party of|group of|total of)\s*(\d{1,3})/i);
     if (paxMatch) pax = parseInt(paxMatch[1], 10);
   }
 
