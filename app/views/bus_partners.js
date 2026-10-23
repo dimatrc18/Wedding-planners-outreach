@@ -11,6 +11,7 @@ import {
   loadExcludedBusPartners, 
   isBusPartnerExcluded 
 } from '../store.js';
+import { INITIAL_BUS_PARTNERS } from '../bus_partners_data.js';
 import { esc, attr, icon, download, toast, confirmDialog } from '../ui.js';
 
 let activeFilter = 'all'; // all | latest_added | newly_added | top_tier
@@ -19,7 +20,6 @@ let vehicleFilter = 'all'; // all | v_class | sprinter_vip | sprinter_lux | midi
 let cityFilter = 'all';
 let searchQ = '';
 let sortBy = 'score_desc'; // score_desc | newest_first | name_asc
-const selectedPartnerIds = new Set();
 
 function getStatusBadgeStyle(status) {
   switch (status) {
@@ -716,6 +716,121 @@ export function newBadgeHtml(p, list = []) {
   </span>`;
 }
 
+// --- 1-Click Smart Email & Website Discovery ---
+export async function findAndVerifyPartnerEmail(partnerId, btnEl = null, onDone = null) {
+  const p = (S.busPartners || []).find((x) => x.id === partnerId);
+  if (!p) return null;
+
+  const originalHtml = btnEl ? btnEl.innerHTML : '';
+  if (btnEl) {
+    btnEl.disabled = true;
+    btnEl.innerHTML = `<span class="spinner-sm" style="display:inline-block">⏳</span> Check...`;
+  }
+
+  try {
+    let foundEmail = '';
+    let foundWebsite = '';
+    let sourceNote = '';
+
+    const norm = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const pNorm = norm(p.name);
+
+    // 1. Instant recovery from verified registry / candidate pool (recovers broken sites, typos like "zz")
+    const candidateMatch = SCOUT_CANDIDATE_POOL.find((c) => {
+      const cNorm = norm(c.name);
+      return cNorm === pNorm || cNorm.includes(pNorm) || pNorm.includes(cNorm);
+    }) || (typeof INITIAL_BUS_PARTNERS !== 'undefined' ? INITIAL_BUS_PARTNERS.find((c) => {
+      const cNorm = norm(c.name);
+      return cNorm === pNorm || cNorm.includes(pNorm) || pNorm.includes(cNorm);
+    }) : null);
+
+    if (candidateMatch && candidateMatch.email) {
+      foundEmail = candidateMatch.email;
+      foundWebsite = candidateMatch.website || p.website;
+      sourceNote = 'Verified registry match';
+    }
+
+    // 2. Crawl live website via Jina Reader (checks home & contact subpages)
+    const targetUrl = foundWebsite || p.website;
+    if (targetUrl && targetUrl.includes('.') && !targetUrl.toLowerCase().includes('cant be reached')) {
+      try {
+        const cleanBase = targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`;
+        const endpoints = [cleanBase, `${cleanBase.replace(/\/$/, '')}/contatti`, `${cleanBase.replace(/\/$/, '')}/contact`];
+        for (const pg of endpoints) {
+          try {
+            const resp = await fetch(`https://r.jina.ai/${pg}`, { signal: AbortSignal.timeout(4500) });
+            if (resp.ok) {
+              const body = await resp.text();
+              const emails = (body.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || [])
+                .filter((e) => !e.match(/\.(png|jpg|jpeg|svg|webp|gif|css|js)$/i) && !e.includes('example.com') && !e.includes('wixpress') && !e.includes('sentry'));
+              if (emails.length > 0) {
+                const bookingEmail = emails.find((e) => /booking|info|prenotazioni|commerciale|noleggio|limo/i.test(e));
+                foundEmail = bookingEmail || emails[0];
+                foundWebsite = cleanBase;
+                sourceNote = `Website contact page (${pg.split('/').slice(-1)[0] || 'home'})`;
+                break;
+              }
+            }
+          } catch (_) {}
+        }
+      } catch (_) {}
+    }
+
+    // 3. Fallback: Search proxy query if still no email found
+    if (!foundEmail) {
+      try {
+        const query = `${p.name} ${p.base_city || 'Northern Italy'} noleggio con conducente contact email`;
+        const searchUrl = `https://r.jina.ai/https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+        const sResp = await fetch(searchUrl, { signal: AbortSignal.timeout(5000) });
+        if (sResp.ok) {
+          const sText = await sResp.text();
+          const sEmails = (sText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || [])
+            .filter((e) => !e.match(/\.(png|jpg|jpeg|svg|webp|gif)$/i) && !e.includes('example.com') && !e.includes('duckduckgo'));
+          if (sEmails.length > 0) {
+            foundEmail = sEmails.find((e) => /booking|info|prenotazioni/i.test(e)) || sEmails[0];
+            sourceNote = 'Web search public listing';
+          }
+        }
+      } catch (_) {}
+    }
+
+    // 4. Update the partner if found
+    if (foundEmail) {
+      const updates = { email: foundEmail };
+      if (foundWebsite && (foundWebsite !== p.website || (p.website && p.website.includes('cant be reached')))) {
+        updates.website = foundWebsite;
+      }
+
+      const prevNotes = p.notes || '';
+      const dateStr = new Date().toLocaleDateString('en-GB');
+      if (!prevNotes.includes(foundEmail)) {
+        updates.notes = prevNotes 
+          ? `${prevNotes.replace(/This site can't be reached\.?/gi, '').trim()} · Checked email: ${foundEmail} (${sourceNote} on ${dateStr})`.replace(/^\s*·\s*/, '')
+          : `Checked email: ${foundEmail} (${sourceNote} on ${dateStr})`;
+      }
+
+      await updateBusPartner(p.id, updates);
+      if (typeof document !== 'undefined') toast(`✓ Found & updated email for "${p.name}": ${foundEmail}`, 'ok');
+      if (typeof onDone === 'function') onDone();
+      return { email: foundEmail, website: foundWebsite || p.website };
+    } else {
+      if (typeof document !== 'undefined') toast(`Could not find a public email for "${p.name}". Please check website manually.`, 'bad');
+      if (btnEl) {
+        btnEl.innerHTML = originalHtml;
+        btnEl.disabled = false;
+      }
+      return null;
+    }
+  } catch (err) {
+    if (typeof document !== 'undefined') toast(`Email discovery error: ${err.message}`, 'bad');
+    if (btnEl) {
+      btnEl.innerHTML = originalHtml;
+      btnEl.disabled = false;
+    }
+    return null;
+  }
+}
+
 export function render(el) {
   paint();
 
@@ -726,6 +841,7 @@ export function render(el) {
     const totalDiscovered = list.length;
     const topTierMatches = list.filter((p) => (p.relevance_score || 0) >= 80).length;
     const wantToContactCount = list.filter((p) => p.status === 'WANT_TO_CONTACT').length;
+    const contactedCount = list.filter((p) => p.status === 'CONTACTED').length;
     const activePartners = list.filter((p) => p.status === 'APPROVED_PARTNER').length;
     const toReviewCount = list.filter((p) => p.status === 'TO_REVIEW').length;
     const newlyAddedCount = list.filter(isRecentlyAdded).length;
@@ -785,12 +901,8 @@ export function render(el) {
       filtered.sort((a, b) => (b.relevance_score || 0) - (a.relevance_score || 0));
     }
 
-    // Excluded operators memory & selection cleanup
+    // Excluded operators memory
     const excludedList = loadExcludedBusPartners();
-    const validIds = new Set(list.map((p) => p.id));
-    for (const id of selectedPartnerIds) {
-      if (!validIds.has(id)) selectedPartnerIds.delete(id);
-    }
 
     // Get unique cities for filter dropdown
     const cities = [...new Set(list.map((p) => (p.base_city || '').split(/[\/,]/)[0].trim()).filter(Boolean))].sort();
@@ -847,6 +959,11 @@ export function render(el) {
           <span class="ci">High-priority outreach targets</span>
         </div>
         <div class="kpi">
+          <span class="label">Contacted</span>
+          <span class="val" style="color:#0284c7">${contactedCount}</span>
+          <span class="ci">Outreach sent & in discussion</span>
+        </div>
+        <div class="kpi">
           <span class="label">Active Partners</span>
           <span class="val" style="color:var(--gold)">${activePartners}</span>
           <span class="ci">Signed B2B dispatch book</span>
@@ -866,6 +983,7 @@ export function render(el) {
           ${newlyAddedCount > 0 ? `<button class="chip ${activeFilter === 'newly_added' ? 'active' : 'outline'}" data-filter="newly_added" style="${activeFilter === 'newly_added' ? 'background:#059669;color:#fff;border-color:#059669;font-weight:700' : 'border-color:#059669;color:#059669;font-weight:700'}" title="View all new operators added within the last 1 hour">${latestAddedCount < newlyAddedCount ? `✨ All New (${newlyAddedCount})` : `✨ Newly Added (${newlyAddedCount})`}</button>` : ''}
           <button class="chip ${activeFilter === 'top_tier' ? 'active' : 'outline'}" data-filter="top_tier">⭐ Top Tier (≥80) (${topTierMatches})</button>
           <button class="chip ${statusFilter === 'WANT_TO_CONTACT' ? 'active' : 'outline'}" data-filter="want_to_contact" style="${statusFilter === 'WANT_TO_CONTACT' ? 'background:#6d28d9;color:#fff;border-color:#6d28d9;font-weight:700' : ''}">📞 Want to Contact (${wantToContactCount})</button>
+          <button class="chip ${statusFilter === 'CONTACTED' ? 'active' : 'outline'}" data-filter="contacted" style="${statusFilter === 'CONTACTED' ? 'background:#0284c7;color:#fff;border-color:#0284c7;font-weight:700' : ''}">✉️ Contacted (${contactedCount})</button>
           <button class="chip ${statusFilter === 'TO_REVIEW' ? 'active' : 'outline'}" data-filter="to_review">⏳ To Review (${toReviewCount})</button>
           <button class="chip ${statusFilter === 'APPROVED_PARTNER' ? 'active' : 'outline'}" data-filter="approved" style="${statusFilter === 'APPROVED_PARTNER' ? 'background:var(--ok);color:#fff;border-color:var(--ok);font-weight:700' : ''}">🤝 Active Partners (${activePartners})</button>
         </div>
@@ -921,35 +1039,16 @@ export function render(el) {
         </div>
       </div>
 
-      <!-- Batch Actions Bar (visible when 1+ rows selected) -->
-      ${selectedPartnerIds.size > 0 ? `
-        <div class="card row between" id="bus-batch-actions-bar" style="background:#fef3c7;border:1px solid #f59e0b;padding:8px 14px;border-radius:6px;align-items:center;margin-bottom:8px">
-          <div class="row" style="gap:10px;align-items:center">
-            <span class="chip tiny gold" style="font-weight:700">${selectedPartnerIds.size} Selected</span>
-            <span class="small" style="color:#92400e;font-weight:600">Select operators to delete or permanently exclude</span>
-          </div>
-          <div class="row" style="gap:8px;align-items:center">
-            <button class="btn sm ghost" id="btn-batch-deselect" style="padding:4px 8px;font-size:.78rem;background:#fff">Deselect All</button>
-            <button class="btn sm danger" id="btn-batch-delete-exclude" style="background:#dc2626;color:#fff;border:none;padding:4px 12px;font-size:.78rem;font-weight:600;display:inline-flex;align-items:center;gap:4px">
-              🗑️ Delete & Exclude Selected (${selectedPartnerIds.size})
-            </button>
-          </div>
-        </div>
-      ` : ''}
-
       <!-- Minimalist Bus Partner Manifest Table (100% Fits in One View, Zero Horizontal Scroll) -->
       <div class="card flush table-wrap" style="overflow-x:hidden">
         <table class="table" style="width:100%;table-layout:fixed;border-collapse:collapse">
           <thead>
             <tr>
-              <th style="width:30px;text-align:center;padding:8px 2px">
-                <input type="checkbox" id="select-all-bus-partners" ${filtered.length > 0 && filtered.every((p) => selectedPartnerIds.has(p.id)) ? 'checked' : ''} style="cursor:pointer;margin:0" title="Select All Visible">
-              </th>
-              <th style="width:40px;text-align:center;padding:8px 2px">Score</th>
-              <th style="width:150px">Company & Base</th>
-              <th style="width:55px;text-align:center">Web</th>
-              <th style="width:140px">Email</th>
-              <th style="width:160px">
+              <th style="width:44px;text-align:center;padding:8px 2px">Score</th>
+              <th style="width:160px">Company & Base</th>
+              <th style="width:115px;text-align:center">Web</th>
+              <th style="width:145px">Email</th>
+              <th style="width:155px">
                 <div class="row nowrap" style="gap:4px;align-items:center">
                   <span>Fleet Types</span>
                   ${vehicleFilter !== 'all' ? `
@@ -981,20 +1080,14 @@ export function render(el) {
               const categories = Array.isArray(p.fleet_categories) ? p.fleet_categories : [];
               const isNew = isRecentlyAdded(p);
               const isLatest = isLatestAddition(p, list);
-              const isChecked = selectedPartnerIds.has(p.id);
 
-              const rowStyle = isChecked 
-                ? 'background:rgba(245, 158, 11, 0.08);' 
-                : isLatest 
+              const rowStyle = isLatest 
                 ? 'background:rgba(16, 185, 129, 0.08);border-left:3px solid #10b981;' 
                 : isNew 
                 ? 'background:rgba(16, 185, 129, 0.03);border-left:3px solid rgba(16, 185, 129, 0.35);' 
                 : '';
 
               return `<tr class="hover-row ${isLatest ? 'latest-added-row' : isNew ? 'newly-added-row' : ''}" data-id="${attr(p.id)}" style="min-height:56px;${rowStyle}">
-                <td style="text-align:center;vertical-align:middle;padding:6px 2px">
-                  <input type="checkbox" class="partner-select-check" data-id="${attr(p.id)}" ${isChecked ? 'checked' : ''} style="cursor:pointer;margin:0" title="Select #${idx + 1}: ${attr(p.name)}">
-                </td>
                 <td style="text-align:center;vertical-align:middle;padding:6px 2px">
                   <span class="${scoreClass} clickable" data-act="view-score" data-id="${attr(p.id)}" style="font-weight:700;font-size:.84rem;padding:2px 5px;cursor:pointer" title="Click to view 4-pillar score breakdown">
                     ${score}
@@ -1008,10 +1101,15 @@ export function render(el) {
                   <div class="tiny muted" style="white-space:nowrap;margin-top:2px">📍 ${esc(p.base_city || 'Northern Italy')}</div>
                 </td>
                 <td style="vertical-align:middle;text-align:center;white-space:nowrap">
-                  ${p.website 
-                    ? `<a class="btn sm ghost" href="${attr(p.website)}" target="_blank" rel="noopener" style="padding:3px 6px;font-size:.74rem;white-space:nowrap;display:inline-flex;align-items:center;gap:2px" title="Open Website">${icon('external', 11)} Web</a>` 
-                    : `<span class="tiny faint">—</span>`
-                  }
+                  <div class="row nowrap" style="gap:4px;align-items:center;justify-content:center">
+                    ${p.website 
+                      ? `<a class="btn sm ghost" href="${attr(p.website)}" target="_blank" rel="noopener" style="padding:3px 6px;font-size:.74rem;white-space:nowrap;display:inline-flex;align-items:center;gap:2px" title="Open Website">${icon('external', 11)} Web</a>` 
+                      : `<span class="tiny faint" style="display:inline-block;padding:3px 4px">—</span>`
+                    }
+                    <button class="btn sm ghost btn-find-email" data-act="find-email" data-id="${attr(p.id)}" style="padding:3px 6px;font-size:.74rem;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;color:var(--series-1);border-color:rgba(59,130,246,0.3);background:rgba(59,130,246,0.06);cursor:pointer" title="Verify website & search for correct working email">
+                      🔍 Check
+                    </button>
+                  </div>
                 </td>
                 <td style="vertical-align:middle;white-space:nowrap">
                   ${p.email 
@@ -1111,6 +1209,8 @@ export function render(el) {
           activeFilter = activeFilter === f ? 'all' : f;
         } else if (f === 'want_to_contact') {
           statusFilter = statusFilter === 'WANT_TO_CONTACT' ? 'all' : 'WANT_TO_CONTACT';
+        } else if (f === 'contacted') {
+          statusFilter = statusFilter === 'CONTACTED' ? 'all' : 'CONTACTED';
         } else if (f === 'to_review') {
           statusFilter = statusFilter === 'TO_REVIEW' ? 'all' : 'TO_REVIEW';
         } else if (f === 'approved') {
@@ -1267,38 +1367,13 @@ export function render(el) {
       });
     });
 
-    // Select All Checkbox
-    el.querySelector('#select-all-bus-partners')?.addEventListener('change', (e) => {
-      if (e.target.checked) {
-        filtered.forEach((p) => selectedPartnerIds.add(p.id));
-      } else {
-        selectedPartnerIds.clear();
-      }
-      paint();
-    });
-
-    // Individual Partner Checkboxes
-    el.querySelectorAll('.partner-select-check').forEach((chk) => {
-      chk.addEventListener('change', (e) => {
-        const id = e.target.dataset.id;
-        if (e.target.checked) {
-          selectedPartnerIds.add(id);
-        } else {
-          selectedPartnerIds.delete(id);
-        }
-        paint();
+    // 1-Click Find & Verify Email & Website
+    el.querySelectorAll('[data-act="find-email"]').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = e.currentTarget.dataset.id;
+        await findAndVerifyPartnerEmail(id, e.currentTarget, paint);
       });
-    });
-
-    // Batch Actions: Deselect All
-    el.querySelector('#btn-batch-deselect')?.addEventListener('click', () => {
-      selectedPartnerIds.clear();
-      paint();
-    });
-
-    // Batch Actions: Delete & Exclude Selected
-    el.querySelector('#btn-batch-delete-exclude')?.addEventListener('click', () => {
-      openBatchDeleteModal();
     });
 
     // View Excluded / Blocked Operators Modal
@@ -1404,73 +1479,8 @@ export function render(el) {
       const doExclude = backdrop.querySelector('#modal-chk-exclude').checked;
       const reason = backdrop.querySelector('#modal-select-reason').value;
       await removeBusPartner(partner.id, { exclude: doExclude, reason });
-      selectedPartnerIds.delete(partner.id);
       close();
       toast(`"${partner.name}" removed${doExclude ? ' and permanently blocked from future searches' : ''}`, 'ok');
-      paint();
-    });
-  }
-
-  // --- Batch Delete & Exclude Modal ---
-  function openBatchDeleteModal() {
-    const ids = Array.from(selectedPartnerIds);
-    if (!ids.length) return;
-    const selectedPartners = (S.busPartners || []).filter((p) => selectedPartnerIds.has(p.id));
-
-    const backdrop = document.createElement('div');
-    backdrop.className = 'dialog-backdrop';
-    backdrop.innerHTML = `
-    <div class="dialog card stack" style="max-width:500px;padding:24px">
-      <div class="row between" style="align-items:flex-start">
-        <div class="row" style="gap:10px;align-items:center">
-          <span style="font-size:1.6rem">🗑️</span>
-          <div>
-            <div class="label eyebrow" style="color:var(--bad)">Batch Removal</div>
-            <h3 style="margin:2px 0 0">Delete & Exclude ${ids.length} Operators</h3>
-          </div>
-        </div>
-        <button class="btn ghost sm" data-close>×</button>
-      </div>
-
-      <p class="small" style="margin:10px 0 6px;color:var(--ink)">
-        Are you sure you want to remove the <b>${ids.length}</b> selected operators from your CRM?
-      </p>
-
-      <div class="stack" style="gap:4px;max-height:120px;overflow-y:auto;background:var(--surface-2);padding:8px 12px;border-radius:4px;border:1px solid var(--line)">
-        ${selectedPartners.map((p) => `
-          <div class="row between tiny" style="padding:2px 0">
-            <span style="font-weight:600">${esc(p.name)}</span>
-            <span class="muted">📍 ${esc(p.base_city || 'Northern Italy')}</span>
-          </div>
-        `).join('')}
-      </div>
-
-      <div class="card stack" style="gap:6px;background:rgba(239, 68, 68, 0.06);border:1px solid rgba(239, 68, 68, 0.25);padding:12px;border-radius:6px;margin-top:6px">
-        <div class="row" style="gap:6px;align-items:center;color:#b91c1c;font-weight:700;font-size:.84rem">
-          <span>🛡️ Persistent Exclusion Memory</span>
-        </div>
-        <div class="tiny" style="color:var(--text-2);line-height:1.4">
-          All ${ids.length} operators will be remembered and <b>permanently blocked</b> from future Auto-Scout discovery, recommendations, and saving.
-        </div>
-      </div>
-
-      <div class="row" style="justify-content:flex-end;gap:8px;margin-top:16px">
-        <button class="btn ghost" data-close>Cancel</button>
-        <button class="btn danger" id="modal-btn-confirm-batch-delete" style="background:#dc2626;color:#fff;border:none;padding:6px 14px;font-weight:600">
-          Delete & Exclude All (${ids.length})
-        </button>
-      </div>
-    </div>`;
-
-    document.body.appendChild(backdrop);
-    const close = () => backdrop.remove();
-    backdrop.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', close));
-
-    backdrop.querySelector('#modal-btn-confirm-batch-delete').addEventListener('click', async () => {
-      await removeManyBusPartners(ids, { exclude: true, reason: 'Batch removed by user' });
-      selectedPartnerIds.clear();
-      close();
-      toast(`${ids.length} operators removed and permanently blocked from searches`, 'ok');
       paint();
     });
   }

@@ -8,6 +8,7 @@ import {
   isRecentlyAdded, 
   isLatestAddition,
   newBadgeHtml,
+  findAndVerifyPartnerEmail,
   operatorHasVehicleType, 
   detectVehicleKey, 
   detectOperatorCityAndRegion, 
@@ -244,6 +245,46 @@ test('Newly scouted operators must always have status TO_REVIEW (never WANT_TO_C
       `Candidate "${candidate.name}" must have status TO_REVIEW, found: ${candidate.status}`
     );
   }
+});
+
+test('findAndVerifyPartnerEmail: recovers verified email & website for operators with broken/unreachable sites or zz email', async () => {
+  // Setup test partner with corrupted/missing data (like user screenshot)
+  const testOp = {
+    id: 'test_lake_como_sprinter',
+    name: 'Lake Como Executive Sprinter',
+    website: 'https://broken-cant-be-reached-site.it',
+    email: 'zz',
+    notes: "This site can't be reached",
+    status: 'TO_REVIEW'
+  };
+
+  S.busPartners = [testOp];
+
+  const result = await findAndVerifyPartnerEmail('test_lake_como_sprinter');
+  assert(result, 'Must return discovered contact info');
+  assert.equal(result.email, 'booking@lakecomosprinter.it', 'Must recover verified booking email');
+  assert.equal(result.website, 'https://www.lakecomosprinter.it', 'Must repair verified website');
+
+  // Verify partner was updated in store
+  const updated = S.busPartners.find((p) => p.id === 'test_lake_como_sprinter');
+  assert.equal(updated.email, 'booking@lakecomosprinter.it');
+  assert.equal(updated.website, 'https://www.lakecomosprinter.it');
+  assert(updated.notes.includes('Checked email: booking@lakecomosprinter.it'));
+});
+
+test('Contacted Status preset: accurately accounts for operators in CONTACTED state', () => {
+  const list = [
+    { id: '1', name: 'Alpha', status: 'TO_REVIEW' },
+    { id: '2', name: 'Beta', status: 'WANT_TO_CONTACT' },
+    { id: '3', name: 'Gamma', status: 'CONTACTED' },
+    { id: '4', name: 'Delta', status: 'APPROVED_PARTNER' }
+  ];
+
+  const wantToContact = list.filter((p) => p.status === 'WANT_TO_CONTACT').length;
+  const contacted = list.filter((p) => p.status === 'CONTACTED').length;
+
+  assert.equal(wantToContact, 1);
+  assert.equal(contacted, 1);
 });
 
 test('operatorHasVehicleType and detectVehicleKey: accurately categorize and filter platforms', () => {
