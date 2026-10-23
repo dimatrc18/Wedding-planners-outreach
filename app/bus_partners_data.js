@@ -39,7 +39,7 @@ export const INITIAL_BUS_PARTNERS = [
       "territory_permits": 20,
       "corporate_sla": 17
     },
-    "status": "VETTED",
+    "status": "WANT_TO_CONTACT",
     "unbranded_status": "100% Guaranteed Unbranded / NCC Black",
     "fleet_categories": [
       "Mercedes Sprinter Luxury (8-20 seats)",
@@ -62,7 +62,7 @@ export const INITIAL_BUS_PARTNERS = [
       "territory_permits": 18,
       "corporate_sla": 18
     },
-    "status": "VETTED",
+    "status": "WANT_TO_CONTACT",
     "unbranded_status": "100% Guaranteed Unbranded",
     "fleet_categories": [
       "Mercedes Sprinter Executive (16-19 seats)",

@@ -4,7 +4,7 @@ import * as core from '../../supabase/functions/_shared/core/index.js';
 import { S, updateBusPartner, addBusPartner, removeBusPartner } from '../store.js';
 import { esc, attr, icon, download, toast, confirmDialog } from '../ui.js';
 
-let activeFilter = 'all'; // all | top_tier | want_to_contact | vetted | approved | to_review
+let activeFilter = 'all'; // all | top_tier | want_to_contact | approved | to_review
 let searchQ = '';
 let cityFilter = 'all';
 
@@ -22,8 +22,6 @@ function getStatusBadgeStyle(status) {
       return 'background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;font-weight:600';
     case 'NOT_RELEVANT':
       return 'background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;font-weight:600';
-    case 'VETTED':
-      return 'background:#ccfbf1;color:#0f766e;border:1px solid #99f6e4;font-weight:600';
     default:
       return 'background:var(--surface);color:var(--ink);border:1px solid var(--border);';
   }
@@ -35,11 +33,10 @@ export function render(el) {
   function paint() {
     const list = S.busPartners || [];
     
-    // 1. Metric calculations for Top Stat Bar
+    // 1. Metric calculations for Top Stat Bar (MECE, no vetted)
     const totalDiscovered = list.length;
     const topTierMatches = list.filter((p) => (p.relevance_score || 0) >= 80).length;
     const wantToContactCount = list.filter((p) => p.status === 'WANT_TO_CONTACT').length;
-    const vettedCount = list.filter((p) => ['VETTED', 'APPROVED_PARTNER'].includes(p.status)).length;
     const activePartners = list.filter((p) => p.status === 'APPROVED_PARTNER').length;
 
     // Filter logic
@@ -48,8 +45,6 @@ export function render(el) {
       filtered = filtered.filter((p) => (p.relevance_score || 0) >= 80);
     } else if (activeFilter === 'want_to_contact') {
       filtered = filtered.filter((p) => p.status === 'WANT_TO_CONTACT');
-    } else if (activeFilter === 'vetted') {
-      filtered = filtered.filter((p) => p.status === 'VETTED');
     } else if (activeFilter === 'approved') {
       filtered = filtered.filter((p) => p.status === 'APPROVED_PARTNER');
     } else if (activeFilter === 'to_review') {
@@ -117,9 +112,9 @@ export function render(el) {
           <span class="ci">Guaranteed unbranded luxury lines</span>
         </div>
         <div class="kpi">
-          <span class="label">Vetted / Verified</span>
-          <span class="val" style="color:var(--series-1)">${vettedCount}</span>
-          <span class="ci">Photos & zero-decal policy reviewed</span>
+          <span class="label">Want to Contact</span>
+          <span class="val" style="color:#6d28d9">${wantToContactCount}</span>
+          <span class="ci">High-priority outreach targets</span>
         </div>
         <div class="kpi">
           <span class="label">Active Partners</span>
@@ -135,7 +130,6 @@ export function render(el) {
           <button class="chip ${activeFilter === 'top_tier' ? 'active' : 'outline'}" data-filter="top_tier">⭐ Top Tier (≥80) (${topTierMatches})</button>
           <button class="chip ${activeFilter === 'want_to_contact' ? 'active' : 'outline'}" data-filter="want_to_contact">📞 Want to Contact (${wantToContactCount})</button>
           <button class="chip ${activeFilter === 'to_review' ? 'active' : 'outline'}" data-filter="to_review">⏳ To Review (${list.filter(p => p.status === 'TO_REVIEW').length})</button>
-          <button class="chip ${activeFilter === 'vetted' ? 'active' : 'outline'}" data-filter="vetted">🛡️ Vetted (${list.filter(p => p.status === 'VETTED').length})</button>
           <button class="chip ${activeFilter === 'approved' ? 'active' : 'outline'}" data-filter="approved">🤝 Active Partners (${activePartners})</button>
         </div>
 
@@ -148,19 +142,19 @@ export function render(el) {
         </div>
       </div>
 
-      <!-- Minimalist Bus Partner Manifest Table -->
-      <div class="card flush table-wrap" style="overflow-x:auto">
-        <table class="table" style="width:100%;min-width:910px;table-layout:fixed;border-collapse:collapse">
+      <!-- Minimalist Bus Partner Manifest Table (100% Fits in One View, Zero Horizontal Scroll) -->
+      <div class="card flush table-wrap" style="overflow-x:hidden">
+        <table class="table" style="width:100%;table-layout:fixed;border-collapse:collapse">
           <thead>
             <tr>
-              <th style="width:48px;text-align:center">Score</th>
-              <th style="width:160px">Company & Base</th>
-              <th style="width:150px">Email</th>
+              <th style="width:44px;text-align:center">Score</th>
+              <th style="width:165px">Company & Base</th>
+              <th style="width:155px">Email</th>
               <th style="width:120px">Fleet Types</th>
-              <th style="width:145px">Notes</th>
-              <th style="width:148px">Status</th>
-              <th style="width:62px;text-align:center">Web</th>
-              <th style="width:95px;text-align:right">Actions</th>
+              <th style="width:180px">Notes</th>
+              <th style="width:145px">Status</th>
+              <th style="width:55px;text-align:center">Web</th>
+              <th style="width:36px;text-align:center" title="Delete">Del</th>
             </tr>
           </thead>
           <tbody>
@@ -170,20 +164,20 @@ export function render(el) {
               const scoreClass = score >= 90 ? 'chip ok' : score >= 75 ? 'chip' : score >= 50 ? 'chip gold' : 'chip bad';
               const categories = Array.isArray(p.fleet_categories) ? p.fleet_categories : [];
 
-              return `<tr class="hover-row" data-id="${attr(p.id)}" style="height:48px">
+              return `<tr class="hover-row" data-id="${attr(p.id)}" style="height:52px">
                 <td style="text-align:center;vertical-align:middle">
-                  <span class="${scoreClass} clickable" data-act="view-score" data-id="${attr(p.id)}" style="font-weight:700;font-size:.85rem;padding:3px 7px;cursor:pointer" title="Click to view 4-pillar score breakdown">
+                  <span class="${scoreClass} clickable" data-act="view-score" data-id="${attr(p.id)}" style="font-weight:700;font-size:.85rem;padding:3px 6px;cursor:pointer" title="Click to view 4-pillar score breakdown">
                     ${score}
                   </span>
                 </td>
                 <td style="vertical-align:middle">
-                  <div style="font-weight:600;font-size:.88rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:165px" title="${attr(p.name)}">${esc(p.name)}</div>
+                  <div style="font-weight:600;font-size:.88rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(p.name)}">${esc(p.name)}</div>
                   <div class="tiny muted" style="white-space:nowrap;margin-top:2px">📍 ${esc(p.base_city || 'Northern Italy')}</div>
                 </td>
                 <td style="vertical-align:middle;white-space:nowrap">
                   ${p.email 
                     ? `<div class="row nowrap" style="gap:4px;align-items:center;white-space:nowrap">
-                        <a href="mailto:${attr(p.email)}" style="color:var(--series-1);font-size:.8rem;text-decoration:none;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;max-width:135px;overflow:hidden;text-overflow:ellipsis" title="Email: ${attr(p.email)}">
+                        <a href="mailto:${attr(p.email)}" style="color:var(--series-1);font-size:.8rem;text-decoration:none;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;max-width:125px;overflow:hidden;text-overflow:ellipsis" title="Email: ${attr(p.email)}">
                           ${icon('email', 11)} <span style="overflow:hidden;text-overflow:ellipsis">${esc(p.email)}</span>
                         </a>
                         <button class="clickable" data-act="edit-email" data-id="${attr(p.id)}" style="background:none;border:none;padding:1px 3px;cursor:pointer;color:var(--text-3);font-size:.72rem" title="Edit Email">✏️</button>
@@ -194,13 +188,14 @@ export function render(el) {
                   }
                 </td>
                 <td style="vertical-align:middle">
-                  <div class="row nowrap" style="gap:4px;flex-wrap:nowrap;overflow:hidden;white-space:nowrap;max-width:140px">
-                    ${categories.length ? `<span class="chip tiny outline" style="font-size:.71rem;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${attr(categories.join(', '))}">${esc(categories[0])}</span>` : '<span class="faint tiny">Minibus</span>'}
-                    ${categories.length > 1 ? `<span class="chip tiny outline faint" style="font-size:.7rem" title="${attr(categories.slice(1).join(', '))}">+${categories.length - 1}</span>` : ''}
+                  <div style="display:flex;flex-direction:column;gap:3px;max-width:115px;line-height:1.2">
+                    ${categories.slice(0, 2).map((c) => `<span class="chip tiny outline" style="font-size:.67rem;padding:0 5px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px" title="${attr(c)}">${esc(c)}</span>`).join('')}
+                    ${categories.length > 2 ? `<span class="tiny faint" style="font-size:.66rem;padding-left:2px" title="${attr(categories.slice(2).join(', '))}">+${categories.length - 2} more</span>` : ''}
+                    ${!categories.length ? '<span class="faint tiny">Minibus</span>' : ''}
                   </div>
                 </td>
                 <td style="vertical-align:middle">
-                  <div class="clickable" data-act="edit-notes" data-id="${attr(p.id)}" style="cursor:pointer;max-width:155px;display:flex;align-items:flex-start;gap:4px" title="Click to edit notes: ${attr(p.notes || '')}">
+                  <div class="clickable" data-act="edit-notes" data-id="${attr(p.id)}" style="cursor:pointer;max-width:175px;display:flex;align-items:flex-start;gap:4px" title="Click to edit notes: ${attr(p.notes || '')}">
                     <span style="font-size:.74rem;line-height:1.2;flex:none">📝</span>
                     ${p.notes 
                       ? `<span class="tiny" style="color:var(--text-2);font-style:italic;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(p.notes)}</span>`
@@ -209,21 +204,18 @@ export function render(el) {
                   </div>
                 </td>
                 <td style="vertical-align:middle;white-space:nowrap">
-                  <select class="sm bus-status-select" data-id="${attr(p.id)}" style="padding:3px 6px;border-radius:6px;font-size:.76rem;width:100%;min-width:150px;height:29px;line-height:1.2;cursor:pointer;white-space:nowrap;${getStatusBadgeStyle(p.status)}">
+                  <select class="sm bus-status-select" data-id="${attr(p.id)}" style="padding:3px 6px;border-radius:6px;font-size:.75rem;width:100%;height:29px;line-height:1.2;cursor:pointer;white-space:nowrap;${getStatusBadgeStyle(p.status)}">
                     ${core.BUS_STATUSES.map((st) => `<option value="${st.key}" ${p.status === st.key ? 'selected' : ''} style="background:var(--surface);color:var(--ink)">${st.label}</option>`).join('')}
                   </select>
                 </td>
                 <td style="vertical-align:middle;text-align:center;white-space:nowrap">
                   ${p.website 
-                    ? `<a class="btn sm ghost" href="${attr(p.website)}" target="_blank" rel="noopener" style="padding:3px 7px;font-size:.74rem;white-space:nowrap;display:inline-flex;align-items:center;gap:3px" title="Open Website">${icon('external', 11)} Web</a>` 
+                    ? `<a class="btn sm ghost" href="${attr(p.website)}" target="_blank" rel="noopener" style="padding:3px 6px;font-size:.74rem;white-space:nowrap;display:inline-flex;align-items:center;gap:2px" title="Open Website">${icon('external', 11)} Web</a>` 
                     : `<span class="tiny faint">—</span>`
                   }
                 </td>
-                <td style="vertical-align:middle;text-align:right;white-space:nowrap">
-                  <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:nowrap;white-space:nowrap">
-                    <button class="btn sm ghost" data-act="edit-notes" data-id="${attr(p.id)}" style="padding:3px 8px;font-size:.74rem;white-space:nowrap;display:inline-flex;align-items:center;gap:3px" title="Edit Dispatch Notes">✏️ Notes</button>
-                    <button class="btn sm ghost" data-act="delete-partner" data-id="${attr(p.id)}" style="padding:3px 6px;color:var(--bad);white-space:nowrap;display:inline-flex;align-items:center" title="Delete Operator">${icon('trash', 13)}</button>
-                  </div>
+                <td style="vertical-align:middle;text-align:center;white-space:nowrap">
+                  <button class="btn sm ghost" data-act="delete-partner" data-id="${attr(p.id)}" style="padding:4px 6px;color:var(--bad);display:inline-flex;align-items:center" title="Delete Operator">${icon('trash', 13)}</button>
                 </td>
               </tr>`;
             }).join('') : `<tr><td colspan="8" class="empty small">No bus operators found matching the current filters.</td></tr>`}

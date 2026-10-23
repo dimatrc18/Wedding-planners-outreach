@@ -8,7 +8,6 @@ export const BUS_STATUSES = [
   { key: 'APPROVED_PARTNER', label: '4. Approved Partner', tone: 'ok', desc: 'Rates agreed, zero-decal rule confirmed' },
   { key: 'REJECTED', label: '5. Rejected', tone: 'bad', desc: 'Disqualified (decals, rude, no NCC)' },
   { key: 'NOT_RELEVANT', label: '6. Not Relevant', tone: 'bad', desc: 'Not relevant for Dorogo; score pulled to 0' },
-  { key: 'VETTED', label: 'Vetted', tone: 'info', desc: 'Confirmed unbranded dark fleet' },
 ];
 
 export const DISCRETION_LEVELS = [
