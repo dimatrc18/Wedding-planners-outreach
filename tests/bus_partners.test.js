@@ -4,7 +4,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { isRecentlyAdded, operatorHasVehicleType, detectVehicleKey, detectOperatorCityAndRegion, STANDARD_FLEET_TYPES, SCOUT_CANDIDATE_POOL } from '../app/views/bus_partners.js';
+import { 
+  isRecentlyAdded, 
+  isLatestAddition,
+  newBadgeHtml,
+  operatorHasVehicleType, 
+  detectVehicleKey, 
+  detectOperatorCityAndRegion, 
+  STANDARD_FLEET_TYPES, 
+  SCOUT_CANDIDATE_POOL 
+} from '../app/views/bus_partners.js';
 import { 
   addExcludedBusPartner, 
   loadExcludedBusPartners, 
@@ -191,6 +200,39 @@ test('isRecentlyAdded detects newly scouted partners within 1 hour and expires a
   // Missing or invalid created_at
   assert.equal(isRecentlyAdded({}), false);
   assert.equal(isRecentlyAdded(null), false);
+});
+
+test('Batch Recency Differentiation: distinguishes operators added in the latest scout run from earlier new batches', () => {
+  const now = Date.now();
+  // Batch 1: Added 15 minutes ago
+  const earlierOp1 = { id: 'earlier_1', name: 'Earlier 1', created_at: new Date(now - 15 * 60000).toISOString() };
+  const earlierOp2 = { id: 'earlier_2', name: 'Earlier 2', created_at: new Date(now - 15 * 60000).toISOString() };
+
+  // Batch 2: Added just now (added after!)
+  const latestOp1 = { id: 'latest_1', name: 'Latest 1', created_at: new Date(now - 30 * 1000).toISOString() };
+  const latestOp2 = { id: 'latest_2', name: 'Latest 2', created_at: new Date(now - 20 * 1000).toISOString() };
+
+  const allOps = [latestOp2, latestOp1, earlierOp2, earlierOp1];
+
+  // 1. Both batches are within 1 hour
+  assert.equal(isRecentlyAdded(earlierOp1), true);
+  assert.equal(isRecentlyAdded(latestOp1), true);
+
+  // 2. isLatestAddition accurately identifies only the latest batch
+  assert.equal(isLatestAddition(latestOp1, allOps), true);
+  assert.equal(isLatestAddition(latestOp2, allOps), true);
+  assert.equal(isLatestAddition(earlierOp1, allOps), false);
+  assert.equal(isLatestAddition(earlierOp2, allOps), false);
+
+  // 3. newBadgeHtml displays distinct visual badges
+  const latestBadge = newBadgeHtml(latestOp1, allOps);
+  assert(latestBadge.includes('⚡ LATEST'), 'Latest batch badge must display ⚡ LATEST');
+  assert(latestBadge.includes('latest-batch-badge'));
+
+  const earlierBadge = newBadgeHtml(earlierOp1, allOps);
+  assert(earlierBadge.includes('15m ago'), 'Earlier batch badge must display exact age: 15m ago');
+  assert(earlierBadge.includes('earlier-batch-badge'));
+  assert(!earlierBadge.includes('⚡ LATEST'));
 });
 
 test('operatorHasVehicleType and detectVehicleKey: accurately categorize and filter platforms', () => {

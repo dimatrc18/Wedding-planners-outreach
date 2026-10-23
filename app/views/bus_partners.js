@@ -13,11 +13,12 @@ import {
 } from '../store.js';
 import { esc, attr, icon, download, toast, confirmDialog } from '../ui.js';
 
-let activeFilter = 'all'; // all | newly_added | top_tier
+let activeFilter = 'all'; // all | latest_added | newly_added | top_tier
 let statusFilter = 'all'; // all | TO_REVIEW | WANT_TO_CONTACT | CONTACTED | APPROVED_PARTNER | REJECTED | NOT_RELEVANT
 let vehicleFilter = 'all'; // all | v_class | sprinter_vip | sprinter_lux | midibus | limobus | gt_coach
 let cityFilter = 'all';
 let searchQ = '';
+let sortBy = 'score_desc'; // score_desc | newest_first | name_asc
 const selectedPartnerIds = new Set();
 
 function getStatusBadgeStyle(status) {
@@ -670,12 +671,49 @@ export function isRecentlyAdded(p) {
   return diffMs >= 0 && diffMs < 3600000; // 1 hour = 3600000 ms
 }
 
-export function newBadgeHtml(p) {
+export function getLatestAdditionBatchTime(list = []) {
+  const recent = (list && list.length ? list : (S.busPartners || [])).filter(isRecentlyAdded);
+  if (!recent.length) return 0;
+  return Math.max(...recent.map((p) => new Date(p.created_at).getTime()));
+}
+
+export function isLatestAddition(p, list = []) {
+  if (!isRecentlyAdded(p)) return false;
+  const pTime = new Date(p.created_at).getTime();
+  const partnersList = list && list.length ? list : (S.busPartners || []);
+  const latestTime = getLatestAdditionBatchTime(partnersList);
+  if (!latestTime) return false;
+  // Consider part of latest addition if added within 90 seconds of the newest addition
+  return Math.abs(latestTime - pTime) <= 90000;
+}
+
+export function newBadgeHtml(p, list = []) {
   if (!isRecentlyAdded(p)) return '';
   const created = new Date(p.created_at).getTime();
   const minsAgo = Math.max(0, Math.floor((Date.now() - created) / 60000));
   const remainingMins = Math.max(1, 60 - minsAgo);
-  return `<span class="chip tiny ok new-scout-badge" style="padding:1px 6px;font-size:.67rem;font-weight:700;background:#059669;color:#fff;border-radius:10px;letter-spacing:.02em;flex:none;box-shadow:0 0 6px rgba(16,185,129,0.35);display:inline-flex;align-items:center;gap:3px" title="⚡ Scouted ${minsAgo === 0 ? 'just now' : `${minsAgo}m ago`} (NEW badge active for ${remainingMins}m more)">✨ NEW</span>`;
+
+  const partnersList = list && list.length ? list : (S.busPartners || []);
+  const recentPartners = partnersList.filter(isRecentlyAdded);
+  const latestBatchTime = getLatestAdditionBatchTime(partnersList);
+  const isLatest = Math.abs(latestBatchTime - created) <= 90000;
+  const hasMultipleBatches = recentPartners.some((r) => Math.abs(latestBatchTime - new Date(r.created_at).getTime()) > 90000);
+
+  if (isLatest && (hasMultipleBatches || minsAgo < 5)) {
+    return `<span class="chip tiny ok new-scout-badge latest-batch-badge" 
+      style="padding:1px 7px;font-size:.67rem;font-weight:800;background:linear-gradient(135deg, #059669 0%, #10b981 100%);color:#fff;border-radius:10px;border:1px solid #34d399;letter-spacing:.02em;flex:none;box-shadow:0 0 7px rgba(16,185,129,0.45);display:inline-flex;align-items:center;gap:3px" 
+      title="⚡ LATEST: Added in the most recent scout run (${minsAgo === 0 ? 'just now' : `${minsAgo}m ago`}) · Added after earlier batches">
+      ⚡ LATEST
+    </span>`;
+  }
+
+  // Earlier recent additions (still < 60 min, but added in an earlier run)
+  const labelText = minsAgo === 0 ? '✨ JUST NOW' : `✨ ${minsAgo}m ago`;
+  return `<span class="chip tiny new-scout-badge earlier-batch-badge" 
+    style="padding:1px 6px;font-size:.66rem;font-weight:600;background:#064e3b;color:#a7f3d0;border-radius:10px;border:1px solid #059669;letter-spacing:.01em;flex:none;display:inline-flex;align-items:center;gap:2px" 
+    title="Added ${minsAgo}m ago (earlier scout batch) · Active for ${remainingMins}m more">
+    ${labelText}
+  </span>`;
 }
 
 export function render(el) {
@@ -691,12 +729,15 @@ export function render(el) {
     const activePartners = list.filter((p) => p.status === 'APPROVED_PARTNER').length;
     const toReviewCount = list.filter((p) => p.status === 'TO_REVIEW').length;
     const newlyAddedCount = list.filter(isRecentlyAdded).length;
+    const latestAddedCount = list.filter((p) => isLatestAddition(p, list)).length;
 
     // Filter logic
     let filtered = [...list];
 
-    // Presets (All, Newly Added, Top Tier)
-    if (activeFilter === 'newly_added') {
+    // Presets (All, Latest Added, Newly Added, Top Tier)
+    if (activeFilter === 'latest_added') {
+      filtered = filtered.filter((p) => isLatestAddition(p, list));
+    } else if (activeFilter === 'newly_added') {
       filtered = filtered.filter(isRecentlyAdded);
     } else if (activeFilter === 'top_tier') {
       filtered = filtered.filter((p) => (p.relevance_score || 0) >= 80);
@@ -729,8 +770,20 @@ export function render(el) {
       );
     }
 
-    // Sort by relevance score descending
-    filtered.sort((a, b) => (b.relevance_score || 0) - (a.relevance_score || 0));
+    // Sort order
+    if (sortBy === 'newest_first') {
+      filtered.sort((a, b) => {
+        const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+        if (tb !== ta) return tb - ta;
+        return (b.relevance_score || 0) - (a.relevance_score || 0);
+      });
+    } else if (sortBy === 'name_asc') {
+      filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    } else {
+      // Default: relevance score descending
+      filtered.sort((a, b) => (b.relevance_score || 0) - (a.relevance_score || 0));
+    }
 
     // Excluded operators memory & selection cleanup
     const excludedList = loadExcludedBusPartners();
@@ -805,14 +858,19 @@ export function render(el) {
         <!-- Quick filter presets & status shortcuts -->
         <div class="row" style="gap:6px;flex-wrap:wrap;align-items:center">
           <button class="chip ${activeFilter === 'all' && statusFilter === 'all' && vehicleFilter === 'all' && cityFilter === 'all' && !searchQ ? 'active' : 'outline'}" data-filter="all">All (${totalDiscovered})</button>
-          ${newlyAddedCount > 0 ? `<button class="chip ${activeFilter === 'newly_added' ? 'active' : 'outline'}" data-filter="newly_added" style="${activeFilter === 'newly_added' ? 'background:#059669;color:#fff;border-color:#059669;font-weight:700' : 'border-color:#059669;color:#059669;font-weight:700'}">✨ Newly Added (${newlyAddedCount})</button>` : ''}
+          ${latestAddedCount > 0 && latestAddedCount < newlyAddedCount ? `
+            <button class="chip ${activeFilter === 'latest_added' ? 'active' : 'outline'}" data-filter="latest_added" style="${activeFilter === 'latest_added' ? 'background:linear-gradient(135deg, #059669, #10b981);color:#fff;border-color:#10b981;font-weight:700' : 'border-color:#10b981;color:#059669;font-weight:700'}" title="View only operators added in the most recent scout run">
+              ⚡ Just Added (${latestAddedCount})
+            </button>
+          ` : ''}
+          ${newlyAddedCount > 0 ? `<button class="chip ${activeFilter === 'newly_added' ? 'active' : 'outline'}" data-filter="newly_added" style="${activeFilter === 'newly_added' ? 'background:#059669;color:#fff;border-color:#059669;font-weight:700' : 'border-color:#059669;color:#059669;font-weight:700'}" title="View all new operators added within the last 1 hour">${latestAddedCount < newlyAddedCount ? `✨ All New (${newlyAddedCount})` : `✨ Newly Added (${newlyAddedCount})`}</button>` : ''}
           <button class="chip ${activeFilter === 'top_tier' ? 'active' : 'outline'}" data-filter="top_tier">⭐ Top Tier (≥80) (${topTierMatches})</button>
           <button class="chip ${statusFilter === 'WANT_TO_CONTACT' ? 'active' : 'outline'}" data-filter="want_to_contact" style="${statusFilter === 'WANT_TO_CONTACT' ? 'background:#6d28d9;color:#fff;border-color:#6d28d9;font-weight:700' : ''}">📞 Want to Contact (${wantToContactCount})</button>
           <button class="chip ${statusFilter === 'TO_REVIEW' ? 'active' : 'outline'}" data-filter="to_review">⏳ To Review (${toReviewCount})</button>
           <button class="chip ${statusFilter === 'APPROVED_PARTNER' ? 'active' : 'outline'}" data-filter="approved" style="${statusFilter === 'APPROVED_PARTNER' ? 'background:var(--ok);color:#fff;border-color:var(--ok);font-weight:700' : ''}">🤝 Active Partners (${activePartners})</button>
         </div>
 
-        <!-- Filter Dropdowns: Status, Vehicle Platform, City, Search -->
+        <!-- Filter Dropdowns: Status, Vehicle Platform, City, Sort, Search -->
         <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">
           <!-- Status Dropdown -->
           <select id="select-status" class="sm" style="padding:4px 8px;border-radius:6px;border:1px solid ${statusFilter !== 'all' ? '#6d28d9' : 'var(--border)'};background:${statusFilter !== 'all' ? '#f5f3ff' : 'var(--surface)'};font-size:.82rem;font-weight:${statusFilter !== 'all' ? '700' : '500'}" title="Filter by Status">
@@ -844,8 +902,15 @@ export function render(el) {
             `).join('')}
           </select>
 
+          <!-- Sort Order Dropdown -->
+          <select id="select-sort" class="sm" style="padding:4px 8px;border-radius:6px;border:1px solid ${sortBy !== 'score_desc' ? 'var(--gold-strong)' : 'var(--border)'};background:${sortBy !== 'score_desc' ? 'var(--gold-soft)' : 'var(--surface)'};font-size:.82rem;font-weight:${sortBy !== 'score_desc' ? '700' : '500'}" title="Sort bus partners">
+            <option value="score_desc" ${sortBy === 'score_desc' ? 'selected' : ''}>Sort: Score ↓</option>
+            <option value="newest_first" ${sortBy === 'newest_first' ? 'selected' : ''}>Sort: Newest First ⚡</option>
+            <option value="name_asc" ${sortBy === 'name_asc' ? 'selected' : ''}>Sort: Name (A–Z)</option>
+          </select>
+
           <!-- Search Input -->
-          <input type="text" id="bus-search" placeholder="Search company, city, email, fleet..." value="${attr(searchQ)}" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);font-size:.85rem;min-width:180px">
+          <input type="text" id="bus-search" placeholder="Search company, city, email, fleet..." value="${attr(searchQ)}" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);font-size:.85rem;min-width:170px">
 
           <!-- Reset Filter Button -->
           ${hasActiveFilters ? `
@@ -915,9 +980,18 @@ export function render(el) {
               const scoreClass = score >= 90 ? 'chip ok' : score >= 75 ? 'chip' : score >= 50 ? 'chip gold' : 'chip bad';
               const categories = Array.isArray(p.fleet_categories) ? p.fleet_categories : [];
               const isNew = isRecentlyAdded(p);
+              const isLatest = isLatestAddition(p, list);
               const isChecked = selectedPartnerIds.has(p.id);
 
-              return `<tr class="hover-row ${isNew ? 'newly-added-row' : ''}" data-id="${attr(p.id)}" style="min-height:56px;${isChecked ? 'background:rgba(245, 158, 11, 0.08);' : isNew ? 'background:rgba(16, 185, 129, 0.05);' : ''}">
+              const rowStyle = isChecked 
+                ? 'background:rgba(245, 158, 11, 0.08);' 
+                : isLatest 
+                ? 'background:rgba(16, 185, 129, 0.08);border-left:3px solid #10b981;' 
+                : isNew 
+                ? 'background:rgba(16, 185, 129, 0.03);border-left:3px solid rgba(16, 185, 129, 0.35);' 
+                : '';
+
+              return `<tr class="hover-row ${isLatest ? 'latest-added-row' : isNew ? 'newly-added-row' : ''}" data-id="${attr(p.id)}" style="min-height:56px;${rowStyle}">
                 <td style="text-align:center;vertical-align:middle;padding:6px 2px">
                   <input type="checkbox" class="partner-select-check" data-id="${attr(p.id)}" ${isChecked ? 'checked' : ''} style="cursor:pointer;margin:0" title="Select #${idx + 1}: ${attr(p.name)}">
                 </td>
@@ -929,7 +1003,7 @@ export function render(el) {
                 <td style="vertical-align:middle">
                   <div class="row" style="gap:5px;align-items:center;white-space:nowrap">
                     <span style="font-weight:600;font-size:.88rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(p.name)}">${esc(p.name)}</span>
-                    ${newBadgeHtml(p)}
+                    ${newBadgeHtml(p, list)}
                   </div>
                   <div class="tiny muted" style="white-space:nowrap;margin-top:2px">📍 ${esc(p.base_city || 'Northern Italy')}</div>
                 </td>
@@ -1030,6 +1104,9 @@ export function render(el) {
           vehicleFilter = 'all';
           cityFilter = 'all';
           searchQ = '';
+        } else if (f === 'latest_added') {
+          activeFilter = activeFilter === 'latest_added' ? 'all' : 'latest_added';
+          if (activeFilter === 'latest_added') sortBy = 'newest_first';
         } else if (f === 'newly_added' || f === 'top_tier') {
           activeFilter = activeFilter === f ? 'all' : f;
         } else if (f === 'want_to_contact') {
@@ -1042,6 +1119,15 @@ export function render(el) {
         paint();
       });
     });
+
+    // Sort order dropdown
+    const sortSelect = el.querySelector('#select-sort');
+    if (sortSelect) {
+      sortSelect.addEventListener('change', (e) => {
+        sortBy = e.target.value;
+        paint();
+      });
+    }
 
     // Status dropdown filter
     const statusSelect = el.querySelector('#select-status');
@@ -2118,7 +2204,8 @@ export function render(el) {
       await wait(350);
       toast(`⚡ Scout complete: Added ${toAdd.length} verified operator${toAdd.length === 1 ? '' : 's'} to CRM!`);
       close();
-      activeFilter = 'newly_added';
+      activeFilter = 'latest_added';
+      sortBy = 'newest_first';
       statusFilter = 'all';
       vehicleFilter = 'all';
       cityFilter = 'all';
@@ -2145,16 +2232,16 @@ export function render(el) {
       </div>
 
       <p class="small muted" style="margin:6px 0 14px">
-        The following operators matched your filters and the 100-Point Relevance Gate. They are tagged with <span class="chip tiny ok" style="background:#059669;color:#fff;font-weight:700;padding:1px 5px">✨ NEW</span> for 1 hour.
+        The following operators matched your filters and the 100-Point Relevance Gate. They are tagged with <span class="chip tiny ok" style="background:linear-gradient(135deg, #059669, #10b981);color:#fff;font-weight:800;padding:1px 6px;border-radius:10px;border:1px solid #34d399">⚡ LATEST</span> to clearly differentiate them from earlier additions.
       </p>
 
       <div class="stack" style="gap:8px;max-height:340px;overflow-y:auto;padding-right:4px">
         ${addedPartners.map((op, i) => `
-          <div class="card row between" style="align-items:center;padding:10px 14px;background:var(--surface-2);border-radius:6px;border:1px solid var(--line)">
+          <div class="card row between" style="align-items:center;padding:10px 14px;background:var(--surface-2);border-radius:6px;border:1px solid var(--line);border-left:3px solid #10b981">
             <div class="stack" style="gap:3px;min-width:0;flex:1">
               <div class="row" style="gap:6px;align-items:center">
                 <span style="font-weight:700;font-size:.9rem">${i + 1}. ${esc(op.name)}</span>
-                <span class="chip tiny ok" style="background:#059669;color:#fff;font-weight:700;padding:1px 5px;font-size:.65rem">✨ NEW</span>
+                <span class="chip tiny ok" style="background:linear-gradient(135deg, #059669, #10b981);color:#fff;font-weight:800;padding:1px 6px;font-size:.65rem;border-radius:10px;border:1px solid #34d399">⚡ LATEST</span>
               </div>
               <div class="tiny muted" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
                 📍 ${esc(op.base_city || 'Northern Italy')}
@@ -2176,10 +2263,10 @@ export function render(el) {
       </div>
 
       <div class="row" style="justify-content:space-between;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--line)">
-        <span class="tiny muted">Tag remains active for 1 hour</span>
+        <span class="tiny muted">Tagged with ⚡ LATEST · New status active for 1 hour</span>
         <div class="row" style="gap:8px">
           <button class="btn ghost sm" id="btn-modal-view-all">View All (${totalCount})</button>
-          <button class="btn primary sm" id="btn-modal-view-new" style="background:#059669;border-color:#059669;font-weight:600">✨ View Newly Added (${addedPartners.length})</button>
+          <button class="btn primary sm" id="btn-modal-view-new" style="background:linear-gradient(135deg, #059669, #10b981);border:1px solid #34d399;font-weight:700">⚡ View Just Added (${addedPartners.length})</button>
         </div>
       </div>
     </div>`;
@@ -2199,7 +2286,8 @@ export function render(el) {
     });
 
     backdrop.querySelector('#btn-modal-view-new').addEventListener('click', () => {
-      activeFilter = 'newly_added';
+      activeFilter = 'latest_added';
+      sortBy = 'newest_first';
       statusFilter = 'all';
       vehicleFilter = 'all';
       cityFilter = 'all';
