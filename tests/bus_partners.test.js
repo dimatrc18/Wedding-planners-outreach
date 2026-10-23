@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { isRecentlyAdded } from '../app/views/bus_partners.js';
 import {
   calculateBusRelevanceScore,
   getPriorityTier,
@@ -164,4 +165,21 @@ test('Isolation Principle: existing CRM tables and core workflows remain unaffec
   assert.equal(FLEET_TIERS.length, 3);
   assert.equal(TERRITORY_PERMITS.length, 3);
   assert.equal(CORPORATE_SLA.length, 2);
+});
+
+test('isRecentlyAdded detects newly scouted partners within 1 hour and expires after 60m', () => {
+  const now = Date.now();
+  // Just scouted (now)
+  assert.equal(isRecentlyAdded({ created_at: new Date(now).toISOString() }), true);
+  // Scouted 30 mins ago (still within 1 hour)
+  assert.equal(isRecentlyAdded({ created_at: new Date(now - 30 * 60000).toISOString() }), true);
+  // Scouted 59 mins ago (still within 1 hour)
+  assert.equal(isRecentlyAdded({ created_at: new Date(now - 59 * 60000).toISOString() }), true);
+  // Scouted 61 mins ago (expired, no longer new)
+  assert.equal(isRecentlyAdded({ created_at: new Date(now - 61 * 60000).toISOString() }), false);
+  // Scouted 2 hours ago (expired)
+  assert.equal(isRecentlyAdded({ created_at: new Date(now - 120 * 60000).toISOString() }), false);
+  // Missing or invalid created_at
+  assert.equal(isRecentlyAdded({}), false);
+  assert.equal(isRecentlyAdded(null), false);
 });

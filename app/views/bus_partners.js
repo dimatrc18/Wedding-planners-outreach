@@ -216,6 +216,22 @@ export const SCOUT_CANDIDATE_POOL = [
   }
 ];
 
+export function isRecentlyAdded(p) {
+  if (!p || !p.created_at) return false;
+  const created = new Date(p.created_at).getTime();
+  if (isNaN(created)) return false;
+  const diffMs = Date.now() - created;
+  return diffMs >= 0 && diffMs < 3600000; // 1 hour = 3600000 ms
+}
+
+export function newBadgeHtml(p) {
+  if (!isRecentlyAdded(p)) return '';
+  const created = new Date(p.created_at).getTime();
+  const minsAgo = Math.max(0, Math.floor((Date.now() - created) / 60000));
+  const remainingMins = Math.max(1, 60 - minsAgo);
+  return `<span class="chip tiny ok new-scout-badge" style="padding:1px 6px;font-size:.67rem;font-weight:700;background:#059669;color:#fff;border-radius:10px;letter-spacing:.02em;flex:none;box-shadow:0 0 6px rgba(16,185,129,0.35);display:inline-flex;align-items:center;gap:3px" title="⚡ Scouted ${minsAgo === 0 ? 'just now' : `${minsAgo}m ago`} (NEW badge active for ${remainingMins}m more)">✨ NEW</span>`;
+}
+
 export function render(el) {
   paint();
 
@@ -227,10 +243,13 @@ export function render(el) {
     const topTierMatches = list.filter((p) => (p.relevance_score || 0) >= 80).length;
     const wantToContactCount = list.filter((p) => p.status === 'WANT_TO_CONTACT').length;
     const activePartners = list.filter((p) => p.status === 'APPROVED_PARTNER').length;
+    const newlyAddedCount = list.filter(isRecentlyAdded).length;
 
     // Filter logic
     let filtered = [...list];
-    if (activeFilter === 'top_tier') {
+    if (activeFilter === 'newly_added') {
+      filtered = filtered.filter(isRecentlyAdded);
+    } else if (activeFilter === 'top_tier') {
       filtered = filtered.filter((p) => (p.relevance_score || 0) >= 80);
     } else if (activeFilter === 'want_to_contact') {
       filtered = filtered.filter((p) => p.status === 'WANT_TO_CONTACT');
@@ -318,6 +337,7 @@ export function render(el) {
       <div class="row between" style="gap:12px;flex-wrap:wrap;align-items:center">
         <div class="row" style="gap:6px;flex-wrap:wrap">
           <button class="chip ${activeFilter === 'all' ? 'active' : 'outline'}" data-filter="all">All (${totalDiscovered})</button>
+          ${newlyAddedCount > 0 ? `<button class="chip ${activeFilter === 'newly_added' ? 'active' : 'outline'}" data-filter="newly_added" style="${activeFilter === 'newly_added' ? 'background:#059669;color:#fff;border-color:#059669;font-weight:700' : 'border-color:#059669;color:#059669;font-weight:700'}">✨ Newly Added (${newlyAddedCount})</button>` : ''}
           <button class="chip ${activeFilter === 'top_tier' ? 'active' : 'outline'}" data-filter="top_tier">⭐ Top Tier (≥80) (${topTierMatches})</button>
           <button class="chip ${activeFilter === 'want_to_contact' ? 'active' : 'outline'}" data-filter="want_to_contact">📞 Want to Contact (${wantToContactCount})</button>
           <button class="chip ${activeFilter === 'to_review' ? 'active' : 'outline'}" data-filter="to_review">⏳ To Review (${list.filter(p => p.status === 'TO_REVIEW').length})</button>
@@ -355,8 +375,9 @@ export function render(el) {
               const tier = core.getPriorityTier(score);
               const scoreClass = score >= 90 ? 'chip ok' : score >= 75 ? 'chip' : score >= 50 ? 'chip gold' : 'chip bad';
               const categories = Array.isArray(p.fleet_categories) ? p.fleet_categories : [];
+              const isNew = isRecentlyAdded(p);
 
-              return `<tr class="hover-row" data-id="${attr(p.id)}" style="min-height:56px">
+              return `<tr class="hover-row ${isNew ? 'newly-added-row' : ''}" data-id="${attr(p.id)}" style="min-height:56px;${isNew ? 'background:rgba(16, 185, 129, 0.05);' : ''}">
                 <td style="text-align:center;vertical-align:middle;color:var(--ink-3);font-size:.76rem;font-weight:600;font-variant-numeric:tabular-nums;padding:6px 2px">
                   ${idx + 1}
                 </td>
@@ -366,7 +387,10 @@ export function render(el) {
                   </span>
                 </td>
                 <td style="vertical-align:middle">
-                  <div style="font-weight:600;font-size:.88rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(p.name)}">${esc(p.name)}</div>
+                  <div class="row" style="gap:5px;align-items:center;white-space:nowrap">
+                    <span style="font-weight:600;font-size:.88rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(p.name)}">${esc(p.name)}</span>
+                    ${newBadgeHtml(p)}
+                  </div>
                   <div class="tiny muted" style="white-space:nowrap;margin-top:2px">📍 ${esc(p.base_city || 'Northern Italy')}</div>
                 </td>
                 <td style="vertical-align:middle;text-align:center;white-space:nowrap">
@@ -849,10 +873,15 @@ export function render(el) {
 
     backdrop.querySelector('#btn-scout-add-crm').addEventListener('click', async () => {
       if (!evaluatedPartner) return;
-      await addBusPartner(evaluatedPartner);
-      toast(`Added "${evaluatedPartner.name}" to CRM Manifest (Score: ${evaluatedPartner.relevance_score})`);
+      const added = await addBusPartner({
+        ...evaluatedPartner,
+        created_at: new Date().toISOString(),
+      });
+      toast(`✨ Added "${evaluatedPartner.name}" to CRM Manifest (Score: ${evaluatedPartner.relevance_score})`);
       close();
+      activeFilter = 'newly_added';
       paint();
+      openScoutSummaryModal([added || evaluatedPartner]);
     });
   }
 
@@ -990,12 +1019,93 @@ export function render(el) {
       }
 
       const toAdd = candidates.slice(0, count);
+      const addedList = [];
 
       for (const op of toAdd) {
-        await addBusPartner(op);
+        const added = await addBusPartner({
+          ...op,
+          created_at: new Date().toISOString(),
+          notes: op.notes || `Scouted on ${new Date().toLocaleDateString('en-GB')}: 100-Point Score ${op.relevance_score || 0}/100`,
+        });
+        addedList.push(added || op);
       }
 
       toast(`⚡ Scout complete: Added ${toAdd.length} verified operator${toAdd.length === 1 ? '' : 's'} to CRM!`);
+      close();
+      activeFilter = 'newly_added';
+      paint();
+      openScoutSummaryModal(addedList);
+    });
+  }
+
+  // --- Auto-Scout Summary Modal (Shows exactly what operators were added) ---
+  function openScoutSummaryModal(addedPartners) {
+    if (!addedPartners || !addedPartners.length) return;
+    const backdrop = document.createElement('div');
+    backdrop.className = 'dialog-backdrop';
+    const totalCount = (S.busPartners || []).length;
+    backdrop.innerHTML = `
+    <div class="dialog card stack" style="max-width:540px;padding:24px">
+      <div class="row between" style="align-items:flex-start">
+        <div>
+          <div class="label eyebrow" style="color:var(--ok);font-weight:700">✨ Auto-Scout Complete</div>
+          <h3 style="margin:2px 0 0">Added ${addedPartners.length} New Operator${addedPartners.length === 1 ? '' : 's'} to CRM</h3>
+        </div>
+        <button class="btn ghost sm" data-close aria-label="Close">✕</button>
+      </div>
+
+      <p class="small muted" style="margin:6px 0 14px">
+        The following operators matched your filters and the 100-Point Relevance Gate. They are tagged with <span class="chip tiny ok" style="background:#059669;color:#fff;font-weight:700;padding:1px 5px">✨ NEW</span> for 1 hour.
+      </p>
+
+      <div class="stack" style="gap:8px;max-height:340px;overflow-y:auto;padding-right:4px">
+        ${addedPartners.map((op, i) => `
+          <div class="card row between" style="align-items:center;padding:10px 14px;background:var(--surface-2);border-radius:6px;border:1px solid var(--line)">
+            <div class="stack" style="gap:3px;min-width:0;flex:1">
+              <div class="row" style="gap:6px;align-items:center">
+                <span style="font-weight:700;font-size:.9rem">${i + 1}. ${esc(op.name)}</span>
+                <span class="chip tiny ok" style="background:#059669;color:#fff;font-weight:700;padding:1px 5px;font-size:.65rem">✨ NEW</span>
+              </div>
+              <div class="tiny muted" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                📍 ${esc(op.base_city || 'Northern Italy')}
+                ${op.email ? `· <span style="color:var(--series-1)">${esc(op.email)}</span>` : '· <span class="faint">No email</span>'}
+                ${op.website ? `· <a href="${attr(op.website)}" target="_blank" rel="noopener" style="color:var(--ink-2);text-decoration:none">🌐 Web</a>` : ''}
+              </div>
+              <div class="row" style="gap:4px;flex-wrap:wrap;margin-top:2px">
+                ${(op.fleet_categories || []).map((c) => `<span class="chip tiny outline" style="font-size:.68rem;padding:1px 5px">${esc(shortFleetName(c))}</span>`).join('')}
+              </div>
+            </div>
+            <div style="text-align:right;flex:none;margin-left:14px">
+              <span class="chip ${op.relevance_score >= 80 ? 'ok' : 'gold'}" style="font-weight:800;font-size:1rem;padding:3px 8px">
+                ${op.relevance_score || 0}/100
+              </span>
+              <div class="tiny muted" style="margin-top:2px">${core.getPriorityTier(op.relevance_score || 0).badge}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="row" style="justify-content:space-between;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--line)">
+        <span class="tiny muted">Tag remains active for 1 hour</span>
+        <div class="row" style="gap:8px">
+          <button class="btn ghost sm" id="btn-modal-view-all">View All (${totalCount})</button>
+          <button class="btn primary sm" id="btn-modal-view-new" style="background:#059669;border-color:#059669;font-weight:600">✨ View Newly Added (${addedPartners.length})</button>
+        </div>
+      </div>
+    </div>`;
+
+    document.body.appendChild(backdrop);
+    const close = () => backdrop.remove();
+    backdrop.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', close));
+
+    backdrop.querySelector('#btn-modal-view-all').addEventListener('click', () => {
+      activeFilter = 'all';
+      close();
+      paint();
+    });
+
+    backdrop.querySelector('#btn-modal-view-new').addEventListener('click', () => {
+      activeFilter = 'newly_added';
       close();
       paint();
     });

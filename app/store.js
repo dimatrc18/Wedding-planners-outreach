@@ -278,9 +278,9 @@ export async function addBusPartner(partner) {
   const newRow = {
     id: partner.id || `partner_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
     status: partner.status || 'TO_REVIEW',
-    created_at: nowIso(),
-    updated_at: nowIso(),
     ...partner,
+    created_at: partner.created_at || nowIso(),
+    updated_at: nowIso(),
   };
   S.busPartners = [newRow, ...(S.busPartners || [])];
   saveStoredBusPartners(S.busPartners);
