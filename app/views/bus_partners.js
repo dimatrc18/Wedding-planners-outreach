@@ -149,11 +149,11 @@ export function render(el) {
             <tr>
               <th style="width:44px;text-align:center">Score</th>
               <th style="width:165px">Company & Base</th>
+              <th style="width:55px;text-align:center">Web</th>
               <th style="width:155px">Email</th>
               <th style="width:120px">Fleet Types</th>
               <th style="width:180px">Notes</th>
               <th style="width:145px">Status</th>
-              <th style="width:55px;text-align:center">Web</th>
               <th style="width:36px;text-align:center" title="Delete">Del</th>
             </tr>
           </thead>
@@ -173,6 +173,12 @@ export function render(el) {
                 <td style="vertical-align:middle">
                   <div style="font-weight:600;font-size:.88rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(p.name)}">${esc(p.name)}</div>
                   <div class="tiny muted" style="white-space:nowrap;margin-top:2px">📍 ${esc(p.base_city || 'Northern Italy')}</div>
+                </td>
+                <td style="vertical-align:middle;text-align:center;white-space:nowrap">
+                  ${p.website 
+                    ? `<a class="btn sm ghost" href="${attr(p.website)}" target="_blank" rel="noopener" style="padding:3px 6px;font-size:.74rem;white-space:nowrap;display:inline-flex;align-items:center;gap:2px" title="Open Website">${icon('external', 11)} Web</a>` 
+                    : `<span class="tiny faint">—</span>`
+                  }
                 </td>
                 <td style="vertical-align:middle;white-space:nowrap">
                   ${p.email 
@@ -207,12 +213,6 @@ export function render(el) {
                   <select class="sm bus-status-select" data-id="${attr(p.id)}" style="padding:3px 6px;border-radius:6px;font-size:.75rem;width:100%;height:29px;line-height:1.2;cursor:pointer;white-space:nowrap;${getStatusBadgeStyle(p.status)}">
                     ${core.BUS_STATUSES.map((st) => `<option value="${st.key}" ${p.status === st.key ? 'selected' : ''} style="background:var(--surface);color:var(--ink)">${st.label}</option>`).join('')}
                   </select>
-                </td>
-                <td style="vertical-align:middle;text-align:center;white-space:nowrap">
-                  ${p.website 
-                    ? `<a class="btn sm ghost" href="${attr(p.website)}" target="_blank" rel="noopener" style="padding:3px 6px;font-size:.74rem;white-space:nowrap;display:inline-flex;align-items:center;gap:2px" title="Open Website">${icon('external', 11)} Web</a>` 
-                    : `<span class="tiny faint">—</span>`
-                  }
                 </td>
                 <td style="vertical-align:middle;text-align:center;white-space:nowrap">
                   <button class="btn sm ghost" data-act="delete-partner" data-id="${attr(p.id)}" style="padding:4px 6px;color:var(--bad);display:inline-flex;align-items:center" title="Delete Operator">${icon('trash', 13)}</button>
