@@ -150,17 +150,17 @@ export function render(el) {
 
       <!-- Minimalist Bus Partner Manifest Table -->
       <div class="card flush table-wrap" style="overflow-x:auto">
-        <table class="table" style="width:100%;min-width:1160px;border-collapse:collapse">
+        <table class="table" style="width:100%;min-width:910px;table-layout:fixed;border-collapse:collapse">
           <thead>
             <tr>
-              <th style="width:55px;min-width:55px;text-align:center">Score</th>
-              <th style="width:220px;min-width:200px">Company & Base</th>
-              <th style="width:200px;min-width:180px">Email</th>
-              <th style="width:180px;min-width:160px">Fleet Types</th>
-              <th style="width:210px;min-width:180px">Notes</th>
-              <th style="width:165px;min-width:155px">Status</th>
-              <th style="width:85px;min-width:80px">Web</th>
-              <th style="width:130px;min-width:120px;text-align:right">Actions</th>
+              <th style="width:48px;text-align:center">Score</th>
+              <th style="width:160px">Company & Base</th>
+              <th style="width:150px">Email</th>
+              <th style="width:120px">Fleet Types</th>
+              <th style="width:145px">Notes</th>
+              <th style="width:148px">Status</th>
+              <th style="width:62px;text-align:center">Web</th>
+              <th style="width:95px;text-align:right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -172,58 +172,57 @@ export function render(el) {
 
               return `<tr class="hover-row" data-id="${attr(p.id)}" style="height:48px">
                 <td style="text-align:center;vertical-align:middle">
-                  <span class="${scoreClass} clickable" data-act="view-score" data-id="${attr(p.id)}" style="font-weight:700;font-size:.88rem;padding:3px 8px;cursor:pointer" title="Click to view 4-pillar score breakdown">
+                  <span class="${scoreClass} clickable" data-act="view-score" data-id="${attr(p.id)}" style="font-weight:700;font-size:.85rem;padding:3px 7px;cursor:pointer" title="Click to view 4-pillar score breakdown">
                     ${score}
                   </span>
                 </td>
                 <td style="vertical-align:middle">
-                  <div style="font-weight:600;font-size:.9rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(p.name)}">${esc(p.name)}</div>
+                  <div style="font-weight:600;font-size:.88rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:165px" title="${attr(p.name)}">${esc(p.name)}</div>
                   <div class="tiny muted" style="white-space:nowrap;margin-top:2px">📍 ${esc(p.base_city || 'Northern Italy')}</div>
                 </td>
                 <td style="vertical-align:middle;white-space:nowrap">
                   ${p.email 
-                    ? `<div class="row nowrap" style="gap:5px;align-items:center;white-space:nowrap">
-                        <a href="mailto:${attr(p.email)}" style="color:var(--series-1);font-size:.82rem;text-decoration:none;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;max-width:145px;overflow:hidden;text-overflow:ellipsis" title="Email: ${attr(p.email)}">
-                          ${icon('email', 12)} <span style="overflow:hidden;text-overflow:ellipsis">${esc(p.email)}</span>
+                    ? `<div class="row nowrap" style="gap:4px;align-items:center;white-space:nowrap">
+                        <a href="mailto:${attr(p.email)}" style="color:var(--series-1);font-size:.8rem;text-decoration:none;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;max-width:135px;overflow:hidden;text-overflow:ellipsis" title="Email: ${attr(p.email)}">
+                          ${icon('email', 11)} <span style="overflow:hidden;text-overflow:ellipsis">${esc(p.email)}</span>
                         </a>
-                        <button class="clickable" data-act="edit-email" data-id="${attr(p.id)}" style="background:none;border:none;padding:2px 4px;cursor:pointer;color:var(--text-3);font-size:.76rem" title="Edit Email">✏️</button>
+                        <button class="clickable" data-act="edit-email" data-id="${attr(p.id)}" style="background:none;border:none;padding:1px 3px;cursor:pointer;color:var(--text-3);font-size:.72rem" title="Edit Email">✏️</button>
                       </div>`
-                    : `<button class="clickable" data-act="edit-email" data-id="${attr(p.id)}" style="background:var(--surface-2);border:1px dashed var(--line-strong);padding:4px 9px;border-radius:5px;color:var(--gold-ink);cursor:pointer;font-size:.75rem;white-space:nowrap;display:inline-flex;align-items:center;gap:4px" title="Click to add email">
+                    : `<button class="clickable" data-act="edit-email" data-id="${attr(p.id)}" style="background:var(--surface-2);border:1px dashed var(--line-strong);padding:3px 7px;border-radius:4px;color:var(--gold-ink);cursor:pointer;font-size:.73rem;white-space:nowrap;display:inline-flex;align-items:center;gap:3px" title="Click to add email">
                         + Add email
                       </button>`
                   }
                 </td>
                 <td style="vertical-align:middle">
-                  <div class="row nowrap" style="gap:4px;flex-wrap:nowrap;overflow:hidden;white-space:nowrap">
-                    ${categories.slice(0, 2).map((c) => `<span class="chip tiny outline" style="font-size:.72rem;white-space:nowrap" title="${attr(c)}">${esc(c.length > 20 ? c.slice(0, 19) + '…' : c)}</span>`).join('')}
-                    ${categories.length > 2 ? `<span class="chip tiny outline faint" title="${attr(categories.slice(2).join(', '))}">+${categories.length - 2}</span>` : ''}
-                    ${!categories.length ? '<span class="faint tiny">Minibus / GT Coaches</span>' : ''}
+                  <div class="row nowrap" style="gap:4px;flex-wrap:nowrap;overflow:hidden;white-space:nowrap;max-width:140px">
+                    ${categories.length ? `<span class="chip tiny outline" style="font-size:.71rem;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${attr(categories.join(', '))}">${esc(categories[0])}</span>` : '<span class="faint tiny">Minibus</span>'}
+                    ${categories.length > 1 ? `<span class="chip tiny outline faint" style="font-size:.7rem" title="${attr(categories.slice(1).join(', '))}">+${categories.length - 1}</span>` : ''}
                   </div>
                 </td>
                 <td style="vertical-align:middle">
-                  <div class="clickable" data-act="edit-notes" data-id="${attr(p.id)}" style="cursor:pointer;max-width:210px;display:flex;align-items:flex-start;gap:5px" title="Click to edit notes: ${attr(p.notes || '')}">
-                    <span style="font-size:.76rem;line-height:1.2;flex:none">📝</span>
+                  <div class="clickable" data-act="edit-notes" data-id="${attr(p.id)}" style="cursor:pointer;max-width:155px;display:flex;align-items:flex-start;gap:4px" title="Click to edit notes: ${attr(p.notes || '')}">
+                    <span style="font-size:.74rem;line-height:1.2;flex:none">📝</span>
                     ${p.notes 
                       ? `<span class="tiny" style="color:var(--text-2);font-style:italic;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(p.notes)}</span>`
-                      : `<span class="tiny" style="color:var(--text-3);font-style:italic">+ Add dispatch notes...</span>`
+                      : `<span class="tiny" style="color:var(--text-3);font-style:italic">+ Add notes...</span>`
                     }
                   </div>
                 </td>
                 <td style="vertical-align:middle;white-space:nowrap">
-                  <select class="sm bus-status-select" data-id="${attr(p.id)}" style="padding:4px 8px;border-radius:6px;font-size:.78rem;width:100%;min-width:155px;height:30px;line-height:1.2;cursor:pointer;white-space:nowrap;${getStatusBadgeStyle(p.status)}">
+                  <select class="sm bus-status-select" data-id="${attr(p.id)}" style="padding:3px 6px;border-radius:6px;font-size:.76rem;width:100%;min-width:150px;height:29px;line-height:1.2;cursor:pointer;white-space:nowrap;${getStatusBadgeStyle(p.status)}">
                     ${core.BUS_STATUSES.map((st) => `<option value="${st.key}" ${p.status === st.key ? 'selected' : ''} style="background:var(--surface);color:var(--ink)">${st.label}</option>`).join('')}
                   </select>
                 </td>
-                <td style="vertical-align:middle;white-space:nowrap">
+                <td style="vertical-align:middle;text-align:center;white-space:nowrap">
                   ${p.website 
-                    ? `<a class="btn sm ghost" href="${attr(p.website)}" target="_blank" rel="noopener" style="padding:4px 8px;font-size:.76rem;white-space:nowrap;display:inline-flex;align-items:center;gap:4px" title="Open Website">${icon('external', 12)} Web</a>` 
+                    ? `<a class="btn sm ghost" href="${attr(p.website)}" target="_blank" rel="noopener" style="padding:3px 7px;font-size:.74rem;white-space:nowrap;display:inline-flex;align-items:center;gap:3px" title="Open Website">${icon('external', 11)} Web</a>` 
                     : `<span class="tiny faint">—</span>`
                   }
                 </td>
                 <td style="vertical-align:middle;text-align:right;white-space:nowrap">
-                  <div style="display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:nowrap;white-space:nowrap">
-                    <button class="btn sm ghost" data-act="edit-notes" data-id="${attr(p.id)}" style="padding:4px 9px;font-size:.76rem;white-space:nowrap;display:inline-flex;align-items:center;gap:4px" title="Edit Dispatch Notes">✏️ Notes</button>
-                    <button class="btn sm ghost" data-act="delete-partner" data-id="${attr(p.id)}" style="padding:4px 7px;color:var(--bad);white-space:nowrap;display:inline-flex;align-items:center" title="Delete Operator">${icon('trash', 14)}</button>
+                  <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:nowrap;white-space:nowrap">
+                    <button class="btn sm ghost" data-act="edit-notes" data-id="${attr(p.id)}" style="padding:3px 8px;font-size:.74rem;white-space:nowrap;display:inline-flex;align-items:center;gap:3px" title="Edit Dispatch Notes">✏️ Notes</button>
+                    <button class="btn sm ghost" data-act="delete-partner" data-id="${attr(p.id)}" style="padding:3px 6px;color:var(--bad);white-space:nowrap;display:inline-flex;align-items:center" title="Delete Operator">${icon('trash', 13)}</button>
                   </div>
                 </td>
               </tr>`;
@@ -331,9 +330,9 @@ export function render(el) {
 
   function openEmailModal(partner) {
     const backdrop = document.createElement('div');
-    backdrop.className = 'modal-backdrop';
+    backdrop.className = 'dialog-backdrop';
     backdrop.innerHTML = `
-    <div class="modal card stack" style="max-width:440px;padding:24px">
+    <div class="dialog card stack" style="max-width:440px;padding:24px">
       <div class="row between">
         <div>
           <div class="label eyebrow">Partner Contact</div>
@@ -380,9 +379,9 @@ export function render(el) {
 
   function openNotesModal(partner) {
     const backdrop = document.createElement('div');
-    backdrop.className = 'modal-backdrop';
+    backdrop.className = 'dialog-backdrop';
     backdrop.innerHTML = `
-    <div class="modal card stack" style="max-width:540px;padding:24px">
+    <div class="dialog card stack" style="max-width:540px;padding:24px">
       <div class="row between">
         <div>
           <div class="label eyebrow">Partner Details & Dispatch</div>
@@ -453,9 +452,9 @@ export function render(el) {
     const tier = core.getPriorityTier(scoreRes.total_score);
 
     const backdrop = document.createElement('div');
-    backdrop.className = 'modal-backdrop';
+    backdrop.className = 'dialog-backdrop';
     backdrop.innerHTML = `
-    <div class="modal card stack" style="max-width:540px;padding:24px">
+    <div class="dialog card stack" style="max-width:540px;padding:24px">
       <div class="row between">
         <div>
           <div class="label eyebrow">${tier.badge}</div>
@@ -526,9 +525,9 @@ export function render(el) {
 
   function openAddPartnerModal() {
     const backdrop = document.createElement('div');
-    backdrop.className = 'modal-backdrop';
+    backdrop.className = 'dialog-backdrop';
     backdrop.innerHTML = `
-    <div class="modal card stack" style="max-width:580px;padding:24px;max-height:90vh;overflow-y:auto">
+    <div class="dialog card stack" style="max-width:580px;padding:24px;max-height:90vh;overflow-y:auto">
       <div class="row between">
         <h3>Add New Bus Fleet Partner</h3>
         <button class="btn ghost sm" data-close>×</button>
