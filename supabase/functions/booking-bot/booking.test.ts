@@ -1,6 +1,6 @@
 // Comprehensive Deno test suite for Dorogo Booking Copilot
 import { assertEquals, assertNotEquals, assert } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { normalizeDate, normalizeTime, parseGoogleMapsUrl, mapChildSeat, applyBusinessRules } from "./rules.ts";
+import { normalizeDate, normalizeTime, parseGoogleMapsUrl, mapChildSeat, applyBusinessRules, calculateStandbyHours } from "./rules.ts";
 import { extractBookingWithGemini } from "./extract.ts";
 import { getGoogleAccessToken, toCalendarEventId } from "./google.ts";
 import { buildCompactCopyText, buildEditableBookingText, buildFullCardPlainText, renderEditCopyCard, renderBookingCard } from "./card.ts";
@@ -304,4 +304,57 @@ Deno.test("buildFullCardPlainText produces complete un-truncated card for in-pla
   assertEquals(previewCard.replyMarkup.inline_keyboard[1][0].callback_data, "edit_card:draft_123");
 
   console.log("✅ buildFullCardPlainText and renderEditCopyCard test passed!");
+});
+
+// 8. UNIT TEST: calculateStandbyHours calculation
+Deno.test("calculateStandbyHours calculates standby hours accurately from regex, ranges, or itinerary span", () => {
+  // Test direct regex match in text
+  const h1 = calculateStandbyHours(null, "Standby 10 hours for Bellagio wedding", []);
+  assertEquals(h1, 10);
+
+  const h2 = calculateStandbyHours(null, "В распоряжении на 8 часов", []);
+  assertEquals(h2, 8);
+
+  const h3 = calculateStandbyHours(null, "A disposizione 6 ore", []);
+  assertEquals(h3, 6);
+
+  // Test time range with rollover
+  const h4 = calculateStandbyHours(null, "Standby from 14:00 to 22:00", []);
+  assertEquals(h4, 8);
+
+  const h5 = calculateStandbyHours(null, "Service 20:00 - 02:00", []);
+  assertEquals(h5, 6);
+
+  // Test multi-ride itinerary span (Bellagio schedule: 14:00 to 00:00 = 10h)
+  const bellagioRides: any[] = [
+    {
+      ride_no: 1,
+      time: "14:00",
+      stops: [
+        { kind: "pickup", place: "Nenè Bellagio", time: "14:00" },
+        { kind: "dropoff", place: "Loppia", time: "15:10" },
+      ],
+    },
+    {
+      ride_no: 2,
+      time: "17:40",
+      stops: [
+        { kind: "pickup", place: "Loppia", time: "17:40" },
+        { kind: "dropoff", place: "La Madonnina di Barni", time: "18:10" },
+      ],
+    },
+    {
+      ride_no: 3,
+      time: "23:30",
+      end_time: "00:00",
+      stops: [
+        { kind: "pickup", place: "La Madonnina di Barni", time: "23:30" },
+        { kind: "dropoff", place: "Villa Lilla", time: "00:00" },
+      ],
+    },
+  ];
+  const h6 = calculateStandbyHours(null, "Sprinter transfer package Bellagio", bellagioRides);
+  assertEquals(h6, 10);
+
+  console.log("✅ calculateStandbyHours test passed!");
 });

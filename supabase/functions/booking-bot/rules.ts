@@ -206,7 +206,7 @@ export function calculateStandbyHours(
   }
 
   // 2. Direct regex match in text: e.g. "10 hours", "10h", "10 hrs", "8 часов", "4 ore"
-  const match = sourceText.match(/\b(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|h|часов|часа|ore|ora)\b/i);
+  const match = sourceText.match(/(?:^|[^\p{L}\p{N}])(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|h|часов|часа|час|ore|ora)(?=[^\p{L}\p{N}]|$)/iu);
   if (match) {
     const val = parseFloat(match[1]);
     if (val >= 1 && val <= 48) {
@@ -214,8 +214,8 @@ export function calculateStandbyHours(
     }
   }
 
-  // 3. Time range regex: e.g. "14:00 - 22:00", "from 10:00 to 18:00"
-  const rangeMatch = sourceText.match(/\b(\d{1,2})[:.](\d{2})\s*(?:to|-|–|—|до)\s*(\d{1,2})[:.](\d{2})\b/i);
+  // 3. Time range regex: e.g. "14:00 - 22:00", "from 10:00 to 18:00", "14:00 до 22:00"
+  const rangeMatch = sourceText.match(/(?:^|[^\d])(\d{1,2})[:.](\d{2})\s*(?:to|-|–|—|до)\s*(\d{1,2})[:.](\d{2})(?=[^\d]|$)/i);
   if (rangeMatch) {
     const sH = parseInt(rangeMatch[1], 10);
     const sM = parseInt(rangeMatch[2], 10);
@@ -231,7 +231,7 @@ export function calculateStandbyHours(
   }
 
   // 4. Time span across extracted rides (earliest pickup to latest dropoff)
-  const isStandbyOrPackage = /\b(?:stand\s*by|disposi(?:zione|tion)|распоряжен|hourly|wedding|package)\b/i.test(sourceText) ||
+  const isStandbyOrPackage = /(?:^|[^\p{L}\p{N}])(?:stand\s*by|disposi(?:zione|tion)|распоряжен\p{L}*|hourly|wedding|package)(?=[^\p{L}\p{N}]|$)/iu.test(sourceText) ||
     rides.length >= 2;
 
   if (isStandbyOrPackage && rides.length > 0) {

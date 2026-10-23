@@ -373,7 +373,7 @@ export async function saveBookingToGoogleCalendar(
       vTag = `E-Class (${paxNum} pax)`;
     }
 
-    const isStandby = /standby|10hours|disposal/i.test(notesCombined);
+    const isStandby = Boolean(booking.standby_hours) || /standby|10hours|disposal/i.test(notesCombined) || /standby/i.test(booking.service_type || "");
     const isWedding = /wedding/i.test(notesCombined);
 
     let summary = "";
@@ -381,7 +381,8 @@ export async function saveBookingToGoogleCalendar(
       summary = `🔄 ${vTag} Return: ${dName} ➔ ${pName} | ${booking.client.name || "Client"} [${fullRef}]`;
     } else if (isStandby) {
       const hMatch = `${booking.service_type || ""} ${booking.client_notes || ""}`.match(/(\d+)\s*(?:hours|hour|h|hr)\b/i);
-      const hTag = hMatch ? `${hMatch[1]}h Standby` : "Standby";
+      const hours = booking.standby_hours || (hMatch ? parseInt(hMatch[1], 10) : null);
+      const hTag = hours ? `${hours}h Standby` : "Standby";
       const svcTag = isWedding ? `Wedding ${hTag}` : hTag;
       summary = `${icon} ${vTag} ${svcTag}: ${pName} / ${dName} | ${booking.client.name || "Client"} [${fullRef}]`;
     } else {
@@ -397,7 +398,11 @@ export async function saveBookingToGoogleCalendar(
     const startIso = `${ride.date}T${startTimeStr}:00`;
 
     let durationMins = ride.est_minutes || 90;
-    if (durationMins < 30) durationMins = 30;
+    if (booking.rides.length === 1 && booking.standby_hours && booking.standby_hours > 0) {
+      durationMins = booking.standby_hours * 60;
+    } else if (durationMins < 30) {
+      durationMins = 30;
+    }
 
     let endIso = addMinutesLocalIso(ride.date, startTimeStr, durationMins);
     if (ride.end_time) {
