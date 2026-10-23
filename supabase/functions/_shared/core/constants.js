@@ -79,6 +79,7 @@ export const DEFAULT_SETTINGS = {
   track_opens: false,
   stale_days: 10,
   ratecard_nudge_days: 5,
+  notify_drafts_ready: false, // Do not spam telegram for background draft generation
   human_escalation_hours: 2,
   nurture_month_day: '10-01',
   targets: { open_rate: 0.5, positive_reply_rate: 0.10, positive_reply_rate_high: 0.15, ratecard_to_quote: 0.25, partners_won: 5, partners_won_high: 10 },

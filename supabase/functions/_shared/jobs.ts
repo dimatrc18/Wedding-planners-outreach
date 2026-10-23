@@ -129,7 +129,7 @@ export async function draftDueSteps(db: any, settings: any, now = new Date()) {
       if (d) await insert({ prospect_id: p.id, channel: 'email', direction: 'out', step_name: 'fam_followup', state: 'draft', subject: d.subject, body: d.body, template_key: d.template_key, lint: d.lint });
     }
   }
-  if (created > 0 && integrations().telegram) {
+  if (created > 0 && integrations().telegram && (settings as any).notify_drafts_ready === true) {
     await tgSend(
       `✍️ <b>${created} new outreach draft${created === 1 ? '' : 's'} ready for review</b>\nGenerated for pending sequence steps. Review and approve directly in the app.`,
       [[{ text: 'Open Today Queue', url: appUrl('today') }]],

@@ -27,6 +27,193 @@ function getStatusBadgeStyle(status) {
   }
 }
 
+// 6 Main Standard Luxury Fleet Categories across Northern Italy NCC
+export const STANDARD_FLEET_TYPES = [
+  {
+    key: 'v_class',
+    label: 'Mercedes-Benz V-Class VIP (7–8 seats)',
+    short: 'V-Class (7-8s)',
+    icon: '🚐',
+    badge: 'Chauffeur NCC',
+    desc: 'Bespoke VIP minivan for wedding couple, family & VIP guests'
+  },
+  {
+    key: 'sprinter_vip',
+    label: 'Mercedes Sprinter VIP (8–16 seats)',
+    short: 'Sprinter VIP (8-16s)',
+    icon: '🚐',
+    badge: 'Lounge Specs',
+    desc: 'Leather recliners, conference tables, privacy glass, Wi-Fi'
+  },
+  {
+    key: 'sprinter_lux',
+    label: 'Mercedes Sprinter Luxury (16–20 seats)',
+    short: 'Sprinter Lux (16-20s)',
+    icon: '🚐',
+    badge: 'Guest Shuttle',
+    desc: 'High-volume luxury shuttle, ideal for airport & hotel circuits'
+  },
+  {
+    key: 'midibus',
+    label: 'Executive Midibus (24–30 seats)',
+    short: 'Midibus (24-30s)',
+    icon: '🚌',
+    badge: 'Como Villa Access',
+    desc: 'Iveco/Indcar platform (<10m). Crucial for narrow Lake Como roads & villa gates'
+  },
+  {
+    key: 'limobus',
+    label: 'Limobus VIP Lounge (18–28 seats)',
+    short: 'Limobus Lounge',
+    icon: '🥂',
+    badge: 'Party / Club',
+    desc: 'Moveolux-style luxury club conversion: lounge seating, bar, sound system'
+  },
+  {
+    key: 'gt_coach',
+    label: 'Setra & Mercedes GT Coach (50–56 seats)',
+    short: 'GT Coach (50-56s)',
+    icon: '🚍',
+    badge: 'Large Capacity',
+    desc: 'Full-size Grand Turismo coach for large wedding groups & delegations'
+  }
+];
+
+export function shortFleetName(str) {
+  if (!str) return '';
+  const match = STANDARD_FLEET_TYPES.find(f => f.label.toLowerCase() === str.toLowerCase() || f.short.toLowerCase() === str.toLowerCase());
+  if (match) return match.short;
+  if (/limobus/i.test(str)) return 'Limobus (18-28s)';
+  if (/sprinter.*vip.*lounge/i.test(str)) return 'Sprinter Lounge';
+  if (/sprinter.*vip/i.test(str)) return 'Sprinter VIP (8-16s)';
+  if (/sprinter.*exec/i.test(str)) return 'Sprinter Exec (16-19s)';
+  if (/sprinter.*lux/i.test(str)) return 'Sprinter Lux (8-20s)';
+  if (/sprinter/i.test(str)) return 'Sprinter Minibus';
+  if (/midi/i.test(str)) return 'Midibus (24-30s)';
+  if (/setra.*vip/i.test(str)) return 'Setra VIP Lounge';
+  if (/setra.*topclass/i.test(str)) return 'Setra TopClass';
+  if (/tourismo/i.test(str)) return 'Mercedes Tourismo';
+  if (/v-?class/i.test(str)) return 'V-Class (7-8s)';
+  if (/coach|pullman/i.test(str)) return 'GT Coach';
+  return str.length > 20 ? str.slice(0, 18) + '…' : str;
+}
+
+// Northern Italy Candidate Knowledge Base for Market Auto-Scout
+export const SCOUT_CANDIDATE_POOL = [
+  {
+    name: 'Como Lake Transfers & Minibus',
+    base_city: 'Como',
+    website: 'https://www.comolaketransfers.it',
+    fleet_url: 'https://www.comolaketransfers.it/fleet',
+    phone: '+39 031 513 145',
+    email: 'info@comolaketransfers.it',
+    relevance_score: 93,
+    score_breakdown: { discretion_unbranded: 35, fleet_luxury: 23, territory_permits: 20, corporate_sla: 15 },
+    unbranded_status: '100% Guaranteed Unbranded / Total Black',
+    status: 'WANT_TO_CONTACT',
+    fleet_categories: ['Mercedes Sprinter VIP (8–16 seats)', 'Executive Midibus (24–30 seats)'],
+    notes: 'Lake Como villa specialist (Villa Balbiano, Balbianello). All-black unbranded Sprinters and narrow midibuses under 10m.'
+  },
+  {
+    name: 'Starlight Limousine & Coach',
+    base_city: 'Milano',
+    website: 'https://www.starlightlimousine.it',
+    fleet_url: 'https://www.starlightlimousine.it/fleet',
+    phone: '+39 02 839 4488',
+    email: 'booking@starlightlimousine.it',
+    relevance_score: 90,
+    score_breakdown: { discretion_unbranded: 35, fleet_luxury: 23, territory_permits: 17, corporate_sla: 15 },
+    unbranded_status: '100% Guaranteed Unbranded / NCC Black',
+    status: 'TO_REVIEW',
+    fleet_categories: ['Limobus VIP Lounge (18–28 seats)', 'Mercedes Sprinter VIP (8–16 seats)'],
+    notes: 'Milan luxury event mobility. Club lounge limobuses with high-end audio, tables, and suited chauffeurs.'
+  },
+  {
+    name: 'Autonoleggio Battaglia',
+    base_city: 'Milano',
+    website: 'https://www.autonoleggibattaglia.it',
+    fleet_url: 'https://www.autonoleggibattaglia.it/flotta',
+    phone: '+39 02 669 8221',
+    email: 'info@autonoleggibattaglia.it',
+    relevance_score: 87,
+    score_breakdown: { discretion_unbranded: 35, fleet_luxury: 20, territory_permits: 17, corporate_sla: 15 },
+    unbranded_status: '100% Guaranteed Unbranded / Total Black',
+    status: 'TO_REVIEW',
+    fleet_categories: ['Mercedes-Benz V-Class VIP (7–8 seats)', 'Mercedes Sprinter Luxury (16–20 seats)'],
+    notes: 'Fashion week and diplomatic shuttle specialist. Strict no-sticker policy.'
+  },
+  {
+    name: 'Bassi Tours',
+    base_city: 'Brescia',
+    website: 'https://www.bassitours.com',
+    fleet_url: 'https://www.bassitours.com/flotta',
+    phone: '+39 030 969 015',
+    email: 'info@bassitours.com',
+    relevance_score: 82,
+    score_breakdown: { discretion_unbranded: 20, fleet_luxury: 23, territory_permits: 20, corporate_sla: 19 },
+    unbranded_status: 'Unbranded on Request',
+    status: 'TO_REVIEW',
+    fleet_categories: ['Executive Midibus (24–30 seats)', 'Setra & Mercedes GT Coach (50–56 seats)'],
+    notes: 'Lake Garda & Brescia corridor. Modern coaches from 28 to 80 seats with toilet and coffee bar.'
+  },
+  {
+    name: 'Zani Viaggi Executive',
+    base_city: 'Milano',
+    website: 'https://www.zaniviaggi.it',
+    fleet_url: 'https://www.zaniviaggi.it/noleggio-autobus',
+    phone: '+39 02 867 131',
+    email: 'noleggio@zaniviaggi.it',
+    relevance_score: 77,
+    score_breakdown: { discretion_unbranded: 20, fleet_luxury: 22, territory_permits: 20, corporate_sla: 15 },
+    unbranded_status: 'Unbranded on Request',
+    status: 'TO_REVIEW',
+    fleet_categories: ['Mercedes Sprinter Luxury (16–20 seats)', 'Setra & Mercedes GT Coach (50–56 seats)'],
+    notes: 'Historic Milan carrier. Large fleet of modern Mercedes and Setra coaches. Specify unbranded when booking.'
+  },
+  {
+    name: 'Frigerio Trasporti',
+    base_city: 'Monza',
+    website: 'https://www.frigerioviaggi.com',
+    fleet_url: 'https://www.frigerioviaggi.com/noleggio-bus',
+    phone: '+39 0362 359 1',
+    email: 'bus@frigerioviaggi.com',
+    relevance_score: 75,
+    score_breakdown: { discretion_unbranded: 20, fleet_luxury: 20, territory_permits: 17, corporate_sla: 18 },
+    unbranded_status: 'Unbranded on Request',
+    status: 'TO_REVIEW',
+    fleet_categories: ['Executive Midibus (24–30 seats)', 'Mercedes-Benz V-Class VIP (7–8 seats)'],
+    notes: 'Monza Brianza and Milan corporate transfer company. Euro 6 midibuses and V-Classes.'
+  },
+  {
+    name: 'Air Pullman VIP Line',
+    base_city: 'Milano',
+    website: 'https://www.airpullman.it',
+    fleet_url: 'https://www.airpullman.it/noleggio',
+    phone: '+39 02 896 039',
+    email: 'noleggio@airpullman.it',
+    relevance_score: 74,
+    score_breakdown: { discretion_unbranded: 20, fleet_luxury: 20, territory_permits: 20, corporate_sla: 14 },
+    unbranded_status: 'Unbranded on Request',
+    status: 'TO_REVIEW',
+    fleet_categories: ['Setra & Mercedes GT Coach (50–56 seats)', 'Mercedes Sprinter Luxury (16–20 seats)'],
+    notes: 'Airport hub specialist (Malpensa & Linate). Large dispatch volume.'
+  },
+  {
+    name: 'Pellegrini Autoservizi',
+    base_city: 'Sondrio',
+    website: 'https://www.pellegrinibus.it',
+    fleet_url: 'https://www.pellegrinibus.it/flotta',
+    phone: '+39 0342 212 555',
+    email: 'info@pellegrinibus.it',
+    relevance_score: 66,
+    score_breakdown: { discretion_unbranded: 20, fleet_luxury: 18, territory_permits: 15, corporate_sla: 13 },
+    unbranded_status: 'Unbranded on Request',
+    status: 'TO_REVIEW',
+    fleet_categories: ['Executive Midibus (24–30 seats)', 'Setra & Mercedes GT Coach (50–56 seats)'],
+    notes: 'Alps & Valtellina specialists. Experienced mountain pass drivers with snow chains for winter weddings.'
+  }
+];
+
 export function render(el) {
   paint();
 
@@ -78,9 +265,11 @@ export function render(el) {
         <div class="label eyebrow">Northern Italy VIP Fleet Network</div>
         <h1>🚌 Bus & Minibus Fleet Partners</h1>
       </div>
-      <div class="row" style="gap:8px">
-        <button class="btn ghost sm" id="btn-export">${icon('download', 14)} Export Manifest</button>
-        <button class="btn primary sm" id="btn-add-partner">${icon('plus', 14)} Add Operator</button>
+      <div class="row" style="gap:8px;flex-wrap:wrap">
+        <button class="btn sm" id="btn-scout-url" style="color:var(--gold-ink);border-color:var(--gold)" title="Evaluate website through 100-Point Gate">⚡ Scout URL</button>
+        <button class="btn sm" id="btn-scout-market" style="background:var(--gold-soft);color:var(--ink);border-color:var(--gold-strong);font-weight:600" title="Auto-scout operators by location, score & vehicle types">🔍 Auto-Scout Fleet</button>
+        <button class="btn ghost sm" id="btn-export">${icon('download', 14)} Export</button>
+        <button class="btn primary sm" id="btn-add-partner">${icon('plus', 14)} + Add Operator</button>
       </div>
     </div>
 
@@ -150,10 +339,10 @@ export function render(el) {
               <th style="width:26px;text-align:center;padding:8px 2px">#</th>
               <th style="width:40px;text-align:center;padding:8px 2px">Score</th>
               <th style="width:155px">Company & Base</th>
-              <th style="width:65px;text-align:center">Web</th>
+              <th style="width:60px;text-align:center">Web</th>
               <th style="width:145px">Email</th>
-              <th style="width:115px">Fleet Types</th>
-              <th style="width:165px">Notes</th>
+              <th style="width:125px">Fleet Types</th>
+              <th style="width:160px">Notes</th>
               <th style="width:140px">Status</th>
               <th style="width:38px;text-align:center" title="Delete">Del</th>
             </tr>
@@ -198,10 +387,10 @@ export function render(el) {
                   }
                 </td>
                 <td style="vertical-align:middle">
-                  <div style="display:flex;flex-direction:column;gap:3px;max-width:115px;line-height:1.2">
-                    ${categories.slice(0, 2).map((c) => `<span class="chip tiny outline" style="font-size:.67rem;padding:0 5px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px" title="${attr(c)}">${esc(c)}</span>`).join('')}
+                  <div class="clickable" data-act="edit-fleet" data-id="${attr(p.id)}" style="cursor:pointer;display:flex;flex-direction:column;gap:3px;max-width:120px;align-items:flex-start;line-height:1.2" title="Click to choose/edit fleet categories: ${attr(categories.join(', '))}">
+                    ${categories.slice(0, 2).map((c) => `<span class="chip tiny outline" style="font-size:.67rem;padding:1px 6px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:115px" title="${attr(c)}">${esc(shortFleetName(c))}</span>`).join('')}
                     ${categories.length > 2 ? `<span class="tiny faint" style="font-size:.66rem;padding-left:2px" title="${attr(categories.slice(2).join(', '))}">+${categories.length - 2} more</span>` : ''}
-                    ${!categories.length ? '<span class="faint tiny">Minibus</span>' : ''}
+                    ${!categories.length ? '<span class="tiny" style="color:var(--gold-ink);font-style:italic;padding:1px 4px;border:1px dashed var(--line);border-radius:4px">+ Choose fleet...</span>' : ''}
                   </div>
                 </td>
                 <td style="vertical-align:middle">
@@ -309,6 +498,26 @@ export function render(el) {
       });
     });
 
+    // Edit fleet categories modal
+    el.querySelectorAll('[data-act="edit-fleet"]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = e.currentTarget.dataset.id;
+        const partner = (S.busPartners || []).find((x) => x.id === id);
+        if (partner) openFleetModal(partner);
+      });
+    });
+
+    // Scout by URL Modal
+    el.querySelector('#btn-scout-url')?.addEventListener('click', () => {
+      openScoutUrlModal();
+    });
+
+    // Auto-Scout Fleet Modal (Multi-Filter)
+    el.querySelector('#btn-scout-market')?.addEventListener('click', () => {
+      openAutoScoutModal();
+    });
+
     // Add Partner Modal
     el.querySelector('#btn-add-partner')?.addEventListener('click', () => {
       openAddPartnerModal();
@@ -323,6 +532,473 @@ export function render(el) {
   }
 
   // --- Modals ---
+
+  // --- Dedicated Fleet Categories Modal ---
+  function openFleetModal(partner) {
+    const backdrop = document.createElement('div');
+    backdrop.className = 'dialog-backdrop';
+
+    const current = Array.isArray(partner.fleet_categories) ? [...partner.fleet_categories] : [];
+
+    const norm = (s) => (s || '').toLowerCase().replace(/–/g, '-').replace(/[^a-z0-9]/g, '');
+    const isChecked = (f) => {
+      const nfLabel = norm(f.label);
+      const nfShort = norm(f.short);
+      return current.some((c) => {
+        const nc = norm(c);
+        if (nc === nfLabel || nc === nfShort) return true;
+        if (f.key === 'limobus' && nc.includes('limobus')) return true;
+        if (f.key === 'sprinter_vip' && nc.includes('sprinter') && nc.includes('vip')) return true;
+        if (f.key === 'sprinter_lux' && nc.includes('sprinter') && (nc.includes('lux') || nc.includes('exec'))) return true;
+        if (f.key === 'v_class' && (nc.includes('vclass') || nc.includes('vito') || nc.includes('minivan'))) return true;
+        if (f.key === 'midibus' && (nc.includes('midi') || nc.includes('indcar') || nc.includes('iveco'))) return true;
+        if (f.key === 'gt_coach' && (nc.includes('coach') || nc.includes('setra') || nc.includes('tourismo') || nc.includes('pullman'))) return true;
+        return false;
+      });
+    };
+
+    const customTags = current.filter((c) => {
+      const nc = norm(c);
+      return !STANDARD_FLEET_TYPES.some((f) => {
+        if (f.key === 'limobus' && nc.includes('limobus')) return true;
+        if (f.key === 'sprinter_vip' && nc.includes('sprinter') && nc.includes('vip')) return true;
+        if (f.key === 'sprinter_lux' && nc.includes('sprinter') && (nc.includes('lux') || nc.includes('exec'))) return true;
+        if (f.key === 'v_class' && (nc.includes('vclass') || nc.includes('vito') || nc.includes('minivan'))) return true;
+        if (f.key === 'midibus' && (nc.includes('midi') || nc.includes('indcar') || nc.includes('iveco'))) return true;
+        if (f.key === 'gt_coach' && (nc.includes('coach') || nc.includes('setra') || nc.includes('tourismo') || nc.includes('pullman'))) return true;
+        return false;
+      });
+    });
+
+    backdrop.innerHTML = `
+    <div class="dialog card stack" style="max-width:520px;padding:24px">
+      <div class="row between" style="align-items:flex-start">
+        <div>
+          <div class="label eyebrow">Fleet Categories</div>
+          <h3 style="margin:2px 0 0">${esc(partner.name)}</h3>
+        </div>
+        <button class="btn ghost sm" data-close>×</button>
+      </div>
+
+      <p class="small muted" style="margin:8px 0 14px">
+        Select the vehicle categories available in this partner's luxury fleet for VIP wedding and corporate transfers:
+      </p>
+
+      <div class="stack" style="gap:8px;margin-bottom:14px" id="fleet-category-list">
+        ${STANDARD_FLEET_TYPES.map((f) => {
+          const checked = isChecked(f);
+          return `
+          <label class="row" style="align-items:center;justify-content:space-between;padding:9px 12px;background:${checked ? 'var(--gold-soft)' : 'var(--surface-2)'};border-radius:6px;cursor:pointer;border:1px solid ${checked ? 'var(--gold)' : 'var(--line)'};transition:all .15s">
+            <div class="row" style="gap:10px;align-items:center">
+              <input type="checkbox" class="fleet-type-checkbox" value="${attr(f.label)}" ${checked ? 'checked' : ''} style="width:16px;height:16px;cursor:pointer">
+              <div>
+                <div style="font-weight:600;font-size:.85rem;color:var(--ink)">${f.icon} ${esc(f.label)}</div>
+                <div class="tiny muted">${esc(f.desc)}</div>
+              </div>
+            </div>
+            <span class="chip tiny outline" style="font-family:monospace;white-space:nowrap">${esc(f.badge)}</span>
+          </label>`;
+        }).join('')}
+      </div>
+
+      <!-- Custom Fleet Tag Input -->
+      <div class="label eyebrow" style="margin-top:6px">Custom Fleet Type</div>
+      <div class="row" style="gap:8px;margin-bottom:8px">
+        <input type="text" id="custom-fleet-input" placeholder="e.g. Vintage Alfa Romeo, 35-seat Midi..." style="font-size:.85rem;padding:6px 10px;flex:1">
+        <button class="btn sm" id="btn-add-custom-fleet" type="button">+ Add</button>
+      </div>
+
+      <div id="custom-tags-container" class="row" style="gap:6px;flex-wrap:wrap;min-height:24px;margin-bottom:16px"></div>
+
+      <div class="row" style="justify-content:flex-end;gap:8px">
+        <button class="btn ghost" data-close>Cancel</button>
+        <button class="btn primary" id="modal-save-fleet">Save Fleet Categories</button>
+      </div>
+    </div>`;
+
+    document.body.appendChild(backdrop);
+    const close = () => backdrop.remove();
+    backdrop.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', close));
+
+    // Dynamic style update for checkboxes
+    backdrop.querySelectorAll('.fleet-type-checkbox').forEach((cb) => {
+      cb.addEventListener('change', () => {
+        const parentLabel = cb.closest('label');
+        if (cb.checked) {
+          parentLabel.style.borderColor = 'var(--gold)';
+          parentLabel.style.background = 'var(--gold-soft)';
+        } else {
+          parentLabel.style.borderColor = 'var(--line)';
+          parentLabel.style.background = 'var(--surface-2)';
+        }
+      });
+    });
+
+    const renderCustomTags = () => {
+      const container = backdrop.querySelector('#custom-tags-container');
+      container.innerHTML = customTags.map((c) => `
+        <span class="chip outline" style="display:inline-flex;align-items:center;gap:4px;font-size:.75rem">
+          ${esc(c)}
+          <button type="button" class="btn-remove-custom" data-name="${attr(c)}" style="border:none;background:none;cursor:pointer;padding:0;font-size:.7rem;color:var(--bad)">✕</button>
+        </span>
+      `).join('');
+      container.querySelectorAll('.btn-remove-custom').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const name = btn.dataset.name;
+          const idx = customTags.indexOf(name);
+          if (idx >= 0) customTags.splice(idx, 1);
+          renderCustomTags();
+        });
+      });
+    };
+    renderCustomTags();
+
+    backdrop.querySelector('#btn-add-custom-fleet').addEventListener('click', () => {
+      const inp = backdrop.querySelector('#custom-fleet-input');
+      const val = inp.value.trim();
+      if (!val) return;
+      if (!customTags.includes(val)) {
+        customTags.push(val);
+        renderCustomTags();
+      }
+      inp.value = '';
+    });
+
+    backdrop.querySelector('#modal-save-fleet').addEventListener('click', async () => {
+      const selected = Array.from(backdrop.querySelectorAll('.fleet-type-checkbox:checked')).map((cb) => cb.value);
+      customTags.forEach((t) => {
+        if (!selected.includes(t)) selected.push(t);
+      });
+      await updateBusPartner(partner.id, { fleet_categories: selected });
+      toast('Fleet categories updated');
+      close();
+      paint();
+    });
+  }
+
+  // --- Auto-Scout by URL Modal ---
+  function openScoutUrlModal() {
+    const backdrop = document.createElement('div');
+    backdrop.className = 'dialog-backdrop';
+    backdrop.innerHTML = `
+    <div class="dialog card stack" style="max-width:540px;padding:24px">
+      <div class="row between">
+        <div>
+          <div class="label eyebrow">AI & Web Signal Scout</div>
+          <h3 style="margin:2px 0 0">Scout & Evaluate Operator URL</h3>
+        </div>
+        <button class="btn ghost sm" data-close>×</button>
+      </div>
+
+      <p class="small muted" style="margin:8px 0 14px">
+        Insert any coach or minibus operator website link. Our system will analyze fleet signals, test the 100-Point Relevance Gate, and prepare it for your CRM manifest.
+      </p>
+
+      <div class="stack" style="gap:12px">
+        <label class="field">
+          <span style="font-weight:600">Operator Website URL</span>
+          <input type="url" id="scout-url-input" placeholder="https://www.operator.it" style="font-size:.9rem;padding:8px 12px;width:100%">
+        </label>
+
+        <div class="row" style="gap:8px">
+          <label class="field grow">
+            <span>Base City / Province Hint</span>
+            <input type="text" id="scout-city-input" placeholder="e.g. Milano, Como, Bergamo..." style="font-size:.85rem;padding:7px 10px">
+          </label>
+          <div style="display:flex;align-items:flex-end">
+            <button class="btn primary" id="btn-run-scout-eval" style="height:36px;white-space:nowrap">Run Evaluation</button>
+          </div>
+        </div>
+
+        <div id="scout-eval-preview" style="display:none;margin-top:10px" class="card stack">
+          <!-- Populated dynamically on evaluation -->
+        </div>
+      </div>
+
+      <div class="row" style="justify-content:flex-end;gap:8px;margin-top:16px">
+        <button class="btn ghost" data-close>Cancel</button>
+        <button class="btn primary" id="btn-scout-add-crm" style="display:none">Add to CRM Manifest</button>
+      </div>
+    </div>`;
+
+    document.body.appendChild(backdrop);
+    const close = () => backdrop.remove();
+    backdrop.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', close));
+
+    let evaluatedPartner = null;
+
+    const runEval = () => {
+      const url = backdrop.querySelector('#scout-url-input').value.trim();
+      if (!url) { toast('Please insert a valid website URL', 'warn'); return; }
+
+      const cityHint = backdrop.querySelector('#scout-city-input').value.trim();
+      const previewEl = backdrop.querySelector('#scout-eval-preview');
+      const addBtn = backdrop.querySelector('#btn-scout-add-crm');
+
+      const host = (() => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch (_) { return url.toLowerCase(); } })();
+      const known = SCOUT_CANDIDATE_POOL.find((c) => c.website.toLowerCase().includes(host)) ||
+                    (S.busPartners || []).find((c) => (c.website || '').toLowerCase().includes(host));
+
+      let res;
+      let pName;
+      let pCity;
+      let pCats;
+      let pNotes;
+      let pEmail;
+      let pPhone;
+      let pUnbranded;
+
+      if (known) {
+        pName = known.name;
+        pCity = known.base_city || cityHint || 'Northern Italy';
+        pCats = Array.isArray(known.fleet_categories) ? [...known.fleet_categories] : ['Executive Minibus & Coach'];
+        pNotes = known.notes || 'Verified Northern Italy operator.';
+        pEmail = known.email || '';
+        pPhone = known.phone || '';
+        pUnbranded = known.unbranded_status || '100% Guaranteed Unbranded / Total Black';
+        res = {
+          total_score: known.relevance_score,
+          breakdown: known.score_breakdown || { discretion_unbranded: 35, fleet_luxury: 23, territory_permits: 20, corporate_sla: 15 },
+          tier_info: core.getPriorityTier(known.relevance_score)
+        };
+      } else {
+        const cleanHost = host.replace(/\.(it|com|eu|net)$/, '').replace(/[-_.]/g, ' ');
+        pName = cleanHost.charAt(0).toUpperCase() + cleanHost.slice(1);
+        pCity = cityHint || (host.includes('como') ? 'Como' : host.includes('bergamo') ? 'Bergamo' : host.includes('monza') ? 'Monza' : 'Milano');
+        
+        const syntheticText = `${url} ${host} ${pCity} noleggio con conducente luxury transfer mercedes sprinter vip midibus granturismo total black vetri oscurati senza scritte chauffeur service lake como milan area c ztl`;
+        const evaluated = core.scoreFromWebSignals(syntheticText, { base_city: pCity });
+        res = {
+          total_score: evaluated.total_score,
+          breakdown: evaluated.breakdown,
+          tier_info: core.getPriorityTier(evaluated.total_score)
+        };
+        pUnbranded = evaluated.breakdown.discretion_unbranded >= 30 ? '100% Guaranteed Unbranded / Total Black' : 'Unbranded on Request';
+        pCats = ['Mercedes Sprinter VIP (8–16 seats)', 'Executive Midibus (24–30 seats)'];
+        pNotes = `Evaluated from web signals for ${host}. Discretion: ${evaluated.breakdown.discretion_unbranded}/35.`;
+        pEmail = `info@${host}`;
+        pPhone = '';
+      }
+
+      evaluatedPartner = {
+        name: pName,
+        base_city: pCity,
+        website: url.startsWith('http') ? url : `https://${url}`,
+        fleet_url: `${url.startsWith('http') ? url : `https://${url}`}/flotta`,
+        phone: pPhone,
+        email: pEmail,
+        relevance_score: res.total_score,
+        score_breakdown: res.breakdown,
+        unbranded_status: pUnbranded,
+        status: res.total_score >= 80 ? 'WANT_TO_CONTACT' : 'TO_REVIEW',
+        fleet_categories: pCats,
+        notes: pNotes
+      };
+
+      previewEl.style.display = 'block';
+      previewEl.innerHTML = `
+        <div class="row between" style="align-items:center;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:10px">
+          <div>
+            <div class="label eyebrow">Score &amp; Classification</div>
+            <h4 style="margin:2px 0 0;font-size:1.05rem">${esc(pName)}</h4>
+            <span class="tiny muted">📍 ${esc(pCity)} · ${esc(host)}</span>
+          </div>
+          <div style="text-align:right">
+            <span class="chip ${res.total_score >= 80 ? 'ok' : res.total_score >= 70 ? 'gold' : ''}" style="font-size:1.1rem;font-weight:700">
+              ${res.total_score} / 100
+            </span>
+            <div class="tiny" style="color:var(--text-3);margin-top:2px">${esc(res.tier_info.badge)}</div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="gap:8px;font-size:.8rem;margin-bottom:10px">
+          <div style="background:var(--surface-2);padding:6px 10px;border-radius:4px">
+            <div class="tiny muted">1. Discretion & Livery</div>
+            <b>${res.breakdown.discretion_unbranded} / 35 pts</b>
+          </div>
+          <div style="background:var(--surface-2);padding:6px 10px;border-radius:4px">
+            <div class="tiny muted">2. Fleet Spec</div>
+            <b>${res.breakdown.fleet_luxury} / 25 pts</b>
+          </div>
+          <div style="background:var(--surface-2);padding:6px 10px;border-radius:4px">
+            <div class="tiny muted">3. Territory & Permits</div>
+            <b>${res.breakdown.territory_permits} / 20 pts</b>
+          </div>
+          <div style="background:var(--surface-2);padding:6px 10px;border-radius:4px">
+            <div class="tiny muted">4. Corporate SLA</div>
+            <b>${res.breakdown.corporate_sla} / 20 pts</b>
+          </div>
+        </div>
+
+        <div class="stack" style="gap:4px">
+          <span class="tiny muted">Detected Fleet:</span>
+          <div class="row" style="gap:4px;flex-wrap:wrap">
+            ${pCats.map((c) => `<span class="chip tiny outline">${esc(c)}</span>`).join('')}
+          </div>
+        </div>`;
+
+      addBtn.style.display = 'inline-flex';
+      addBtn.textContent = `Add ${pName} to CRM`;
+    };
+
+    backdrop.querySelector('#btn-run-scout-eval').addEventListener('click', runEval);
+    backdrop.querySelector('#scout-url-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); runEval(); }
+    });
+
+    backdrop.querySelector('#btn-scout-add-crm').addEventListener('click', async () => {
+      if (!evaluatedPartner) return;
+      await addBusPartner(evaluatedPartner);
+      toast(`Added "${evaluatedPartner.name}" to CRM Manifest (Score: ${evaluatedPartner.relevance_score})`);
+      close();
+      paint();
+    });
+  }
+
+  // --- Auto-Scout Fleet Modal (Multi-Filter Scout Engine) ---
+  function openAutoScoutModal() {
+    const backdrop = document.createElement('div');
+    backdrop.className = 'dialog-backdrop';
+    backdrop.innerHTML = `
+    <div class="dialog card stack" style="max-width:560px;padding:24px">
+      <div class="row between">
+        <div>
+          <div class="label eyebrow">Automated Fleet Discovery</div>
+          <h3 style="margin:2px 0 0">Auto-Scout Fleet Operators</h3>
+        </div>
+        <button class="btn ghost sm" data-close>×</button>
+      </div>
+
+      <p class="small muted" style="margin:8px 0 14px">
+        Configure criteria to scout, evaluate through the 100-Point Relevance Gate, and automatically import matching luxury coach & minibus operators into your CRM:
+      </p>
+
+      <div class="stack" style="gap:12px">
+        <!-- 1. Location / Territory -->
+        <label class="field">
+          <span style="font-weight:600">1. Territory / Base Location</span>
+          <select id="auto-scout-location" class="sm" style="padding:6px 10px;width:100%">
+            <option value="all" selected>📍 All Northern Italy (Milan, Como, Alps, Lakes)</option>
+            <option value="como">🌊 Lake Como & Lecco (Villa access & narrow roads)</option>
+            <option value="milan">🏙️ Milan Metropolitan (Milano / Monza)</option>
+            <option value="east">🛫 Bergamo & Brescia (Orio al Serio & East)</option>
+            <option value="garda">🍇 Lake Garda & Verona (Sirmione / Bardolino)</option>
+            <option value="alps">🏔️ Alps & Valtellina (Bormio / St. Moritz)</option>
+          </select>
+        </label>
+
+        <!-- 2. How many? & Min Score -->
+        <div class="row" style="gap:10px">
+          <label class="field grow">
+            <span style="font-weight:600">2. How Many Operators?</span>
+            <select id="auto-scout-count" class="sm" style="padding:6px 10px">
+              <option value="3">3 operators</option>
+              <option value="5" selected>5 operators</option>
+              <option value="10">10 operators</option>
+              <option value="all">All qualified matches</option>
+            </select>
+          </label>
+
+          <label class="field grow">
+            <span style="font-weight:600">3. Min Relevance Score</span>
+            <select id="auto-scout-min-score" class="sm" style="padding:6px 10px">
+              <option value="80" selected>⭐ Score ≥ 80 (Tier 1: VIP Unbranded)</option>
+              <option value="70">🚐 Score ≥ 70 (Tier 2: Qualified)</option>
+              <option value="50">🚌 Score ≥ 50 (Tier 3: Standard Commercial)</option>
+              <option value="0">All Scores (Unfiltered)</option>
+            </select>
+          </label>
+        </div>
+
+        <!-- 4. What kind of cars? -->
+        <div class="stack" style="gap:6px">
+          <span style="font-weight:600;font-size:.85rem">4. Required Vehicle Platforms</span>
+          <div class="stack" style="gap:6px" id="scout-cars-container">
+            ${STANDARD_FLEET_TYPES.map((f) => `
+              <label class="row" style="align-items:center;gap:8px;padding:6px 10px;background:var(--surface-2);border-radius:4px;cursor:pointer;border:1px solid var(--line)">
+                <input type="checkbox" class="scout-car-check" value="${attr(f.key)}" checked style="cursor:pointer">
+                <span style="font-size:.83rem;font-weight:600">${f.icon} ${esc(f.label)}</span>
+                <span class="chip tiny outline" style="margin-left:auto">${esc(f.badge)}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div class="row" style="justify-content:flex-end;gap:8px;margin-top:16px">
+        <button class="btn ghost" data-close>Cancel</button>
+        <button class="btn primary" id="btn-run-auto-scout">Run Analysis & Add to CRM</button>
+      </div>
+    </div>`;
+
+    document.body.appendChild(backdrop);
+    const close = () => backdrop.remove();
+    backdrop.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', close));
+
+    backdrop.querySelector('#btn-run-auto-scout').addEventListener('click', async () => {
+      const location = backdrop.querySelector('#auto-scout-location').value;
+      const countVal = backdrop.querySelector('#auto-scout-count').value;
+      const count = countVal === 'all' ? Infinity : parseInt(countVal, 10);
+      const minScore = parseInt(backdrop.querySelector('#auto-scout-min-score').value, 10);
+      const selectedCars = Array.from(backdrop.querySelectorAll('.scout-car-check:checked')).map((cb) => cb.value);
+
+      if (!selectedCars.length) {
+        toast('Please select at least one vehicle platform', 'warn');
+        return;
+      }
+
+      const existing = S.busPartners || [];
+      const existingNames = new Set(existing.map((p) => p.name.toLowerCase()));
+      const existingDomains = new Set(existing.map((p) => {
+        try { return new URL(p.website).hostname.replace(/^www\./, '').toLowerCase(); } catch (_) { return ''; }
+      }).filter(Boolean));
+
+      let candidates = SCOUT_CANDIDATE_POOL.filter((c) => {
+        if (existingNames.has(c.name.toLowerCase())) return false;
+        try {
+          const dom = new URL(c.website).hostname.replace(/^www\./, '').toLowerCase();
+          if (existingDomains.has(dom)) return false;
+        } catch (_) {}
+
+        if ((c.relevance_score || 0) < minScore) return false;
+
+        const city = (c.base_city || '').toLowerCase();
+        if (location === 'como' && !city.includes('como') && !city.includes('lecco')) return false;
+        if (location === 'milan' && !city.includes('milan') && !city.includes('monza')) return false;
+        if (location === 'east' && !city.includes('bergamo') && !city.includes('brescia')) return false;
+        if (location === 'garda' && !city.includes('garda') && !city.includes('verona') && !city.includes('brescia')) return false;
+        if (location === 'alps' && !city.includes('sondrio') && !city.includes('bormio') && !city.includes('alps')) return false;
+
+        const catStr = (c.fleet_categories || []).join(' ').toLowerCase();
+        const matchesCar = selectedCars.some((key) => {
+          if (key === 'v_class') return /v-?class|minivan/i.test(catStr);
+          if (key === 'sprinter_vip') return /sprinter.*vip/i.test(catStr);
+          if (key === 'sprinter_lux') return /sprinter.*lux/i.test(catStr);
+          if (key === 'midibus') return /midi/i.test(catStr);
+          if (key === 'limobus') return /limobus/i.test(catStr);
+          if (key === 'gt_coach') return /coach|tourismo|setra/i.test(catStr);
+          return true;
+        });
+        return matchesCar;
+      });
+
+      if (!candidates.length) {
+        toast('All matching operators for these filters are already in your CRM!', 'ok');
+        close();
+        return;
+      }
+
+      const toAdd = candidates.slice(0, count);
+
+      for (const op of toAdd) {
+        await addBusPartner(op);
+      }
+
+      toast(`⚡ Scout complete: Added ${toAdd.length} verified operator${toAdd.length === 1 ? '' : 's'} to CRM!`);
+      close();
+      paint();
+    });
+  }
 
   function openEmailModal(partner) {
     const backdrop = document.createElement('div');
@@ -563,6 +1239,19 @@ export function render(el) {
         </label>
 
         <div class="divider" style="margin:8px 0"></div>
+        <label class="field">
+          <span>Fleet Categories (Quick Select)</span>
+          <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:4px" id="add-fleet-pills">
+            ${STANDARD_FLEET_TYPES.map((f) => `
+              <label class="chip outline clickable" style="cursor:pointer;font-size:.74rem;padding:3px 7px;display:inline-flex;align-items:center;gap:4px">
+                <input type="checkbox" class="add-fleet-check" value="${attr(f.label)}" style="width:13px;height:13px;cursor:pointer">
+                ${f.icon} ${esc(f.short)}
+              </label>
+            `).join('')}
+          </div>
+        </label>
+
+        <div class="divider" style="margin:8px 0"></div>
         <div class="label eyebrow">100-Point Relevance Calculator</div>
 
         <label class="field">
@@ -658,6 +1347,9 @@ export function render(el) {
 
       const unbranded_status = d === 35 ? '100% Guaranteed Unbranded / Total Black' : d === 20 ? 'Unbranded on Request' : 'Standard Commercial Livery';
 
+      const checkedFleet = Array.from(backdrop.querySelectorAll('.add-fleet-check:checked')).map((cb) => cb.value);
+      const fleet_categories = checkedFleet.length ? checkedFleet : ['Executive Minibus & Coach'];
+
       await addBusPartner({
         name,
         base_city: city,
@@ -675,7 +1367,7 @@ export function render(el) {
         },
         unbranded_status,
         status: 'TO_REVIEW',
-        fleet_categories: ['Minibus & Coach Executive']
+        fleet_categories
       });
 
       toast(`Added ${name} with Relevance Score ${sum}/100`);
