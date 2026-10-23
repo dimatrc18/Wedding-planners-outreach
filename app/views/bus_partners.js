@@ -81,21 +81,23 @@ export const STANDARD_FLEET_TYPES = [
 
 export function shortFleetName(str) {
   if (!str) return '';
-  const match = STANDARD_FLEET_TYPES.find(f => f.label.toLowerCase() === str.toLowerCase() || f.short.toLowerCase() === str.toLowerCase());
-  if (match) return match.short;
   if (/limobus/i.test(str)) return 'Limobus (18-28s)';
-  if (/sprinter.*vip.*lounge/i.test(str)) return 'Sprinter Lounge';
+  if (/sprinter.*vip.*lounge/i.test(str)) return 'Sprinter VIP Lounge';
   if (/sprinter.*vip/i.test(str)) return 'Sprinter VIP (8-16s)';
   if (/sprinter.*exec/i.test(str)) return 'Sprinter Exec (16-19s)';
   if (/sprinter.*lux/i.test(str)) return 'Sprinter Lux (8-20s)';
-  if (/sprinter/i.test(str)) return 'Sprinter Minibus';
+  if (/sprinter.*minibus|sprinter/i.test(str)) return 'Sprinter Minibus';
   if (/midi/i.test(str)) return 'Midibus (24-30s)';
   if (/setra.*vip/i.test(str)) return 'Setra VIP Lounge';
-  if (/setra.*topclass/i.test(str)) return 'Setra TopClass';
-  if (/tourismo/i.test(str)) return 'Mercedes Tourismo';
-  if (/v-?class/i.test(str)) return 'V-Class (7-8s)';
-  if (/coach|pullman/i.test(str)) return 'GT Coach';
-  return str.length > 20 ? str.slice(0, 18) + '…' : str;
+  if (/setra.*topclass/i.test(str)) return 'Setra TopClass (30-54)';
+  if (/tourismo.*black/i.test(str)) return 'Tourismo Black Series';
+  if (/tourismo/i.test(str)) return 'Tourismo GT (30-53)';
+  if (/v-?class/i.test(str)) return 'V-Class VIP (7-8s)';
+  if (/coach.*36.*56/i.test(str)) return 'GT Coach (36-56s)';
+  if (/coach|pullman/i.test(str)) return 'Executive GT Coach';
+  const match = STANDARD_FLEET_TYPES.find((f) => f.label.toLowerCase() === str.toLowerCase() || f.short.toLowerCase() === str.toLowerCase());
+  if (match) return match.short;
+  return str.length > 22 ? str.slice(0, 20) + '…' : str;
 }
 
 // Northern Italy Candidate Knowledge Base for Market Auto-Scout
@@ -338,13 +340,13 @@ export function render(el) {
             <tr>
               <th style="width:26px;text-align:center;padding:8px 2px">#</th>
               <th style="width:40px;text-align:center;padding:8px 2px">Score</th>
-              <th style="width:155px">Company & Base</th>
-              <th style="width:60px;text-align:center">Web</th>
-              <th style="width:145px">Email</th>
-              <th style="width:125px">Fleet Types</th>
-              <th style="width:160px">Notes</th>
-              <th style="width:140px">Status</th>
-              <th style="width:38px;text-align:center" title="Delete">Del</th>
+              <th style="width:150px">Company & Base</th>
+              <th style="width:55px;text-align:center">Web</th>
+              <th style="width:140px">Email</th>
+              <th style="width:160px">Fleet Types</th>
+              <th style="width:150px">Notes</th>
+              <th style="width:138px">Status</th>
+              <th style="width:36px;text-align:center" title="Delete">Del</th>
             </tr>
           </thead>
           <tbody>
@@ -354,7 +356,7 @@ export function render(el) {
               const scoreClass = score >= 90 ? 'chip ok' : score >= 75 ? 'chip' : score >= 50 ? 'chip gold' : 'chip bad';
               const categories = Array.isArray(p.fleet_categories) ? p.fleet_categories : [];
 
-              return `<tr class="hover-row" data-id="${attr(p.id)}" style="height:52px">
+              return `<tr class="hover-row" data-id="${attr(p.id)}" style="min-height:56px">
                 <td style="text-align:center;vertical-align:middle;color:var(--ink-3);font-size:.76rem;font-weight:600;font-variant-numeric:tabular-nums;padding:6px 2px">
                   ${idx + 1}
                 </td>
@@ -376,7 +378,7 @@ export function render(el) {
                 <td style="vertical-align:middle;white-space:nowrap">
                   ${p.email 
                     ? `<div class="row nowrap" style="gap:4px;align-items:center;white-space:nowrap">
-                        <a href="mailto:${attr(p.email)}" style="color:var(--series-1);font-size:.8rem;text-decoration:none;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;max-width:125px;overflow:hidden;text-overflow:ellipsis" title="Email: ${attr(p.email)}">
+                        <a href="mailto:${attr(p.email)}" style="color:var(--series-1);font-size:.8rem;text-decoration:none;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis" title="Email: ${attr(p.email)}">
                           ${icon('email', 11)} <span style="overflow:hidden;text-overflow:ellipsis">${esc(p.email)}</span>
                         </a>
                         <button class="clickable" data-act="edit-email" data-id="${attr(p.id)}" style="background:none;border:none;padding:1px 3px;cursor:pointer;color:var(--text-3);font-size:.72rem" title="Edit Email">✏️</button>
@@ -387,9 +389,8 @@ export function render(el) {
                   }
                 </td>
                 <td style="vertical-align:middle">
-                  <div class="clickable" data-act="edit-fleet" data-id="${attr(p.id)}" style="cursor:pointer;display:flex;flex-direction:column;gap:3px;max-width:120px;align-items:flex-start;line-height:1.2" title="Click to choose/edit fleet categories: ${attr(categories.join(', '))}">
-                    ${categories.slice(0, 2).map((c) => `<span class="chip tiny outline" style="font-size:.67rem;padding:1px 6px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:115px" title="${attr(c)}">${esc(shortFleetName(c))}</span>`).join('')}
-                    ${categories.length > 2 ? `<span class="tiny faint" style="font-size:.66rem;padding-left:2px" title="${attr(categories.slice(2).join(', '))}">+${categories.length - 2} more</span>` : ''}
+                  <div class="clickable" data-act="edit-fleet" data-id="${attr(p.id)}" style="cursor:pointer;display:flex;flex-direction:column;gap:3px;max-width:155px;align-items:flex-start;line-height:1.2" title="Click to choose/edit fleet categories: ${attr(categories.join(', '))}">
+                    ${categories.map((c) => `<span class="chip tiny outline" style="font-size:.70rem;padding:2px 7px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px" title="${attr(c)}">${esc(shortFleetName(c))}</span>`).join('')}
                     ${!categories.length ? '<span class="tiny" style="color:var(--gold-ink);font-style:italic;padding:1px 4px;border:1px dashed var(--line);border-radius:4px">+ Choose fleet...</span>' : ''}
                   </div>
                 </td>
