@@ -3,7 +3,7 @@ import { assertEquals, assertNotEquals, assert } from "https://deno.land/std@0.2
 import { normalizeDate, normalizeTime, parseGoogleMapsUrl, mapChildSeat, applyBusinessRules } from "./rules.ts";
 import { extractBookingWithGemini } from "./extract.ts";
 import { getGoogleAccessToken, toCalendarEventId } from "./google.ts";
-import { buildCompactCopyText, buildEditableBookingText } from "./card.ts";
+import { buildCompactCopyText, buildEditableBookingText, buildFullCardPlainText, renderEditCopyCard, renderBookingCard } from "./card.ts";
 import defaultCreds from "./service_account.json" with { type: "json" };
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") || "";
@@ -227,4 +227,81 @@ Deno.test("buildCompactCopyText guarantees <= 256 chars for native Telegram copy
   assert(rawCopy.length <= 256);
 
   console.log("✅ buildCompactCopyText 256-char limit test passed!");
+});
+
+// 7. UNIT TEST: buildFullCardPlainText and renderEditCopyCard in-place edit flip
+Deno.test("buildFullCardPlainText produces complete un-truncated card for in-place edit flip", () => {
+  const dummyBooking: any = {
+    booking_ref: "DRG-827R8B",
+    booked_date: "2027-04-24",
+    client: { name: "Isabella O'Kennedy", phone: null, email: "isabella.ok@icloud.com" },
+    vehicle: { class: "Mercedes-Benz Sprinter", count: 1 },
+    party: { passengers: 22, luggage: null, children: [] },
+    service_type: "Hourly Standby",
+    rides: [
+      {
+        ride_no: 1,
+        date: "2027-04-24",
+        time: "14:00",
+        stops: [
+          { kind: "pickup", place: "Nenè Bellagio (Parcheggio)", maps_url: "https://maps.google.com/?q=45.9752932,9.2468878", instructions: "Bus pulls over outside the main gate" },
+          { kind: "dropoff", place: "Loppia Bus Stop", maps_url: "https://maps.google.com/?q=Via+Paolo+Carcano+10+Bellagio", instructions: "2-min gentle walk / 130m down to Loppia Dock" },
+        ],
+      },
+      {
+        ride_no: 2,
+        date: "2027-04-24",
+        time: "17:40",
+        stops: [
+          { kind: "pickup", place: "Loppia Bus Stop", maps_url: "https://maps.google.com/?q=Via+Paolo+Carcano+10+Bellagio" },
+          { kind: "dropoff", place: "La Madonnina di Barni", maps_url: "https://maps.google.com/?q=La+Madonnina+di+Barni", instructions: "Direct drop-off at the restaurant entrance" },
+        ],
+      },
+      {
+        ride_no: 3,
+        date: "2027-04-24",
+        time: "23:30",
+        stops: [
+          { kind: "pickup", place: "La Madonnina di Barni", maps_url: "https://maps.google.com/?q=La+Madonnina+di+Barni" },
+          { kind: "dropoff", place: "Nenèè Bellagio (Parcheggio)", maps_url: "https://maps.google.com/?q=45.9752932,9.2468878" },
+          { kind: "dropoff", place: "Villa Lilla", maps_url: "https://maps.google.com/?q=Via+Paolo+Carcano+30+Bellagio" },
+        ],
+      },
+    ],
+    finance: { total_price: 1610, paid_deposit: 483, balance_due: 1127 },
+    client_notes: "We will have everyone at Loppia by 14:50 for your 15:00 boat departure. Your chauffeur can transfer all 22 guests together at 14:4, there are other locations that have to be confimed, we promised sprinter on 24/28 people",
+    missing_fields: ["Client phone number / WhatsApp"],
+  };
+
+  const fullText = buildFullCardPlainText(dummyBooking);
+  console.log("Full Card Plain Text:\n", fullText);
+
+  // Assert NO truncation
+  assert(fullText.length > 500, `Full text length ${fullText.length} must be comprehensive (>500 chars)`);
+  assert(fullText.includes("Isabella O'Kennedy"));
+  assert(fullText.includes("isabella.ok@icloud.com"));
+  assert(fullText.includes("We will have everyone at Loppia by 14:50 for your 15:00 boat departure. Your chauffeur can transfer all 22 guests together at 14:4, there are other locations that have to be confimed, we promised sprinter on 24/28 people"), "Full notes must not be cut off!");
+  assert(fullText.includes("https://maps.google.com/?q=45.9752932,9.2468878"), "Maps URLs must be present in full");
+  assert(fullText.includes("La Madonnina di Barni"));
+  assert(fullText.includes("€1610"));
+  assert(fullText.includes("€1127"));
+
+  // Verify renderEditCopyCard markup
+  const editCard = renderEditCopyCard(dummyBooking, "draft_123");
+  assert(editCard.text.includes("<code>"));
+  assert(editCard.text.includes("</code>"));
+  assert(editCard.replyMarkup.inline_keyboard[0][0].text === "⬅️ Back to Preview");
+  assert(editCard.replyMarkup.inline_keyboard[0][1].text === "❌ Cancel");
+
+  // Verify renderBookingCard has single "Edit the Card" button on row 2
+  const previewCard = renderBookingCard(dummyBooking, "draft_123");
+  assertEquals(previewCard.replyMarkup.inline_keyboard.length, 2);
+  assertEquals(previewCard.replyMarkup.inline_keyboard[0].length, 2);
+  assertEquals(previewCard.replyMarkup.inline_keyboard[0][0].text, "✅ Confirm & Save to CRM");
+  assertEquals(previewCard.replyMarkup.inline_keyboard[0][1].text, "❌ Cancel");
+  assertEquals(previewCard.replyMarkup.inline_keyboard[1].length, 1);
+  assertEquals(previewCard.replyMarkup.inline_keyboard[1][0].text, "✏️ Edit the Card");
+  assertEquals(previewCard.replyMarkup.inline_keyboard[1][0].callback_data, "edit_card:draft_123");
+
+  console.log("✅ buildFullCardPlainText and renderEditCopyCard test passed!");
 });

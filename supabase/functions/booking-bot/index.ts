@@ -1,6 +1,6 @@
 // Dorogo Booking Copilot Telegram Bot (Supabase Edge Function / Deno)
 import { extractBookingWithGemini, patchBookingWithGemini } from "./extract.ts";
-import { renderBookingCard, buildEditableBookingText, esc } from "./card.ts";
+import { renderBookingCard, renderEditCopyCard, buildEditableBookingText, esc } from "./card.ts";
 import { saveBookingToGoogleSheet, saveBookingToGoogleCalendar } from "./google.ts";
 import {
   upsertDraft,
@@ -499,34 +499,37 @@ async function handleCallbackQuery(query: any) {
     return;
   }
 
-  // 2. EDIT FULL BOOKING
-  if (action === "edit_full" || action === "copy_full") {
-    // Answer callback silently (NO alert modal popup!)
+  // 2. EDIT THE CARD (IN-PLACE FLIP TO UNTRUNCATED TAP-TO-COPY CODE BLOCK)
+  if (action === "edit_card" || action === "edit_full" || action === "copy_full") {
     await tgApi("answerCallbackQuery", { callback_query_id: queryId });
+    if (!draft || !draft.booking_data) return;
 
-    const ref = draft?.booking_ref || "";
-    const fullText = (draft?.raw_text && draft.raw_text.trim().length > 10)
-      ? draft.raw_text.trim()
-      : (draft?.booking_data ? buildEditableBookingText(draft.booking_data) : "No booking text found");
-
-    const promptMsg = await tgApi("sendMessage", {
+    const editCard = renderEditCopyCard(draft.booking_data, draft.id);
+    await tgApi("editMessageText", {
       chat_id: chatId,
-      text: `✏️ <b>Edit Full Booking [${ref}]:</b>\n\n` +
-        `<code>${esc(fullText)}</code>\n\n` +
-        `<i>💡 <b>How to edit:</b>\n` +
-        `1. <b>Tap the box above</b> to copy everything.\n` +
-        `2. <b>Paste into chat (Cmd+V)</b>, edit whatever you want, and send.\n` +
-        `3. The bot will automatically update the card in-place and clean up this prompt.</i>\n\n` +
-        `<i>⚡ <b>Desktop Shortcut:</b> You can also just press <b>↑ (Up Arrow)</b> in chat to edit your original message directly!</i>`,
+      message_id: messageId,
+      text: editCard.text,
       parse_mode: "HTML",
+      reply_markup: editCard.replyMarkup,
+      disable_web_page_preview: true,
     });
+    return;
+  }
 
-    if (draft && promptMsg.ok) {
-      await upsertDraft({
-        ...draft,
-        prompt_message_id: promptMsg.result.message_id,
-      });
-    }
+  // 3. BACK TO PREVIEW CARD (FLIP BACK IN-PLACE)
+  if (action === "preview") {
+    await tgApi("answerCallbackQuery", { callback_query_id: queryId });
+    if (!draft || !draft.booking_data) return;
+
+    const previewCard = renderBookingCard(draft.booking_data, draft.id, draft.raw_text);
+    await tgApi("editMessageText", {
+      chat_id: chatId,
+      message_id: messageId,
+      text: previewCard.text,
+      parse_mode: "HTML",
+      reply_markup: previewCard.replyMarkup,
+      disable_web_page_preview: true,
+    });
     return;
   }
 

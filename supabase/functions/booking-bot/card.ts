@@ -160,7 +160,7 @@ export function renderBookingCard(
 
   // Inline Buttons layout requested by user:
   // Row 1: Approve and Cancel (Cancel deletes draft completely from chat)
-  // Row 2: Single full-width native 1-Click CopyTextButton (copies directly to clipboard with Telegram popup, 0 chat messages!)
+  // Row 2: Single full-width button to flip the card in-place into tap-to-copy mode (0 truncation, 0 chat clutter!)
   const buttons: any[] = [];
 
   buttons.push([
@@ -174,16 +174,183 @@ export function renderBookingCard(
     },
   ]);
 
-  const compactBookingText = buildCompactCopyText(booking, rawText);
   buttons.push([
     {
-      text: "✏️ Edit Full Booking",
-      copy_text: { text: compactBookingText },
+      text: "✏️ Edit the Card",
+      callback_data: `edit_card:${draftId}`,
     },
   ]);
 
   return {
     text: lines.join("\n"),
+    replyMarkup: { inline_keyboard: buttons },
+  };
+}
+
+/**
+ * Builds the complete un-truncated card in plain-text format (all 1,350+ chars).
+ * Placed inside a <code> block so one tap on Telegram copies everything to clipboard.
+ */
+export function buildFullCardPlainText(booking: BookingData): string {
+  const lines: string[] = [];
+
+  // Header
+  lines.push(`📋 BOOKING DRAFT [${booking.booking_ref}]`);
+  lines.push(`───────────────────────────`);
+
+  const primaryDate = booking.rides[0]?.date || booking.booked_date;
+  if (primaryDate) {
+    lines.push(`📅 Date: ${formatDisplayDate(primaryDate)}`);
+  }
+
+  // Client Details
+  const clientName = booking.client.name || `❓ Not provided`;
+  const clientPhone = booking.client.phone || `❓ Not provided`;
+  lines.push(`👤 Client: ${clientName} | 📞 ${clientPhone}`);
+  if (booking.client.email) {
+    lines.push(`✉️ Email: ${booking.client.email}`);
+  }
+
+  // Vehicle & Party
+  const vehStr = `${booking.vehicle.class || "Mercedes-Benz V-Class"}${booking.vehicle.count > 1 ? ` (${booking.vehicle.count}x)` : ""}`;
+  let partyStr = `👥 Guests: ${booking.party.passengers ?? 1} passengers`;
+  if (booking.party.luggage !== null && booking.party.luggage > 0) {
+    partyStr += ` | 🧳 ${booking.party.luggage} bags`;
+  }
+  lines.push(`🚐 Vehicle: ${vehStr}`);
+  lines.push(partyStr);
+
+  // Service Description (Standby vs Transfer)
+  const isStandby = booking.service_type === "standby" ||
+    booking.service_type === "disposal" ||
+    booking.service_type === "wedding_transport" ||
+    (booking.client_notes && /standby|10hours|disposal/i.test(booking.client_notes));
+
+  let serviceDisplay = booking.service_type || "Chauffeur Service";
+  if (isStandby) {
+    const hMatch = (booking.client_notes || "").match(/(\d+)\s*(?:hours|hour|h|hr)\b/i);
+    const hCount = hMatch ? `${hMatch[1]}-Hour ` : "";
+    serviceDisplay = `${hCount}Standby Service`;
+  }
+  lines.push(`⏱ Service: ${serviceDisplay}`);
+
+  // Financials
+  if (booking.finance.total_price !== null) {
+    const p = booking.finance.total_price;
+    const dep = booking.finance.paid_deposit || 0;
+    const due = booking.finance.balance_due ?? (p - dep);
+    if (dep > 0) {
+      lines.push(`💶 Fare: €${p} | Paid: €${dep} ✅ | Due: €${due} 💵`);
+    } else {
+      lines.push(`💶 Fare: €${p} (Unpaid)`);
+    }
+  } else if (booking.finance.suggested_price) {
+    lines.push(`💶 Fare: Suggested: €${booking.finance.suggested_price}`);
+  } else {
+    lines.push(`💶 Fare: ❓ Not specified`);
+  }
+
+  // Child Seats
+  if (booking.party.children && booking.party.children.length > 0) {
+    const seatsDesc = booking.party.children
+      .map((c) => {
+        if (c.age === null) return "Child seat (age not specified ⚠️)";
+        if (c.seat_type === "infant_carrier") return `Infant carrier (under 13kg, age ${c.age})`;
+        if (c.seat_type === "child_seat") return `Toddler seat 9–18kg (age ${c.age})`;
+        return `Booster cushion (age ${c.age})`;
+      })
+      .join(", ");
+    lines.push(`👶 Child seats: ${seatsDesc}`);
+  }
+
+  // Rides & Transfers Itinerary
+  if (booking.rides.length > 0) {
+    lines.push(`\n📍 ITINERARY:`);
+    booking.rides.forEach((r, idx) => {
+      const pickups = r.stops.filter((s) => s.kind === "pickup");
+      const dropoffs = r.stops.filter((s) => s.kind === "dropoff");
+
+      if (pickups.length > 0) {
+        const p = pickups[0];
+        const pTime = p.time ? `${p.time} — ` : r.time ? `${r.time} — ` : "";
+        const pMap = p.maps_url ? ` (${p.maps_url})` : "";
+        lines.push(`• ${pTime}${p.place}${pMap}`);
+        if (p.instructions) {
+          lines.push(`    ℹ️ ${p.instructions}`);
+        }
+      } else {
+        lines.push(`• Transfer ${idx + 1}`);
+      }
+
+      if (dropoffs.length === 1) {
+        const d = dropoffs[0];
+        const dTime = d.time ? ` (~${d.time})` : "";
+        const dMap = d.maps_url ? ` (${d.maps_url})` : "";
+        lines.push(`  ↳ Drop-off${dTime}: ${d.place}${dMap}`);
+        if (d.instructions) {
+          lines.push(`    ℹ️ ${d.instructions}`);
+        }
+      } else if (dropoffs.length > 1) {
+        lines.push(`  ↳ Drop-offs:`);
+        dropoffs.forEach((d) => {
+          const dTime = d.time ? ` (~${d.time})` : "";
+          const dMap = d.maps_url ? ` (${d.maps_url})` : "";
+          lines.push(`    - ${d.place}${dTime}${dMap}`);
+          if (d.instructions) {
+            lines.push(`      ℹ️ ${d.instructions}`);
+          }
+        });
+      }
+
+      if (r.flight?.number) {
+        lines.push(`  ✈️ Flight: ${r.flight.number}`);
+      }
+
+      lines.push("");
+    });
+  }
+
+  // Client Notes
+  if (booking.client_notes) {
+    lines.push(`📝 Notes: ${booking.client_notes}`);
+  }
+
+  // Missing Fields Checklist
+  if (booking.missing_fields.length > 0) {
+    lines.push(`\n───────────────────────────`);
+    lines.push(`❓ MISSING INFO:`);
+    booking.missing_fields.forEach((m) => lines.push(`• ❓ ${m}`));
+  }
+
+  return lines.join("\n").trim();
+}
+
+/**
+ * In-place Tap-to-Copy Card View.
+ * Contains the ENTIRE un-truncated booking (all 1,350+ characters) inside <code>...</code>.
+ * One tap anywhere on the code box copies everything to the clipboard in Telegram.
+ */
+export function renderEditCopyCard(booking: BookingData, draftId: string): { text: string; replyMarkup: any } {
+  const fullText = buildFullCardPlainText(booking);
+  const text = `✏️ <b>TAP THE BOX BELOW TO COPY:</b>\n` +
+    `<i>(Tap once to copy the entire card, paste into chat (Cmd+V), edit, and send)</i>\n\n` +
+    `<code>${esc(fullText)}</code>`;
+
+  const buttons = [
+    [
+      {
+        text: "⬅️ Back to Preview",
+        callback_data: `preview:${draftId}`,
+      },
+      {
+        text: "❌ Cancel",
+        callback_data: `discard:${draftId}`,
+      },
+    ],
+  ];
+
+  return {
+    text,
     replyMarkup: { inline_keyboard: buttons },
   };
 }
