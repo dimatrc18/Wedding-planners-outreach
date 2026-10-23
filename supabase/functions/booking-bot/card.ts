@@ -27,7 +27,11 @@ function formatDisplayDate(dateStr: string): string {
   return dateStr;
 }
 
-export function renderBookingCard(booking: BookingData, draftId: string): { text: string; replyMarkup: any } {
+export function renderBookingCard(
+  booking: BookingData,
+  draftId: string,
+  rawText?: string
+): { text: string; replyMarkup: any } {
   const lines: string[] = [];
 
   // Header
@@ -154,9 +158,9 @@ export function renderBookingCard(booking: BookingData, draftId: string): { text
     booking.missing_fields.forEach((m) => lines.push(`• ❓ ${esc(m)}`));
   }
 
-  // Inline Buttons layout:
+  // Inline Buttons layout requested by user:
   // Row 1: Approve and Cancel (Cancel deletes draft completely from chat)
-  // Row 2: Native 1-Click CopyTextButton (copies directly to clipboard with Telegram popup, 0 chat messages!)
+  // Row 2: Single full-width native 1-Click CopyTextButton (copies directly to clipboard with Telegram popup, 0 chat messages!)
   const buttons: any[] = [];
 
   buttons.push([
@@ -170,27 +174,13 @@ export function renderBookingCard(booking: BookingData, draftId: string): { text
     },
   ]);
 
-  const compactBookingText = buildCompactCopyText(booking);
-  if (booking.client_notes) {
-    const notesCopy = `[${booking.booking_ref}] Notes: ${booking.client_notes}`.substring(0, 256);
-    buttons.push([
-      {
-        text: "✏️ Copy Booking",
-        copy_text: { text: compactBookingText },
-      },
-      {
-        text: "📋 Copy Notes",
-        copy_text: { text: notesCopy },
-      },
-    ]);
-  } else {
-    buttons.push([
-      {
-        text: "✏️ Copy to Edit",
-        copy_text: { text: compactBookingText },
-      },
-    ]);
-  }
+  const compactBookingText = buildCompactCopyText(booking, rawText);
+  buttons.push([
+    {
+      text: "✏️ Edit Full Booking",
+      copy_text: { text: compactBookingText },
+    },
+  ]);
 
   return {
     text: lines.join("\n"),
@@ -202,7 +192,16 @@ export function renderBookingCard(booking: BookingData, draftId: string): { text
  * Builds a compact editable summary (<= 256 chars) for Telegram's native CopyTextButton.
  * Clicking the button copies this directly to clipboard with a native popup and 0 chat messages.
  */
-export function buildCompactCopyText(booking: BookingData): string {
+export function buildCompactCopyText(booking: BookingData, rawText?: string): string {
+  // If original raw message is short enough to fit with ref into 256 chars,
+  // copy the user's actual original message directly so they can edit it naturally!
+  if (rawText && rawText.trim()) {
+    const candidate = `[${booking.booking_ref}]\n${rawText.trim()}`;
+    if (candidate.length <= 256) {
+      return candidate;
+    }
+  }
+
   const lines: string[] = [];
   lines.push(`[${booking.booking_ref}]`);
   if (booking.client.name) lines.push(`Name: ${booking.client.name}`);
@@ -218,6 +217,13 @@ export function buildCompactCopyText(booking: BookingData): string {
     const r0 = booking.rides[0];
     const times = booking.rides.map((r) => r.time || "").filter(Boolean).join(", ");
     lines.push(`Date: ${r0.date}${times ? ` @ ${times}` : ""}`);
+
+    // Include route if available
+    const p0 = r0.stops.find((s) => s.kind === "pickup");
+    const d0 = r0.stops.find((s) => s.kind === "dropoff");
+    if (p0?.place && d0?.place) {
+      lines.push(`Route: ${p0.place} -> ${d0.place}`);
+    }
   }
   if (booking.client_notes) {
     lines.push(`Notes: ${booking.client_notes}`);

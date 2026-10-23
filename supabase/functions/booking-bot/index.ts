@@ -258,7 +258,7 @@ async function handleIncomingMessage(msg: any) {
       await tgApi("deleteMessage", { chat_id: chatId, message_id: existingDraft.prompt_message_id });
     }
 
-    const card = renderBookingCard(existingDraft.booking_data, existingDraft.id);
+    const card = renderBookingCard(existingDraft.booking_data, existingDraft.id, existingDraft.raw_text);
     if (existingDraft.card_message_id) {
       await tgApi("editMessageText", {
         chat_id: chatId,
@@ -317,7 +317,7 @@ async function handleIncomingMessage(msg: any) {
     await tgApi("deleteMessage", { chat_id: chatId, message_id: msg.message_id });
 
     // Update card in place
-    const card = renderBookingCard(existingDraft.booking_data, existingDraft.id);
+    const card = renderBookingCard(existingDraft.booking_data, existingDraft.id, existingDraft.raw_text);
     await tgApi("editMessageText", {
       chat_id: chatId,
       message_id: existingDraft.card_message_id,
@@ -391,7 +391,7 @@ async function handleIncomingMessage(msg: any) {
     }
 
     const draftId = existingDraft?.id || `d_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-    const card = renderBookingCard(booking, draftId);
+    const card = renderBookingCard(booking, draftId, text);
 
     let finalCardMsgId = statusMsgId;
 
@@ -626,7 +626,7 @@ async function handleCallbackQuery(query: any) {
     await upsertDraft(draft);
     await tgApi("answerCallbackQuery", { callback_query_id: queryId, text: `Fare €${p} confirmed.` });
 
-    const card = renderBookingCard(draft.booking_data, draft.id);
+    const card = renderBookingCard(draft.booking_data, draft.id, draft.raw_text);
     await tgApi("editMessageText", {
       chat_id: chatId,
       message_id: messageId,

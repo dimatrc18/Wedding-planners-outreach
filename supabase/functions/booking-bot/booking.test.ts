@@ -219,5 +219,12 @@ Deno.test("buildCompactCopyText guarantees <= 256 chars for native Telegram copy
   const truncatedCopyText = buildCompactCopyText(bookingWithLongNotes);
   assert(truncatedCopyText.length <= 256, "Even with 500 chars of notes, must truncate to <= 256 chars");
   assert(truncatedCopyText.endsWith("..."), "Truncated text must end with ellipsis");
+
+  // Short raw message test: should preserve the user's raw message when <= 256 chars
+  const shortRaw = "Transfer MXP to Bellagio on 15 May at 10:00 for Alessandro, 4 pax, V-Class, 350 EUR";
+  const rawCopy = buildCompactCopyText(dummyBooking, shortRaw);
+  assert(rawCopy.startsWith("[DRG-9A7B3C]\nTransfer MXP to Bellagio"), "Should preserve raw text when <= 256 chars");
+  assert(rawCopy.length <= 256);
+
   console.log("✅ buildCompactCopyText 256-char limit test passed!");
 });
