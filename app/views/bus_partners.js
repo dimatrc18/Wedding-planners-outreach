@@ -1470,8 +1470,6 @@ export function render(el) {
         <button class="btn ghost sm" id="btn-view-excluded" style="color:var(--text-3);border-color:var(--border);display:inline-flex;align-items:center;gap:4px" title="View operators permanently blocked from discovery and searches">
           🚫 Excluded (${excludedList.length})
         </button>
-        <button class="btn ghost sm" id="btn-export">${icon('download', 14)} Export</button>
-        <button class="btn primary sm" id="btn-add-partner">${icon('plus', 14)} + Add Operator</button>
       </div>
     </div>
 
