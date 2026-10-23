@@ -209,3 +209,90 @@ test('Market-aware queue balancer enforces 70% International / 30% Local send ra
   assert.equal(localDispatched[0].id, 't_it_1');
 });
 
+test('Anti-Flood Protection: sequenceState never auto-drafts a step that has a failed touch', () => {
+  const p = P({ status: 'ready' });
+  const failedTouch = {
+    id: 't_failed_1',
+    direction: 'out',
+    step_name: 'T1_intro',
+    state: 'failed',
+    created_at: '2026-10-23T09:00:00Z',
+  };
+  const st = sequenceState(p, [failedTouch], S, rome(2026, 10, 6, 10, 0));
+  assert.equal(st.isDue, false, 'Failed touch must never be considered isDue: true');
+  assert.equal(st.blocked, 'failed_touch', 'Step must be marked blocked as failed_touch');
+  assert.ok(st.pending, 'Pending should point to the failed touch for human review');
+});
+
+test('Anti-Flood Protection: canSend blocks duplicate sends of the same step (step_already_sent)', () => {
+  const tue10 = rome(2026, 10, 6, 10, 0);
+  const p = P({ status: 't1_sent' });
+  const alreadySentTouch = {
+    id: 't_sent_1',
+    channel: 'email',
+    direction: 'out',
+    step_name: 'T1_intro',
+    state: 'sent',
+    sent_at: '2026-10-23T08:00:00Z',
+    message_id: '<msg-1@dorogo.eu>',
+  };
+  const duplicateTouch = {
+    id: 't_duplicate_2',
+    channel: 'email',
+    direction: 'out',
+    step_name: 'T1_intro',
+    state: 'approved',
+    scheduled_at: tue10.toISOString(),
+  };
+
+  const gate = canSend(duplicateTouch, p, [alreadySentTouch], S, { now: tue10 });
+  assert.equal(gate.ok, false);
+  assert.equal(gate.reason, 'step_already_sent', 'canSend must strictly reject sending a step that was already sent');
+});
+
+test('Anti-Flood Protection: canSend enforces 24-hour cooldown between cold emails to the same recipient', () => {
+  const now = new Date('2026-10-23T12:00:00Z');
+  const p = P({ status: 't1_sent' });
+  const recentTouch = {
+    id: 't_sent_earlier',
+    channel: 'email',
+    direction: 'out',
+    step_name: 'T1_intro',
+    state: 'sent',
+    sent_at: '2026-10-23T10:00:00Z', // 2 hours ago
+  };
+  const nextColdTouch = {
+    id: 't_cold_followup',
+    channel: 'email',
+    direction: 'out',
+    step_name: 'T3_followup',
+    state: 'approved',
+    scheduled_at: '2026-10-23T12:00:00Z',
+  };
+
+  const gate = canSend(nextColdTouch, p, [recentTouch], S, { now });
+  assert.equal(gate.ok, false);
+  assert.equal(gate.reason, 'recipient_cooldown', 'Must reject cold email sent within 24 hours of another cold email');
+
+  // After 24 hours, cooldown expires
+  const after24h = new Date('2026-10-24T10:01:00Z');
+  const gateAfter24h = canSend(nextColdTouch, p, [recentTouch], S, { now: after24h });
+  // Since it is Saturday outside window it might be outside_window, but NOT recipient_cooldown:
+  assert.notEqual(gateAfter24h.reason, 'recipient_cooldown', 'Cooldown should be expired after 24h');
+});
+
+test('Anti-Flood Protection: non-cold touches that are already sent cannot be resent', () => {
+  const sentReply = {
+    id: 't_reply_sent',
+    channel: 'email',
+    direction: 'out',
+    step_name: 'reply',
+    state: 'sent',
+    sent_at: '2026-10-23T10:00:00Z',
+  };
+  const gate = canSend(sentReply, P(), [], S);
+  assert.equal(gate.ok, false);
+  assert.equal(gate.reason, 'touch_already_sent');
+});
+
+

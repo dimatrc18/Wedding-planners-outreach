@@ -108,7 +108,7 @@ create table public.touches (
 );
 -- One live touch per cadence step and prospect: the cron drafter and the browser can never double-draft.
 create unique index touches_one_live_step on public.touches (prospect_id, step_name)
-  where direction = 'out' and step_name in ('T1_intro','T2_ig_dm','T3_followup','T4_breakup') and state in ('draft','approved','sent');
+  where direction = 'out' and step_name in ('T1_intro','T2_ig_dm','T3_followup','T4_breakup') and state in ('draft','approved','sent','failed');
 create unique index touches_message_id on public.touches (message_id) where message_id is not null;
 create index touches_due on public.touches (state, scheduled_at);
 create index touches_prospect on public.touches (prospect_id, created_at);

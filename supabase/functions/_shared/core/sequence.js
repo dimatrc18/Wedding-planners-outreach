@@ -6,7 +6,7 @@ import { localParts, zonedTimeToUtc, localDateKey, isItalianHoliday, parseHHMM, 
 import { inferMarket } from './prospects.js';
 
 export const COLD_STEPS = ['T1_intro', 'T3_followup', 'T4_breakup'];
-const PENDING_STATES = ['draft', 'approved'];
+const PENDING_STATES = ['draft', 'approved', 'failed'];
 
 export const withDefaults = (s) => {
   const merged = { ...DEFAULT_SETTINGS, ...(s || {}), warmup: { ...DEFAULT_SETTINGS.warmup, ...((s || {}).warmup || {}) } };
@@ -51,7 +51,12 @@ export function sequenceState(prospect, touches = [], settings = DEFAULT_SETTING
   const anchor = sequenceAnchor(outs);
   for (const step of steps) {
     const ts = outs.filter((t) => t.step_name === step.key);
-    if (ts.some((t) => t.state === 'sent' || t.state === 'skipped')) continue;
+    if (ts.some((t) => t.state === 'sent' || t.state === 'skipped' || Boolean(t.sent_at) || Boolean(t.message_id))) continue;
+    const failedTouch = ts.find((t) => t.state === 'failed');
+    if (failedTouch) {
+      // Step failed previously: never auto-draft a new touch. Hold for human retry/review.
+      return { active: true, step, pending: failedTouch, blocked: 'failed_touch', dueAt: null, isDue: false };
+    }
     const pending = ts.find((t) => PENDING_STATES.includes(t.state)) || null;
     if (step.channel === 'email' && !prospect.email) {
       return { active: true, step, pending, blocked: 'no_email', dueAt: null, isDue: false };
@@ -138,6 +143,7 @@ export function canSend(touch, prospect, touches, settings, ctx = {}) {
   const s = withDefaults(settings);
   const now = ctx.now || new Date();
   const cold = COLD_STEPS.includes(touch.step_name);
+  if (touch.state === 'sent' || Boolean(touch.sent_at)) return { ok: false, reason: 'touch_already_sent' };
   if (s.kill_switch) return { ok: false, reason: 'kill_switch' };
   if (isBlocked(prospect)) return { ok: false, reason: 'do_not_contact' };
   if (touch.state !== 'approved') return { ok: false, reason: 'not_approved' };
@@ -162,9 +168,30 @@ export function canSend(touch, prospect, touches, settings, ctx = {}) {
   if ((ctx.sentTotal || 0) >= s.bounce_min_sample && (ctx.bouncedTotal || 0) / ctx.sentTotal > s.bounce_pause_rate) {
     return { ok: false, reason: 'bounce_pause' };
   }
-  if (!cold) return { ok: true };
+  if (!cold) {
+    if (touch.state === 'sent' || Boolean(touch.sent_at)) return { ok: false, reason: 'touch_already_sent' };
+    return { ok: true };
+  }
   if (hasRealReply(touches)) return { ok: false, reason: 'replied' };
   if (prospect.sequence_paused) return { ok: false, reason: 'paused' };
+
+  // Anti-Flood Gate 1: Check if this cadence step was already sent to this prospect
+  const otherTouches = Array.isArray(touches) ? touches : [];
+  const alreadySentStep = otherTouches.some(
+    (t) => t.id !== touch.id && t.direction === 'out' && t.step_name === touch.step_name && (t.state === 'sent' || Boolean(t.sent_at) || Boolean(t.message_id))
+  );
+  if (alreadySentStep) return { ok: false, reason: 'step_already_sent' };
+
+  // Anti-Flood Gate 2: Cooldown protection - never send more than 1 cold email per 24 hours to the same prospect
+  const dayMs = 24 * 60 * 60 * 1000;
+  const recentColdSend = otherTouches.some((t) => {
+    if (t.id === touch.id || t.direction !== 'out' || !COLD_STEPS.includes(t.step_name)) return false;
+    if (t.state !== 'sent' && !t.sent_at) return false;
+    const sentTime = t.sent_at ? new Date(t.sent_at).getTime() : 0;
+    return sentTime > 0 && (now.getTime() - sentTime) < dayMs;
+  });
+  if (recentColdSend) return { ok: false, reason: 'recipient_cooldown' };
+
   const cap = effectiveCap(s, now, ctx.firstSendAt);
   if (cap === 0) return { ok: false, reason: 'season_paused' };
   if (touch.scheduled_at && new Date(touch.scheduled_at) > now) return { ok: false, reason: 'not_due' };
@@ -193,6 +220,10 @@ export const BLOCK_REASONS = {
   not_due: 'Scheduled for later',
   outside_window: 'Outside the send window',
   daily_cap: 'Daily cap reached',
+  step_already_sent: 'Cadence step has already been sent to this prospect',
+  recipient_cooldown: 'Recipient was contacted within the last 24 hours (anti-flood active)',
+  touch_already_sent: 'This message has already been sent',
+  failed_touch: 'A previous attempt for this step failed; manual retry required',
 };
 
 // Nurture date: the date the planner gave, else the configured month-day of next year.

@@ -104,6 +104,10 @@ export async function unapprove(t) { await update('touches', t.id, { state: 'dra
 export async function retryFailed(t) {
   const p = prospectById(t.prospect_id);
   if (core.isBlocked(p)) { toast('This prospect is marked Do Not Contact', 'error'); return false; }
+  if (t.state === 'sent' || Boolean(t.sent_at) || Boolean(t.message_id)) {
+    toast('Email was already sent, cannot retry', 'error');
+    return false;
+  }
   const at = core.scheduleApproved(t, p, S.settings, core.takenSlots(S.touches), { firstSendAt: core.firstColdSend(S.touches) });
   await update('touches', t.id, { state: 'approved', approved_by: me(), approved_at: nowIso(), scheduled_at: at ? at.toISOString() : null, error: null, send_attempts: 0 });
   log('draft_approved', { touch_id: t.id, step: t.step_name, scheduled_at: at, retried: true }, p.id);

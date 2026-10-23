@@ -231,3 +231,67 @@ test('Scenario 10: Human escalation fallback -> if reply asks unknown quote offl
   assert.ok(fx.opportunity);
   assert.equal(fx.opportunity.title, 'Como Luxury Weddings');
 });
+
+test('Scenario 11: Blast Radius / Flood Prevention -> canSend and sequenceState strictly prevent duplicate emails (Easton Events incident prevention)', () => {
+  const p = {
+    id: 'p-easton-test',
+    agency_name: 'Easton Events Test',
+    email: 'easton@eastonevents.com',
+    status: 'ready',
+    market: 'us',
+    timezone: 'Europe/Rome',
+  };
+
+  // 1. Initial touch is approved
+  const touch1 = {
+    id: 't-intro-1',
+    prospect_id: p.id,
+    direction: 'out',
+    step_name: 'T1_intro',
+    channel: 'email',
+    state: 'approved',
+    scheduled_at: now.toISOString(),
+  };
+
+  // Gate allows first approved touch
+  const gate1 = canSend(touch1, p, [], DEFAULT_SETTINGS, { now, sentToday: 0 });
+  assert.equal(gate1.ok, true, 'First touch is permitted');
+
+  // Simulate touch1 is sent
+  touch1.state = 'sent';
+  touch1.sent_at = now.toISOString();
+  touch1.message_id = '<msg-easton-1@dorogo.eu>';
+  p.status = 't1_sent';
+
+  // 2. Suppose a bug drafts a duplicate T1_intro touch
+  const touch2 = {
+    id: 't-intro-2',
+    prospect_id: p.id,
+    direction: 'out',
+    step_name: 'T1_intro',
+    channel: 'email',
+    state: 'approved',
+    scheduled_at: now.toISOString(),
+  };
+
+  // canSend must block touch2 with step_already_sent
+  const gate2 = canSend(touch2, p, [touch1], DEFAULT_SETTINGS, { now, sentToday: 1 });
+  assert.equal(gate2.ok, false);
+  assert.equal(gate2.reason, 'step_already_sent', 'canSend blocks duplicate step send');
+
+  // 3. Suppose next step T3_followup is scheduled 2 hours later on the same day
+  const touch3 = {
+    id: 't-follow-1',
+    prospect_id: p.id,
+    direction: 'out',
+    step_name: 'T3_followup',
+    channel: 'email',
+    state: 'approved',
+    scheduled_at: new Date(now.getTime() + 2 * 3600 * 1000).toISOString(),
+  };
+
+  // canSend must block touch3 with recipient_cooldown
+  const gate3 = canSend(touch3, p, [touch1], DEFAULT_SETTINGS, { now: new Date(now.getTime() + 2 * 3600 * 1000), sentToday: 1 });
+  assert.equal(gate3.ok, false);
+  assert.equal(gate3.reason, 'recipient_cooldown', 'canSend enforces 24h cooldown between cold sends to the same recipient');
+});

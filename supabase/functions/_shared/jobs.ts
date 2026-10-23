@@ -98,6 +98,20 @@ export async function draftDueSteps(db: any, settings: any, now = new Date()) {
     const list = by.get(p.id) || [];
     const st: any = core.sequenceState(p, list, settings, now);
     if (st.active && st.isDue && !st.pending && !st.blocked) {
+      // Invariant 1: Never draft if this step already exists for this prospect (sent, draft, approved, failed)
+      const hasExistingStep = list.some(
+        (t: any) => t.direction === 'out' && t.step_name === st.step.key && (t.state !== 'skipped' || Boolean(t.sent_at) || Boolean(t.message_id))
+      );
+      if (hasExistingStep) continue;
+
+      // Invariant 2: Anti-flood 24h cooldown across cold steps
+      const dayMs = 24 * 60 * 60 * 1000;
+      const recentColdSent = list.some((t: any) => {
+        if (t.direction !== 'out' || !core.COLD_STEPS.includes(t.step_name) || !t.sent_at) return false;
+        return (now.getTime() - new Date(t.sent_at).getTime()) < dayMs;
+      });
+      if (recentColdSent) continue;
+
       const t1 = list.find((t: any) => t.step_name === 'T1_intro' && t.direction === 'out' && t.subject);
       const d: any = core.buildDraft({ prospect: p, key: st.step.key, templates, threadSubject: t1?.subject || '', step: st.step });
       if (d) {
@@ -226,6 +240,8 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
   const fromEmail = env('OUTREACH_FROM_EMAIL') || settings.sender?.email || 'dmitri@dorogo.eu';
   const fromName = settings.sender?.display_name || 'Dmitri | DOROGO';
   const results: any[] = [];
+  const sentRecipientsThisRun = new Set<string>();
+  const sentProspectsThisRun = new Set<string>();
   let sent = 0;
   for (const t of due.slice(0, 25)) {
     const p: any = pmap.get(t.prospect_id);
@@ -235,7 +251,7 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
     if (!gate.ok && gate.reason === 'not_due' && onlyTouchId) gate = { ok: true }; // "Send now" overrides the slot, nothing else
     if (!gate.ok) {
       results.push({ id: t.id, reason: gate.reason });
-      if (['replied', 'do_not_contact', 'invalid_email', 'catch_all_unverified', 'broken_website', 'no_email'].includes(gate.reason)) {
+      if (['replied', 'do_not_contact', 'invalid_email', 'catch_all_unverified', 'broken_website', 'no_email', 'step_already_sent', 'touch_already_sent'].includes(gate.reason)) {
         await db.from('touches').update({ state: 'skipped', error: core.BLOCK_REASONS[gate.reason] }).eq('id', t.id);
       }
       continue;
@@ -248,6 +264,15 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
     const lastInbound = [...thread].reverse().find((x: any) => x.direction === 'in');
     const inReplyTo = threaded ? (lastInbound || thread[thread.length - 1]).message_id : null;
     const targetTo = t.to_address || (t.step_name === 'reply' && lastInbound?.from_address ? lastInbound.from_address : p.email);
+    const targetToNorm = String(targetTo || '').trim().toLowerCase();
+
+    // In-batch anti-flood deduplication: never email the same recipient or prospect twice in one run
+    if (core.COLD_STEPS.includes(t.step_name)) {
+      if (sentRecipientsThisRun.has(targetToNorm) || sentProspectsThisRun.has(p.id)) {
+        results.push({ id: t.id, reason: 'batch_duplicate' });
+        continue;
+      }
+    }
 
     // Strict Zero-Bounce Mailbox Verification Gate (MillionVerifier):
     const existingVer = p.enrichment?.verification;
@@ -312,34 +337,61 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
       results.push({ id: t.id, reason: 'lint' });
       continue;
     }
+    let sentMessageId: string | null = null;
+    let sentRaw: string | null = null;
     try {
       const prospectLang = p.language || t.language || 'en';
       const rcAtt = t.attach_rate_card ? await rateCardAttachment(db, settings, prospectLang) : null;
       const attachments = rcAtt ? [rcAtt] : [];
       const pixelUrl = settings.track_opens ? `${env('SUPABASE_URL')}/functions/v1/outreach-api?open=${t.id}` : null;
-      const targetTo = t.to_address || (t.step_name === 'reply' && lastInbound?.from_address ? lastInbound.from_address : p.email);
       const fromName = prospectLang === 'ru' ? 'Дмитрий | DOROGO Transfers' : 'Dmitri | DOROGO Transfers';
       const html = core.renderDorogoLuxuryHtmlEmail(t.body, { lang: prospectLang, fromEmail, pixelUrl, footerStyle: settings.email_footer_style || 'wordmark' });
       const cleanText = core.stripSignOff ? core.stripSignOff(t.body) : t.body;
-      const { messageId, raw } = await sendMail({
+      const sendResult = await sendMail({
         fromName, fromEmail, replyTo: settings.sender?.reply_to || fromEmail, to: targetTo, subject: t.subject, text: cleanText, html,
         lang: prospectLang,
         inReplyTo, references: threaded ? thread.map((x: any) => x.message_id).slice(-10) : [], attachments, pixelUrl,
         footerStyle: settings.email_footer_style || 'wordmark',
       });
+      sentMessageId = sendResult?.messageId || `<sent-${Date.now()}@dorogo.eu>`;
+      sentRaw = sendResult?.raw || null;
       const at = new Date().toISOString();
-      await db.from('touches').update({ state: 'sent', sent_at: at, message_id: messageId, in_reply_to: inReplyTo, to_address: targetTo, from_address: fromEmail, error: null, send_attempts: (t.send_attempts || 0) + 1 }).eq('id', t.id);
+      await db.from('touches').update({ state: 'sent', sent_at: at, message_id: sentMessageId, in_reply_to: inReplyTo, to_address: targetTo, from_address: fromEmail, error: null, send_attempts: (t.send_attempts || 0) + 1 }).eq('id', t.id);
       await db.from('prospects').update({ status: core.statusAfterSend(p.status, t.step_name, core.FUNNEL_RANK), last_touch_at: at }).eq('id', p.id);
       if (t.suggested_for) await db.from('touches').update({ handled_at: at }).eq('id', t.suggested_for);
-      appendToSent(raw).catch((e) => console.error('append to Sent failed', e.message));
-      if (core.COLD_STEPS.includes(t.step_name)) sentToday++;
+      if (sentRaw) appendToSent(sentRaw).catch((e) => console.error('append to Sent failed', e.message));
+      if (core.COLD_STEPS.includes(t.step_name)) {
+        sentToday++;
+        sentRecipientsThisRun.add(targetToNorm);
+        sentProspectsThisRun.add(p.id);
+      }
       sentTotal++; sent++;
-      await logEvent(db, 'email_sent', { touch_id: t.id, step: t.step_name, to: targetTo }, p.id, actor);
+      await logEvent(db, 'email_sent', { touch_id: t.id, step: t.step_name, to: targetTo, message_id: sentMessageId }, p.id, actor);
       results.push({ id: t.id, sent: true });
     } catch (e) {
-      const attempts = (t.send_attempts || 0) + 1;
-      await db.from('touches').update({ state: attempts >= 3 ? 'failed' : 'approved', send_attempts: attempts, error: (e as Error).message }).eq('id', t.id);
-      results.push({ id: t.id, error: (e as Error).message });
+      if (sentMessageId) {
+        // CRITICAL POST-SEND RECOVERY:
+        // Email was physically transmitted over SMTP. NEVER revert state to approved or failed!
+        console.error(`Post-send warning on touch ${t.id} (${sentMessageId}):`, (e as Error).message);
+        try {
+          await db.from('touches').update({
+            state: 'sent',
+            sent_at: new Date().toISOString(),
+            message_id: sentMessageId,
+            to_address: targetTo,
+            error: `Post-send warning: ${(e as Error).message}`,
+          }).eq('id', t.id);
+        } catch (_) {}
+        if (core.COLD_STEPS.includes(t.step_name)) {
+          sentRecipientsThisRun.add(targetToNorm);
+          sentProspectsThisRun.add(p.id);
+        }
+        results.push({ id: t.id, sent: true, warning: (e as Error).message });
+      } else {
+        const attempts = (t.send_attempts || 0) + 1;
+        await db.from('touches').update({ state: attempts >= 3 ? 'failed' : 'approved', send_attempts: attempts, error: (e as Error).message }).eq('id', t.id);
+        results.push({ id: t.id, error: (e as Error).message });
+      }
     }
   }
   return { sent, results };
