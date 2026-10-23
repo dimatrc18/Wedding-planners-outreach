@@ -494,55 +494,69 @@ export async function saveBookingToGoogleCalendar(
     const durationMins = hours * 60;
     const endIso = addMinutesLocalIso(firstRide.date, startTimeStr, durationMins);
 
+    const emailHtml = booking.client.email
+      ? `<a href="mailto:${booking.client.email}">${booking.client.email}</a>`
+      : "N/A";
+
     const descLines: string[] = [
-      `Status: ${booking.status}`,
-      `🔖 Reference: ${booking.booking_ref}`,
-      `👤 Client: ${booking.client.name || "VIP Guest"}`,
-      `📞 Phone: ${booking.client.phone || "N/A"}`,
-      `✉️ Email: ${booking.client.email || "N/A"}`,
+      `<b>Status:</b> ${booking.status}`,
+      `<b>🔖 Reference:</b> ${booking.booking_ref}`,
+      `<b>👤 Client:</b> ${booking.client.name || "VIP Guest"}`,
+      `<b>📞 Phone:</b> ${booking.client.phone || "N/A"}`,
+      `<b>✉️ Email:</b> ${emailHtml}`,
       "",
-      `🚘 Fleet: ${booking.vehicle.class || "Mercedes-Benz"}`,
-      `👥 Party: ${booking.party.passengers || 1} Pax | 🧳 Luggage: ${booking.party.luggage || 0}`,
-      `⏱ Service: ${hours}-Hour Standby Service (${startTimeStr} - ${endIso.split("T")[1]?.substring(0, 5) || ""})`,
+      `<b>🚘 Fleet:</b> ${booking.vehicle.class || "Mercedes-Benz"}`,
+      `<b>👥 Party:</b> ${booking.party.passengers || 1} Pax | <b>🧳 Luggage:</b> ${booking.party.luggage || 0}`,
+      `<b>⏱ Service:</b> ${hours}-Hour Standby Service (${startTimeStr} — ${endIso.split("T")[1]?.substring(0, 5) || ""})`,
       "",
-      `📍 ITINERARY & TRANSFERS SCHEDULE:`,
+      `<hr>`,
+      `<b>📍 ITINERARY & TRANSFERS SCHEDULE:</b>`,
     ];
 
     booking.rides.forEach((r, rIdx) => {
-      descLines.push(`• Leg ${rIdx + 1} (${r.time || ""}${r.end_time ? ` — ~${r.end_time}` : ""}):`);
+      descLines.push("");
+      descLines.push(`<b>• Leg ${rIdx + 1} (${r.time || ""}${r.end_time ? ` — ~${r.end_time}` : ""})</b>`);
       r.stops.forEach((st) => {
-        const arrow = st.kind === "pickup" ? "  ↳ Pickup:" : "  ↳ Dropoff:";
-        const mapStr = st.maps_url ? ` (${st.maps_url})` : "";
-        descLines.push(`${arrow} ${st.place}${mapStr}`);
-        if (st.instructions) descLines.push(`    ℹ️ ${st.instructions}`);
+        const isPick = st.kind === "pickup";
+        const icon = isPick ? "📍" : "🏁";
+        const label = isPick ? "Pick-up" : "Drop-off";
+        const placeHtml = st.maps_url ? `<a href="${st.maps_url}">${st.place}</a>` : st.place;
+        descLines.push(`${icon} <b>${label}:</b> ${placeHtml}`);
+        if (st.instructions) {
+          descLines.push(`   <i>ℹ️ ${st.instructions}</i>`);
+        }
       });
     });
 
     if (booking.party.children.length > 0) {
+      descLines.push("");
       const seats = booking.party.children.map((c) => `${c.age} y/o (${c.seat_type})`).join(", ");
-      descLines.push(`👶 Child Seats: ${seats}`);
+      descLines.push(`<b>👶 Child Seats:</b> ${seats}`);
     }
 
     if (booking.finance.total_price !== null) {
       descLines.push("");
-      descLines.push(`💶 FINANCIALS:`);
-      descLines.push(`• Fare: €${booking.finance.total_price}`);
+      descLines.push(`<hr>`);
+      descLines.push(`<b>💶 FINANCIALS:</b>`);
+      descLines.push(`• <b>Fare:</b> €${booking.finance.total_price}`);
       if (booking.finance.paid_deposit !== null) {
-        descLines.push(`• Paid Deposit: €${booking.finance.paid_deposit}`);
-        descLines.push(`• Balance Due: €${booking.finance.balance_due || 0}`);
+        descLines.push(`• <b>Paid Deposit:</b> €${booking.finance.paid_deposit} ✅`);
+        descLines.push(`• <b>Balance Due:</b> €${booking.finance.balance_due || 0} 💵`);
       }
     }
 
     if (booking.client_notes) {
       descLines.push("");
-      descLines.push(`📝 Notes: ${booking.client_notes}`);
+      descLines.push(`<hr>`);
+      descLines.push(`<b>📝 NOTES:</b>`);
+      descLines.push(booking.client_notes);
     }
 
     const eventId = toCalendarEventId(booking.booking_ref);
     const eventBody = {
       summary,
       location: pStop?.address || pStop?.place || "",
-      description: descLines.join("\n"),
+      description: descLines.join("<br>\n"),
       start: { dateTime: startIso, timeZone: timezone },
       end: { dateTime: endIso, timeZone: timezone },
       reminders: {
@@ -647,53 +661,64 @@ export async function saveBookingToGoogleCalendar(
     }
 
     // Build Detailed Description
+    const emailHtml = booking.client.email
+      ? `<a href="mailto:${booking.client.email}">${booking.client.email}</a>`
+      : "N/A";
+
     const descLines: string[] = [
-      `Status: ${booking.status}`,
-      `🔖 Reference: ${fullRef}`,
-      `👤 Client: ${booking.client.name || "VIP Guest"}`,
-      `📞 Phone: ${booking.client.phone || "N/A"}`,
-      `✉️ Email: ${booking.client.email || "N/A"}`,
+      `<b>Status:</b> ${booking.status}`,
+      `<b>🔖 Reference:</b> ${fullRef}`,
+      `<b>👤 Client:</b> ${booking.client.name || "VIP Guest"}`,
+      `<b>📞 Phone:</b> ${booking.client.phone || "N/A"}`,
+      `<b>✉️ Email:</b> ${emailHtml}`,
       "",
-      `🚘 Fleet: ${booking.vehicle.class || "Mercedes-Benz V-Class"}`,
-      `👥 Party: ${booking.party.passengers || 1} Pax | 🧳 Luggage: ${booking.party.luggage || 0}`,
+      `<b>🚘 Fleet:</b> ${booking.vehicle.class || "Mercedes-Benz V-Class"}`,
+      `<b>👥 Party:</b> ${booking.party.passengers || 1} Pax | <b>🧳 Luggage:</b> ${booking.party.luggage || 0}`,
     ];
 
     if (ride.flight?.number) {
-      descLines.push(`✈️ Flight: ${ride.flight.number}`);
+      descLines.push(`<b>✈️ Flight:</b> ${ride.flight.number}`);
     }
 
     if (booking.party.children.length > 0) {
       const seats = booking.party.children.map((c) => `${c.age} y/o (${c.seat_type})`).join(", ");
-      descLines.push(`👶 Child Seats: ${seats}`);
+      descLines.push(`<b>👶 Child Seats:</b> ${seats}`);
     }
 
     descLines.push("");
-    descLines.push("📍 ITINERARY & STOPS:");
+    descLines.push(`<hr>`);
+    descLines.push("<b>📍 ITINERARY & STOPS:</b>");
     ride.stops.forEach((st) => {
-      const mark = st.kind === "pickup" ? "🟢 Pickup" : "🔴 Dropoff";
-      let sLine = `• ${mark} ${st.time ? `(${st.time})` : ""}: ${st.place}`;
-      if (st.maps_url) sLine += `\n  Link: ${st.maps_url}`;
-      if (st.instructions) sLine += `\n  Note: ${st.instructions}`;
+      const isPick = st.kind === "pickup";
+      const icon = isPick ? "📍" : "🏁";
+      const label = isPick ? "Pick-up" : "Drop-off";
+      const placeHtml = st.maps_url ? `<a href="${st.maps_url}">${st.place}</a>` : st.place;
+      let sLine = `${icon} <b>${label}${st.time ? ` (${st.time})` : ""}:</b> ${placeHtml}`;
+      if (st.instructions) sLine += `<br>&nbsp;&nbsp;<i>ℹ️ ${st.instructions}</i>`;
       descLines.push(sLine);
     });
 
     if (ride.price !== null) {
       descLines.push("");
-      descLines.push(`💶 Fare: €${ride.price}`);
+      descLines.push(`<hr>`);
+      descLines.push(`<b>💶 FINANCIALS:</b>`);
+      descLines.push(`• <b>Fare:</b> €${ride.price}`);
       if (booking.finance.balance_due !== null && booking.finance.balance_due > 0) {
-        descLines.push(`💵 Collect from client on site: €${booking.finance.balance_due}`);
+        descLines.push(`• <b>Collect on site:</b> €${booking.finance.balance_due} 💵`);
       }
     }
 
     if (booking.client_notes) {
       descLines.push("");
-      descLines.push(`📝 Notes: ${booking.client_notes}`);
+      descLines.push(`<hr>`);
+      descLines.push(`<b>📝 NOTES:</b>`);
+      descLines.push(booking.client_notes);
     }
 
     const eventBody = {
       summary,
       location: pStop?.address || pStop?.place || "",
-      description: descLines.join("\n"),
+      description: descLines.join("<br>\n"),
       start: { dateTime: startIso, timeZone: timezone },
       end: { dateTime: endIso, timeZone: timezone },
       reminders: {
