@@ -72,6 +72,7 @@ export interface BookingData {
   booked_month: string;         // e.g. "October 2026"
   status: string;               // "Prepayment Received", "Confirmed (Unpaid)", "Transfer Complete"
   service_type: string;         // "Airport Transfer", "City To City", "Mountain Transfer", etc.
+  standby_hours?: number | null; // e.g. 10 for 10-hour standby
   client: ClientInfo;
   party: PartyInfo;
   vehicle: VehicleInfo;
@@ -94,6 +95,11 @@ export const GEMINI_BOOKING_SCHEMA = {
     client_phone: { type: "STRING", nullable: true },
     client_email: { type: "STRING", nullable: true },
     service_type: { type: "STRING", nullable: true },
+    standby_hours: {
+      type: "NUMBER",
+      description: "Total number of hours for standby / disposal / hourly service (e.g. 10 for 10 hours, 8 for 8 hours). Null if standard transfer.",
+      nullable: true,
+    },
     vehicle_class: { type: "STRING", nullable: true },
     vehicle_count: { type: "INTEGER", nullable: true },
     passengers: { type: "INTEGER", nullable: true },

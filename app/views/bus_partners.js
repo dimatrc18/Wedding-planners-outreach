@@ -21,6 +21,9 @@ let cityFilter = 'all';
 let searchQ = '';
 let sortBy = 'score_desc'; // score_desc | newest_first | name_asc
 
+// Minimalist feather/lucide pencil icon for understated luxury UI
+const pencilIcon = (size = 11) => `<svg class="ico" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>`;
+
 function getStatusBadgeStyle(status) {
   switch (status) {
     case 'TO_REVIEW':
@@ -1117,7 +1120,7 @@ export function render(el) {
                         <a href="mailto:${attr(p.email)}" style="color:var(--series-1);font-size:.8rem;text-decoration:none;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis" title="Email: ${attr(p.email)}">
                           ${icon('email', 11)} <span style="overflow:hidden;text-overflow:ellipsis">${esc(p.email)}</span>
                         </a>
-                        <button class="clickable" data-act="edit-email" data-id="${attr(p.id)}" style="background:none;border:none;padding:1px 3px;cursor:pointer;color:var(--text-3);font-size:.72rem" title="Edit Email">✏️</button>
+                        <button class="clickable btn-edit-pencil" data-act="edit-email" data-id="${attr(p.id)}" style="background:none;border:none;padding:2px 3px;cursor:pointer;color:var(--text-3);opacity:0.6;display:inline-flex;align-items:center;justify-content:center;border-radius:3px;transition:all .15s ease" title="Edit Email" onmouseover="this.style.opacity='1';this.style.color='var(--ink)';this.style.background='var(--surface-2)'" onmouseout="this.style.opacity='0.6';this.style.color='var(--text-3)';this.style.background='none'">${pencilIcon(11)}</button>
                       </div>`
                     : `<button class="clickable" data-act="edit-email" data-id="${attr(p.id)}" style="background:var(--surface-2);border:1px dashed var(--line-strong);padding:3px 7px;border-radius:4px;color:var(--gold-ink);cursor:pointer;font-size:.73rem;white-space:nowrap;display:inline-flex;align-items:center;gap:3px" title="Click to add email">
                         + Add email
@@ -1138,8 +1141,8 @@ export function render(el) {
                         </button>
                       `;
                     }).join('')}
-                    <button class="clickable" data-act="edit-fleet" data-id="${attr(p.id)}" style="background:none;border:none;padding:1px 2px;cursor:pointer;font-size:.68rem;color:var(--text-3);display:inline-flex;align-items:center;gap:3px" title="Edit fleet categories">
-                      ✏️ <span class="tiny" style="color:var(--gold-ink);font-style:italic">${categories.length ? 'Edit fleet' : '+ Choose fleet...'}</span>
+                    <button class="clickable" data-act="edit-fleet" data-id="${attr(p.id)}" style="background:none;border:none;padding:2px 4px;cursor:pointer;font-size:.68rem;color:var(--text-3);display:inline-flex;align-items:center;gap:3px;opacity:0.75;border-radius:3px;transition:all .15s ease" title="Edit fleet categories" onmouseover="this.style.opacity='1';this.style.color='var(--gold-ink)'" onmouseout="this.style.opacity='0.75';this.style.color='var(--text-3)'">
+                      <span style="display:inline-flex;align-items:center">${pencilIcon(10)}</span> <span class="tiny" style="color:var(--gold-ink);font-style:italic">${categories.length ? 'Edit fleet' : '+ Choose fleet...'}</span>
                     </button>
                   </div>
                 </td>

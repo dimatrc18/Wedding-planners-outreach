@@ -193,6 +193,102 @@ export function mapChildSeat(child: ChildInfo): ChildInfo {
 }
 
 /**
+ * Automatically detects and computes total standby/disposal hours
+ */
+export function calculateStandbyHours(
+  rawHours: number | null | undefined,
+  sourceText: string,
+  rides: Ride[]
+): number | null {
+  // 1. Direct from Gemini if valid positive number
+  if (typeof rawHours === "number" && rawHours > 0) {
+    return Math.round(rawHours * 10) / 10;
+  }
+
+  // 2. Direct regex match in text: e.g. "10 hours", "10h", "10 hrs", "8 часов", "4 ore"
+  const match = sourceText.match(/\b(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|h|часов|часа|ore|ora)\b/i);
+  if (match) {
+    const val = parseFloat(match[1]);
+    if (val >= 1 && val <= 48) {
+      return val;
+    }
+  }
+
+  // 3. Time range regex: e.g. "14:00 - 22:00", "from 10:00 to 18:00"
+  const rangeMatch = sourceText.match(/\b(\d{1,2})[:.](\d{2})\s*(?:to|-|–|—|до)\s*(\d{1,2})[:.](\d{2})\b/i);
+  if (rangeMatch) {
+    const sH = parseInt(rangeMatch[1], 10);
+    const sM = parseInt(rangeMatch[2], 10);
+    let eH = parseInt(rangeMatch[3], 10);
+    const eM = parseInt(rangeMatch[4], 10);
+    if (eH < sH || (eH === 0 && sH > 0)) {
+      eH += 24; // midnight rollover
+    }
+    const diffHours = (eH * 60 + eM - (sH * 60 + sM)) / 60;
+    if (diffHours >= 1 && diffHours <= 24) {
+      return Math.round(diffHours * 10) / 10;
+    }
+  }
+
+  // 4. Time span across extracted rides (earliest pickup to latest dropoff)
+  const isStandbyOrPackage = /\b(?:stand\s*by|disposi(?:zione|tion)|распоряжен|hourly|wedding|package)\b/i.test(sourceText) ||
+    rides.length >= 2;
+
+  if (isStandbyOrPackage && rides.length > 0) {
+    let earliestMinutes: number | null = null;
+    let latestMinutes: number | null = null;
+
+    rides.forEach((r) => {
+      if (r.time) {
+        const [hh, mm] = r.time.split(":").map(Number);
+        if (!isNaN(hh)) {
+          const totalM = hh * 60 + (mm || 0);
+          if (earliestMinutes === null || totalM < earliestMinutes) {
+            earliestMinutes = totalM;
+          }
+        }
+      }
+      const dropoffs = r.stops.filter((s) => s.kind === "dropoff");
+      dropoffs.forEach((d) => {
+        if (d.time) {
+          const [hh, mm] = d.time.split(":").map(Number);
+          if (!isNaN(hh)) {
+            let totalM = hh * 60 + (mm || 0);
+            if (earliestMinutes !== null && totalM < earliestMinutes) {
+              totalM += 24 * 60;
+            }
+            if (latestMinutes === null || totalM > latestMinutes) {
+              latestMinutes = totalM;
+            }
+          }
+        }
+      });
+      if (r.end_time) {
+        const [hh, mm] = r.end_time.split(":").map(Number);
+        if (!isNaN(hh)) {
+          let totalM = hh * 60 + (mm || 0);
+          if (earliestMinutes !== null && totalM < earliestMinutes) {
+            totalM += 24 * 60;
+          }
+          if (latestMinutes === null || totalM > latestMinutes) {
+            latestMinutes = totalM;
+          }
+        }
+      }
+    });
+
+    if (earliestMinutes !== null && latestMinutes !== null) {
+      const spanHours = (latestMinutes - earliestMinutes) / 60;
+      if (spanHours >= 3 && spanHours <= 24) {
+        return Math.round(spanHours);
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
  * Applies deterministic business rules to raw extracted Gemini output
  */
 export function applyBusinessRules(
@@ -298,9 +394,10 @@ export function applyBusinessRules(
   const balanceDue = totalPrice !== null ? (totalPrice - (paidDeposit || 0)) : null;
 
   // Standby / Hourly & Vehicle classification
-  const isStandby = /\b(?:\d+\s*hours?|stand\s*by|disposi(?:zione|tion)|from\s+\d+\s*(?:am|pm)\s*-\s*\d+\s*(?:am|pm))\b/i.test(sourceText);
-  const standbyHoursMatch = sourceText.match(/(\d+)\s*hours?/i);
-  const standbyDuration = standbyHoursMatch ? ` (${standbyHoursMatch[1]}h)` : "";
+  const standbyHours = calculateStandbyHours(raw.standby_hours, sourceText, rides);
+  const isStandby = (standbyHours !== null && standbyHours > 0) ||
+    /\b(?:\d+\s*hours?|stand\s*by|disposi(?:zione|tion)|from\s+\d+\s*(?:am|pm)\s*-\s*\d+\s*(?:am|pm))\b/i.test(sourceText);
+  const standbyDuration = standbyHours ? ` (${standbyHours}h)` : "";
 
   const isBusOrSprinter = /\b(?:bus|sprinter|minibus|coach|24\/28)\b/i.test(sourceText);
   const defaultVehicle = isBusOrSprinter ? "Mercedes-Benz Sprinter (24-28 seats)" : "Mercedes-Benz V-Class";
@@ -410,6 +507,7 @@ export function applyBusinessRules(
     booked_month: currentMonth,
     status,
     service_type: raw.service_type || (isStandby ? `Hourly Standby${standbyDuration}` : hasAirport ? "Airport Transfer" : rides.length > 2 ? "Multi-Stop Transfer" : "Chauffeur Transfer"),
+    standby_hours: standbyHours,
     client: {
       name: clientName,
       phone: clientPhone,

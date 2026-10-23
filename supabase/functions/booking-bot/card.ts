@@ -61,15 +61,19 @@ export function renderBookingCard(
   lines.push(partyStr);
 
   // Service Description (Standby vs Transfer)
-  const isStandby = booking.service_type === "standby" ||
+  const isStandby = (booking.standby_hours !== undefined && booking.standby_hours !== null && booking.standby_hours > 0) ||
+    booking.service_type === "standby" ||
     booking.service_type === "disposal" ||
     booking.service_type === "wedding_transport" ||
+    /standby|disposi|hourly/i.test(booking.service_type) ||
     (booking.client_notes && /standby|10hours|disposal/i.test(booking.client_notes));
 
   let serviceDisplay = booking.service_type || "Chauffeur Service";
   if (isStandby) {
-    const hMatch = (booking.client_notes || "").match(/(\d+)\s*(?:hours|hour|h|hr)\b/i);
-    const hCount = hMatch ? `${hMatch[1]}-Hour ` : "";
+    const hours = booking.standby_hours ||
+      ((booking.client_notes || "").match(/(\d+)\s*(?:hours|hour|h|hr)\b/i)?.[1]) ||
+      ((booking.service_type || "").match(/(\d+)\s*h\b/i)?.[1]);
+    const hCount = hours ? `${hours}-Hour ` : "";
     serviceDisplay = `${hCount}Standby Service`;
   }
   lines.push(`⏱ <b>Service:</b> ${esc(serviceDisplay)}`);
@@ -221,15 +225,19 @@ export function buildFullCardPlainText(booking: BookingData): string {
   lines.push(partyStr);
 
   // Service Description (Standby vs Transfer)
-  const isStandby = booking.service_type === "standby" ||
+  const isStandby = (booking.standby_hours !== undefined && booking.standby_hours !== null && booking.standby_hours > 0) ||
+    booking.service_type === "standby" ||
     booking.service_type === "disposal" ||
     booking.service_type === "wedding_transport" ||
+    /standby|disposi|hourly/i.test(booking.service_type) ||
     (booking.client_notes && /standby|10hours|disposal/i.test(booking.client_notes));
 
   let serviceDisplay = booking.service_type || "Chauffeur Service";
   if (isStandby) {
-    const hMatch = (booking.client_notes || "").match(/(\d+)\s*(?:hours|hour|h|hr)\b/i);
-    const hCount = hMatch ? `${hMatch[1]}-Hour ` : "";
+    const hours = booking.standby_hours ||
+      ((booking.client_notes || "").match(/(\d+)\s*(?:hours|hour|h|hr)\b/i)?.[1]) ||
+      ((booking.service_type || "").match(/(\d+)\s*h\b/i)?.[1]);
+    const hCount = hours ? `${hours}-Hour ` : "";
     serviceDisplay = `${hCount}Standby Service`;
   }
   lines.push(`⏱ Service: ${serviceDisplay}`);

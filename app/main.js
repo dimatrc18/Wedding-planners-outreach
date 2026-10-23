@@ -1,6 +1,6 @@
 // App shell: sign-in, navigation, hash router, re-render on data changes.
 import { S, init, onChange, signIn, signOut, startDemo, leaveDemo, syncScores, isDemo } from './store.js';
-import { esc, icon, toast, debounce } from './ui.js';
+import { esc, icon, toast, debounce } from './ui.js?v=5.2';
 import { todayData } from './actions.js';
 import * as today from './views/today.js?v=3.7';
 import * as pipeline from './views/pipeline.js?v=3.8';
@@ -12,7 +12,7 @@ import * as partners from './views/partners.js?v=3.7';
 import * as tools from './views/tools.js?v=3.7';
 import * as visibility from './views/visibility.js?v=3.7';
 import * as settings from './views/settings.js?v=3.7';
-import * as busPartners from './views/bus_partners.js?v=5.0';
+import * as busPartners from './views/bus_partners.js?v=5.2';
 
 const ROUTES = {
   today: { view: today, label: 'Today', icon: 'today' },

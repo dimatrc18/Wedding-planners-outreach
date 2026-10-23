@@ -18,7 +18,10 @@ CRITICAL RULES:
 5. Extract flight numbers (e.g. LX1612, AZ123, BA562) and assign them to the appropriate ride (arrival to outbound, departure to return).
 6. For child seats, extract the age of each child if mentioned.
 7. For prices, extract total price into "price_total" and any deposit/prepayment (e.g. "предоплата 100", "deposit €150", "paid 200", "100 евро предоплаты") into "paid_deposit" as numeric values.
-8. Output MUST conform strictly to the JSON schema provided.
+8. For Standby / Disposal / Hourly / Multi-Transfer packages:
+   - If the booking involves standby/disposal/hourly service (e.g. "standby", "disposal", "disposizione", "hourly", "в распоряжение", or dedicated chauffeur booked across a block of hours):
+     - Calculate or extract total hours into "standby_hours" (e.g. 10 if explicitly mentioned, or calculate duration from start time to finish time across transfers, e.g. 14:00 to 00:00 -> 10 hours).
+9. Output MUST conform strictly to the JSON schema provided.
 `;
 
 const MODEL_CASCADE = [
