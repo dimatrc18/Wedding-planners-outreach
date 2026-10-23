@@ -18,6 +18,25 @@ const MONTHS = {
 };
 const MONTH_RE = Object.keys(MONTHS).sort((a, b) => b.length - a.length).join('|');
 
+export const SYSTEM_OR_VENDOR_DOMAINS = new Set([
+  'debounce.email', 'debounce.io', 'zerobounce.net', 'millionverifier.com',
+  'supabase.co', 'supabase.com', 'github.com', 'stripe.com', 'google.com',
+  'telegram.org', 'apple.com', 'cloudflare.com', 'resend.com', 'mailgun.net',
+  'sendgrid.net', 'postmarkapp.com', 'brevo.com', 'mailerlite.com', 'mailchimp.com',
+  'hubspot.com', 'intercom.io', 'zendesk.com', 'wordpress.com', 'squarespace.com',
+  'wix.com', 'automattic.com',
+]);
+
+export function isSystemOrBotSender(from = '', name = '', subject = '', autoSub = '') {
+  const emailLower = String(from || '').toLowerCase().trim();
+  const domain = emailLower.split('@')[1] || '';
+  if (SYSTEM_OR_VENDOR_DOMAINS.has(domain)) return true;
+  if (/^(no-?reply|donotreply|notifications?|billing|support|mailer-daemon|postmaster|alerts?|security|news|updates?|marketing|newsletter)@/i.test(emailLower)) return true;
+  if (/auto-(replied|generated)/i.test(autoSub || '')) return true;
+  if (/(verify your email|welcome to|confirm your|password reset|invoice #|receipt for|payment confirmation|security alert|login alert|statement for|subscription)/i.test(subject || '')) return true;
+  return false;
+}
+
 // Drop quoted history and signatures-of-the-thread so our own words don't get classified.
 export function stripQuoted(body = '') {
   const lines = String(body).replace(/\r/g, '').split('\n');

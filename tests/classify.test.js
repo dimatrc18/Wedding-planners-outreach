@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { classifyReply, stripQuoted, parseLooseDate } from '../supabase/functions/_shared/core/index.js';
+import { classifyReply, stripQuoted, parseLooseDate, isSystemOrBotSender } from '../supabase/functions/_shared/core/index.js';
 
 const now = new Date('2026-10-07T09:00:00Z');
 const c = (body, extra = {}) => classifyReply({ from: 'giulia@studio.it', subject: 'Re: Guest transport', body, ...extra }, now);
@@ -99,5 +99,23 @@ test('challenging operational questions without pricing/rate-card keywords class
 
   const q2 = c('My couples would never want SumUp links sent to their guests. How does your portal handle privacy under GDPR?');
   assert.equal(q2.intent, 'specific_question');
+});
+
+test('isSystemOrBotSender blocks vendor and transactional emails from becoming CRM prospects', () => {
+  // DeBounce verification & welcome email
+  assert.equal(isSystemOrBotSender('info@debounce.email', 'DeBounce', 'Welcome to DeBounce. Verify Your Email Address.'), true);
+  // ZeroBounce / MillionVerifier
+  assert.equal(isSystemOrBotSender('support@zerobounce.net', 'ZeroBounce Support', 'Your monthly credits'), true);
+  assert.equal(isSystemOrBotSender('billing@millionverifier.com', 'MillionVerifier', 'Invoice #12345'), true);
+  // Generic automated senders
+  assert.equal(isSystemOrBotSender('noreply@service.com', 'Service', 'Account update'), true);
+  assert.equal(isSystemOrBotSender('notifications@github.com', 'GitHub', 'Run completed'), true);
+  assert.equal(isSystemOrBotSender('mailer-daemon@google.com', 'Google', 'Delivery Status Notification'), true);
+  assert.equal(isSystemOrBotSender('any@domain.com', 'Any', 'Password reset requested'), true);
+  assert.equal(isSystemOrBotSender('user@auto.com', 'Bot', 'Hello', 'auto-generated'), true);
+
+  // Legitimate wedding planner inbound inquiry
+  assert.equal(isSystemOrBotSender('federica@lakecomoweddings.it', 'Federica', 'Guest shuttle inquiry for Villa Balbiano'), false);
+  assert.equal(isSystemOrBotSender('contact@elizabeth-events.com', 'Elizabeth', 'Van and minibus rates 2027'), false);
 });
 

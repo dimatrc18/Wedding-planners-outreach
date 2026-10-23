@@ -721,8 +721,21 @@ export async function syncInbox(db: any, settings: any, now = new Date()) {
         }
       }
 
-      // Tier 6: Organic Inbound Lead Auto-Creation
+      // Tier 6: Organic Inbound Lead Auto-Creation (Only legitimate human inquiries, never automated/service/vendor mail)
       if (!p) {
+        if (core.isSystemOrBotSender && core.isSystemOrBotSender(m.from, m.fromName, m.subject, m.autoSubmitted)) {
+          continue;
+        }
+        const clsPre: any = await classifyInboundMessage(
+          db,
+          { from: m.from, subject: m.subject, body: m.text, autoSubmitted: m.autoSubmitted },
+          null,
+          now,
+        );
+        if (clsPre.bounce || ['unsubscribe', 'ooo'].includes(clsPre.sentiment)) {
+          continue;
+        }
+
         const inferredAgency = m.fromName || m.from.split('@')[0];
         const newLead = {
           agency_name: inferredAgency,
