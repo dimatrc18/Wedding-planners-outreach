@@ -83,6 +83,7 @@ test('canSend gates: approval, kill switch, window, holiday, cap, season, bounce
   const reply = { direction: 'in', reply_sentiment: 'neutral' };
   assert.equal(canSend(t, P(), [reply], S, { now: tue10 }).reason, 'replied');
   assert.equal(canSend({ ...t, scheduled_at: rome(2026, 10, 6, 11).toISOString() }, P(), [], S, { now: tue10 }).reason, 'not_due');
+  assert.equal(canSend(t, P({ email_status: 'bounced' }), [], S, { now: tue10 }).reason, 'bounced_email');
   assert.equal(canSend(t, P({ email_status: 'invalid' }), [], S, { now: tue10 }).reason, 'invalid_email');
   assert.equal(canSend(t, P({ email_status: 'no_mx' }), [], S, { now: tue10 }).reason, 'invalid_email');
   assert.equal(canSend(t, P({ website_status: 'broken' }), [], S, { now: tue10 }).reason, 'broken_website');

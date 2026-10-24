@@ -149,6 +149,7 @@ export function canSend(touch, prospect, touches, settings, ctx = {}) {
   if (touch.state !== 'approved') return { ok: false, reason: 'not_approved' };
   if (touch.channel !== 'email') return { ok: false, reason: 'manual_channel' };
   if (!prospect.email) return { ok: false, reason: 'no_email' };
+  if (prospect.email_status === 'bounced') return { ok: false, reason: 'bounced_email' };
   if (prospect.email_status === 'invalid' || prospect.email_status === 'no_mx') return { ok: false, reason: 'invalid_email' };
   if (prospect.enrichment?.known_bad_emails?.includes(String(prospect.email).toLowerCase())) {
     return { ok: false, reason: 'known_bad_email' };
@@ -159,8 +160,8 @@ export function canSend(touch, prospect, touches, settings, ctx = {}) {
   if (
     (prospect.enrichment?.verification?.status === 'catch_all' || prospect.enrichment?.verification?.result === 'catch_all' || prospect.enrichment?.verification?.resultcode === 2) &&
     !prospect.enrichment?.verification?.verbatim_proof &&
-    !prospect.hook_source_url &&
-    !(prospect.source_detail && /contact|footer|header|mailto/i.test(prospect.source_detail))
+    !(prospect.source_detail && /contact|footer|header|mailto/i.test(prospect.source_detail)) &&
+    !(prospect.notes && /verbatim/i.test(prospect.notes))
   ) {
     return { ok: false, reason: 'catch_all_unverified' };
   }
@@ -208,6 +209,7 @@ export const BLOCK_REASONS = {
   manual_channel: 'Send this one by hand',
   no_email: 'No email address',
   invalid_email: 'Email address or domain failed mailbox verification',
+  bounced_email: 'Email address previously bounced',
   known_bad_email: 'Email address previously bounced (known bad email)',
   catch_all_unverified: 'Catch-all domain without verbatim contact page proof',
   unverified_no_credits: 'Paused: MillionVerifier credits depleted',

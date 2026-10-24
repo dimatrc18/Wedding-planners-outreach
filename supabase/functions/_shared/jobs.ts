@@ -251,7 +251,7 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
     if (!gate.ok && gate.reason === 'not_due' && onlyTouchId) gate = { ok: true }; // "Send now" overrides the slot, nothing else
     if (!gate.ok) {
       results.push({ id: t.id, reason: gate.reason });
-      if (['replied', 'do_not_contact', 'invalid_email', 'catch_all_unverified', 'broken_website', 'no_email', 'step_already_sent', 'touch_already_sent'].includes(gate.reason)) {
+      if (['replied', 'do_not_contact', 'bounced_email', 'invalid_email', 'catch_all_unverified', 'broken_website', 'no_email', 'step_already_sent', 'touch_already_sent'].includes(gate.reason)) {
         await db.from('touches').update({ state: 'skipped', error: core.BLOCK_REASONS[gate.reason] }).eq('id', t.id);
       }
       continue;
@@ -281,7 +281,6 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
     if (existingVer?.resultcode === 2 || existingVer?.result === 'catch_all') {
       const hasVerbatimProof = Boolean(
         existingVer.verbatim_proof ||
-        (p.hook_source_url && String(p.hook_source_url).length > 8) ||
         (p.source_detail && /contact|footer|header|mailto/i.test(p.source_detail)) ||
         (p.notes && /verbatim/i.test(p.notes))
       );
@@ -303,7 +302,6 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
         p.email_status = 'mx_ok';
       } else if (verRes.resultcode === 2) { // catch_all
         const hasVerbatimProof = Boolean(
-          (p.hook_source_url && String(p.hook_source_url).length > 8) ||
           (p.source_detail && /contact|footer|header|mailto/i.test(p.source_detail)) ||
           (p.notes && /verbatim/i.test(p.notes))
         );
