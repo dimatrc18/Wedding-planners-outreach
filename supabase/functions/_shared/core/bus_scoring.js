@@ -473,9 +473,11 @@ export function nextBusSendSlot(now = new Date(), indexOffset = 0, opts = {}) {
 /**
  * Generates CEO-level, ultra-concise Italian outreach messages (Email 1, Email 2 Follow-up, and WhatsApp Pitch).
  * Designed for busy fleet owners: presents DOROGO's high customer volume on Lake Como & Milan and asks for:
- * 1. Bus models & passenger capacities
- * 2. Standby (a disposizione 4h/8h) & hourly rates
- * 3. Direct WhatsApp contact
+ * 1. Bus models & exact passenger capacities (plus any unlisted fleet)
+ * 2. Point-to-point transfer rates (Milan/Malpensa/Como) + minimum order/transfer minimum
+ * 3. Hourly & standby rates (a disposizione 4h/8h)
+ * 4. Cancellation policy & advance notice (when noted or inquired)
+ * 5. Direct WhatsApp contact for rapid dispatch availability
  */
 export function buildBusOutreachDraft(partner = {}, stepKey = 'T1_intro') {
   const rawName = String(partner.name || 'Partner').trim();
@@ -490,21 +492,42 @@ export function buildBusOutreachDraft(partner = {}, stepKey = 'T1_intro') {
 
   const subjectBase = `Collaborazione B2B minibus/pullman · ${city} — DOROGO`;
 
-  // Notes-aware personalization: AI inspects Dmitri's pre-contact comments and known fleet
+  // Deep notes-aware personalization: AI inspects Dmitri's operator review comments
   const userNotes = String(partner.notes || '').trim();
   const lowerNotes = userNotes.toLowerCase();
-  let personalizedFleetNote = '';
+  const isUserAuthored = /^-|\b(i |we |wonder|sure|interested|prices|cancel|sticker|stickers|fit|seats?|posti|tag|how many|\?)/i.test(userNotes);
 
-  if (/19\s*seat|19\s*posti/i.test(lowerNotes)) {
-    personalizedFleetNote = `In particolare ho notato il vostro Sprinter 19 posti; vorrei verificare tariffe e disponibilità (e se avete altri modelli).`;
-  } else if (/minibus\s*extra-?long|20\s*seat|26\s*seat|20\s*posti|26\s*posti/i.test(lowerNotes)) {
-    personalizedFleetNote = `In particolare ho notato i vostri minibus 20/26 posti ed extra-long; vorrei verificare tariffe e disponibilità per questi mezzi.`;
-  } else if (/adesiv|sticker|senza\s*scritte|livrea/i.test(lowerNotes)) {
-    personalizedFleetNote = `Per i nostri clienti cerchiamo veicoli eleganti senza scritte commerciali.`;
+  const asks50Focus = /focus mostly on 50|focus.*50/i.test(lowerNotes);
+  const asksMinibuses = /interested in.*minibus|minibuses/i.test(lowerNotes);
+  const asksExtraLong = /extra-?long/i.test(lowerNotes);
+  const asks20_26 = /20\s*seat|26\s*seat|20\s*posti|26\s*posti/i.test(lowerNotes);
+  const asks19 = /19\s*seat|19\s*posti/i.test(lowerNotes);
+  const asksUnlisted = /other buses|not on the website|not add to the website|presented on the website or the 3|only.*or other|altri mezzi|oltre al sito/i.test(lowerNotes);
+  const asksCapacity = /how many people|how many the fit|fit\?|quanti posti|capienza/i.test(lowerNotes);
+  const asksLuxury = /luxury|consider as vip|lux or not|versione lux/i.test(lowerNotes);
+  const asksStickers = /sticker|stickers|adesiv|senza scritte|tags|livrea/i.test(lowerNotes);
+  const asksCancellation = /cancel|cancell|disdett|penal/i.test(lowerNotes);
+  const asksAdvanceNotice = /in advance|anticipo|preavviso/i.test(lowerNotes);
+
+  let personalIntro = '';
+  if (isUserAuthored) {
+    if (asks50Focus) {
+      personalIntro = `Ho notato che la vostra flotta si concentra principalmente sui pullman da 50 posti (a cui siamo molto interessati per grandi gruppi ed eventi).`;
+    } else if (asksExtraLong && asks20_26) {
+      personalIntro = `In particolare siamo molto interessati ai vostri minibus extra-long e ai bus da 20 e 26 posti.`;
+    } else if (asks19) {
+      personalIntro = `In particolare ho notato il vostro Sprinter 19 posti e vorremmo verificare disponibilità e capienze per questa tipologia di mezzi.`;
+    } else if (asksMinibuses) {
+      personalIntro = `In particolare siamo molto interessati alla vostra flotta di minibus per transfer e servizi a disposizione.`;
+    } else if (asksStickers) {
+      personalIntro = `Per i nostri clienti cerchiamo veicoli eleganti senza scritte commerciali o adesivi pubblicitari sulla carrozzeria.`;
+    } else if (asksLuxury) {
+      personalIntro = `Vorremmo capire meglio la composizione del vostro parco mezzi per verificare la disponibilità di allestimenti Luxury / VIP.`;
+    }
   } else if (Array.isArray(partner.fleet_categories) && partner.fleet_categories.length >= 2) {
     const busNames = partner.fleet_categories.slice(0, 2).map((c) => c.split('(')[0].replace(/mercedes-benz/i, 'Mercedes').trim()).join(' e ');
     if (busNames) {
-      personalizedFleetNote = `In particolare ho notato i vostri ${busNames}; vorremmo valutare tariffe e disponibilità per questi mezzi.`;
+      personalIntro = `In particolare ho notato i vostri ${busNames}; vorremmo valutare tariffe e disponibilità per questi mezzi.`;
     }
   }
 
@@ -514,9 +537,10 @@ export function buildBusOutreachDraft(partner = {}, stepKey = 'T1_intro') {
 Vi scrivo rapidamente in merito alla mia precedente email per verificare disponibilità B2B su Como e Milano.
 
 Se per voi è possibile, potete rispondermi direttamente a questa email (oppure su WhatsApp al +32 456 14 14 97) indicando:
-- Modelli bus e quanti passeggeri portano per ciascun mezzo
-- Prezzi B2B per servizio orario e a disposizione (4h / 8h)
-- Tariffe per transfer (es. Malpensa – Como/Milano), costo a km e minimo d'ordine
+- Modelli bus disponibili e quanti passeggeri portano per ciascun mezzo
+- Tariffe B2B per transfer (es. Milano Centro – Malpensa, Milano – Como, con relativo minimo d'ordine)
+- Prezzi B2B indicativi per servizio orario e a disposizione (4h / 8h)
+- Politiche di cancellazione e conferma se disponete di veicoli privi di scritte commerciali
 
 Grazie e buon lavoro,
 Dmitri Traciuc`;
@@ -531,8 +555,8 @@ Dmitri Traciuc`;
   }
 
   if (stepKey === 'WA_pitch') {
-    const extraPersonal = personalizedFleetNote ? ` ${personalizedFleetNote}` : '';
-    const body = `Buongiorno ${cleanName}, sono Dmitri di DOROGO (trasferimenti eventi e matrimoni su Lago di Como e Milano). Abbiamo forte richiesta clienti per ${segmentPhrase} e vorremmo collaborare con voi.${extraPersonal} Potreste indicarmi qui su WhatsApp modelli, quanti passeggeri portano e prezzi B2B indicativi per servizio orario e a disposizione (4h/8h)? Grazie mille!\n\nDmitri Traciuc`;
+    const extraPersonal = personalIntro ? ` ${personalIntro}` : '';
+    const body = `Buongiorno ${cleanName}, sono Dmitri di DOROGO (trasferimenti eventi e matrimoni su Lago di Como e Milano). Abbiamo forte richiesta clienti per ${segmentPhrase} e vorremmo collaborare con voi.${extraPersonal} Potreste indicarmi qui su WhatsApp modelli, quanti passeggeri portano, tariffe per transfer (con relativo minimo d'ordine) e prezzi per servizio orario e a disposizione (4h/8h)? Grazie mille!\n\nDmitri Traciuc`;
     return {
       step_name: 'WA_pitch',
       language: 'it',
@@ -542,16 +566,59 @@ Dmitri Traciuc`;
     };
   }
 
-  // Default: T1_intro (CEO-level Italian Intro, ultra-concise, NO hardcoded footer)
-  const personalLine = personalizedFleetNote ? `\n\n${personalizedFleetNote}` : '';
+  // Default: T1_intro (Tailored CEO-level Italian outreach)
+  const questions = [];
+
+  // Question 1: Fleet Models, Seating Capacity & Unlisted Fleet
+  if (asks50Focus) {
+    questions.push(`Oltre ai pullman da 50 posti, avete a disposizione anche minibus o bus in versione Luxury/VIP (o contatti fidati di colleghi da consigliare)? Siamo comunque molto interessati anche ai pullman normali.`);
+  } else if (asksUnlisted && (asksMinibuses || asksExtraLong || asks19 || asks20_26)) {
+    if (asks19) {
+      questions.push(`Disponete solo del modello da 19 posti o avete anche altri modelli/capienze a disposizione in flotta?`);
+    } else if (asksExtraLong || asks20_26) {
+      questions.push(`Oltre ai minibus extra-long e ai bus da 20 e 26 posti, avete altri modelli a disposizione in flotta? Quanti passeggeri portano per ciascun mezzo?`);
+    } else if (asksMinibuses) {
+      questions.push(`I minibus disponibili in flotta sono solo i modelli visibili sul sito o ne avete anche altri? Quanti passeggeri portano per ciascun mezzo?`);
+    } else {
+      questions.push(`Oltre ai modelli visibili sul sito, avete altri minibus/pullman disponibili in flotta e quanti passeggeri portano esattamente?`);
+    }
+  } else if (asksCapacity) {
+    questions.push(`Modelli bus disponibili e quanti passeggeri portano (capienza esatta ed effettiva per ciascun mezzo)`);
+  } else {
+    questions.push(`Modelli bus disponibili e quanti passeggeri portano (capienza esatta per mezzo)`);
+  }
+
+  // Question 2: Zero Stickers / Luxury Line vs Standard
+  if (asksStickers) {
+    questions.push(`Potreste confermarmi se disponete di mezzi completamente privi di scritte o adesivi commerciali sulla carrozzeria?`);
+  } else if (asksLuxury && !asks50Focus) {
+    questions.push(`Oltre ai bus turistici standard, disponete anche di mezzi in allestimento Luxury/VIP (interni in pelle, vetri oscurati privacy, total black)?`);
+  }
+
+  // Question 3: PRICING - Transfer (with Milan/Como Minimum Order) AND Hourly / Standby
+  questions.push(`Prezzi B2B indicativi per servizio orario e a disposizione (4h / 8h) e per transfer (es. Milano – Malpensa o Como, con relativo minimo d'ordine)`);
+
+  // Question 4: Cancellation Policy & Advance Booking Notice
+  if (asksCancellation && asksAdvanceNotice) {
+    questions.push(`Con quanto preavviso richiedete solitamente la prenotazione e quali sono le vostre politiche e penali di cancellazione (cancellation policy)?`);
+  } else if (asksCancellation) {
+    questions.push(`Quali sono i vostri termini e penali di cancellazione (cancellation policy)?`);
+  } else if (asksAdvanceNotice) {
+    questions.push(`Con quanto preavviso è necessario prenotare per bloccare i mezzi?`);
+  }
+
+  // Final Question: Direct WhatsApp
+  questions.push(`Un vostro contatto WhatsApp diretto per le disponibilità rapide`);
+
+  const qLines = questions.map((q, idx) => `${idx + 1}. ${q}`).join('\n');
+  const personalLine = personalIntro ? `\n\n${personalIntro}` : '';
+
   const body = `Buongiorno Team ${cleanName},
 
-Sono Dmitri di DOROGO. Gestiamo trasferimenti per eventi privati e matrimoni sul Lago di Como e Milano con flotta V-Class ed S-Class. Abbiamo frequente richiesta per ${segmentPhrase} che vorremmo affidare a un partner di fiducia in zona ${city}.${personalLine}
+Sono Dmitri di DOROGO. Gestiamo trasferimenti per eventi privati e matrimoni sul Lago di Como e Milano con flotta V-Class ed S-Class. Abbiamo frequente richiesta per ${segmentPhrase} su ${city}.${personalLine}
 
 Per collaborare, potreste indicarmi brevemente:
-1. Modelli bus disponibili e quanti passeggeri portano (capienza esatta per mezzo)
-2. Prezzi B2B indicativi per servizio orario e a disposizione (4h / 8h)
-3. Un vostro contatto WhatsApp diretto per le disponibilità rapide
+${qLines}
 
 Grazie e buon lavoro,
 Dmitri Traciuc`;

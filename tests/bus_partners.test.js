@@ -737,6 +737,27 @@ test('Smart Personalization from user notes: AI incorporates specific fleet comm
   const followUp = buildBusOutreachDraft(partnerBerini, 'T2_followup');
   assert(followUp.body.includes('transfer') || followUp.body.includes('Malpensa'), 'Follow-up must ask for point-to-point transfer rates');
   assert(followUp.body.includes('costo a km') || followUp.body.includes('minimo d\'ordine'), 'Follow-up must ask for per-km rates and minimum order');
+
+  // 4. Partner with notes on stickers and seating capacity (Avantgarde)
+  const partnerAvantgarde = {
+    name: 'Avantgarde Limousine Service',
+    base_city: 'Milano',
+    notes: '- Confirm whether they do not have stickers on cars?\n- i see they have 3 different ones, i want to know the prices/how many people the fit?'
+  };
+  const draftAvantgarde = buildBusOutreachDraft(partnerAvantgarde, 'T1_intro');
+  assert(draftAvantgarde.body.includes('adesivi commerciali') || draftAvantgarde.body.includes('scritte'), 'Must ask to confirm no stickers/decals on fleet');
+  assert(draftAvantgarde.body.includes('transfer') && draftAvantgarde.body.includes('minimo d\'ordine'), 'Must ask for transfer rates and minimum order');
+
+  // 5. Partner with notes on cancellation policy, unlisted fleet, and luxury class (Perletti)
+  const partnerPerletti = {
+    name: 'Perletti Autoservizi (Top Class Line)',
+    base_city: 'Bergamo',
+    notes: '- i am interested in their minibuses.\n- i am curious if all of the minibuses that they have are presented on the website or the 3?\n- I wonder if they have something luxury/consider as VIP class\n- prices\n- cancelation\n- cancelation policies'
+  };
+  const draftPerletti = buildBusOutreachDraft(partnerPerletti, 'T1_intro');
+  assert(draftPerletti.body.includes('Luxury/VIP') || draftPerletti.body.includes('Luxury / VIP'), 'Must ask about Luxury/VIP line');
+  assert(draftPerletti.body.includes('cancellazione') || draftPerletti.body.includes('cancellation policy'), 'Must ask for cancellation policy');
+  assert(draftPerletti.body.includes('transfer') && draftPerletti.body.includes('disposizione'), 'Must ask for both transfer and standby rates');
 });
 
 test('shortFleetName: pairs model and passenger capacity in one compact tag for non-repetitive table display', () => {
