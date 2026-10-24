@@ -1,32 +1,42 @@
 // Gemini 2.5 Flash / Pro extraction engine with strict schema enforcement
 import { GEMINI_BOOKING_SCHEMA } from "./schema.ts";
-import { applyBusinessRules } from "./rules.ts";
+import { applyBusinessRules, allocateFinance } from "./rules.ts";
 import type { BookingData } from "./schema.ts";
 import rateCardData from "./rate_card.json" with { type: "json" };
 
-const SYSTEM_INSTRUCTION = `
+function buildSystemInstruction(referenceDateIso: string): string {
+  return `
 You are an expert booking assistant for Dorogo, a private luxury chauffeur service in Milan, Northern Italy, and the Alps.
+Today is ${referenceDateIso} (Europe/Rome).
 Your task is to extract chauffeur booking data from conversational messages, WhatsApp chat logs, multi-stop itineraries, or notes.
 
 CRITICAL RULES:
 1. ONLY extract information that is explicitly stated or directly implied by the context.
 2. If a field is NOT in the text, you MUST return null or omit it. NEVER invent names, phone numbers, prices, or flights.
-3. If the booking is a round-trip or multi-transfer schedule, create separate entries in the "rides" array:
-   - For a standard return trip, create 2 rides (ride 1: outbound, ride 2: return).
+3. Round-trip vs Multi-stop Itineraries:
+   - For a round-trip (e.g. marked with "RETURN JOURNEY", "Return:", "обратно", or returning on a later date), create 2 distinct rides in the "rides" array:
+     - Ride 1 has role: "outbound" with outbound date, time, pickup, and dropoff.
+     - Ride 2 has role: "return" with return date, time, pickup, and dropoff.
+     - Always preserve the separate return date (e.g. outbound 11 Jan 2027, return 18 Jan 2027). NEVER conflate the return date into the outbound date!
    - For multi-stop itineraries (e.g. [TRANSFER 1], [TRANSFER 2], [TRANSFER 3]), create separate rides for each transfer block, each with its own pickup(s) and dropoff(s).
-4. Extract Google Maps URLs if present into "maps_url".
-5. Extract flight numbers (e.g. LX1612, AZ123, BA562) and assign them to the appropriate ride (arrival to outbound, departure to return).
-6. For child seats, extract the age of each child if mentioned.
-7. For prices, extract total price into "price_total" and any deposit/prepayment (e.g. "предоплата 100", "deposit €150", "paid 200", "100 евро предоплаты") into "paid_deposit" as numeric values.
-8. For Standby / Disposal / Hourly / Multi-Transfer packages:
+4. Dates:
+   - Extract raw_date in ISO YYYY-MM-DD or exact string from the text (e.g. "11 Jan 2027").
+   - NEVER drop or change the year. If year 2027 is stated, preserve 2027. If no year is stated, assume the upcoming occurrence relative to today.
+5. Extract Google Maps URLs if present into "maps_url".
+6. Extract flight numbers (e.g. LX1612, AZ123, BA562) and assign them to the appropriate ride (arrival to outbound, departure to return).
+7. For child seats, extract the age of each child if mentioned.
+8. For prices, extract total price into "price_total" and any deposit/prepayment (e.g. "предоплата 100", "deposit €150", "paid 200", "100 евро предоплаты", "25% Deposit: €380") into "paid_deposit" as numeric values.
+9. For Standby / Disposal / Hourly / Multi-Transfer packages:
    - If the booking involves standby/disposal/hourly service (e.g. "standby", "disposal", "disposizione", "hourly", "в распоряжение", or dedicated chauffeur booked across a block of hours):
      - Calculate or extract total hours into "standby_hours" (e.g. 10 if explicitly mentioned, or calculate duration from start time to finish time across transfers, e.g. 14:00 to 00:00 -> 10 hours).
-9. Vehicle Seating Capacity vs Passenger Party Count:
+   - Standard point-to-point transfers and round trips (even across long distances, e.g. Milan to Zermatt) are NOT standby. Set standby_hours to null.
+10. Vehicle Seating Capacity vs Passenger Party Count:
    - Phrases like "sprinter 24/28 pax", "24/8 pax", "sprinter on 24/28 people", or "V-Class 7 pax" describe the VEHICLE MODEL / CAPACITY, NOT the party count.
    - Extract the vehicle specification into "vehicle_class".
    - ONLY set "passengers" if the text explicitly states the number of traveling guests (e.g. "22 guests", "transfer all 22 passengers", "we are 4 people"). If no party size is stated, return null for "passengers".
-10. Output MUST conform strictly to the JSON schema provided.
+11. Output MUST conform strictly to the JSON schema provided.
 `;
+}
 
 const MODEL_CASCADE = [
   "gemini-3.5-flash",
@@ -98,8 +108,9 @@ export async function extractBookingWithGemini(
     });
   }
 
+  const nowIso = new Date().toISOString().split("T")[0];
   const payload = {
-    systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+    systemInstruction: { parts: [{ text: buildSystemInstruction(nowIso) }] },
     contents: [{ parts }],
     generationConfig: {
       temperature: 0.1,
@@ -153,8 +164,9 @@ CRITICAL INSTRUCTIONS:
 3. Return the complete updated booking conforming strictly to the JSON schema.
 `;
 
+  const nowIso = new Date().toISOString().split("T")[0];
   const payload = {
-    systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+    systemInstruction: { parts: [{ text: buildSystemInstruction(nowIso) }] },
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.1,
@@ -211,18 +223,7 @@ CRITICAL INSTRUCTIONS:
     updated.finance.paid_deposit = existingBooking.finance.paid_deposit;
   }
   if (updated.finance.total_price !== null) {
-    updated.finance.balance_due = updated.finance.total_price - (updated.finance.paid_deposit || 0);
-    updated.our_notes = updated.finance.balance_due > 0 ? `to be paid: ${updated.finance.balance_due} EUR` : "";
-    updated.status = updated.finance.paid_deposit && updated.finance.paid_deposit > 0 ? "Prepayment Received" : "Confirmed (Unpaid)";
-    // Re-sync ride prices
-    if (updated.rides.length === 2 && updated.rides[1].role === "return" && !/standby/i.test(updated.service_type)) {
-      const half = Math.round(updated.finance.total_price / 2);
-      updated.rides[0].price = half;
-      updated.rides[1].price = updated.finance.total_price - half;
-    } else if (updated.rides.length > 0) {
-      updated.rides[0].price = updated.finance.total_price;
-      for (let i = 1; i < updated.rides.length; i++) updated.rides[i].price = null;
-    }
+    allocateFinance(updated);
   }
 
   // Re-evaluate missing fields

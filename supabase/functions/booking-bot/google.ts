@@ -1,5 +1,6 @@
 // Google Service Account Authentication and Google Sheets / Calendar API client (Deno WebCrypto)
 import type { BookingData, Ride } from "./schema.ts";
+import { isStandbyBooking, legBalanceNote } from "./rules.ts";
 
 const SCOPES = [
   "https://www.googleapis.com/auth/spreadsheets",
@@ -175,10 +176,9 @@ export async function saveBookingToGoogleSheet(
   // Build rows for each ride
   const rowsToSave: { rowNumber: number | null; values: any[] }[] = [];
 
-  const isStandbyBooking = Boolean(booking.standby_hours) ||
-    /standby|hourly|disposal/i.test(`${booking.service_type || ""} ${booking.client_notes || ""}`);
+  const isStandby = isStandbyBooking(booking);
 
-  if (isStandbyBooking) {
+  if (isStandby) {
     const firstRide = booking.rides[0] || {
       date: booking.booked_date,
       time: "10:00",
@@ -314,11 +314,7 @@ export async function saveBookingToGoogleSheet(
         priceVal = booking.rides.length === 2 ? "Included in Round-Trip" : "Included in Package";
       }
       const prepayVal = idx === 0 && booking.finance.paid_deposit !== null ? `€${booking.finance.paid_deposit}` : "";
-      const ourNotesVal =
-        booking.our_notes ||
-        (booking.finance.balance_due !== null && booking.finance.balance_due > 0
-          ? `to be paid: ${booking.finance.balance_due} EUR`
-          : "");
+      const ourNotesVal = legBalanceNote(booking, idx);
 
       const phoneStr = booking.client.phone ? (booking.client.phone.startsWith("+") ? `'${booking.client.phone}` : booking.client.phone) : "";
 
@@ -437,7 +433,7 @@ export async function saveBookingToGoogleCalendar(
   const errors: string[] = [];
 
   const notesCombined = `${booking.vehicle.class || ""} ${booking.service_type || ""} ${booking.client_notes || ""}`.toLowerCase();
-  const isStandby = Boolean(booking.standby_hours) || /standby|10hours|disposal|hourly/i.test(notesCombined) || /standby|hourly/i.test(booking.service_type || "");
+  const isStandby = isStandbyBooking(booking);
   const isWedding = /wedding/i.test(notesCombined);
   const paxNum = booking.party.passengers || 1;
   const vClass = (booking.vehicle.class || "").toLowerCase();
@@ -627,7 +623,7 @@ export async function saveBookingToGoogleCalendar(
 
     let summary = "";
     if (isReturn) {
-      summary = `🔄 ${vTag} Return: ${dName} ➔ ${pName} | ${booking.client.name || "Client"} [${fullRef}]`;
+      summary = `🔄 ${vTag} Return: ${pName} ➔ ${dName} | ${booking.client.name || "Client"} [${fullRef}]`;
     } else {
       const svcTag = isWedding ? "Wedding Transfer" : "Transfer";
       summary = `${icon} ${vTag} ${svcTag}: ${pName} ➔ ${dName} | ${booking.client.name || "Client"} [${fullRef}]`;
@@ -703,8 +699,11 @@ export async function saveBookingToGoogleCalendar(
       descLines.push(`<hr>`);
       descLines.push(`<b>💶 FINANCIALS:</b>`);
       descLines.push(`• <b>Fare:</b> €${ride.price}`);
-      if (booking.finance.balance_due !== null && booking.finance.balance_due > 0) {
-        descLines.push(`• <b>Collect on site:</b> €${booking.finance.balance_due} 💵`);
+      const legDue = ride.balance_due !== undefined && ride.balance_due !== null
+        ? ride.balance_due
+        : (idx === 0 && booking.finance.balance_due ? booking.finance.balance_due : 0);
+      if (legDue > 0) {
+        descLines.push(`• <b>Collect on site:</b> €${legDue} 💵`);
       }
     }
 

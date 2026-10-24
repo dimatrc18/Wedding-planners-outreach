@@ -36,76 +36,92 @@ const EN_MONTHS: Record<string, number> = {
   dec: 12, december: 12
 };
 
+function pad2(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
+function isValidYmd(y: number, m: number, d: number): boolean {
+  if (m < 1 || m > 12 || d < 1 || d > 31) return false;
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
+}
+
 /**
- * Normalizes any freeform or localized date to YYYY-MM-DD
+ * Builds an ISO date. When the year is missing, picks the NEXT upcoming occurrence
+ * relative to referenceDate (bookings are always for the future).
  */
-export function normalizeDate(dateStr: string | null | undefined, baseDate: Date = new Date()): string {
-  if (!dateStr || !dateStr.trim()) {
-    return baseDate.toISOString().split("T")[0];
+function buildIso(y: number | null, m: number, d: number, referenceDate: Date): string | null {
+  if (y !== null) {
+    if (y < 100) y += 2000;
+    return isValidYmd(y, m, d) ? `${y}-${pad2(m)}-${pad2(d)}` : null;
   }
+  const refIso = referenceDate.toISOString().split("T")[0];
+  let year = referenceDate.getUTCFullYear();
+  if (!isValidYmd(year, m, d) && !isValidYmd(year + 1, m, d)) return null;
+  let iso = `${year}-${pad2(m)}-${pad2(d)}`;
+  if (iso < refIso) {
+    year += 1;
+    iso = `${year}-${pad2(m)}-${pad2(d)}`;
+  }
+  return isValidYmd(year, m, d) ? iso : null;
+}
+
+function lookupMonth(token: string): number | null {
+  const t = token.toLowerCase().replace(/\.$/, "");
+  return EN_MONTHS[t] || RU_MONTHS[t] || RU_MONTHS[t + "."] || null;
+}
+
+/**
+ * Strict date parser. Returns YYYY-MM-DD, or null when no date can be read.
+ * The day and year tokens must be complete numbers (so "Jan 2027" is never read as "Jan 20").
+ */
+export function parseDateStrict(dateStr: string | null | undefined, referenceDate: Date = new Date()): string | null {
+  if (!dateStr || !dateStr.trim()) return null;
   const s = dateStr.trim();
 
-  // 1. Check ISO format YYYY-MM-DD
-  const isoMatch = s.match(/\b(\d{4})-(\d{1,2})-(\d{1,2})\b/);
+  // 1. ISO YYYY-MM-DD
+  const isoMatch = s.match(/(?<!\d)(\d{4})-(\d{1,2})-(\d{1,2})(?!\d)/);
   if (isoMatch) {
-    const y = parseInt(isoMatch[1], 10);
-    const m = String(parseInt(isoMatch[2], 10)).padStart(2, "0");
-    const d = String(parseInt(isoMatch[3], 10)).padStart(2, "0");
-    return `${y}-${m}-${d}`;
+    return buildIso(parseInt(isoMatch[1], 10), parseInt(isoMatch[2], 10), parseInt(isoMatch[3], 10), referenceDate);
   }
 
-  // 2. Check DD/MM/YYYY or DD.MM.YYYY
-  const slashMatch = s.match(/\b(\d{1,2})[\/.](\d{1,2})[\/.](\d{2,4})\b/);
+  // 2. DD/MM/YYYY or DD.MM.YYYY (European day-first)
+  const slashMatch = s.match(/(?<!\d)(\d{1,2})[\/.](\d{1,2})[\/.](\d{4}|\d{2})(?!\d)/);
   if (slashMatch) {
-    const d = String(parseInt(slashMatch[1], 10)).padStart(2, "0");
-    const m = String(parseInt(slashMatch[2], 10)).padStart(2, "0");
-    let y = parseInt(slashMatch[3], 10);
-    if (y < 100) y += 2000;
-    return `${y}-${m}-${d}`;
+    return buildIso(parseInt(slashMatch[3], 10), parseInt(slashMatch[2], 10), parseInt(slashMatch[1], 10), referenceDate);
   }
 
-  // 3. Check English date: "Saturday, April 24, 2027" or "24 April 2027"
-  const enMatch1 = s.match(/([A-Za-z]+)\s+(\d{1,2})(?:st|nd|rd|th)?,?\s*(\d{4})?/i);
-  if (enMatch1) {
-    const mName = enMatch1[1].toLowerCase();
-    const mNum = EN_MONTHS[mName];
+  const MONTH_TOKEN = "([A-Za-zА-Яа-яЁё]{3,}\\.?)";
+  const DAY_TOKEN = "(\\d{1,2})(?:st|nd|rd|th)?(?!\\d)";
+  const YEAR_TOKEN = "(?:,?\\s*(\\d{4})(?!\\d))?";
+
+  // 3. Day-first: "11 Jan 2027", "11 January", "24 дек 2026", "2 января"
+  const dayFirstRe = new RegExp(`(?<!\\d)${DAY_TOKEN}\\s+(?:of\\s+)?${MONTH_TOKEN}${YEAR_TOKEN}`, "gi");
+  for (const m of s.matchAll(dayFirstRe)) {
+    const mNum = lookupMonth(m[2]);
     if (mNum) {
-      const d = String(parseInt(enMatch1[2], 10)).padStart(2, "0");
-      const y = enMatch1[3] ? parseInt(enMatch1[3], 10) : baseDate.getFullYear();
-      return `${y}-${String(mNum).padStart(2, "0")}-${d}`;
+      return buildIso(m[3] ? parseInt(m[3], 10) : null, mNum, parseInt(m[1], 10), referenceDate);
     }
   }
 
-  const enMatch2 = s.match(/(\d{1,2})(?:st|nd|rd|th)?\s+([A-Za-z]+),?\s*(\d{4})?/i);
-  if (enMatch2) {
-    const mName = enMatch2[2].toLowerCase();
-    const mNum = EN_MONTHS[mName];
+  // 4. Month-first: "Jan 11, 2027", "Saturday, April 24, 2027"
+  const monthFirstRe = new RegExp(`${MONTH_TOKEN}\\s+${DAY_TOKEN}${YEAR_TOKEN}`, "gi");
+  for (const m of s.matchAll(monthFirstRe)) {
+    const mNum = lookupMonth(m[1]);
     if (mNum) {
-      const d = String(parseInt(enMatch2[1], 10)).padStart(2, "0");
-      const y = enMatch2[3] ? parseInt(enMatch2[3], 10) : baseDate.getFullYear();
-      return `${y}-${String(mNum).padStart(2, "0")}-${d}`;
+      return buildIso(m[3] ? parseInt(m[3], 10) : null, mNum, parseInt(m[2], 10), referenceDate);
     }
   }
 
-  // 4. Check Russian date: "24 дек 2026" or "2 января 2027"
-  const ruMatch = s.match(/(\d{1,2})\s+([а-яА-ЯёЁ]+),?\s*(\d{4})?/i);
-  if (ruMatch) {
-    const mName = ruMatch[2].toLowerCase();
-    const mNum = RU_MONTHS[mName];
-    if (mNum) {
-      const d = String(parseInt(ruMatch[1], 10)).padStart(2, "0");
-      const y = ruMatch[3] ? parseInt(ruMatch[3], 10) : baseDate.getFullYear();
-      return `${y}-${String(mNum).padStart(2, "0")}-${d}`;
-    }
-  }
+  return null;
+}
 
-  // Fallback to JS Date
-  const parsed = new Date(s);
-  if (!isNaN(parsed.getTime())) {
-    return parsed.toISOString().split("T")[0];
-  }
-
-  return baseDate.toISOString().split("T")[0];
+/**
+ * Normalizes any freeform or localized date to YYYY-MM-DD (falls back to baseDate when unreadable).
+ * Prefer parseDateStrict() when a missing date must be detected.
+ */
+export function normalizeDate(dateStr: string | null | undefined, baseDate: Date = new Date()): string {
+  return parseDateStrict(dateStr, baseDate) || baseDate.toISOString().split("T")[0];
 }
 
 /**
@@ -193,17 +209,35 @@ export function mapChildSeat(child: ChildInfo): ChildInfo {
 }
 
 /**
- * Automatically detects and computes total standby/disposal hours
+ * Explicit standby / disposal / hourly vocabulary (EN / IT / RU)
+ */
+export const STANDBY_KEYWORD_RE =
+  /(?:^|[^\p{L}\p{N}])(?:stand\s*-?\s*by|disposal|disposi(?:zione|tion)|a\s+disposizione|распоряжен\p{L}*|hourly|по\s+часам|почасов\p{L}*|package)(?=[^\p{L}\p{N}]|$)/iu;
+
+/**
+ * Automatically detects and computes total standby/disposal hours.
+ * Returns null for ordinary transfers / round trips (e.g. Milan → Zermatt and back a week later).
  */
 export function calculateStandbyHours(
   rawHours: number | null | undefined,
   sourceText: string,
   rides: Ride[]
 ): number | null {
+  const hasStandbyKeyword = STANDBY_KEYWORD_RE.test(sourceText);
+  // A standby block happens on one service day. Rides on different dates = transfers, never standby.
+  const distinctDates = new Set(rides.map((r) => r.date).filter(Boolean));
+  const singleServiceDay = distinctDates.size <= 1;
+
+  if (!singleServiceDay) return null;
+
   // 1. Direct from Gemini if valid positive number
   if (typeof rawHours === "number" && rawHours > 0) {
     return Math.round(rawHours * 10) / 10;
   }
+
+  // Without explicit standby vocabulary, free-text hours/ranges ("3 hours drive", "08:00 - 12:00")
+  // are only considered if there are no transfer rides defined (i.e. pure hourly booking brief)
+  if (!hasStandbyKeyword && rides.length > 0) return null;
 
   // 2. Direct regex match in text: e.g. "10 hours", "10h", "10 hrs", "8 часов", "4 ore"
   const match = sourceText.match(/(?:^|[^\p{L}\p{N}])(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|h|часов|часа|час|ore|ora)(?=[^\p{L}\p{N}]|$)/iu);
@@ -231,10 +265,8 @@ export function calculateStandbyHours(
   }
 
   // 4. Time span across extracted rides (earliest pickup to latest dropoff)
-  const isStandbyOrPackage = /(?:^|[^\p{L}\p{N}])(?:stand\s*by|disposi(?:zione|tion)|распоряжен\p{L}*|hourly|wedding|package)(?=[^\p{L}\p{N}]|$)/iu.test(sourceText) ||
-    rides.length >= 2;
-
-  if (isStandbyOrPackage && rides.length > 0) {
+  //    Only for explicit standby/disposal/hourly bookings — a normal round trip must never become "standby".
+  if (rides.length > 0) {
     let earliestMinutes: number | null = null;
     let latestMinutes: number | null = null;
 
@@ -311,7 +343,9 @@ export function applyBusinessRules(
     randomRef).toUpperCase();
 
   // 1. Process Rides
-  const baseDate = normalizeDate(raw.raw_date || raw.rides?.[0]?.raw_date, now);
+  const parsedBaseDate = parseDateStrict(raw.raw_date || raw.rides?.[0]?.raw_date, now);
+  const baseDate = parsedBaseDate || todayIso;
+  let dateMissing = !parsedBaseDate;
   const rawRides = Array.isArray(raw.rides) && raw.rides.length > 0 ? raw.rides : [{ role: "outbound", stops: [] }];
   
   const rides: Ride[] = rawRides.map((r: any, idx: number) => {
@@ -319,7 +353,10 @@ export function applyBusinessRules(
     let role = r.role || (idx === 0 ? "outbound" : idx === 1 && rawRides.length === 2 ? "return" : "transfer");
     if (rawRides.length === 2 && idx === 1) role = "return";
 
-    const rideDate = normalizeDate(r.raw_date || raw.raw_date, new Date(baseDate + "T12:00:00Z"));
+    // Ride's own date wins; otherwise inherit booking date (never silently default to today without flagging)
+    const ownDate = parseDateStrict(r.raw_date, now);
+    const rideDate = ownDate || parseDateStrict(raw.raw_date, now) || baseDate;
+    if (!ownDate && !parsedBaseDate) dateMissing = true;
 
     // Process Stops
     const stops: Stop[] = (r.stops || []).map((s: any, sIdx: number) => {
@@ -399,25 +436,11 @@ export function applyBusinessRules(
   // Standby / Hourly & Vehicle classification
   const standbyHours = calculateStandbyHours(raw.standby_hours, sourceText, rides);
   const isStandby = (standbyHours !== null && standbyHours > 0) ||
-    /\b(?:\d+\s*hours?|stand\s*by|disposi(?:zione|tion)|from\s+\d+\s*(?:am|pm)\s*-\s*\d+\s*(?:am|pm))\b/i.test(sourceText);
+    (STANDBY_KEYWORD_RE.test(sourceText) && new Set(rides.map((r) => r.date)).size <= 1);
   const standbyDuration = standbyHours ? ` (${standbyHours}h)` : "";
 
   const isBusOrSprinter = /\b(?:bus|sprinter|minibus|coach|24\/28)\b/i.test(sourceText);
   const defaultVehicle = isBusOrSprinter ? "Mercedes-Benz Sprinter (24-28 seats)" : "Mercedes-Benz V-Class";
-
-  // Split prices across rides (50/50 for round trips; full package price on Ride 1 for multi-stop/standby packages)
-  if (totalPrice !== null && rides.length > 0) {
-    if (rides.length === 2 && rides[1].role === "return" && !isStandby) {
-      const half = Math.round(totalPrice / 2);
-      rides[0].price = half;
-      rides[1].price = totalPrice - half;
-    } else {
-      rides[0].price = totalPrice;
-      for (let i = 1; i < rides.length; i++) {
-        rides[i].price = null;
-      }
-    }
-  }
 
   // 3. Children & Party
   const childrenList: ChildInfo[] = Array.isArray(raw.children)
@@ -517,21 +540,39 @@ export function applyBusinessRules(
   const status = paidDeposit && paidDeposit > 0 ? "Prepayment Received" : "Confirmed (Unpaid)";
   const ourNotes = balanceDue !== null && balanceDue > 0 ? `to be paid: ${balanceDue} EUR` : "";
 
-  // Standby / Hourly service type normalization
+  // Standby / Hourly / Round-Trip service type normalization
   let serviceType = raw.service_type;
+  const isRoundTrip = rides.length === 2 && rides[1].role === "return";
+
   if (isStandby) {
     serviceType = standbyHours ? `Standby (${standbyHours} hours)` : "Standby Service";
-  } else if (!serviceType) {
+  } else if (isRoundTrip) {
+    serviceType = "Round-Trip Transfer";
+  } else if (!serviceType || /stand\s*-?\s*by|hourly|disposal|disposizione/i.test(serviceType)) {
     serviceType = hasAirport ? "Airport Transfer" : rides.length > 2 ? "Multi-Stop Transfer" : "Chauffeur Transfer";
   }
 
-  return {
+  // Date sanity checks (missing date, past date, return before outbound)
+  if (dateMissing) {
+    missing.push("📅 Travel date (not found in message)");
+  } else {
+    if (rides.some((r) => r.date < todayIso)) {
+      warnings.push("⚠️ Date is in the past – check the year");
+    }
+    const outbound = rides.find((r) => r.role === "outbound") || rides[0];
+    const ret = rides.find((r) => r.role === "return");
+    if (outbound && ret && ret.date < outbound.date) {
+      warnings.push("⚠️ Return date is before the outbound date");
+    }
+  }
+
+  const booking: BookingData = {
     booking_ref: bookingRef,
     booked_date: todayIso,
     booked_month: currentMonth,
     status,
     service_type: serviceType,
-    standby_hours: standbyHours,
+    standby_hours: isStandby ? standbyHours : null,
     client: {
       name: clientName,
       phone: clientPhone,
@@ -555,4 +596,80 @@ export function applyBusinessRules(
     missing_fields: missing,
     warnings,
   };
+
+  allocateFinance(booking);
+  return booking;
+}
+
+/**
+ * True for single-block standby / disposal / hourly services (one calendar event, one CRM row)
+ */
+export function isStandbyBooking(booking: BookingData): boolean {
+  return Boolean(booking.standby_hours && booking.standby_hours > 0) ||
+    /^standby/i.test(booking.service_type || "");
+}
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
+/**
+ * Single source of truth for money: total balance, per-leg price and per-leg amount to collect.
+ * Round trip: price split 50/50, prepayment counted once, remaining balance split 50/50
+ * (odd euro goes on the return leg). Standby / multi-stop packages: everything on leg 1.
+ * Mutates and returns the booking.
+ */
+export function allocateFinance(booking: BookingData): BookingData {
+  const total = booking.finance.total_price;
+  const deposit = booking.finance.paid_deposit || 0;
+  const rides = booking.rides || [];
+
+  rides.forEach((r) => {
+    r.price = null;
+    r.balance_due = null;
+  });
+
+  if (total === null || total === undefined) {
+    booking.finance.balance_due = null;
+    booking.our_notes = "";
+    booking.status = deposit > 0 ? "Prepayment Received" : "Confirmed (Unpaid)";
+    return booking;
+  }
+
+  const balance = round2(total - deposit);
+  booking.finance.balance_due = balance;
+  booking.our_notes = balance > 0 ? `to be paid: ${balance} EUR` : "";
+  booking.status = deposit > 0 ? "Prepayment Received" : "Confirmed (Unpaid)";
+
+  if (rides.length === 0) return booking;
+
+  const isRoundTrip = rides.length === 2 && rides[1].role === "return" && !isStandbyBooking(booking);
+  if (isRoundTrip) {
+    const half = Math.round(total / 2);
+    rides[0].price = half;
+    rides[1].price = round2(total - half);
+    const firstLegDue = Math.floor(balance / 2);
+    rides[0].balance_due = firstLegDue;
+    rides[1].balance_due = round2(balance - firstLegDue);
+  } else {
+    rides[0].price = total;
+    rides[0].balance_due = balance;
+  }
+  return booking;
+}
+
+/**
+ * Text used in CRM "our_notes" / calendar for a specific leg
+ */
+export function legBalanceNote(booking: BookingData, rideIdx: number): string {
+  const ride = booking.rides[rideIdx];
+  const due = ride?.balance_due;
+  if (due === null || due === undefined) {
+    // Legacy drafts without per-leg allocation: show total on leg 1 only
+    if (rideIdx === 0 && booking.finance.balance_due && booking.finance.balance_due > 0) {
+      return `to be paid: ${booking.finance.balance_due} EUR`;
+    }
+    return "";
+  }
+  return due > 0 ? `to be paid: ${due} EUR` : "";
 }

@@ -36,6 +36,7 @@ export interface Ride {
   stops: Stop[];
   flight: FlightInfo | null;
   price: number | null;         // Allocated price for this specific ride
+  balance_due?: number | null;  // Amount still to collect on this specific ride (per-leg split)
 }
 
 export interface ClientInfo {

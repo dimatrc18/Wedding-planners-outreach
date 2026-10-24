@@ -2,6 +2,7 @@
 import { extractBookingWithGemini, patchBookingWithGemini } from "./extract.ts";
 import { renderBookingCard, renderEditCopyCard, buildEditableBookingText, esc } from "./card.ts";
 import { saveBookingToGoogleSheet, saveBookingToGoogleCalendar } from "./google.ts";
+import { allocateFinance } from "./rules.ts";
 import {
   upsertDraft,
   getDraftById,
@@ -230,14 +231,20 @@ async function handleIncomingMessage(msg: any) {
     existingDraft = await getDraftByMessageId(chatId, replyTo.message_id);
   }
 
-  // Check C: If recent unconfirmed draft exists in this chat (< 30 minutes) and text has booking/edit clues
-  if (!existingDraft) {
+  // Check C: If recent unconfirmed draft exists in this chat (< 30 minutes) and text is a short field snippet
+  // NEVER hijack if text is a new booking request, contains an unrecognised DRG ref, or contains a full itinerary
+  const isExplicitNewBooking =
+    /\bDRG-[A-Z0-9]{4,10}\b/i.test(text) ||
+    /^(?:🔔\s*)?new\s+booking/i.test(text) ||
+    (/\b(?:pickup|pick-up|откуда)\b/i.test(text) && /\b(?:dropoff|drop-off|куда)\b/i.test(text) && /\b(?:date|дата|\d{1,2}\s+[a-z]{3,})\b/i.test(text));
+
+  if (!existingDraft && !isExplicitNewBooking) {
     const recent = await getLatestDraftForChat(chatId);
     if (recent && recent.updated_at) {
       const ageMs = Date.now() - new Date(recent.updated_at).getTime();
       if (ageMs < 30 * 60 * 1000) {
-        const isUpdate = /transfer|pickup|dropoff|guests|sprinter|v-class|fare|deposit|price|notes?|заметк|phone|name|email|\b€\b|flight|\+\d{8,}/i.test(text);
-        if (isUpdate) {
+        const isShortUpdate = text.length < 200 && /^(?:phone|name|email|notes?|flight|fare|price|\+?\d{8,}|€?\s*\d+)\b/i.test(text);
+        if (isShortUpdate) {
           existingDraft = recent;
         }
       }
@@ -295,10 +302,7 @@ async function handleIncomingMessage(msg: any) {
         const dep = priceMatch[2] ? parseFloat(priceMatch[2]) : existingDraft.booking_data.finance.paid_deposit;
         existingDraft.booking_data.finance.total_price = p;
         existingDraft.booking_data.finance.paid_deposit = dep;
-        existingDraft.booking_data.finance.balance_due = p - (dep || 0);
-        existingDraft.booking_data.our_notes = existingDraft.booking_data.finance.balance_due > 0
-          ? `to be paid: ${existingDraft.booking_data.finance.balance_due} EUR`
-          : "";
+        allocateFinance(existingDraft.booking_data);
       } else {
         const phoneMatch = text.match(/(\+?\d[\d\s\-()]{6,}\d)/);
         if (phoneMatch && !existingDraft.booking_data.client.phone && text.length < 40) {
@@ -619,12 +623,7 @@ async function handleCallbackQuery(query: any) {
     draft.booking_data.finance.total_price = p;
     draft.booking_data.finance.suggested_price = null;
     draft.booking_data.finance.is_suggested = false;
-    draft.booking_data.finance.balance_due = p - (draft.booking_data.finance.paid_deposit || 0);
-
-    if (draft.booking_data.rides.length === 2 && draft.booking_data.rides[1].role === "return") {
-      draft.booking_data.rides[0].price = Math.round(p / 2);
-      draft.booking_data.rides[1].price = p - Math.round(p / 2);
-    }
+    allocateFinance(draft.booking_data);
 
     await upsertDraft(draft);
     await tgApi("answerCallbackQuery", { callback_query_id: queryId, text: `Fare €${p} confirmed.` });

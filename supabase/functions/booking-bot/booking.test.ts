@@ -21,6 +21,17 @@ Deno.test("normalizeDate handles multiple formats", () => {
 
   const d4 = normalizeDate("2026-10-25");
   assertEquals(d4, "2026-10-25");
+
+  // Critical regression checks: Day-first Month Year format (previously matched 'Jan 20' from '11 Jan 2027')
+  const baseDate = new Date("2026-10-24T12:00:00Z");
+  assertEquals(normalizeDate("11 Jan 2027", baseDate), "2027-01-11");
+  assertEquals(normalizeDate("18 Jan 2027", baseDate), "2027-01-18");
+  assertEquals(normalizeDate("11 January 2027", baseDate), "2027-01-11");
+  assertEquals(normalizeDate("Jan 11, 2027", baseDate), "2027-01-11");
+  assertEquals(normalizeDate("18/01/2027", baseDate), "2027-01-18");
+
+  // Year missing rollover (October 2026 -> 3 Feb should be 2027)
+  assertEquals(normalizeDate("3 Feb", baseDate), "2027-02-03");
 });
 
 Deno.test("normalizeTime handles ranges and approx", () => {
@@ -423,4 +434,85 @@ Deno.test("applyBusinessRules avoids mistaking vehicle capacity for party size",
   const b2 = applyBusinessRules(rawWithBoth, "Transfer all 22 guests. We promised a sprinter 24/28 pax.");
   assertEquals(b2.party.passengers, 22, "Should extract 22 guests, ignoring vehicle capacity 24/28");
   console.log("✅ Vehicle capacity vs party size test passed!");
+});
+
+// 11. UNIT TEST: DRG-WIL1KT Round Trip Extraction & Per-Leg Financial Split
+Deno.test("DRG-WIL1KT round trip parses dates (11 & 18 Jan 2027), splits 50/50 balance, and is not standby", () => {
+  const rawWil1kt: any = {
+    booking_ref: "DRG-WIL1KT",
+    client_name: "Facundo Bahamonde",
+    client_phone: "+17867601195",
+    client_email: "facundobahamonde@gmail.com",
+    service_type: "Transfer",
+    vehicle_class: "Mercedes-Benz V-Class",
+    passengers: 2,
+    luggage: 2,
+    price_total: 1520,
+    paid_deposit: 380,
+    raw_date: "11 Jan 2027",
+    rides: [
+      {
+        ride_no: 1,
+        role: "outbound",
+        raw_date: "11 Jan 2027",
+        stops: [
+          { seq: 1, kind: "pickup", time: "08:00", place: "Milan City Center", evidence: "Milan City Center" },
+          { seq: 2, kind: "dropoff", place: "Zermatt (Matterhorn)", evidence: "Zermatt (Matterhorn)" },
+        ],
+      },
+      {
+        ride_no: 2,
+        role: "return",
+        raw_date: "18 Jan 2027",
+        stops: [
+          { seq: 1, kind: "pickup", time: "09:00", place: "Zermatt (Matterhorn)", evidence: "Zermatt (Matterhorn)" },
+          { seq: 2, kind: "dropoff", place: "Milan City Center", evidence: "Milan City Center" },
+        ],
+      },
+    ],
+    client_notes: "Palazzo Touring Club Milan, A Radisson Collection Hotel",
+  };
+
+  const booking = applyBusinessRules(
+    rawWil1kt,
+    `🔔 NEW BOOKING REQUEST [DRG-WIL1KT]
+Date: 11 Jan 2027
+🔄 RETURN JOURNEY
+Date: 18 Jan 2027
+Calculated Fare: €1520 (25% Deposit: €380)`,
+    new Date("2026-10-24T12:00:00Z")
+  );
+
+  // Assertions
+  assertEquals(booking.booking_ref, "DRG-WIL1KT");
+  assertEquals(booking.service_type, "Round-Trip Transfer");
+  assertEquals(booking.standby_hours, null, "Should NOT be classified as standby");
+  assertEquals(booking.rides.length, 2);
+
+  // Outbound ride
+  const r1 = booking.rides[0];
+  assertEquals(r1.date, "2027-01-11", "Outbound date must be 2027-01-11");
+  assertEquals(r1.price, 760, "Outbound price should be €760 (50%)");
+  assertEquals(r1.balance_due, 570, "Outbound balance due should be €570 (half of €1140)");
+
+  // Return ride
+  const r2 = booking.rides[1];
+  assertEquals(r2.date, "2027-01-18", "Return date must be 2027-01-18");
+  assertEquals(r2.role, "return");
+  assertEquals(r2.price, 760, "Return price should be €760 (50%)");
+  assertEquals(r2.balance_due, 570, "Return balance due should be €570 (half of €1140)");
+
+  // Total financials
+  assertEquals(booking.finance.total_price, 1520);
+  assertEquals(booking.finance.paid_deposit, 380);
+  assertEquals(booking.finance.balance_due, 1140);
+
+  // Check Card Display
+  const card = renderBookingCard(booking, "test-draft-id");
+  assert(card.text.includes("Dates:"), "Card should display multi-day Dates header");
+  assert(card.text.includes("11 Jan 2027") && card.text.includes("18 Jan 2027"), "Card must display both 11 and 18 Jan 2027");
+  assert(card.text.includes("€570 + €570 per leg"), "Card must display per-leg balance breakdown");
+  assert(card.text.includes("RETURN"), "Card must show RETURN label on ride 2");
+
+  console.log("✅ DRG-WIL1KT round trip business rules test passed!");
 });

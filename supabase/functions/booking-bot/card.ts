@@ -1,5 +1,6 @@
 // Telegram HTML Card Renderer and Inline Keyboards (Clean Luxury Minimalist English)
 import type { BookingData, Ride, Stop } from "./schema.ts";
+import { isStandbyBooking } from "./rules.ts";
 
 export function esc(s: string | null | undefined): string {
   if (!s) return "";
@@ -27,6 +28,59 @@ function formatDisplayDate(dateStr: string): string {
   return dateStr;
 }
 
+function formatShortDate(dateStr: string): string {
+  if (!dateStr) return "";
+  const dt = new Date(dateStr + "T12:00:00Z");
+  if (isNaN(dt.getTime())) return dateStr;
+  return dt.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+}
+
+/** Multi-day bookings (round trips) need a per-ride date header, otherwise the return leg is invisible */
+function isMultiDay(booking: BookingData): boolean {
+  return new Set(booking.rides.map((r) => r.date).filter(Boolean)).size > 1 ||
+    booking.rides.some((r) => r.role === "return");
+}
+
+function topDateLine(booking: BookingData): string | null {
+  const primaryDate = booking.rides[0]?.date || booking.booked_date;
+  if (!primaryDate) return null;
+  if (booking.missing_fields?.some((m) => m.startsWith("📅"))) {
+    return `📅 Date: ❓ Not provided`;
+  }
+  const distinct = [...new Set(booking.rides.map((r) => r.date).filter(Boolean))];
+  if (distinct.length > 1) {
+    return `📅 Dates: ${distinct.map(formatShortDate).join(" → ")}`;
+  }
+  return `📅 Date: ${formatDisplayDate(primaryDate)}`;
+}
+
+function rideHeader(booking: BookingData, r: Ride, idx: number): string | null {
+  if (!isMultiDay(booking)) return null;
+  const label = r.role === "return" ? "🔄 RETURN" : r.role === "outbound" ? "➡️ OUTBOUND" : `🚘 TRANSFER ${idx + 1}`;
+  return `${label} — ${formatShortDate(r.date)}`;
+}
+
+function fareLine(booking: BookingData): string {
+  const p = booking.finance.total_price as number;
+  const dep = booking.finance.paid_deposit || 0;
+  const due = booking.finance.balance_due ?? (p - dep);
+  const legs = booking.rides.filter((r) => r.balance_due !== null && r.balance_due !== undefined);
+  const split = legs.length === 2 ? ` (€${legs[0].balance_due} + €${legs[1].balance_due} per leg)` : "";
+  if (dep > 0) {
+    return `💶 Fare: €${p} | Paid: €${dep} ✅ | Due: €${due}${split} 💵`;
+  }
+  return `💶 Fare: €${p} (Unpaid)${split}`;
+}
+
+function serviceLine(booking: BookingData): string {
+  let serviceDisplay = booking.service_type || "Chauffeur Service";
+  if (isStandbyBooking(booking)) {
+    const hours = booking.standby_hours || ((booking.service_type || "").match(/(\d+)\s*(?:h|hours?)\b/i)?.[1]);
+    serviceDisplay = `${hours ? `${hours}-Hour ` : ""}Standby Service`;
+  }
+  return `⏱ Service: ${serviceDisplay}`;
+}
+
 export function renderBookingCard(
   booking: BookingData,
   draftId: string,
@@ -38,9 +92,9 @@ export function renderBookingCard(
   lines.push(`📋 <b>BOOKING DRAFT [${esc(booking.booking_ref)}]</b>`);
   lines.push(`───────────────────────────`);
 
-  const primaryDate = booking.rides[0]?.date || booking.booked_date;
-  if (primaryDate) {
-    lines.push(`📅 <b>Date:</b> ${esc(formatDisplayDate(primaryDate))}`);
+  const dateLine = topDateLine(booking);
+  if (dateLine) {
+    lines.push(esc(dateLine).replace(/^📅 (Dates?:)/, "📅 <b>$1</b>"));
   }
 
   // Client Details
@@ -60,34 +114,11 @@ export function renderBookingCard(
   lines.push(`🚐 <b>Vehicle:</b> ${vehStr}`);
   lines.push(partyStr);
 
-  // Service Description (Standby vs Transfer)
-  const isStandby = (booking.standby_hours !== undefined && booking.standby_hours !== null && booking.standby_hours > 0) ||
-    booking.service_type === "standby" ||
-    booking.service_type === "disposal" ||
-    booking.service_type === "wedding_transport" ||
-    /standby|disposi|hourly/i.test(booking.service_type) ||
-    (booking.client_notes && /standby|10hours|disposal/i.test(booking.client_notes));
-
-  let serviceDisplay = booking.service_type || "Chauffeur Service";
-  if (isStandby) {
-    const hours = booking.standby_hours ||
-      ((booking.client_notes || "").match(/(\d+)\s*(?:hours|hour|h|hr)\b/i)?.[1]) ||
-      ((booking.service_type || "").match(/(\d+)\s*h\b/i)?.[1]);
-    const hCount = hours ? `${hours}-Hour ` : "";
-    serviceDisplay = `${hCount}Standby Service`;
-  }
-  lines.push(`⏱ <b>Service:</b> ${esc(serviceDisplay)}`);
+  lines.push(esc(serviceLine(booking)).replace(/^⏱ Service:/, "⏱ <b>Service:</b>"));
 
   // Financials (Single consolidated line in top summary)
   if (booking.finance.total_price !== null) {
-    const p = booking.finance.total_price;
-    const dep = booking.finance.paid_deposit || 0;
-    const due = booking.finance.balance_due ?? (p - dep);
-    if (dep > 0) {
-      lines.push(`💶 <b>Fare:</b> €${p} | <b>Paid:</b> €${dep} ✅ | <b>Due:</b> <b>€${due}</b> 💵`);
-    } else {
-      lines.push(`💶 <b>Fare:</b> €${p} (Unpaid)`);
-    }
+    lines.push(esc(fareLine(booking)).replace("Fare:", "<b>Fare:</b>").replace("Paid:", "<b>Paid:</b>").replace("Due:", "<b>Due:</b>"));
   } else if (booking.finance.suggested_price) {
     lines.push(`💶 <b>Fare:</b> <i>Suggested: €${booking.finance.suggested_price}</i>`);
   } else {
@@ -111,6 +142,8 @@ export function renderBookingCard(
   if (booking.rides.length > 0) {
     lines.push(`\n📍 <b>ITINERARY:</b>`);
     booking.rides.forEach((r, idx) => {
+      const header = rideHeader(booking, r, idx);
+      if (header) lines.push(`<b>${esc(header)}</b>`);
       const pickups = r.stops.filter((s) => s.kind === "pickup");
       const dropoffs = r.stops.filter((s) => s.kind === "dropoff");
 
@@ -153,6 +186,13 @@ export function renderBookingCard(
   // Client Notes
   if (booking.client_notes) {
     lines.push(`📝 <b>Notes:</b> ${esc(booking.client_notes)}`);
+  }
+
+  // Date / data sanity warnings
+  const alertWarnings = (booking.warnings || []).filter((w) => w.startsWith("⚠️"));
+  if (alertWarnings.length > 0) {
+    lines.push(`\n───────────────────────────`);
+    alertWarnings.forEach((w) => lines.push(`<b>${esc(w)}</b>`));
   }
 
   // Missing Fields Checklist
@@ -202,9 +242,9 @@ export function buildFullCardPlainText(booking: BookingData): string {
   lines.push(`📋 BOOKING DRAFT [${booking.booking_ref}]`);
   lines.push(`───────────────────────────`);
 
-  const primaryDate = booking.rides[0]?.date || booking.booked_date;
-  if (primaryDate) {
-    lines.push(`📅 Date: ${formatDisplayDate(primaryDate)}`);
+  const dateLine = topDateLine(booking);
+  if (dateLine) {
+    lines.push(dateLine);
   }
 
   // Client Details
@@ -224,34 +264,11 @@ export function buildFullCardPlainText(booking: BookingData): string {
   lines.push(`🚐 Vehicle: ${vehStr}`);
   lines.push(partyStr);
 
-  // Service Description (Standby vs Transfer)
-  const isStandby = (booking.standby_hours !== undefined && booking.standby_hours !== null && booking.standby_hours > 0) ||
-    booking.service_type === "standby" ||
-    booking.service_type === "disposal" ||
-    booking.service_type === "wedding_transport" ||
-    /standby|disposi|hourly/i.test(booking.service_type) ||
-    (booking.client_notes && /standby|10hours|disposal/i.test(booking.client_notes));
-
-  let serviceDisplay = booking.service_type || "Chauffeur Service";
-  if (isStandby) {
-    const hours = booking.standby_hours ||
-      ((booking.client_notes || "").match(/(\d+)\s*(?:hours|hour|h|hr)\b/i)?.[1]) ||
-      ((booking.service_type || "").match(/(\d+)\s*h\b/i)?.[1]);
-    const hCount = hours ? `${hours}-Hour ` : "";
-    serviceDisplay = `${hCount}Standby Service`;
-  }
-  lines.push(`⏱ Service: ${serviceDisplay}`);
+  lines.push(serviceLine(booking));
 
   // Financials
   if (booking.finance.total_price !== null) {
-    const p = booking.finance.total_price;
-    const dep = booking.finance.paid_deposit || 0;
-    const due = booking.finance.balance_due ?? (p - dep);
-    if (dep > 0) {
-      lines.push(`💶 Fare: €${p} | Paid: €${dep} ✅ | Due: €${due} 💵`);
-    } else {
-      lines.push(`💶 Fare: €${p} (Unpaid)`);
-    }
+    lines.push(fareLine(booking));
   } else if (booking.finance.suggested_price) {
     lines.push(`💶 Fare: Suggested: €${booking.finance.suggested_price}`);
   } else {
@@ -275,6 +292,8 @@ export function buildFullCardPlainText(booking: BookingData): string {
   if (booking.rides.length > 0) {
     lines.push(`\n📍 ITINERARY:`);
     booking.rides.forEach((r, idx) => {
+      const header = rideHeader(booking, r, idx);
+      if (header) lines.push(header);
       const pickups = r.stops.filter((s) => s.kind === "pickup");
       const dropoffs = r.stops.filter((s) => s.kind === "dropoff");
 
@@ -321,6 +340,13 @@ export function buildFullCardPlainText(booking: BookingData): string {
   // Client Notes
   if (booking.client_notes) {
     lines.push(`📝 Notes: ${booking.client_notes}`);
+  }
+
+  // Date / data sanity warnings
+  const alertWarnings = (booking.warnings || []).filter((w) => w.startsWith("⚠️"));
+  if (alertWarnings.length > 0) {
+    lines.push(`\n───────────────────────────`);
+    alertWarnings.forEach((w) => lines.push(w));
   }
 
   // Missing Fields Checklist
