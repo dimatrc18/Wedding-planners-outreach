@@ -68,7 +68,8 @@ export async function appendToSent(raw: Uint8Array) {
 }
 
 /**
- * New messages in INBOX since the last UID. Returns { messages, lastUid }.
+ * New messages in INBOX (and recent bounces in INBOX.Junk) since the last UID.
+ * Returns { messages, lastUid }.
  * Only metadata and text are kept; attachments are ignored.
  */
 export async function fetchNewMessages(lastUid: number | null, maxMessages = 50) {
@@ -76,30 +77,64 @@ export async function fetchNewMessages(lastUid: number | null, maxMessages = 50)
   await client.connect();
   const out: any[] = [];
   let newest = lastUid || 0;
-  const lock = await client.getMailboxLock('INBOX');
   try {
-    const range = lastUid ? { uid: `${lastUid + 1}:*` } : { since: new Date(Date.now() - 3 * 86400000) };
-    for await (const msg of client.fetch(range as any, { uid: true, source: true, envelope: true })) {
-      if (lastUid && msg.uid <= lastUid) continue;
-      newest = Math.max(newest, msg.uid);
-      const parsed: any = await simpleParser(msg.source);
-      out.push({
-        uid: msg.uid,
-        messageId: parsed.messageId || null,
-        inReplyTo: parsed.inReplyTo || null,
-        references: Array.isArray(parsed.references) ? parsed.references : parsed.references ? [parsed.references] : [],
-        from: parsed.from?.value?.[0]?.address?.toLowerCase() || '',
-        fromName: parsed.from?.value?.[0]?.name || '',
-        subject: parsed.subject || '',
-        date: (parsed.date || new Date()).toISOString(),
-        text: String(parsed.text || '').slice(0, 20000),
-        autoSubmitted: String(parsed.headers?.get('auto-submitted') || ''),
-        failedRecipients: String(parsed.headers?.get('x-failed-recipients') || ''),
-      });
-      if (out.length >= maxMessages) break;
+    // 1. Fetch from INBOX (tracking lastUid progression)
+    const lock = await client.getMailboxLock('INBOX');
+    try {
+      const range = lastUid ? { uid: `${lastUid + 1}:*` } : { since: new Date(Date.now() - 3 * 86400000) };
+      for await (const msg of client.fetch(range as any, { uid: true, source: true, envelope: true })) {
+        if (lastUid && msg.uid <= lastUid) continue;
+        newest = Math.max(newest, msg.uid);
+        const parsed: any = await simpleParser(msg.source);
+        out.push({
+          uid: msg.uid,
+          messageId: parsed.messageId || null,
+          inReplyTo: parsed.inReplyTo || null,
+          references: Array.isArray(parsed.references) ? parsed.references : parsed.references ? [parsed.references] : [],
+          from: parsed.from?.value?.[0]?.address?.toLowerCase() || '',
+          fromName: parsed.from?.value?.[0]?.name || '',
+          subject: parsed.subject || '',
+          date: (parsed.date || new Date()).toISOString(),
+          text: String(parsed.text || '').slice(0, 20000),
+          autoSubmitted: String(parsed.headers?.get('auto-submitted') || ''),
+          failedRecipients: String(parsed.headers?.get('x-failed-recipients') || ''),
+        });
+        if (out.length >= maxMessages) break;
+      }
+    } finally {
+      lock.release();
+    }
+
+    // 2. Fetch recent messages from INBOX.Junk to catch misfiled bounce notices
+    try {
+      const junkLock = await client.getMailboxLock('INBOX.Junk');
+      try {
+        const junkRange = { since: new Date(Date.now() - 3 * 86400000) };
+        for await (const msg of client.fetch(junkRange as any, { uid: true, source: true, envelope: true })) {
+          const parsed: any = await simpleParser(msg.source);
+          out.push({
+            uid: null, // Junk folder has separate UIDs, do not mix with INBOX newest
+            folder: 'INBOX.Junk',
+            messageId: parsed.messageId || null,
+            inReplyTo: parsed.inReplyTo || null,
+            references: Array.isArray(parsed.references) ? parsed.references : parsed.references ? [parsed.references] : [],
+            from: parsed.from?.value?.[0]?.address?.toLowerCase() || '',
+            fromName: parsed.from?.value?.[0]?.name || '',
+            subject: parsed.subject || '',
+            date: (parsed.date || new Date()).toISOString(),
+            text: String(parsed.text || '').slice(0, 20000),
+            autoSubmitted: String(parsed.headers?.get('auto-submitted') || ''),
+            failedRecipients: String(parsed.headers?.get('x-failed-recipients') || ''),
+          });
+          if (out.length >= maxMessages * 2) break;
+        }
+      } finally {
+        junkLock.release();
+      }
+    } catch {
+      // INBOX.Junk is optional; ignore if not present or empty
     }
   } finally {
-    lock.release();
     await client.logout();
   }
   return { messages: out, lastUid: newest };
