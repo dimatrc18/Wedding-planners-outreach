@@ -144,6 +144,7 @@ export const INTENTS = ['wants_rate_card', 'asks_pricing', 'has_supplier', 'not_
 export const LOST_REASONS = ['has_supplier', 'no_response', 'price', 'not_a_fit', 'not_now', 'other'];
 
 export const MARKETS = [
+  { key: 'in', label: 'India (Luxury Destination Weddings)', flag: '🇮🇳', tier: 'international', directCta: true },
   { key: 'kz', label: 'Kazakhstan & Central Asia', flag: '🇰🇿', tier: 'international', directCta: true },
   { key: 'ru', label: 'Russia & CIS', flag: '🇷🇺', tier: 'international', directCta: true },
   { key: 'ch', label: 'Switzerland', flag: '🇨🇭', tier: 'international', directCta: true },
@@ -160,6 +161,7 @@ export const marketFlag = (m) => MARKET_FLAG[String(m || '').toLowerCase()] || '
 export const marketLabel = (m) => (MARKETS.find((x) => x.key === String(m || '').toLowerCase()) || { label: m || 'Other' }).label;
 
 export const MARKET_TIMEZONES = {
+  in: 'Asia/Kolkata',
   kz: 'Asia/Almaty',
   ru: 'Europe/Moscow',
   ch: 'Europe/Zurich',

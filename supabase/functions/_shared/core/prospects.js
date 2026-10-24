@@ -11,6 +11,7 @@ export function inferMarket(p = {}) {
   if (/^\+?7\b/.test(phone)) return 'ru';
   if (/^\+?41/.test(phone)) return 'ch';
   if (/^\+?971/.test(phone)) return 'ae';
+  if (/^\+?91/.test(phone)) return 'in';
   if (/^\+?44/.test(phone)) return 'uk';
   if (/^\+?1\b/.test(phone)) return 'us';
   if (/^\+?39/.test(phone)) return 'it';
@@ -24,6 +25,7 @@ export function inferMarket(p = {}) {
   if (/\.(ru|by|su)(\/|$)/.test(web)) return 'ru';
   if (/\.ch(\/|$)/.test(web)) return 'ch';
   if (/\.ae(\/|$)/.test(web)) return 'ae';
+  if (/\.(in|co\.in)(\/|$)/.test(web)) return 'in';
   if (/\.co\.uk(\/|$)/.test(web) || /\.uk(\/|$)/.test(web)) return 'uk';
   if (/\.it(\/|$)/.test(web)) return 'it';
 
@@ -32,6 +34,7 @@ export function inferMarket(p = {}) {
   if (/moscow|москва|russia|россия|petersburg|петербург/.test(loc)) return 'ru';
   if (/switzerland|swiss|lugano|zurich|geneva/.test(loc)) return 'ch';
   if (/dubai|abu dhabi|uae|emirates|doha|qatar|riyadh|saudi/.test(loc)) return 'ae';
+  if (/mumbai|delhi|new delhi|bengaluru|bangalore|jaipur|udaipur|kolkata|india/.test(loc)) return 'in';
   if (/london|uk|united kingdom|manchester|surrey/.test(loc)) return 'uk';
   if (/usa|united states|new york|california|miami|los angeles|texas/.test(loc)) return 'us';
   if (/como|milano|milan|italia|italy|varenna|bellagio|lecco|cernobbio|laglio|rome|roma|verona|venice|venezia/.test(loc)) return 'it';
