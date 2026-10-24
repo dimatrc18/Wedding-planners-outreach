@@ -395,6 +395,130 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
   return { sent, results };
 }
 
+/**
+ * Sends due Italian CEO outreach messages to queued Bus Partners.
+ * Respects Mon–Sat window, spaces out sends (max 1 per cron run = 10+ min interval),
+ * verifies email deliverability before sending, and logs transmission to Hostinger SMTP & IMAP.
+ */
+export async function sendDueBusPartners(db: any, settings: any, now = new Date(), { actor = 'cron', onlyPartnerId = null as string | null } = {}) {
+  if (!integrations().smtp) return { sent: 0, skipped: 'smtp_not_configured' };
+
+  let query = db.from('bus_partners').select('*');
+  if (onlyPartnerId) {
+    query = query.eq('id', onlyPartnerId);
+  } else {
+    query = query.eq('status', 'WANT_TO_CONTACT');
+  }
+
+  const { data: partners, error } = await query;
+  if (error || !partners || !partners.length) return { sent: 0, checked: 0 };
+
+  const due = partners.filter((p: any) => {
+    if (onlyPartnerId) return true;
+    const card = p.score_breakdown?.partner_card || {};
+    const sched = card.scheduled_at || p.scheduled_at;
+    if (!sched) return true;
+    return new Date(sched) <= now;
+  });
+
+  if (!due.length) return { sent: 0, checked: partners.length, message: 'none_due' };
+
+  // Prioritize lower relevance score if user requested least relevant first
+  due.sort((a: any, b: any) => (a.relevance_score || 70) - (b.relevance_score || 70));
+
+  let sent = 0;
+  // Send at most 1 per cron cycle to guarantee safe pacing (no blast)
+  const batch = due.slice(0, 1);
+
+  for (const partner of batch) {
+    const card = partner.score_breakdown?.partner_card || {};
+    const gate = core.canSendBusOutreach(partner, now, { allowUnverifiedOverride: Boolean(onlyPartnerId) });
+    if (!gate.ok && !onlyPartnerId) {
+      console.log(`Bus outreach paused for ${partner.name}: ${gate.message}`);
+      continue;
+    }
+
+    if (!partner.email) continue;
+
+    // 1. Live Pre-Send Verification via Triple-Tier Router
+    const ver = await verifyEmailUnified(partner.email, { db });
+    if (ver.resultcode === 6 || ver.resultcode === 5 || ver.status === 'invalid') {
+      const updatedCard = { ...card, email_status: 'invalid' };
+      await db.from('bus_partners').update({
+        status: 'TO_REVIEW',
+        score_breakdown: { ...(partner.score_breakdown || {}), partner_card: updatedCard },
+        updated_at: now.toISOString()
+      }).eq('id', partner.id);
+      continue;
+    }
+
+    // 2. Build personalized Italian CEO pitch
+    const draft = core.buildBusOutreachDraft(partner, 'T1_intro');
+    const fromEmail = env('OUTREACH_FROM_EMAIL') || settings?.sender?.email || 'dmitri@dorogo.eu';
+    const fromName = 'Dmitri | DOROGO Transfers';
+
+    try {
+      const sendResult = await sendMail({
+        fromName,
+        fromEmail,
+        replyTo: fromEmail,
+        to: partner.email,
+        subject: draft.subject,
+        text: draft.body,
+        lang: 'it',
+        footerStyle: settings?.email_footer_style || 'wordmark',
+      });
+
+      const sentAt = now.toISOString();
+      const messageId = sendResult?.messageId || `<sent-bus-${Date.now()}@dorogo.eu>`;
+
+      if (sendResult?.raw) {
+        await appendToSent(sendResult.raw).catch((e: Error) => console.error('appendToSent failed:', e.message));
+      }
+
+      const updatedCard = {
+        ...card,
+        outreach_stage: 't1_sent',
+        last_outreach_at: sentAt,
+        last_message_id: messageId,
+        email_status: ver.resultcode === 1 ? 'verified' : (ver.resultcode === 2 ? 'catch_all' : 'mx_ok'),
+        verification: ver,
+      };
+
+      await db.from('bus_partners').update({
+        status: 'CONTACTED',
+        score_breakdown: { ...(partner.score_breakdown || {}), partner_card: updatedCard },
+        updated_at: sentAt,
+      }).eq('id', partner.id);
+
+      await logEvent(db, 'bus_partner_contacted', {
+        partner_id: partner.id,
+        name: partner.name,
+        email: partner.email,
+        message_id: messageId,
+        score: partner.relevance_score,
+      }, null, actor);
+
+      await tgSend(
+        `🚌 <b>Bus Partner CEO Outreach Sent</b>\n\n` +
+        `Operator: <b>${tgEscape(partner.name)}</b> (${tgEscape(partner.base_city)})\n` +
+        `Email: <code>${tgEscape(partner.email)}</code>\n` +
+        `Relevance Score: <b>${partner.relevance_score}/100</b>\n` +
+        `Verification: <b>${ver.provider} (${ver.result})</b>\n` +
+        `Sent at: ${sentAt.slice(0, 16)}`,
+      );
+
+      sent++;
+      return { sent: 1, partner_id: partner.id, name: partner.name, email: partner.email, message_id: messageId };
+    } catch (sendErr) {
+      console.error(`Failed to send bus outreach to ${partner.name}:`, (sendErr as Error).message);
+      throw sendErr;
+    }
+  }
+
+  return { sent, due: due.length };
+}
+
 // ---------------- Inbox & Conversational AI ----------------
 export function formatThreadHistory(list: any[], excludeInboundId: string | null = null) {
   const hasSentOut = list.some((t: any) => t.direction === 'out' && t.state === 'sent');

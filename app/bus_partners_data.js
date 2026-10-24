@@ -593,6 +593,8 @@ export function hydratePartnerCard(p) {
     (p.status === 'REJECTED' || p.status === 'NOT_RELEVANT') ? 'closed' : 'to_check'
   );
 
+  const scheduled_at = p.scheduled_at || card.scheduled_at || null;
+
   const nextCard = {
     ...card,
     fleet_segment,
@@ -604,6 +606,7 @@ export function hydratePartnerCard(p) {
     client_notes,
     email_status,
     outreach_stage,
+    scheduled_at,
     replied_at: p.replied_at || card.replied_at || (isMoveolux ? '2026-10-20T10:00:00Z' : null),
     last_outreach_at: p.last_outreach_at || card.last_outreach_at || null,
     user_set_status: Boolean(p.user_set_status || card.user_set_status),
@@ -620,6 +623,7 @@ export function hydratePartnerCard(p) {
     client_notes,
     email_status,
     outreach_stage,
+    scheduled_at,
     replied_at: nextCard.replied_at,
     last_outreach_at: nextCard.last_outreach_at,
     user_set_status: nextCard.user_set_status,

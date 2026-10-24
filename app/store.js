@@ -11,7 +11,8 @@ import {
   saveExcludedBusPartners,
   addExcludedBusPartner,
   removeExcludedBusPartner,
-  isBusPartnerExcluded
+  isBusPartnerExcluded,
+  hydratePartnerCard
 } from './bus_partners_data.js';
 
 export const S = {
@@ -64,7 +65,10 @@ function liveBackend() {
       let busPartners = [];
       try {
         const { data, error } = await sb.from('bus_partners').select('*').order('relevance_score', { ascending: false });
-        if (!error && data && data.length) busPartners = data;
+        if (!error && data && data.length) {
+          busPartners = data.map(hydratePartnerCard);
+          saveStoredBusPartners(busPartners);
+        }
       } catch (_) {}
       if (!busPartners.length) busPartners = loadStoredBusPartners();
       return { prospects: check(p), touches: check(t), opps: check(o), templates: check(tpl), settings: check(s)?.data || {}, events: check(ev), busPartners };
@@ -274,11 +278,13 @@ function syncBusPartnerCardFields(merged) {
     outreach_stage: merged.outreach_stage ?? merged.score_breakdown?.partner_card?.outreach_stage ?? 'to_check',
     replied_at: merged.replied_at ?? merged.score_breakdown?.partner_card?.replied_at ?? null,
     last_outreach_at: merged.last_outreach_at ?? merged.score_breakdown?.partner_card?.last_outreach_at ?? null,
+    scheduled_at: merged.scheduled_at ?? merged.score_breakdown?.partner_card?.scheduled_at ?? null,
     user_set_status: Boolean(merged.user_set_status ?? merged.score_breakdown?.partner_card?.user_set_status),
   };
   return {
     ...merged,
     ...card,
+    scheduled_at: card.scheduled_at,
     score_breakdown: {
       ...(merged.score_breakdown || { discretion_unbranded: 20, fleet_luxury: 18, territory_permits: 15, corporate_sla: 15 }),
       partner_card: card,

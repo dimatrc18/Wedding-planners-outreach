@@ -429,15 +429,45 @@ export function canSendBusOutreach(partner = {}, now = new Date(), opts = {}) {
 
 /**
  * Computes the next valid Mon–Sat send slot (skipping Sunday unless replying to a Sunday inbound).
+ * Spaces out operators across weekdays (max 4 per morning window, spaced by 25–30 mins),
+ * mirroring the venue outreach cadence.
  */
 export function nextBusSendSlot(now = new Date(), indexOffset = 0, opts = {}) {
-  const base = new Date((now instanceof Date ? now : new Date(now)).getTime() + indexOffset * 8 * 60000);
-  const check = canSendBusOutreach({ email: 'ok@ok.it', email_status: 'verified' }, base, opts);
-  if (check.ok) return base;
-  // If Sunday, advance to Monday 09:00 Europe/Rome
-  const nextMon = new Date(base.getTime() + 24 * 3600 * 1000);
-  nextMon.setUTCHours(8, 0 + (indexOffset * 7) % 50, 0, 0);
-  return nextMon;
+  const d = now instanceof Date ? new Date(now.getTime()) : new Date(now);
+  const maxPerDay = 4;
+  const dayShift = Math.floor(indexOffset / maxPerDay);
+  const slotInDay = indexOffset % maxPerDay;
+
+  let cur = new Date(d.getTime());
+  const romeDow = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Rome', weekday: 'short' }).format(cur);
+  const isWeekend = romeDow === 'Sun' || (romeDow === 'Sat' && cur.getUTCHours() >= 12);
+
+  // Advance to Monday if on weekend
+  if (isWeekend) {
+    while (new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Rome', weekday: 'short' }).format(cur) !== 'Mon') {
+      cur = new Date(cur.getTime() + 24 * 3600 * 1000);
+    }
+  }
+
+  // Shift by weekdays (skipping Sundays)
+  let addedDays = 0;
+  while (addedDays < dayShift) {
+    cur = new Date(cur.getTime() + 24 * 3600 * 1000);
+    const dayName = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Rome', weekday: 'short' }).format(cur);
+    if (dayName !== 'Sun') {
+      addedDays++;
+    }
+  }
+
+  // 09:00, 09:25, 09:50, 10:15 Rome morning window
+  const minuteOffsets = [0, 25, 50, 75];
+  const mins = minuteOffsets[slotInDay] || 0;
+  cur.setUTCHours(7, mins, 0, 0); // ~08:00–09:00 Rome time
+  if (cur <= d) {
+    cur = new Date(cur.getTime() + 24 * 3600 * 1000);
+    cur.setUTCHours(7, mins, 0, 0);
+  }
+  return cur;
 }
 
 /**
@@ -450,7 +480,7 @@ export function nextBusSendSlot(now = new Date(), indexOffset = 0, opts = {}) {
 export function buildBusOutreachDraft(partner = {}, stepKey = 'T1_intro') {
   const rawName = String(partner.name || 'Partner').trim();
   const cleanName = rawName.replace(/\b(S\.?r\.?l\.?|S\.?p\.?A\.?|S\.?n\.?c\.?|Autonoleggio|Autoservizi)\b/gi, '').replace(/\s+/g, ' ').trim() || rawName;
-  const city = String(partner.base_city || 'Lago di Como & Milano').split(/[\/,]/)[0].trim();
+  const city = String(partner.base_city || 'Lago di Como & Milano').split(/[\/,]/)[0].replace(/[\(\)].*$/, '').trim() || 'Lago di Como';
   const seg = inferBusSegment(partner);
   const segmentPhrase = seg === 'luxury'
     ? 'minibus e pullman Luxury VIP (senza scritte / total black)'
@@ -1093,9 +1123,9 @@ export function buildBusSankeyFlow(partners = [], selectedNodes = {}) {
       const st = p.status || 'TO_REVIEW';
       if (st === 'APPROVED_PARTNER') return { key: 'status:APPROVED_PARTNER', label: '🤝 4. Approved Partner', tone: 'ok', order: 1 };
       if (st === 'CONTACTED') return { key: 'status:CONTACTED', label: '✉️ 3. Contacted', tone: 'info', order: 2 };
-      if (st === 'WANT_TO_CONTACT') return { key: 'status:WANT_TO_CONTACT', label: '📞 2. Want to Contact', tone: 'purple', order: 3 };
+      if (st === 'WANT_TO_CONTACT') return { key: 'status:WANT_TO_CONTACT', label: '⏳ 2. In Queue (Spaced Mon–Sat)', tone: 'purple', order: 3 };
       if (st === 'REJECTED' || st === 'NOT_RELEVANT') return { key: 'status:CLOSED', label: '🚫 Closed / Disqualified', tone: 'bad', order: 5 };
-      return { key: 'status:TO_REVIEW', label: '⏳ 1. To Check', tone: 'warn', order: 4 };
+      return { key: 'status:TO_REVIEW', label: '🔍 1. To Check', tone: 'warn', order: 4 };
     }
     // colIdx === 3: Deliverables & Weekly 10-Reply Goal
     const stage = getBusOutreachStage(p);
@@ -1107,7 +1137,7 @@ export function buildBusSankeyFlow(partners = [], selectedNodes = {}) {
       return { key: 'goal:waiting_reply', label: '📨 Sent · Waiting Reply', tone: 'info', order: 2 };
     }
     if (p.status === 'WANT_TO_CONTACT' || stage === 'ready') {
-      return { key: 'goal:ready_pitch', label: '🚀 Ready to Pitch (Mon–Sat)', tone: 'purple', order: 3 };
+      return { key: 'goal:ready_pitch', label: '⏳ In Queue (Mon–Sat Spaced)', tone: 'purple', order: 3 };
     }
     if (p.status === 'REJECTED' || p.status === 'NOT_RELEVANT' || stage === 'closed') {
       return { key: 'goal:closed', label: '🚫 Skipped / Not Local', tone: 'bad', order: 5 };

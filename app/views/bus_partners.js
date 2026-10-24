@@ -1664,6 +1664,7 @@ export function render(el) {
         <h1>🚌 Bus & Minibus Partner Outreach</h1>
       </div>
       <div class="row" style="gap:8px;flex-wrap:wrap">
+        <button class="btn sm" id="btn-ceo-outreach" style="background:#7c3aed;color:#fff;border-color:#6d28d9;font-weight:700" title="Manage Italian CEO outreach queue and sending">✉️ CEO Outreach & Queue (${wantToContactCount})</button>
         <button class="btn sm" id="btn-scout-url" style="color:var(--gold-ink);border-color:var(--gold)" title="Evaluate website through 100-Point Gate">⚡ Scout URL</button>
         <button class="btn sm" id="btn-scout-market" style="background:var(--gold-soft);color:var(--ink);border-color:var(--gold-strong);font-weight:600" title="Auto-scout operators by location, score & vehicle types">🔍 Auto-Scout Fleet</button>
         <button class="btn ghost sm" id="btn-view-excluded" style="color:var(--text-3);border-color:var(--border);display:inline-flex;align-items:center;gap:4px" title="View operators permanently blocked from discovery and searches">
@@ -1681,14 +1682,19 @@ export function render(el) {
           <span class="ci">Luxury VIP & Standard GT (${verifiedEmailsCount} MX verified)</span>
         </div>
         <div class="kpi">
-          <span class="label">Want to Contact (Ready)</span>
-          <span class="val" style="color:#6d28d9">${wantToContactCount}</span>
-          <span class="ci">Queued for Mon–Sat Italian CEO pitch</span>
+          <span class="label">1. To Check</span>
+          <span class="val" style="color:#d97706">${toReviewCount}</span>
+          <span class="ci">Discovered & awaiting review</span>
         </div>
         <div class="kpi">
-          <span class="label">Contacted (In Sequence)</span>
+          <span class="label">2. In Queue (Ready)</span>
+          <span class="val" style="color:#6d28d9">${wantToContactCount}</span>
+          <span class="ci">Spaced Mon–Sat (max 4/day, 25m offset)</span>
+        </div>
+        <div class="kpi">
+          <span class="label">3. Contacted / Sent</span>
           <span class="val" style="color:#0284c7">${contactedCount}</span>
-          <span class="ci">Email 1 / Follow-up / WA sent</span>
+          <span class="ci">Sent via Hostinger SMTP</span>
         </div>
         <div class="kpi" style="border-left:3px solid #10b981;padding-left:12px">
           <span class="label">🎯 Replied (Models & Rates)</span>
@@ -1697,7 +1703,7 @@ export function render(el) {
         </div>
         <div class="kpi">
           <span class="label">Approved Partners</span>
-          <span class="val" style="color:#d97706">${activePartners}</span>
+          <span class="val" style="color:#15803d">${activePartners}</span>
           <span class="ci">Standby/hourly rates & WA confirmed</span>
         </div>
       </div>
@@ -1779,9 +1785,9 @@ export function render(el) {
           <button class="chip clickable ${activeFilter === 'all' && segmentFilter === 'all' && statusFilter === 'all' && vehicleFilter === 'all' && cityFilter === 'all' && !searchQ && !hasFlowSel ? 'active' : 'outline'}" data-filter="all" style="${activeFilter === 'all' && segmentFilter === 'all' && statusFilter === 'all' && vehicleFilter === 'all' && cityFilter === 'all' && !searchQ && !hasFlowSel ? 'background:#0f172a;color:#fff;border-color:#0f172a;font-weight:700' : ''}">All (${totalDiscovered})</button>
           <button class="chip clickable ${segmentFilter === 'luxury' ? 'active' : 'outline'}" data-segment="luxury" style="${segmentFilter === 'luxury' ? 'background:#d97706;color:#fff;border-color:#d97706;font-weight:700' : 'border-color:#f59e0b;color:#b45309;background:#fffbeb;font-weight:600'}" title="Filter operators with Luxury VIP buses allocated (V-Class, Sprinter VIP/Lux, Limobus)">✨ Luxury VIP</button>
           <button class="chip clickable ${segmentFilter === 'standard' ? 'active' : 'outline'}" data-segment="standard" style="${segmentFilter === 'standard' ? 'background:#2563eb;color:#fff;border-color:#2563eb;font-weight:700' : 'border-color:#93c5fd;color:#1d4ed8;background:#eff6ff;font-weight:600'}" title="Filter operators with Standard GT / Midibus fleet allocated (24–56 pax)">🚌 Standard GT</button>
-          <button class="chip clickable ${statusFilter === 'TO_REVIEW' ? 'active' : 'outline'}" data-filter="to_review" style="${statusFilter === 'TO_REVIEW' ? 'background:#d97706;color:#fff;border-color:#d97706;font-weight:700' : 'border-color:#fde68a;color:#b45309;background:#fffbeb'}">⏳ To Check (${toReviewCount})</button>
-          <button class="chip clickable ${statusFilter === 'WANT_TO_CONTACT' ? 'active' : 'outline'}" data-filter="want_to_contact" style="${statusFilter === 'WANT_TO_CONTACT' ? 'background:#6d28d9;color:#fff;border-color:#6d28d9;font-weight:700' : 'border-color:#ddd6fe;color:#6d28d9;background:#f5f3ff;font-weight:600'}">📞 Want to Contact (${wantToContactCount})</button>
-          <button class="chip clickable ${statusFilter === 'CONTACTED' ? 'active' : 'outline'}" data-filter="contacted" style="${statusFilter === 'CONTACTED' ? 'background:#0284c7;color:#fff;border-color:#0284c7;font-weight:700' : 'border-color:#bae6fd;color:#0369a1;background:#f0f9ff;font-weight:600'}">✉️ Contacted (${contactedCount})</button>
+          <button class="chip clickable ${statusFilter === 'TO_REVIEW' ? 'active' : 'outline'}" data-filter="to_review" style="${statusFilter === 'TO_REVIEW' ? 'background:#d97706;color:#fff;border-color:#d97706;font-weight:700' : 'border-color:#fde68a;color:#b45309;background:#fffbeb'}">⏳ 1. To Check (${toReviewCount})</button>
+          <button class="chip clickable ${statusFilter === 'WANT_TO_CONTACT' ? 'active' : 'outline'}" data-filter="want_to_contact" style="${statusFilter === 'WANT_TO_CONTACT' ? 'background:#6d28d9;color:#fff;border-color:#6d28d9;font-weight:700' : 'border-color:#ddd6fe;color:#6d28d9;background:#f5f3ff;font-weight:600'}">📋 2. In Queue (${wantToContactCount})</button>
+          <button class="chip clickable ${statusFilter === 'CONTACTED' ? 'active' : 'outline'}" data-filter="contacted" style="${statusFilter === 'CONTACTED' ? 'background:#0284c7;color:#fff;border-color:#0284c7;font-weight:700' : 'border-color:#bae6fd;color:#0369a1;background:#f0f9ff;font-weight:600'}">✉️ 3. Contacted (${contactedCount})</button>
           <button class="chip clickable ${activeFilter === 'replied_rates' ? 'active' : 'outline'}" data-filter="replied_rates" style="${activeFilter === 'replied_rates' ? 'background:#059669;color:#fff;border-color:#059669;font-weight:700' : 'border-color:#10b981;color:#059669;background:#ecfdf5;font-weight:700'}">💶 Replied / Rates (${repliedOrRatesCount}/10)</button>
           <button class="chip clickable ${statusFilter === 'APPROVED_PARTNER' ? 'active' : 'outline'}" data-filter="approved" style="${statusFilter === 'APPROVED_PARTNER' ? 'background:#15803d;color:#fff;border-color:#15803d;font-weight:700' : 'border-color:#bbf7d0;color:#15803d;background:#f0fdf4;font-weight:600'}">🤝 Approved (${activePartners})</button>
         </div>
@@ -1975,10 +1981,35 @@ export function render(el) {
                     <select class="sm bus-status-select" data-id="${attr(p.id)}" style="padding:2px 5px;border-radius:6px;font-size:.73rem;width:100%;height:26px;line-height:1.1;cursor:pointer;white-space:nowrap;${getStatusBadgeStyle(p.status)}">
                       ${core.BUS_STATUSES.map((st) => `<option value="${st.key}" ${p.status === st.key ? 'selected' : ''} style="background:var(--surface);color:var(--ink)">${st.label}</option>`).join('')}
                     </select>
-                    <div class="row nowrap" style="gap:4px;align-items:center;justify-content:space-between">
-                      <button class="btn sm ghost" data-act="ceo-pitch" data-id="${attr(p.id)}" style="padding:1px 6px;font-size:.69rem;color:#1d4ed8;border-color:rgba(37,99,235,0.3);background:rgba(37,99,235,0.06);font-weight:600;width:100%;justify-content:center" title="Open short CEO Italian Email / WhatsApp Outreach for ${attr(p.name)}">
-                        ✉️ CEO Pitch (IT)
-                      </button>
+                    ${p.status === 'WANT_TO_CONTACT'
+                      ? `<div class="tiny" style="color:#7c3aed;font-weight:700;font-size:.68rem;background:rgba(124,58,237,0.08);padding:1px 5px;border-radius:4px;border:1px solid rgba(124,58,237,0.25);text-align:center" title="${p.scheduled_at ? 'Scheduled for ' + new Date(p.scheduled_at).toLocaleString('en-GB') : 'In Queue'}">
+                          ⏳ ${p.scheduled_at ? new Date(p.scheduled_at).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) + ' ' + new Date(p.scheduled_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : 'Mon 09:00'}
+                         </div>`
+                      : p.status === 'CONTACTED'
+                      ? `<div class="tiny" style="color:#0284c7;font-weight:700;font-size:.68rem;background:rgba(2,132,199,0.08);padding:1px 5px;border-radius:4px;border:1px solid rgba(2,132,199,0.25);text-align:center" title="${p.last_outreach_at ? 'Sent at ' + new Date(p.last_outreach_at).toLocaleString('en-GB') : 'Contacted'}">
+                          ✉️ Sent: ${p.last_outreach_at ? new Date(p.last_outreach_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Yes'}
+                         </div>`
+                      : ''
+                    }
+                    <div class="row nowrap" style="gap:3px;align-items:center;justify-content:space-between">
+                      ${p.status === 'TO_REVIEW'
+                        ? `<button class="btn sm ghost" data-act="quick-queue" data-id="${attr(p.id)}" style="padding:1px 5px;font-size:.68rem;color:#6d28d9;border-color:rgba(109,40,217,0.3);background:rgba(109,40,217,0.06);font-weight:600;flex:1;justify-content:center" title="Add ${attr(p.name)} to Mon–Sat queue">
+                            ➕ Queue
+                           </button>
+                           <button class="btn sm ghost" data-act="ceo-pitch" data-id="${attr(p.id)}" style="padding:1px 5px;font-size:.68rem;color:#1d4ed8;border-color:rgba(37,99,235,0.3);background:rgba(37,99,235,0.06);font-weight:600;flex:1;justify-content:center" title="Open short CEO Italian Email / WhatsApp Outreach for ${attr(p.name)}">
+                            ✉️ Pitch
+                           </button>`
+                        : p.status === 'WANT_TO_CONTACT'
+                        ? `<button class="btn sm ghost" data-act="quick-send" data-id="${attr(p.id)}" style="padding:1px 5px;font-size:.68rem;color:#059669;border-color:rgba(5,150,105,0.3);background:rgba(5,150,105,0.06);font-weight:700;flex:1;justify-content:center" title="Send live email now via Hostinger SMTP">
+                            🚀 Send
+                           </button>
+                           <button class="btn sm ghost" data-act="ceo-pitch" data-id="${attr(p.id)}" style="padding:1px 5px;font-size:.68rem;color:#1d4ed8;border-color:rgba(37,99,235,0.3);background:rgba(37,99,235,0.06);font-weight:600;flex:1;justify-content:center" title="Open short CEO Italian Email / WhatsApp Outreach for ${attr(p.name)}">
+                            ✉️ Pitch
+                           </button>`
+                        : `<button class="btn sm ghost" data-act="ceo-pitch" data-id="${attr(p.id)}" style="padding:1px 6px;font-size:.69rem;color:#1d4ed8;border-color:rgba(37,99,235,0.3);background:rgba(37,99,235,0.06);font-weight:600;width:100%;justify-content:center" title="Open short CEO Italian Email / WhatsApp Outreach for ${attr(p.name)}">
+                            ✉️ CEO Pitch (IT)
+                           </button>`
+                      }
                     </div>
                   </div>
                 </td>
@@ -2191,8 +2222,89 @@ export function render(el) {
       sel.addEventListener('change', async (e) => {
         const id = e.target.dataset.id;
         const newStatus = e.target.value;
-        await updateBusPartner(id, { status: newStatus });
-        toast(newStatus === 'NOT_RELEVANT' ? 'Marked Not Relevant (Score set to 0)' : `Status updated to ${newStatus}`);
+        const partner = (S.busPartners || []).find((x) => x.id === id);
+        if (newStatus === 'WANT_TO_CONTACT') {
+          const existingQueued = (S.busPartners || []).filter((p) => p.status === 'WANT_TO_CONTACT' && p.id !== id);
+          const nextSlot = core.nextBusSendSlot(new Date(), existingQueued.length);
+          await updateBusPartner(id, { 
+            status: 'WANT_TO_CONTACT', 
+            scheduled_at: nextSlot.toISOString(),
+            outreach_stage: 'ready'
+          });
+          toast(`Added to queue · Scheduled for ${nextSlot.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} ${nextSlot.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`, 'ok');
+        } else if (newStatus === 'TO_REVIEW') {
+          await updateBusPartner(id, { 
+            status: 'TO_REVIEW', 
+            scheduled_at: null,
+            outreach_stage: 'to_check'
+          });
+          toast('Moved back to To Check', 'ok');
+        } else {
+          await updateBusPartner(id, { status: newStatus });
+          toast(newStatus === 'NOT_RELEVANT' ? 'Marked Not Relevant (Score set to 0)' : `Status updated to ${newStatus}`);
+        }
+        paint();
+      });
+    });
+
+    // Quick Queue single operator
+    el.querySelectorAll('[data-act="quick-queue"]').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = e.currentTarget.dataset.id;
+        const partner = (S.busPartners || []).find((x) => x.id === id);
+        if (!partner) return;
+        btn.disabled = true;
+        btn.textContent = '⏳...';
+        try {
+          const res = await api('queue_bus_partners', { partner_ids: [id] });
+          if (res && res.results && res.results[0]) {
+            const r = res.results[0];
+            await updateBusPartner(id, {
+              status: r.email_status === 'invalid' ? 'TO_REVIEW' : 'WANT_TO_CONTACT',
+              outreach_stage: r.email_status === 'invalid' ? 'to_check' : 'ready',
+              scheduled_at: r.scheduled_at,
+              email_status: r.email_status,
+            });
+            toast(`Added ${partner.name} to Mon–Sat queue (${r.scheduled_at ? new Date(r.scheduled_at).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) + ' ' + new Date(r.scheduled_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : 'Mon 09:00'})`, 'ok');
+          }
+        } catch (err) {
+          toast(`Queue failed: ${err.message}`, 'bad');
+        }
+        paint();
+      });
+    });
+
+    // Quick Send single operator live via Hostinger SMTP
+    el.querySelectorAll('[data-act="quick-send"]').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = e.currentTarget.dataset.id;
+        const partner = (S.busPartners || []).find((x) => x.id === id);
+        if (!partner) return;
+        if (!partner.email) {
+          toast(`No email on file for ${partner.name}`, 'warn');
+          return;
+        }
+        btn.disabled = true;
+        btn.textContent = '🚀...';
+        try {
+          const res = await api('send_bus_partner', { partner_id: id });
+          if (res && res.sent > 0) {
+            await updateBusPartner(id, {
+              status: 'CONTACTED',
+              outreach_stage: 't1_sent',
+              last_outreach_at: new Date().toISOString(),
+              email_status: 'verified',
+              scheduled_at: null,
+            });
+            toast(`🚀 Sent Italian CEO pitch to ${partner.name} (${partner.email}) via Hostinger SMTP! Saved to Sent folder.`, 'ok');
+          } else {
+            toast(`Send blocked: ${res?.message || 'Check email or deliverability'}`, 'warn');
+          }
+        } catch (err) {
+          toast(`Send failed: ${err.message}`, 'bad');
+        }
         paint();
       });
     });
@@ -2676,12 +2788,17 @@ export function render(el) {
           <button type="button" class="btn sm" id="btn-ceo-wa" style="background:#059669;color:#fff;border:none;font-weight:600">💬 Send on WhatsApp</button>
           <button type="button" class="btn sm ghost" id="btn-ceo-mailto" style="color:var(--series-1);border-color:var(--series-1)">✉️ Open in Mail + Mark Contacted</button>
         </div>
-        <div class="row" style="gap:8px">
-          <button type="button" class="btn sm" id="btn-ceo-batch" style="background:var(--gold-soft);color:var(--gold-ink);border-color:var(--gold-strong);font-weight:700" title="Verify & queue Mon–Sat outreach to all Want to Contact / Top-Tier operators">
-            ⚡ Queue Batch (${readyBatch.length})
+        <div class="row" style="gap:8px;align-items:center">
+          <button type="button" class="btn sm" id="btn-ceo-queue-single" style="background:#ede9fe;color:#6d28d9;border-color:#ddd6fe;font-weight:700" title="Add this operator to Mon–Sat queue">
+            ⏳ Add to Queue
           </button>
-          <button type="button" class="btn primary sm" id="btn-ceo-send-single" style="font-weight:700">
-            🚀 Send / Log Step
+          ${readyBatch.length > 0 ? `
+            <button type="button" class="btn sm" id="btn-ceo-batch" style="background:var(--gold-soft);color:var(--gold-ink);border-color:var(--gold-strong);font-weight:700" title="Verify & queue Mon–Sat outreach to all Want to Contact operators">
+              ⚡ Queue Batch (${readyBatch.length})
+            </button>
+          ` : ''}
+          <button type="button" class="btn primary sm" id="btn-ceo-send-single" style="font-weight:700" title="Immediately send real email via Hostinger SMTP">
+            🚀 Send Now (Hostinger SMTP)
           </button>
         </div>
       </div>
@@ -2708,8 +2825,22 @@ export function render(el) {
 
       const gate = core.canSendBusOutreach(p, new Date(), { isReplyToSundayInbound: isSundayReply, allowUnverifiedOverride: true });
       const gateEl = backdrop.querySelector('#ceo-gate-status');
-      gateEl.textContent = gate.ok ? '✓ Allowed to send right now (Mon–Sat window)' : `⏳ ${gate.message || 'Queued for next Mon–Sat slot'}`;
-      gateEl.style.color = gate.ok ? '#059669' : '#d97706';
+      if (p.status === 'WANT_TO_CONTACT' && p.scheduled_at) {
+        const schedDate = new Date(p.scheduled_at);
+        gateEl.textContent = `⏳ Queued for ${schedDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} ${schedDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} (Mon–Sat schedule)`;
+        gateEl.style.color = '#7c3aed';
+      } else if (p.status === 'CONTACTED') {
+        gateEl.textContent = `✉️ Already contacted on ${p.last_outreach_at ? new Date(p.last_outreach_at).toLocaleDateString('en-GB') : 'record'}`;
+        gateEl.style.color = '#0284c7';
+      } else {
+        gateEl.textContent = gate.ok ? '✓ Allowed to send right now (Mon–Sat window)' : `⏳ ${gate.message || 'Queued for next Mon–Sat slot'}`;
+        gateEl.style.color = gate.ok ? '#059669' : '#d97706';
+      }
+
+      const qBtn = backdrop.querySelector('#btn-ceo-queue-single');
+      if (qBtn) {
+        qBtn.style.display = p.status === 'WANT_TO_CONTACT' ? 'none' : 'inline-flex';
+      }
     };
 
     backdrop.querySelector('#ceo-partner-select').addEventListener('change', refreshPreview);
@@ -2759,65 +2890,101 @@ export function render(el) {
       paint();
     });
 
+    // Queue Single Operator from Modal
+    const queueSingleBtn = backdrop.querySelector('#btn-ceo-queue-single');
+    if (queueSingleBtn) {
+      queueSingleBtn.addEventListener('click', async () => {
+        const p = getSelectedPartner();
+        queueSingleBtn.disabled = true;
+        queueSingleBtn.textContent = '⏳ Queuing...';
+        try {
+          const res = await api('queue_bus_partners', { partner_ids: [p.id] });
+          if (res && res.results && res.results[0]) {
+            const r = res.results[0];
+            await updateBusPartner(r.id, {
+              status: r.email_status === 'invalid' ? 'TO_REVIEW' : 'WANT_TO_CONTACT',
+              outreach_stage: r.email_status === 'invalid' ? 'to_check' : 'ready',
+              scheduled_at: r.scheduled_at,
+              email_status: r.email_status,
+            });
+            toast(`Added ${p.name} to Mon–Sat queue (${r.scheduled_at ? new Date(r.scheduled_at).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) + ' ' + new Date(r.scheduled_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : 'Mon 09:00'})`, 'ok');
+            refreshPreview();
+            paint();
+          }
+        } catch (err) {
+          toast(`Queue failed: ${err.message}`, 'bad');
+          queueSingleBtn.disabled = false;
+          queueSingleBtn.textContent = '⏳ Add to Queue';
+        }
+      });
+    }
+
+    // Send Real Live Email via Hostinger SMTP
     backdrop.querySelector('#btn-ceo-send-single').addEventListener('click', async () => {
       const p = getSelectedPartner();
-      isSundayReply = backdrop.querySelector('#ceo-sunday-reply-chk').checked;
-      // 1. Verify email MX first if unknown
-      if (!['verified', 'mx_ok'].includes(p.email_status)) {
-        const vRes = await findAndVerifyPartnerEmail(p.id, null, null, { silent: true });
-        if (!vRes) {
-          toast(`Blocked: "${p.name}" has an unreachable/invalid email. Protected from bounce/spam.`, 'bad');
-          return;
-        }
+      if (!p.email) {
+        toast(`No email on file for ${p.name}`, 'warn');
+        return;
       }
-      const updatedP = (S.busPartners || []).find((x) => x.id === p.id) || p;
-      const gate = core.canSendBusOutreach(updatedP, new Date(), { isReplyToSundayInbound: isSundayReply });
-      const slot = core.nextBusSendSlot(new Date(), 0, { isReplyToSundayInbound: isSundayReply });
-      const stageKey = currentStep === 'T2_followup' ? 't2_sent' : 't1_sent';
-      const stamp = gate.ok
-        ? `Sent ${currentStep} (IT CEO pitch) on ${new Date().toLocaleDateString('en-GB')}`
-        : `Scheduled ${currentStep} for Mon ${slot.toLocaleDateString('en-GB')} 09:00 (Sunday pause active)`;
-
-      await updateBusPartner(updatedP.id, {
-        status: updatedP.status === 'APPROVED_PARTNER' ? 'APPROVED_PARTNER' : 'CONTACTED',
-        outreach_stage: stageKey,
-        last_outreach_at: slot.toISOString(),
-      });
-      toast(gate.ok ? `🚀 Sent Italian CEO pitch to ${updatedP.name} (${updatedP.email})` : `📅 Sunday pause active: Queued ${updatedP.name} for Monday 09:00`, 'ok');
-      close();
-      paint();
-    });
-
-    backdrop.querySelector('#btn-ceo-batch').addEventListener('click', async (e) => {
-      const btn = e.currentTarget;
+      const btn = backdrop.querySelector('#btn-ceo-send-single');
       btn.disabled = true;
-      isSundayReply = backdrop.querySelector('#ceo-sunday-reply-chk').checked;
-      let queued = 0;
-      let blocked = 0;
+      btn.textContent = '🚀 Sending via Hostinger SMTP...';
 
-      for (let i = 0; i < readyBatch.length; i++) {
-        const item = readyBatch[i];
-        btn.textContent = `⏳ Checking & Queuing ${i + 1}/${readyBatch.length}...`;
-        const mxStatus = await verifyDomainMxRecord(item.email);
-        if (mxStatus === 'no_mx' || mxStatus === 'invalid') {
-          await updateBusPartner(item.id, { email_status: 'invalid' });
-          blocked++;
-          continue;
+      try {
+        const res = await api('send_bus_partner', { partner_id: p.id });
+        if (res && res.sent > 0) {
+          await updateBusPartner(p.id, {
+            status: 'CONTACTED',
+            outreach_stage: currentStep === 'T2_followup' ? 't2_sent' : 't1_sent',
+            last_outreach_at: new Date().toISOString(),
+            email_status: 'verified',
+            scheduled_at: null,
+          });
+          toast(`🚀 Sent Italian CEO pitch to ${p.name} (${p.email}) via Hostinger SMTP! Saved to Sent folder.`, 'ok');
+          close();
+          paint();
+        } else {
+          toast(`Send blocked: ${res?.message || 'Check email or deliverability'}`, 'warn');
+          btn.disabled = false;
+          btn.textContent = '🚀 Send Now (Hostinger SMTP)';
         }
-        const slot = core.nextBusSendSlot(new Date(), queued, { isReplyToSundayInbound: isSundayReply });
-        await updateBusPartner(item.id, {
-          email_status: 'verified',
-          status: item.status === 'APPROVED_PARTNER' ? 'APPROVED_PARTNER' : 'CONTACTED',
-          outreach_stage: 't1_sent',
-          last_outreach_at: slot.toISOString(),
-        });
-        queued++;
+      } catch (err) {
+        toast(`Send failed: ${err.message}`, 'bad');
+        btn.disabled = false;
+        btn.textContent = '🚀 Send Now (Hostinger SMTP)';
       }
-
-      toast(`🚀 Queued ${queued} verified operators on Mon–Sat schedule (${blocked} blocked by MX gate).`, 'ok');
-      close();
-      paint();
     });
+
+    // Queue Batch of Want-to-Contact Operators
+    const batchBtn = backdrop.querySelector('#btn-ceo-batch');
+    if (batchBtn) {
+      batchBtn.addEventListener('click', async (e) => {
+        const btn = e.currentTarget;
+        btn.disabled = true;
+        btn.textContent = `⏳ Verifying & Queuing ${readyBatch.length}...`;
+
+        try {
+          const res = await api('queue_bus_partners', { partner_ids: readyBatch.map((x) => x.id) });
+          if (res && res.results) {
+            for (const r of res.results) {
+              await updateBusPartner(r.id, {
+                status: r.email_status === 'invalid' ? 'TO_REVIEW' : 'WANT_TO_CONTACT',
+                outreach_stage: r.email_status === 'invalid' ? 'to_check' : 'ready',
+                scheduled_at: r.scheduled_at,
+                email_status: r.email_status,
+              });
+            }
+            toast(`📅 Queued ${res.queued} operators across Mon–Sat (max 4/day, 25m offset) with 3-tier API verification!`, 'ok');
+            close();
+            paint();
+          }
+        } catch (err) {
+          toast(`Queue failed: ${err.message}`, 'bad');
+          btn.disabled = false;
+          btn.textContent = `⚡ Queue Batch (${readyBatch.length})`;
+        }
+      });
+    }
   }
 
   // --- Delete & Exclude Single Operator Modal ---

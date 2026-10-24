@@ -6,7 +6,7 @@ import { verifySmtp, sendMail } from '../_shared/mail.ts';
 import { tgSend } from '../_shared/telegram.ts';
 import { gemini, checkHook } from '../_shared/ai.ts';
 import { verifyEmailUnified, getZeroBounceBalance, getDebounceBalance, getMillionVerifierBalance, checkAndSendMonthlyVerificationAudit } from '../_shared/verify.ts';
-import { draftDueSteps, sendDue, syncInbox, sendDigest, approveTouch, fetchJinaSignals, autoResearchPending, loadAll, classifyInboundMessage, applyInbound, formatThreadHistory, verifyDnsMx } from '../_shared/jobs.ts';
+import { draftDueSteps, sendDue, syncInbox, sendDigest, approveTouch, fetchJinaSignals, autoResearchPending, loadAll, classifyInboundMessage, applyInbound, formatThreadHistory, verifyDnsMx, sendDueBusPartners } from '../_shared/jobs.ts';
 
 const GIF = Uint8Array.from(atob('R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=='), (c) => c.charCodeAt(0));
 const UA = 'Mozilla/5.0 (compatible; DOROGO-partner-research/1.0; +https://dorogo.eu)';
@@ -364,6 +364,53 @@ Deno.serve((req) => handle(req, async () => {
     case 'send_now': {
       const r = await sendDue(db, settings, now, { onlyTouchId: body.touch_id, actor: user.email });
       return json(r);
+    }
+    case 'send_bus_partner': {
+      const { partner_id } = body;
+      const res = await sendDueBusPartners(db, settings, now, { actor: user.email, onlyPartnerId: partner_id });
+      return json(res);
+    }
+    case 'queue_bus_partners': {
+      const { partner_ids = [], start_slot = null } = body;
+      const { data: partners, error } = await db.from('bus_partners').select('*').in('id', partner_ids);
+      if (error || !partners) throw new HttpError(400, 'Failed to fetch bus partners');
+
+      // Sort by relevance score ascending (lowest score / least relevant first)
+      partners.sort((a: any, b: any) => (a.relevance_score || 70) - (b.relevance_score || 70));
+
+      const baseDate = start_slot ? new Date(start_slot) : core.nextBusSendSlot(now, 0);
+      let queued = 0;
+      const results = [];
+
+      for (let i = 0; i < partners.length; i++) {
+        const p = partners[i];
+        const slot = core.nextBusSendSlot(baseDate, i);
+        const card = p.score_breakdown?.partner_card || {};
+
+        // Verify with 3-tier API
+        const ver = await verifyEmailUnified(p.email, { db });
+        const isBad = ver.resultcode === 6 || ver.resultcode === 5 || ver.status === 'invalid';
+        const emailStatus = isBad ? 'invalid' : (ver.resultcode === 1 ? 'verified' : (ver.resultcode === 2 ? 'catch_all' : 'mx_ok'));
+
+        const updatedCard = {
+          ...card,
+          outreach_stage: isBad ? 'to_check' : 'ready',
+          scheduled_at: isBad ? null : slot.toISOString(),
+          email_status: emailStatus,
+          verification: ver,
+        };
+
+        await db.from('bus_partners').update({
+          status: isBad ? 'TO_REVIEW' : 'WANT_TO_CONTACT',
+          score_breakdown: { ...(p.score_breakdown || {}), partner_card: updatedCard },
+          updated_at: now.toISOString(),
+        }).eq('id', p.id);
+
+        queued++;
+        results.push({ id: p.id, name: p.name, email: p.email, email_status: emailStatus, scheduled_at: isBad ? null : slot.toISOString() });
+      }
+
+      return json({ ok: true, queued, results });
     }
     case 'ai_redraft':
       return json(await aiRedraft(db, body));
