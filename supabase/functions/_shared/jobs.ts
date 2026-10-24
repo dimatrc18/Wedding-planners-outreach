@@ -740,6 +740,7 @@ export async function syncInbox(db: any, settings: any, now = new Date()) {
     throw e;
   }
   const { prospects, touches, templates } = await loadAll(db);
+  const { data: busPartners } = await db.from('bus_partners').select('*');
   const stripSubjectPrefix = (s = '') => String(s || '').replace(/^(\s*(re|fwd|fw|r|rif|ответ|на)\s*:\s*)+/i, '').trim().toLowerCase();
   const PUBLIC_DOMAINS = new Set(['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'me.com', 'mail.ru', 'yandex.ru', 'bk.ru']);
   const byEmail = new Map();
@@ -783,6 +784,26 @@ export async function syncInbox(db: any, settings: any, now = new Date()) {
           pByBody;
 
         if (!p) {
+          const bpBounce = (busPartners || []).find((bp: any) => bp.email && failed && bp.email.toLowerCase() === failed.toLowerCase());
+          if (bpBounce) {
+            const card = bpBounce.score_breakdown?.partner_card || {};
+            await db.from('bus_partners').update({
+              status: 'TO_REVIEW',
+              score_breakdown: { ...(bpBounce.score_breakdown || {}), partner_card: { ...card, email_status: 'bounced' } },
+              updated_at: now.toISOString(),
+            }).eq('id', bpBounce.id);
+            await logEvent(db, 'bus_partner_bounce', { partner_id: bpBounce.id, name: bpBounce.name, failed, subject: m.subject }, null, 'imap');
+            await tgSend(
+              `⚠️ <b>Bus Partner Email Bounced</b>\n\n` +
+              `Operator: <b>${tgEscape(bpBounce.name)}</b>\n` +
+              `Recipient: <code>${failed}</code>\n` +
+              `Type: ${bounce.hard ? 'Hard bounce' : 'Soft bounce'}\n` +
+              `Status: Moved back to To Review.`,
+            );
+            bounces++;
+            continue;
+          }
+
           await logEvent(db, 'bounce_unmatched', { failed, from: m.from, subject: m.subject, text: m.text?.slice(0, 500) });
           await tgSend(
             `⚠️ <b>Unmatched Email Bounce Received</b>\n\n` +
@@ -834,6 +855,67 @@ export async function syncInbox(db: any, settings: any, now = new Date()) {
         bounces++;
         continue;
       }
+
+      // --- Check if incoming message is a reply from a Bus Partner ---
+      const cleanFromEmail = (m.from || '').toLowerCase().trim();
+      const bpMatch = (busPartners || []).find((bp: any) => {
+        const bpEmail = (bp.email || '').toLowerCase().trim();
+        if (bpEmail && (bpEmail === cleanFromEmail || cleanFromEmail.includes(bpEmail))) return true;
+        const lastMsgId = bp.score_breakdown?.partner_card?.last_message_id;
+        if (lastMsgId && (m.inReplyTo === lastMsgId || m.references?.includes(lastMsgId))) return true;
+        return false;
+      });
+
+      if (bpMatch) {
+        const parsed = core.parseBusPartnerReply(m.text || '', bpMatch);
+        const card = bpMatch.score_breakdown?.partner_card || {};
+        const updatedCard = {
+          ...card,
+          outreach_stage: 'replied',
+          replied_at: m.date || now.toISOString(),
+          ...(parsed.bus_models ? { bus_models: parsed.bus_models } : {}),
+          ...(parsed.pax_capacity ? { pax_capacity: parsed.pax_capacity } : {}),
+          ...(parsed.rate_hourly ? { rate_hourly: parsed.rate_hourly } : {}),
+          ...(parsed.rate_standby ? { rate_standby: parsed.rate_standby } : {}),
+          ...(parsed.whatsapp ? { whatsapp: parsed.whatsapp } : {}),
+          last_reply_snippet: (m.text || '').slice(0, 500),
+        };
+
+        await db.from('bus_partners').update({
+          status: 'CONTACTED',
+          score_breakdown: { ...(bpMatch.score_breakdown || {}), partner_card: updatedCard },
+          updated_at: now.toISOString(),
+        }).eq('id', bpMatch.id);
+
+        await logEvent(db, 'bus_partner_replied', {
+          partner_id: bpMatch.id,
+          name: bpMatch.name,
+          email: bpMatch.email,
+          subject: m.subject,
+          parsed,
+        }, null, 'imap');
+
+        const ratesList = [
+          parsed.rate_hourly ? `Hourly: <b>${tgEscape(parsed.rate_hourly)}</b>` : '',
+          parsed.rate_standby ? `Standby: <b>${tgEscape(parsed.rate_standby)}</b>` : '',
+        ].filter(Boolean).join(' · ');
+
+        await tgSend(
+          `🚌 <b>Bus Partner Replied!</b>\n\n` +
+          `Operator: <b>${tgEscape(bpMatch.name)}</b> (${tgEscape(bpMatch.base_city || 'Northern Italy')})\n` +
+          `From: <code>${tgEscape(m.from)}</code>\n` +
+          `Subject: <i>${tgEscape(m.subject)}</i>\n\n` +
+          `💬 <i>"${tgEscape(core.stripQuoted(m.text || '').slice(0, 600))}"</i>\n\n` +
+          (ratesList ? `💶 <b>Extracted Rates:</b> ${ratesList}\n` : '') +
+          (parsed.pax_capacity ? `👥 <b>Fleet Pax:</b> ${tgEscape(parsed.pax_capacity)}\n` : '') +
+          (parsed.whatsapp ? `📱 <b>Direct WA:</b> ${tgEscape(parsed.whatsapp)}\n` : '') +
+          `Target: Save standby/hourly rates for Lake Como dispatch file.`,
+        );
+
+        stored++;
+        continue;
+      }
+
       // Tier 1 & 2: Direct email match or In-Reply-To / References thread match
       let p: any = byEmail.get(m.from) || (viaThread && pById.get(viaThread.prospect_id));
 

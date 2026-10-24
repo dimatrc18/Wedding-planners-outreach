@@ -1834,7 +1834,7 @@ export function render(el) {
               <th style="width:52px;text-align:center;padding:8px 2px">Score</th>
               <th style="width:150px">Company & Base</th>
               <th style="width:108px;text-align:center">Web & Verify</th>
-              <th style="width:150px">Email & Direct WA</th>
+              <th style="width:140px">Contact Email</th>
               <th style="width:175px">
                 <div class="row nowrap" style="gap:4px;align-items:center">
                   <span>Models & Pax Fit</span>
@@ -1918,26 +1918,18 @@ export function render(el) {
                   </div>
                 </td>
                 <td style="vertical-align:middle;white-space:nowrap">
-                  <div style="display:flex;flex-direction:column;gap:3px">
-                    ${p.email 
-                      ? `<div class="row nowrap" style="gap:3px;align-items:center;white-space:nowrap">
-                          ${emailDot}
-                          <a href="mailto:${attr(p.email)}" style="color:var(--series-1);font-size:.78rem;text-decoration:none;display:inline-flex;align-items:center;gap:2px;white-space:nowrap;max-width:112px;overflow:hidden;text-overflow:ellipsis" title="Email: ${attr(p.email)} (${esc(emailSt)})">
-                            <span style="overflow:hidden;text-overflow:ellipsis">${esc(p.email)}</span>
-                          </a>
-                          <button class="clickable btn-edit-pencil" data-act="edit-email" data-id="${attr(p.id)}" style="background:none;border:none;padding:2px 3px;cursor:pointer;color:var(--text-3);opacity:0.6;display:inline-flex;align-items:center;justify-content:center;border-radius:3px" title="Edit Email & Website">${pencilIcon(11)}</button>
-                        </div>`
-                      : `<button class="clickable" data-act="edit-email" data-id="${attr(p.id)}" style="background:var(--surface-2);border:1px dashed var(--line-strong);padding:2px 6px;border-radius:4px;color:var(--gold-ink);cursor:pointer;font-size:.72rem;white-space:nowrap;display:inline-flex;align-items:center;gap:3px" title="Click to add email">
-                          + Add email
-                        </button>`
-                    }
-                    <div class="row nowrap" style="gap:4px;align-items:center">
-                      ${waHref
-                        ? `<a href="${attr(waHref)}" target="_blank" rel="noopener" style="font-size:.71rem;color:#059669;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:3px;background:rgba(16,185,129,0.1);padding:1px 6px;border-radius:4px;border:1px solid rgba(16,185,129,0.25)" title="Open 1-Click Direct WhatsApp Pitch in Italian (${attr(p.whatsapp || p.phone)})">💬 WA: ${esc((p.whatsapp || p.phone).slice(0, 15))}</a>`
-                        : `<button class="clickable tiny" data-act="edit-rates" data-id="${attr(p.id)}" style="background:none;border:none;padding:0;color:var(--text-3);font-size:.69rem;cursor:pointer" title="Add direct WhatsApp / dispatcher number">+ Add WhatsApp</button>`
-                      }
-                    </div>
-                  </div>
+                  ${p.email 
+                    ? `<div class="row nowrap" style="gap:4px;align-items:center;white-space:nowrap">
+                        ${emailDot}
+                        <a href="mailto:${attr(p.email)}" style="color:var(--series-1);font-size:.78rem;text-decoration:none;display:inline-flex;align-items:center;gap:2px;white-space:nowrap;max-width:115px;overflow:hidden;text-overflow:ellipsis" title="Email: ${attr(p.email)} (${esc(emailSt)})">
+                          <span style="overflow:hidden;text-overflow:ellipsis">${esc(p.email)}</span>
+                        </a>
+                        <button class="clickable btn-edit-pencil" data-act="edit-email" data-id="${attr(p.id)}" style="background:none;border:none;padding:2px 3px;cursor:pointer;color:var(--text-3);opacity:0.6;display:inline-flex;align-items:center;justify-content:center;border-radius:3px" title="Edit Email & Website">${pencilIcon(11)}</button>
+                      </div>`
+                    : `<button class="clickable" data-act="edit-email" data-id="${attr(p.id)}" style="background:var(--surface-2);border:1px dashed var(--line-strong);padding:2px 6px;border-radius:4px;color:var(--gold-ink);cursor:pointer;font-size:.72rem;white-space:nowrap;display:inline-flex;align-items:center;gap:3px" title="Click to add email">
+                        + Add email
+                      </button>`
+                  }
                 </td>
                 <td style="vertical-align:middle">
                   <div style="display:flex;flex-wrap:wrap;gap:3px;align-items:center;line-height:1.2;max-width:175px">
@@ -1959,21 +1951,23 @@ export function render(el) {
                   </div>
                 </td>
                 <td style="vertical-align:middle">
-                  <div class="clickable" data-act="edit-rates" data-id="${attr(p.id)}" style="cursor:pointer;max-width:190px;display:flex;flex-direction:column;gap:3px;line-height:1.25" title="Click to view/edit Rates, Direct WhatsApp, My Pre-Contact Notes, and Client Response">
+                  <div class="clickable" data-act="edit-rates" data-id="${attr(p.id)}" style="cursor:pointer;max-width:205px;display:flex;flex-direction:column;gap:3px;line-height:1.25" title="Click to view/edit Rates and My Pre-Contact Notes">
                     ${hasRates ? `
                       <div style="font-size:.74rem;font-weight:700;color:#059669;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
                         💶 ${esc([p.rate_hourly, p.rate_standby].filter(Boolean).join(' · '))}
                       </div>
-                      ${p.client_notes ? `<div class="tiny" style="color:#059669;font-weight:600;font-size:.68rem;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden" title="${attr(p.client_notes)}">💬 Client: ${esc(p.client_notes)}</div>` : ''}
-                      ${p.notes ? `<div class="tiny muted" style="font-size:.67rem;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden" title="${attr(p.notes)}">📝 My Note: ${esc(p.notes)}</div>` : ''}
+                    ` : ''}
+                    ${p.notes ? `
+                      <div class="tiny" style="font-size:.71rem;color:#1e293b;line-height:1.3;white-space:pre-line;max-height:56px;overflow-y:auto;background:rgba(245,158,11,0.09);padding:3px 6px;border-radius:4px;border-left:2px solid #f59e0b" title="${attr(p.notes)}">
+                        <b>📝</b> ${esc(p.notes)}
+                      </div>
                     ` : `
                       <div class="row nowrap" style="gap:4px;align-items:center">
-                        <span class="chip tiny outline" style="font-size:.68rem;padding:1px 6px;border-color:var(--gold);color:var(--gold-ink);background:var(--gold-soft);font-weight:600">+ Rates / Reply</span>
+                        <span class="chip tiny outline" style="font-size:.68rem;padding:1px 6px;border-color:var(--border);color:var(--text-3);background:var(--surface-2)">+ Notes / Rates</span>
                         <span class="clickable" data-act="edit-notes" data-id="${attr(p.id)}" style="font-size:.7rem;color:var(--text-3)" title="Edit notes">${pencilIcon(10)}</span>
                       </div>
-                      ${p.client_notes ? `<div class="tiny" style="color:#059669;font-weight:600;font-size:.68rem;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden" title="${attr(p.client_notes)}">💬 Client: ${esc(p.client_notes)}</div>` : ''}
-                      ${p.notes ? `<div class="tiny" style="font-size:.71rem;color:var(--text-1);line-height:1.25;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden" title="${attr(p.notes)}">📝 ${esc(p.notes)}</div>` : ''}
                     `}
+                    ${p.client_notes ? `<div class="tiny" style="color:#059669;font-weight:600;font-size:.68rem;line-height:1.2;overflow:hidden;text-overflow:ellipsis" title="${attr(p.client_notes)}">💬 Reply: ${esc(p.client_notes)}</div>` : ''}
                   </div>
                 </td>
                 <td style="vertical-align:middle;white-space:nowrap">
@@ -1983,7 +1977,7 @@ export function render(el) {
                     </select>
                     ${p.status === 'WANT_TO_CONTACT'
                       ? `<div class="tiny" style="color:#7c3aed;font-weight:700;font-size:.68rem;background:rgba(124,58,237,0.08);padding:1px 5px;border-radius:4px;border:1px solid rgba(124,58,237,0.25);text-align:center" title="${p.scheduled_at ? 'Scheduled for ' + new Date(p.scheduled_at).toLocaleString('en-GB') : 'In Queue'}">
-                          ⏳ ${p.scheduled_at ? new Date(p.scheduled_at).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) + ' ' + new Date(p.scheduled_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : 'Mon 09:00'}
+                          ⏳ ${p.scheduled_at ? new Date(p.scheduled_at).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) + ' ' + new Date(p.scheduled_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' }) : 'Mon 09:00'}
                          </div>`
                       : p.status === 'CONTACTED'
                       ? `<div class="tiny" style="color:#0284c7;font-weight:700;font-size:.68rem;background:rgba(2,132,199,0.08);padding:1px 5px;border-radius:4px;border:1px solid rgba(2,132,199,0.25);text-align:center" title="${p.last_outreach_at ? 'Sent at ' + new Date(p.last_outreach_at).toLocaleString('en-GB') : 'Contacted'}">
@@ -1991,26 +1985,9 @@ export function render(el) {
                          </div>`
                       : ''
                     }
-                    <div class="row nowrap" style="gap:3px;align-items:center;justify-content:space-between">
-                      ${p.status === 'TO_REVIEW'
-                        ? `<button class="btn sm ghost" data-act="quick-queue" data-id="${attr(p.id)}" style="padding:1px 5px;font-size:.68rem;color:#6d28d9;border-color:rgba(109,40,217,0.3);background:rgba(109,40,217,0.06);font-weight:600;flex:1;justify-content:center" title="Add ${attr(p.name)} to Mon–Sat queue">
-                            ➕ Queue
-                           </button>
-                           <button class="btn sm ghost" data-act="ceo-pitch" data-id="${attr(p.id)}" style="padding:1px 5px;font-size:.68rem;color:#1d4ed8;border-color:rgba(37,99,235,0.3);background:rgba(37,99,235,0.06);font-weight:600;flex:1;justify-content:center" title="Open short CEO Italian Email / WhatsApp Outreach for ${attr(p.name)}">
-                            ✉️ Pitch
-                           </button>`
-                        : p.status === 'WANT_TO_CONTACT'
-                        ? `<button class="btn sm ghost" data-act="quick-send" data-id="${attr(p.id)}" style="padding:1px 5px;font-size:.68rem;color:#059669;border-color:rgba(5,150,105,0.3);background:rgba(5,150,105,0.06);font-weight:700;flex:1;justify-content:center" title="Send live email now via Hostinger SMTP">
-                            🚀 Send
-                           </button>
-                           <button class="btn sm ghost" data-act="ceo-pitch" data-id="${attr(p.id)}" style="padding:1px 5px;font-size:.68rem;color:#1d4ed8;border-color:rgba(37,99,235,0.3);background:rgba(37,99,235,0.06);font-weight:600;flex:1;justify-content:center" title="Open short CEO Italian Email / WhatsApp Outreach for ${attr(p.name)}">
-                            ✉️ Pitch
-                           </button>`
-                        : `<button class="btn sm ghost" data-act="ceo-pitch" data-id="${attr(p.id)}" style="padding:1px 6px;font-size:.69rem;color:#1d4ed8;border-color:rgba(37,99,235,0.3);background:rgba(37,99,235,0.06);font-weight:600;width:100%;justify-content:center" title="Open short CEO Italian Email / WhatsApp Outreach for ${attr(p.name)}">
-                            ✉️ CEO Pitch (IT)
-                           </button>`
-                      }
-                    </div>
+                    <button class="btn sm ghost" data-act="ceo-pitch" data-id="${attr(p.id)}" style="padding:1px 6px;font-size:.69rem;color:#1d4ed8;border-color:rgba(37,99,235,0.3);background:rgba(37,99,235,0.06);font-weight:600;width:100%;justify-content:center" title="Open short CEO Italian Email Outreach for ${attr(p.name)}">
+                      ✉️ CEO Pitch (IT)
+                    </button>
                   </div>
                 </td>
                 <td style="vertical-align:middle;text-align:center;white-space:nowrap">
@@ -2242,68 +2219,6 @@ export function render(el) {
         } else {
           await updateBusPartner(id, { status: newStatus });
           toast(newStatus === 'NOT_RELEVANT' ? 'Marked Not Relevant (Score set to 0)' : `Status updated to ${newStatus}`);
-        }
-        paint();
-      });
-    });
-
-    // Quick Queue single operator
-    el.querySelectorAll('[data-act="quick-queue"]').forEach((btn) => {
-      btn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const id = e.currentTarget.dataset.id;
-        const partner = (S.busPartners || []).find((x) => x.id === id);
-        if (!partner) return;
-        btn.disabled = true;
-        btn.textContent = '⏳...';
-        try {
-          const res = await api('queue_bus_partners', { partner_ids: [id] });
-          if (res && res.results && res.results[0]) {
-            const r = res.results[0];
-            await updateBusPartner(id, {
-              status: r.email_status === 'invalid' ? 'TO_REVIEW' : 'WANT_TO_CONTACT',
-              outreach_stage: r.email_status === 'invalid' ? 'to_check' : 'ready',
-              scheduled_at: r.scheduled_at,
-              email_status: r.email_status,
-            });
-            toast(`Added ${partner.name} to Mon–Sat queue (${r.scheduled_at ? new Date(r.scheduled_at).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) + ' ' + new Date(r.scheduled_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : 'Mon 09:00'})`, 'ok');
-          }
-        } catch (err) {
-          toast(`Queue failed: ${err.message}`, 'bad');
-        }
-        paint();
-      });
-    });
-
-    // Quick Send single operator live via Hostinger SMTP
-    el.querySelectorAll('[data-act="quick-send"]').forEach((btn) => {
-      btn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const id = e.currentTarget.dataset.id;
-        const partner = (S.busPartners || []).find((x) => x.id === id);
-        if (!partner) return;
-        if (!partner.email) {
-          toast(`No email on file for ${partner.name}`, 'warn');
-          return;
-        }
-        btn.disabled = true;
-        btn.textContent = '🚀...';
-        try {
-          const res = await api('send_bus_partner', { partner_id: id });
-          if (res && res.sent > 0) {
-            await updateBusPartner(id, {
-              status: 'CONTACTED',
-              outreach_stage: 't1_sent',
-              last_outreach_at: new Date().toISOString(),
-              email_status: 'verified',
-              scheduled_at: null,
-            });
-            toast(`🚀 Sent Italian CEO pitch to ${partner.name} (${partner.email}) via Hostinger SMTP! Saved to Sent folder.`, 'ok');
-          } else {
-            toast(`Send blocked: ${res?.message || 'Check email or deliverability'}`, 'warn');
-          }
-        } catch (err) {
-          toast(`Send failed: ${err.message}`, 'bad');
         }
         paint();
       });
@@ -2753,7 +2668,6 @@ export function render(el) {
           <select id="ceo-step-select" class="sm" style="padding:6px 10px">
             <option value="T1_intro" selected>1. Email 1: CEO Intro (Italian · Day 0)</option>
             <option value="T2_followup">2. Email 2: Quick Follow-up (Italian · Day +3)</option>
-            <option value="WA_pitch">3. Direct WhatsApp Pitch (Italian)</option>
           </select>
         </label>
       </div>
@@ -2785,18 +2699,9 @@ export function render(el) {
       <div class="row between" style="margin-top:8px;flex-wrap:wrap;gap:8px">
         <div class="row" style="gap:6px;flex-wrap:wrap">
           <button type="button" class="btn sm ghost" id="btn-ceo-copy">📋 Copy Text</button>
-          <button type="button" class="btn sm" id="btn-ceo-wa" style="background:#059669;color:#fff;border:none;font-weight:600">💬 Send on WhatsApp</button>
-          <button type="button" class="btn sm ghost" id="btn-ceo-mailto" style="color:var(--series-1);border-color:var(--series-1)">✉️ Open in Mail + Mark Contacted</button>
+          <button type="button" class="btn sm ghost" id="btn-ceo-mailto" style="color:var(--series-1);border-color:var(--series-1)">✉️ Open in Mail App</button>
         </div>
         <div class="row" style="gap:8px;align-items:center">
-          <button type="button" class="btn sm" id="btn-ceo-queue-single" style="background:#ede9fe;color:#6d28d9;border-color:#ddd6fe;font-weight:700" title="Add this operator to Mon–Sat queue">
-            ⏳ Add to Queue
-          </button>
-          ${readyBatch.length > 0 ? `
-            <button type="button" class="btn sm" id="btn-ceo-batch" style="background:var(--gold-soft);color:var(--gold-ink);border-color:var(--gold-strong);font-weight:700" title="Verify & queue Mon–Sat outreach to all Want to Contact operators">
-              ⚡ Queue Batch (${readyBatch.length})
-            </button>
-          ` : ''}
           <button type="button" class="btn primary sm" id="btn-ceo-send-single" style="font-weight:700" title="Immediately send real email via Hostinger SMTP">
             🚀 Send Now (Hostinger SMTP)
           </button>
@@ -2827,7 +2732,7 @@ export function render(el) {
       const gateEl = backdrop.querySelector('#ceo-gate-status');
       if (p.status === 'WANT_TO_CONTACT' && p.scheduled_at) {
         const schedDate = new Date(p.scheduled_at);
-        gateEl.textContent = `⏳ Queued for ${schedDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} ${schedDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} (Mon–Sat schedule)`;
+        gateEl.textContent = `⏳ Queued for ${schedDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} ${schedDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' })} (Mon–Sat schedule)`;
         gateEl.style.color = '#7c3aed';
       } else if (p.status === 'CONTACTED') {
         gateEl.textContent = `✉️ Already contacted on ${p.last_outreach_at ? new Date(p.last_outreach_at).toLocaleDateString('en-GB') : 'record'}`;
@@ -2835,11 +2740,6 @@ export function render(el) {
       } else {
         gateEl.textContent = gate.ok ? '✓ Allowed to send right now (Mon–Sat window)' : `⏳ ${gate.message || 'Queued for next Mon–Sat slot'}`;
         gateEl.style.color = gate.ok ? '#059669' : '#d97706';
-      }
-
-      const qBtn = backdrop.querySelector('#btn-ceo-queue-single');
-      if (qBtn) {
-        qBtn.style.display = p.status === 'WANT_TO_CONTACT' ? 'none' : 'inline-flex';
       }
     };
 
@@ -2851,24 +2751,6 @@ export function render(el) {
       const subj = backdrop.querySelector('#ceo-subject').value.trim();
       const body = backdrop.querySelector('#ceo-body').value.trim();
       copyText(subj ? `Subject: ${subj}\n\n${body}` : body, 'Italian CEO pitch copied to clipboard');
-    });
-
-    backdrop.querySelector('#btn-ceo-wa').addEventListener('click', async () => {
-      const p = getSelectedPartner();
-      const rawWa = (p.whatsapp || p.phone || '').replace(/[^\d+]/g, '');
-      const waPitch = core.buildBusOutreachDraft(p, 'WA_pitch').body;
-      if (!rawWa) {
-        copyText(waPitch, 'No phone on file — copied Italian WhatsApp pitch to clipboard');
-        return;
-      }
-      window.open(`https://wa.me/${rawWa.replace(/^\+/, '')}?text=${encodeURIComponent(waPitch)}`, '_blank', 'noopener');
-      await updateBusPartner(p.id, {
-        status: p.status === 'APPROVED_PARTNER' ? 'APPROVED_PARTNER' : 'CONTACTED',
-        outreach_stage: 't1_sent',
-        last_outreach_at: new Date().toISOString(),
-      });
-      toast(`Opened WhatsApp for ${p.name} & marked Contacted`, 'ok');
-      paint();
     });
 
     backdrop.querySelector('#btn-ceo-mailto').addEventListener('click', async () => {
@@ -2889,35 +2771,6 @@ export function render(el) {
       close();
       paint();
     });
-
-    // Queue Single Operator from Modal
-    const queueSingleBtn = backdrop.querySelector('#btn-ceo-queue-single');
-    if (queueSingleBtn) {
-      queueSingleBtn.addEventListener('click', async () => {
-        const p = getSelectedPartner();
-        queueSingleBtn.disabled = true;
-        queueSingleBtn.textContent = '⏳ Queuing...';
-        try {
-          const res = await api('queue_bus_partners', { partner_ids: [p.id] });
-          if (res && res.results && res.results[0]) {
-            const r = res.results[0];
-            await updateBusPartner(r.id, {
-              status: r.email_status === 'invalid' ? 'TO_REVIEW' : 'WANT_TO_CONTACT',
-              outreach_stage: r.email_status === 'invalid' ? 'to_check' : 'ready',
-              scheduled_at: r.scheduled_at,
-              email_status: r.email_status,
-            });
-            toast(`Added ${p.name} to Mon–Sat queue (${r.scheduled_at ? new Date(r.scheduled_at).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) + ' ' + new Date(r.scheduled_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : 'Mon 09:00'})`, 'ok');
-            refreshPreview();
-            paint();
-          }
-        } catch (err) {
-          toast(`Queue failed: ${err.message}`, 'bad');
-          queueSingleBtn.disabled = false;
-          queueSingleBtn.textContent = '⏳ Add to Queue';
-        }
-      });
-    }
 
     // Send Real Live Email via Hostinger SMTP
     backdrop.querySelector('#btn-ceo-send-single').addEventListener('click', async () => {
@@ -2954,37 +2807,6 @@ export function render(el) {
         btn.textContent = '🚀 Send Now (Hostinger SMTP)';
       }
     });
-
-    // Queue Batch of Want-to-Contact Operators
-    const batchBtn = backdrop.querySelector('#btn-ceo-batch');
-    if (batchBtn) {
-      batchBtn.addEventListener('click', async (e) => {
-        const btn = e.currentTarget;
-        btn.disabled = true;
-        btn.textContent = `⏳ Verifying & Queuing ${readyBatch.length}...`;
-
-        try {
-          const res = await api('queue_bus_partners', { partner_ids: readyBatch.map((x) => x.id) });
-          if (res && res.results) {
-            for (const r of res.results) {
-              await updateBusPartner(r.id, {
-                status: r.email_status === 'invalid' ? 'TO_REVIEW' : 'WANT_TO_CONTACT',
-                outreach_stage: r.email_status === 'invalid' ? 'to_check' : 'ready',
-                scheduled_at: r.scheduled_at,
-                email_status: r.email_status,
-              });
-            }
-            toast(`📅 Queued ${res.queued} operators across Mon–Sat (max 4/day, 25m offset) with 3-tier API verification!`, 'ok');
-            close();
-            paint();
-          }
-        } catch (err) {
-          toast(`Queue failed: ${err.message}`, 'bad');
-          btn.disabled = false;
-          btn.textContent = `⚡ Queue Batch (${readyBatch.length})`;
-        }
-      });
-    }
   }
 
   // --- Delete & Exclude Single Operator Modal ---

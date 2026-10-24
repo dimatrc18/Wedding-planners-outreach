@@ -433,41 +433,41 @@ export function canSendBusOutreach(partner = {}, now = new Date(), opts = {}) {
  * mirroring the venue outreach cadence.
  */
 export function nextBusSendSlot(now = new Date(), indexOffset = 0, opts = {}) {
-  const d = now instanceof Date ? new Date(now.getTime()) : new Date(now);
   const maxPerDay = 4;
   const dayShift = Math.floor(indexOffset / maxPerDay);
   const slotInDay = indexOffset % maxPerDay;
+  const minuteOffsets = [0, 25, 50, 75];
+  const mins = minuteOffsets[slotInDay] || 0;
 
-  let cur = new Date(d.getTime());
-  const romeDow = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Rome', weekday: 'short' }).format(cur);
-  const isWeekend = romeDow === 'Sun' || (romeDow === 'Sat' && cur.getUTCHours() >= 12);
+  const n = now instanceof Date ? now : new Date(now);
+  let d = new Date(n.getTime());
+  // Base at 07:00 UTC (08:00/09:00 Rome time morning window)
+  d.setUTCHours(7, mins, 0, 0);
 
-  // Advance to Monday if on weekend
-  if (isWeekend) {
-    while (new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Rome', weekday: 'short' }).format(cur) !== 'Mon') {
-      cur = new Date(cur.getTime() + 24 * 3600 * 1000);
-    }
+  const romeDow = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Rome', weekday: 'short' }).format(n);
+  if (d <= n || romeDow === 'Sun' || (romeDow === 'Sat' && n.getUTCHours() >= 12)) {
+    // Advance to next valid Mon–Sat morning
+    do {
+      d = new Date(d.getTime() + 24 * 3600 * 1000);
+      d.setUTCHours(7, mins, 0, 0);
+    } while (
+      new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Rome', weekday: 'short' }).format(d) === 'Sun' ||
+      d <= n
+    );
   }
 
-  // Shift by weekdays (skipping Sundays)
+  // Shift by dayShift weekdays (skipping Sundays)
   let addedDays = 0;
   while (addedDays < dayShift) {
-    cur = new Date(cur.getTime() + 24 * 3600 * 1000);
-    const dayName = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Rome', weekday: 'short' }).format(cur);
-    if (dayName !== 'Sun') {
+    d = new Date(d.getTime() + 24 * 3600 * 1000);
+    d.setUTCHours(7, mins, 0, 0);
+    const dow = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Rome', weekday: 'short' }).format(d);
+    if (dow !== 'Sun') {
       addedDays++;
     }
   }
 
-  // 09:00, 09:25, 09:50, 10:15 Rome morning window
-  const minuteOffsets = [0, 25, 50, 75];
-  const mins = minuteOffsets[slotInDay] || 0;
-  cur.setUTCHours(7, mins, 0, 0); // ~08:00–09:00 Rome time
-  if (cur <= d) {
-    cur = new Date(cur.getTime() + 24 * 3600 * 1000);
-    cur.setUTCHours(7, mins, 0, 0);
-  }
-  return cur;
+  return d;
 }
 
 /**
@@ -511,9 +511,9 @@ export function buildBusOutreachDraft(partner = {}, stepKey = 'T1_intro') {
   if (stepKey === 'T2_followup') {
     const body = `Buongiorno Team ${cleanName},
 
-Vi scrivo rapidamente in merito alla mia email per verificare disponibilità B2B su Como e Milano.
+Vi scrivo rapidamente in merito alla mia precedente email per verificare disponibilità B2B su Como e Milano.
 
-Se per voi è più rapido, potete rispondermi su WhatsApp al +32 456 14 14 97:
+Se per voi è possibile, potete rispondermi direttamente a questa email (oppure su WhatsApp al +32 456 14 14 97) indicando:
 - Modelli bus e quanti passeggeri portano per ciascun mezzo
 - Prezzi B2B per servizio orario e a disposizione (4h / 8h)
 - Tariffe per transfer (es. Malpensa – Como/Milano), costo a km e minimo d'ordine
