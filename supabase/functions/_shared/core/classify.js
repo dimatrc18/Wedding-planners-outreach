@@ -131,6 +131,66 @@ export function detectBounce({ from = '', subject = '', body = '' } = {}) {
   return { bounced: true, hard: !soft };
 }
 
+/**
+ * Extracts the failed recipient email address from a bounce message.
+ * Prioritizes RFC 3464 DSN, mail server fatal error lines, Hostinger 'addressed to', etc.
+ * Strictly ignores the system sender address, @dorogo.eu, mailer-daemon, and 'from <sender>' lines.
+ */
+export function extractBounceFailedRecipient(msg = {}, systemSender = 'dmitri@dorogo.eu') {
+  const rawFailed = String(msg.failedRecipients || '').toLowerCase().trim();
+  const sysEmail = String(systemSender || 'dmitri@dorogo.eu').toLowerCase().trim();
+  const sysDomain = sysEmail.includes('@') ? sysEmail.split('@')[1] : 'dorogo.eu';
+
+  const isExcluded = (addr) => {
+    if (!addr) return true;
+    const a = addr.toLowerCase().trim();
+    if (a === sysEmail) return true;
+    if (sysDomain && a.endsWith('@' + sysDomain)) return true;
+    if (/^(?:mailer-daemon|postmaster|bounce|noreply|no-reply|donotreply)@/i.test(a)) return true;
+    if (/bounce\.mail/i.test(a)) return true;
+    return false;
+  };
+
+  if (rawFailed && !isExcluded(rawFailed)) return rawFailed;
+
+  const content = [msg.text || '', msg.body || '', msg.subject || ''].join('\n');
+
+  const patterns = [
+    // RFC 3464 DSN
+    /(?:Final-Recipient|Original-Recipient):\s*(?:rfc822;\s*)?<?([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})>?/i,
+    // Hostinger / sendmail fatal errors header
+    /The following address(?:es)? had permanent fatal errors[^\n]*\s*<?([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})>?/i,
+    // 'addressed to <recipient>' or 'addressed to recipient' (Hostinger)
+    /addressed to\s+<?([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})>?/i,
+    // Google / standard 'delivering your message to <recipient>'
+    /(?:failed recipient|undeliverable to|delivering your message to|delivery to|was not delivered to|could not be delivered to|failed to deliver to)\s*:?\s*<?([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})>?/i,
+    // Reason block: <recipient> (reason: 55x ...)
+    /<([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})>\s*\(reason:/i,
+    // to: <recipient>
+    /\bto:\s*<?([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})>?/i,
+  ];
+
+  for (const pat of patterns) {
+    const match = content.match(pat);
+    if (match && match[1]) {
+      const candidate = match[1].toLowerCase().trim();
+      if (!isExcluded(candidate)) return candidate;
+    }
+  }
+
+  // Fallback: search all emails, filtering out system senders, daemon emails, and emails immediately preceded by 'from '
+  const allEmails = [...content.matchAll(/(?:\bfrom\s+<?([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})>?)|(?:\b([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b)/gi)];
+  for (const m of allEmails) {
+    if (m[1]) continue; // matched 'from <email>', which is the sender!
+    const addr = (m[2] || '').toLowerCase().trim();
+    if (addr && !isExcluded(addr)) {
+      return addr;
+    }
+  }
+
+  return '';
+}
+
 // Loose date in text such as "12 October", "October 12th", "12/10", "12.10.2026", "12 ottobre". Day-first for numeric dates.
 export function parseLooseDate(text = '', now = new Date()) {
   const t = String(text).toLowerCase();

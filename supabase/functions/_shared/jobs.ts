@@ -644,12 +644,7 @@ export async function syncInbox(db: any, settings: any, now = new Date()) {
       const viaThread = [m.inReplyTo, ...m.references].map((id: string) => byMsg.get(id)).find(Boolean);
       const bounce = core.detectBounce({ from: m.from, subject: m.subject, body: m.text });
       if (bounce) {
-        let failed = (m.failedRecipients || '').toLowerCase().trim();
-        if (!failed) {
-          const match = (m.text || '').match(/(?:failed recipient|undeliverable to|to:\s*|<)([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})>/i) ||
-            (m.text || '').match(/\b([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b/);
-          if (match) failed = match[1].toLowerCase();
-        }
+        let failed = core.extractBounceFailedRecipient(m, settings?.from_email || 'dmitri@dorogo.eu');
 
         // Tier A: Match by outgoing sent touches to_address
         const sentTouch = failed ? touches.find((t: any) => t.direction === 'out' && t.to_address?.toLowerCase() === failed) : null;
@@ -675,10 +670,22 @@ export async function syncInbox(db: any, settings: any, now = new Date()) {
           continue;
         }
 
+        // If failed recipient was not directly identified from bounce headers/body, fallback to matched prospect's email
+        if (!failed && p.email) {
+          failed = String(p.email).toLowerCase().trim();
+        }
+
         const lastOut = sentTouch || [...touches].reverse().find((t: any) => t.prospect_id === p.id && t.direction === 'out' && t.state === 'sent' && t.channel === 'email');
         if (lastOut) await db.from('touches').update({ bounced: true }).eq('id', lastOut.id);
 
-        const knownBad = Array.from(new Set([...(p.enrichment?.known_bad_emails || []), ...(failed ? [failed] : [])]));
+        // Safeguard: NEVER add our own sender address to known_bad_emails
+        const sysSender = String(settings?.from_email || 'dmitri@dorogo.eu').toLowerCase().trim();
+        const sysDomain = sysSender.includes('@') ? sysSender.split('@')[1] : 'dorogo.eu';
+        const isBadEligible = (addr: string) => addr && addr !== sysSender && !addr.endsWith('@' + sysDomain) && !/^(mailer-daemon|postmaster|bounce)@/i.test(addr);
+
+        const badToAdd = isBadEligible(failed) ? [failed] : (isBadEligible(p.email) ? [String(p.email).toLowerCase().trim()] : []);
+        const existingBad = (p.enrichment?.known_bad_emails || []).filter((e: string) => isBadEligible(e));
+        const knownBad = Array.from(new Set([...existingBad, ...badToAdd]));
         const updatedEnrichment = { ...(p.enrichment || {}), known_bad_emails: knownBad };
 
         const isCurrentEmail = !failed || p.email?.toLowerCase() === failed;

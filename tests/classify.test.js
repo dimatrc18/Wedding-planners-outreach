@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { classifyReply, stripQuoted, parseLooseDate, isSystemOrBotSender } from '../supabase/functions/_shared/core/index.js';
+import { classifyReply, stripQuoted, parseLooseDate, isSystemOrBotSender, detectBounce, extractBounceFailedRecipient } from '../supabase/functions/_shared/core/index.js';
 
 const now = new Date('2026-10-07T09:00:00Z');
 const c = (body, extra = {}) => classifyReply({ from: 'giulia@studio.it', subject: 'Re: Guest transport', body, ...extra }, now);
@@ -58,6 +58,54 @@ test('bounces are detected and split hard/soft', () => {
   assert.equal(hard.hard_bounce, true);
   const soft = classifyReply({ from: 'postmaster@x.it', subject: 'Undeliverable: hello', body: 'Mailbox full, try again later' }, now);
   assert.equal(soft.hard_bounce, false);
+});
+
+test('extractBounceFailedRecipient extracts failed recipient and ignores sender', () => {
+  // Hostinger bounce format (Ksenia Ridolfi case)
+  const hostingerBounce = {
+    from: 'mailer-daemon@bounce.mail.hostinger.com',
+    subject: 'Returned mail: see transcript for details',
+    text: `The message was received at Fri, 24 Oct 2026 09:37:55 +0200
+from dmitri@dorogo.eu and addressed to info@kseniaridolfi.com.
+
+The following addresses had permanent fatal errors -----
+<info@kseniaridolfi.com>
+(reason: 551 5.4.7 Next delivery time would be 3days: host mx.kseniaridolfi.com: Host not found)
+
+----- Transcript of session follows -----`,
+  };
+  assert.equal(extractBounceFailedRecipient(hostingerBounce, 'dmitri@dorogo.eu'), 'info@kseniaridolfi.com');
+
+  // RFC 3464 DSN
+  const rfc3464Bounce = {
+    from: 'MAILER-DAEMON@relay.example.com',
+    subject: 'Delivery Status Notification (Failure)',
+    text: `Action: failed\nStatus: 5.1.1\nFinal-Recipient: rfc822; invalid@agency.it\nDiagnostic-Code: 550 User unknown`,
+  };
+  assert.equal(extractBounceFailedRecipient(rfc3464Bounce, 'dmitri@dorogo.eu'), 'invalid@agency.it');
+
+  // Google Mail Delivery Subsystem
+  const googleBounce = {
+    from: 'mail-noreply@google.com',
+    subject: 'Delivery Status Notification (Failure)',
+    text: `** Message not delivered **\nThere was a problem delivering your message to contact@weddingcomo.com. See the technical details below.`,
+  };
+  assert.equal(extractBounceFailedRecipient(googleBounce, 'dmitri@dorogo.eu'), 'contact@weddingcomo.com');
+
+  // Header x-failed-recipients
+  const headerBounce = {
+    failedRecipients: 'header-fail@planner.com',
+    text: 'Some random text without emails',
+  };
+  assert.equal(extractBounceFailedRecipient(headerBounce, 'dmitri@dorogo.eu'), 'header-fail@planner.com');
+
+  // Strict sender immunity: if body only contains sender email and mailer-daemon, never return sender!
+  const onlySenderBounce = {
+    from: 'mailer-daemon@bounce.mail.hostinger.com',
+    subject: 'Returned mail',
+    text: 'The message was received from dmitri@dorogo.eu. System error.',
+  };
+  assert.equal(extractBounceFailedRecipient(onlySenderBounce, 'dmitri@dorogo.eu'), '');
 });
 
 test('quoted history is ignored', () => {
