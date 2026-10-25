@@ -14,7 +14,7 @@ async function run() {
   console.log('Fetching all prospects, templates, and touches...');
   const [pRes, tRes, draftRes, approvedRes] = await Promise.all([
     fetch(`${SUPABASE_URL}/prospects?select=*`, { headers }),
-    fetch(`${SUPABASE_URL}/outreach_templates?select=*`, { headers }),
+    fetch(`${SUPABASE_URL}/templates?select=*`, { headers }),
     fetch(`${SUPABASE_URL}/touches?state=eq.draft&select=*`, { headers }),
     fetch(`${SUPABASE_URL}/touches?state=eq.approved&select=*`, { headers }),
   ]);
