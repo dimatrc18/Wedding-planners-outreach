@@ -11,6 +11,7 @@ import {
   validatePartnerReplyOutput,
   findUnansweredReplies,
   SIGNATURE,
+  generateBulletproofHook,
 } from '../supabase/functions/_shared/core/index.js';
 
 test('2+1 thread split: T1 and T3 are in the same thread, T4 breakup starts a separate fresh thread', () => {
@@ -332,7 +333,72 @@ test('MECE overhaul: Variant A (Intro), Variant B (Late returns), Variant C (Hot
   assert.match(draftC.body, /Reply here or text me on WhatsApp and I will send our rate card and vehicle guide\./);
   assert.deepEqual(draftC.lint.errors, []);
   assert.deepEqual(draftC.lint.warnings, []);
+});
 
+test('Zero-Hallucination Portfolio Guardrails: prevents phantom venue claims on unverified leads', () => {
+  // 1. Unverified overseas agency with dummy venues in key_venues (e.g. Australian planner)
+  const unverifiedAu = {
+    id: 'au-style-co',
+    agency_name: 'The Style Co Melbourne',
+    contact_name: 'Marie',
+    type: 'planner',
+    language: 'en',
+    market: 'au',
+    location: 'Melbourne',
+    key_venues: ['Villa Erba', 'Villa Balbiano'], // dummy/unverified
+  };
+
+  const hookAu = generateBulletproofHook(unverifiedAu);
+  assert.doesNotMatch(hookAu, /Villa (Erba|Balbiano|del Balbianello|d'Este|Pizzo)|Passalacqua/i, 'Must not claim specific Lake Como villas for unverified agency');
+  assert.match(hookAu, /Australia|destination|styling|productions/i, 'Must reference truthful Australian / destination standing');
+
+  const draftAu = buildDraft({
+    prospect: { ...unverifiedAu, personalization_hook: hookAu },
+    key: 'T1_intro',
+  });
+  assert.deepEqual(draftAu.lint.errors, []);
+  assert.doesNotMatch(draftAu.body, /Villa (Erba|Balbiano|del Balbianello|d'Este|Pizzo)|Passalacqua/i);
+
+  // Follow-up 1 (T3) must use "Italian destination" rather than phantom villa
+  const draftAuT3 = buildDraft({
+    prospect: { ...unverifiedAu, personalization_hook: hookAu },
+    key: 'T3_followup',
+  });
+  assert.match(draftAuT3.body, /regarding guest transport for your Italian destination weddings/i);
+  assert.doesNotMatch(draftAuT3.body, /Villa (Erba|Balbiano)/i);
+
+  // 2. Verified agency with documented proof (e.g. WDC at Villa del Balbianello)
+  const verifiedWdc = {
+    id: 'in-wdc',
+    agency_name: 'The Wedding Design Company (WDC)',
+    contact_name: 'Vandana Mohan',
+    type: 'planner',
+    language: 'en',
+    market: 'in',
+    location: 'New Delhi / Mumbai',
+    key_venues: ['Villa del Balbianello'],
+    notes: 'Planned high-profile Bollywood wedding at Villa del Balbianello.',
+  };
+
+  const hookWdc = generateBulletproofHook(verifiedWdc);
+  assert.match(hookWdc, /Villa del Balbianello/i, 'Verified agency must be allowed to reference verified venue');
+  const draftWdc = buildDraft({
+    prospect: { ...verifiedWdc, personalization_hook: hookWdc },
+    key: 'T1_intro',
+  });
+  assert.deepEqual(draftWdc.lint.errors, []);
+  assert.match(draftWdc.body, /Villa del Balbianello/i);
+
+  // 3. Linter catches manual injection of unverified villa
+  const fakeManualDraft = buildDraft({
+    prospect: unverifiedAu,
+    key: 'T1_intro',
+    extraVars: { hook: 'Saw your celebration at Villa Erba, magnificent glasshouse pavilion setup and lighting.' },
+  });
+  assert.ok(
+    fakeManualDraft.lint.errors.some((e) => e.includes('Unverified venue claim')),
+    'Linter must block unverified venue claim'
+  );
 });
 
 

@@ -2,6 +2,7 @@
 // errors block approval; warnings are shown on the card and can be overridden by a human.
 
 import { SIGNATURE, SIGNATURE_IT, SIGNATURE_RU, OPTOUT } from './constants.js';
+import { isVenueVerified } from './prospects.js';
 
 
 export const BANNED = [
@@ -48,13 +49,27 @@ export function coreText(body = '') {
 export const wordCount = (t) => (String(t).match(/[\p{L}\p{N}€][\p{L}\p{N}'’.,€%-]*/gu) || []).length;
 
 /**
- * lintMessage({ subject, body, channel, step }) → { errors: string[], warnings: string[], words }
+ * lintMessage({ subject, body, channel, step, prospect }) → { errors: string[], warnings: string[], words }
  */
-export function lintMessage({ subject = '', body = '', channel = 'email', step = '' } = {}) {
+export function lintMessage({ subject = '', body = '', channel = 'email', step = '', prospect = null } = {}) {
   const errors = [], warnings = [];
   const full = `${subject}\n${body}`;
   const core = coreText(body);
   const words = wordCount(core);
+
+  // Ground-truth venue verification guardrail:
+  // Never mention a specific villa unless it is verified for this prospect
+  if (prospect) {
+    const specificVillas = ['villa balbiano', 'villa del balbianello', 'villa erba', 'villa pizzo', 'passalacqua', "villa d'este", 'villa sola cabiati'];
+    const lowerBody = body.toLowerCase();
+    for (const sv of specificVillas) {
+      if (lowerBody.includes(sv)) {
+        if (!isVenueVerified(prospect, sv)) {
+          errors.push(`Unverified venue claim: "${sv}" is not verified for this prospect`);
+        }
+      }
+    }
+  }
 
   for (const m of full.matchAll(/\{\{\s*([\w]+)\s*\}\}/g)) {
     const v = m[1];

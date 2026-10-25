@@ -36,7 +36,7 @@ Would it be helpful if I shared our confidential partner rate card and vehicle o
     subject_b: 'Executive guest transport in Italy',
     body: `{{greeting}}
 
-Last note from me so I do not crowd your inbox. Whenever you need guest transport for Lake Como, Milan, Tuscany, or Venice, feel free to message me on WhatsApp or reply here.
+Last note from me so I do not crowd your inbox. Whenever you need guest transport for Lake Como, Milan, Tuscany, Venice, or Nice (French Riviera), feel free to message me on WhatsApp or reply here.
 
 Wishing you a calm, successful season.
 
@@ -62,7 +62,7 @@ Wishing you a calm, successful season.
     key: 'T3_followup', language: 'it', kind: 'sequence', name: 'Step 2 (Follow-up 1: Partner Speciale)', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
-Volevo solo assicurarmi che vi sia arrivata la nostra mail precedente sui trasferimenti per i vostri matrimoni a {{venue}}. Vediamo la vostra agenzia come un partner davvero speciale per la nostra flotta, e non scriviamo questo a tutti.
+Volevo solo assicurarmi che vi sia arrivata la nostra mail precedente sui trasferimenti per i vostri matrimoni {{venue}}. Vediamo la vostra agenzia come un partner davvero speciale per la nostra flotta, e non scriviamo questo a tutti.
 
 Vi farebbe piacere ricevere la nostra scheda tariffe partner riservata e la panoramica della flotta?
 
@@ -74,7 +74,7 @@ Vi farebbe piacere ricevere la nostra scheda tariffe partner riservata e la pano
     subject_b: 'Transfer ospiti in Italia',
     body: `{{greeting}}
 
-Chiudo qui per non affollare la vostra casella. Quando vi servirà supporto per i trasferimenti ospiti tra Lago di Como, Milano, Toscana o Venezia, scrivetemi pure su WhatsApp o rispondete qui.
+Chiudo qui per non affollare la vostra casella. Quando vi servirà supporto per i trasferimenti ospiti tra Lago di Como, Milano, Toscana, Venezia o Nizza (Costa Azzurra), scrivetemi pure su WhatsApp o rispondete qui.
 
 Buona stagione.
 
@@ -100,7 +100,7 @@ Buona stagione.
     key: 'T3_followup', language: 'ru', kind: 'sequence', name: 'Step 2 (Follow-up 1: Партнерский интерес)', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
-Хотел убедиться, что вы получили мое предыдущее письмо по трансферам для ваших свадеб в {{venue}}. Мы видим в вашем агентстве действительно сильного потенциального партнера для нашего автопарка, и мы точно не пишем такие слова всем подряд.
+Хотел убедиться, что вы получили мое предыдущее письмо по трансферам для ваших свадеб {{venue}}. Мы видим в вашем агентстве действительно сильного потенциального партнера для нашего автопарка, и мы точно не пишем такие слова всем подряд.
 
 Будет ли вам удобно взглянуть на наш партнерский прайс-лист и презентацию автопарка?
 
@@ -112,7 +112,7 @@ Buona stagione.
     subject_b: 'Трансферы гостей в Италии',
     body: `{{greeting}}
 
-Пишу в последний раз, чтобы не перегружать вашу почту. Если для свадеб на озере Комо, в Милане, Тоскане или Венеции понадобится надежный транспорт для гостей, напишите мне в WhatsApp или ответьте на это письмо.
+Пишу в последний раз, чтобы не перегружать вашу почту. Если для свадеб на озере Комо, в Милане, Тоскане, Венеции или в Ницце (Лазурный берег) понадобится надежный транспорт для гостей, напишите мне в WhatsApp или ответьте на это письмо.
 
 Успешного и спокойного сезона.
 

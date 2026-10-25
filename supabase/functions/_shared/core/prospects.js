@@ -144,7 +144,7 @@ export function normalizeHandle(s = '') {
   return /^[A-Za-z0-9_.]{1,30}$/.test(h) ? h.toLowerCase() : '';
 }
 
-const normName = (s = '') => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\b(wedding|weddings|planner|planners|events?|srl|s\.r\.l\.|studio|the|di|by|lake|como)\b/g, '').replace(/[^a-z0-9]/g, '');
+export const normName = (s = '') => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\b(wedding|weddings|planner|planners|events?|srl|s\.r\.l\.|studio|the|di|by|lake|como)\b/g, '').replace(/[^a-z0-9]/g, '');
 
 /** Existing prospects that look like the same business. */
 export function findDuplicates(c, prospects) {
@@ -319,7 +319,7 @@ export function parseProfileUrl(url = '') {
 }
 
 // Verified public contact & venue directory for Lake Como agencies (MECE Review compliant)
-const KNOWN_LAKE_COMO_DIRECTORY = {
+export const KNOWN_LAKE_COMO_DIRECTORY = {
   federicacantu: {
     website: 'https://www.federicacantuweddingplanner.com',
     email: 'hello@federicacantuweddingplanner.com',
@@ -467,6 +467,59 @@ const KNOWN_LAKE_COMO_DIRECTORY = {
     contact_name: 'Matthew Oliver',
   },
 };
+
+/**
+ * Strict ground-truth venue verification.
+ * A venue is ONLY verified if:
+ * 1. The prospect is a venue/hotel matching that name (self-identity).
+ * 2. The prospect is in KNOWN_LAKE_COMO_DIRECTORY with that venue in key_venues.
+ * 3. The prospect notes or source detail has explicit documented proof (e.g. Deepika Padukone wedding at Balbianello).
+ */
+export function isVenueVerified(prospect = {}, venueName = '') {
+  if (!venueName) return false;
+  const vNorm = normName(venueName);
+
+  // 1. If prospect is a venue or concierge hotel, verified for its own name
+  if (prospect.type === 'venue' || prospect.type === 'concierge_hotel') {
+    const pNameNorm = normName(prospect.agency_name || '');
+    if (pNameNorm.includes(vNorm) || vNorm.includes(pNameNorm)) return true;
+  }
+
+  // 2. Verified local Lake Como directory (local venues/planners with confirmed history)
+  const pNorm = normName(prospect.agency_name || '');
+  const seed = KNOWN_LAKE_COMO_DIRECTORY[pNorm];
+  if (seed && Array.isArray(seed.key_venues)) {
+    if (seed.key_venues.some((v) => normName(v) === vNorm)) return true;
+  }
+
+  // 3. Local Lake Como agency physical presence (strictly local Italian municipality, never foreign)
+  const loc = String(prospect.location || '').toLowerCase();
+  const isForeign = /london|san francisco|new york|paris|dubai|moscow|sydney|melbourne|toronto|berlin|vienna|zurich|mumbai|delhi/i.test(loc);
+  const isLocalComo = !isForeign && /como|bellagio|cernobbio|tremezzo|tremezzina|menaggio|varenna|laglio|moltrasio|lecco|blevio|ossuccio|lenno/i.test(loc);
+  if (isLocalComo) {
+    if (/bellagio/i.test(loc) && /melzi|serbelloni/i.test(venueName)) return true;
+    if (/cernobbio/i.test(loc) && /d'este|erba|pizzo/i.test(venueName)) return true;
+    if (/tremezzo|tremezzina|lenno|ossuccio/i.test(loc) && /balbianello|balbiano|sola cabiati|tremezzo/i.test(venueName)) return true;
+    if (/varenna/i.test(loc) && /cipressi|monastero/i.test(venueName)) return true;
+  }
+
+  // 4. Documented proof in notes/source with verified citations (e.g. WDC Deepika Padukone wedding at Balbianello)
+  const notes = String(prospect.notes || '').toLowerCase();
+  const vLower = venueName.toLowerCase();
+  if (notes.includes(vLower) && /(planned|wedding|shot|executed|celebrity|bollywood|client|portfolio verified)/i.test(notes)) {
+    return true;
+  }
+
+  return false;
+}
+
+export function getVerifiedVenue(prospect = {}) {
+  const venues = Array.isArray(prospect.key_venues) ? prospect.key_venues : [];
+  for (const v of venues) {
+    if (v && isVenueVerified(prospect, v)) return v;
+  }
+  return null;
+}
 
 export const DISCOVERY_PARTNER_CATALOG = [
   // Local Italian Luxury Destination Planners & Venues (50% local)
