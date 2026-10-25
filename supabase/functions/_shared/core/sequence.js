@@ -296,6 +296,7 @@ export function sortDueTouchesWithMarketBalancer(
     if (rollingIntlRatio < targetIntlRatio && isIntlA !== isIntlB) {
       return isIntlA ? -1 : 1;
     }
+
     return new Date(a.scheduled_at || a.created_at).getTime() - new Date(b.scheduled_at || b.created_at).getTime();
   });
 }
