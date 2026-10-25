@@ -15,6 +15,12 @@ export function firstName(contact = '') {
   return n.charAt(0).toUpperCase() + n.slice(1);
 }
 
+function stableHash(str = '') {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+  return h;
+}
+
 export function generateBulletproofHook(prospect = {}) {
   const lang = prospect.language === 'it' ? 'it' : (prospect.language === 'ru' ? 'ru' : 'en');
   const venues = (Array.isArray(prospect.key_venues) ? prospect.key_venues : [])
@@ -22,29 +28,140 @@ export function generateBulletproofHook(prospect = {}) {
     .filter((v) => v && !/^(lake\s+como|lago\s+di\s+como|italy|milan)$/i.test(v));
   const loc = String(prospect.location || '').toLowerCase();
   const v = venues[0];
+  const name = prospect.agency_name || prospect.id || 'p';
+  const pick = (arr) => arr[stableHash(name) % arr.length];
 
   const isTuscany = /tuscany|toscana|florence|firenze|chianti|siena/.test(loc) || (v && /tuscany|florence|firenze/i.test(v));
   const isComo = /como|bellagio|cernobbio|tremezzo|passalacqua|balbiano|balbianello|erba|pizzo|d'este/.test(loc) || (v && /passalacqua|balbiano|balbianello|erba|pizzo|d'este|cipressi|monastero/i.test(v));
 
   if (lang === 'it') {
-    if (v) return `Ho visto i vostri allestimenti a ${v}, complimenti per la produzione e la cura dei dettagli.`;
-    if (isTuscany) return "Ho visto i vostri matrimoni in Toscana, davvero complimenti per la cura dell'allestimento.";
-    if (isComo) return 'Ho visto le vostre nozze sul Lago di Como, davvero complimenti per la produzione.';
-    return 'Ho visto le vostre produzioni per destination wedding in Italia, davvero complimenti per la cura dei dettagli.';
+    if (v && /balbianello/i.test(v)) return pick([
+      "Ho visto le vostre nozze a Villa del Balbianello, l'arrivo in barca al tramonto era davvero spettacolare.",
+      "Ho visto la vostra celebrazione a Villa del Balbianello, l'allestimento a lago era magnifico.",
+      "Ho visto i vostri allestimenti a Villa del Balbianello, la cerimonia sulla loggia era splendida."
+    ]);
+    if (v && /balbiano/i.test(v)) return pick([
+      "Ho visto la vostra celebrazione a Villa Balbiano, la cena nei giardini a lago era meravigliosa.",
+      "Ho visto i vostri allestimenti a Villa Balbiano, giochi di luce e cena all'aperto splendidi.",
+      "Ho visto le vostre nozze a Villa Balbiano, styling ed eleganza a lago davvero unici."
+    ]);
+    if (v && /passalacqua/i.test(v)) return pick([
+      "Ho visto i vostri eventi a Passalacqua, atmosfera e cura dei dettagli nei giardini davvero splendide.",
+      "Ho visto le vostre nozze a Passalacqua, allestimento a bordo piscina e a lago impeccabile."
+    ]);
+    if (v && /erba/i.test(v)) return pick([
+      "Ho visto la vostra celebrazione a Villa Erba, allestimento nel padiglione davvero magnifico.",
+      "Ho visto il vostro evento a Villa Erba, scala e giochi di luce sulla terrazza a lago splendidi."
+    ]);
+    if (v && /d'este/i.test(v)) return pick([
+      "Ho visto le vostre nozze a Villa d'Este, eleganza senza tempo sulla terrazza a lago.",
+      "Ho visto i vostri allestimenti a Villa d'Este, la cena nella corte interna era magnifica."
+    ]);
+    if (v) return pick([
+      `Ho visto i vostri allestimenti a ${v}, complimenti per lo styling e la cura dei dettagli.`,
+      `Ho visto la vostra recente celebrazione a ${v}, allestimento a lago davvero splendido.`
+    ]);
+    if (isTuscany) return pick([
+      "Ho visto i vostri matrimoni in Toscana, allestimento nella corte del borgo davvero splendido.",
+      "Ho visto le vostre celebrazioni in Toscana, atmosfera tra le colline e cena a lume di candela meravigliose."
+    ]);
+    if (isComo) return pick([
+      "Ho visto le vostre nozze sul Lago di Como, styling e atmosfera a lago davvero impeccabili.",
+      "Ho visto le vostre celebrazioni sul Lago di Como, allestimenti sul lungolago davvero splendidi."
+    ]);
+    return pick([
+      "Ho visto i vostri destination wedding in Italia, davvero complimenti per lo stile e la cura dei dettagli.",
+      "Ho visto le vostre recenti celebrazioni in Italia, eleganza e allestimenti impeccabili."
+    ]);
   }
 
   if (lang === 'ru') {
-    if (v) return `Обратил внимание на ваши проекты в ${v} — очень впечатлил уровень организации.`;
-    if (isTuscany) return 'Обратил внимание на ваши свадьбы в Тоскане — очень впечатлил уровень организации.';
-    if (isComo) return 'Обратил внимание на ваши свадьбы на озере Комо — очень впечатлил масштаб и детализация.';
-    return 'Обратил внимание на ваши выездные свадебные проекты в Италии — впечатляющий уровень организации.';
+    if (v && /balbianello/i.test(v)) return pick([
+      'Увидел вашу свадьбу на Villa del Balbianello, потрясающая церемония у воды и выход на катерах.',
+      'Обратил внимание на ваши проекты на Villa del Balbianello, великолепная локация и оформление.'
+    ]);
+    if (v && /balbiano/i.test(v)) return pick([
+      'Обратил внимание на ваши проекты на Villa Balbiano, невероятно красивый ужин в саду у озера.',
+      'Увидел вашу свадьбу на Villa Balbiano, оформление и атмосфера у воды выглядели потрясающе.'
+    ]);
+    if (v && /passalacqua/i.test(v)) return pick([
+      'Увидел ваши свадебные проекты в Passalacqua, потрясающая атмосфера и внимание к деталям.',
+      'Обратил внимание на ваше торжество в Passalacqua, красивейший ужин в оливковом саду.'
+    ]);
+    if (v && /erba/i.test(v)) return pick([
+      'Обратил внимание на ваше торжество на Villa Erba, великолепный масштаб и оформление.',
+      'Увидел ваше мероприятие на Villa Erba, вечерний прием и подсветка выглядели впечатляюще.'
+    ]);
+    if (v && /d'este/i.test(v)) return pick([
+      'Обратил внимание на вашу свадьбу на Villa d\'Este, классическая элегантность на террасе у воды.',
+      'Увидел ваши проекты на Villa d\'Este, великолепный ужин во внутреннем дворе.'
+    ]);
+    if (v) return pick([
+      `Обратил внимание на ваши недавние свадебные проекты в ${v}, очень красивое оформление и детали.`,
+      `Увидел вашу недавнюю свадьбу в ${v}, великолепный уровень и эстетика.`
+    ]);
+    if (isTuscany) return pick([
+      'Увидел вашу недавнюю свадьбу в Тоскане, потрясающий ужин при свечах в усадьбе.',
+      'Обратил внимание на ваши проекты в Тоскане, очень красивая атмосфера среди холмов.'
+    ]);
+    if (isComo) return pick([
+      'Обратил внимание на ваши свадьбы на озере Комо, очень красивое оформление церемоний у воды.',
+      'Увидел ваши проекты на озере Комо, потрясающий стиль и атмосфера.'
+    ]);
+    return pick([
+      'Обратил внимание на ваши выездные свадьбы в Италии, очень сильное и красивое портфолио.',
+      'Увидел ваши итальянские свадебные проекты, великолепный вкус и внимание к деталям.'
+    ]);
   }
 
   // English
-  if (v) return `Saw your weddings at ${v} and loved the production.`;
-  if (isTuscany) return 'Saw your recent wedding in Tuscany and loved the production.';
-  if (isComo) return 'Saw your recent destination weddings on Lake Como — really impressed by the setup.';
-  return 'Saw your destination wedding productions in Italy — really impressed by the setup.';
+  if (v && /balbianello/i.test(v)) return pick([
+    'Saw your celebration at Villa del Balbianello, the arrival by wooden boat at dusk was stunning.',
+    'Saw your wedding at Villa del Balbianello, beautiful ceremony setup by the water.',
+    'Came across your celebration at Villa del Balbianello, stunning lakeside setting and styling.'
+  ]);
+  if (v && /balbiano/i.test(v)) return pick([
+    'Saw your celebration at Villa Balbiano, stunning garden dinner setup and lighting.',
+    'Saw your wedding at Villa Balbiano, loved the styling and lakeside atmosphere.',
+    'Came across your celebration at Villa Balbiano, beautiful ceremony setup by the water.'
+  ]);
+  if (v && /passalacqua/i.test(v)) return pick([
+    'Saw your celebration at Passalacqua, the garden setting and olive grove dinner looked incredible.',
+    'Saw your wedding at Passalacqua, beautiful styling and lakeside atmosphere.',
+    'Came across your celebration at Passalacqua, timeless setting by the water.'
+  ]);
+  if (v && /erba/i.test(v)) return pick([
+    'Saw your celebration at Villa Erba, magnificent glasshouse pavilion setup and lighting.',
+    'Saw your event at Villa Erba, incredible scale and lakeside setting.',
+    'Came across your celebration at Villa Erba, loved the evening reception setup.'
+  ]);
+  if (v && /d'este/i.test(v)) return pick([
+    'Saw your wedding at Villa d\'Este, timeless setting on the lake terrace.',
+    'Saw your celebration at Villa d\'Este, stunning courtyard dinner and floral styling.',
+    'Came across your celebration at Villa d\'Este, beautiful lakeside setting.'
+  ]);
+  if (v && /pizzo/i.test(v)) return pick([
+    'Saw your celebration at Villa Pizzo, the lakeside terrace and cypress avenue looked stunning.',
+    'Saw your wedding at Villa Pizzo, loved the dinner setup along the water.'
+  ]);
+  if (v) return pick([
+    `Saw your celebration at ${v}, stunning setup and styling.`,
+    `Saw your wedding at ${v}, loved how the dinner setup and lighting turned out.`,
+    `Came across your celebration at ${v}, beautiful lakeside atmosphere.`
+  ]);
+  if (isTuscany) return pick([
+    'Saw your recent wedding in Tuscany, stunning courtyard dinner and lighting.',
+    'Saw your celebration in Tuscany, beautiful vineyard setting and styling.',
+    'Came across your event in Florence, stunning terrace setup overlooking the city.'
+  ]);
+  if (isComo) return pick([
+    'Saw your destination celebrations on Lake Como, stunning lakeside styling and atmosphere.',
+    'Came across your Lake Como celebrations, loved the dinner setups by the water.'
+  ]);
+  return pick([
+    'Came across your destination weddings in Italy, really impressive portfolio and curation.',
+    'Saw your recent Italian destination celebrations, beautiful styling across every detail.'
+  ]);
 }
 
 export function cleanPersonalizationHook(hook = '', prospect = {}) {
@@ -152,18 +269,6 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       c: 'вопрос по трансферам гостей',
     };
 
-    if (effectiveVariant === 'B') {
-      return {
-        subject_line_a: ruSubjects.a,
-        subject_line_b: ruSubjects.b,
-        subject_line_c: ruSubjects.c,
-        service_pitch:
-          'Ночной разъезд гостей — самый сложный момент свадебной логистики на виллах: узкие подъезды, гости живут в разных городках по побережью или холмам, а такси после полуночи отсутствует. Мы работаем на собственном автопарке Mercedes-Benz V-Class и S-Class на озере Комо, в Милане, Тоскане, Венеции и Ницце (Лазурный берег), привлекаем минибусы до 50 мест и выделяем персонального координатора в WhatsApp на каждое мероприятие.',
-        cta_line:
-          'Если на предстоящих датах требуется надежный ночной разъезд или трансферы гостей, отправить вам схему шаттлов и наш партнерский лист тарифов, или логистика уже закрыта?',
-      };
-    }
-
     return {
       subject_line_a: ruSubjects.a,
       subject_line_b: ruSubjects.b,
@@ -196,18 +301,6 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       c: 'breve domanda sulla gestione transfer',
     };
 
-    if (effectiveVariant === 'B') {
-      return {
-        subject_line_a: itSubjects.a,
-        subject_line_b: itSubjects.b,
-        subject_line_c: itSubjects.c,
-        service_pitch:
-          'Il rientro notturno è il momento più critico per i matrimoni nelle ville: accessi stretti, ospiti distribuiti su diversi paesi e nessun taxi disponibile a notte fonda. Operiamo con una flotta Mercedes-Benz Classe V e Classe S di proprietà attiva tra Lago di Como, Milano, Toscana, Venezia e Nizza (Costa Azzurra), più minibus fino a 50 posti e un referente operativo dedicato su WhatsApp per ogni evento.',
-        cta_line:
-          'Se avete un matrimonio con transfer complessi o rientri notturni dalle ville, può esservi utile ricevere il piano navette e il nostro listino riservato, o avete già fornitori fissi?',
-      };
-    }
-
     return {
       subject_line_a: itSubjects.a,
       subject_line_b: itSubjects.b,
@@ -239,18 +332,6 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
     b: 'backup V-Class fleet for 2027',
     c: 'quick question re: guest transport',
   };
-
-  if (effectiveVariant === 'B') {
-    return {
-      subject_line_a: enSubjects.a,
-      subject_line_b: enSubjects.b,
-      subject_line_c: enSubjects.c,
-      service_pitch:
-        'Late-night returns are where Italian destination weddings face friction: narrow access, scattered hotels, and zero taxis past midnight. We operate executive Mercedes-Benz V-Class and S-Class vehicles across Lake Como, Milan, Tuscany, Venice, and Nice (French Riviera), plus vetted minibuses up to 50 seats, with one fleet lead on WhatsApp.',
-      cta_line:
-        'If an upcoming date has tight guest logistics, would having our 2027 partner rate card and shuttle circuits be useful for your file, or are transfers already arranged?',
-    };
-  }
 
   return {
     subject_line_a: enSubjects.a,

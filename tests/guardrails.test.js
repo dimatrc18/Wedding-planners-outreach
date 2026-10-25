@@ -295,9 +295,9 @@ test('MECE overhaul: Variant A (Intro), Variant B (Late returns), Variant C (Hot
   assert.deepEqual(draftA.lint.errors, []);
   assert.deepEqual(draftA.lint.warnings, []);
 
-  // Variant B: Late Returns After the Reception
+  // Variant B: Subject line split test (backup V-Class fleet for 2027)
   const hookB = buildVerifiedFallbackHook(planner, null, 'B');
-  assert.match(hookB, /The hardest part of a Lake Como wedding's transport is often the end of the night/i);
+  assert.match(hookB, /loved the styling and lakeside atmosphere/i);
   const draftB = buildDraft({
     prospect: { ...planner, personalization_hook: hookB },
     key: 'T1_intro',
@@ -305,8 +305,8 @@ test('MECE overhaul: Variant A (Intro), Variant B (Late returns), Variant C (Hot
   });
   assert.equal(draftB.variant, 'B');
   assert.equal(draftB.subject, 'backup V-Class fleet for 2027');
-  assert.match(draftB.body, /Late-night returns are where Italian destination weddings face friction/);
-  assert.match(draftB.body, /2027 partner rate card and shuttle circuits/);
+  assert.match(draftB.body, /We operate an executive Mercedes-Benz V-Class and S-Class fleet based on Lake Como/);
+  assert.match(draftB.body, /Would having our 2027 partner rate card and villa shuttle circuits be useful/);
   assert.deepEqual(draftB.lint.errors, []);
   assert.deepEqual(draftB.lint.warnings, []);
 

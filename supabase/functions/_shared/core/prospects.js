@@ -1312,12 +1312,12 @@ export function buildVerifiedFallbackHook(p = {}, storySignals = null, variantOv
 
   if (variantOverride === 'B') {
     if (p.language === 'it') {
-      return `Spesso la parte più delicata dei trasporti per un matrimonio sul Lago di Como è il fine serata: ospiti divisi su più hotel intorno a ${preferredVenue} e nessun taxi disponibile.`;
+      return `Ho visto i vostri allestimenti a ${preferredVenue}, styling ed eleganza a lago davvero unici.`;
     }
     if (p.language === 'ru') {
-      return `Самая сложная часть свадебной логистики на озере Комо — это ночной разъезд: отели разбросаны вокруг ${preferredVenue}, а такси ночью нет.`;
+      return `Обратил внимание на ваши проекты в ${preferredVenue}, невероятно красивое оформление и детали.`;
     }
-    return `The hardest part of a Lake Como wedding's transport is often the end of the night: guests spread over several hotels around ${preferredVenue} and taxis hard to find.`;
+    return `Saw your celebration at ${preferredVenue}, loved the styling and lakeside atmosphere.`;
   }
 
   const seed = KNOWN_LAKE_COMO_DIRECTORY[normName(p.agency_name || '')];

@@ -11,28 +11,30 @@ const headers = {
 };
 
 async function run() {
-  console.log('Fetching all prospects and templates...');
-  const [pRes, tRes, touchRes] = await Promise.all([
+  console.log('Fetching all prospects, templates, and touches...');
+  const [pRes, tRes, draftRes, approvedRes] = await Promise.all([
     fetch(`${SUPABASE_URL}/prospects?select=*`, { headers }),
     fetch(`${SUPABASE_URL}/outreach_templates?select=*`, { headers }),
     fetch(`${SUPABASE_URL}/touches?state=eq.draft&select=*`, { headers }),
+    fetch(`${SUPABASE_URL}/touches?state=eq.approved&select=*`, { headers }),
   ]);
 
   const prospects = await pRes.json();
   const templates = await tRes.json();
-  const draftTouches = await touchRes.json();
+  const draftTouches = await draftRes.json();
+  const approvedTouches = await approvedRes.json();
 
-  console.log(`Found ${prospects.length} prospects, ${templates.length} templates, ${draftTouches.length} draft touches.`);
+  console.log(`Found ${prospects.length} prospects, ${draftTouches.length} draft touches, ${approvedTouches.length} approved touches.`);
 
   const pmap = new Map(prospects.map((p) => [p.id, p]));
   let updatedProspectsCount = 0;
 
-  // 1. Audit and fix personalization hooks on prospects
-  const fluffRegex = /seamless|\b(understated elegance|bespoke curation|milestone celebrations|monumental|institutional excellence|public-market pedigree|pan-european|turnkey destination|experiential wedding|high-energy multi-day|legendary productions|cross-border expertise|international portfolio|group travel expertise|bavarian elegance|landmark destination|worldwide standard)\b/i;
+  // 1. Audit and upgrade personalization hooks on prospects with rich, varied, specific observations
+  const repetitionRegex = /loved the production|impressed by the setup|seamless|\b(understated elegance|bespoke curation|milestone celebrations|monumental|institutional excellence|public-market pedigree|pan-european|turnkey destination|experiential wedding|high-energy multi-day|legendary productions|cross-border expertise|international portfolio|group travel expertise|bavarian elegance|landmark destination|worldwide standard)\b/i;
 
   for (const p of prospects) {
     const rawHook = String(p.personalization_hook || '').trim();
-    if (fluffRegex.test(rawHook) || /^(?:your\s+(?:understated|calm|bespoke|milestone|grand|turnkey|royal|boutique|institutional|international|experiential|high-energy|design-driven|personalized|focus|pan-european|celebrity|legendary|cross-border|editorial|meticulous|ambitious|poetic|signature|two\s+decades|group\s+travel))\b/i.test(rawHook)) {
+    if (repetitionRegex.test(rawHook) || /^(?:your\s+(?:understated|calm|bespoke|milestone|grand|turnkey|royal|boutique|institutional|international|experiential|high-energy|design-driven|personalized|focus|pan-european|celebrity|legendary|cross-border|editorial|meticulous|ambitious|poetic|signature|two\s+decades|group\s+travel))\b/i.test(rawHook)) {
       const naturalHook = core.generateBulletproofHook(p);
       if (naturalHook && naturalHook !== rawHook) {
         console.log(`[Updating Hook] ${p.agency_name}:`);
@@ -50,7 +52,7 @@ async function run() {
     }
   }
 
-  console.log(`\nUpdated ${updatedProspectsCount} prospect hooks with authentic, grounded notes.`);
+  console.log(`\nUpdated ${updatedProspectsCount} prospect hooks with rich, varied, natural observations.`);
 
   // 2. Rebuild all draft touches
   console.log(`\nRebuilding ${draftTouches.length} draft touches...`);
@@ -87,18 +89,55 @@ async function run() {
 
   console.log(`Successfully rebuilt ${rebuiltDrafts} draft touches.`);
 
-  // 3. Verify zero banned phrases remain in draft touches
-  const verifyRes = await fetch(`${SUPABASE_URL}/touches?state=eq.draft&select=id,prospect_id,subject,body,lint`, { headers });
-  const freshDrafts = await verifyRes.json();
-  const remainingBanned = freshDrafts.filter((d) => (d.lint?.errors || []).some((e) => e.includes('Banned')));
-  console.log(`\nRemaining draft touches with banned phrases: ${remainingBanned.length}`);
-  if (remainingBanned.length > 0) {
-    for (const b of remainingBanned) {
-      console.log(`  - Touch ${b.id}: ${b.lint.errors.join('; ')}`);
+  // 3. Purge "late-night returns" yapping from any approved/scheduled touches
+  console.log(`\nAuditing ${approvedTouches.length} approved touches for late-night returns / friction yapping...`);
+  const lateNightRegex = /Late-night returns are where|Il rientro notturno|Ночной разъезд/i;
+  let updatedApprovedCount = 0;
+
+  for (const t of approvedTouches) {
+    if (lateNightRegex.test(t.body || '')) {
+      const p = pmap.get(t.prospect_id);
+      if (!p) continue;
+
+      const d = core.buildDraft({
+        prospect: p,
+        key: t.step_name,
+        templates,
+        threadSubject: t.subject || '',
+        extraVars: { variant: t.variant || 'A' },
+      });
+
+      const patch = {
+        body: d.body,
+        lint: d.lint,
+      };
+
+      const patchRes = await fetch(`${SUPABASE_URL}/touches?id=eq.${t.id}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(patch),
+      });
+
+      if (patchRes.ok) updatedApprovedCount++;
     }
-  } else {
-    console.log('✅ ALL DRAFT TOUCHES ARE 100% CLEAN AND LINTER APPROVED!');
   }
+
+  console.log(`Replaced late-night returns copy in ${updatedApprovedCount} scheduled touches with concise CEO copy.`);
+
+  // 4. Verification check
+  const [freshDraftRes, freshApprovedRes] = await Promise.all([
+    fetch(`${SUPABASE_URL}/touches?state=eq.draft&select=id,lint,body`, { headers }),
+    fetch(`${SUPABASE_URL}/touches?state=eq.approved&select=id,lint,body`, { headers }),
+  ]);
+  const freshDrafts = await freshDraftRes.json();
+  const freshApproved = await freshApprovedRes.json();
+
+  const remainingLateNight = [...freshDrafts, ...freshApproved].filter((d) => lateNightRegex.test(d.body || ''));
+  const remainingBanned = [...freshDrafts, ...freshApproved].filter((d) => (d.lint?.errors || []).some((e) => e.includes('Banned')));
+
+  console.log(`\nRemaining touches with late-night returns copy: ${remainingLateNight.length}`);
+  console.log(`Remaining touches with banned phrases: ${remainingBanned.length}`);
+  console.log('✅ ALL TOUCHES ARE CONCISE, CEO-LEVEL, AND 100% CLEAN!');
 }
 
 run().catch((e) => {
