@@ -493,7 +493,7 @@ export function isVenueVerified(prospect = {}, venueName = '') {
   }
 
   // 3. Local Lake Como agency physical presence (strictly local Italian municipality, never foreign)
-  const loc = String(prospect.location || '').toLowerCase();
+  const loc = String(prospect.location || prospect.agency_name || '').toLowerCase();
   const isForeign = /london|san francisco|new york|paris|dubai|moscow|sydney|melbourne|toronto|berlin|vienna|zurich|mumbai|delhi/i.test(loc);
   const isLocalComo = !isForeign && /como|bellagio|cernobbio|tremezzo|tremezzina|menaggio|varenna|laglio|moltrasio|lecco|blevio|ossuccio|lenno/i.test(loc);
   if (isLocalComo) {

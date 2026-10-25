@@ -226,7 +226,6 @@ export function cleanPersonalizationHook(hook = '', prospect = {}) {
 
   // If hook has banned words ("seamless", "seamlessly"), robotic formula, or unverified specific venue claim, replace with bulletproof hook
   const hasSeamless = /\bseamless(ly)?\b/i.test(s);
-  const isGenericAiFormula = /^(?:your\s+(?:understated|calm|bespoke|milestone|grand|turnkey|royal|boutique|institutional|international|experiential|high-energy|design-driven|personalized|focus|pan-european|celebrity|legendary|cross-border|editorial|meticulous|ambitious|poetic|signature|two\s+decades|group\s+travel))\b/i.test(s);
   
   const specificVillas = [
     'villa balbiano',
@@ -242,7 +241,18 @@ export function cleanPersonalizationHook(hook = '', prospect = {}) {
     (sv) => lowerHook.includes(sv) && !isVenueVerified(prospect, sv)
   );
 
-  if ((hasSeamless || isGenericAiFormula || hasUnverifiedVilla) && prospect) {
+  // Check if hook is AI-generated fluff / ungrounded claim for unverified planners
+  const allKnownVillas = specificVillas.concat(['villa melzi', 'villa serbelloni', 'villa monastero', 'villa cipressi']);
+  const isHookVenueVerified = allKnownVillas.some(
+    (v) => lowerHook.includes(v) && isVenueVerified(prospect, v)
+  );
+  const isVerified = Boolean(getVerifiedVenue(prospect) || isHookVenueVerified || prospect.type === 'venue' || prospect.type === 'concierge_hotel');
+  const isAiYourFormula = /^your\s+/i.test(s) && (!isVerified || /clientele|heading to|expect absolute precision|vibrant glamour|lakeside villas?|bring.*to lake como|translated onto lake como/i.test(s));
+  const isUngroundedComoClaim = !isVerified && /(?:lake como|lago di como|козеро комо|lakeside villas?)/i.test(s) && /(?:clientele|heading to|expect|villas?|buyout|weddings? on|celebrations? on|productions? on|itineraries|private estate|ultra-luxury|bespoke weddings|cinematic|opulent)/i.test(s);
+  const isAiItalianFormula = !isVerified && /^(?:la vostra|i vostri|il vostro)\s+/i.test(s);
+  const isAiRussianFormula = !isVerified && /^(?:ваши|создаваемые вами|масштаб ваших)\s+/i.test(s);
+
+  if ((hasSeamless || hasUnverifiedVilla || isAiYourFormula || isUngroundedComoClaim || isAiItalianFormula || isAiRussianFormula) && prospect) {
     return generateBulletproofHook(prospect);
   }
 
