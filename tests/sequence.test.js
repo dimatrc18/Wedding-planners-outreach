@@ -296,4 +296,38 @@ test('Anti-Flood Protection: non-cold touches that are already sent cannot be re
   assert.equal(gate.reason, 'touch_already_sent');
 });
 
+test('Zero-Hallucination & Authentic Research Gate: canSend blocks generic placeholder hooks and unverified prospects', () => {
+  const tue10 = rome(2026, 10, 6, 10, 0);
+
+  // 1. Prospect with status: 'needs_research' is blocked
+  const unresearchedProspect = P({ status: 'needs_research' });
+  const t1 = { step_name: 'T1_intro', channel: 'email', state: 'approved', scheduled_at: tue10.toISOString(), body: 'Hi Kathy, valid body' };
+  const gateResearch = canSend(t1, unresearchedProspect, [], S, { now: tue10 });
+  assert.equal(gateResearch.ok, false);
+  assert.equal(gateResearch.reason, 'needs_research');
+
+  // 2. Cold touch containing generic fallback formula is strictly blocked
+  const genericTouch = {
+    step_name: 'T1_intro',
+    channel: 'email',
+    state: 'approved',
+    scheduled_at: tue10.toISOString(),
+    body: 'Hi Jessica,\n\nWhen your Australian couples plan multi-day destination weddings in Italy or the French Riviera...\n\nWe operate an executive Mercedes-Benz V-Class fleet.',
+  };
+  const gateGeneric = canSend(genericTouch, P(), [], S, { now: tue10 });
+  assert.equal(gateGeneric.ok, false);
+  assert.equal(gateGeneric.reason, 'unverified_generic_hook');
+
+  // 3. Authentic verified hook passes gate
+  const verifiedTouch = {
+    step_name: 'T1_intro',
+    channel: 'email',
+    state: 'approved',
+    scheduled_at: tue10.toISOString(),
+    body: 'Hi Kathy,\n\nFollow your work in Sydney across @eventsbynightingales. Your three decades of luxury event styling and architectural tablescapes set an industry benchmark.\n\nWe operate an executive Mercedes-Benz V-Class fleet.',
+  };
+  const gateVerified = canSend(verifiedTouch, P(), [], S, { now: tue10 });
+  assert.equal(gateVerified.ok, true);
+});
+
 

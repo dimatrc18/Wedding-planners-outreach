@@ -95,6 +95,15 @@ export function lintMessage({ subject = '', body = '', channel = 'email', step =
     if (['T1_intro', 'T3_followup', 'T4_breakup'].includes(step) && !OPTOUT_RE.test(body)) warnings.push('Add the opt-out line');
   }
 
+  const GENERIC_HOOK_PATTERNS = [
+    /When your (?:clients|couples|Australian|Canadian)/i,
+    /Follow your destination celebrations and design-led/i,
+    /Came across your luxury event styling and international celebration/i,
+  ];
+  if (step === 'T1_intro' && GENERIC_HOOK_PATTERNS.some((re) => re.test(core))) {
+    warnings.push('Hook is a generic fallback; replace with authentic portfolio research');
+  }
+
   const questions = (core.match(/\?/g) || []).length;
   if (step === 'T1_intro') {
     if (questions === 0) warnings.push('No call to action; ask if you can send rates or deck');
@@ -104,7 +113,9 @@ export function lintMessage({ subject = '', body = '', channel = 'email', step =
     warnings.push(`${questions} questions; keep one clear ask`);
   }
   if (/!/.test(core)) warnings.push('Exclamation marks read as salesy');
-  if (/—/.test(core)) warnings.push('Avoid em-dashes (—); use a comma, colon or period (Concierge style)');
+  if (/—/.test(core)) warnings.push('Avoid em-dashes (—); use a comma, colon or period (/copywriting rule 7)');
+  if (/\s+-\s+/.test(core)) warnings.push('Avoid hyphens as punctuation ( - ); use a comma or period (/copywriting rule 7)');
+  if (/\b(?:really|very)\s+/i.test(core)) warnings.push('Remove qualifiers like "really" or "very" (/copywriting rule 2)');
   const links = (core.match(/https?:\/\/|www\./g) || []).length;
   if (links > 1) warnings.push('More than one link hurts deliverability');
   if (/dear (sir|madam)|to whom it may concern|gentile cliente/i.test(core)) warnings.push('Generic greeting; use their name');

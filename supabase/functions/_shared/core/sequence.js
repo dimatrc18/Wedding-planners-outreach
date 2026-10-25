@@ -175,6 +175,18 @@ export function canSend(touch, prospect, touches, settings, ctx = {}) {
   }
   if (hasRealReply(touches)) return { ok: false, reason: 'replied' };
   if (prospect.sequence_paused) return { ok: false, reason: 'paused' };
+  if (prospect.status === 'needs_research' || prospect.status === 'dead_domain') return { ok: false, reason: 'needs_research' };
+
+  // Zero-Hallucination & Authentic Research Gate:
+  // Never send cold outreach containing a generic placeholder hook
+  const GENERIC_HOOK_PATTERNS = [
+    /When your (?:clients|couples|Australian|Canadian)/i,
+    /Follow your destination celebrations and design-led/i,
+    /Came across your luxury event styling and international celebration/i,
+  ];
+  if (cold && touch.step_name === 'T1_intro' && touch.body && GENERIC_HOOK_PATTERNS.some((re) => re.test(touch.body))) {
+    return { ok: false, reason: 'unverified_generic_hook' };
+  }
 
   // Anti-Flood Gate 1: Check if this cadence step was already sent to this prospect
   const otherTouches = Array.isArray(touches) ? touches : [];
@@ -218,6 +230,8 @@ export const BLOCK_REASONS = {
   bounce_pause: 'Paused: bounce rate above limit',
   replied: 'Planner replied, sequence stopped',
   paused: 'Sequence paused',
+  needs_research: 'Prospect needs ground-truth portfolio research before outreach',
+  unverified_generic_hook: 'Touch contains generic fallback hook; needs authentic portfolio research',
   season_paused: 'Campaign paused for the season',
   not_due: 'Scheduled for later',
   outside_window: 'Outside the send window',

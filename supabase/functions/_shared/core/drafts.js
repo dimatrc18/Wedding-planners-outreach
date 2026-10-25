@@ -256,13 +256,26 @@ export function cleanPersonalizationHook(hook = '', prospect = {}) {
     return generateBulletproofHook(prospect);
   }
 
-  // Sanitize any remaining banned words
+  // Sanitize any remaining banned words and apply /copywriting rules:
+  // 1. Simple over complex & no marketing buzzwords
   s = s.replace(/\bseamlessly\b/gi, 'smoothly')
        .replace(/\bseamless\b/gi, 'smooth')
        .replace(/\bbespoke solutions?\b/gi, 'tailored logistics')
        .replace(/\btop[- ]notch\b/gi, 'first-class')
        .replace(/\belevate your\b/gi, 'support your')
        .trim();
+
+  // 2. Confident over qualified: remove "really", "very"
+  s = s.replace(/\breally\s+/gi, '')
+       .replace(/\bvery\s+/gi, '')
+       .trim();
+
+  // 3. No dashes (Rule 7 from /copywriting): do not use dashes (- or —) as punctuation
+  s = s.replace(/\s*—\s*/g, '. ')
+       .replace(/\s+-\s+/g, ', ')
+       .replace(/\.\./g, '.')
+       .trim();
+  s = s.replace(/\.\s+([a-z])/g, (_, letter) => '. ' + letter.toUpperCase());
 
   if (s) {
     s = s.charAt(0).toUpperCase() + s.slice(1);
