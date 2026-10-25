@@ -354,7 +354,7 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
     const ruSubjects = {
       a: `DOROGO x ${ruAgency}`,
       b: 'резервный парк Mercedes V-Class / 2027',
-      c: 'вопрос по трансферам гостей',
+      c: `DOROGO x ${ruAgency}`,
     };
 
     return {
@@ -362,9 +362,9 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       subject_line_b: ruSubjects.b,
       subject_line_c: ruSubjects.c,
       service_pitch:
-        'Мы организуем трансферы гостей на собственном автопарке представительских Mercedes-Benz V-Class и S-Class, а также комфортабельных минибусах до 50 мест на озере Комо, в Милане, Тоскане, Венеции и Ницце (Лазурный берег). Мы не стремимся заменить ваших основных перевозчиков, но на пиковые даты, когда парк перегружен, мы держим резервные слоты для партнерских студий.',
+        'Я Дмитрий, руковожу компанией DOROGO. У нас собственный автопарк минивэнов Mercedes V-Class и представительских микроавтобусов на озере Комо, также работаем в Милане и Тоскане.',
       cta_line:
-        'Отправить вам наш партнерский лист тарифов на 2027 год и схему шаттлов, или у вас уже закрыты трансферы на сезон?',
+        'Когда ваши пары планируют свадьбы в Италии, у вас уже есть проверенные водители для гостей или вам пригодится наш тарифный план 2027 и маршруты шаттлов по виллам?',
     };
   }
 
@@ -386,7 +386,7 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
     const itSubjects = {
       a: `DOROGO x ${itAgency}`,
       b: 'flotta Mercedes di supporto per il 2027',
-      c: 'breve domanda sulla gestione transfer',
+      c: `DOROGO x ${itAgency}`,
     };
 
     return {
@@ -394,9 +394,9 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       subject_line_b: itSubjects.b,
       subject_line_c: itSubjects.c,
       service_pitch:
-        'Operiamo con una flotta Mercedes-Benz Classe V e Classe S basata sul Lago di Como e attiva a Milano, in Toscana, a Venezia e a Nizza (Costa Azzurra), più minibus fino a 50 posti. Non cerchiamo di sostituire i vostri autisti di fiducia, ma nelle date di punta in cui le disponibilità scarseggiano, riserviamo disponibilità di flotta per le agenzie partner.',
+        'Sono Dmitri e gestisco DOROGO. Abbiamo una flotta di Mercedes Classe V e minibus executive con base sul Lago di Como, attivi anche su Milano e in Toscana.',
       cta_line:
-        'Può esservi utile ricevere il nostro listino riservato 2027 e lo schema dei circuiti villa, o avete già fornitori fissi?',
+        'Per i vostri eventi e matrimoni sul lago, avete già i transfer degli ospiti organizzati o vi farebbe comodo avere le nostre tariffe 2027 e i percorsi navetta per le ville?',
     };
   }
 
@@ -418,7 +418,7 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
   const enSubjects = {
     a: `DOROGO x ${enAgency}`,
     b: 'backup V-Class fleet for 2027',
-    c: 'quick question re: guest transport',
+    c: `DOROGO x ${enAgency}`,
   };
 
   return {
