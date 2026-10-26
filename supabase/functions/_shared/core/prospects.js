@@ -1277,9 +1277,9 @@ export function extractUniqueStorySignals(rawText = '') {
   return { couples: uniqueCouples, press, signatureDetails, founderName };
 }
 
-export const PARKED_OR_DEAD_DOMAINS = /(?:^|\.)(sedo\.com|dan\.com|hugedomains\.com|afternic\.com|parkingcrew\.net|bodis\.com|domainmarket\.com|sav\.com)$/i;
+export const PARKED_OR_DEAD_DOMAINS = /(?:^|\.)(sedo\.com|dan\.com|above\.com|hugedomains\.com|afternic\.com|parkingcrew\.net|bodis\.com|domainmarket\.com|sav\.com|squadhelp\.com|brandbucket\.com)$/i;
 
-export const PARKED_OR_DEAD_PATH_RE = /\/(?:lander(?:\?|\/|$)|parking(?:\/|$)|parked(?:\/|$))/i;
+export const PARKED_OR_DEAD_PATH_RE = /\/(?:lander(?:\?|\/|$)|parking(?:\/|$)|parked(?:\/|$)|for-sale(?:\/|$))/i;
 
 export const PARKED_OR_DEAD_CONTENT_RE = new RegExp(
   [
@@ -1289,6 +1289,7 @@ export const PARKED_OR_DEAD_CONTENT_RE = new RegExp(
     '\\bdomain\\s+has\\s+expired\\b',
     '\\bthe\\s+domain\\s+.*?is\\s+for\\s+sale\\b',
     '\\brenew\\s+(?:your|this)\\s+domain\\b',
+    '\\babove\\.com\\b',
     'window\\.LANDER_SYSTEM\\b',
     'parking-lander',
     'wsimg\\.com\\/parking-lander',
@@ -1299,6 +1300,7 @@ export const PARKED_OR_DEAD_CONTENT_RE = new RegExp(
     '\\bpage\\s+cannot\\s+be\\s+found\\b',
     '\\bsite\\s+not\\s+found\\b',
     '\\bdomain\\s+names?\\s+at\\s+godaddy\\b',
+    '\\bliveconfig\\b',
   ].join('|'),
   'i'
 );

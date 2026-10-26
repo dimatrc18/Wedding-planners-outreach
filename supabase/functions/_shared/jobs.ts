@@ -62,15 +62,42 @@ export async function verifyWebsiteReachability(url: string): Promise<'active' |
   if (core.isParkedOrDeadDomain(url)) return 'broken';
   try {
     const u = new URL(url.startsWith('http') ? url : `https://${url}`);
-    const res = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(u.hostname)}&type=A`, {
+    const dnsRes = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(u.hostname)}&type=A`, {
       headers: { accept: 'application/dns-json' },
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(3000),
     });
-    if (!res.ok) return 'unknown';
-    const json: any = await res.json();
+    if (!dnsRes.ok) return 'unknown';
+    const json: any = await dnsRes.json();
     if (json.Status === 3) return 'broken'; // NXDOMAIN
     const hasIp = (json.Answer || []).some((a: any) => (a.type === 1 || a.type === 28) && a.data && !/^(127\.|0\.)/.test(String(a.data).trim()));
-    return hasIp ? 'active' : 'broken';
+    if (!hasIp) return 'broken';
+
+    // Deep reachability check: fetch headers and landing page snippet
+    try {
+      const httpRes = await fetch(u.href, {
+        method: 'GET',
+        headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' },
+        signal: AbortSignal.timeout(4000),
+      });
+      if (httpRes.status === 404 || httpRes.status === 410 || httpRes.status >= 500) {
+        return 'broken';
+      }
+      if (core.isParkedOrDeadDomain(httpRes.url)) {
+        return 'broken';
+      }
+      const serverHeader = (httpRes.headers.get('server') || '').toLowerCase();
+      if (serverHeader.includes('parking')) {
+        return 'broken';
+      }
+      const htmlSnippet = await httpRes.text().then((t: string) => t.slice(0, 10000)).catch(() => '');
+      if (core.isParkedOrDeadDomain(httpRes.url, htmlSnippet)) {
+        return 'broken';
+      }
+      return 'active';
+    } catch {
+      // SSL error, connection reset, or host unreachable
+      return 'broken';
+    }
   } catch {
     return 'unknown';
   }

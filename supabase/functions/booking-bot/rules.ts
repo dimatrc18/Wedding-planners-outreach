@@ -509,6 +509,17 @@ export function applyBusinessRules(
 
   // Client Name & Email fallbacks (strictly guarded so place names like "Villa Lilla" are never mistaken for client names)
   let clientName = raw.client_name || raw.client?.name || null;
+  if (!clientName || !clientName.includes(" ")) {
+    // Check for chat log sender: e.g. [07/10/2569 BE, 00:03:42] Julie Mote (Dorogo):
+    const senderMatches = [...sourceText.matchAll(/\[\d{1,2}[\/.]\d{1,2}[\/.]\d{2,4}[^\]]*\]\s*([^:\n]+?)(?:\s*\([^)]*\))?\s*:/g)];
+    for (const sm of senderMatches) {
+      const senderName = sm[1].trim();
+      if (!/dmitri|dorogo|chauffeur|driver|dispatcher|admin|assistant|bot\b/i.test(senderName) && senderName.length >= 3) {
+        clientName = senderName;
+        break;
+      }
+    }
+  }
   if (!clientName) {
     const labeledName =
       sourceText.match(/(?:client|name|guest|passenger|клиент|имя|пассажир)\s*[:—–-]\s*([A-ZА-ЯЁ][a-zа-яё]+(?:\s+[A-ZА-ЯЁ]['’]?[A-Za-zА-Яа-яЁё]+)*)/i) ||
@@ -643,7 +654,7 @@ export function applyBusinessRules(
     warnings,
   };
 
-  allocateFinance(booking);
+  allocateFinance(booking, sourceText);
   return booking;
 }
 
@@ -662,20 +673,19 @@ function round2(n: number): number {
 /**
  * Single source of truth for money: total balance, per-leg price and per-leg amount to collect.
  * Round trip: price split 50/50, prepayment counted once, remaining balance split 50/50
- * (odd euro goes on the return leg). Standby / multi-stop packages: everything on leg 1.
+ * (or uses explicit per-leg prices and balances if provided in text).
  * Mutates and returns the booking.
  */
-export function allocateFinance(booking: BookingData): BookingData {
+export function allocateFinance(booking: BookingData, sourceText: string = ""): BookingData {
   const total = booking.finance.total_price;
   const deposit = booking.finance.paid_deposit || 0;
   const rides = booking.rides || [];
 
-  rides.forEach((r) => {
-    r.price = null;
-    r.balance_due = null;
-  });
-
   if (total === null || total === undefined) {
+    rides.forEach((r) => {
+      r.price = null;
+      r.balance_due = null;
+    });
     booking.finance.balance_due = null;
     booking.our_notes = "";
     booking.status = deposit > 0 ? "Prepayment Received" : "Confirmed (Unpaid)";
@@ -689,18 +699,70 @@ export function allocateFinance(booking: BookingData): BookingData {
 
   if (rides.length === 0) return booking;
 
-  const isRoundTrip = rides.length === 2 && rides[1].role === "return" && !isStandbyBooking(booking);
-  if (isRoundTrip) {
+  // 1. Check if explicit per-leg due amounts or per-leg prices exist in sourceText
+  const legBalances: { [key: number]: number } = {};
+  const legPrices: { [key: number]: number } = {};
+
+  if (sourceText) {
+    // Matches: "Due after Leg 1 (27 Dec): €952.00", "Due after Leg 1: €952", "Leg 1 due: €952", "Due after Leg 2: €900"
+    const dueRegex = /(?:due\s+after\s+(?:leg\s*(\d+)|([^\n:]+))|leg\s*(\d+)\s+due)[^:\n]*:\s*€?\s*([\d,.]+)/gi;
+    for (const m of sourceText.matchAll(dueRegex)) {
+      const legNum = m[1] || m[3];
+      const legIdx = legNum ? parseInt(legNum, 10) - 1 : (/return|leg\s*2/i.test(m[2] || "") ? 1 : 0);
+      const amount = parseFloat(m[4].replace(/,/g, ""));
+      if (!isNaN(amount) && legIdx >= 0 && legIdx < rides.length) {
+        legBalances[legIdx] = amount;
+      }
+    }
+
+    // Matches: "•  Dec 27 (Milan → Cortina): €1,270", "•  Leg 1: €1,270", "•  Jan 02: €1,200"
+    const priceRegex = /•\s*(?:[A-Za-z]{3,}\s*\d{1,2}|\d{1,2}\s*[A-Za-z]{3,}|Leg\s*(\d+)|Transfer\s*(\d+))[^:\n]*:\s*€?\s*([\d,.]+)/gi;
+    let autoIdx = 0;
+    for (const m of sourceText.matchAll(priceRegex)) {
+      if (/total|due|paid|deposit/i.test(m[0])) continue;
+      const legIdx = m[1] ? parseInt(m[1], 10) - 1 : (m[2] ? parseInt(m[2], 10) - 1 : autoIdx);
+      const amount = parseFloat(m[3].replace(/,/g, ""));
+      if (!isNaN(amount) && legIdx >= 0 && legIdx < rides.length) {
+        legPrices[legIdx] = amount;
+        autoIdx++;
+      }
+    }
+  }
+
+  // 2. Allocate Leg Prices
+  const hasExtractedPrices = rides.length > 1 && rides.every((_, idx) => typeof legPrices[idx] === "number");
+  const hasExistingPrices = rides.length > 1 && rides.every((r) => typeof r.price === "number" && r.price > 0);
+
+  if (hasExtractedPrices) {
+    rides.forEach((r, idx) => { r.price = legPrices[idx]; });
+  } else if (hasExistingPrices) {
+    // Preserve existing ride prices
+  } else if (rides.length === 2 && rides[1].role === "return" && !isStandbyBooking(booking)) {
     const half = Math.round(total / 2);
     rides[0].price = half;
     rides[1].price = round2(total - half);
+  } else {
+    rides[0].price = total;
+    for (let i = 1; i < rides.length; i++) rides[i].price = 0;
+  }
+
+  // 3. Allocate Leg Balances (Due After Leg X)
+  const hasExtractedBalances = rides.length > 1 && rides.every((_, idx) => typeof legBalances[idx] === "number");
+  const hasExistingBalances = rides.length > 1 && rides.every((r) => typeof r.balance_due === "number" && r.balance_due >= 0);
+
+  if (hasExtractedBalances) {
+    rides.forEach((r, idx) => { r.balance_due = legBalances[idx]; });
+  } else if (hasExistingBalances) {
+    // Preserve existing ride balances
+  } else if (rides.length === 2 && rides[1].role === "return" && !isStandbyBooking(booking)) {
     const firstLegDue = Math.floor(balance / 2);
     rides[0].balance_due = firstLegDue;
     rides[1].balance_due = round2(balance - firstLegDue);
   } else {
-    rides[0].price = total;
     rides[0].balance_due = balance;
+    for (let i = 1; i < rides.length; i++) rides[i].balance_due = 0;
   }
+
   return booking;
 }
 
@@ -718,4 +780,40 @@ export function legBalanceNote(booking: BookingData, rideIdx: number): string {
     return "";
   }
   return due > 0 ? `to be paid: ${due} EUR` : "";
+}
+
+/**
+ * Robust extraction of phone number from short reply / snippet
+ */
+export function extractPhoneNumber(text: string): string | null {
+  const clean = text.replace(/^(?:phone|tel|whatsapp|телефон|тел|номер)\s*[:—–-]?\s*/i, "").trim();
+  const m = clean.match(/(?:\+?\d{1,3}[\s-]?)?\(?\d{2,4}\)?[\s.-]?\d{2,4}[\s.-]?\d{3,9}/);
+  if (m) {
+    const digits = m[0].replace(/\D/g, "");
+    if (digits.length >= 7 && digits.length <= 15) {
+      return clean.length <= m[0].length + 10 ? clean : m[0];
+    }
+  }
+  return null;
+}
+
+/**
+ * Robust extraction of client name from short reply / snippet
+ */
+export function extractNameFromReply(text: string): string | null {
+  const clean = text.replace(/^(?:client|name|guest|passenger|клиент|имя|пассажир)\s*[:—–-]?\s*/i, "").trim();
+  if (/^[A-Za-zА-Яа-яЁё'’\-]+(?:\s+[A-Za-zА-Яа-яЁё'’\-]+){0,3}$/.test(clean) && clean.length >= 2 && clean.length <= 40) {
+    if (!/^(?:yes|no|ok|cancel|notes?|transfer|round|trip|standby|mercedes|van|sprinter|flight|due|fare|paid)$/i.test(clean)) {
+      return clean;
+    }
+  }
+  return null;
+}
+
+/**
+ * Robust extraction of pick-up times from short reply / snippet
+ */
+export function extractTimesFromReply(text: string): string[] {
+  const timeMatches = [...text.matchAll(/(?<!\d)(?:[01]?\d|2[0-3]):[0-5]\d(?!\d)/g)];
+  return timeMatches.map((m) => m[0]);
 }

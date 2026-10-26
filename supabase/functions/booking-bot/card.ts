@@ -65,7 +65,14 @@ function fareLine(booking: BookingData): string {
   const dep = booking.finance.paid_deposit || 0;
   const due = booking.finance.balance_due ?? (p - dep);
   const legs = booking.rides.filter((r) => r.balance_due !== null && r.balance_due !== undefined);
-  const split = legs.length === 2 ? ` (€${legs[0].balance_due} + €${legs[1].balance_due} per leg)` : "";
+  let split = "";
+  if (legs.length === 2) {
+    if (legs[0].balance_due === legs[1].balance_due) {
+      split = ` (€${legs[0].balance_due} + €${legs[1].balance_due} per leg)`;
+    } else {
+      split = ` (€${legs[0].balance_due} Leg 1 + €${legs[1].balance_due} Leg 2)`;
+    }
+  }
   if (dep > 0) {
     return `💶 Fare: €${p} | Paid: €${dep} ✅ | Due: €${due}${split} 💵`;
   }
@@ -200,6 +207,7 @@ export function renderBookingCard(
     lines.push(`\n───────────────────────────`);
     lines.push(`❓ <b>MISSING INFO:</b>`);
     booking.missing_fields.forEach((m) => lines.push(`• ❓ ${esc(m)}`));
+    lines.push(`\n<i>💬 Reply to this message with any missing details to update this draft.</i>`);
   }
 
   // Inline Buttons layout requested by user:
@@ -354,6 +362,7 @@ export function buildFullCardPlainText(booking: BookingData): string {
     lines.push(`\n───────────────────────────`);
     lines.push(`❓ MISSING INFO:`);
     booking.missing_fields.forEach((m) => lines.push(`• ❓ ${m}`));
+    lines.push(`\n💬 Reply to this message with any missing details to update this draft.`);
   }
 
   return lines.join("\n").trim();
