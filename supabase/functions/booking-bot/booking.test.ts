@@ -569,3 +569,82 @@ Deno.test("Missing pick-up time is audited in missing_fields and rendered as Tim
 
   console.log("✅ Missing pick-up time audit & Time TBD test passed!");
 });
+
+// 13. UNIT TEST: Explicit per-leg fares & dues vs 50/50 fallback and reply instructions
+Deno.test("Flexible per-leg pricing, due amounts, and reply instructions under MISSING INFO", () => {
+  const chatLogText = `[07/10/2569 BE, 00:00:13] Dmitri: Hi Julie, I just tried calling following your booking request for Dec 27 & Jan 02 (Milan ⇄ Cortina d'Ampezzo).
+
+Your fixed rate for the Mercedes-Benz V-Class (5 passengers) with an English-speaking chauffeur is:
+•  Dec 27 (Milan → Cortina): €1,270
+•  Jan 02 (Cortina → Milan): €1,200 (return discount applied)
+•  Total: €2,470 all-inclusive (all tolls, fuel, VAT)
+A 25% deposit reserves your chauffeur for both dates. If any children are traveling, child seats are complimentary.
+
+Shall I send the secure payment link to lock this in?
+
+Warm regards,
+Dmitri
+DOROGO | Private Transportation
+[07/10/2569 BE, 00:03:42] Julie Mote (Dorogo): Thank you Dimitri! Let me get a few quotes back but this looks really good !
+[21/10/2569 BE, 10:32:42] Dmitri: A 25% deposit secures your Mercedes V-Class and chauffeur:
+
+•  Due today (25%): €618.00, link:  https://pay.sumup.com/p/s/XQZFSY1WR6
+•  Due after Leg 1 (27 Dec): €952.00
+•  Due after Leg 2 (02 Jan): €900.00
+[21/10/2569 BE, 10:33:11] Dmitri: Also, if you'll be needing a chauffeur between the airport (Malp`;
+
+  const rawGeminiExtraction: any = {
+    booking_ref: "DRG-JUL1EM",
+    client_name: "Julie",
+    service_type: "Round-Trip Transfer",
+    vehicle_class: "Mercedes-Benz V-Class",
+    passengers: 5,
+    price_total: 2470,
+    paid_deposit: 618,
+    rides: [
+      {
+        ride_no: 1,
+        role: "outbound",
+        raw_date: "27 Dec 2026",
+        stops: [
+          { seq: 1, kind: "pickup", place: "Milan", evidence: "Milan" },
+          { seq: 2, kind: "dropoff", place: "Cortina d'Ampezzo", evidence: "Cortina" },
+        ],
+      },
+      {
+        ride_no: 2,
+        role: "return",
+        raw_date: "02 Jan 2027",
+        stops: [
+          { seq: 1, kind: "pickup", place: "Cortina d'Ampezzo", evidence: "Cortina" },
+          { seq: 2, kind: "dropoff", place: "Milan", evidence: "Milan" },
+        ],
+      },
+    ],
+  };
+
+  const booking = applyBusinessRules(rawGeminiExtraction, chatLogText, new Date("2026-10-26T08:00:00Z"));
+
+  // 1. Verify Client full name was resolved from WhatsApp chat log
+  assertEquals(booking.client.name, "Julie Mote", "Client full name must be extracted from WhatsApp chat header");
+
+  // 2. Verify explicit per-leg prices and per-leg balances due were preserved
+  assertEquals(booking.rides[0].price, 1270, "Ride 1 price must be 1270");
+  assertEquals(booking.rides[1].price, 1200, "Ride 2 price must be 1200");
+  assertEquals(booking.rides[0].balance_due, 952, "Ride 1 balance due must be 952");
+  assertEquals(booking.rides[1].balance_due, 900, "Ride 2 balance due must be 900");
+  assertEquals(booking.finance.balance_due, 1852, "Total balance due must be 1852");
+
+  // 3. Verify Card Fare line renders explicit split
+  const card = renderBookingCard(booking, "draft-julie");
+  assert(card.text.includes("€1852 (€952 + €900 per leg)"), "Card must display explicit per-leg due amounts");
+
+  // 4. Verify Reply instruction is rendered under MISSING INFO
+  assert(card.text.includes("Reply directly to this message to add missing details"), "Card must include reply instructions under MISSING INFO");
+
+  // 5. Verify plain-text tap-to-copy card also includes reply instructions
+  const plainText = buildFullCardPlainText(booking);
+  assert(plainText.includes("Reply directly to this message to add missing details"), "Plain-text card must include reply instructions");
+
+  console.log("✅ Flexible per-leg pricing, due amounts, and reply instructions test passed!");
+});

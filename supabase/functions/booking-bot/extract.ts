@@ -25,7 +25,9 @@ CRITICAL RULES:
 5. Extract Google Maps URLs if present into "maps_url".
 6. Extract flight numbers (e.g. LX1612, AZ123, BA562) and assign them to the appropriate ride (arrival to outbound, departure to return).
 7. For child seats, extract the age of each child if mentioned.
-8. For prices, extract total price into "price_total" and any deposit/prepayment (e.g. "предоплата 100", "deposit €150", "paid 200", "100 евро предоплаты", "25% Deposit: €380") into "paid_deposit" as numeric values.
+8. For prices:
+   - Extract total price into "price_total" and any deposit/prepayment (e.g. "предоплата 100", "deposit €150", "paid 200", "100 евро предоплаты", "25% Deposit: €380") into "paid_deposit" as numeric values.
+   - If per-leg pricing or per-leg remaining balance due is specified (e.g. "Dec 27: €1,270", "Jan 02: €1,200", "Due after Leg 1: €952.00", "Due after Leg 2: €900.00"), extract each into that ride's "price" and "balance_due".
 9. For Standby / Disposal / Hourly / Multi-Transfer packages:
    - If the booking involves standby/disposal/hourly service (e.g. "standby", "disposal", "disposizione", "hourly", "в распоряжение", or dedicated chauffeur booked across a block of hours):
      - Calculate or extract total hours into "standby_hours" (e.g. 10 if explicitly mentioned, or calculate duration from start time to finish time across transfers, e.g. 14:00 to 00:00 -> 10 hours).

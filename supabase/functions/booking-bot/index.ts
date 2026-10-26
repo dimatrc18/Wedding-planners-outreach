@@ -228,7 +228,13 @@ async function handleIncomingMessage(msg: any) {
   // Check B: Reply to a previous draft card or prompt message
   const replyTo = msg.reply_to_message;
   if (!existingDraft && replyTo) {
-    existingDraft = await getDraftByMessageId(chatId, replyTo.message_id);
+    const replyRef = (replyTo.text || replyTo.caption || "").match(/\b(DRG-[A-Z0-9]{4,10})\b/i);
+    if (replyRef) {
+      existingDraft = await getDraftByBookingRef(replyRef[1].toUpperCase());
+    }
+    if (!existingDraft) {
+      existingDraft = await getDraftByMessageId(chatId, replyTo.message_id);
+    }
   }
 
   // Check C: If recent unconfirmed draft exists in this chat (< 30 minutes) and text is a short field snippet
@@ -243,7 +249,13 @@ async function handleIncomingMessage(msg: any) {
     if (recent && recent.updated_at) {
       const ageMs = Date.now() - new Date(recent.updated_at).getTime();
       if (ageMs < 30 * 60 * 1000) {
-        const isShortUpdate = text.length < 200 && /^(?:phone|name|email|notes?|flight|fare|price|\+?\d{8,}|€?\s*\d+)\b/i.test(text);
+        const isShortUpdate = text.length < 200 && (
+          /^(?:phone|name|email|notes?|flight|fare|price|time|pickup|date)\b/i.test(text) ||
+          /(?:\+\d[\d\s\-()]{7,18}\d)/.test(text) ||
+          /^[A-ZА-ЯЁ][a-zа-яё]+(?:\s+[A-ZА-ЯЁ]['’]?[A-Za-zА-Яа-яЁё]+)+$/.test(text) ||
+          /^\d{1,2}:\d{2}(?:\s*(?:&|-|and)\s*\d{1,2}:\d{2})?$/.test(text) ||
+          /^[€$£]?\s*\d+(?:\s*[\/\-]\s*[€$£]?\s*\d+)?$/.test(text)
+        );
         if (isShortUpdate) {
           existingDraft = recent;
         }
@@ -262,7 +274,9 @@ async function handleIncomingMessage(msg: any) {
     } catch (_) {}
 
     if (existingDraft.prompt_message_id) {
-      await tgApi("deleteMessage", { chat_id: chatId, message_id: existingDraft.prompt_message_id });
+      try {
+        await tgApi("deleteMessage", { chat_id: chatId, message_id: existingDraft.prompt_message_id });
+      } catch (_) {}
     }
 
     const card = renderBookingCard(existingDraft.booking_data, existingDraft.id, existingDraft.raw_text);
@@ -280,58 +294,156 @@ async function handleIncomingMessage(msg: any) {
     return;
   }
 
-  // Direct prompt reply handler (full edit / notes / price / missing info) -> Updates card in-place with ZERO chat clutter
-  if (
+  // Direct draft reply handler (missing info / phone / name / time / notes / price / full edit) -> Updates card in-place with ZERO chat clutter
+  const isDirectReplyToDraft = Boolean(
     existingDraft &&
-    existingDraft.prompt_message_id &&
     replyTo &&
-    (replyTo.message_id === existingDraft.prompt_message_id || replyTo.message_id === existingDraft.card_message_id)
-  ) {
+    (
+      (existingDraft.card_message_id && replyTo.message_id === existingDraft.card_message_id) ||
+      (existingDraft.prompt_message_id && replyTo.message_id === existingDraft.prompt_message_id) ||
+      (replyTo.text && replyTo.text.includes(existingDraft.booking_ref))
+    )
+  );
+
+  if (isDirectReplyToDraft || (existingDraft && existingDraft.prompt_message_id && replyTo)) {
+    // 1. Concurrency-safe: Fetch freshest state from DB
+    let activeDraft = (await getDraftByBookingRef(existingDraft.booking_ref)) || existingDraft;
     const isFullBookingUpdate = text.length > 260 && /\[transfer|\bpick-?up\s*\d/i.test(text);
 
     if (isFullBookingUpdate) {
       await tgApi("sendChatAction", { chat_id: chatId, action: "typing" });
       const updatedBooking = await extractBookingWithGemini({ text }, GEMINI_API_KEY);
-      updatedBooking.booking_ref = existingDraft.booking_ref;
-      existingDraft.booking_data = updatedBooking;
-      existingDraft.raw_text = text;
+      updatedBooking.booking_ref = activeDraft.booking_ref;
+      activeDraft.booking_data = updatedBooking;
+      activeDraft.raw_text = text;
     } else {
-      const priceMatch = text.match(/^(?:€\s*)?(\d+)(?:\s*[\/\-]\s*(?:€\s*)?(\d+))?$/);
-      if (priceMatch) {
-        const p = parseFloat(priceMatch[1]);
-        const dep = priceMatch[2] ? parseFloat(priceMatch[2]) : existingDraft.booking_data.finance.paid_deposit;
-        existingDraft.booking_data.finance.total_price = p;
-        existingDraft.booking_data.finance.paid_deposit = dep;
-        allocateFinance(existingDraft.booking_data);
-      } else {
-        const phoneMatch = text.match(/(\+?\d[\d\s\-()]{6,}\d)/);
-        if (phoneMatch && !existingDraft.booking_data.client.phone && text.length < 40) {
-          existingDraft.booking_data.client.phone = phoneMatch[1].replace(/\s+/g, "");
-          existingDraft.booking_data.missing_fields = (existingDraft.booking_data.missing_fields || []).filter((m: string) => !m.includes("phone"));
-        } else {
-          existingDraft.booking_data.client_notes = text.trim();
+      // Check for fast-path direct field patches
+      let patched = false;
+
+      // A. Phone number
+      const phoneMatch = text.match(/(?:phone|tel|whatsapp|телефон|тел)?\s*[:—–-]?\s*(\+\d[\d\s\-()]{7,18}\d)/i);
+      if (phoneMatch && (/phone|tel|whatsapp/i.test(text) || text.length < 35)) {
+        activeDraft.booking_data.client.phone = phoneMatch[1].trim();
+        activeDraft.booking_data.missing_fields = (activeDraft.booking_data.missing_fields || []).filter(
+          (m: string) => !m.includes("phone")
+        );
+        patched = true;
+      }
+
+      // B. Client name
+      const nameMatch = text.match(/^(?:name|client|guest|passenger|имя|клиент|фио)\s*[:—–-]\s*([A-ZА-ЯЁ][a-zа-яё]+(?:\s+[A-ZА-ЯЁ]['’]?[A-Za-zА-Яа-яЁё]+)*)$/i) ||
+                        text.match(/^([A-ZА-ЯЁ][a-zа-яё]+(?:\s+[A-ZА-ЯЁ]['’]?[A-Za-zА-Яа-яЁё]+)+)$/);
+      if (!patched && nameMatch && text.length < 50 && !/^(?:mercedes|transfer|milan|malpensa|today|sumup|deposit|booking)/i.test(text)) {
+        activeDraft.booking_data.client.name = nameMatch[1].trim();
+        activeDraft.booking_data.missing_fields = (activeDraft.booking_data.missing_fields || []).filter(
+          (m: string) => !m.includes("Client")
+        );
+        patched = true;
+      }
+
+      // C. Pick-up times
+      const timeMatches = [...text.matchAll(/\b([01]?\d|2[0-3]):([0-5]\d)\b/g)].map((m) => `${m[1].padStart(2, "0")}:${m[2]}`);
+      if (!patched && timeMatches.length > 0 && (/time|pickup|время/i.test(text) || text.length < 25)) {
+        const missingRides = (activeDraft.booking_data.rides || []).filter((r: any) => !r.time);
+        timeMatches.forEach((tm, idx) => {
+          const targetRide = missingRides[idx] || activeDraft.booking_data.rides[idx];
+          if (targetRide) {
+            targetRide.time = tm;
+            if (targetRide.stops && targetRide.stops[0]) {
+              targetRide.stops[0].time = tm;
+            }
+          }
+        });
+        activeDraft.booking_data.missing_fields = (activeDraft.booking_data.missing_fields || []).filter(
+          (m: string) => !m.includes("Pick-up time")
+        );
+        patched = true;
+      }
+
+      // D. Flight number
+      const flightMatch = text.match(/^(?:flight|рейс)?\s*[:—–-]?\s*([A-Z0-9]{2,3}\s*\d{1,4})$/i);
+      if (!patched && flightMatch && text.length < 20) {
+        const fn = flightMatch[1].toUpperCase().replace(/\s+/g, "");
+        if (activeDraft.booking_data.rides && activeDraft.booking_data.rides[0]) {
+          activeDraft.booking_data.rides[0].flight = { number: fn };
         }
+        activeDraft.booking_data.missing_fields = (activeDraft.booking_data.missing_fields || []).filter(
+          (m: string) => !m.includes("flight")
+        );
+        patched = true;
+      }
+
+      // E. Price / Deposit
+      const priceMatch = text.match(/^(?:fare|price|цена|стоимость)?\s*[:—–-]?\s*€?\s*(\d+)(?:\s*[\/\-]\s*€?\s*(\d+))?$/i);
+      if (!patched && priceMatch && text.length < 30) {
+        const p = parseFloat(priceMatch[1]);
+        const dep = priceMatch[2] ? parseFloat(priceMatch[2]) : activeDraft.booking_data.finance.paid_deposit;
+        activeDraft.booking_data.finance.total_price = p;
+        activeDraft.booking_data.finance.paid_deposit = dep;
+        patched = true;
+      }
+
+      // F. Notes
+      const notesMatch = text.match(/^(?:notes?|заметк[иа])\s*[:—–-]\s*(.+)$/i);
+      if (!patched && notesMatch) {
+        activeDraft.booking_data.client_notes = notesMatch[1].trim();
+        patched = true;
+      }
+
+      // G. Fallback to Gemini patch if conversational or multiple fields
+      if (!patched) {
+        activeDraft.booking_data = await patchBookingWithGemini(
+          activeDraft.booking_data,
+          text,
+          GEMINI_API_KEY,
+          activeDraft.raw_text || ""
+        );
       }
     }
 
-    // Clean up prompt message and user reply message
-    if (existingDraft.prompt_message_id) {
-      await tgApi("deleteMessage", { chat_id: chatId, message_id: existingDraft.prompt_message_id });
+    // Re-apply business rules and leg finance
+    activeDraft.booking_data = applyBusinessRules(activeDraft.booking_data, `${activeDraft.raw_text}\n[Update]: ${text}`);
+    allocateFinance(activeDraft.booking_data);
+    activeDraft.raw_text = activeDraft.raw_text ? `${activeDraft.raw_text}\n[Update]: ${text}` : text;
+
+    // Clean up prompt message and user reply message immediately
+    if (activeDraft.prompt_message_id) {
+      try {
+        await tgApi("deleteMessage", { chat_id: chatId, message_id: activeDraft.prompt_message_id });
+      } catch (_) {}
     }
-    await tgApi("deleteMessage", { chat_id: chatId, message_id: msg.message_id });
+    try {
+      await tgApi("deleteMessage", { chat_id: chatId, message_id: msg.message_id });
+    } catch (_) {}
+
+    // Concurrency merge check: verify DB state didn't change while patching
+    const latestBeforeSave = await getDraftByBookingRef(activeDraft.booking_ref);
+    if (latestBeforeSave && latestBeforeSave.updated_at && latestBeforeSave.updated_at !== activeDraft.updated_at) {
+      if (!text.includes(latestBeforeSave.booking_data.client?.phone || "") && latestBeforeSave.booking_data.client?.phone) {
+        activeDraft.booking_data.client.phone = latestBeforeSave.booking_data.client.phone;
+      }
+      if (!text.includes(latestBeforeSave.booking_data.client?.name || "") && latestBeforeSave.booking_data.client?.name) {
+        activeDraft.booking_data.client.name = latestBeforeSave.booking_data.client.name;
+      }
+      activeDraft.booking_data = applyBusinessRules(activeDraft.booking_data, activeDraft.raw_text);
+      allocateFinance(activeDraft.booking_data);
+    }
+
+    activeDraft.prompt_message_id = null;
+    await upsertDraft(activeDraft);
 
     // Update card in place
-    const card = renderBookingCard(existingDraft.booking_data, existingDraft.id, existingDraft.raw_text);
-    await tgApi("editMessageText", {
-      chat_id: chatId,
-      message_id: existingDraft.card_message_id,
-      text: card.text,
-      parse_mode: "HTML",
-      reply_markup: card.replyMarkup,
-      disable_web_page_preview: true,
-    });
-
-    await upsertDraft({ ...existingDraft, prompt_message_id: null });
+    const card = renderBookingCard(activeDraft.booking_data, activeDraft.id, activeDraft.raw_text);
+    if (activeDraft.card_message_id) {
+      await tgApi("editMessageText", {
+        chat_id: chatId,
+        message_id: activeDraft.card_message_id,
+        text: card.text,
+        parse_mode: "HTML",
+        reply_markup: card.replyMarkup,
+        disable_web_page_preview: true,
+      });
+    }
     return;
   }
 

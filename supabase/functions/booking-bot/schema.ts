@@ -130,6 +130,16 @@ export const GEMINI_BOOKING_SCHEMA = {
           role: { type: "STRING", enum: ["outbound", "return", "transfer"] },
           raw_date: { type: "STRING", nullable: true },
           est_duration_min: { type: "INTEGER", nullable: true },
+          price: {
+            type: "NUMBER",
+            description: "Allocated price/fare for this specific leg/ride if specified (e.g. 1270 for Leg 1, 1200 for Leg 2)",
+            nullable: true,
+          },
+          balance_due: {
+            type: "NUMBER",
+            description: "Remaining balance due after this specific leg if stated (e.g. Due after Leg 1: 952.00)",
+            nullable: true,
+          },
           flight_number: { type: "STRING", nullable: true },
           flight_kind: { type: "STRING", enum: ["arrival", "departure"], nullable: true },
           flight_time: { type: "STRING", nullable: true },
