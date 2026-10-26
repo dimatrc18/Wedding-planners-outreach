@@ -354,7 +354,24 @@ export function applyBusinessRules(
     if (rawRides.length === 2 && idx === 1) role = "return";
 
     // Ride's own date wins; otherwise inherit booking date (never silently default to today without flagging)
-    const ownDate = parseDateStrict(r.raw_date || r.date, now);
+    let ownDate = parseDateStrict(r.raw_date, now);
+    if (!ownDate && r.date && r.date !== todayIso) {
+      ownDate = parseDateStrict(r.date, now);
+    }
+    if (!ownDate && Array.isArray(r.stops)) {
+      for (const st of r.stops) {
+        if (st.evidence) {
+          const matchDate = parseDateStrict(st.evidence, now);
+          if (matchDate) {
+            ownDate = matchDate;
+            break;
+          }
+        }
+      }
+    }
+    if (!ownDate && r.date) {
+      ownDate = parseDateStrict(r.date, now);
+    }
     const rideDate = ownDate || parseDateStrict(raw.raw_date || raw.date, now) || baseDate;
     if (!ownDate && !parsedBaseDate) dateMissing = true;
 
@@ -417,18 +434,29 @@ export function applyBusinessRules(
   let totalPrice = typeof raw.price_total === "number" ? raw.price_total : null;
   if (totalPrice === null) {
     const priceMatch =
-      sourceText.match(/(?:итого|total|fare|всего|стоимость)\s*[:—–-]?\s*(?:€\s*)?(\d+)/i) ||
-      sourceText.match(/(\d+)\s*€|€\s*(\d+)/) ||
-      sourceText.match(/(\d+)\s*(?:евро|eur)\b/i);
-    if (priceMatch) totalPrice = parseFloat(priceMatch[1] || priceMatch[2]);
+      sourceText.match(/(?:итого|total|fare|всего|стоимость)\s*[:—–-]?\s*(?:€\s*)?([\d,.]+)/i) ||
+      sourceText.match(/([\d,.]+)\s*€|€\s*([\d,.]+)/) ||
+      sourceText.match(/([\d,.]+)\s*(?:евро|eur)\b/i);
+    if (priceMatch) {
+      const cleaned = (priceMatch[1] || priceMatch[2]).replace(/,/g, "");
+      totalPrice = parseFloat(cleaned);
+    } else if (typeof raw.finance?.total_price === "number") {
+      totalPrice = raw.finance.total_price;
+    }
   }
 
   let paidDeposit = typeof raw.paid_deposit === "number" ? raw.paid_deposit : null;
   if (paidDeposit === null) {
-    const depositMatch = sourceText.match(/(?:paid|deposit|предоплат[аы]?)\s*[:—–-]?\s*(?:€\s*)?(\d+)/i) ||
-                         sourceText.match(/(\d+)\s*(?:евро|eur|€)?\s*предоплат[аы]/i) ||
-                         sourceText.match(/предоплат[аы]\s*(\d+)/i);
-    if (depositMatch) paidDeposit = parseFloat(depositMatch[1]);
+    const depositMatch =
+      sourceText.match(/(?:due\s+today|paid|deposit|предоплат[аы]?)\s*(?:\([^)]*\))?\s*[:—–-]?\s*(?:€\s*)?([\d,.]+)/i) ||
+      sourceText.match(/([\d,.]+)\s*(?:евро|eur|€)?\s*предоплат[аы]/i) ||
+      sourceText.match(/предоплат[аы]\s*([\d,.]+)/i);
+    if (depositMatch) {
+      const cleaned = depositMatch[1].replace(/,/g, "");
+      paidDeposit = parseFloat(cleaned);
+    } else if (typeof raw.finance?.paid_deposit === "number") {
+      paidDeposit = raw.finance.paid_deposit;
+    }
   }
 
   const balanceDue = totalPrice !== null ? (totalPrice - (paidDeposit || 0)) : null;
@@ -443,11 +471,16 @@ export function applyBusinessRules(
   const defaultVehicle = isBusOrSprinter ? "Mercedes-Benz Sprinter (24-28 seats)" : "Mercedes-Benz V-Class";
 
   // 3. Children & Party
-  const childrenList: ChildInfo[] = Array.isArray(raw.children)
-    ? raw.children.map((c: any) => mapChildSeat({ age: typeof c.age === "number" ? c.age : null }))
-    : [];
+  const rawChildren = Array.isArray(raw.children)
+    ? raw.children
+    : (Array.isArray(raw.party?.children) ? raw.party.children : []);
+  const childrenList: ChildInfo[] = rawChildren.map((c: any) =>
+    mapChildSeat({ age: typeof c.age === "number" ? c.age : null })
+  );
 
-  let pax = typeof raw.passengers === "number" ? raw.passengers : null;
+  let pax = typeof raw.passengers === "number"
+    ? raw.passengers
+    : (typeof raw.party?.passengers === "number" ? raw.party.passengers : null);
 
   // Safeguard: distinguish between vehicle seating capacity (e.g. "sprinter, 24/8 pax", "sprinter 24/28 pax") vs actual passenger count
   const vehCapacityMatch = sourceText.match(/\b(?:sprinter|bus|coach|van|minibus)[^.\n]*?(\d{1,2})\s*[/–-]\s*(\d{1,2})\s*(?:pax|people|seats?)/i);
@@ -468,30 +501,30 @@ export function applyBusinessRules(
 
   const party = {
     passengers: pax,
-    adults: typeof raw.adults === "number" ? raw.adults : null,
+    adults: typeof raw.adults === "number" ? raw.adults : (typeof raw.party?.adults === "number" ? raw.party.adults : null),
     children: childrenList,
-    luggage: typeof raw.luggage === "number" ? raw.luggage : null,
-    ski_bags: typeof raw.ski_bags === "number" ? raw.ski_bags : null,
+    luggage: typeof raw.luggage === "number" ? raw.luggage : (typeof raw.party?.luggage === "number" ? raw.party.luggage : null),
+    ski_bags: typeof raw.ski_bags === "number" ? raw.ski_bags : (typeof raw.party?.ski_bags === "number" ? raw.party.ski_bags : null),
   };
 
   // Client Name & Email fallbacks (strictly guarded so place names like "Villa Lilla" are never mistaken for client names)
-  let clientName = raw.client_name || null;
+  let clientName = raw.client_name || raw.client?.name || null;
   if (!clientName) {
     const labeledName =
-      sourceText.match(/(?:client|name|guest|passenger|клиент|имя|пассажир)\s*[:—–-]\s*([A-ZА-ЯЁ][a-zа-яё]+(?:\s+[A-ZА-ЯЁ]['’]?[A-Za-zА-Яа-яЁё]+)+)/i) ||
-      sourceText.match(/\b([A-Z][a-z]+\s+[A-Z]['’]?[A-Za-z]+)\s*[,|/-]?\s*[a-zA-Z0-9._%+-]+@/);
+      sourceText.match(/(?:client|name|guest|passenger|клиент|имя|пассажир)\s*[:—–-]\s*([A-ZА-ЯЁ][a-zа-яё]+(?:\s+[A-ZА-ЯЁ]['’]?[A-Za-zА-Яа-яЁё]+)*)/i) ||
+      sourceText.match(/\b([A-Z][a-z]+(?:\s+[A-Z]['’]?[A-Za-z]+)*)\s*[,|/-]?\s*[a-zA-Z0-9._%+-]+@/);
     if (labeledName) {
       clientName = labeledName[1].trim();
     }
   }
 
-  let clientEmail = raw.client_email || null;
+  let clientEmail = raw.client_email || raw.client?.email || null;
   if (!clientEmail) {
     const emailMatch = sourceText.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
     if (emailMatch) clientEmail = emailMatch[1];
   }
 
-  let clientPhone = raw.client_phone || null;
+  let clientPhone = raw.client_phone || raw.client?.phone || null;
   if (!clientPhone) {
     const phoneMatch = sourceText.match(/(?:phone|tel|whatsapp|телефон|тел)?\s*[:—–-]?\s*(\+\d[\d\s\-()]{7,18}\d)/i);
     if (phoneMatch) clientPhone = phoneMatch[1].trim();
@@ -593,8 +626,8 @@ export function applyBusinessRules(
     },
     party,
     vehicle: {
-      class: raw.vehicle_class || defaultVehicle,
-      count: raw.vehicle_count || 1,
+      class: raw.vehicle_class || raw.vehicle?.class || defaultVehicle,
+      count: raw.vehicle_count || raw.vehicle?.count || 1,
     },
     rides,
     finance: {
