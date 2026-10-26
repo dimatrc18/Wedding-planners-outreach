@@ -2243,12 +2243,12 @@ export async function findAndVerifyPartnerEmail(partnerId, btnEl = null, onDone 
         if (!p.user_set_segment && extractedFleet.fleet_segment) updates.fleet_segment = extractedFleet.fleet_segment;
       }
 
-      const baseNotes = foundNotes || (p.notes || '').replace(/This site can't be reached\.?/gi, '').replace(/⚠️ Website unreachable[^·]*/gi, '').trim();
-      const dateStr = new Date().toLocaleDateString('en-GB');
-      const checkStamp = `Checked email: ${finalEmail} (${sourceNote || 'Verified MX'} on ${dateStr})`;
-      updates.notes = baseNotes.includes(finalEmail)
-        ? baseNotes
-        : (baseNotes ? `${baseNotes} · ${checkStamp}` : checkStamp);
+      // DO NOT TOUCH OR OVERWRITE USER NOTES!
+      // Notes are strictly reserved for manual comments authored by the user.
+      // Only clean out old automated system warnings if one was previously present, preserving user comments.
+      if (p.notes && /⚠️ Website\/Email unreachable/i.test(p.notes)) {
+        updates.notes = p.notes.replace(/⚠️ Website\/Email unreachable[^\n·]*/gi, '').trim();
+      }
 
       await updateBusPartner(p.id, updates);
       if (typeof document !== 'undefined' && !opts.silent) {
@@ -2262,8 +2262,8 @@ export async function findAndVerifyPartnerEmail(partnerId, btnEl = null, onDone 
       if (typeof onDone === 'function') onDone();
       return { email: finalEmail, website: finalWebsite, name: updates.name || p.name, email_status: updates.email_status };
     } else {
-      const deadNote = `⚠️ Website/Email unreachable (${p.website || 'no domain'}) · Verified dead/no-MX on ${new Date().toLocaleDateString('en-GB')}`;
-      await updateBusPartner(p.id, { notes: deadNote, email_status: 'invalid' });
+      // Email or domain check failed: mark email_status as invalid, but NEVER OVERWRITE OR CLEAR USER NOTES!
+      await updateBusPartner(p.id, { email_status: 'invalid' });
       if (typeof document !== 'undefined' && !opts.silent) {
         toast(`⚠️ Website or Mail Server "${p.website || p.name}" does not exist or has no MX record. Blocked from sending.`, 'bad');
       }

@@ -1,29 +1,5 @@
 [
   {
-    "id": "partner_moveolux",
-    "name": "Moveolux",
-    "base_city": "Milano",
-    "website": "https://www.moveolux.com",
-    "fleet_url": "https://www.moveolux.com/fleet/luxury-bus-hire/",
-    "relevance_score": 98,
-    "score_breakdown": {
-      "discretion_unbranded": 35,
-      "fleet_luxury": 25,
-      "territory_permits": 20,
-      "corporate_sla": 18
-    },
-    "status": "APPROVED_PARTNER",
-    "unbranded_status": "100% Guaranteed Unbranded / Total Black",
-    "fleet_categories": [
-      "Limobus Exclusive (18-28 seats)",
-      "Mercedes Sprinter VIP (8-16 seats)",
-      "Setra VIP Lounge"
-    ],
-    "phone": "+39 02 4004 7799",
-    "email": "booking@moveolux.com",
-    "notes": "Pioneer of Limobus. Lounge seating, bar, hostess, champagne service. Highest price in Italy, but gold standard for ultra-VIP."
-  },
-  {
     "id": "partner_cima_luxury",
     "name": "Cima Luxury",
     "base_city": "Roma (Central Italy)",
@@ -50,49 +26,72 @@
     "notes": "Headquartered at Waldorf Astoria Rome Cavalieri (00136 Rome). Out-of-region depot (+39 06) located 570km from Milan/Lake Como with no local Lombardy depot. Disqualified from local Northern Italy dispatch."
   },
   {
-    "id": "partner_1793031479651_9_4o1d",
-    "name": "Viganò Autoservizi",
-    "base_city": "Como / Lecco",
-    "website": "https://www.viganobus.com",
-    "fleet_url": "https://www.viganobus.com/flotta/",
+    "id": "partner_moveolux",
+    "name": "Moveolux",
+    "base_city": "Milano",
+    "website": "https://www.moveolux.com",
+    "fleet_url": "https://www.moveolux.com/fleet/luxury-bus-hire/",
+    "relevance_score": 98,
+    "score_breakdown": {
+      "discretion_unbranded": 35,
+      "fleet_luxury": 25,
+      "territory_permits": 20,
+      "corporate_sla": 18
+    },
+    "status": "APPROVED_PARTNER",
+    "unbranded_status": "100% Guaranteed Unbranded / Total Black",
+    "fleet_categories": [
+      "Limobus Exclusive (18-28 seats)",
+      "Mercedes Sprinter VIP (8-16 seats)",
+      "Setra VIP Lounge"
+    ],
+    "phone": "+39 02 4004 7799",
+    "email": "booking@moveolux.com",
+    "notes": "Pioneer of Limobus. Lounge seating, bar, hostess, champagne service. Highest price in Italy, but gold standard for ultra-VIP."
+  },
+  {
+    "id": "partner_1792765278957_tgxp",
+    "name": "Vivaldi Driver Bellagio",
+    "base_city": "Como",
+    "website": "https://i-vivaldi.com",
+    "fleet_url": "https://i-vivaldi.com/parco-auto/",
     "relevance_score": 94,
     "score_breakdown": {
-      "fleet_luxury": 23,
+      "fleet_luxury": 24,
       "partner_card": {
-        "whatsapp": "+39 031 690617",
-        "bus_models": "Mercedes Sprinter (22 pax), Sprinter Grande Capri (19 pax), Setra 515 (51 pax), Mercedes Tourismo (53–55 pax), Mercedes Travego (53 pax)",
+        "whatsapp": "+39 347 373 5465",
+        "bus_models": "Mercedes-Benz Sprinter VIP (8 pax), Mercedes-Benz Sprinter Nero VIP w/ Hostess (19 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
-        "email_status": "unknown",
-        "pax_capacity": "19, 22, 51, 53–55 pax",
+        "email_status": "mx_ok",
+        "pax_capacity": "8, 19 pax",
         "rate_standby": "",
-        "scheduled_at": "2026-10-28T10:30:00.000Z",
-        "fleet_segment": "both",
+        "scheduled_at": "2026-10-27T12:30:00.000Z",
+        "fleet_segment": "luxury",
         "outreach_stage": "ready",
+        "last_message_id": null,
         "user_set_status": true,
         "last_outreach_at": null,
-        "user_set_segment": false
+        "user_set_segment": false,
+        "fleet_audit_verified_at": "2026-10-23T18:41:34.391Z"
       },
-      "corporate_sla": 16,
+      "corporate_sla": 15,
       "territory_permits": 20,
       "discretion_unbranded": 35
     },
     "status": "WANT_TO_CONTACT",
     "unbranded_status": "100% Guaranteed Unbranded / Total Black",
     "fleet_categories": [
-      "Mercedes Sprinter (22 seats)",
-      "Sprinter Grande Capri (19 seats)",
-      "Setra 515 (51 seats)",
-      "Mercedes Tourismo (53–55 seats)",
-      "Mercedes Travego (53 seats)"
+      "Mercedes-Benz Sprinter VIP (8 seats)",
+      "Mercedes-Benz Sprinter Nero VIP w/ Hostess (19 seats)"
     ],
-    "phone": "+39 031 690617",
-    "email": "info@viganobus.com",
-    "notes": "- i am interested  SPRINTER 22 POSTI , SPRINTER GRANDE CAPRI (18). \n- Additionally, in Caratteristiche Tecniche (50 seater) also on 52 seats",
+    "phone": "+39 347 373 5465",
+    "email": "info@i-vivaldi.com",
+    "notes": "- do they have only 19 seats  or other \n- prices",
     "source": "crawler",
-    "created_at": "2026-10-26T16:17:59.651+00:00",
-    "updated_at": "2026-10-26T16:45:26.70229+00:00"
+    "created_at": "2026-10-23T14:21:18.957+00:00",
+    "updated_at": "2026-10-26T16:45:24.938104+00:00"
   },
   {
     "id": "partner_vip_limousine",
@@ -140,48 +139,45 @@
     "updated_at": "2026-10-26T16:45:27.325941+00:00"
   },
   {
-    "id": "partner_1792765278957_tgxp",
-    "name": "Vivaldi Driver Bellagio",
-    "base_city": "Como",
-    "website": "https://i-vivaldi.com",
-    "fleet_url": "https://i-vivaldi.com/parco-auto/",
+    "id": "partner_1793031479651_9_4o1d",
+    "name": "Viganò Autoservizi",
+    "base_city": "Como / Lecco",
+    "website": "https://www.viganobus.com",
+    "fleet_url": "https://www.viganobus.com/flotta/",
     "relevance_score": 94,
     "score_breakdown": {
-      "fleet_luxury": 24,
+      "fleet_luxury": 23,
       "partner_card": {
-        "whatsapp": "+39 347 373 5465",
-        "bus_models": "Mercedes-Benz Sprinter VIP (8 pax), Mercedes-Benz Sprinter Nero VIP w/ Hostess (19 pax)",
+        "whatsapp": "+39 031 690617",
+        "bus_models": "Minibus (8–20 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
-        "email_status": "mx_ok",
-        "pax_capacity": "8, 19 pax",
+        "email_status": "verified",
+        "pax_capacity": "19, 22, 51, 53–55 pax",
         "rate_standby": "",
-        "scheduled_at": "2026-10-27T12:30:00.000Z",
-        "fleet_segment": "luxury",
+        "scheduled_at": "2026-10-28T10:30:00.000Z",
+        "fleet_segment": "standard",
         "outreach_stage": "ready",
-        "last_message_id": null,
         "user_set_status": true,
         "last_outreach_at": null,
-        "user_set_segment": false,
-        "fleet_audit_verified_at": "2026-10-23T18:41:34.391Z"
+        "user_set_segment": false
       },
-      "corporate_sla": 15,
+      "corporate_sla": 16,
       "territory_permits": 20,
       "discretion_unbranded": 35
     },
     "status": "WANT_TO_CONTACT",
     "unbranded_status": "100% Guaranteed Unbranded / Total Black",
     "fleet_categories": [
-      "Mercedes-Benz Sprinter VIP (8 seats)",
-      "Mercedes-Benz Sprinter Nero VIP w/ Hostess (19 seats)"
+      "Minibus (8–20 seats)"
     ],
-    "phone": "+39 347 373 5465",
-    "email": "info@i-vivaldi.com",
-    "notes": "- do they have only 19 seats  or other \n- prices",
+    "phone": "+39 031 690617",
+    "email": "info@viganobus.com",
+    "notes": "- i am interested  SPRINTER 22 POSTI , SPRINTER GRANDE CAPRI (18). \n- Additionally, in Caratteristiche Tecniche (50 seater) also on 52 seats",
     "source": "crawler",
-    "created_at": "2026-10-23T14:21:18.957+00:00",
-    "updated_at": "2026-10-26T16:45:24.938104+00:00"
+    "created_at": "2026-10-26T16:17:59.651+00:00",
+    "updated_at": "2026-10-26T17:48:00.988076+00:00"
   },
   {
     "id": "partner_1793031479651_12_2dpf",
@@ -194,15 +190,15 @@
       "fleet_luxury": 23,
       "partner_card": {
         "whatsapp": "+39 031 928 111",
-        "bus_models": "Minibus Gran Turismo (25 & 28 pax), Midibus (40 pax), Pullman GT (54 & 56 pax)",
+        "bus_models": "Pullman Gran Turismo (50–56 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
-        "email_status": "unknown",
+        "email_status": "verified",
         "pax_capacity": "25, 28, 40, 54, 56 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-28T10:00:00.000Z",
-        "fleet_segment": "both",
+        "fleet_segment": "standard",
         "outreach_stage": "ready",
         "user_set_status": true,
         "last_outreach_at": null,
@@ -215,16 +211,14 @@
     "status": "WANT_TO_CONTACT",
     "unbranded_status": "100% Guaranteed Unbranded / Total Black",
     "fleet_categories": [
-      "Minibus Gran Turismo (25 & 28 seats)",
-      "Midibus (40 seats)",
-      "Pullman GT (54 & 56 seats)"
+      "Pullman Gran Turismo (50–56 seats)"
     ],
     "phone": "+39 031 928 111",
     "email": "info@rampinini.it",
     "notes": "Interested only in WING | IVECO 28 seats? and of they have other ones with no big stickers?",
     "source": "crawler",
     "created_at": "2026-10-26T16:17:59.651+00:00",
-    "updated_at": "2026-10-26T16:45:22.707509+00:00"
+    "updated_at": "2026-10-26T17:48:00.491801+00:00"
   },
   {
     "id": "partner_1792765279410_2zml",
@@ -315,91 +309,6 @@
     "updated_at": "2026-10-26T16:45:27.755066+00:00"
   },
   {
-    "id": "partner_1793031479651_10_3kbi",
-    "name": "Autoservizi Radaelli",
-    "base_city": "Monza / Como / Milano",
-    "website": "https://www.autoserviziradaelli.it",
-    "fleet_url": "https://www.autoserviziradaelli.it/flotta",
-    "relevance_score": 93,
-    "score_breakdown": {
-      "fleet_luxury": 23,
-      "partner_card": {
-        "whatsapp": "+39 0362 901353",
-        "bus_models": "Mercedes Sprinter Minibus (19 pax), Pullman Gran Turismo (52 pax)",
-        "replied_at": null,
-        "rate_hourly": "",
-        "email_status": "unknown",
-        "pax_capacity": "19, 52 pax",
-        "rate_standby": "",
-        "scheduled_at": "2026-10-28T11:00:00.000Z",
-        "fleet_segment": "both",
-        "outreach_stage": "ready",
-        "user_set_status": true,
-        "last_outreach_at": null,
-        "user_set_segment": false
-      },
-      "corporate_sla": 15,
-      "territory_permits": 20,
-      "discretion_unbranded": 35
-    },
-    "status": "WANT_TO_CONTACT",
-    "unbranded_status": "100% Guaranteed Unbranded",
-    "fleet_categories": [
-      "Mercedes Sprinter Minibus (19 seats)",
-      "Pullman Gran Turismo (52 seats)"
-    ],
-    "phone": "+39 0362 901353",
-    "email": "bus@autoserviziradaelli.it",
-    "notes": "",
-    "source": "crawler",
-    "created_at": "2026-10-26T16:17:59.651+00:00",
-    "updated_at": "2026-10-26T16:45:26.760106+00:00"
-  },
-  {
-    "id": "partner_1792765279743_bk0p",
-    "name": "Exclusive Cars Milano",
-    "base_city": "Milano",
-    "website": "https://exclusivecarsmilano.it",
-    "fleet_url": "https://exclusivecarsmilano.it/noleggio-autobus/",
-    "relevance_score": 92,
-    "score_breakdown": {
-      "fleet_luxury": 24,
-      "partner_card": {
-        "whatsapp": "+39 02 4070 8295",
-        "bus_models": "Mercedes-Benz Sprinter Minibus (20 pax), Irizar GT Coach (52 pax)",
-        "replied_at": null,
-        "rate_hourly": "",
-        "client_notes": "",
-        "email_status": "mx_ok",
-        "pax_capacity": "20, 52 pax",
-        "rate_standby": "",
-        "scheduled_at": "2026-10-27T13:00:00.000Z",
-        "fleet_segment": "both",
-        "outreach_stage": "ready",
-        "last_message_id": null,
-        "user_set_status": true,
-        "last_outreach_at": null,
-        "user_set_segment": true,
-        "fleet_audit_verified_at": "2026-10-23T18:41:33.513Z"
-      },
-      "corporate_sla": 15,
-      "territory_permits": 18,
-      "discretion_unbranded": 35
-    },
-    "status": "WANT_TO_CONTACT",
-    "unbranded_status": "100% Guaranteed Unbranded / Total Black",
-    "fleet_categories": [
-      "Mercedes-Benz Sprinter Minibus (20 seats)",
-      "Irizar GT Coach (52 seats)"
-    ],
-    "phone": "+39 02 4070 8295",
-    "email": "info@exclusivecarsmilano.it",
-    "notes": "interested in Mercedes sprinter 20 posti and Irizar 52 posti",
-    "source": "crawler",
-    "created_at": "2026-10-23T14:21:19.743+00:00",
-    "updated_at": "2026-10-26T16:45:27.661611+00:00"
-  },
-  {
     "id": "partner_1792765278630_r4vp",
     "name": "Berini Autonoleggio & Minibus",
     "base_city": "Como",
@@ -455,14 +364,15 @@
       "fleet_luxury": 23,
       "partner_card": {
         "whatsapp": "+39 011 397 0000",
-        "bus_models": "Mercedes Sprinter Minibus (16 pax), Executive Midibus (35 pax), Pullman Gran Turismo (50 & 63 pax), Double Decker GT (79 pax)",
+        "bus_models": "Pullman Gran Turismo (50–56 pax)",
         "replied_at": null,
         "rate_hourly": "",
-        "email_status": "unknown",
+        "client_notes": "",
+        "email_status": "verified",
         "pax_capacity": "16, 35, 50, 63, 79 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-28T12:00:00.000Z",
-        "fleet_segment": "both",
+        "fleet_segment": "standard",
         "outreach_stage": "ready",
         "user_set_status": true,
         "last_outreach_at": null,
@@ -475,17 +385,14 @@
     "status": "WANT_TO_CONTACT",
     "unbranded_status": "100% Guaranteed Unbranded / Total Black",
     "fleet_categories": [
-      "Mercedes Sprinter Minibus (16 seats)",
-      "Executive Midibus (35 seats)",
-      "Pullman Gran Turismo (50 & 63 seats)",
-      "Double Decker GT (79 seats)"
+      "Pullman Gran Turismo (50–56 seats)"
     ],
     "phone": "+39 011 397 0000",
     "email": "info@cavourese.it",
     "notes": "",
     "source": "crawler",
     "created_at": "2026-10-26T16:17:59.649+00:00",
-    "updated_at": "2026-10-26T16:45:27.807596+00:00"
+    "updated_at": "2026-10-26T17:48:01.251727+00:00"
   },
   {
     "id": "partner_1793031479651_11_r6tm",
@@ -501,15 +408,16 @@
         "bus_models": "Minibus GT (8–19 pax), Midibus (25–35 pax), Mercedes Tourismo / Setra GT (54–85 pax)",
         "replied_at": null,
         "rate_hourly": "",
-        "email_status": "unknown",
+        "client_notes": "",
+        "email_status": "verified",
         "pax_capacity": "8–19, 25–35, 54–85 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-28T11:30:00.000Z",
-        "fleet_segment": "both",
+        "fleet_segment": "standard",
         "outreach_stage": "ready",
         "user_set_status": true,
         "last_outreach_at": null,
-        "user_set_segment": false
+        "user_set_segment": true
       },
       "corporate_sla": 15,
       "territory_permits": 19,
@@ -524,221 +432,54 @@
     ],
     "phone": "+39 0332 287146",
     "email": "info@moranditour.it",
-    "notes": "",
+    "notes": "interested in Mercedes Sprinter (is it 22 seats for passagers), Mercedes 20 (the same question), Mercedes Tourismo and is the price of the last one, is it very different from SETRA 5, Neoplan Cityliner Grey 52, Irisbus",
     "source": "crawler",
     "created_at": "2026-10-26T16:17:59.651+00:00",
-    "updated_at": "2026-10-26T16:45:23.372264+00:00"
+    "updated_at": "2026-10-26T17:48:01.453107+00:00"
   },
   {
-    "id": "partner_1793031479651_1_wjsp",
-    "name": "Castano Turismo",
-    "base_city": "Varese / Malpensa",
-    "website": "https://www.castanobus.it",
-    "fleet_url": "https://www.castanobus.it/flotta/",
-    "relevance_score": 91,
+    "id": "partner_1792765279743_bk0p",
+    "name": "Exclusive Cars Milano",
+    "base_city": "Milano",
+    "website": "https://exclusivecarsmilano.it",
+    "fleet_url": "https://exclusivecarsmilano.it/noleggio-autobus/",
+    "relevance_score": 92,
     "score_breakdown": {
-      "fleet_luxury": 22,
+      "fleet_luxury": 24,
       "partner_card": {
-        "whatsapp": "+39 0332 830 000",
-        "bus_models": "Mercedes Sprinter Minibus (19 pax), Setra GT Coach (54 pax)",
-        "replied_at": null,
-        "rate_hourly": "",
-        "email_status": "unknown",
-        "pax_capacity": "19, 54 pax",
-        "rate_standby": "",
-        "scheduled_at": "2026-10-29T07:30:00.000Z",
-        "fleet_segment": "both",
-        "outreach_stage": "ready",
-        "user_set_status": true,
-        "last_outreach_at": null,
-        "user_set_segment": false
-      },
-      "corporate_sla": 15,
-      "territory_permits": 19,
-      "discretion_unbranded": 35
-    },
-    "status": "WANT_TO_CONTACT",
-    "unbranded_status": "100% Guaranteed Unbranded / Total Black",
-    "fleet_categories": [
-      "Mercedes Sprinter Minibus (19 seats)",
-      "Setra GT Coach (54 seats)"
-    ],
-    "phone": "+39 0332 830 000",
-    "email": "info@castanobus.it",
-    "notes": "",
-    "source": "crawler",
-    "created_at": "2026-10-26T16:17:59.651+00:00",
-    "updated_at": "2026-10-26T16:45:25.902718+00:00"
-  },
-  {
-    "id": "partner_1793031479651_13_f82y",
-    "name": "Autoservizi Cazzaniga Silvestro",
-    "base_city": "Lecco / Como / Monza",
-    "website": "https://www.autoservizicazzaniga.it",
-    "fleet_url": "https://www.autoservizicazzaniga.it/parco-mezzi",
-    "relevance_score": 91,
-    "score_breakdown": {
-      "fleet_luxury": 22,
-      "partner_card": {
-        "whatsapp": "+39 031 850 144",
-        "bus_models": "Mercedes Sprinter Minibus (19 pax), Pullman Gran Turismo (54 pax)",
-        "replied_at": null,
-        "rate_hourly": "",
-        "email_status": "unknown",
-        "pax_capacity": "19, 54 pax",
-        "rate_standby": "",
-        "scheduled_at": "2026-10-28T12:30:00.000Z",
-        "fleet_segment": "both",
-        "outreach_stage": "ready",
-        "user_set_status": true,
-        "last_outreach_at": null,
-        "user_set_segment": false
-      },
-      "corporate_sla": 15,
-      "territory_permits": 19,
-      "discretion_unbranded": 35
-    },
-    "status": "WANT_TO_CONTACT",
-    "unbranded_status": "100% Guaranteed Unbranded",
-    "fleet_categories": [
-      "Mercedes Sprinter Minibus (19 seats)",
-      "Pullman Gran Turismo (54 seats)"
-    ],
-    "phone": "+39 031 850 144",
-    "email": "info@autoservizicazzaniga.it",
-    "notes": "",
-    "source": "crawler",
-    "created_at": "2026-10-26T16:17:59.651+00:00",
-    "updated_at": "2026-10-26T16:45:27.863212+00:00"
-  },
-  {
-    "id": "partner_1792765279097_26hr",
-    "name": "Como Driver Services",
-    "base_city": "Como",
-    "website": "https://www.comodriver.com",
-    "fleet_url": "https://www.comodriver.com/autovetture/",
-    "relevance_score": 91,
-    "score_breakdown": {
-      "fleet_luxury": 21,
-      "partner_card": {
-        "whatsapp": "+39 347 184 8920",
-        "bus_models": "Mercedes Sprinter Minibus (12 pax), Ford Transit Minibus (16 pax)",
+        "whatsapp": "+39 02 4070 8295",
+        "bus_models": "Mercedes-Benz Sprinter Minibus (20 pax), Irizar GT Coach (52 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
         "email_status": "mx_ok",
-        "pax_capacity": "12, 16 pax",
+        "pax_capacity": "20, 52 pax",
         "rate_standby": "",
-        "scheduled_at": "2026-10-27T10:00:00.000Z",
+        "scheduled_at": "2026-10-27T13:00:00.000Z",
         "fleet_segment": "both",
         "outreach_stage": "ready",
         "last_message_id": null,
         "user_set_status": true,
         "last_outreach_at": null,
         "user_set_segment": true,
-        "fleet_audit_verified_at": "2026-10-23T18:41:33.012Z"
+        "fleet_audit_verified_at": "2026-10-23T18:41:33.513Z"
       },
       "corporate_sla": 15,
-      "territory_permits": 20,
-      "discretion_unbranded": 35
-    },
-    "status": "WANT_TO_CONTACT",
-    "unbranded_status": "100% Guaranteed Unbranded / NCC Black",
-    "fleet_categories": [
-      "Mercedes Sprinter Minibus (12 seats)",
-      "Ford Transit Minibus (16 seats)"
-    ],
-    "phone": "+39 347 184 8920",
-    "email": "info@comodriver.com",
-    "notes": "interested in Minibus Mercedes Sprinter ( 12 passeggeri), do they have other mini vans?",
-    "source": "crawler",
-    "created_at": "2026-10-23T14:21:19.097+00:00",
-    "updated_at": "2026-10-26T16:45:23.631276+00:00"
-  },
-  {
-    "id": "partner_1793031479651_7_9rqt",
-    "name": "Bus Company",
-    "base_city": "Torino (Piemonte)",
-    "website": "https://www.buscompany.it",
-    "fleet_url": "https://www.buscompany.it/noleggio/",
-    "relevance_score": 91,
-    "score_breakdown": {
-      "fleet_luxury": 22,
-      "partner_card": {
-        "whatsapp": "+39 011 226 1222",
-        "bus_models": "Minibus (20 pax), Midibus (28–32 pax), Pullman GT (52–80 pax)",
-        "replied_at": null,
-        "rate_hourly": "",
-        "email_status": "unknown",
-        "pax_capacity": "20, 28–32, 52–80 pax",
-        "rate_standby": "",
-        "scheduled_at": "2026-10-29T08:30:00.000Z",
-        "fleet_segment": "both",
-        "outreach_stage": "ready",
-        "user_set_status": true,
-        "last_outreach_at": null,
-        "user_set_segment": false
-      },
-      "corporate_sla": 16,
       "territory_permits": 18,
       "discretion_unbranded": 35
     },
     "status": "WANT_TO_CONTACT",
-    "unbranded_status": "100% Guaranteed Unbranded",
+    "unbranded_status": "100% Guaranteed Unbranded / Total Black",
     "fleet_categories": [
-      "Minibus (20 seats)",
-      "Midibus (28–32 seats)",
-      "Pullman GT (52–80 seats)"
+      "Mercedes-Benz Sprinter Minibus (20 seats)",
+      "Irizar GT Coach (52 seats)"
     ],
-    "phone": "+39 011 226 1222",
-    "email": "noleggi@buscompany.it",
-    "notes": "",
+    "phone": "+39 02 4070 8295",
+    "email": "info@exclusivecarsmilano.it",
+    "notes": "interested in Mercedes sprinter 20 posti and Irizar 52 posti",
     "source": "crawler",
-    "created_at": "2026-10-26T16:17:59.651+00:00",
-    "updated_at": "2026-10-26T16:45:26.820821+00:00"
-  },
-  {
-    "id": "partner_1793031479651_4_xsml",
-    "name": "Autoservizi Facchinetti",
-    "base_city": "Milano / Bergamo",
-    "website": "https://www.autoservizifacchinetti.it",
-    "fleet_url": "https://www.autoservizifacchinetti.it/flotta",
-    "relevance_score": 91,
-    "score_breakdown": {
-      "fleet_luxury": 22,
-      "partner_card": {
-        "whatsapp": "+39 035 838 120",
-        "bus_models": "Mercedes Sprinter (20 pax), Iveco Midibus (29 pax), Temsa VIP Safari (46 pax), Temsa Safari HD (54–58 pax)",
-        "replied_at": null,
-        "rate_hourly": "",
-        "email_status": "unknown",
-        "pax_capacity": "20, 29, 46, 54–58 pax",
-        "rate_standby": "",
-        "scheduled_at": "2026-10-29T08:00:00.000Z",
-        "fleet_segment": "both",
-        "outreach_stage": "ready",
-        "user_set_status": true,
-        "last_outreach_at": null,
-        "user_set_segment": false
-      },
-      "corporate_sla": 15,
-      "territory_permits": 19,
-      "discretion_unbranded": 35
-    },
-    "status": "WANT_TO_CONTACT",
-    "unbranded_status": "100% Guaranteed Unbranded",
-    "fleet_categories": [
-      "Mercedes Sprinter (20 seats)",
-      "Iveco Midibus (29 seats)",
-      "Temsa VIP Safari (46 seats)",
-      "Temsa Safari HD (54–58 seats)"
-    ],
-    "phone": "+39 035 838 120",
-    "email": "info@autoservizifacchinetti.it",
-    "notes": "",
-    "source": "crawler",
-    "created_at": "2026-10-26T16:17:59.651+00:00",
-    "updated_at": "2026-10-26T16:45:26.259322+00:00"
+    "created_at": "2026-10-23T14:21:19.743+00:00",
+    "updated_at": "2026-10-26T16:45:27.661611+00:00"
   },
   {
     "id": "partner_transervice",
@@ -782,47 +523,6 @@
     "source": "seed",
     "created_at": "2026-10-22T16:36:12.495179+00:00",
     "updated_at": "2026-10-26T16:45:24.500487+00:00"
-  },
-  {
-    "id": "partner_1793031479651_16_z7uf",
-    "name": "Bergamo Transfer",
-    "base_city": "Bergamo / Milano",
-    "website": "https://www.bergamotransfer.com",
-    "fleet_url": "https://www.bergamotransfer.com/flotta",
-    "relevance_score": 91,
-    "score_breakdown": {
-      "fleet_luxury": 22,
-      "partner_card": {
-        "whatsapp": "+39 035 3844411",
-        "bus_models": "Mercedes Sprinter VIP (8 & 16 pax), Coach GT (50 pax)",
-        "replied_at": null,
-        "rate_hourly": "",
-        "email_status": "unknown",
-        "pax_capacity": "8, 16, 50 pax",
-        "rate_standby": "",
-        "scheduled_at": "2026-10-28T13:00:00.000Z",
-        "fleet_segment": "both",
-        "outreach_stage": "ready",
-        "user_set_status": true,
-        "last_outreach_at": null,
-        "user_set_segment": false
-      },
-      "corporate_sla": 15,
-      "territory_permits": 19,
-      "discretion_unbranded": 35
-    },
-    "status": "WANT_TO_CONTACT",
-    "unbranded_status": "100% Guaranteed Unbranded / Total Black",
-    "fleet_categories": [
-      "Mercedes Sprinter VIP (8 & 16 seats)",
-      "Coach GT (50 seats)"
-    ],
-    "phone": "+39 035 3844411",
-    "email": "reservation@bergamotransfer.com",
-    "notes": "",
-    "source": "crawler",
-    "created_at": "2026-10-26T16:17:59.651+00:00",
-    "updated_at": "2026-10-26T16:45:25.613919+00:00"
   },
   {
     "id": "partner_1792765279535_l9ei",
@@ -870,6 +570,175 @@
     "updated_at": "2026-10-26T16:45:27.610264+00:00"
   },
   {
+    "id": "partner_1793031479651_1_wjsp",
+    "name": "Castano Turismo",
+    "base_city": "Varese / Malpensa",
+    "website": "https://www.castanobus.it",
+    "fleet_url": "https://www.castanobus.it/flotta/",
+    "relevance_score": 91,
+    "score_breakdown": {
+      "fleet_luxury": 22,
+      "partner_card": {
+        "whatsapp": "+39 0332 830 000",
+        "bus_models": "Pullman Gran Turismo (50–56 pax)",
+        "replied_at": null,
+        "rate_hourly": "",
+        "client_notes": "",
+        "email_status": "verified",
+        "pax_capacity": "19, 54 pax",
+        "rate_standby": "",
+        "scheduled_at": "2026-10-29T07:30:00.000Z",
+        "fleet_segment": "standard",
+        "outreach_stage": "ready",
+        "user_set_status": true,
+        "last_outreach_at": null,
+        "user_set_segment": true
+      },
+      "corporate_sla": 15,
+      "territory_permits": 19,
+      "discretion_unbranded": 35
+    },
+    "status": "WANT_TO_CONTACT",
+    "unbranded_status": "100% Guaranteed Unbranded / Total Black",
+    "fleet_categories": [
+      "Pullman Gran Turismo (50–56 seats)"
+    ],
+    "phone": "+39 0332 830 000",
+    "email": "info@castanobus.it",
+    "notes": "I am interested in Minibus 8 posti, Autobus 20 posti, Autobus 36 posti and Autobus 52/54 posti.",
+    "source": "crawler",
+    "created_at": "2026-10-26T16:17:59.651+00:00",
+    "updated_at": "2026-10-26T17:48:01.106929+00:00"
+  },
+  {
+    "id": "partner_1793031479651_13_f82y",
+    "name": "Autoservizi Cazzaniga Silvestro",
+    "base_city": "Lecco / Como / Monza",
+    "website": "https://www.autoservizicazzaniga.it",
+    "fleet_url": "https://www.autoservizicazzaniga.it/parco-mezzi",
+    "relevance_score": 91,
+    "score_breakdown": {
+      "fleet_luxury": 22,
+      "partner_card": {
+        "whatsapp": "+39 031 850 144",
+        "bus_models": "Minibus (8–20 pax)",
+        "replied_at": null,
+        "rate_hourly": "",
+        "client_notes": "",
+        "email_status": "verified",
+        "pax_capacity": "19, 54 pax",
+        "rate_standby": "",
+        "scheduled_at": "2026-10-28T12:30:00.000Z",
+        "fleet_segment": "standard",
+        "outreach_stage": "ready",
+        "user_set_status": true,
+        "last_outreach_at": null,
+        "user_set_segment": true
+      },
+      "corporate_sla": 15,
+      "territory_permits": 19,
+      "discretion_unbranded": 35
+    },
+    "status": "WANT_TO_CONTACT",
+    "unbranded_status": "100% Guaranteed Unbranded",
+    "fleet_categories": [
+      "Minibus (8–20 seats)"
+    ],
+    "phone": "+39 031 850 144",
+    "email": "info@autoservizicazzaniga.it",
+    "notes": "only ask about 54 seater bus, and if they have other more luxury?",
+    "source": "crawler",
+    "created_at": "2026-10-26T16:17:59.651+00:00",
+    "updated_at": "2026-10-26T17:48:01.649175+00:00"
+  },
+  {
+    "id": "partner_1792765279097_26hr",
+    "name": "Como Driver Services",
+    "base_city": "Como",
+    "website": "https://www.comodriver.com",
+    "fleet_url": "https://www.comodriver.com/autovetture/",
+    "relevance_score": 91,
+    "score_breakdown": {
+      "fleet_luxury": 21,
+      "partner_card": {
+        "whatsapp": "+39 347 184 8920",
+        "bus_models": "Mercedes Sprinter Minibus (12 pax), Ford Transit Minibus (16 pax)",
+        "replied_at": null,
+        "rate_hourly": "",
+        "client_notes": "",
+        "email_status": "mx_ok",
+        "pax_capacity": "12, 16 pax",
+        "rate_standby": "",
+        "scheduled_at": "2026-10-27T10:00:00.000Z",
+        "fleet_segment": "both",
+        "outreach_stage": "ready",
+        "last_message_id": null,
+        "user_set_status": true,
+        "last_outreach_at": null,
+        "user_set_segment": true,
+        "fleet_audit_verified_at": "2026-10-23T18:41:33.012Z"
+      },
+      "corporate_sla": 15,
+      "territory_permits": 20,
+      "discretion_unbranded": 35
+    },
+    "status": "WANT_TO_CONTACT",
+    "unbranded_status": "100% Guaranteed Unbranded / NCC Black",
+    "fleet_categories": [
+      "Mercedes Sprinter Minibus (12 seats)",
+      "Ford Transit Minibus (16 seats)"
+    ],
+    "phone": "+39 347 184 8920",
+    "email": "info@comodriver.com",
+    "notes": "interested in Minibus Mercedes Sprinter ( 12 passeggeri), do they have other mini vans?",
+    "source": "crawler",
+    "created_at": "2026-10-23T14:21:19.097+00:00",
+    "updated_at": "2026-10-26T17:24:27.870639+00:00"
+  },
+  {
+    "id": "partner_1792761050695_9k2e",
+    "name": "Prestige Car Limousine",
+    "base_city": "Milano",
+    "website": "https://www.prestigecarlimousine.it",
+    "fleet_url": "https://www.prestigecarlimousine.it/car/car-service-milan-luxury-minibus/",
+    "relevance_score": 90,
+    "score_breakdown": {
+      "fleet_luxury": 23,
+      "partner_card": {
+        "whatsapp": "+39 02 8951 6813",
+        "bus_models": "Mercedes-Benz Sprinter Luxury Minibus 8 & (16 pax), reclining leather & tables",
+        "replied_at": null,
+        "rate_hourly": "",
+        "client_notes": "",
+        "email_status": "mx_ok",
+        "pax_capacity": "8, 16 pax",
+        "rate_standby": "",
+        "scheduled_at": "2026-10-28T07:30:00.000Z",
+        "fleet_segment": "both",
+        "outreach_stage": "ready",
+        "last_message_id": null,
+        "user_set_status": true,
+        "last_outreach_at": null,
+        "user_set_segment": true,
+        "fleet_audit_verified_at": "2026-10-23T18:41:34.515Z"
+      },
+      "corporate_sla": 15,
+      "territory_permits": 17,
+      "discretion_unbranded": 35
+    },
+    "status": "WANT_TO_CONTACT",
+    "unbranded_status": "100% Guaranteed Unbranded / NCC Black",
+    "fleet_categories": [
+      "Mercedes-Benz Sprinter Luxury Minibus (8 & 16 seats)"
+    ],
+    "phone": "+39 02 8951 6813",
+    "email": "info@prestigecarlimousine.it",
+    "notes": "Interested in their Luxury Minibus. I want to learn more about it",
+    "source": "crawler",
+    "created_at": "2026-10-23T13:10:50.695+00:00",
+    "updated_at": "2026-10-26T17:36:45.561579+00:00"
+  },
+  {
     "id": "partner_1793031479651_2_b7ae",
     "name": "Autoservizi Zambetti",
     "base_city": "Brescia / Bergamo",
@@ -883,15 +752,16 @@
         "bus_models": "Iveco Daily Tourys Minibus (19 pax), Executive Midibus (28–34 pax), Scania Touring HD & Mercedes Tourismo (54 pax), Double Decker GT (82 pax)",
         "replied_at": null,
         "rate_hourly": "",
-        "email_status": "unknown",
+        "client_notes": "",
+        "email_status": "verified",
         "pax_capacity": "19, 28–34, 54, 82 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-29T09:30:00.000Z",
-        "fleet_segment": "both",
+        "fleet_segment": "standard",
         "outreach_stage": "ready",
         "user_set_status": true,
         "last_outreach_at": null,
-        "user_set_segment": false
+        "user_set_segment": true
       },
       "corporate_sla": 15,
       "territory_permits": 18,
@@ -907,53 +777,54 @@
     ],
     "phone": "+39 035 810742",
     "email": "info@zambettibus.com",
-    "notes": "",
+    "notes": "interested in Mercedes Tourismo 15 RHD (2026 & 2023 models) and Mercedes Tourismo K (midibus)",
     "source": "crawler",
     "created_at": "2026-10-26T16:17:59.651+00:00",
-    "updated_at": "2026-10-26T16:45:27.918728+00:00"
+    "updated_at": "2026-10-26T17:48:01.572146+00:00"
   },
   {
-    "id": "partner_1792761050695_9k2e",
-    "name": "Prestige Car Limousine",
-    "base_city": "Milano",
-    "website": "https://www.prestigecarlimousine.it",
-    "fleet_url": "https://www.prestigecarlimousine.it/car/car-service-milan-luxury-minibus/",
+    "id": "partner_1793031479651_14_wrph",
+    "name": "Autoservizi Perico",
+    "base_city": "Bergamo",
+    "website": "https://www.autoserviziperico.com",
+    "fleet_url": "https://www.autoserviziperico.com/flotta/",
     "relevance_score": 90,
     "score_breakdown": {
-      "fleet_luxury": 23,
+      "fleet_luxury": 22,
       "partner_card": {
-        "whatsapp": "+39 02 8951 6813",
-        "bus_models": "Mercedes-Benz Sprinter Luxury Minibus (8 & 16 pax, reclining leather & tables)",
+        "whatsapp": "+39 035 540302",
+        "bus_models": "Minivan NCC (7–8 pax), Mercedes-Benz Sprinter (8–20 pax), Iveco Midibus (34 pax), Mercedes Tourismo / Irizar GT Coach (50–56 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
-        "email_status": "mx_ok",
-        "pax_capacity": "8, 16 pax",
+        "email_status": "verified",
+        "pax_capacity": "34 pax",
         "rate_standby": "",
-        "scheduled_at": "2026-10-28T07:30:00.000Z",
-        "fleet_segment": "luxury",
+        "scheduled_at": "2026-10-29T09:00:00.000Z",
+        "fleet_segment": "standard",
         "outreach_stage": "ready",
-        "last_message_id": null,
         "user_set_status": true,
         "last_outreach_at": null,
-        "user_set_segment": false,
-        "fleet_audit_verified_at": "2026-10-23T18:41:34.515Z"
+        "user_set_segment": true
       },
       "corporate_sla": 15,
-      "territory_permits": 17,
+      "territory_permits": 18,
       "discretion_unbranded": 35
     },
     "status": "WANT_TO_CONTACT",
-    "unbranded_status": "100% Guaranteed Unbranded / NCC Black",
+    "unbranded_status": "100% Guaranteed Unbranded",
     "fleet_categories": [
-      "Mercedes-Benz Sprinter Luxury Minibus (8 & 16 seats)"
+      "Minivan NCC (7–8 seats)",
+      "Mercedes-Benz Sprinter (8–20 seats)",
+      "Iveco Midibus (34 seats)",
+      "Mercedes Tourismo / Irizar GT Coach (50–56 seats)"
     ],
-    "phone": "+39 02 8951 6813",
-    "email": "info@prestigecarlimousine.it",
-    "notes": "Milan luxury roadshow and event transport. 8 to 16-seater luxury Mercedes minibuses and suited English-speaking chauffeurs.",
+    "phone": "+39 035 540302",
+    "email": "info@autoserviziperico.com",
+    "notes": "- Interested in a) Mercedes-Benz Travego, b) Volvo 9700 Superior, c) Mercedes-Benz Tourismo, d) Irizar i6\n- Do they have stickers?",
     "source": "crawler",
-    "created_at": "2026-10-23T13:10:50.695+00:00",
-    "updated_at": "2026-10-26T16:45:25.558561+00:00"
+    "created_at": "2026-10-26T16:17:59.651+00:00",
+    "updated_at": "2026-10-26T17:48:00.775256+00:00"
   },
   {
     "id": "partner_1793031479651_19_75aq",
@@ -969,15 +840,16 @@
         "bus_models": "Mercedes Sprinter Minibus (19 pax), Setra GT Coach (52–64 pax)",
         "replied_at": null,
         "rate_hourly": "",
+        "client_notes": "",
         "email_status": "unknown",
         "pax_capacity": "19, 52–64 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-29T10:30:00.000Z",
-        "fleet_segment": "both",
+        "fleet_segment": "standard",
         "outreach_stage": "ready",
         "user_set_status": true,
         "last_outreach_at": null,
-        "user_set_segment": false
+        "user_set_segment": true
       },
       "corporate_sla": 15,
       "territory_permits": 18,
@@ -991,96 +863,10 @@
     ],
     "phone": "+39 0142 453136",
     "email": "info@gruppostat.com",
-    "notes": "",
+    "notes": "interested in MERCEDES - D'AURIA GRAN CAPRI, IRIZAR PB 12.37 HDH, EVOBUS SETRA S 431 DT, IRISBUS MAGELYS HD (53 posti), SETRA 415 GT-HD & 417 GT-HD",
     "source": "crawler",
     "created_at": "2026-10-26T16:17:59.651+00:00",
-    "updated_at": "2026-10-26T16:45:27.551507+00:00"
-  },
-  {
-    "id": "partner_1793031479651_5_i74u",
-    "name": "Pasqualini Bus",
-    "base_city": "Verona / Lake Garda",
-    "website": "https://www.pasqualinibus.it",
-    "fleet_url": "https://www.pasqualinibus.it/flotta/",
-    "relevance_score": 90,
-    "score_breakdown": {
-      "fleet_luxury": 21,
-      "partner_card": {
-        "whatsapp": "+39 045 765 0100",
-        "bus_models": "Minibus (16–19 pax), Midibus (28–32 pax), Pullman GT (52–60 pax), Double Decker GT (80 pax)",
-        "replied_at": null,
-        "rate_hourly": "",
-        "email_status": "unknown",
-        "pax_capacity": "16–19, 28–32, 52–60, 80 pax",
-        "rate_standby": "",
-        "scheduled_at": "2026-10-29T10:00:00.000Z",
-        "fleet_segment": "both",
-        "outreach_stage": "ready",
-        "user_set_status": true,
-        "last_outreach_at": null,
-        "user_set_segment": false
-      },
-      "corporate_sla": 16,
-      "territory_permits": 18,
-      "discretion_unbranded": 35
-    },
-    "status": "WANT_TO_CONTACT",
-    "unbranded_status": "100% Guaranteed Unbranded",
-    "fleet_categories": [
-      "Minibus GT (16–19 seats)",
-      "Midibus (28–32 seats)",
-      "Pullman GT (52–60 seats)",
-      "Double Decker GT (80 seats)"
-    ],
-    "phone": "+39 045 765 0100",
-    "email": "info@pasqualinibus.it",
-    "notes": "",
-    "source": "crawler",
-    "created_at": "2026-10-26T16:17:59.651+00:00",
-    "updated_at": "2026-10-26T16:45:26.903748+00:00"
-  },
-  {
-    "id": "partner_1793031479651_14_wrph",
-    "name": "Autoservizi Perico",
-    "base_city": "Bergamo",
-    "website": "https://www.autoserviziperico.com",
-    "fleet_url": "https://www.autoserviziperico.com/flotta/",
-    "relevance_score": 90,
-    "score_breakdown": {
-      "fleet_luxury": 22,
-      "partner_card": {
-        "whatsapp": "+39 035 540302",
-        "bus_models": "Mercedes Sprinter 416 (19 pax), Midibus (34 pax), Mercedes Tourismo / Travego GT (54 pax), Irizar i6 (54 pax)",
-        "replied_at": null,
-        "rate_hourly": "",
-        "email_status": "unknown",
-        "pax_capacity": "19, 34, 54 pax",
-        "rate_standby": "",
-        "scheduled_at": "2026-10-29T09:00:00.000Z",
-        "fleet_segment": "both",
-        "outreach_stage": "ready",
-        "user_set_status": true,
-        "last_outreach_at": null,
-        "user_set_segment": false
-      },
-      "corporate_sla": 15,
-      "territory_permits": 18,
-      "discretion_unbranded": 35
-    },
-    "status": "WANT_TO_CONTACT",
-    "unbranded_status": "100% Guaranteed Unbranded",
-    "fleet_categories": [
-      "Mercedes Sprinter 416 (19 seats)",
-      "Midibus (34 seats)",
-      "Mercedes Tourismo / Travego GT (54 seats)",
-      "Irizar i6 (54 seats)"
-    ],
-    "phone": "+39 035 540302",
-    "email": "info@autoserviziperico.com",
-    "notes": "",
-    "source": "crawler",
-    "created_at": "2026-10-26T16:17:59.651+00:00",
-    "updated_at": "2026-10-26T16:45:25.012829+00:00"
+    "updated_at": "2026-10-26T17:40:36.421969+00:00"
   },
   {
     "id": "partner_1793031479651_15_fgcv",
@@ -1096,15 +882,16 @@
         "bus_models": "Mercedes Sprinter Minibus (19 pax), Pullman GT (54 pax)",
         "replied_at": null,
         "rate_hourly": "",
+        "client_notes": "",
         "email_status": "unknown",
         "pax_capacity": "19, 54 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-29T11:00:00.000Z",
-        "fleet_segment": "both",
+        "fleet_segment": "standard",
         "outreach_stage": "ready",
         "user_set_status": true,
         "last_outreach_at": null,
-        "user_set_segment": false
+        "user_set_segment": true
       },
       "corporate_sla": 15,
       "territory_permits": 18,
@@ -1118,10 +905,10 @@
     ],
     "phone": "+39 349 8429000",
     "email": "info@italeurobus.it",
-    "notes": "",
+    "notes": "i would love to see the images of their minibuses and pullmans",
     "source": "crawler",
     "created_at": "2026-10-26T16:17:59.651+00:00",
-    "updated_at": "2026-10-26T16:45:24.817809+00:00"
+    "updated_at": "2026-10-26T17:46:54.313391+00:00"
   },
   {
     "id": "partner_1793031479651_18_caqw",
@@ -1209,51 +996,6 @@
     "updated_at": "2026-10-26T16:45:26.59247+00:00"
   },
   {
-    "id": "partner_1792765280013_poa6",
-    "name": "Caprioli Viaggi VIP Minibus",
-    "base_city": "Brescia",
-    "website": "https://www.caprioliviaggi.it",
-    "fleet_url": "https://www.caprioliviaggi.it/mezzi/",
-    "relevance_score": 88,
-    "score_breakdown": {
-      "fleet_luxury": 23,
-      "partner_card": {
-        "whatsapp": "+39 030 969 511",
-        "bus_models": "Mercedes Sprinter (8 & 16–20 pax), Minibus (25 pax), Setra GT (30, 42, 54 pax), Irizar i8 Pullman GTL Lusso (60 pax)",
-        "replied_at": null,
-        "rate_hourly": "",
-        "client_notes": "",
-        "email_status": "mx_ok",
-        "pax_capacity": "8, 16–20, 25, 30, 42, 54, 60 pax",
-        "rate_standby": "",
-        "scheduled_at": "2026-10-28T08:30:00.000Z",
-        "fleet_segment": "both",
-        "outreach_stage": "ready",
-        "user_set_status": true,
-        "last_outreach_at": null,
-        "user_set_segment": true,
-        "fleet_audit_verified_at": "2026-10-23T18:41:33.396Z"
-      },
-      "corporate_sla": 17,
-      "territory_permits": 18,
-      "discretion_unbranded": 30
-    },
-    "status": "WANT_TO_CONTACT",
-    "unbranded_status": "100% Guaranteed Unbranded / Total Black",
-    "fleet_categories": [
-      "Mercedes-Benz Sprinter Minibus (8 & 16–20 seats)",
-      "Minibus (25 seats)",
-      "Setra GT Coaches (30, 42, 54 seats)",
-      "Irizar i8 Pullman GTL Lusso (60 seats)"
-    ],
-    "phone": "+39 030 969 511",
-    "email": "info@caprioliviaggi.it",
-    "notes": "1. do they have buses without big stickers?",
-    "source": "crawler",
-    "created_at": "2026-10-23T14:21:20.013+00:00",
-    "updated_at": "2026-10-26T16:45:26.064528+00:00"
-  },
-  {
     "id": "partner_1792765279227_h3qg",
     "name": "Travel & Service Como",
     "base_city": "Como",
@@ -1300,47 +1042,6 @@
     "updated_at": "2026-10-26T16:45:27.140752+00:00"
   },
   {
-    "id": "partner_1793031479651_6_rmj2",
-    "name": "Rossi Pietro Bus",
-    "base_city": "Piacenza / South Lombardy",
-    "website": "https://www.rossipietrobus.it",
-    "fleet_url": "https://www.rossipietrobus.it/parco-mezzi/",
-    "relevance_score": 88,
-    "score_breakdown": {
-      "fleet_luxury": 20,
-      "partner_card": {
-        "whatsapp": "+39 0523 855 120",
-        "bus_models": "Mercedes Sprinter Minibus (19 pax), Pullman GT (52–56 pax)",
-        "replied_at": null,
-        "rate_hourly": "",
-        "email_status": "unknown",
-        "pax_capacity": "19, 52–56 pax",
-        "rate_standby": "",
-        "scheduled_at": "2026-10-29T13:00:00.000Z",
-        "fleet_segment": "both",
-        "outreach_stage": "ready",
-        "user_set_status": true,
-        "last_outreach_at": null,
-        "user_set_segment": false
-      },
-      "corporate_sla": 15,
-      "territory_permits": 18,
-      "discretion_unbranded": 35
-    },
-    "status": "WANT_TO_CONTACT",
-    "unbranded_status": "Neutral White / B2B Charter",
-    "fleet_categories": [
-      "Mercedes Sprinter Minibus (19 seats)",
-      "Pullman Gran Turismo (52–56 seats)"
-    ],
-    "phone": "+39 0523 855 120",
-    "email": "info@rossipietrobus.it",
-    "notes": "",
-    "source": "crawler",
-    "created_at": "2026-10-26T16:17:59.651+00:00",
-    "updated_at": "2026-10-26T16:45:26.966863+00:00"
-  },
-  {
     "id": "partner_1793031479651_17_6bsj",
     "name": "Bolognini Autoservizi",
     "base_city": "Verbania (Lake Maggiore)",
@@ -1383,28 +1084,30 @@
     "updated_at": "2026-10-26T16:45:25.777717+00:00"
   },
   {
-    "id": "partner_1793030996360_0w9g",
-    "name": "Peschiera Viaggi Luxury Coaches",
-    "base_city": "Lake Garda",
-    "website": "https://www.peschieraviaggi.it",
-    "fleet_url": "https://www.peschieraviaggi.it/flotta",
-    "relevance_score": 87,
+    "id": "partner_1792765280013_poa6",
+    "name": "Caprioli Viaggi VIP Minibus",
+    "base_city": "Brescia",
+    "website": "https://www.caprioliviaggi.it",
+    "fleet_url": "https://www.caprioliviaggi.it/mezzi/",
+    "relevance_score": 88,
     "score_breakdown": {
-      "fleet_luxury": 22,
+      "fleet_luxury": 23,
       "partner_card": {
-        "whatsapp": "+39 045 755 0122",
-        "bus_models": "Mercedes Sprinter Minibus (19 pax), Midibus (30 pax), Pullman GT (54–62 pax)",
+        "whatsapp": "+39 030 969 511",
+        "bus_models": "Mercedes Sprinter (8 & 16–20 pax), Minibus (25 pax), Setra GT (30, 42, 54 pax), Irizar i8 Pullman GTL Lusso (60 pax)",
         "replied_at": null,
         "rate_hourly": "",
-        "email_status": "unknown",
-        "pax_capacity": "19, 30, 54–62 pax",
+        "client_notes": "",
+        "email_status": "mx_ok",
+        "pax_capacity": "8, 16–20, 25, 30, 42, 54, 60 pax",
         "rate_standby": "",
-        "scheduled_at": "2026-10-30T07:30:00.000Z",
+        "scheduled_at": "2026-10-28T08:30:00.000Z",
         "fleet_segment": "both",
         "outreach_stage": "ready",
         "user_set_status": true,
         "last_outreach_at": null,
-        "user_set_segment": false
+        "user_set_segment": true,
+        "fleet_audit_verified_at": "2026-10-23T18:41:33.396Z"
       },
       "corporate_sla": 17,
       "territory_permits": 18,
@@ -1413,16 +1116,58 @@
     "status": "WANT_TO_CONTACT",
     "unbranded_status": "100% Guaranteed Unbranded / Total Black",
     "fleet_categories": [
-      "Mercedes Sprinter Minibus (19 seats)",
-      "Midibus (30 seats)",
-      "Pullman GT (54–62 seats)"
+      "Mercedes-Benz Sprinter Minibus (8 & 16–20 seats)",
+      "Minibus (25 seats)",
+      "Setra GT Coaches (30, 42, 54 seats)",
+      "Irizar i8 Pullman GTL Lusso (60 seats)"
     ],
-    "phone": "+39 045 755 0122",
-    "email": "info@peschieraviaggi.it",
-    "notes": "Peschiera del Garda and Sirmione wedding event transport. Clean unbranded black buses for lakefront resorts.",
+    "phone": "+39 030 969 511",
+    "email": "info@caprioliviaggi.it",
+    "notes": "1. do they have buses without big stickers?",
     "source": "crawler",
-    "created_at": "2026-10-26T16:09:56.36+00:00",
-    "updated_at": "2026-10-26T16:45:28.011259+00:00"
+    "created_at": "2026-10-23T14:21:20.013+00:00",
+    "updated_at": "2026-10-26T16:45:26.064528+00:00"
+  },
+  {
+    "id": "partner_1793031479651_6_rmj2",
+    "name": "Rossi Pietro Bus",
+    "base_city": "Piacenza / South Lombardy",
+    "website": "https://www.rossipietrobus.it",
+    "fleet_url": "https://www.rossipietrobus.it/parco-mezzi/",
+    "relevance_score": 88,
+    "score_breakdown": {
+      "fleet_luxury": 20,
+      "partner_card": {
+        "whatsapp": "+39 0523 855 120",
+        "bus_models": "Mercedes Sprinter Minibus (19 pax), Pullman GT (52–56 pax)",
+        "replied_at": null,
+        "rate_hourly": "",
+        "email_status": "unknown",
+        "pax_capacity": "19, 52–56 pax",
+        "rate_standby": "",
+        "scheduled_at": "2026-10-29T13:00:00.000Z",
+        "fleet_segment": "both",
+        "outreach_stage": "ready",
+        "user_set_status": true,
+        "last_outreach_at": null,
+        "user_set_segment": false
+      },
+      "corporate_sla": 15,
+      "territory_permits": 18,
+      "discretion_unbranded": 35
+    },
+    "status": "WANT_TO_CONTACT",
+    "unbranded_status": "Neutral White / B2B Charter",
+    "fleet_categories": [
+      "Mercedes Sprinter Minibus (19 seats)",
+      "Pullman Gran Turismo (52–56 seats)"
+    ],
+    "phone": "+39 0523 855 120",
+    "email": "info@rossipietrobus.it",
+    "notes": "",
+    "source": "crawler",
+    "created_at": "2026-10-26T16:17:59.651+00:00",
+    "updated_at": "2026-10-26T16:45:26.966863+00:00"
   },
   {
     "id": "partner_1792761050955_n0vc",
@@ -1466,6 +1211,48 @@
     "source": "crawler",
     "created_at": "2026-10-23T13:10:50.955+00:00",
     "updated_at": "2026-10-26T16:45:23.128233+00:00"
+  },
+  {
+    "id": "partner_1793030996360_0w9g",
+    "name": "Peschiera Viaggi Luxury Coaches",
+    "base_city": "Lake Garda",
+    "website": "https://www.peschieraviaggi.it",
+    "fleet_url": "https://www.peschieraviaggi.it/flotta",
+    "relevance_score": 87,
+    "score_breakdown": {
+      "fleet_luxury": 22,
+      "partner_card": {
+        "whatsapp": "+39 045 755 0122",
+        "bus_models": "Mercedes Sprinter Minibus (19 pax), Midibus (30 pax), Pullman GT (54–62 pax)",
+        "replied_at": null,
+        "rate_hourly": "",
+        "email_status": "unknown",
+        "pax_capacity": "19, 30, 54–62 pax",
+        "rate_standby": "",
+        "scheduled_at": "2026-10-30T07:30:00.000Z",
+        "fleet_segment": "both",
+        "outreach_stage": "ready",
+        "user_set_status": true,
+        "last_outreach_at": null,
+        "user_set_segment": false
+      },
+      "corporate_sla": 17,
+      "territory_permits": 18,
+      "discretion_unbranded": 30
+    },
+    "status": "WANT_TO_CONTACT",
+    "unbranded_status": "100% Guaranteed Unbranded / Total Black",
+    "fleet_categories": [
+      "Mercedes Sprinter Minibus (19 seats)",
+      "Midibus (30 seats)",
+      "Pullman GT (54–62 seats)"
+    ],
+    "phone": "+39 045 755 0122",
+    "email": "info@peschieraviaggi.it",
+    "notes": "Peschiera del Garda and Sirmione wedding event transport. Clean unbranded black buses for lakefront resorts.",
+    "source": "crawler",
+    "created_at": "2026-10-26T16:09:56.36+00:00",
+    "updated_at": "2026-10-26T16:45:28.011259+00:00"
   },
   {
     "id": "partner_1793031479651_8_6l1r",
@@ -1548,47 +1335,6 @@
     "source": "crawler",
     "created_at": "2026-10-23T14:21:20.113+00:00",
     "updated_at": "2026-10-26T16:45:26.17265+00:00"
-  },
-  {
-    "id": "partner_1793016425770_x3h4",
-    "name": "Air Car Service",
-    "base_city": "Monza",
-    "website": "https://www.aircarservice.com",
-    "fleet_url": "https://www.aircarservice.com/",
-    "relevance_score": 85,
-    "score_breakdown": {
-      "fleet_luxury": 21,
-      "partner_card": {
-        "whatsapp": "+39 035 311 258",
-        "bus_models": "Mercedes Sprinter VIP (16 pax), Autobus Granturismo (54 pax)",
-        "replied_at": null,
-        "rate_hourly": "",
-        "email_status": "unknown",
-        "pax_capacity": "16, 54 pax",
-        "rate_standby": "",
-        "scheduled_at": "2026-10-30T08:30:00.000Z",
-        "fleet_segment": "both",
-        "outreach_stage": "ready",
-        "user_set_status": true,
-        "last_outreach_at": null,
-        "user_set_segment": false
-      },
-      "corporate_sla": 16,
-      "territory_permits": 18,
-      "discretion_unbranded": 30
-    },
-    "status": "WANT_TO_CONTACT",
-    "unbranded_status": "100% Guaranteed Unbranded / Total Black",
-    "fleet_categories": [
-      "Mercedes Sprinter VIP (16 seats)",
-      "Autobus Granturismo (54 seats)"
-    ],
-    "phone": "+39 035 311 258",
-    "email": "info@aircarservice.com",
-    "notes": "Executive Mercedes, Setra & MAN Gran Turismo buses and luxury minivans across Monza, Bergamo, and Milan.",
-    "source": "crawler",
-    "created_at": "2026-10-26T12:07:05.77+00:00",
-    "updated_at": "2026-10-26T16:45:23.25121+00:00"
   },
   {
     "id": "partner_1793030995868_be2m",
@@ -1696,47 +1442,45 @@
     "updated_at": "2026-10-26T16:45:24.691731+00:00"
   },
   {
-    "id": "partner_1793030996812_339h",
-    "name": "Cattazzo Pullman",
-    "base_city": "Bormio (Alps)",
-    "website": "https://cattazzopullman.com",
-    "fleet_url": "https://cattazzopullman.com/",
-    "relevance_score": 84,
+    "id": "partner_1793016425770_x3h4",
+    "name": "Air Car Service",
+    "base_city": "Monza",
+    "website": "https://www.aircarservice.com",
+    "fleet_url": "https://www.aircarservice.com/",
+    "relevance_score": 85,
     "score_breakdown": {
-      "fleet_luxury": 22,
+      "fleet_luxury": 21,
       "partner_card": {
-        "whatsapp": "+39 045 715 1138",
-        "bus_models": "Mercedes Sprinter Capri (17 pax), Mercedes Sprinter Amalfi/Tourline (20 pax), Executive Midibus (30 pax), Neoplan Tourliner (54 pax)",
+        "whatsapp": "+39 035 311 258",
+        "bus_models": "Mercedes Sprinter VIP (16 pax), Autobus Granturismo (54 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "email_status": "unknown",
-        "pax_capacity": "17, 20, 30, 54 pax",
+        "pax_capacity": "16, 54 pax",
         "rate_standby": "",
-        "scheduled_at": "2026-10-30T10:00:00.000Z",
+        "scheduled_at": "2026-10-30T08:30:00.000Z",
         "fleet_segment": "both",
         "outreach_stage": "ready",
         "user_set_status": true,
         "last_outreach_at": null,
         "user_set_segment": false
       },
-      "corporate_sla": 17,
-      "territory_permits": 20,
-      "discretion_unbranded": 25
+      "corporate_sla": 16,
+      "territory_permits": 18,
+      "discretion_unbranded": 30
     },
     "status": "WANT_TO_CONTACT",
-    "unbranded_status": "Unbranded on Request",
+    "unbranded_status": "100% Guaranteed Unbranded / Total Black",
     "fleet_categories": [
-      "Mercedes Sprinter Capri (17 seats)",
-      "Mercedes Sprinter Amalfi & Tourline (20 seats)",
-      "Executive Midibus (30 seats)",
-      "Neoplan Tourliner (54 seats)"
+      "Mercedes Sprinter VIP (16 seats)",
+      "Autobus Granturismo (54 seats)"
     ],
-    "phone": "+39 045 715 1138",
-    "email": "info@cattazzopullman.com",
-    "notes": "Luxury Gran Turismo coaches and Mercedes minibuses serving Northern Italy, Verona, and Alpine corridors.",
+    "phone": "+39 035 311 258",
+    "email": "info@aircarservice.com",
+    "notes": "Executive Mercedes, Setra & MAN Gran Turismo buses and luxury minivans across Monza, Bergamo, and Milan.",
     "source": "crawler",
-    "created_at": "2026-10-26T16:09:56.812+00:00",
-    "updated_at": "2026-10-26T16:45:26.643529+00:00"
+    "created_at": "2026-10-26T12:07:05.77+00:00",
+    "updated_at": "2026-10-26T16:45:23.25121+00:00"
   },
   {
     "id": "partner_1793030996491_wete",
@@ -1780,46 +1524,88 @@
     "updated_at": "2026-10-26T16:45:25.354341+00:00"
   },
   {
-    "id": "partner_1793030996589_2k6k",
-    "name": "Consorzio Eurobus Verona",
-    "base_city": "Lake Garda",
-    "website": "https://eurobusverona.it",
-    "fleet_url": "https://eurobusverona.it/",
-    "relevance_score": 83,
+    "id": "partner_1793030996812_339h",
+    "name": "Cattazzo Pullman",
+    "base_city": "Bormio (Alps)",
+    "website": "https://cattazzopullman.com",
+    "fleet_url": "https://cattazzopullman.com/",
+    "relevance_score": 84,
     "score_breakdown": {
       "fleet_luxury": 22,
       "partner_card": {
-        "whatsapp": "+39 045 803 2002",
-        "bus_models": "Minibus (19 pax), Pullman GT (54 pax), Autobus Maxi (84 pax)",
+        "whatsapp": "+39 045 715 1138",
+        "bus_models": "Mercedes Sprinter Capri (17 pax), Mercedes Sprinter Amalfi/Tourline (20 pax), Executive Midibus (30 pax), Neoplan Tourliner (54 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "email_status": "unknown",
-        "pax_capacity": "19, 54, 84 pax",
+        "pax_capacity": "17, 20, 30, 54 pax",
         "rate_standby": "",
-        "scheduled_at": "2026-10-30T11:30:00.000Z",
+        "scheduled_at": "2026-10-30T10:00:00.000Z",
         "fleet_segment": "both",
         "outreach_stage": "ready",
         "user_set_status": true,
         "last_outreach_at": null,
         "user_set_segment": false
       },
-      "corporate_sla": 18,
-      "territory_permits": 18,
+      "corporate_sla": 17,
+      "territory_permits": 20,
       "discretion_unbranded": 25
     },
     "status": "WANT_TO_CONTACT",
     "unbranded_status": "Unbranded on Request",
     "fleet_categories": [
-      "Minibus GT (19 seats)",
-      "Pullman Gran Turismo (54 seats)",
-      "Autobus Maxi (84 seats)"
+      "Mercedes Sprinter Capri (17 seats)",
+      "Mercedes Sprinter Amalfi & Tourline (20 seats)",
+      "Executive Midibus (30 seats)",
+      "Neoplan Tourliner (54 seats)"
     ],
-    "phone": "+39 045 803 2002",
-    "email": "info@eurobusverona.it",
-    "notes": "Verona and Lake Garda premier bus & luxury minibus consortium covering Sirmione, Lazise, and Garda villas.",
+    "phone": "+39 045 715 1138",
+    "email": "info@cattazzopullman.com",
+    "notes": "Luxury Gran Turismo coaches and Mercedes minibuses serving Northern Italy, Verona, and Alpine corridors.",
     "source": "crawler",
-    "created_at": "2026-10-26T16:09:56.589+00:00",
-    "updated_at": "2026-10-26T16:45:25.844342+00:00"
+    "created_at": "2026-10-26T16:09:56.812+00:00",
+    "updated_at": "2026-10-26T16:45:26.643529+00:00"
+  },
+  {
+    "id": "partner_1793030997076_cyc8",
+    "name": "Luxury Transfer Milan",
+    "base_city": "Varese",
+    "website": "https://www.luxurytransfermilan.com",
+    "fleet_url": "https://www.luxurytransfermilan.com/",
+    "relevance_score": 83,
+    "score_breakdown": {
+      "fleet_luxury": 21,
+      "partner_card": {
+        "whatsapp": "+39 02 8718 6920",
+        "bus_models": "Mercedes Sprinter Bus (14 pax)",
+        "replied_at": null,
+        "rate_hourly": "",
+        "client_notes": "",
+        "email_status": "verified",
+        "pax_capacity": "14 pax",
+        "rate_standby": "",
+        "scheduled_at": "2026-10-30T12:05:00.000Z",
+        "fleet_segment": "luxury",
+        "outreach_stage": "ready",
+        "user_set_status": true,
+        "last_outreach_at": null,
+        "user_set_segment": true
+      },
+      "corporate_sla": 17,
+      "territory_permits": 20,
+      "discretion_unbranded": 25
+    },
+    "status": "WANT_TO_CONTACT",
+    "unbranded_status": "Unbranded on Request",
+    "fleet_categories": [
+      "Mercedes Sprinter Bus (14 seats)"
+    ],
+    "phone": "+39 02 8718 6920",
+    "email": "info@luxurytransfermilan.com",
+    "notes": "Only interested in Mercedes Sprinter, and want to see if they have anything else in the category of busses?",
+    "source": "crawler",
+    "created_at": "2026-10-26T16:09:57.076+00:00",
+    "updated_at": "2026-10-26T16:45:22.87793+00:00"
   },
   {
     "id": "partner_1793030996893_sp4m",
@@ -1864,45 +1650,46 @@
     "updated_at": "2026-10-26T16:45:23.685596+00:00"
   },
   {
-    "id": "partner_1793030997076_cyc8",
-    "name": "Luxury Transfer Milan",
-    "base_city": "Varese",
-    "website": "https://www.luxurytransfermilan.com",
-    "fleet_url": "https://www.luxurytransfermilan.com/",
+    "id": "partner_1793030996589_2k6k",
+    "name": "Consorzio Eurobus Verona",
+    "base_city": "Lake Garda",
+    "website": "https://eurobusverona.it",
+    "fleet_url": "https://eurobusverona.it/",
     "relevance_score": 83,
     "score_breakdown": {
-      "fleet_luxury": 21,
+      "fleet_luxury": 22,
       "partner_card": {
-        "whatsapp": "+39 02 8718 6920",
-        "bus_models": "Mercedes Sprinter Bus (14 pax)",
+        "whatsapp": "+39 045 803 2002",
+        "bus_models": "Minibus (19 pax), Pullman GT (54 pax), Autobus Maxi (84 pax)",
         "replied_at": null,
         "rate_hourly": "",
-        "client_notes": "",
-        "email_status": "verified",
-        "pax_capacity": "14 pax",
+        "email_status": "unknown",
+        "pax_capacity": "19, 54, 84 pax",
         "rate_standby": "",
-        "scheduled_at": "2026-10-30T12:05:00.000Z",
-        "fleet_segment": "luxury",
+        "scheduled_at": "2026-10-30T11:30:00.000Z",
+        "fleet_segment": "both",
         "outreach_stage": "ready",
         "user_set_status": true,
         "last_outreach_at": null,
-        "user_set_segment": true
+        "user_set_segment": false
       },
-      "corporate_sla": 17,
-      "territory_permits": 20,
+      "corporate_sla": 18,
+      "territory_permits": 18,
       "discretion_unbranded": 25
     },
     "status": "WANT_TO_CONTACT",
     "unbranded_status": "Unbranded on Request",
     "fleet_categories": [
-      "Mercedes Sprinter Bus (14 seats)"
+      "Minibus GT (19 seats)",
+      "Pullman Gran Turismo (54 seats)",
+      "Autobus Maxi (84 seats)"
     ],
-    "phone": "+39 02 8718 6920",
-    "email": "info@luxurytransfermilan.com",
-    "notes": "Only interested in Mercedes Sprinter, and want to see if they have anything else in the category of busses?",
+    "phone": "+39 045 803 2002",
+    "email": "info@eurobusverona.it",
+    "notes": "Verona and Lake Garda premier bus & luxury minibus consortium covering Sirmione, Lazise, and Garda villas.",
     "source": "crawler",
-    "created_at": "2026-10-26T16:09:57.076+00:00",
-    "updated_at": "2026-10-26T16:45:22.87793+00:00"
+    "created_at": "2026-10-26T16:09:56.589+00:00",
+    "updated_at": "2026-10-26T16:45:25.844342+00:00"
   },
   {
     "id": "partner_1793030996221_7t9y",
@@ -2130,15 +1917,15 @@
       "fleet_luxury": 21,
       "partner_card": {
         "whatsapp": "+39 0345 910 38",
-        "bus_models": "Mercedes Sprinter Minibus (19 pax), Mercedes Tourismo GT (54 pax), Setra TopClass (56 pax)",
+        "bus_models": "Minibus (8–20 pax), Pullman Gran Turismo (50–56 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
-        "email_status": "unknown",
+        "email_status": "verified",
         "pax_capacity": "19, 54, 56 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-27T10:30:00.000Z",
-        "fleet_segment": "both",
+        "fleet_segment": "standard",
         "outreach_stage": "ready",
         "user_set_status": true,
         "last_outreach_at": null,
@@ -2151,16 +1938,15 @@
     "status": "WANT_TO_CONTACT",
     "unbranded_status": "Unbranded on Request",
     "fleet_categories": [
-      "Mercedes Sprinter Minibus (19 seats)",
-      "Mercedes Tourismo GT (54 seats)",
-      "Setra TopClass (56 seats)"
+      "Minibus (8–20 seats)",
+      "Pullman Gran Turismo (50–56 seats)"
     ],
     "phone": "+39 0345 910 38",
     "email": "info@autoservizisonzogni.it",
     "notes": "interested in Mercedes Sprinter Capri (22 seater) + 40 seater + 54 + 64",
     "source": "crawler",
     "created_at": "2026-10-26T16:10:33.043+00:00",
-    "updated_at": "2026-10-26T16:45:24.057416+00:00"
+    "updated_at": "2026-10-26T17:48:00.668054+00:00"
   },
   {
     "id": "partner_1793031032925_1w89",
@@ -2177,7 +1963,7 @@
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
-        "email_status": "unknown",
+        "email_status": "invalid",
         "pax_capacity": "9, 38, 54–80 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-28T09:30:00.000Z",
@@ -2200,10 +1986,10 @@
     ],
     "phone": "+39 02 896 039",
     "email": "noleggio@airpullman.it",
-    "notes": "1. Do cars have your brand stickers?\n2. You have a lot of different buses listed on your website. Can you give general price ranges for minibuses, autobuses, and grandturismos?",
+    "notes": "",
     "source": "crawler",
     "created_at": "2026-10-26T16:10:32.925+00:00",
-    "updated_at": "2026-10-26T16:45:27.495253+00:00"
+    "updated_at": "2026-10-26T17:48:01.338833+00:00"
   },
   {
     "id": "partner_linea_azzurra",
@@ -2312,46 +2098,133 @@
     "updated_at": "2026-10-26T16:45:23.431338+00:00"
   },
   {
-    "id": "partner_1793031033153_oyw9",
-    "name": "Frigerio Trasporti",
-    "base_city": "Monza",
-    "website": "https://www.frigerioviaggi.com",
-    "fleet_url": "https://www.frigerioviaggi.com/noleggio-bus",
+    "id": "partner_1793031479651_16_z7uf",
+    "name": "Bergamo Transfer",
+    "base_city": "Bergamo / Milano",
+    "website": "https://www.bergamotransfer.com",
+    "fleet_url": "https://www.bergamotransfer.com/flotta",
     "relevance_score": 0,
     "score_breakdown": {
-      "fleet_luxury": 20,
+      "fleet_luxury": 22,
       "partner_card": {
-        "whatsapp": "+39 0362 359 1",
-        "bus_models": "Executive Midibus (28 pax), Pullman GT (54 pax)",
+        "whatsapp": "+39 035 3844411",
+        "bus_models": "Mercedes Sprinter VIP 8 & (16 pax), Coach GT (50 pax)",
+        "replied_at": null,
+        "rate_hourly": "",
+        "client_notes": "",
+        "email_status": "invalid",
+        "pax_capacity": "8, 16, 50 pax",
+        "rate_standby": "",
+        "scheduled_at": "2026-10-28T13:00:00.000Z",
+        "fleet_segment": "both",
+        "outreach_stage": "closed",
+        "user_set_status": true,
+        "last_outreach_at": null,
+        "user_set_segment": true
+      },
+      "corporate_sla": 15,
+      "territory_permits": 19,
+      "discretion_unbranded": 35
+    },
+    "status": "NOT_RELEVANT",
+    "unbranded_status": "100% Guaranteed Unbranded / Total Black",
+    "fleet_categories": [
+      "Mercedes Sprinter VIP (8 & 16 seats)",
+      "Coach GT (50 seats)"
+    ],
+    "phone": "+39 035 3844411",
+    "email": "reservation@bergamotransfer.com",
+    "notes": "",
+    "source": "crawler",
+    "created_at": "2026-10-26T16:17:59.651+00:00",
+    "updated_at": "2026-10-26T17:48:00.898191+00:00"
+  },
+  {
+    "id": "partner_1793031479651_7_9rqt",
+    "name": "Bus Company",
+    "base_city": "Torino (Piemonte)",
+    "website": "https://www.buscompany.it",
+    "fleet_url": "https://www.buscompany.it/noleggio/",
+    "relevance_score": 0,
+    "score_breakdown": {
+      "fleet_luxury": 22,
+      "partner_card": {
+        "whatsapp": "+39 011 226 1222",
+        "bus_models": "Minibus (20 pax), Midibus (28–32 pax), Pullman GT (52–80 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
         "email_status": "unknown",
-        "pax_capacity": "28, 54 pax",
+        "pax_capacity": "20, 28–32, 52–80 pax",
         "rate_standby": "",
-        "scheduled_at": null,
-        "fleet_segment": "both",
+        "scheduled_at": "2026-10-29T08:30:00.000Z",
+        "fleet_segment": "standard",
         "outreach_stage": "closed",
         "user_set_status": true,
         "last_outreach_at": null,
         "user_set_segment": false
       },
-      "corporate_sla": 18,
-      "territory_permits": 17,
-      "discretion_unbranded": 20
+      "corporate_sla": 16,
+      "territory_permits": 18,
+      "discretion_unbranded": 35
     },
     "status": "NOT_RELEVANT",
-    "unbranded_status": "Unbranded on Request",
+    "unbranded_status": "100% Guaranteed Unbranded",
     "fleet_categories": [
-      "Executive Midibus (28 seats)",
-      "Pullman GT (54 seats)"
+      "Minibus (20 seats)",
+      "Midibus (28–32 seats)",
+      "Pullman GT (52–80 seats)"
     ],
-    "phone": "+39 0362 359 1",
-    "email": "bus@frigerioviaggi.com",
-    "notes": "Monza Brianza and Milan corporate transfer company. Euro 6 midibuses and V-Classes.",
+    "phone": "+39 011 226 1222",
+    "email": "noleggi@buscompany.it",
+    "notes": "",
     "source": "crawler",
-    "created_at": "2026-10-26T16:10:33.153+00:00",
-    "updated_at": "2026-10-26T16:45:24.870025+00:00"
+    "created_at": "2026-10-26T16:17:59.651+00:00",
+    "updated_at": "2026-10-26T17:30:50.392552+00:00"
+  },
+  {
+    "id": "partner_1793031479651_5_i74u",
+    "name": "Pasqualini Bus",
+    "base_city": "Verona / Lake Garda",
+    "website": "https://www.pasqualinibus.it",
+    "fleet_url": "https://www.pasqualinibus.it/flotta/",
+    "relevance_score": 0,
+    "score_breakdown": {
+      "fleet_luxury": 21,
+      "partner_card": {
+        "whatsapp": "+39 045 765 0100",
+        "bus_models": "Minibus (16–19 pax), Midibus (28–32 pax), Pullman GT (52–60 pax), Double Decker GT (80 pax)",
+        "replied_at": null,
+        "rate_hourly": "",
+        "client_notes": "",
+        "email_status": "unknown",
+        "pax_capacity": "16–19, 28–32, 52–60, 80 pax",
+        "rate_standby": "",
+        "scheduled_at": "2026-10-29T10:00:00.000Z",
+        "fleet_segment": "standard",
+        "outreach_stage": "closed",
+        "user_set_status": true,
+        "last_outreach_at": null,
+        "user_set_segment": false
+      },
+      "corporate_sla": 16,
+      "territory_permits": 18,
+      "discretion_unbranded": 35
+    },
+    "status": "NOT_RELEVANT",
+    "unbranded_status": "100% Guaranteed Unbranded",
+    "fleet_categories": [
+      "Minibus GT (16–19 seats)",
+      "Midibus (28–32 seats)",
+      "Pullman GT (52–60 seats)",
+      "Double Decker GT (80 seats)"
+    ],
+    "phone": "+39 045 765 0100",
+    "email": "info@pasqualinibus.it",
+    "notes": "",
+    "source": "crawler",
+    "created_at": "2026-10-26T16:17:59.651+00:00",
+    "updated_at": "2026-10-26T17:41:19.371637+00:00"
   },
   {
     "id": "partner_1793031032498_gxg7",
@@ -2394,5 +2267,133 @@
     "source": "crawler",
     "created_at": "2026-10-26T16:10:32.497+00:00",
     "updated_at": "2026-10-26T16:45:27.07704+00:00"
+  },
+  {
+    "id": "partner_1793031479651_4_xsml",
+    "name": "Autoservizi Facchinetti",
+    "base_city": "Milano / Bergamo",
+    "website": "https://www.autoservizifacchinetti.it",
+    "fleet_url": "https://www.autoservizifacchinetti.it/flotta",
+    "relevance_score": 0,
+    "score_breakdown": {
+      "fleet_luxury": 22,
+      "partner_card": {
+        "whatsapp": "+39 035 838 120",
+        "bus_models": "Mercedes Sprinter (20 pax), Iveco Midibus (29 pax), Temsa VIP Safari (46 pax), Temsa Safari HD (54–58 pax)",
+        "replied_at": null,
+        "rate_hourly": "",
+        "client_notes": "",
+        "email_status": "unknown",
+        "pax_capacity": "20, 29, 46, 54–58 pax",
+        "rate_standby": "",
+        "scheduled_at": "2026-10-29T08:00:00.000Z",
+        "fleet_segment": "both",
+        "outreach_stage": "closed",
+        "user_set_status": true,
+        "last_outreach_at": null,
+        "user_set_segment": false
+      },
+      "corporate_sla": 15,
+      "territory_permits": 19,
+      "discretion_unbranded": 35
+    },
+    "status": "NOT_RELEVANT",
+    "unbranded_status": "100% Guaranteed Unbranded",
+    "fleet_categories": [
+      "Mercedes Sprinter (20 seats)",
+      "Iveco Midibus (29 seats)",
+      "Temsa VIP Safari (46 seats)",
+      "Temsa Safari HD (54–58 seats)"
+    ],
+    "phone": "+39 035 838 120",
+    "email": "info@autoservizifacchinetti.it",
+    "notes": "",
+    "source": "crawler",
+    "created_at": "2026-10-26T16:17:59.651+00:00",
+    "updated_at": "2026-10-26T17:31:29.565919+00:00"
+  },
+  {
+    "id": "partner_1793031479651_10_3kbi",
+    "name": "Autoservizi Radaelli",
+    "base_city": "Monza / Como / Milano",
+    "website": "https://www.autoserviziradaelli.it",
+    "fleet_url": "https://www.autoserviziradaelli.it/flotta",
+    "relevance_score": 0,
+    "score_breakdown": {
+      "fleet_luxury": 23,
+      "partner_card": {
+        "whatsapp": "+39 0362 901353",
+        "bus_models": "Mercedes Sprinter Minibus (19 pax), Pullman Gran Turismo (52 pax)",
+        "replied_at": null,
+        "rate_hourly": "",
+        "client_notes": "",
+        "email_status": "unknown",
+        "pax_capacity": "19, 52 pax",
+        "rate_standby": "",
+        "scheduled_at": "2026-10-28T11:00:00.000Z",
+        "fleet_segment": "standard",
+        "outreach_stage": "closed",
+        "user_set_status": true,
+        "last_outreach_at": null,
+        "user_set_segment": false
+      },
+      "corporate_sla": 15,
+      "territory_permits": 20,
+      "discretion_unbranded": 35
+    },
+    "status": "NOT_RELEVANT",
+    "unbranded_status": "100% Guaranteed Unbranded",
+    "fleet_categories": [
+      "Mercedes Sprinter Minibus (19 seats)",
+      "Pullman Gran Turismo (52 seats)"
+    ],
+    "phone": "+39 0362 901353",
+    "email": "bus@autoserviziradaelli.it",
+    "notes": "",
+    "source": "crawler",
+    "created_at": "2026-10-26T16:17:59.651+00:00",
+    "updated_at": "2026-10-26T17:20:54.974843+00:00"
+  },
+  {
+    "id": "partner_1793031033153_oyw9",
+    "name": "Frigerio Trasporti",
+    "base_city": "Monza",
+    "website": "https://www.frigerioviaggi.com",
+    "fleet_url": "https://www.frigerioviaggi.com/noleggio-bus",
+    "relevance_score": 0,
+    "score_breakdown": {
+      "fleet_luxury": 20,
+      "partner_card": {
+        "whatsapp": "+39 0362 359 1",
+        "bus_models": "Executive Midibus (28 pax), Pullman GT (54 pax)",
+        "replied_at": null,
+        "rate_hourly": "",
+        "client_notes": "",
+        "email_status": "unknown",
+        "pax_capacity": "28, 54 pax",
+        "rate_standby": "",
+        "scheduled_at": null,
+        "fleet_segment": "both",
+        "outreach_stage": "closed",
+        "user_set_status": true,
+        "last_outreach_at": null,
+        "user_set_segment": false
+      },
+      "corporate_sla": 18,
+      "territory_permits": 17,
+      "discretion_unbranded": 20
+    },
+    "status": "NOT_RELEVANT",
+    "unbranded_status": "Unbranded on Request",
+    "fleet_categories": [
+      "Executive Midibus (28 seats)",
+      "Pullman GT (54 seats)"
+    ],
+    "phone": "+39 0362 359 1",
+    "email": "bus@frigerioviaggi.com",
+    "notes": "Monza Brianza and Milan corporate transfer company. Euro 6 midibuses and V-Classes.",
+    "source": "crawler",
+    "created_at": "2026-10-26T16:10:33.153+00:00",
+    "updated_at": "2026-10-26T16:45:24.870025+00:00"
   }
 ]

@@ -287,7 +287,7 @@ test('findAndVerifyPartnerEmail: upgrades legacy dead-domain entries and recover
   assert.equal(updated.name, 'Como Limo Lux');
   assert.equal(updated.email, 'info@comolimolux.com');
   assert.equal(updated.website, 'https://comolimolux.com');
-  assert(updated.notes.includes('Checked email: info@comolimolux.com'));
+  assert.equal(updated.email_status, 'verified');
 
   // 2. Verify zero candidates in SCOUT_CANDIDATE_POOL use any legacy dead domain
   for (const cand of SCOUT_CANDIDATE_POOL) {
@@ -295,6 +295,39 @@ test('findAndVerifyPartnerEmail: upgrades legacy dead-domain entries and recover
     assert(!LEGACY_DEAD_DOMAINS[dom], `Candidate "${cand.name}" uses dead domain ${dom}`);
     assert(!findLegacyReplacement(cand), `Candidate "${cand.name}" should already be a verified live operator`);
   }
+});
+
+test('findAndVerifyPartnerEmail strictly preserves manual user comments on both failure and success', async () => {
+  // Scenario 1: Failure / dead domain -> Must mark email_status as invalid, but NEVER OVERWRITE user notes!
+  const failOp = {
+    id: 'test_perico_fail',
+    name: 'Autoservizi Fake',
+    website: 'https://www.completely-nonexistent-domain-12345.it',
+    email: 'bad@completely-nonexistent-domain-12345.it',
+    notes: '- Interested in a) Mercedes-Benz Travego, b) Volvo 9700 Superior\n- Do they have stickers?',
+    status: 'TO_REVIEW'
+  };
+  S.busPartners = [failOp];
+  const failRes = await findAndVerifyPartnerEmail('test_perico_fail', null, null, { silent: true });
+  assert.equal(failRes, null);
+  const updatedFail = S.busPartners.find((p) => p.id === 'test_perico_fail');
+  assert.equal(updatedFail.email_status, 'invalid');
+  assert.equal(updatedFail.notes, '- Interested in a) Mercedes-Benz Travego, b) Volvo 9700 Superior\n- Do they have stickers?', 'User notes must be strictly preserved on check failure!');
+
+  // Scenario 2: Success -> Recovers email, but NEVER appends or rewrites user notes!
+  const successOp = {
+    id: 'test_stat_success',
+    name: 'Stat Turismo Real',
+    website: 'https://comolimolux.com',
+    email: '',
+    notes: "interested in MERCEDES - D'AURIA GRAN CAPRI, IRIZAR PB 12.37 HDH",
+    status: 'TO_REVIEW'
+  };
+  S.busPartners = [successOp];
+  const succRes = await findAndVerifyPartnerEmail('test_stat_success', null, null, { silent: true });
+  assert(succRes);
+  const updatedSucc = S.busPartners.find((p) => p.id === 'test_stat_success');
+  assert.equal(updatedSucc.notes, "interested in MERCEDES - D'AURIA GRAN CAPRI, IRIZAR PB 12.37 HDH", 'User notes must remain 100% clean without appended system check stamps!');
 });
 
 test('Contacted Status preset: accurately accounts for operators in CONTACTED state', () => {
