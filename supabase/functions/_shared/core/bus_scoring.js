@@ -612,23 +612,23 @@ Dmitri Traciuc`;
   const questions = [];
 
   // Question 1: Transfer Pricing (Milan <-> Malpensa MXP / Como + Minimum Order)
-  questions.push(`Prezzi B2B indicativi per transfer punto a punto (es. tratta Milano Centro – Aeroporto di Malpensa MXP, con relativo minimo d'ordine e preavviso richiesto)`);
+  questions.push(`Tariffe B2B per transfer punto a punto (es. tratta Milano Centro – Aeroporto di Malpensa MXP, con relativo minimo d'ordine e preavviso)`);
 
   // Question 2: Hourly / Standby Pricing (4h / 8h + Minimum Service Time)
-  questions.push(`Tariffe B2B per servizio orario e a disposizione (es. mezza giornata 4h / giornata intera 8h) e relativo tempo minimo di servizio`);
+  questions.push(`Tariffe B2B per servizio orario e a disposizione (4h / 8h) e relativo tempo minimo di servizio`);
 
   // Question 3: Fleet Models, Seating Capacity & Unlisted Fleet
   if (asks50Focus) {
-    questions.push(`Oltre ai pullman da 50 posti, avete a disposizione anche minibus o bus in versione Luxury/VIP (o contatti fidati di colleghi da consigliare)? Siamo comunque molto interessati anche ai pullman normali.`);
+    questions.push(`Oltre ai pullman da 50 posti, avete a disposizione anche minibus o bus in versione Luxury/VIP? (siamo comunque molto interessati anche ai pullman normali)`);
   } else if (asksUnlisted && (asksMinibuses || asksExtraLong || asks19 || asks20_26 || asks22)) {
     if (asks22 && asks19) {
-      questions.push(`Disponete solo dei modelli da 22 posti e 19 posti o avete anche altri modelli/capienze a disposizione in flotta? Quanti passeggeri portano per ciascun mezzo?`);
+      questions.push(`Disponete solo dei modelli da 22 posti e 19 posti o avete anche altri modelli/capienze a disposizione in flotta?`);
     } else if (asks22) {
-      questions.push(`Disponete solo del modello da 22 posti o avete anche altri modelli/capienze a disposizione in flotta? Quanti passeggeri portano per ciascun mezzo?`);
+      questions.push(`Disponete solo del modello da 22 posti o avete anche altri modelli/capienze a disposizione in flotta?`);
     } else if (asks19) {
       questions.push(`Disponete solo del modello da 19 posti o avete anche altri modelli/capienze a disposizione in flotta?`);
     } else if (asksExtraLong || asks20_26) {
-      questions.push(`Oltre ai minibus extra-long e ai bus da 20 e 26 posti, avete altri modelli a disposizione in flotta? Quanti passeggeri portano per ciascun mezzo?`);
+      questions.push(`Oltre ai minibus extra-long e ai bus da 20 e 26 posti, avete altri modelli a disposizione in flotta e quanti passeggeri portano?`);
     } else if (asksMinibuses) {
       questions.push(`I minibus disponibili in flotta sono solo i modelli visibili sul sito o ne avete anche altri? Quanti passeggeri portano per ciascun mezzo?`);
     } else {
@@ -637,24 +637,24 @@ Dmitri Traciuc`;
   } else if (asksCapacity) {
     questions.push(`Modelli bus disponibili e quanti passeggeri portano (capienza esatta ed effettiva per ciascun mezzo)`);
   } else {
-    questions.push(`Se oltre ai modelli indicati disponete di altri minibus o pullman in flotta (o contatti fidati di colleghi con cui collaborate per capienze maggiori)`);
+    questions.push(`Modelli bus disponibili e quanti passeggeri portano (capienza esatta per ciascun mezzo)`);
   }
 
-  // Question 4: Discretion / Zero Stickers / Luxury Line vs Standard
+  // Question 4: Standard vs Luxury/VIP Minibus Fleet (Mandatory across all providers)
   if (asksStickers) {
-    questions.push(`Potreste confermarmi se disponete di mezzi completamente privi di scritte o adesivi commerciali sulla carrozzeria?`);
-  } else if (asksLuxury && !asks50Focus) {
-    questions.push(`Oltre ai bus turistici standard, disponete anche di mezzi in allestimento Luxury/VIP (interni in pelle, vetri oscurati privacy, total black)?`);
+    questions.push(`Se disponete solo di allestimenti standard o anche di minibus Luxury/VIP, e se confermate che sono completamente privi di scritte commerciali`);
+  } else {
+    questions.push(`Se disponete solo di minibus standard o anche di una flotta Luxury / VIP (es. interni in pelle, vetri privacy, senza scritte pubblicitarie)`);
   }
 
   // Question 5: Cancellation Policy & Advance Booking Notice
   if (asksCancellation && asksAdvanceNotice) {
-    questions.push(`Con quanto preavviso richiedete solitamente la prenotazione e quali sono le vostre politiche e penali di cancellazione (cancellation policy)?`);
+    questions.push(`Termini di cancellazione (cancellation policy) e preavviso richiesto per bloccare i mezzi`);
   } else if (asksCancellation) {
     questions.push(`Quali sono i vostri termini e penali di cancellazione (cancellation policy)?`);
   } else if (asksAdvanceNotice) {
     questions.push(`Con quanto preavviso è necessario prenotare per bloccare i mezzi?`);
-  } else if (!asksStickers && !asksLuxury) {
+  } else {
     questions.push(`Termini e penali di cancellazione (cancellation policy)`);
   }
 

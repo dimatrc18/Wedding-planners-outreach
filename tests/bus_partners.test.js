@@ -604,6 +604,7 @@ test('CEO-Level Short Italian Outreach Templates: generates concise Italian B2B 
   assert(t1.body.includes('Setra & Mercedes GT Coach'), 'T1 body must cite website coach fleet');
   assert(!t1.body.includes('Mercedes-Benz V-Class VIP'), 'T1 body must exclude V-Class from partner citations');
   assert(t1.body.includes('non minivan V-Class o Vito'), 'T1 body must explicitly clarify that minibus is not V-Class or Vito');
+  assert(t1.body.includes('solo di minibus standard o anche di una flotta Luxury') || t1.body.includes('solo di allestimenti standard o anche di minibus Luxury'), 'T1 body must ask if provider has only standard or also luxury/VIP fleet of minibuses');
   assert(t1.body.includes('contatto WhatsApp diretto'), 'T1 body must ask for direct WhatsApp contact');
   assert(t1.word_count < 190, `CEO template must remain short, got ${t1.word_count}`);
 
