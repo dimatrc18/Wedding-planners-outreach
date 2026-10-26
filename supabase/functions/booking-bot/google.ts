@@ -494,6 +494,10 @@ export async function saveBookingToGoogleCalendar(
       ? `<a href="mailto:${booking.client.email}">${booking.client.email}</a>`
       : "N/A";
 
+    let partyDesc = `${booking.party.passengers || 1} Pax`;
+    if (booking.party.adults && booking.party.children && booking.party.children.length > 0) {
+      partyDesc += ` (${booking.party.adults} adults, ${booking.party.children.length} children)`;
+    }
     const descLines: string[] = [
       `<b>Status:</b> ${booking.status}`,
       `<b>🔖 Reference:</b> ${booking.booking_ref}`,
@@ -502,7 +506,7 @@ export async function saveBookingToGoogleCalendar(
       `<b>✉️ Email:</b> ${emailHtml}`,
       "",
       `<b>🚘 Fleet:</b> ${booking.vehicle.class || "Mercedes-Benz"}`,
-      `<b>👥 Party:</b> ${booking.party.passengers || 1} Pax | <b>🧳 Luggage:</b> ${booking.party.luggage || 0}`,
+      `<b>👥 Party:</b> ${partyDesc} | <b>🧳 Luggage:</b> ${booking.party.luggage || 0}`,
       `<b>⏱ Service:</b> ${hours}-Hour Standby Service (${startTimeStr} — ${endIso.split("T")[1]?.substring(0, 5) || ""})`,
       "",
       `<hr>`,
@@ -526,7 +530,9 @@ export async function saveBookingToGoogleCalendar(
 
     if (booking.party.children.length > 0) {
       descLines.push("");
-      const seats = booking.party.children.map((c) => `${c.age} y/o (${c.seat_type})`).join(", ");
+      const seats = booking.party.children
+        .map((c) => (c.age !== null ? `Seat (${c.age} y/o)` : "Child seat (age pending ⚠️)"))
+        .join(", ");
       descLines.push(`<b>👶 Child Seats:</b> ${seats}`);
     }
 
@@ -664,6 +670,10 @@ export async function saveBookingToGoogleCalendar(
       ? `<a href="mailto:${booking.client.email}">${booking.client.email}</a>`
       : "N/A";
 
+    let partyDesc = `${booking.party.passengers || 1} Pax`;
+    if (booking.party.adults && booking.party.children && booking.party.children.length > 0) {
+      partyDesc += ` (${booking.party.adults} adults, ${booking.party.children.length} children)`;
+    }
     const descLines: string[] = [
       `<b>Status:</b> ${booking.status}`,
       `<b>🔖 Reference:</b> ${fullRef}`,
@@ -672,15 +682,18 @@ export async function saveBookingToGoogleCalendar(
       `<b>✉️ Email:</b> ${emailHtml}`,
       "",
       `<b>🚘 Fleet:</b> ${booking.vehicle.class || "Mercedes-Benz V-Class"}`,
-      `<b>👥 Party:</b> ${booking.party.passengers || 1} Pax | <b>🧳 Luggage:</b> ${booking.party.luggage || 0}`,
+      `<b>👥 Party:</b> ${partyDesc} | <b>🧳 Luggage:</b> ${booking.party.luggage || 0}`,
     ];
 
     if (ride.flight?.number) {
-      descLines.push(`<b>✈️ Flight:</b> ${ride.flight.number}`);
+      const fKind = ride.flight.kind === "arrival" ? "🛬 Flight arr" : ride.flight.kind === "departure" ? "🛫 Flight dep" : "✈️ Flight";
+      descLines.push(`<b>${fKind}:</b> ${ride.flight.number}`);
     }
 
     if (booking.party.children.length > 0) {
-      const seats = booking.party.children.map((c) => `${c.age} y/o (${c.seat_type})`).join(", ");
+      const seats = booking.party.children
+        .map((c) => (c.age !== null ? `Seat (${c.age} y/o)` : "Child seat (age pending ⚠️)"))
+        .join(", ");
       descLines.push(`<b>👶 Child Seats:</b> ${seats}`);
     }
 
