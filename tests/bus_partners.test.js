@@ -957,6 +957,135 @@ test('Ground Truth Fleet Re-evaluation: Car Service Milan and all bus leads have
   assert.equal(rainoldi.email, 'info@rainoldibus.com');
 });
 
+test('All 41 Bus Partners with User Comments: verify each company has their specific questions and models included in CEO outreach email', async () => {
+  const { INITIAL_BUS_PARTNERS } = await import('../app/bus_partners_data.js');
+  const partnersWithNotes = INITIAL_BUS_PARTNERS.filter((p) => p.notes && p.notes.trim() && !/Waldorf Astoria Rome|Pioneer of Limobus/i.test(p.notes));
+  assert.equal(partnersWithNotes.length, 41, 'Must have exactly 41 partners with user review notes');
+
+  partnersWithNotes.forEach((p) => {
+    const draft = buildBusOutreachDraft(p, 'T1_intro');
+    assert(draft.subject.includes('Collaborazione B2B minibus/pullman'), `${p.name}: subject must be B2B collab`);
+    assert(draft.body.includes('Dmitri di DOROGO'), `${p.name}: must have Dmitri DOROGO intro`);
+    assert(draft.body.includes('non minivan V-Class o Vito'), `${p.name}: must specify non V-Class/Vito`);
+    assert(draft.body.includes('WhatsApp diretto per verificare disponibilità rapide'), `${p.name}: must ask for WhatsApp`);
+    assert(draft.body.includes('Dmitri Traciuc'), `${p.name}: must have CEO sign-off`);
+
+    // Verify key personalized requirements from user notes:
+    if (/carnelli/i.test(p.name)) {
+      assert(draft.body.includes('Luxury / VIP'), 'Carnelli must ask about Luxury/VIP fleet');
+    }
+    if (/cazzaniga/i.test(p.name)) {
+      assert(draft.body.includes('54 posti'), 'Cazzaniga must focus on 54-seater bus');
+    }
+    if (/comazzi/i.test(p.name)) {
+      assert(draft.body.includes('Sprinter Plus') && draft.body.includes('Van Hool'), 'Comazzi must include user-listed models');
+    }
+    if (/guizzetti/i.test(p.name)) {
+      assert(draft.body.includes('Setra 417 HDH') && draft.body.includes('Travego'), 'Guizzetti must include user-listed models');
+    }
+    if (/perico/i.test(p.name)) {
+      assert(draft.body.includes('Travego') && draft.body.includes('Volvo 9700') && draft.body.includes('adesivi o scritte'), 'Perico must include models and stickers check');
+    }
+    if (/sonzogni/i.test(p.name)) {
+      assert(draft.body.includes('Sprinter Capri (22 posti)') && draft.body.includes('40'), 'Sonzogni must include Capri 22p and 40p');
+    }
+    if (/zambetti/i.test(p.name)) {
+      assert(draft.body.includes('Tourismo K') && draft.body.includes('Tourismo 15 RHD'), 'Zambetti must include Tourismo K & 15 RHD');
+    }
+    if (/avantgarde/i.test(p.name)) {
+      assert(draft.body.includes('adesivi commerciali'), 'Avantgarde must check stickers/unbranded');
+    }
+    if (/berini/i.test(p.name)) {
+      assert(draft.body.includes('extra-long') && draft.body.includes('non pubblicati online'), 'Berini must include extra-long and unlisted buses');
+    }
+    if (/bolognini/i.test(p.name)) {
+      assert(draft.body.includes('non attivo') || draft.body.includes('non raggiungibile'), 'Bolognini must handle broken site');
+    }
+    if (/bormio viaggi/i.test(p.name)) {
+      assert(draft.body.includes("Lion's Coach") && draft.body.includes('317'), 'Bormio Viaggi must include specific models');
+    }
+    if (/caprioli/i.test(p.name)) {
+      assert(draft.body.includes('privi di grandi adesivi'), 'Caprioli must ask about big stickers');
+    }
+    if (/car service milan/i.test(p.name)) {
+      assert(draft.body.includes('Sprinter Luxury Minibus') && draft.body.includes('8 posti'), 'Car Service Milan must focus on Sprinter 8 seats');
+    }
+    if (/castano/i.test(p.name)) {
+      assert(draft.body.includes('36 posti') && draft.body.includes('52/54 posti'), 'Castano must ask about 8, 20, 36, and 52/54 seats');
+    }
+    if (/como driver/i.test(p.name)) {
+      assert(draft.body.includes('12 passeggeri'), 'Como Driver must ask about Sprinter 12 pax');
+    }
+    if (/como limo lux/i.test(p.name)) {
+      assert(draft.body.includes('Malpensa MXP') && draft.body.includes('Sprinter 20 posti') && draft.body.includes('Irizar 52 posti'), 'Como Limo Lux must cite exact MXP route & models');
+    }
+    if (/eurobus verona/i.test(p.name)) {
+      assert(draft.body.includes('foto o schede tecniche'), 'Eurobus Verona must ask for photos/images');
+    }
+    if (/exclusive cars/i.test(p.name)) {
+      assert(draft.body.includes('Sprinter 20 posti') && draft.body.includes('Irizar 52 posti'), 'Exclusive Cars must cite Sprinter 20 & Irizar 52');
+    }
+    if (/gardabus/i.test(p.name)) {
+      assert(draft.body.includes('non attivo') || draft.body.includes('non raggiungibile'), 'Gardabus must handle broken website');
+    }
+    if (/italeurobus/i.test(p.name)) {
+      assert(draft.body.includes('immagini o schede tecniche'), 'Italeurobus must ask for images');
+    }
+    if (/landway/i.test(p.name)) {
+      assert(draft.body.includes('Malpensa MXP – Milano Stazione Centrale') && draft.body.includes('Iveco 29'), 'Landway must cite MXP-Milan Central and Iveco 29');
+    }
+    if (/lariobus/i.test(p.name)) {
+      assert(draft.body.includes('privi di scritte, loghi commerciali'), 'Lariobus must check unbranded/tags');
+    }
+    if (/luxury transfer/i.test(p.name)) {
+      assert(draft.body.includes('altri mezzi o categorie nella fascia minibus e bus'), 'Luxury Transfer Milan must ask about other bus categories');
+    }
+    if (/morandi/i.test(p.name)) {
+      assert(draft.body.includes('22 posti') && draft.body.includes('Neoplan Cityliner'), 'Morandi must ask about 22 seats and rate comparison');
+    }
+    if (/pancheri/i.test(p.name)) {
+      assert(draft.body.includes('senza adesivi commerciali'), 'Pancheri must ask about stickers');
+    }
+    if (/perletti/i.test(p.name)) {
+      assert(draft.body.includes('solo i 3 modelli presenti sul sito'), 'Perletti must ask about unlisted fleet beyond the 3 on site');
+    }
+    if (/rampinini/i.test(p.name)) {
+      assert(draft.body.includes('Wing') && draft.body.includes('grandi adesivi commerciali'), 'Rampinini must ask about Wing 28 and stickers');
+    }
+    if (/rosa bus/i.test(p.name)) {
+      assert(draft.body.includes('50 posti') && draft.body.includes('Malpensa MXP'), 'Rosa Bus must cite 50-seater focus and MXP transfer');
+    }
+    if (/rossi pietro/i.test(p.name)) {
+      assert(draft.body.includes('non funzionante') || draft.body.includes('non raggiungibile'), 'Rossi Pietro must handle broken website');
+    }
+    if (/stat/i.test(p.name)) {
+      assert(draft.body.includes('Gran Capri') && draft.body.includes('Setra S 431 DT'), 'Stat must cite Gran Capri & Setra DT');
+    }
+    if (/transervice/i.test(p.name)) {
+      assert(draft.body.includes('Capienza passeggeri esatta ed effettiva'), 'Transervice must ask how many people fit');
+    }
+    if (/travel & service/i.test(p.name)) {
+      assert(draft.body.includes('Luxury e Premium'), 'Travel & Service must check Luxury/Premium fleet');
+    }
+    if (/ugolini/i.test(p.name)) {
+      assert(draft.body.includes('50+ posti'), 'Ugolini must focus on 50+ seaters');
+    }
+    if (/viganò/i.test(p.name)) {
+      assert(draft.body.includes('Sprinter 22 posti') && draft.body.includes('Grande Capri'), 'Viganò must cite Sprinter 22 & Grande Capri');
+    }
+    if (/vip limousine/i.test(p.name)) {
+      assert(draft.body.includes('Luxury Minibus') && draft.body.includes('altri minibus o pullman di lusso'), 'VIP Limousine must ask about other luxury buses');
+    }
+    if (/vivaldi/i.test(p.name)) {
+      assert(draft.body.includes('19 posti') && draft.body.includes('altri minibus di capienze diverse'), 'Vivaldi must ask about 19 seats vs other capacities');
+    }
+    if (/zani viaggi/i.test(p.name)) {
+      assert(draft.body.includes('unbranded'), 'Zani Viaggi must emphasize unbranded vehicle requirement');
+    }
+  });
+});
+
+
 
 
 

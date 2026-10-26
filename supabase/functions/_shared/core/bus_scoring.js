@@ -489,6 +489,599 @@ export function nextBusSendSlot(now = new Date(), indexOffset = 0, opts = {}) {
 }
 
 /**
+ * Verified custom B2B outreach tailoring based on manual operator reviews.
+ * Enforces Dmitri's exact questions, specific vehicle models, unbranded checks, photo requests, and broken link handling.
+ */
+export const PARTNER_NOTE_CUSTOMIZATIONS = {
+  // 1. Autonoleggio Carnelli
+  partner_1792765279877_4d0c: {
+    personalIntro: "In merito alla vostra flotta (in particolare Sprinter 20 posti, midibus e pullman GT), vorremmo verificare disponibilità e capire se oltre alla linea standard disponete anche di mezzi in allestimento Luxury / VIP.",
+    questions: [
+      "Tariffe B2B per transfer punto a punto (es. tratta Milano Centro – Aeroporto di Malpensa MXP, con relativo minimo d'ordine)",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h) e relativo tempo minimo di servizio",
+      "Modelli bus e minibus disponibili e quanti passeggeri portano per ciascun mezzo",
+      "Se oltre alla linea standard disponete di minibus e pullman in allestimento Luxury / VIP (es. interni in pelle, finiture executive, vetri oscurati, senza scritte pubblicitarie)",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 2. Autoservizi Cazzaniga Silvestro
+  partner_1793031479651_13_f82y: {
+    personalIntro: "Per i nostri servizi siamo focalizzati specificamente sui vostri pullman Gran Turismo da 54 posti.",
+    questions: [
+      "Tariffe B2B per transfer (es. Milano Centro – Malpensa MXP / Como) e relativo minimo d'ordine specificamente per il pullman da 54 posti",
+      "Tariffe B2B per servizio a disposizione e orario (4h / 8h) per il bus da 54 posti",
+      "Se per i pullman da 54 posti (o capienze simili) disponete anche di versioni o allestimenti Luxury / VIP di fascia superiore",
+      "Se i veicoli da 54 posti sono completamente privi di scritte commerciali sulla carrozzeria",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 3. Autoservizi Comazzi
+  partner_1793031479651_18_caqw: {
+    personalIntro: "Sul vostro parco mezzi abbiamo individuato con forte interesse i seguenti modelli: Mercedes Sprinter Plus, Setra ComfortClass S 511 HD, Mercedes Travego, Mercedes Tourismo RHD, Mercedes Tourismo 17 RHD e Van Hool TDX27 Astromega.",
+    questions: [
+      "Tariffe B2B per transfer punto a punto (es. tratta Milano Centro – Aeroporto di Malpensa MXP / Como) con relativo minimo d'ordine per i modelli indicati (Sprinter Plus, Setra S 511 HD, Travego, Tourismo e Van Hool Astromega)",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h)",
+      "Capienza passeggeri esatta ed equipaggiamento a bordo per ciascuno dei modelli indicati",
+      "Se disponete di versioni Luxury/VIP e se confermate veicoli totalmente privi di scritte commerciali",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 4. Autoservizi Guizzetti
+  partner_1793030996221_7t9y: {
+    personalIntro: "Sul vostro sito abbiamo notato con grande interesse i seguenti modelli: Setra 417 HDH, Setra 515 HD, Mercedes-Benz Travego e Van Hool TX-Astronef.",
+    questions: [
+      "Tariffe B2B per transfer (es. Milano Centro – Malpensa MXP / Como) con relativo minimo d'ordine per Setra 417 HDH, Setra 515 HD, Travego e Van Hool TX-Astronef",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h)",
+      "Conferma delle esatte capienze passeggeri per ciascuno dei quattro modelli indicati",
+      "Se per questi modelli disponete di allestimenti Luxury/VIP e se confermate carrozzeria priva di scritte pubblicitarie",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 5. Autoservizi Perico
+  partner_1793031479651_14_wrph: {
+    personalIntro: "Siamo molto interessati ai seguenti modelli della vostra flotta: Mercedes-Benz Travego, Volvo 9700 Superior, Mercedes-Benz Tourismo e Irizar i6.",
+    questions: [
+      "Tariffe B2B per transfer punto a punto (es. Milano – Malpensa / Como) per i modelli indicati (Travego, Volvo 9700 Superior, Tourismo, Irizar i6)",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h)",
+      "Capienza passeggeri esatta per ciascuno dei quattro modelli",
+      "Se potete confermare che i veicoli per i nostri servizi sono completamente privi di adesivi o scritte commerciali sulla carrozzeria (unbranded)",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 6. Autoservizi Sonzogni
+  partner_1793031033043_nx6z: {
+    personalIntro: "Siamo particolarmente interessati al vostro Mercedes Sprinter Capri (22 posti) e ai vostri pullman da 40, 54 e 64 posti.",
+    questions: [
+      "Tariffe B2B per transfer (es. Milano Centro – Malpensa MXP / Como) per lo Sprinter Capri 22 posti e per i pullman da 40, 54 e 64 posti",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h)",
+      "Se oltre a questi modelli disponete di altri minibus o pullman in allestimento Luxury/VIP",
+      "Conferma che i veicoli siano privi di scritte commerciali sulla carrozzeria",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 7. Autoservizi Zambetti
+  partner_1793031479651_2_b7ae: {
+    personalIntro: "Abbiamo visionato con grande interesse la vostra flotta e siamo interessati in particolare al Mercedes Tourismo K (midibus) e ai Mercedes Tourismo 15 RHD (modelli recenti 2023 e 2026).",
+    questions: [
+      "Tariffe B2B per transfer (es. Milano Centro – Malpensa MXP / Como) per Tourismo K e Tourismo 15 RHD",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h)",
+      "Capienza passeggeri esatta ed equipaggiamento a bordo per ciascuno di questi modelli",
+      "Se disponete anche di minibus Mercedes Sprinter Luxury/VIP e conferma che i veicoli siano privi di adesivi pubblicitari",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 8. Avantgarde Limousine Service
+  partner_1792765279535_l9ei: {
+    personalIntro: "Abbiamo notato sul vostro sito tre diverse tipologie di minibus Mercedes (8, 16 e 18 posti).",
+    questions: [
+      "Tariffe B2B per transfer (es. Milano Centro – Malpensa MXP / Como, con relativo minimo d'ordine) per ciascuno dei 3 modelli di minibus",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h)",
+      "Capienza passeggeri esatta ed effettiva per ciascuno dei tre minibus (quanti passeggeri trasportano comodamente con bagagli)",
+      "Conferma fondamentale che tutti i minibus siano totalmente privi di adesivi commerciali o scritte sulla carrozzeria",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 9. Berini Autonoleggio & Minibus
+  partner_1792765278630_r4vp: {
+    personalIntro: "Siamo molto interessati ai vostri minibus: in particolare il modello extra-long e i mezzi da 20 e 26 posti.",
+    questions: [
+      "Tariffe B2B per transfer punto a punto (es. Milano Centro – Malpensa MXP / Como) per il minibus extra-long e per i modelli da 20 e 26 posti",
+      "Tariffe B2B per servizio orario e a disposizione (standby 4h / 8h) e relativo tempo minimo di servizio",
+      "Oltre ai modelli visibili sul sito, disponete di altri minibus o bus in flotta non pubblicati online e quanti passeggeri portano?",
+      "Se disponete di minibus in allestimento Luxury/VIP e conferma assenza di scritte commerciali",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 10. Bolognini Autoservizi
+  partner_1793031479651_17_6bsj: {
+    brokenWeb: true,
+    personalIntro: "Abbiamo provato a consultare il vostro sito web ma il collegamento risulta momentaneamente non attivo. Vi contattiamo quindi direttamente per richiedere la scheda della vostra flotta aggiornata per collaborazioni su Como e Milano.",
+    questions: [
+      "Elenco e modelli dei minibus (chassis Sprinter) e pullman GT attualmente operativi nella vostra flotta con relative capienze passeggeri",
+      "Tariffe B2B per transfer punto a punto (es. Milano Centro – Malpensa MXP / Como, con relativo minimo d'ordine)",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h)",
+      "Se disponete di veicoli in allestimento Luxury/VIP privi di scritte commerciali sulla carrozzeria",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 11. Bormio Viaggi Luxury Lines
+  partner_1793030996893_sp4m: {
+    personalIntro: "Siamo particolarmente interessati ai seguenti veicoli della vostra flotta: Mercedes Sprinter 317 (8 posti), Setra 515 HD (49 posti), Iveco Magelys Pro (55 posti) e MAN Lion's Coach (63 posti).",
+    questions: [
+      "Tariffe B2B per transfer e collegamenti alpini/aeroportuali per i modelli indicati (Mercedes 317, Setra 515 HD, Magelys Pro, MAN Lion's Coach)",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h)",
+      "Se per questi modelli disponete di allestimenti Luxury/VIP e se confermate carrozzeria priva di scritte commerciali",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 12. Caprioli Viaggi VIP Minibus
+  partner_1792765280013_poa6: {
+    personalIntro: "Per i nostri clienti di fascia alta cerchiamo minibus e pullman di rappresentanza estremamente curati.",
+    questions: [
+      "Se potete confermare la disponibilità di minibus e pullman completamente privi di grandi adesivi commerciali o scritte pubblicitarie sulla carrozzeria (total black / unbranded)",
+      "Tariffe B2B per transfer (es. Milano Centro – Malpensa MXP / Como, con relativo minimo d'ordine)",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h)",
+      "Modelli bus e minibus disponibili e relative capienze passeggeri (sia standard sia Luxury/VIP)",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 13. Car Service Milan
+  partner_1792761050955_n0vc: {
+    personalIntro: "Abbiamo notato con molto interesse il vostro Mercedes-Benz Sprinter Luxury Minibus (8 posti) e vorremmo approfondire i dettagli di questo mezzo per i nostri servizi di transfer ed eventi.",
+    questions: [
+      "Tariffe B2B per transfer (es. Milano Centro – Malpensa MXP / Como, con minimo d'ordine) specificamente per lo Sprinter Luxury Minibus 8 posti",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h)",
+      "Dettagli sull'allestimento interno dello Sprinter e se disponete anche di versioni con capienza passeggeri maggiore (es. 16–20 posti)",
+      "Conferma che il veicolo sia totalmente privo di adesivi o scritte commerciali",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 14. Castano Turismo
+  partner_1793031479651_1_wjsp: {
+    personalIntro: "Siamo molto interessati alle seguenti fasce del vostro parco mezzi: Minibus 8 posti, Autobus 20 posti, Autobus 36 posti e Autobus 52/54 posti.",
+    questions: [
+      "Tariffe B2B per transfer (es. Milano – Malpensa / Como) per ciascuna fascia indicata (8 posti, 20 posti, 36 posti e 52/54 posti)",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h)",
+      "Modelli specifici assegnati a ciascuna di queste 4 capienze",
+      "Se disponete di versioni Luxury/VIP e se confermate carrozzeria priva di scritte pubblicitarie",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 15. Cattazzo Pullman
+  partner_1793030996812_339h: {
+    personalIntro: "Abbiamo individuato con molto interesse la vostra flotta di pullman Gran Turismo e minibus Mercedes (inclusi Sprinter Capri 17 posti, Amalfi/Tourline 20 posti e Neoplan Tourliner).",
+    questions: [
+      "Tariffe B2B per transfer verso Como, Milano e corridoi alpini (con relativo minimo d'ordine)",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h)",
+      "Modelli disponibili e relative capienze passeggeri (Sprinter Capri, Amalfi, Neoplan)",
+      "Se disponete di allestimenti Luxury/VIP privi di scritte commerciali",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 16. Como Driver Services
+  partner_1792765279097_26hr: {
+    personalIntro: "Siamo interessati al vostro Minibus Mercedes Sprinter da 12 passeggeri e vorremmo verificare disponibilità e tariffe per la stagione.",
+    questions: [
+      "Tariffe B2B per transfer (es. Como – Malpensa MXP / Milano) per lo Sprinter 12 passeggeri",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h)",
+      "Se oltre allo Sprinter 12 posti disponete di ulteriori minibus o van di capienza intermedia o superiore (es. 16–20 posti)",
+      "Conferma allestimento Luxury/VIP e che i veicoli siano privi di scritte commerciali sulla carrozzeria",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 17. Como Limo Lux
+  partner_1792765279410_2zml: {
+    personalIntro: "Siamo particolarmente interessati a due mezzi della vostra flotta: il Mercedes Sprinter 20 posti e il pullman Irizar 52 posti.",
+    questions: [
+      "Tariffa B2B per la tratta specifica transfer Milano Centro – Aeroporto di Malpensa MXP per: a) Mercedes Sprinter 20 posti, b) Irizar 52 posti",
+      "Tariffe B2B per servizio orario e a disposizione (standby 4h / 8h) per entrambi i mezzi",
+      "Se entrambi i mezzi sono disponibili in allestimento Luxury/VIP e totalmente privi di scritte commerciali",
+      "Termini e penali di cancellazione (cancellation policy) e preavviso richiesto",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 18. Consorzio Eurobus Verona
+  partner_1793030996589_2k6k: {
+    personalIntro: "Per i nostri servizi con clienti privati ed eventi cerchiamo partner affidabili per minibus e pullman GT su Milano, Como e Nord Italia.",
+    questions: [
+      "Tariffe B2B per transfer punto a punto (es. Milano Centro – Malpensa MXP / Como) e servizio a disposizione (4h / 8h)",
+      "Modelli disponibili (chassis Sprinter da 8 a 20+ posti e pullman GT) con relative capienze passeggeri",
+      "È possibile ricevere foto o schede tecniche dettagliate dei veicoli disponibili (interni ed esterni)?",
+      "Se disponete di veicoli in allestimento Luxury/VIP privi di scritte commerciali",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 19. Exclusive Cars Milano
+  partner_1792765279743_bk0p: {
+    personalIntro: "Siamo particolarmente interessati a due veicoli della vostra flotta: il Mercedes Sprinter 20 posti e il pullman Irizar 52 posti.",
+    questions: [
+      "Tariffe B2B per transfer (es. Milano Centro – Malpensa MXP / Como) per Mercedes Sprinter 20 posti e Irizar 52 posti",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h)",
+      "Conferma allestimenti e se i mezzi indicati sono completamente privi di adesivi o scritte commerciali",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 20. Frigerio Trasporti
+  partner_1793031033153_oyw9: {
+    personalIntro: "Abbiamo individuato la vostra flotta Euro 6 con focus su midibus e pullman Gran Turismo per servizi ed eventi tra Milano e Monza Brianza.",
+    questions: [
+      "Tariffe B2B per transfer punto a punto (es. Milano Centro – Malpensa MXP / Como, con minimo d'ordine)",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h)",
+      "Modelli esatti di midibus e pullman disponibili e relative capienze passeggeri",
+      "Se disponete di allestimenti Luxury/VIP privi di scritte pubblicitarie",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 21. Gardabus Exclusive
+  partner_1793030996491_wete: {
+    brokenWeb: true,
+    personalIntro: "Abbiamo provato a visualizzare il vostro sito web ma il link risulta non attivo. Vi contattiamo quindi direttamente per richiedere la presentazione della vostra flotta e listino B2B per transfer ed eventi su Lago di Garda, Como e Milano.",
+    questions: [
+      "Elenco modelli disponibili per minibus (chassis Sprinter) e pullman GT con relative capienze passeggeri",
+      "Tariffe B2B per transfer aeroportuali e punto a punto (es. Malpensa / Linate / Verona)",
+      "Tariffe B2B per servizio a disposizione e orario (4h / 8h)",
+      "Conferma se disponete di mezzi Luxury/VIP senza scritte commerciali e possibilità di inviarci alcune foto",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 22. Italeurobus
+  partner_1793031479651_15_fgcv: {
+    personalIntro: "Cerchiamo partner affidabili per minibus e pullman Gran Turismo per i nostri matrimoni ed eventi sul Lago di Como e Milano.",
+    questions: [
+      "Tariffe B2B per transfer punto a punto (es. Milano Centro – Malpensa MXP / Como) e servizio a disposizione (4h / 8h)",
+      "Modelli disponibili e quanti passeggeri portano per ciascun mezzo",
+      "Potreste inviarci alcune immagini o schede tecniche dei vostri minibus e pullman (sia interni sia esterni)?",
+      "Se disponete di veicoli in allestimento Luxury/VIP privi di scritte commerciali",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 23. Landway Tourism
+  partner_1792761170109_96nx: {
+    personalIntro: "Siamo molto interessati a tre tipologie specifiche della vostra flotta: Iveco 29 passeggeri, Mercedes Sprinter 19 passeggeri e i pullman da 50 posti.",
+    questions: [
+      "Tariffe B2B per transfer (in particolare tratta Aeroporto di Malpensa MXP – Milano Stazione Centrale) per: a) Iveco 29 pax, b) Mercedes Sprinter 19 pax, c) pullman 50 posti",
+      "Tariffe B2B per servizio orario e a disposizione (standby 4h / 8h) per ciascuna delle 3 categorie indicate",
+      "Se disponete di allestimenti Luxury/VIP per questi mezzi",
+      "Conferma che i veicoli siano completamente privi di adesivi o scritte commerciali sulla carrozzeria",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 24. Lariobus
+  partner_lariobus: {
+    personalIntro: "Operiamo con clientela internazionale sul Lago di Como e Milano e vorremmo verificare le dotazioni del vostro parco mezzi per eventi e transfer di gruppo.",
+    questions: [
+      "Tariffe B2B per transfer punto a punto e servizio a disposizione (4h / 8h)",
+      "Disponibilità di veicoli recenti (Euro 6) e quanti posti passeggeri hanno i vostri minibus e pullman",
+      "Conferma fondamentale se disponete di veicoli eleganti totalmente privi di scritte, loghi commerciali o livree pubblicitarie",
+      "Se disponete di allestimenti Luxury / VIP per eventi e matrimoni",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 25. Luxury Transfer Milan
+  partner_1793030997076_cyc8: {
+    personalIntro: "Siamo particolarmente interessati al vostro minibus Mercedes Sprinter per servizi di livello executive.",
+    questions: [
+      "Tariffe B2B per transfer (es. Milano Centro – Malpensa MXP / Como) e servizio a disposizione per il Mercedes Sprinter",
+      "Capienza passeggeri esatta ed equipaggiamento dello Sprinter",
+      "Oltre allo Sprinter, disponete di altri mezzi o categorie nella fascia minibus e bus (es. midibus o pullman GT)?",
+      "Conferma allestimento Luxury/VIP e totale assenza di adesivi o scritte commerciali",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 26. Morandi Tour
+  partner_1793031479651_11_r6tm: {
+    personalIntro: "Siamo molto interessati ad approfondire la vostra flotta, in particolare per quanto riguarda Mercedes Sprinter, Tourismo, Setra e Neoplan.",
+    questions: [
+      "Capienza passeggeri esatta ed effettiva per il Mercedes Sprinter (è configurato a 22 posti?) e per il minibus da 20 posti",
+      "Tariffe B2B per transfer (Milano Centro – Malpensa MXP / Como) e standby per Mercedes Tourismo, e se le tariffe differiscono sensibilmente rispetto a Setra S 515, Neoplan Cityliner 52 e Irisbus",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h)",
+      "Se disponete di versioni Luxury/VIP e conferma veicoli privi di scritte commerciali",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 27. Pancheri NCC & Minibus
+  partner_1792765280113_5c8r: {
+    personalIntro: "Per i matrimoni e gli eventi privati dei nostri clienti sul Lago di Garda, Como e Milano cerchiamo minibus e bus di alta rappresentanza.",
+    questions: [
+      "Se disponete di minibus (chassis Sprinter) e pullman completamente neutri, ovvero senza adesivi commerciali o scritte pubblicitarie sulla carrozzeria",
+      "Tariffe B2B per transfer punto a punto (es. Brescia / Garda – Malpensa / Milano, con relativo minimo d'ordine)",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h)",
+      "Modelli disponibili e relative capienze passeggeri in versione standard o Luxury/VIP",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 28. Perletti Autoservizi (Top Class Line)
+  partner_perletti_topclass: {
+    personalIntro: "Siamo molto interessati alla vostra flotta di minibus e vorremmo verificare disponibilità e caratteristiche per la stagione.",
+    questions: [
+      "Tariffe B2B per transfer (es. Milano Centro – Malpensa MXP / Como) e servizio orario a disposizione (standby 4h / 8h) per i minibus",
+      "I minibus disponibili in flotta sono solo i 3 modelli presenti sul sito o disponete di ulteriori mezzi? Quanti posti passeggeri hanno?",
+      "Se disponete di minibus in allestimento Luxury / VIP Class con finiture di pregio e privi di scritte pubblicitarie",
+      "Quali sono le vostre politiche e penali di cancellazione (cancellation policy) e i tempi di preavviso richiesti",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 29. Peschiera Viaggi Luxury Coaches
+  partner_1793030996360_0w9g: {
+    personalIntro: "Abbiamo individuato con molto interesse i vostri pullman e minibus per matrimoni ed eventi sul Lago di Garda, Como e Milano.",
+    questions: [
+      "Tariffe B2B per transfer punto a punto e collegamenti aeroportuali (con relativo minimo d'ordine)",
+      "Tariffe B2B per servizio a disposizione e orario (4h / 8h)",
+      "Conferma disponibilità di veicoli total black/unbranded completamente privi di scritte commerciali",
+      "Modelli disponibili (chassis Sprinter e pullman GT) con relative capienze passeggeri",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 30. Prestige Car Limousine
+  partner_1792761050695_9k2e: {
+    personalIntro: "Abbiamo notato sul vostro sito il vostro Luxury Minibus (Mercedes Sprinter) e vorremmo approfondire le specifiche di questo mezzo.",
+    questions: [
+      "Tariffe B2B per transfer (es. Milano Centro – Malpensa MXP / Como) per il vostro Luxury Minibus",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h)",
+      "Capienza passeggeri esatta (8 o 16 posti) e dotazioni di bordo del Luxury Minibus",
+      "Conferma che il veicolo sia totalmente privo di adesivi o scritte commerciali",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 31. Rampinini Turismo
+  partner_1793031479651_12_2dpf: {
+    personalIntro: "Siamo particolarmente interessati al vostro modello Indcar Wing / Iveco da 28 posti.",
+    questions: [
+      "Tariffe B2B per transfer (es. Como / Milano – Malpensa) e servizio a disposizione per l'Iveco Wing 28 posti",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h)",
+      "Se potete confermare che l'Iveco Wing è privo di grandi adesivi commerciali, o se avete altri mezzi equivalenti senza scritte pubblicitarie",
+      "Se disponete anche di versioni Luxury/VIP in questa fascia di capienza",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 32. Rosa Bus
+  partner_rosa_bus: {
+    personalIntro: "Ho notato che la vostra flotta si concentra principalmente sui pullman da 50 posti (a cui siamo molto interessati per grandi gruppi ed eventi).",
+    questions: [
+      "Tariffe B2B per transfer (in particolare tratta Milano Centro – Aeroporto di Malpensa MXP) con relativo minimo d'ordine",
+      "Tariffe B2B per servizio orario e a disposizione (standby min/max ore, es. 4h / 8h)",
+      "Oltre ai pullman da 50 posti, disponete anche di minibus o bus in versione Luxury/VIP (o avete partner fidati per queste esigenze)? Siamo comunque molto interessati anche ai pullman normali",
+      "Termini e penali di cancellazione (cancellation policy) e con quanto anticipo è necessario contattarvi per bloccare i mezzi",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 33. Rossi Pietro Bus
+  partner_1793031479651_6_rmj2: {
+    brokenWeb: true,
+    personalIntro: "Abbiamo provato ad aprire il vostro sito web ma il collegamento risulta al momento non funzionante. Vi scriviamo quindi direttamente per richiedere la presentazione della flotta e il listino B2B per servizi su Como e Milano.",
+    questions: [
+      "Elenco dei modelli disponibili per minibus (chassis Sprinter) e pullman Gran Turismo con relative capienze passeggeri",
+      "Tariffe B2B per transfer aeroportuali e punto a punto (es. Milano Centro – Malpensa MXP / Como)",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h)",
+      "Se disponete di mezzi in allestimento Luxury/VIP privi di scritte commerciali",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 34. Stat Turismo
+  partner_1793031479651_19_75aq: {
+    personalIntro: "Sul vostro parco mezzi abbiamo notato con forte interesse i seguenti modelli: Mercedes D'Auria Gran Capri, Irizar PB 12.37 HDH, Evobus Setra S 431 DT, Irisbus Magelys HD (53 posti), Setra 415 GT-HD e Setra 417 GT-HD.",
+    questions: [
+      "Tariffe B2B per transfer (Milano Centro – Malpensa MXP / Como) con relativo minimo d'ordine per i modelli indicati (Gran Capri, Setra, Irizar PB, Magelys)",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h)",
+      "Conferma delle esatte capienze passeggeri per ciascuno di questi modelli",
+      "Se disponete di allestimenti Luxury/VIP e conferma veicoli senza scritte commerciali",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 35. Transervice Limousine
+  partner_transervice: {
+    personalIntro: "Abbiamo notato la vostra ricca flotta di minibus Sprinter e pullman Gran Turismo.",
+    questions: [
+      "Tariffe B2B per transfer (Milano Centro – Malpensa MXP / Como) e servizio a disposizione per minibus e pullman",
+      "Capienza passeggeri esatta ed effettiva per ciascun mezzo disponibile (quanti posti passeggeri per i minibus Sprinter e per i pullman Turismo)",
+      "Se disponete di allestimenti Luxury/VIP privi di scritte pubblicitarie",
+      "Politiche di cancellazione e disponibilità operativa",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 36. Travel & Service Como
+  partner_1792765279227_h3qg: {
+    personalIntro: "Operiamo con clientela d'alta gamma per matrimoni ed eventi sul Lago di Como e Milano, e vorremmo approfondire la composizione del vostro parco mezzi.",
+    questions: [
+      "Tariffe B2B per transfer (es. Como / Milano – Malpensa MXP) e relativo minimo d'ordine",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h)",
+      "Se oltre alla flotta standard disponete di minibus e pullman in allestimento Luxury e Premium (es. finiture VIP, sedili in pelle, vetri oscurati, senza scritte pubblicitarie)",
+      "Modelli disponibili (chassis Sprinter 8–20+ posti e bus GT) con relative capienze passeggeri",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 37. Ugolini Viaggi
+  partner_1793030997210_o8w4: {
+    personalIntro: "Per i nostri servizi con gruppi numerosi siamo focalizzati esclusivamente sui vostri pullman Gran Turismo da oltre 50 posti (54 posti).",
+    questions: [
+      "Tariffe B2B per transfer (es. Milano Centro – Malpensa MXP / Como) per i pullman da 50+ posti",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h) per i pullman 50+ posti",
+      "Se per i pullman da 50+ posti disponete di allestimenti Luxury/VIP e se confermate carrozzeria priva di scritte pubblicitarie",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 38. Viganò Autoservizi
+  partner_1793031479651_9_4o1d: {
+    personalIntro: "Sul vostro sito abbiamo notato in particolare lo Sprinter 22 posti, lo Sprinter Grande Capri (18–19 posti) e i vostri pullman Gran Turismo da 50–52 posti.",
+    questions: [
+      "Tariffe B2B transfer (es. Como / Milano – Malpensa MXP) per lo Sprinter 22 posti, per lo Sprinter Grande Capri e per i pullman 50–52 posti",
+      "Tariffe B2B per servizio orario e a disposizione (4h / 8h)",
+      "Disponibilità di versioni Luxury/VIP e conferma veicoli privi di scritte commerciali",
+      "Termini di cancellazione e anticipo prenotazione",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 39. VIP Limousine Milan
+  partner_vip_limousine: {
+    personalIntro: "Siamo particolarmente interessati al vostro Luxury Minibus (Mercedes Sprinter da 8 e 16 posti) e vorremmo approfondire la disponibilità per la stagione.",
+    questions: [
+      "Tariffe B2B per transfer (Milano Centro – Malpensa MXP / Como) e servizio orario per il Luxury Minibus",
+      "Oltre ai modelli da 8 e 16 posti, avete altri minibus o pullman di lusso disponibili in flotta? Quanti passeggeri portano?",
+      "Conferma allestimenti VIP privi di scritte o loghi commerciali",
+      "Termini e penali di cancellazione",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 40. Vivaldi Driver Bellagio
+  partner_1792765278957_tgxp: {
+    personalIntro: "Abbiamo notato sul vostro sito il vostro Mercedes Sprinter Nero VIP da 19 posti con hostess e vorremmo verificare disponibilità e tariffe B2B.",
+    questions: [
+      "Tariffe B2B per transfer (es. Bellagio / Como – Milano / Malpensa MXP) e per servizio a disposizione",
+      "Disponete esclusivamente della configurazione a 19 posti o avete a disposizione anche altri minibus di capienze diverse?",
+      "Tariffe orarie per servizio a disposizione (4h / 8h)",
+      "Politiche di cancellazione e anticipo per riservare i mezzi",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  },
+
+  // 41. Zani Viaggi Executive
+  partner_1793031032498_gxg7: {
+    personalIntro: "Conosciamo la solida reputazione di Zani Viaggi a Milano e siamo interessati ai vostri pullman Gran Turismo Mercedes e Setra e ai minibus Sprinter Executive.",
+    questions: [
+      "Tariffe B2B per transfer (Milano Centro – Malpensa MXP / Como) e servizio a disposizione (4h / 8h)",
+      "Se confermate la possibilità di garantire per i nostri eventi veicoli completamente unbranded (privi di scritte o livree commerciali sulla carrozzeria)",
+      "Modelli disponibili (Mercedes Tourismo, Setra, Sprinter Executive) e relative capienze passeggeri",
+      "Se disponete di linee in allestimento Luxury/VIP",
+      "Termini e penali di cancellazione (cancellation policy)",
+      "Un vostro contatto WhatsApp diretto per verificare disponibilità rapide"
+    ]
+  }
+};
+
+const PARTNER_NAME_KEYWORD_MAP = {
+  "carnelli": "partner_1792765279877_4d0c",
+  "cazzaniga": "partner_1793031479651_13_f82y",
+  "comazzi": "partner_1793031479651_18_caqw",
+  "guizzetti": "partner_1793030996221_7t9y",
+  "perico": "partner_1793031479651_14_wrph",
+  "sonzogni": "partner_1793031033043_nx6z",
+  "zambetti": "partner_1793031479651_2_b7ae",
+  "avantgarde": "partner_1792765279535_l9ei",
+  "berini": "partner_1792765278630_r4vp",
+  "bolognini": "partner_1793031479651_17_6bsj",
+  "bormio viaggi": "partner_1793030996893_sp4m",
+  "caprioli": "partner_1792765280013_poa6",
+  "car service milan": "partner_1792761050955_n0vc",
+  "castano": "partner_1793031479651_1_wjsp",
+  "cattazzo": "partner_1793030996812_339h",
+  "como driver": "partner_1792765279097_26hr",
+  "como limo lux": "partner_1792765279410_2zml",
+  "eurobus verona": "partner_1793030996589_2k6k",
+  "exclusive cars milano": "partner_1792765279743_bk0p",
+  "frigerio": "partner_1793031033153_oyw9",
+  "gardabus": "partner_1793030996491_wete",
+  "italeurobus": "partner_1793031479651_15_fgcv",
+  "landway": "partner_1792761170109_96nx",
+  "lariobus": "partner_lariobus",
+  "luxury transfer milan": "partner_1793030997076_cyc8",
+  "morandi": "partner_1793031479651_11_r6tm",
+  "pancheri": "partner_1792765280113_5c8r",
+  "perletti": "partner_perletti_topclass",
+  "peschiera viaggi": "partner_1793030996360_0w9g",
+  "prestige car": "partner_1792761050695_9k2e",
+  "rampinini": "partner_1793031479651_12_2dpf",
+  "rosa bus": "partner_rosa_bus",
+  "rossi pietro": "partner_1793031479651_6_rmj2",
+  "stat": "partner_1793031479651_19_75aq",
+  "transervice": "partner_transervice",
+  "travel & service": "partner_1792765279227_h3qg",
+  "ugolini": "partner_1793030997210_o8w4",
+  "viganò": "partner_1793031479651_9_4o1d",
+  "vigano": "partner_1793031479651_9_4o1d",
+  "vip limousine": "partner_vip_limousine",
+  "vivaldi driver": "partner_1792765278957_tgxp",
+  "zani viaggi": "partner_1793031032498_gxg7"
+};
+
+/**
+ * Helper to retrieve verified customization for partner by ID or name
+ */
+export function getPartnerNoteCustomization(partner = {}) {
+  if (partner.id && PARTNER_NOTE_CUSTOMIZATIONS[partner.id]) {
+    return PARTNER_NOTE_CUSTOMIZATIONS[partner.id];
+  }
+  const lowerName = String(partner.name || '').toLowerCase();
+  for (const [kw, mappedId] of Object.entries(PARTNER_NAME_KEYWORD_MAP)) {
+    if (lowerName.includes(kw)) {
+      return PARTNER_NOTE_CUSTOMIZATIONS[mappedId];
+    }
+  }
+  return null;
+}
+
+/**
  * Generates CEO-level, ultra-concise Italian outreach messages (Email 1, Email 2 Follow-up, and WhatsApp Pitch).
  * Designed for busy fleet owners: presents DOROGO's high customer volume on Lake Como & Milan and asks for:
  * 1. Bus models & exact passenger capacities (plus any unlisted fleet)
@@ -511,11 +1104,13 @@ export function buildBusOutreachDraft(partner = {}, stepKey = 'T1_intro') {
   const subjectBase = `Collaborazione B2B minibus/pullman · ${city} — DOROGO`;
 
   // Deep notes-aware personalization: AI inspects Dmitri's operator review comments
-  const userNotes = String(partner.notes || '').trim();
+  const userNotes = String(partner.notes || partner.client_notes || '').trim();
   const lowerNotes = userNotes.toLowerCase();
   const isUserAuthored = /^-|\b(i |we |wonder|sure|interested|prices|cancel|sticker|stickers|fit|seats?|posti|tag|how many|\?)/i.test(userNotes);
 
-  const asks50Focus = /focus mostly on 50|focus.*50/i.test(lowerNotes);
+  const custom = getPartnerNoteCustomization(partner);
+
+  const asks50Focus = /focus mostly on 50|focus.*50|only.*(\+|plus)?\s*50/i.test(lowerNotes);
   const asksMinibuses = /interested in.*minibus|minibuses/i.test(lowerNotes);
   const asksExtraLong = /extra-?long/i.test(lowerNotes);
   const asks20_26 = /20\s*seat|26\s*seat|20\s*posti|26\s*posti/i.test(lowerNotes);
@@ -523,10 +1118,12 @@ export function buildBusOutreachDraft(partner = {}, stepKey = 'T1_intro') {
   const asks22 = /22\s*seat|22\s*posti/i.test(lowerNotes);
   const asksUnlisted = /other buses|not on the website|not add to the website|presented on the website or the 3|only.*or other|altri mezzi|oltre al sito/i.test(lowerNotes);
   const asksCapacity = /how many people|how many the fit|fit\?|quanti posti|capienza/i.test(lowerNotes);
-  const asksLuxury = /luxury|consider as vip|lux or not|versione lux/i.test(lowerNotes);
+  const asksLuxury = /luxury|consider as vip|lux or not|versione lux|lux and premium/i.test(lowerNotes);
   const asksStickers = /sticker|stickers|adesiv|senza scritte|tags|livrea/i.test(lowerNotes);
   const asksCancellation = /cancel|cancell|disdett|penal/i.test(lowerNotes);
   const asksAdvanceNotice = /in advance|anticipo|preavviso/i.test(lowerNotes);
+  const asksImages = /image|foto|immagin|picture/i.test(lowerNotes);
+  const isBrokenWeb = custom?.brokenWeb || /does not (exist|work) the web|weblink does not work/i.test(lowerNotes);
 
   // Helper to filter out standalone V-Class/minivans (<8 pax): focus exclusively on Minibuses & larger coaches
   const isMinibusOrCoach = (catStr = '') => {
@@ -548,11 +1145,15 @@ export function buildBusOutreachDraft(partner = {}, stepKey = 'T1_intro') {
   } else if (partner.bus_models && !/classe\s*v|v-?class/i.test(partner.bus_models)) {
     fleetBullets = `• ${partner.bus_models}`;
   }
-  const fleetSection = fleetBullets ? `\n\nSul vostro sito abbiamo notato in particolare:\n${fleetBullets}` : '';
+  const fleetSection = (fleetBullets && !isBrokenWeb) ? `\n\nSul vostro sito abbiamo notato in particolare:\n${fleetBullets}` : '';
 
   let personalIntro = '';
-  if (isUserAuthored) {
-    if (asks50Focus) {
+  if (custom && custom.personalIntro) {
+    personalIntro = custom.personalIntro;
+  } else if (isUserAuthored) {
+    if (isBrokenWeb) {
+      personalIntro = `Abbiamo provato a consultare il vostro sito web ma risulta al momento non raggiungibile; vi contattiamo quindi direttamente per richiedere la scheda della vostra flotta aggiornata per collaborazioni su Como e Milano.`;
+    } else if (asks50Focus) {
       personalIntro = `Ho notato che la vostra flotta si concentra principalmente sui pullman da 50 posti (a cui siamo molto interessati per grandi gruppi ed eventi).`;
     } else if (asks22 && asks19) {
       personalIntro = `In particolare ho notato sul vostro sito lo Sprinter 22 posti e lo Sprinter Grande Capri (18–19 posti), e vorremmo verificare disponibilità e tariffe B2B per questa tipologia di mezzi.`;
@@ -609,57 +1210,66 @@ Dmitri Traciuc`;
   }
 
   // Default: T1_intro (Tailored CEO-level Italian outreach)
-  const questions = [];
+  let questions = [];
 
-  // Question 1: Transfer Pricing (Milan <-> Malpensa MXP / Como + Minimum Order)
-  questions.push(`Tariffe B2B per transfer punto a punto (es. tratta Milano Centro – Aeroporto di Malpensa MXP, con relativo minimo d'ordine e preavviso)`);
+  if (custom && Array.isArray(custom.questions) && custom.questions.length > 0) {
+    questions = [...custom.questions];
+  } else {
+    // Question 1: Transfer Pricing (Milan <-> Malpensa MXP / Como + Minimum Order)
+    questions.push(`Tariffe B2B per transfer punto a punto (es. tratta Milano Centro – Aeroporto di Malpensa MXP, con relativo minimo d'ordine e preavviso)`);
 
-  // Question 2: Hourly / Standby Pricing (4h / 8h + Minimum Service Time)
-  questions.push(`Tariffe B2B per servizio orario e a disposizione (4h / 8h) e relativo tempo minimo di servizio`);
+    // Question 2: Hourly / Standby Pricing (4h / 8h + Minimum Service Time)
+    questions.push(`Tariffe B2B per servizio orario e a disposizione (4h / 8h) e relativo tempo minimo di servizio`);
 
-  // Question 3: Fleet Models, Seating Capacity & Unlisted Fleet
-  if (asks50Focus) {
-    questions.push(`Oltre ai pullman da 50 posti, avete a disposizione anche minibus o bus in versione Luxury/VIP? (siamo comunque molto interessati anche ai pullman normali)`);
-  } else if (asksUnlisted && (asksMinibuses || asksExtraLong || asks19 || asks20_26 || asks22)) {
-    if (asks22 && asks19) {
-      questions.push(`Disponete solo dei modelli da 22 posti e 19 posti o avete anche altri modelli/capienze a disposizione in flotta?`);
-    } else if (asks22) {
-      questions.push(`Disponete solo del modello da 22 posti o avete anche altri modelli/capienze a disposizione in flotta?`);
-    } else if (asks19) {
-      questions.push(`Disponete solo del modello da 19 posti o avete anche altri modelli/capienze a disposizione in flotta?`);
-    } else if (asksExtraLong || asks20_26) {
-      questions.push(`Oltre ai minibus extra-long e ai bus da 20 e 26 posti, avete altri modelli a disposizione in flotta e quanti passeggeri portano?`);
-    } else if (asksMinibuses) {
-      questions.push(`I minibus disponibili in flotta sono solo i modelli visibili sul sito o ne avete anche altri? Quanti passeggeri portano per ciascun mezzo?`);
+    // Question 3: Fleet Models, Seating Capacity & Unlisted Fleet
+    if (asks50Focus) {
+      questions.push(`Oltre ai pullman da 50 posti, avete a disposizione anche minibus o bus in versione Luxury/VIP? (siamo comunque molto interessati anche ai pullman normali)`);
+    } else if (asksUnlisted && (asksMinibuses || asksExtraLong || asks19 || asks20_26 || asks22)) {
+      if (asks22 && asks19) {
+        questions.push(`Disponete solo dei modelli da 22 posti e 19 posti o avete anche altri modelli/capienze a disposizione in flotta?`);
+      } else if (asks22) {
+        questions.push(`Disponete solo del modello da 22 posti o avete anche altri modelli/capienze a disposizione in flotta?`);
+      } else if (asks19) {
+        questions.push(`Disponete solo del modello da 19 posti o avete anche altri modelli/capienze a disposizione in flotta?`);
+      } else if (asksExtraLong || asks20_26) {
+        questions.push(`Oltre ai minibus extra-long e ai bus da 20 e 26 posti, avete altri modelli a disposizione in flotta e quanti passeggeri portano?`);
+      } else if (asksMinibuses) {
+        questions.push(`I minibus disponibili in flotta sono solo i modelli visibili sul sito o ne avete anche altri? Quanti passeggeri portano per ciascun mezzo?`);
+      } else {
+        questions.push(`Oltre ai modelli visibili sul sito, avete altri minibus/pullman disponibili in flotta e quanti passeggeri portano esattamente?`);
+      }
+    } else if (asksCapacity) {
+      questions.push(`Modelli bus disponibili e quanti passeggeri portano (capienza esatta ed effettiva per ciascun mezzo)`);
     } else {
-      questions.push(`Oltre ai modelli visibili sul sito, avete altri minibus/pullman disponibili in flotta e quanti passeggeri portano esattamente?`);
+      questions.push(`Modelli bus disponibili e quanti passeggeri portano (capienza esatta per ciascun mezzo)`);
     }
-  } else if (asksCapacity) {
-    questions.push(`Modelli bus disponibili e quanti passeggeri portano (capienza esatta ed effettiva per ciascun mezzo)`);
-  } else {
-    questions.push(`Modelli bus disponibili e quanti passeggeri portano (capienza esatta per ciascun mezzo)`);
-  }
 
-  // Question 4: Standard vs Luxury/VIP Minibus Fleet (Mandatory across all providers)
-  if (asksStickers) {
-    questions.push(`Se disponete solo di allestimenti standard o anche di minibus Luxury/VIP, e se confermate che sono completamente privi di scritte commerciali`);
-  } else {
-    questions.push(`Se disponete solo di minibus standard o anche di una flotta Luxury / VIP (es. interni in pelle, vetri privacy, senza scritte pubblicitarie)`);
-  }
+    // Question 4: Standard vs Luxury/VIP Minibus Fleet (Mandatory across all providers)
+    if (asksStickers) {
+      questions.push(`Se disponete solo di allestimenti standard o anche di minibus Luxury/VIP, e se confermate che sono completamente privi di scritte commerciali`);
+    } else {
+      questions.push(`Se disponete solo di minibus standard o anche di una flotta Luxury / VIP (es. interni in pelle, vetri privacy, senza scritte pubblicitarie)`);
+    }
 
-  // Question 5: Cancellation Policy & Advance Booking Notice
-  if (asksCancellation && asksAdvanceNotice) {
-    questions.push(`Termini di cancellazione (cancellation policy) e preavviso richiesto per bloccare i mezzi`);
-  } else if (asksCancellation) {
-    questions.push(`Quali sono i vostri termini e penali di cancellazione (cancellation policy)?`);
-  } else if (asksAdvanceNotice) {
-    questions.push(`Con quanto preavviso è necessario prenotare per bloccare i mezzi?`);
-  } else {
-    questions.push(`Termini e penali di cancellazione (cancellation policy)`);
-  }
+    // Optional Question: Images/Photos if requested
+    if (asksImages) {
+      questions.push(`È possibile ricevere foto o schede tecniche dettagliate dei veicoli disponibili (interni ed esterni)?`);
+    }
 
-  // Final Question: Direct WhatsApp
-  questions.push(`Un vostro contatto WhatsApp diretto per verificare disponibilità rapide`);
+    // Question 5: Cancellation Policy & Advance Booking Notice
+    if (asksCancellation && asksAdvanceNotice) {
+      questions.push(`Termini di cancellazione (cancellation policy) e preavviso richiesto per bloccare i mezzi`);
+    } else if (asksCancellation) {
+      questions.push(`Quali sono i vostri termini e penali di cancellazione (cancellation policy)?`);
+    } else if (asksAdvanceNotice) {
+      questions.push(`Con quanto preavviso è necessario prenotare per bloccare i mezzi?`);
+    } else {
+      questions.push(`Termini e penali di cancellazione (cancellation policy)`);
+    }
+
+    // Final Question: Direct WhatsApp
+    questions.push(`Un vostro contatto WhatsApp diretto per verificare disponibilità rapide`);
+  }
 
   const qLines = questions.map((q, idx) => `${idx + 1}. ${q}`).join('\n');
   const personalLine = personalIntro ? `\n\n${personalIntro}` : '';
