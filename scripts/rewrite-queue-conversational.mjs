@@ -114,11 +114,11 @@ function buildConversationalBodyEn(firstName, hook) {
 
 ${hook}
 
-I represent DOROGO. We operate a fleet of Mercedes-Benz V-Class vans and executive minibuses based on Lake Como, also covering Milan and Tuscany.
+I represent DOROGO. We operate Mercedes-Benz E-Class, S-Class, V-Class, and Maybach vehicles based on Lake Como, covering Milan and Tuscany. We also arrange executive minibuses and have a network of special cars for wedding photoshoots.
 
-When your couples plan weddings in Italy, do you already have your guest drivers sorted, or would our 2027 rates and villa shuttle info be handy to keep on file?
+For your upcoming weddings in Italy, do you already have guest drivers sorted, or would our 2027 rates and villa shuttle info be handy to keep on file?
 
-No worries at all if transport is handled by someone else on your team.`;
+No worries at all if transport is handled by someone else on your team, just let me know.`;
 }
 
 function buildConversationalBodyIt(firstName, venueOrLoc) {
@@ -129,11 +129,11 @@ function buildConversationalBodyIt(firstName, venueOrLoc) {
 
 Ho visto i vostri allestimenti per gli eventi a ${place}, dettagli ed eleganza davvero splendidi.
 
-Sono Dmitri e rappresento DOROGO. Abbiamo una flotta di Mercedes-Benz Classe V e minibus executive con base sul Lago di Como, attivi anche su Milano e in Toscana.
+Sono Dmitri e rappresento DOROGO. Operiamo con Mercedes-Benz Classe E, Classe S, Classe V e Maybach con base sul Lago di Como, attivi anche su Milano e in Toscana. Organizziamo anche minibus executive e disponiamo di una rete di auto speciali per i servizi fotografici degli sposi.
 
 Per i vostri eventi e matrimoni sul lago, avete già i transfer degli ospiti organizzati o vi farebbe comodo avere le nostre tariffe 2027 e i percorsi navetta per le ville?
 
-Nessun problema se della logistica si occupa già un altro referente nel vostro team.`;
+Nessun problema se della logistica si occupa già un altro referente nel vostro team, basta farmelo sapere.`;
 }
 
 function buildConversationalBodyRu(firstName, venueOrLoc) {
@@ -144,13 +144,11 @@ function buildConversationalBodyRu(firstName, venueOrLoc) {
 
 Обратил внимание на ваши красивые свадебные проекты в ${place}, оформление и атмосфера выглядят потрясающе.
 
-Я Дмитрий, представляю компанию DOROGO. У нас собственный автопарк минивэнов Mercedes-Benz V-Class и представительских микроавтобусов на озере Комо, также работаем в Милане и Тоскане.
-
-Я Дмитрий, руковожу компанией DOROGO. У нас собственный автопарк минивэнов Mercedes V-Class и представительских микроавтобусов на озере Комо, также работаем в Милане и Тоскане.
+Я Дмитрий, представляю компанию DOROGO. Мы работаем на автомобилях Mercedes-Benz E-Class, S-Class, V-Class и Maybach на озере Комо, а также в Милане и Тоскане. Также организуем представительские микроавтобусы и подбираем редкие автомобили для свадебных фотосессий.
 
 Когда ваши пары планируют свадьбы в Италии, у вас уже есть проверенные водители для гостей или вам пригодится наш тарифный план 2027 и маршруты шаттлов по виллам?
 
-Если трансферами занимается другой специалист в команде, никаких проблем.`;
+Если трансферами занимается другой специалист в команде, никаких проблем, просто дайте знать.`;
 }
 
 async function run() {

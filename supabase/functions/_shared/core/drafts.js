@@ -344,7 +344,7 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
         subject_line_b: 'Аэропортовые трансферы и шаттлы для отелей',
         subject_line_c: 'Прямой контакт с автопарком: трансферы гостей',
         service_pitch:
-          `Мы организуем трансферы из аэропортов (Мальпенса, Линате, Венеция, Флоренция, Ницца) и шаттлы для гостей отелей и вилл в ${targetVenue}. Работаем на собственном представительском парке Mercedes-Benz V-Class и S-Class, а также комфортабельных минибусах до 50 мест с прямым координатором в WhatsApp на озере Комо, в Милане, Тоскане, Венеции и Ницце (Лазурный берег).`,
+          `Мы организуем трансферы из аэропортов (Мальпенса, Линате, Венеция, Флоренция, Ницца) и шаттлы для гостей отелей и вилл в ${targetVenue}. Работаем на представительском парке Mercedes-Benz E-Class, S-Class, V-Class и Maybach, организуем микроавтобусы и подбираем редкие автомобили для свадебных фотосессий с прямым координатором в WhatsApp на озере Комо, в Милане, Тоскане и Венеции.`,
         cta_line:
           'Если вашему консьерж-сервису полезно иметь прямой контакт с парком на сезон, напишите мне здесь или в WhatsApp, и я отправлю наш партнерский тариф.',
       };
@@ -362,7 +362,7 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       subject_line_b: ruSubjects.b,
       subject_line_c: ruSubjects.c,
       service_pitch:
-        'Я Дмитрий, руковожу компанией DOROGO. У нас собственный автопарк минивэнов Mercedes V-Class и представительских микроавтобусов на озере Комо, также работаем в Милане и Тоскане.',
+        'Я Дмитрий, представляю компанию DOROGO. Мы работаем на автомобилях Mercedes-Benz E-Class, S-Class, V-Class и Maybach на озере Комо, а также в Милане и Тоскане. Также организуем представительские микроавтобусы и подбираем редкие автомобили для свадебных фотосессий.',
       cta_line:
         'Когда ваши пары планируют свадьбы в Италии, у вас уже есть проверенные водители для гостей или вам пригодится наш тарифный план 2027 и маршруты шаттлов по виллам?',
     };
@@ -376,7 +376,7 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
         subject_line_b: 'Transfer aeroportuali e navette di gruppo',
         subject_line_c: 'Contatto diretto flotta: transfer per ospiti',
         service_pitch:
-          `Gestiamo transfer aeroportuali e navette per gli ospiti degli hotel e delle ville a ${targetVenue}. Operiamo con Mercedes-Benz Classe V e Classe S di nostra proprietà tra Milano, Lago di Como, Toscana, Venezia e Nizza (Costa Azzurra), affiancate da partner selezionati per minibus e bus fino a 50 posti, con coordinamento diretto via WhatsApp.`,
+          `Gestiamo transfer aeroportuali e navette per gli ospiti degli hotel e delle ville a ${targetVenue}. Operiamo con Mercedes-Benz Classe E, Classe S, Classe V e Maybach con base tra Lago di Como, Milano e Toscana, affiancate da partner selezionati per minibus e auto speciali per shooting fotografici, con coordinamento diretto via WhatsApp.`,
         cta_line:
           'Se vi è utile avere una flotta di riferimento per la stagione, rispondetemi qui o su WhatsApp e vi condivido il listino riservato.',
       };
@@ -394,7 +394,7 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       subject_line_b: itSubjects.b,
       subject_line_c: itSubjects.c,
       service_pitch:
-        'Sono Dmitri e rappresento DOROGO. Abbiamo una flotta di Mercedes Classe V e minibus executive con base sul Lago di Como, attivi anche su Milano e in Toscana.',
+        'Sono Dmitri e rappresento DOROGO. Operiamo con Mercedes-Benz Classe E, Classe S, Classe V e Maybach con base sul Lago di Como, attivi anche su Milano e in Toscana. Organizziamo anche minibus executive e disponiamo di una rete di auto speciali per i servizi fotografici degli sposi.',
       cta_line:
         'Per i vostri eventi e matrimoni sul lago, avete già i transfer degli ospiti organizzati o vi farebbe comodo avere le nostre tariffe 2027 e i percorsi navetta per le ville?',
     };
@@ -408,7 +408,7 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       subject_line_b: 'Airport transfers and group shuttles',
       subject_line_c: 'Direct fleet contact: event guest transfers',
       service_pitch:
-        `How does your team handle airport runs and group shuttles around ${targetVenue}? We operate executive Mercedes-Benz V-Class and S-Class vehicles directly across Lake Como, Milan, Tuscany, Venice, Nice (French Riviera), and Northern Italy, plus vetted partner minibuses up to 50 seats for large wedding parties, with one dedicated lead on WhatsApp.`,
+        `How does your team handle airport runs and group shuttles around ${targetVenue}? We operate executive Mercedes-Benz E-Class, S-Class, V-Class, and Maybach vehicles directly across Lake Como, Milan, and Tuscany, plus vetted partner minibuses and special cars for wedding photoshoots, with one dedicated lead on WhatsApp.`,
       cta_line:
         'Reply here or text me on WhatsApp and I will send our rate card and vehicle guide.',
     };
@@ -426,7 +426,7 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
     subject_line_b: enSubjects.b,
     subject_line_c: enSubjects.c,
     service_pitch:
-      'We operate an executive Mercedes-Benz V-Class and S-Class fleet based on Lake Como and active across Milan, Tuscany, Venice, and Nice (French Riviera), plus vetted minibuses up to 50 seats. We are not looking to replace your usual drivers, but on peak summer dates when villa schedules exceed capacity, we hold dedicated backup fleet slots on reserve for partner studios.',
+      'We operate an executive Mercedes-Benz V-Class and S-Class fleet based on Lake Como, also offering E-Class, Maybach, executive minibuses, and special cars for wedding photoshoots across Milan and Tuscany. We are not looking to replace your usual drivers, but on peak summer dates when villa schedules exceed capacity, we hold dedicated backup fleet slots on reserve for partner studios.',
     cta_line:
       'Would having our 2027 partner rate card and villa shuttle circuits be useful for your file, or do you already have fixed transfer partners in Italy?',
   };
