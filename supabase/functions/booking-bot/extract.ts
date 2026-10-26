@@ -36,7 +36,11 @@ CRITICAL RULES:
    - Phrases like "sprinter 24/28 pax", "24/8 pax", "sprinter on 24/28 people", or "V-Class 7 pax" describe the VEHICLE MODEL / CAPACITY, NOT the party count.
    - Extract the vehicle specification into "vehicle_class".
    - ONLY set "passengers" if the text explicitly states the number of traveling guests (e.g. "22 guests", "transfer all 22 passengers", "we are 4 people"). If no party size is stated, return null for "passengers".
-11. Output MUST conform strictly to the JSON schema provided.
+   - Extract "adults" and "children" counts if mentioned (e.g. "2 adults and 2 children").
+11. Comprehensive Notes & Extra Details:
+   - Always extract extra trip context, passenger details, luggage specifications (e.g. "Family of four travelling with luggage", "Ski equipment or standard luggage to confirm"), child seat requirements ("2 kids - ages to confirm for car seats"), and flight notes into "client_notes".
+   - Do NOT drop conversational questions or pending items asked by or to the client.
+12. Output MUST conform strictly to the JSON schema provided.
 `;
 }
 

@@ -648,3 +648,91 @@ DOROGO | Private Transportation
 
   console.log("✅ Flexible per-leg pricing, due amounts, and reply instructions test passed!");
 });
+
+// 14. UNIT TEST: Extra details (flights, child seats, luggage, one-way round-trip fare) in notes and card
+Deno.test("Extra details (flights, children, luggage, ski equipment) extracted and preserved in notes & card", () => {
+  const quotationText = `Hello, good morning.
+
+I would like to request a quotation for a private minivan transfer for 4 passengers (2 adults and 2 children) from Milan to Zermatt and back.
+
+✈️ ARRIVAL – December 26, 2026
+
+* Flight: Ryanair FR349
+* From: Tenerife South
+* Arrival airport: Milan Malpensa (MXP)
+* Arrival time: 3:20 PM
+* Destination: Zermatt, Switzerland (via Täsch).
+
+✈️ RETURN – January 2, 2027
+
+* Flight: Ryanair FR2830
+* Departure airport: Milan Bergamo (BGY)
+* Flight departure time: 3:25 PM
+* Pick-up location: Zermatt/Täsch
+* Pick-up time: As recommended to ensure we arrive at the airport comfortably.
+
+We are a family of four travelling with luggage
+
+We have a Mercedes-Benz V-Class with an English-speaking chauffeur available at 565€ (one way) all-inclusive.
+
+ Will you be travelling with ski equipment on this trip, or standard luggage only? 
+
+Also, home old are the kids that travel with you? So we could prepare car seats for them!`;
+
+  const raw: any = {
+    booking_ref: "DRG-ZERM4X",
+    service_type: "Round-Trip Transfer",
+    vehicle_class: "Mercedes-Benz V-Class",
+    rides: [
+      {
+        ride_no: 1,
+        role: "outbound",
+        raw_date: "December 26, 2026",
+        stops: [
+          { seq: 1, kind: "pickup", time: "15:20", place: "Milan Malpensa (MXP)", evidence: "Arrival airport: Milan Malpensa (MXP)" },
+          { seq: 2, kind: "dropoff", place: "Zermatt, Switzerland (via Täsch)", evidence: "Destination: Zermatt, Switzerland (via Täsch)." },
+        ],
+      },
+      {
+        ride_no: 2,
+        role: "return",
+        raw_date: "January 2, 2027",
+        stops: [
+          { seq: 1, kind: "pickup", place: "Zermatt/Täsch", evidence: "Pick-up location: Zermatt/Täsch" },
+          { seq: 2, kind: "dropoff", time: "15:25", place: "Milan Bergamo (BGY)", evidence: "Departure airport: Milan Bergamo (BGY)" },
+        ],
+      },
+    ],
+  };
+
+  const booking = applyBusinessRules(raw, quotationText, new Date("2026-10-26T08:00:00Z"));
+
+  // 1. Party breakdown (4 pax: 2 adults, 2 children)
+  assertEquals(booking.party.passengers, 4, "Must have 4 passengers");
+  assertEquals(booking.party.adults, 2, "Must extract 2 adults");
+  assertEquals(booking.party.children.length, 2, "Must extract 2 children");
+
+  // 2. Flights auto-associated with rides
+  assertEquals(booking.rides[0].flight?.number, "FR349", "Ride 1 flight must be FR349");
+  assertEquals(booking.rides[1].flight?.number, "FR2830", "Ride 2 flight must be FR2830");
+
+  // 3. One-way 565 quote for round trip -> total 1130 (565 + 565 per leg)
+  assertEquals(booking.finance.total_price, 1130, "Total price must be 1130 (565 * 2)");
+  assertEquals(booking.rides[0].price, 565, "Ride 1 price must be 565");
+  assertEquals(booking.rides[1].price, 565, "Ride 2 price must be 565");
+
+  // 4. Notes contain ski equipment, luggage, and child seats
+  assert(booking.client_notes.includes("Ski equipment"), "Notes must mention ski equipment");
+  assert(booking.client_notes.includes("luggage"), "Notes must mention luggage");
+  assert(booking.client_notes.includes("child seat"), "Notes must mention child seats");
+
+  // 5. Card text verification
+  const card = renderBookingCard(booking, "draft-zerm");
+  assert(card.text.includes("4 passengers (2 adults, 2 children)"), "Card must display party breakdown");
+  assert(card.text.includes("Flight FR349"), "Card itinerary must display flight FR349");
+  assert(card.text.includes("Flight FR2830"), "Card itinerary must display flight FR2830");
+  assert(card.text.includes("€1130 (Unpaid) (€565 + €565 per leg)"), "Card must display €1130 total and €565 per leg");
+  assert(card.text.includes("Child seat (age not specified ⚠️)"), "Card must display child seat warnings");
+
+  console.log("✅ Extra details in notes & card test passed!");
+});

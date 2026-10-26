@@ -468,6 +468,21 @@ export function applyBusinessRules(
 
   // 2. Financials & Fallbacks
   let totalPrice = typeof raw.price_total === "number" ? raw.price_total : null;
+
+  // Check one-way quote (e.g. "available at 565€ (one way) all-inclusive")
+  const oneWayMatch = sourceText.match(/(?:at\s*)?([0-9,.]+)\s*€?\s*\(one\s*way\)|([0-9,.]+)\s*€?\s*в\s*одну\s*сторону/i);
+  if (oneWayMatch && totalPrice === null) {
+    const oneWayPrice = parseFloat((oneWayMatch[1] || oneWayMatch[2]).replace(/,/g, ""));
+    if (rides.length === 2 && rides[1].role === "return") {
+      totalPrice = oneWayPrice * 2;
+      if (rides[0].price === null) rides[0].price = oneWayPrice;
+      if (rides[1].price === null) rides[1].price = oneWayPrice;
+    } else {
+      totalPrice = oneWayPrice;
+      if (rides[0] && rides[0].price === null) rides[0].price = oneWayPrice;
+    }
+  }
+
   if (totalPrice === null) {
     const priceMatch =
       sourceText.match(/(?:итого|total|fare|всего|стоимость)\s*[:—–-]?\s*(?:€\s*)?([\d,.]+)/i) ||
@@ -535,13 +550,55 @@ export function applyBusinessRules(
     if (paxMatch) pax = parseInt(paxMatch[1], 10);
   }
 
+  // Adults fallback
+  let adults = typeof raw.adults === "number" ? raw.adults : (typeof raw.party?.adults === "number" ? raw.party.adults : null);
+  if (adults === null) {
+    const adultsMatch = sourceText.match(/(\d+)\s*adults?/i);
+    if (adultsMatch) adults = parseInt(adultsMatch[1], 10);
+  }
+
+  // Children fallback from text if not in raw
+  if (childrenList.length === 0) {
+    const kidsMatch = sourceText.match(/(\d+)\s*(?:children|kids|детей|ребенка|дети)/i);
+    if (kidsMatch) {
+      const numKids = parseInt(kidsMatch[1], 10);
+      for (let k = 0; k < numKids; k++) {
+        childrenList.push(mapChildSeat({ age: null }));
+      }
+    }
+  }
+
+  // Luggage fallback
+  let luggage = typeof raw.luggage === "number" ? raw.luggage : (typeof raw.party?.luggage === "number" ? raw.party.luggage : null);
+  if (luggage === null) {
+    const lugMatch = sourceText.match(/(\d+)\s*(?:bags?|suitcases?|чемодан)/i);
+    if (lugMatch) luggage = parseInt(lugMatch[1], 10);
+  }
+
   const party = {
     passengers: pax,
-    adults: typeof raw.adults === "number" ? raw.adults : (typeof raw.party?.adults === "number" ? raw.party.adults : null),
+    adults,
     children: childrenList,
-    luggage: typeof raw.luggage === "number" ? raw.luggage : (typeof raw.party?.luggage === "number" ? raw.party.luggage : null),
+    luggage,
     ski_bags: typeof raw.ski_bags === "number" ? raw.ski_bags : (typeof raw.party?.ski_bags === "number" ? raw.party.ski_bags : null),
   };
+
+  // Flights fallback from text if missing on rides (e.g. Ryanair FR349, FR2830)
+  const flightRe = /\b([A-Z]{2}|[A-Z]\d|\d[A-Z])\s*(\d{2,4})\b/g;
+  const flightMatches = [...sourceText.matchAll(flightRe)]
+    .map((m) => `${m[1]}${m[2]}`)
+    .filter((fn) => !/DRG|EUR|VAT|MXP|BGY|LIN|PM/i.test(fn));
+  if (flightMatches.length > 0) {
+    rides.forEach((r, rIdx) => {
+      if (!r.flight) {
+        const candidate = flightMatches[rIdx];
+        if (candidate) {
+          const fKind = r.role === "return" ? "departure" : "arrival";
+          r.flight = { number: candidate, kind: fKind };
+        }
+      }
+    });
+  }
 
   // Client Name & Email fallbacks (strictly guarded so place names like "Villa Lilla" are never mistaken for client names)
   let clientName = raw.client_name || raw.client?.name || null;
@@ -628,13 +685,29 @@ export function applyBusinessRules(
     warnings.push("💶 Total fare not specified in booking message");
   }
 
-  // Client Notes fallback
+  // Client Notes fallback & extra context preservation
   let notes = (raw.client_notes || "").trim();
   if (!notes) {
     const notesMatch = sourceText.match(/(?:notes?|заметк[иа]|примечани[ея])\s*[:—–-]\s*([\s\S]+?)(?=\n\s*(?:paid|total|fare|итого|предоплат|transfer|pick-?up|drop-?off)\b|$)/i);
     if (notesMatch) {
       notes = notesMatch[1].trim();
     }
+  }
+
+  // Preserve extra context if not already present in notes
+  const extraNotes: string[] = [];
+  if (/ski\s*(?:equipment|gear|bags?)|лыж/i.test(sourceText) && !/ski/i.test(notes)) {
+    extraNotes.push("Ski equipment to confirm");
+  }
+  if (/luggage|baggage|чемодан/i.test(sourceText) && !/luggage/i.test(notes)) {
+    extraNotes.push("Travelling with luggage");
+  }
+  if (childrenList.length > 0 && !/child|kid|seat/i.test(notes)) {
+    const count = childrenList.length;
+    extraNotes.push(`${count} child seat${count > 1 ? "s" : ""} required (ages pending)`);
+  }
+  if (extraNotes.length > 0) {
+    notes = notes ? `${notes} | ${extraNotes.join(" | ")}` : extraNotes.join(" | ");
   }
 
   // Status & Our Notes (balance due) computation

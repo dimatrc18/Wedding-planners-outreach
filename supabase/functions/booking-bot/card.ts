@@ -108,6 +108,11 @@ export function renderBookingCard(
   // Vehicle & Party
   const vehStr = `${esc(booking.vehicle.class || "Mercedes-Benz V-Class")}${booking.vehicle.count > 1 ? ` (${booking.vehicle.count}x)` : ""}`;
   let partyStr = `👥 <b>Guests:</b> ${booking.party.passengers ?? 1} passengers`;
+  if (booking.party.adults && booking.party.children && booking.party.children.length > 0) {
+    partyStr = `👥 <b>Guests:</b> ${booking.party.passengers ?? (booking.party.adults + booking.party.children.length)} passengers (${booking.party.adults} adults, ${booking.party.children.length} children)`;
+  } else if (booking.party.children && booking.party.children.length > 0) {
+    partyStr = `👥 <b>Guests:</b> ${booking.party.passengers ?? 1} passengers (inc. ${booking.party.children.length} children)`;
+  }
   if (booking.party.luggage !== null && booking.party.luggage > 0) {
     partyStr += ` | 🧳 ${booking.party.luggage} bags`;
   }
@@ -143,7 +148,8 @@ export function renderBookingCard(
     lines.push(`\n📍 <b>ITINERARY:</b>`);
     booking.rides.forEach((r, idx) => {
       const header = rideHeader(booking, r, idx);
-      if (header) lines.push(`<b>${esc(header)}</b>`);
+      const flightBadge = r.flight?.number ? ` <i>(✈️ Flight ${esc(r.flight.number)})</i>` : "";
+      if (header) lines.push(`<b>${esc(header)}</b>${flightBadge}`);
       const pickups = r.stops.filter((s) => s.kind === "pickup");
       const dropoffs = r.stops.filter((s) => s.kind === "dropoff");
 
@@ -259,6 +265,11 @@ export function buildFullCardPlainText(booking: BookingData): string {
   // Vehicle & Party
   const vehStr = `${booking.vehicle.class || "Mercedes-Benz V-Class"}${booking.vehicle.count > 1 ? ` (${booking.vehicle.count}x)` : ""}`;
   let partyStr = `👥 Guests: ${booking.party.passengers ?? 1} passengers`;
+  if (booking.party.adults && booking.party.children && booking.party.children.length > 0) {
+    partyStr = `👥 Guests: ${booking.party.passengers ?? (booking.party.adults + booking.party.children.length)} passengers (${booking.party.adults} adults, ${booking.party.children.length} children)`;
+  } else if (booking.party.children && booking.party.children.length > 0) {
+    partyStr = `👥 Guests: ${booking.party.passengers ?? 1} passengers (inc. ${booking.party.children.length} children)`;
+  }
   if (booking.party.luggage !== null && booking.party.luggage > 0) {
     partyStr += ` | 🧳 ${booking.party.luggage} bags`;
   }
@@ -294,7 +305,8 @@ export function buildFullCardPlainText(booking: BookingData): string {
     lines.push(`\n📍 ITINERARY:`);
     booking.rides.forEach((r, idx) => {
       const header = rideHeader(booking, r, idx);
-      if (header) lines.push(header);
+      const flightBadge = r.flight?.number ? ` (✈️ Flight ${r.flight.number})` : "";
+      if (header) lines.push(header + flightBadge);
       const pickups = r.stops.filter((s) => s.kind === "pickup");
       const dropoffs = r.stops.filter((s) => s.kind === "dropoff");
 
