@@ -13,7 +13,8 @@ export const INITIAL_BUS_PARTNERS = [
       "discretion_unbranded": 35,
       "fleet_luxury": 25,
       "territory_permits": 20,
-      "corporate_sla": 18
+      "corporate_sla": 18,
+      "partner_card": {}
     },
     "status": "APPROVED_PARTNER",
     "unbranded_status": "100% Guaranteed Unbranded / Total Black",
@@ -37,15 +38,15 @@ export const INITIAL_BUS_PARTNERS = [
       "fleet_luxury": 22,
       "partner_card": {
         "whatsapp": "+39 02 546 5555",
-        "bus_models": "Mercedes V-Class (7–8 pax), Viano Luxury (7 pax), Mercedes Sprinter 315 Luxury (8 pax), Mercedes Sprinter 519 Tomassini Luxury (16 pax), Pullman di Lusso 21 (50–56 pax), 79 pax) (79 pax) (79 pax) (79 pax) (79 pax) (79 pax) (79 pax) (79 pax) (79 pax) (79 pax), 28, 30, 56, 64",
+        "bus_models": "Mercedes Sprinter 315 Luxury (8 pax), Mercedes Sprinter 519 Tomassini Luxury (16 pax), Pullman di Lusso (21, 28, 30, 56, 64, 79 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
         "email_status": "invalid",
-        "pax_capacity": "7, 8, 16, 21, 28, 30, 56, 64, 79 pax",
+        "pax_capacity": "8, 16, 21, 28, 30, 56, 64, 79 pax",
         "rate_standby": "",
         "scheduled_at": null,
-        "fleet_segment": "both",
+        "fleet_segment": "luxury",
         "outreach_stage": "to_check",
         "last_message_id": null,
         "user_set_status": true,
@@ -60,17 +61,19 @@ export const INITIAL_BUS_PARTNERS = [
     "status": "TO_REVIEW",
     "unbranded_status": "100% Guaranteed Unbranded / NCC Black",
     "fleet_categories": [
-      "Mercedes-Benz Viano / V-Class 250 Extralungo Luxury (7 seats)",
-      "Mercedes-Benz Sprinter 315 Luxury (8 seats)",
-      "Mercedes-Benz Sprinter 315/519 Luxury Long Tomassini Style (16 seats)",
-      "Luxury Coaches / Pullman di Lusso (21, 28, 30, 56, 64, 79 seats)"
+      "Mercedes Sprinter 315 Luxury (8 seats)",
+      "Mercedes Sprinter 519 Tomassini Luxury (16 seats)",
+      "Pullman di Lusso (21, 28, 30, 56, 64, 79 seats)"
     ],
     "phone": "+39 02 546 5555",
     "email": "info@viplimousine.it",
     "notes": "⚠️ Website/Email unreachable (https://www.viplimousine.it) · Verified dead/no-MX on 24/10/2026",
     "source": "seed",
     "created_at": "2026-10-22T16:36:12.495179+00:00",
-    "updated_at": "2026-10-24T21:48:12.74984+00:00"
+    "updated_at": "2026-10-24T21:48:12.74984+00:00",
+    "fleet_segment": "luxury",
+    "bus_models": "Mercedes Sprinter 315 Luxury (8 pax), Mercedes Sprinter 519 Tomassini Luxury (16 pax), Pullman di Lusso (21, 28, 30, 56, 64, 79 pax)",
+    "pax_capacity": "8, 16, 21, 28, 30, 56, 64, 79 pax"
   },
   {
     "id": "partner_1792765278957_tgxp",
@@ -83,12 +86,12 @@ export const INITIAL_BUS_PARTNERS = [
       "fleet_luxury": 24,
       "partner_card": {
         "whatsapp": "+39 347 373 5465",
-        "bus_models": "Mercedes-Benz Classe V VIP (7 pax), Mercedes-Benz Sprinter VIP (8 pax), Mercedes-Benz Sprinter Nero VIP + Hostess (19 pax)",
+        "bus_models": "Mercedes-Benz Sprinter VIP (8 pax), Mercedes-Benz Sprinter Nero VIP w/ Hostess (19 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
         "email_status": "mx_ok",
-        "pax_capacity": "7, 8, 19 pax",
+        "pax_capacity": "8, 19 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-30T07:00:00.000Z",
         "fleet_segment": "luxury",
@@ -106,7 +109,6 @@ export const INITIAL_BUS_PARTNERS = [
     "status": "WANT_TO_CONTACT",
     "unbranded_status": "100% Guaranteed Unbranded / Total Black",
     "fleet_categories": [
-      "Mercedes-Benz V-Class VIP (7 seats)",
       "Mercedes-Benz Sprinter VIP (8 seats)",
       "Mercedes-Benz Sprinter Nero VIP w/ Hostess (19 seats)"
     ],
@@ -115,7 +117,10 @@ export const INITIAL_BUS_PARTNERS = [
     "notes": "- do they have only 19 seats  or other \n- prices",
     "source": "crawler",
     "created_at": "2026-10-23T14:21:18.957+00:00",
-    "updated_at": "2026-10-24T21:52:45.051874+00:00"
+    "updated_at": "2026-10-24T21:52:45.051874+00:00",
+    "fleet_segment": "luxury",
+    "bus_models": "Mercedes-Benz Sprinter VIP (8 pax), Mercedes-Benz Sprinter Nero VIP w/ Hostess (19 pax)",
+    "pax_capacity": "8, 19 pax"
   },
   {
     "id": "partner_1792761170109_96nx",
@@ -128,12 +133,12 @@ export const INITIAL_BUS_PARTNERS = [
       "fleet_luxury": 23,
       "partner_card": {
         "whatsapp": "+39 031 513 189",
-        "bus_models": "Minivan NCC (7 pax), Mercedes Sprinter Minibus (19–20 pax), Iveco Midibus (29–30 pax), Mercedes Tourismo (50–56 pax), Setra (50–56 pax), Neoplan GT (51–57 pax)",
+        "bus_models": "Mercedes Sprinter Minibus (19–20 pax), Iveco Executive Midibus (29–30 pax), Mercedes Tourismo / Setra GT (51–57 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
         "email_status": "mx_ok",
-        "pax_capacity": "7, 19–20, 29–30, 51–57 pax",
+        "pax_capacity": "19–20, 29–30, 51–57 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-29T07:00:00.000Z",
         "fleet_segment": "standard",
@@ -151,7 +156,6 @@ export const INITIAL_BUS_PARTNERS = [
     "status": "WANT_TO_CONTACT",
     "unbranded_status": "100% Guaranteed Unbranded / Total Black",
     "fleet_categories": [
-      "Minivan NCC (7 seats)",
       "Mercedes-Benz Sprinter Minibus (19–20 seats)",
       "Iveco Executive Midibus (29–30 seats)",
       "Mercedes Tourismo / Setra / Neoplan GT Coach (51–57 seats)"
@@ -161,7 +165,10 @@ export const INITIAL_BUS_PARTNERS = [
     "notes": "1. i am interested in the prices of the Iveco (29 passengers) - how much is it standby service and transfer (e,g, MXP -> milan Central)\n2. The same thing for Mercedes Sprinter (19 passagers).\n3.  the same for the 50 seaters?",
     "source": "crawler",
     "created_at": "2026-10-23T13:12:50.109+00:00",
-    "updated_at": "2026-10-26T11:32:06.893081+00:00"
+    "updated_at": "2026-10-26T11:32:06.893081+00:00",
+    "fleet_segment": "standard",
+    "bus_models": "Mercedes Sprinter Minibus (19–20 pax), Iveco Executive Midibus (29–30 pax), Mercedes Tourismo / Setra GT (51–57 pax)",
+    "pax_capacity": "19–20, 29–30, 51–57 pax"
   },
   {
     "id": "partner_1792765279410_2zml",
@@ -174,7 +181,7 @@ export const INITIAL_BUS_PARTNERS = [
       "fleet_luxury": 23,
       "partner_card": {
         "whatsapp": "+39 031 264 780",
-        "bus_models": "Mercedes-Benz V-Class Luxury Minivan (7 pax), face-to-face leather",
+        "bus_models": "Mercedes-Benz V-Class Luxury Minivan (7 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
@@ -182,7 +189,7 @@ export const INITIAL_BUS_PARTNERS = [
         "pax_capacity": "7 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-29T07:25:00.000Z",
-        "fleet_segment": "both",
+        "fleet_segment": "luxury",
         "outreach_stage": "ready",
         "last_message_id": null,
         "user_set_status": true,
@@ -204,7 +211,10 @@ export const INITIAL_BUS_PARTNERS = [
     "notes": "1. i am interested to know how much for transfer (milan -> MXP) and stand by service for a) Mercedes sprinter 20 posti, b) Irizar 52 posti",
     "source": "crawler",
     "created_at": "2026-10-23T14:21:19.41+00:00",
-    "updated_at": "2026-10-26T11:35:09.614816+00:00"
+    "updated_at": "2026-10-26T11:35:09.614816+00:00",
+    "fleet_segment": "luxury",
+    "bus_models": "Mercedes-Benz V-Class Luxury Minivan (7 pax)",
+    "pax_capacity": "7 pax"
   },
   {
     "id": "partner_1792765279743_bk0p",
@@ -217,12 +227,12 @@ export const INITIAL_BUS_PARTNERS = [
       "fleet_luxury": 24,
       "partner_card": {
         "whatsapp": "+39 02 4070 8295",
-        "bus_models": "Mercedes V-Class 250 d Luxury (7–8 pax), Mercedes Sprinter Minibus (20 pax), Irizar GT Coach (52 pax)",
+        "bus_models": "Mercedes-Benz Sprinter Minibus (20 pax), Irizar GT Coach (52 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
         "email_status": "mx_ok",
-        "pax_capacity": "7–8, 20, 52 pax",
+        "pax_capacity": "20, 52 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-29T07:25:00.000Z",
         "fleet_segment": "both",
@@ -240,7 +250,6 @@ export const INITIAL_BUS_PARTNERS = [
     "status": "TO_REVIEW",
     "unbranded_status": "100% Guaranteed Unbranded / Total Black",
     "fleet_categories": [
-      "Mercedes-Benz V-Class 250 d Luxury Van (7–8 seats)",
       "Mercedes-Benz Sprinter Minibus (20 seats)",
       "Irizar GT Coach (52 seats)"
     ],
@@ -249,7 +258,10 @@ export const INITIAL_BUS_PARTNERS = [
     "notes": "Premier Milan NCC operator with luxury Mercedes-Benz Sprinter VIP (8–19 seats) and V-Class fleet.",
     "source": "crawler",
     "created_at": "2026-10-23T14:21:19.743+00:00",
-    "updated_at": "2026-10-24T23:44:22.390083+00:00"
+    "updated_at": "2026-10-24T23:44:22.390083+00:00",
+    "fleet_segment": "both",
+    "bus_models": "Mercedes-Benz Sprinter Minibus (20 pax), Irizar GT Coach (52 pax)",
+    "pax_capacity": "20, 52 pax"
   },
   {
     "id": "partner_1792765278630_r4vp",
@@ -262,7 +274,7 @@ export const INITIAL_BUS_PARTNERS = [
       "fleet_luxury": 22,
       "partner_card": {
         "whatsapp": "+39 031 976 430",
-        "bus_models": "Mercedes Van Classe V VIP (8 pax), Minibus Extralong Luxury (8 pax), Minibus (20 pax), Midibus (26 pax)",
+        "bus_models": "Mercedes Minibus Extralong Luxury (8 pax), Executive Minibus (20 pax), Executive Midibus (26 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
@@ -285,8 +297,7 @@ export const INITIAL_BUS_PARTNERS = [
     "status": "WANT_TO_CONTACT",
     "unbranded_status": "100% Guaranteed Unbranded / Total Black",
     "fleet_categories": [
-      "Mercedes-Benz V-Class VIP Van (8 seats)",
-      "Mercedes Minibus & Extralong Luxury (8 seats)",
+      "Mercedes Minibus Extralong Luxury (8 seats)",
       "Executive Minibus (20 seats)",
       "Executive Midibus (26 seats)"
     ],
@@ -295,7 +306,10 @@ export const INITIAL_BUS_PARTNERS = [
     "notes": "- I am interested in his minibus, minibus extra-long, bus 20 seater, bus 26 seater\n- their prices for stand-by and hourly?\n- Other buses that they have but did not add to the website?",
     "source": "crawler",
     "created_at": "2026-10-23T14:21:18.63+00:00",
-    "updated_at": "2026-10-26T11:36:06.395318+00:00"
+    "updated_at": "2026-10-26T11:36:06.395318+00:00",
+    "fleet_segment": "both",
+    "bus_models": "Mercedes Minibus Extralong Luxury (8 pax), Executive Minibus (20 pax), Executive Midibus (26 pax)",
+    "pax_capacity": "8, 20, 26 pax"
   },
   {
     "id": "partner_transervice",
@@ -308,12 +322,12 @@ export const INITIAL_BUS_PARTNERS = [
       "fleet_luxury": 20,
       "partner_card": {
         "whatsapp": "+39 02 8951 6852",
-        "bus_models": "Mercedes V-Class XL Luxury (7 pax), Mercedes Sprinter Luxury (8 pax), Mercedes \"Alis\" Custom VIP Bus on 30-seat chassis (19 pax), Pullman Lusso GT (16–75 pax)",
+        "bus_models": "Mercedes Sprinter Luxury Minibus (8 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
         "email_status": "mx_ok",
-        "pax_capacity": "7, 8, 19, 16–75 pax",
+        "pax_capacity": "8 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-28T08:15:00.000Z",
         "fleet_segment": "luxury",
@@ -331,17 +345,17 @@ export const INITIAL_BUS_PARTNERS = [
     "status": "WANT_TO_CONTACT",
     "unbranded_status": "100% Guaranteed Unbranded",
     "fleet_categories": [
-      "Mercedes-Benz V-Class Extra Long Luxury (7 seats)",
-      "Mercedes-Benz Sprinter Luxury Minibus (8 seats)",
-      "Mercedes \"Alis\" Custom VIP Luxury Bus (19 seats)",
-      "Pullman Lusso / GT Coaches (16–75 seats)"
+      "Mercedes Sprinter Luxury Minibus (8 seats)"
     ],
     "phone": "+39 02 8951 6852",
     "email": "info@transervicelimousine.com",
     "notes": "- They have minibuses, sprinters, and turismo, but no idea how many people fit?",
     "source": "seed",
     "created_at": "2026-10-22T16:36:12.495179+00:00",
-    "updated_at": "2026-10-24T21:52:44.727625+00:00"
+    "updated_at": "2026-10-24T21:52:44.727625+00:00",
+    "fleet_segment": "luxury",
+    "bus_models": "Mercedes Sprinter Luxury Minibus (8 pax)",
+    "pax_capacity": "8 pax"
   },
   {
     "id": "partner_1792765279097_26hr",
@@ -354,12 +368,12 @@ export const INITIAL_BUS_PARTNERS = [
       "fleet_luxury": 21,
       "partner_card": {
         "whatsapp": "+39 347 184 8920",
-        "bus_models": "Mercedes-Benz Classe V Luxury Minivan (7 pax), Mercedes-Benz Sprinter Minibus (12 pax), Ford Transit Minibus (16 pax)",
+        "bus_models": "Mercedes Sprinter Minibus (12 pax), Ford Transit Minibus (16 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
         "email_status": "mx_ok",
-        "pax_capacity": "7, 12, 16 pax",
+        "pax_capacity": "12, 16 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-28T07:25:00.000Z",
         "fleet_segment": "both",
@@ -377,8 +391,7 @@ export const INITIAL_BUS_PARTNERS = [
     "status": "TO_REVIEW",
     "unbranded_status": "100% Guaranteed Unbranded / NCC Black",
     "fleet_categories": [
-      "Mercedes-Benz Classe V Luxury Minivan (7 seats)",
-      "Mercedes-Benz Sprinter Minibus (12 seats)",
+      "Mercedes Sprinter Minibus (12 seats)",
       "Ford Transit Minibus (16 seats)"
     ],
     "phone": "+39 347 184 8920",
@@ -386,7 +399,10 @@ export const INITIAL_BUS_PARTNERS = [
     "notes": "Dedicated Lake Como private chauffeur & luxury Mercedes Sprinter/V-Class operator covering Bellagio, Cernobbio, and Villa d’Este.",
     "source": "crawler",
     "created_at": "2026-10-23T14:21:19.097+00:00",
-    "updated_at": "2026-10-24T23:44:09.664753+00:00"
+    "updated_at": "2026-10-24T23:44:09.664753+00:00",
+    "fleet_segment": "both",
+    "bus_models": "Mercedes Sprinter Minibus (12 pax), Ford Transit Minibus (16 pax)",
+    "pax_capacity": "12, 16 pax"
   },
   {
     "id": "partner_1792765279535_l9ei",
@@ -399,15 +415,15 @@ export const INITIAL_BUS_PARTNERS = [
       "fleet_luxury": 22,
       "partner_card": {
         "whatsapp": "+39 333 269 7376",
-        "bus_models": "Mercedes Classe V (7–8 pax), Viano (7–8 pax), Mercedes Sprinter VIP Total Black 8 & (16 pax), Mercedes Minibus VIP Class (18 pax), Minibus (25 pax)",
+        "bus_models": "Mercedes-Benz Sprinter VIP Total Black (8 & 16 pax), Mercedes Minibus VIP Class (18 pax), Executive Minibus (25 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
         "email_status": "mx_ok",
-        "pax_capacity": "7–8, 8, 16, 18, 25 pax",
+        "pax_capacity": "8, 16, 18, 25 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-28T07:50:00.000Z",
-        "fleet_segment": "both",
+        "fleet_segment": "luxury",
         "outreach_stage": "ready",
         "last_message_id": null,
         "user_set_status": false,
@@ -422,8 +438,7 @@ export const INITIAL_BUS_PARTNERS = [
     "status": "WANT_TO_CONTACT",
     "unbranded_status": "100% Guaranteed Unbranded / Total Black",
     "fleet_categories": [
-      "Mercedes-Benz V-Class / Viano Luxury (7–8 seats)",
-      "Mercedes-Benz Sprinter VIP / Total Black (8 & 16 seats)",
+      "Mercedes-Benz Sprinter VIP Total Black (8 & 16 seats)",
       "Mercedes Minibus VIP Class (18 seats)",
       "Executive Minibus (25 seats)"
     ],
@@ -432,7 +447,10 @@ export const INITIAL_BUS_PARTNERS = [
     "notes": "- Confirm whether they do not have stickers on cars?\n- i see they have 3 different ones, i want to know the prices/how many people the fit?",
     "source": "crawler",
     "created_at": "2026-10-23T14:21:19.535+00:00",
-    "updated_at": "2026-10-24T21:52:44.659287+00:00"
+    "updated_at": "2026-10-24T21:52:44.659287+00:00",
+    "fleet_segment": "luxury",
+    "bus_models": "Mercedes-Benz Sprinter VIP Total Black (8 & 16 pax), Mercedes Minibus VIP Class (18 pax), Executive Minibus (25 pax)",
+    "pax_capacity": "8, 16, 18, 25 pax"
   },
   {
     "id": "partner_1792761050695_9k2e",
@@ -445,15 +463,15 @@ export const INITIAL_BUS_PARTNERS = [
       "fleet_luxury": 23,
       "partner_card": {
         "whatsapp": "+39 02 8951 6813",
-        "bus_models": "Mercedes-Benz V-Class Luxury Van (7 pax), Mercedes-Benz Sprinter Luxury Minibus & (8 pax), conference leather, reclining leather & tables",
+        "bus_models": "Mercedes-Benz Sprinter Luxury Minibus (8 & 16 pax, reclining leather & tables)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
         "email_status": "mx_ok",
-        "pax_capacity": "7, 8, 16 pax",
+        "pax_capacity": "8, 16 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-28T07:00:00.000Z",
-        "fleet_segment": "both",
+        "fleet_segment": "luxury",
         "outreach_stage": "to_check",
         "last_message_id": null,
         "user_set_status": true,
@@ -468,7 +486,6 @@ export const INITIAL_BUS_PARTNERS = [
     "status": "TO_REVIEW",
     "unbranded_status": "100% Guaranteed Unbranded / NCC Black",
     "fleet_categories": [
-      "Mercedes-Benz V-Class Luxury Van (7 seats)",
       "Mercedes-Benz Sprinter Luxury Minibus (8 & 16 seats)"
     ],
     "phone": "+39 02 8951 6813",
@@ -476,7 +493,10 @@ export const INITIAL_BUS_PARTNERS = [
     "notes": "Milan luxury roadshow and event transport. 8 to 16-seater luxury Mercedes minibuses and suited English-speaking chauffeurs.",
     "source": "crawler",
     "created_at": "2026-10-23T13:10:50.695+00:00",
-    "updated_at": "2026-10-24T23:44:12.464733+00:00"
+    "updated_at": "2026-10-24T23:44:12.464733+00:00",
+    "fleet_segment": "luxury",
+    "bus_models": "Mercedes-Benz Sprinter Luxury Minibus (8 & 16 pax, reclining leather & tables)",
+    "pax_capacity": "8, 16 pax"
   },
   {
     "id": "partner_1792765279227_h3qg",
@@ -489,12 +509,12 @@ export const INITIAL_BUS_PARTNERS = [
       "fleet_luxury": 20,
       "partner_card": {
         "whatsapp": "+39 035 017 2012",
-        "bus_models": "Minivan NCC (5–8 pax), Minibus (14–20 pax), Midibus (31 pax), Pullman GT 50–54 (50–56 pax), 57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax), Double-Decker Pullman (90–94 pax), 55–56",
+        "bus_models": "Minibus (14–20 pax), Midibus (31 pax), Pullman GT (50–64 pax), Double-Decker Pullman (90–94 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
         "email_status": "mx_ok",
-        "pax_capacity": "5–8, 14–20, 31, 50–54, 55–56, 57–64, 90–94 pax",
+        "pax_capacity": "14–20, 31, 50–64, 90–94 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-27T07:50:00.000Z",
         "fleet_segment": "standard",
@@ -512,18 +532,20 @@ export const INITIAL_BUS_PARTNERS = [
     "status": "WANT_TO_CONTACT",
     "unbranded_status": "100% Guaranteed Unbranded / Total Black",
     "fleet_categories": [
-      "Minivan NCC (5–8 seats)",
       "Minibus (14–20 seats)",
-      "Midibus (up to 31 seats)",
+      "Midibus (31 seats)",
       "Pullman GT Coaches (50–54, 55–56, 57–64 seats)",
-      "Double-Decker Coaches (90–94 seats)"
+      "Double-Decker GT (90–94 seats)"
     ],
     "phone": "+39 035 017 2012",
     "email": "info@travelandservice.it",
     "notes": "",
     "source": "crawler",
     "created_at": "2026-10-23T14:21:19.227+00:00",
-    "updated_at": "2026-10-24T23:43:30.089897+00:00"
+    "updated_at": "2026-10-24T23:43:30.089897+00:00",
+    "fleet_segment": "standard",
+    "bus_models": "Minibus (14–20 pax), Midibus (31 pax), Pullman GT (50–64 pax), Double-Decker Pullman (90–94 pax)",
+    "pax_capacity": "14–20, 31, 50–64, 90–94 pax"
   },
   {
     "id": "partner_1792765280013_poa6",
@@ -536,12 +558,12 @@ export const INITIAL_BUS_PARTNERS = [
       "fleet_luxury": 23,
       "partner_card": {
         "whatsapp": "+39 030 969 511",
-        "bus_models": "Mercedes Classe V Exclusive (7 pax), Mercedes Sprinter 8 & (16–20 pax), Minibus (25 pax), Setra GT 30 (50–56 pax), 54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax), Irizar i8 Pullman GTL Lusso (60 pax), 42",
+        "bus_models": "Mercedes Sprinter (8 & 16–20 pax), Minibus (25 pax), Setra GT (30, 42, 54 pax), Irizar i8 Pullman GTL Lusso (60 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
         "email_status": "mx_ok",
-        "pax_capacity": "7, 8, 16–20, 25, 30, 42, 54, 60 pax",
+        "pax_capacity": "8, 16–20, 25, 30, 42, 54, 60 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-27T08:15:00.000Z",
         "fleet_segment": "both",
@@ -558,18 +580,20 @@ export const INITIAL_BUS_PARTNERS = [
     "status": "TO_REVIEW",
     "unbranded_status": "100% Guaranteed Unbranded / Total Black",
     "fleet_categories": [
-      "Mercedes-Benz Classe V Exclusive Leather (7 seats)",
       "Mercedes-Benz Sprinter Minibus (8 & 16–20 seats)",
       "Minibus (25 seats)",
       "Setra GT Coaches (30, 42, 54 seats)",
-      "Irizar i8 Pullman Gran Turismo Lusso GTL (60 seats)"
+      "Irizar i8 Pullman GTL Lusso (60 seats)"
     ],
     "phone": "+39 030 969 511",
     "email": "info@caprioliviaggi.it",
     "notes": "Brescia and Lake Garda luxury fleet. Modern Mercedes Sprinter VIP configurations with leather recliners and dark privacy glass.",
     "source": "crawler",
     "created_at": "2026-10-23T14:21:20.013+00:00",
-    "updated_at": "2026-10-24T23:44:15.637053+00:00"
+    "updated_at": "2026-10-24T23:44:15.637053+00:00",
+    "fleet_segment": "both",
+    "bus_models": "Mercedes Sprinter (8 & 16–20 pax), Minibus (25 pax), Setra GT (30, 42, 54 pax), Irizar i8 Pullman GTL Lusso (60 pax)",
+    "pax_capacity": "8, 16–20, 25, 30, 42, 54, 60 pax"
   },
   {
     "id": "partner_1792761050955_n0vc",
@@ -582,15 +606,15 @@ export const INITIAL_BUS_PARTNERS = [
       "fleet_luxury": 20,
       "partner_card": {
         "whatsapp": "+39 02 8719 9508",
-        "bus_models": "Mercedes-Benz Classe V Luxury Van (7 pax), Mercedes-Benz Sprinter Luxury Minibus (8–16 pax), reclining leather seats & tinted windows",
+        "bus_models": "Mercedes-Benz Sprinter Luxury Minibus (8–16 pax, reclining leather & privacy glass)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
         "email_status": "mx_ok",
-        "pax_capacity": "7, 8–16 pax",
+        "pax_capacity": "8–16 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-27T07:25:00.000Z",
-        "fleet_segment": "both",
+        "fleet_segment": "luxury",
         "outreach_stage": "ready",
         "last_message_id": null,
         "user_set_status": true,
@@ -605,7 +629,6 @@ export const INITIAL_BUS_PARTNERS = [
     "status": "WANT_TO_CONTACT",
     "unbranded_status": "100% Guaranteed Unbranded / Total Black",
     "fleet_categories": [
-      "Mercedes-Benz V-Class Luxury Van (7 seats)",
       "Mercedes-Benz Sprinter Luxury Minibus (8–16 seats)"
     ],
     "phone": "+39 02 8719 9508",
@@ -613,7 +636,10 @@ export const INITIAL_BUS_PARTNERS = [
     "notes": "",
     "source": "crawler",
     "created_at": "2026-10-23T13:10:50.955+00:00",
-    "updated_at": "2026-10-24T23:43:39.524106+00:00"
+    "updated_at": "2026-10-24T23:43:39.524106+00:00",
+    "fleet_segment": "luxury",
+    "bus_models": "Mercedes-Benz Sprinter Luxury Minibus (8–16 pax, reclining leather & privacy glass)",
+    "pax_capacity": "8–16 pax"
   },
   {
     "id": "partner_1792765280113_5c8r",
@@ -626,11 +652,11 @@ export const INITIAL_BUS_PARTNERS = [
       "fleet_luxury": 22,
       "partner_card": {
         "whatsapp": "+39 030 375 2210",
-        "bus_models": "Mercedes Viano Extra Long (7 pax), Mercedes Sprinter Minibus (8 pax), 2x Iveco Daily Minibus (20 pax)",
+        "bus_models": "Mercedes Sprinter Minibus (8 pax), 2x Iveco Daily Minibus (20 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "email_status": "mx_ok",
-        "pax_capacity": "7, 8, 20 pax",
+        "pax_capacity": "8, 20 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-27T07:00:00.000Z",
         "fleet_segment": "standard",
@@ -646,7 +672,6 @@ export const INITIAL_BUS_PARTNERS = [
     "status": "WANT_TO_CONTACT",
     "unbranded_status": "100% Guaranteed Unbranded / Total Black",
     "fleet_categories": [
-      "Mercedes Viano Extra Long (7 seats)",
       "Mercedes Sprinter Minibus (8 seats)",
       "Iveco Daily Minibus (20 seats)"
     ],
@@ -655,7 +680,10 @@ export const INITIAL_BUS_PARTNERS = [
     "notes": "they have a lot of stickers",
     "source": "crawler",
     "created_at": "2026-10-23T14:21:20.113+00:00",
-    "updated_at": "2026-10-24T21:52:43.993493+00:00"
+    "updated_at": "2026-10-24T21:52:43.993493+00:00",
+    "fleet_segment": "standard",
+    "bus_models": "Mercedes Sprinter Minibus (8 pax), 2x Iveco Daily Minibus (20 pax)",
+    "pax_capacity": "8, 20 pax"
   },
   {
     "id": "partner_1792765279877_4d0c",
@@ -668,12 +696,12 @@ export const INITIAL_BUS_PARTNERS = [
       "fleet_luxury": 22,
       "partner_card": {
         "whatsapp": "+39 02 9678 9012",
-        "bus_models": "Minivan Mercedes (8 pax), Mercedes Sprinter (16–20 pax), Temsa MD-7 (32 pax), King Long (36 pax), Neoplan Tourliner (52 pax), Iveco Magelys Pro 53 & (56 pax)",
+        "bus_models": "Mercedes Minibus (8 pax), Mercedes Sprinter (20 pax), Temsa MD-7 (32–36 pax), Neoplan Tourliner (52–56 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
         "email_status": "verified",
-        "pax_capacity": "8, 16–20, 32, 36, 52, 53, 56 pax",
+        "pax_capacity": "8, 20, 32–36, 52–56 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-26T08:15:00.000Z",
         "verification": {
@@ -694,7 +722,7 @@ export const INITIAL_BUS_PARTNERS = [
             "millionverifier_count": 0
           }
         },
-        "fleet_segment": "standard",
+        "fleet_segment": "both",
         "outreach_stage": "t1_sent",
         "last_message_id": "<2e3c27b4-6948-40e6-a8fe-a3aa325c64d3@dorogo.eu>",
         "user_set_status": false,
@@ -709,17 +737,20 @@ export const INITIAL_BUS_PARTNERS = [
     "status": "CONTACTED",
     "unbranded_status": "Unbranded on Request",
     "fleet_categories": [
-      "Mercedes Minivan (8 seats)",
-      "Mercedes-Benz Sprinter Minibus (16–20 seats)",
-      "Temsa MD-7 Midibus (32 seats) & King Long (36 seats)",
-      "Neoplan Tourliner (52 seats) & Iveco Magelys Pro GT (53–56 seats)"
+      "Mercedes Minibus (8 seats)",
+      "Mercedes Sprinter (20 seats)",
+      "Temsa MD-7 (32–36 seats)",
+      "Neoplan Tourliner (52–56 seats)"
     ],
     "phone": "+39 02 9678 9012",
     "email": "info@autonoleggiocarnelli.it",
     "notes": "i am not sure if they offer also lux or not?",
     "source": "crawler",
     "created_at": "2026-10-23T14:21:19.877+00:00",
-    "updated_at": "2026-10-26T08:16:07.291106+00:00"
+    "updated_at": "2026-10-26T08:16:07.291106+00:00",
+    "fleet_segment": "both",
+    "bus_models": "Mercedes Minibus (8 pax), Mercedes Sprinter (20 pax), Temsa MD-7 (32–36 pax), Neoplan Tourliner (52–56 pax)",
+    "pax_capacity": "8, 20, 32–36, 52–56 pax"
   },
   {
     "id": "partner_perletti_topclass",
@@ -732,12 +763,12 @@ export const INITIAL_BUS_PARTNERS = [
       "fleet_luxury": 22,
       "partner_card": {
         "whatsapp": "+39 338 666 8249",
-        "bus_models": "Mercedes Classe V 250 (7 pax), Mercedes Gran Capri Minibus (20 pax), Iveco Wing (28 pax), Iveco Mago 2 (29 pax), Setra 515 HD (50–56 pax), Mercedes Tourismo (50–56 pax), Neoplan Tourliner (50–56 pax), Irizar i6S (51–55 pax), Mercedes Tourismo RHD-L (64 pax)",
+        "bus_models": "Mercedes Sprinter Top Class (16–20 pax), Mercedes Tourismo RHD-L Top Class (64 & 79 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
         "email_status": "mx_ok",
-        "pax_capacity": "7, 20, 28, 29, 51–55, 64 pax",
+        "pax_capacity": "16–20, 64, 79 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-29T07:50:00.000Z",
         "fleet_segment": "both",
@@ -755,18 +786,18 @@ export const INITIAL_BUS_PARTNERS = [
     "status": "WANT_TO_CONTACT",
     "unbranded_status": "Unbranded on Request (Specify Top Class)",
     "fleet_categories": [
-      "Mercedes-Benz Classe V 250 (7 seats)",
-      "Mercedes Gran Capri Minibus (20 seats)",
-      "Iveco Wing (28 seats) & Iveco Mago 2 Midibus (29 seats)",
-      "Setra 515 HD / Mercedes Tourismo / Neoplan Tourliner / Irizar i6S (51–55 seats)",
-      "Mercedes Tourismo RHD-L Maxibus (64 seats)"
+      "Mercedes Sprinter Top Class (16–20 seats)",
+      "Mercedes Tourismo RHD-L Top Class (64 & 79 seats)"
     ],
     "phone": "+39 035 832700",
     "email": "info@perlettibus.it",
     "notes": "- i am interested in their minibuses.\n- i am curious if all of the minibuses that they have are presented on the website or the 3? \n- I wonder if they have something luxury/consider as VIP class\n- prices\n- cancelation \n- cancelation policies",
     "source": "seed",
     "created_at": "2026-10-22T16:36:12.495179+00:00",
-    "updated_at": "2026-10-24T23:42:49.532691+00:00"
+    "updated_at": "2026-10-24T23:42:49.532691+00:00",
+    "fleet_segment": "both",
+    "bus_models": "Mercedes Sprinter Top Class (16–20 pax), Mercedes Tourismo RHD-L Top Class (64 & 79 pax)",
+    "pax_capacity": "16–20, 64, 79 pax"
   },
   {
     "id": "partner_lariobus",
@@ -779,15 +810,15 @@ export const INITIAL_BUS_PARTNERS = [
       "fleet_luxury": 20,
       "partner_card": {
         "whatsapp": "+39 0341 581 600",
-        "bus_models": "Vito (7–8 pax), Ford Transit (13 pax), Mercedes Sprinter IBIS 2 (20 pax), Iveco Smile 3 (30 pax), Iveco Calipso (36 pax), Temsa MD9 (40 pax), Volvo 9700 (54 pax), Mercedes Tourismo (54–56 pax), Irizar i6 (50–56 pax), Scania Century (56 pax), Mercedes Viano",
+        "bus_models": "Ford Transit (13 pax), Mercedes Sprinter IBIS 2 (20 pax), Iveco Calipso (36 pax), Temsa MD9 (40 pax), Mercedes Tourismo & Irizar i6 (54–56 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
         "email_status": "mx_ok",
-        "pax_capacity": "7–8, 13, 20, 30, 36, 40, 54, 56 pax",
+        "pax_capacity": "13, 20, 36, 40, 54–56 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-26T07:25:00.000Z",
-        "fleet_segment": "standard",
+        "fleet_segment": "both",
         "outreach_stage": "to_check",
         "user_set_status": true,
         "last_outreach_at": null,
@@ -801,18 +832,21 @@ export const INITIAL_BUS_PARTNERS = [
     "status": "TO_REVIEW",
     "unbranded_status": "Unbranded on Request (Must Demand in Quote)",
     "fleet_categories": [
-      "Mercedes-Benz Viano / Vito Minivan (7–8 seats)",
-      "Ford Transit Bus (13 seats) & Mercedes Sprinter IBIS 2 (20 seats)",
-      "Irisbus Iveco Smile 3 Midibus (30 seats)",
-      "Iveco Calipso (36 seats) & Temsa MD9 (40 seats)",
-      "Mercedes Tourismo / Volvo 9700 / Irizar i6 GT Coaches (54–56 seats)"
+      "Ford Transit Minibus (13 seats)",
+      "Mercedes Sprinter IBIS 2 (20 seats)",
+      "Iveco Calipso Midibus (36 seats)",
+      "Temsa MD9 (40 seats)",
+      "Mercedes Tourismo & Irizar i6 (54–56 seats)"
     ],
     "phone": "+39 0341 821 445",
     "email": "info@lariobus.com",
     "notes": "- Not a priority, seems that they have only old buses with tags\n- they answer fast if needed",
     "source": "seed",
     "created_at": "2026-10-22T16:36:12.495179+00:00",
-    "updated_at": "2026-10-24T23:36:13.121232+00:00"
+    "updated_at": "2026-10-24T23:36:13.121232+00:00",
+    "fleet_segment": "both",
+    "bus_models": "Ford Transit (13 pax), Mercedes Sprinter IBIS 2 (20 pax), Iveco Calipso (36 pax), Temsa MD9 (40 pax), Mercedes Tourismo & Irizar i6 (54–56 pax)",
+    "pax_capacity": "13, 20, 36, 40, 54–56 pax"
   },
   {
     "id": "partner_linea_azzurra",
@@ -825,15 +859,15 @@ export const INITIAL_BUS_PARTNERS = [
       "fleet_luxury": 20,
       "partner_card": {
         "whatsapp": "+39 02 905 5406",
-        "bus_models": "Mercedes Minivan (6–8 pax), Minibus (16–19 pax), Midibus (25–30 pax), Autobus GT (45–54 pax), Double-Decker (60–75 pax), Autobus Long",
+        "bus_models": "Minibus (16–19 pax), Midibus (25–30 pax), Autobus GT (45–54 pax), Autobus Long/Double-Decker (60–80 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
         "email_status": "mx_ok",
-        "pax_capacity": "6–8, 16–19, 25–30, 45–54, 60–75 pax",
+        "pax_capacity": "16–19, 25–30, 45–54, 60–80 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-26T07:00:00.000Z",
-        "fleet_segment": "standard",
+        "fleet_segment": "both",
         "outreach_stage": "to_check",
         "user_set_status": true,
         "last_outreach_at": null,
@@ -847,18 +881,20 @@ export const INITIAL_BUS_PARTNERS = [
     "status": "TO_REVIEW",
     "unbranded_status": "Neutral White / Custom B2B Fleet",
     "fleet_categories": [
-      "Mercedes Minivan (6–8 seats)",
       "Minibus (16–19 seats)",
       "Midibus (25–30 seats)",
       "Autobus GT Coaches (45–54 seats)",
-      "Autobus Long / Double-Decker GT (60–75 seats)"
+      "Autobus Long / Double-Decker (60–80 seats)"
     ],
     "phone": "+39 02 905 5406",
     "email": "info@lineaazzurrabus.it",
     "notes": "",
     "source": "seed",
     "created_at": "2026-10-22T16:36:12.495179+00:00",
-    "updated_at": "2026-10-24T23:41:39.480024+00:00"
+    "updated_at": "2026-10-24T23:41:39.480024+00:00",
+    "fleet_segment": "both",
+    "bus_models": "Minibus (16–19 pax), Midibus (25–30 pax), Autobus GT (45–54 pax), Autobus Long/Double-Decker (60–80 pax)",
+    "pax_capacity": "16–19, 25–30, 45–54, 60–80 pax"
   },
   {
     "id": "partner_rosa_bus",
@@ -871,12 +907,12 @@ export const INITIAL_BUS_PARTNERS = [
       "fleet_luxury": 18,
       "partner_card": {
         "whatsapp": "+39 0424 582055",
-        "bus_models": "Minivan NCC (7–8 pax), Mercedes Tourengo 818 Midibus (29–30 pax), 83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax), Autobus Gran Turismo 54, 64",
+        "bus_models": "Mercedes Tourengo 818 Midibus (29–30 pax), Autobus GT (54, 64, 83 pax)",
         "replied_at": null,
         "rate_hourly": "",
         "client_notes": "",
         "email_status": "verified",
-        "pax_capacity": "7–8, 29–30, 54, 64, 83 pax",
+        "pax_capacity": "29–30, 54, 64, 83 pax",
         "rate_standby": "",
         "verification": {
           "ok": true,
@@ -896,7 +932,7 @@ export const INITIAL_BUS_PARTNERS = [
             "millionverifier_count": 0
           }
         },
-        "fleet_segment": "standard",
+        "fleet_segment": "both",
         "outreach_stage": "t1_sent",
         "last_message_id": "<1dd8750d-1eb9-4b49-a232-fd8185a5cd8b@dorogo.eu>",
         "user_set_status": true,
@@ -911,7 +947,6 @@ export const INITIAL_BUS_PARTNERS = [
     "status": "CONTACTED",
     "unbranded_status": "Standard Tour Livery (Needs Request for Plain)",
     "fleet_categories": [
-      "Minivan NCC (7–8 seats)",
       "Mercedes Tourengo 818 Midibus (29–30 seats)",
       "Autobus Gran Turismo (54, 64, 83 seats)"
     ],
@@ -920,7 +955,10 @@ export const INITIAL_BUS_PARTNERS = [
     "notes": "It seems that they focus mostly on 50-seaters.\n\nI wonder if:\n1. Are there other buses that they offer?  Do they have luxury minibuses or buses? (if not, if they have trustworhy contacts), also we are still interested in just normal buses\n2. prices for standby (min/max hours) and transfer (like Milan <-> MXP )\n3. how long in advance I should contact them to book?  What would be the cancelation policies?",
     "source": "seed",
     "created_at": "2026-10-22T16:36:12.495179+00:00",
-    "updated_at": "2026-10-24T16:45:36.355467+00:00"
+    "updated_at": "2026-10-24T16:45:36.355467+00:00",
+    "fleet_segment": "both",
+    "bus_models": "Mercedes Tourengo 818 Midibus (29–30 pax), Autobus GT (54, 64, 83 pax)",
+    "pax_capacity": "29–30, 54, 64, 83 pax"
   },
   {
     "id": "partner_cima_luxury",
@@ -933,7 +971,10 @@ export const INITIAL_BUS_PARTNERS = [
       "discretion_unbranded": 32,
       "fleet_luxury": 22,
       "territory_permits": 0,
-      "corporate_sla": 16
+      "corporate_sla": 16,
+      "partner_card": {
+        "fleet_segment": "both"
+      }
     },
     "status": "NOT_RELEVANT",
     "unbranded_status": "Unbranded Luxury Line",

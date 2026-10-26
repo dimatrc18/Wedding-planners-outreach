@@ -298,7 +298,7 @@ export function classifySingleBusAllocation(busStr = '') {
   if (!s.trim()) return null;
 
   // Strict Zero-Hallucination Luxury check: only classify as 'luxury' when explicitly stated
-  if (/limobus|vip\s*lounge|v-?class|classe\s*v|\bvip\b|luxury|\blusso\b|\bgtl\b|exclusive|top\s*class|total\s*black|tomassini|\balis\b/i.test(s)) {
+  if (/limobus|vip\s*lounge|v-?class|classe\s*v|\bvip\b|luxury|\blusso\b|\bgtl\b|exclusive|top\s*class|total\s*black|tomassini|capri|\balis\b/i.test(s)) {
     return 'luxury';
   }
   // Standard GT / Group Charter vehicles: standard Minivan/Viano/Vito, Sprinter minibus, Midibus (20-36 pax), Tourismo/Setra/Irizar/Neoplan GT Coaches (40-80+ pax)
@@ -520,6 +520,7 @@ export function buildBusOutreachDraft(partner = {}, stepKey = 'T1_intro') {
   const asksExtraLong = /extra-?long/i.test(lowerNotes);
   const asks20_26 = /20\s*seat|26\s*seat|20\s*posti|26\s*posti/i.test(lowerNotes);
   const asks19 = /19\s*seat|19\s*posti/i.test(lowerNotes);
+  const asks22 = /22\s*seat|22\s*posti/i.test(lowerNotes);
   const asksUnlisted = /other buses|not on the website|not add to the website|presented on the website or the 3|only.*or other|altri mezzi|oltre al sito/i.test(lowerNotes);
   const asksCapacity = /how many people|how many the fit|fit\?|quanti posti|capienza/i.test(lowerNotes);
   const asksLuxury = /luxury|consider as vip|lux or not|versione lux/i.test(lowerNotes);
@@ -553,6 +554,10 @@ export function buildBusOutreachDraft(partner = {}, stepKey = 'T1_intro') {
   if (isUserAuthored) {
     if (asks50Focus) {
       personalIntro = `Ho notato che la vostra flotta si concentra principalmente sui pullman da 50 posti (a cui siamo molto interessati per grandi gruppi ed eventi).`;
+    } else if (asks22 && asks19) {
+      personalIntro = `In particolare ho notato sul vostro sito lo Sprinter 22 posti e lo Sprinter Grande Capri (19 posti), e vorremmo verificare disponibilità e tariffe B2B per questa tipologia di mezzi.`;
+    } else if (asks22) {
+      personalIntro = `In particolare ho notato il vostro Sprinter 22 posti e vorremmo verificare disponibilità e tariffe B2B per questo mezzo.`;
     } else if (asksExtraLong && asks20_26) {
       personalIntro = `In particolare siamo molto interessati ai vostri minibus extra-long e ai bus da 20 e 26 posti.`;
     } else if (asks19) {
@@ -615,8 +620,12 @@ Dmitri Traciuc`;
   // Question 3: Fleet Models, Seating Capacity & Unlisted Fleet
   if (asks50Focus) {
     questions.push(`Oltre ai pullman da 50 posti, avete a disposizione anche minibus o bus in versione Luxury/VIP (o contatti fidati di colleghi da consigliare)? Siamo comunque molto interessati anche ai pullman normali.`);
-  } else if (asksUnlisted && (asksMinibuses || asksExtraLong || asks19 || asks20_26)) {
-    if (asks19) {
+  } else if (asksUnlisted && (asksMinibuses || asksExtraLong || asks19 || asks20_26 || asks22)) {
+    if (asks22 && asks19) {
+      questions.push(`Disponete solo dei modelli da 22 posti e 19 posti o avete anche altri modelli/capienze a disposizione in flotta? Quanti passeggeri portano per ciascun mezzo?`);
+    } else if (asks22) {
+      questions.push(`Disponete solo del modello da 22 posti o avete anche altri modelli/capienze a disposizione in flotta? Quanti passeggeri portano per ciascun mezzo?`);
+    } else if (asks19) {
       questions.push(`Disponete solo del modello da 19 posti o avete anche altri modelli/capienze a disposizione in flotta?`);
     } else if (asksExtraLong || asks20_26) {
       questions.push(`Oltre ai minibus extra-long e ai bus da 20 e 26 posti, avete altri modelli a disposizione in flotta? Quanti passeggeri portano per ciascun mezzo?`);
@@ -688,9 +697,12 @@ export function inferDefaultPaxForModel(modelStr = '') {
   if (/limobus/i.test(s)) return '18–28 pax';
   if (/sprinter.*vip/i.test(s)) return '8–16 pax';
   if (/sprinter.*(exec|519|516)/i.test(s)) return '16–19 pax';
+  if (/capri/i.test(s)) return '19 pax';
+  if (/sprinter.*22|22\s*(?:pax|posti|seats)/i.test(s)) return '22 pax';
   if (/sprinter/i.test(s)) return '16–20 pax';
   if (/indcar|midibus|minicoach|daily|navigo|vectio|mago/i.test(s)) return '24–30 pax';
   if (/setra.*vip/i.test(s)) return '28–36 pax';
+  if (/travego/i.test(s)) return '53 pax';
   if (/setra|tourismo|irizar|scania|lion|neoplan|magelys|evadys|coach|pullman|gt\b/i.test(s)) return '50–56 pax';
   return '';
 }

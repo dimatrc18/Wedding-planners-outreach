@@ -770,6 +770,31 @@ test('shortFleetName: pairs model and passenger capacity in one compact tag for 
   assert.equal(shortFleetName('Mercedes-Benz Sprinter Luxury Long (16 seats)'), 'Sprinter Lux (16p)');
   assert.equal(shortFleetName('Iveco Wing Midibus (28 posti)'), 'Iveco Wing (28p)');
   assert.equal(shortFleetName('Setra S515 HD GT Coach (54 pax)'), 'Setra (54p)');
+  assert.equal(shortFleetName('Mercedes Sprinter (22 seats)'), 'Sprinter (22p)');
+  assert.equal(shortFleetName('Sprinter Grande Capri (19 seats)'), 'Grande Capri (19p)');
+  assert.equal(shortFleetName('Setra 515 (51 seats)'), 'Setra (51p)');
+  assert.equal(shortFleetName('Mercedes Tourismo (53–55 seats)'), 'Tourismo (53–55p)');
+  assert.equal(shortFleetName('Mercedes Travego (53 seats)'), 'Travego (53p)');
+});
+
+test('Smart Personalization for 22-seater and 19-seater Grande Capri (Viganò scenario)', () => {
+  const partnerVigano = {
+    name: 'Viganò Autoservizi',
+    base_city: 'Como / Lecco',
+    fleet_categories: [
+      'Mercedes Sprinter (22 seats)',
+      'Sprinter Grande Capri (19 seats)',
+      'Setra 515 (51 seats)',
+      'Mercedes Tourismo (53–55 seats)'
+    ],
+    notes: '- i am interested SPRINTER 22 POSTI , SPRINTER GRANDE CAPRI (18). \n- Additionally, in Caratteristiche Tecniche (50 seater) also on 52 seats'
+  };
+  const draft = buildBusOutreachDraft(partnerVigano, 'T1_intro');
+  assert(draft.body.includes('Sprinter 22 posti') || draft.body.includes('22 posti'), 'Must mention 22 posti in intro');
+  assert(draft.body.includes('Grande Capri') || draft.body.includes('19 posti'), 'Must mention Grande Capri in intro');
+  assert(draft.body.includes('Mercedes Sprinter (22 seats)'), 'Must include 22 seats in fleet bullet list');
+  assert(draft.body.includes('Sprinter Grande Capri (19 seats)'), 'Must include Capri 19 seats in fleet bullet list');
+  assert.equal(inferBusSegment(partnerVigano), 'both', 'Must classify as both Luxury & Standard GT');
 });
 
 test('mergeNotes preserves user comments with dashes and numbers without duplication', () => {
