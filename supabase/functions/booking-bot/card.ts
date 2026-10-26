@@ -149,7 +149,7 @@ export function renderBookingCard(
 
       if (pickups.length > 0) {
         const p = pickups[0];
-        const pTime = p.time ? `${p.time} — ` : r.time ? `${r.time} — ` : "";
+        const pTime = p.time ? `${p.time} — ` : r.time ? `${r.time} — ` : "⏰ <i>Time TBD</i> — ";
         const pMap = p.maps_url ? ` <a href="${p.maps_url}">[Maps]</a>` : "";
         lines.push(`• <b>${pTime}${esc(p.place)}</b>${pMap}`);
         if (p.instructions) {
@@ -299,7 +299,7 @@ export function buildFullCardPlainText(booking: BookingData): string {
 
       if (pickups.length > 0) {
         const p = pickups[0];
-        const pTime = p.time ? `${p.time} — ` : r.time ? `${r.time} — ` : "";
+        const pTime = p.time ? `${p.time} — ` : r.time ? `${r.time} — ` : "⏰ Time TBD — ";
         const pMap = p.maps_url ? ` (${p.maps_url})` : "";
         lines.push(`• ${pTime}${p.place}${pMap}`);
         if (p.instructions) {

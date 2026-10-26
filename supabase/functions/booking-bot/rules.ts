@@ -508,6 +508,19 @@ export function applyBusinessRules(
     missing.push("📞 Client phone number / WhatsApp");
   }
 
+  // Check pick-up time
+  const missingTimes = rides.filter((r) => !r.time);
+  if (missingTimes.length > 0) {
+    if (rides.length === 1) {
+      missing.push("⏰ Pick-up time (not specified in message)");
+    } else if (missingTimes.length === rides.length) {
+      missing.push("⏰ Pick-up times (TBD — not specified in message)");
+    } else {
+      const legLabels = missingTimes.map((r) => r.role === "return" ? "Return" : `Leg ${r.ride_no}`).join(", ");
+      missing.push(`⏰ Pick-up time for ${legLabels} (TBD)`);
+    }
+  }
+
   // Check if any airport stop is missing a flight number
   const hasAirport = rides.some((rd) =>
     rd.stops.some((st) => /airport|malpensa|mxp|linate|lin|bergamo|bgy|terminal/i.test(st.place + " " + (st.address || "")))

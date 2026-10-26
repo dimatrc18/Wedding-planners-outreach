@@ -621,12 +621,15 @@ export async function saveBookingToGoogleCalendar(
     const pName = pStop?.place || "Pickup";
     const dName = dStop?.place || "Dropoff";
 
+    const isTimeTbd = !ride.time;
+    const timeTbdTag = isTimeTbd ? " (Time TBD)" : "";
+
     let summary = "";
     if (isReturn) {
-      summary = `🔄 ${vTag} Return: ${pName} ➔ ${dName} | ${booking.client.name || "Client"} [${fullRef}]`;
+      summary = `🔄 ${vTag} Return${timeTbdTag}: ${pName} ➔ ${dName} | ${booking.client.name || "Client"} [${fullRef}]`;
     } else {
       const svcTag = isWedding ? "Wedding Transfer" : "Transfer";
-      summary = `${icon} ${vTag} ${svcTag}: ${pName} ➔ ${dName} | ${booking.client.name || "Client"} [${fullRef}]`;
+      summary = `${icon} ${vTag} ${svcTag}${timeTbdTag}: ${pName} ➔ ${dName} | ${booking.client.name || "Client"} [${fullRef}]`;
     }
 
     // Compute Start and End times (pure local ISO without UTC drift)
@@ -689,7 +692,11 @@ export async function saveBookingToGoogleCalendar(
       const icon = isPick ? "📍" : "🏁";
       const label = isPick ? "Pick-up" : "Drop-off";
       const placeHtml = st.maps_url ? `<a href="${st.maps_url}">${st.place}</a>` : st.place;
-      let sLine = `${icon} <b>${label}${st.time ? ` (${st.time})` : ""}:</b> ${placeHtml}`;
+      const timeStr = st.time ? ` (${st.time})` : (isPick && isTimeTbd ? " (Time TBD ⚠️)" : "");
+      let sLine = `${icon} <b>${label}${timeStr}:</b> ${placeHtml}`;
+      if (isPick && isTimeTbd) {
+        sLine += `<br>&nbsp;&nbsp;<i>⚠️ Exact pick-up time pending client confirmation (holding 10:00)</i>`;
+      }
       if (st.instructions) sLine += `<br>&nbsp;&nbsp;<i>ℹ️ ${st.instructions}</i>`;
       descLines.push(sLine);
     });

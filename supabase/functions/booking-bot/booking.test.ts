@@ -516,3 +516,56 @@ Calculated Fare: €1520 (25% Deposit: €380)`,
 
   console.log("✅ DRG-WIL1KT round trip business rules test passed!");
 });
+
+// 12. UNIT TEST: Missing pick-up time audit & "Time TBD" card rendering
+Deno.test("Missing pick-up time is audited in missing_fields and rendered as Time TBD", () => {
+  const rawWithoutTime: any = {
+    booking_ref: "DRG-5QNRLH",
+    client_name: "Julie",
+    client_phone: "+1 (970) 599-3554",
+    service_type: "Transfer",
+    vehicle_class: "Mercedes-Benz V-Class",
+    passengers: 5,
+    price_total: 2470,
+    paid_deposit: 618,
+    raw_date: "27 Dec 2026",
+    rides: [
+      {
+        ride_no: 1,
+        role: "outbound",
+        raw_date: "27 Dec 2026",
+        stops: [
+          { seq: 1, kind: "pickup", place: "Sina de la Ville, Milan", evidence: "Sina de la Ville" },
+          { seq: 2, kind: "dropoff", place: "Cortina d'Ampezzo", evidence: "Cortina" },
+        ],
+      },
+      {
+        ride_no: 2,
+        role: "return",
+        raw_date: "2 Jan 2027",
+        stops: [
+          { seq: 1, kind: "pickup", place: "Cortina d'Ampezzo", evidence: "Cortina" },
+          { seq: 2, kind: "dropoff", place: "Sina de la Ville, Milan", evidence: "Sina de la Ville" },
+        ],
+      },
+    ],
+  };
+
+  const booking = applyBusinessRules(rawWithoutTime, "booking without time");
+  
+  // 1. Check missing_fields contains Pick-up times TBD
+  const hasTimeMissing = booking.missing_fields.some((m) => m.includes("Pick-up time"));
+  assert(hasTimeMissing, "missing_fields must contain pick-up time warning when time is null");
+
+  // 2. Check Card text renders Time TBD explicitly
+  const card = renderBookingCard(booking, "draft-5qnrlh");
+  assert(card.text.includes("Time TBD"), "Card text must explicitly indicate Time TBD on stops with missing time");
+  assert(card.text.includes("MISSING INFO:"), "Card must include MISSING INFO section");
+  assert(card.text.includes("Pick-up time"), "Card MISSING INFO must list Pick-up time");
+
+  // 3. Plain text view
+  const plain = buildFullCardPlainText(booking);
+  assert(plain.includes("Time TBD"), "Plain text edit mode must show Time TBD");
+
+  console.log("✅ Missing pick-up time audit & Time TBD test passed!");
+});
