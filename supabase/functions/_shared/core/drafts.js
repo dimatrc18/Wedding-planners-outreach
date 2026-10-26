@@ -394,7 +394,7 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
       subject_line_b: itSubjects.b,
       subject_line_c: itSubjects.c,
       service_pitch:
-        'Sono Dmitri e gestisco DOROGO. Abbiamo una flotta di Mercedes Classe V e minibus executive con base sul Lago di Como, attivi anche su Milano e in Toscana.',
+        'Sono Dmitri e rappresento DOROGO. Abbiamo una flotta di Mercedes Classe V e minibus executive con base sul Lago di Como, attivi anche su Milano e in Toscana.',
       cta_line:
         'Per i vostri eventi e matrimoni sul lago, avete già i transfer degli ospiti organizzati o vi farebbe comodo avere le nostre tariffe 2027 e i percorsi navetta per le ville?',
     };

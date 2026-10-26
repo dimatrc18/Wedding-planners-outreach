@@ -114,7 +114,7 @@ function buildConversationalBodyEn(firstName, hook) {
 
 ${hook}
 
-I run DOROGO. We operate a fleet of Mercedes V-Class vans and executive minibuses based on Lake Como, also covering Milan and Tuscany.
+I represent DOROGO. We operate a fleet of Mercedes-Benz V-Class vans and executive minibuses based on Lake Como, also covering Milan and Tuscany.
 
 When your couples plan weddings in Italy, do you already have your guest drivers sorted, or would our 2027 rates and villa shuttle info be handy to keep on file?
 
@@ -129,7 +129,7 @@ function buildConversationalBodyIt(firstName, venueOrLoc) {
 
 Ho visto i vostri allestimenti per gli eventi a ${place}, dettagli ed eleganza davvero splendidi.
 
-Sono Dmitri e gestisco DOROGO. Abbiamo una flotta di Mercedes Classe V e minibus executive con base sul Lago di Como, attivi anche su Milano e in Toscana.
+Sono Dmitri e rappresento DOROGO. Abbiamo una flotta di Mercedes-Benz Classe V e minibus executive con base sul Lago di Como, attivi anche su Milano e in Toscana.
 
 Per i vostri eventi e matrimoni sul lago, avete già i transfer degli ospiti organizzati o vi farebbe comodo avere le nostre tariffe 2027 e i percorsi navetta per le ville?
 
@@ -138,11 +138,13 @@ Nessun problema se della logistica si occupa già un altro referente nel vostro 
 
 function buildConversationalBodyRu(firstName, venueOrLoc) {
   const name = firstName || '';
-  const greeting = name ? `Здравствуйте, ${name}!` : 'Здравствуйте!';
+  const greeting = name ? `Здравствуйте, ${name}.` : 'Здравствуйте.';
   const place = venueOrLoc || 'на озере Комо';
   return `${greeting}
 
 Обратил внимание на ваши красивые свадебные проекты в ${place}, оформление и атмосфера выглядят потрясающе.
+
+Я Дмитрий, представляю компанию DOROGO. У нас собственный автопарк минивэнов Mercedes-Benz V-Class и представительских микроавтобусов на озере Комо, также работаем в Милане и Тоскане.
 
 Я Дмитрий, руковожу компанией DOROGO. У нас собственный автопарк минивэнов Mercedes V-Class и представительских микроавтобусов на озере Комо, также работаем в Милане и Тоскане.
 
