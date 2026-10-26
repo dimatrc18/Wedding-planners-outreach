@@ -519,7 +519,7 @@ export function buildBusOutreachDraft(partner = {}, stepKey = 'T1_intro') {
   const asksMinibuses = /interested in.*minibus|minibuses/i.test(lowerNotes);
   const asksExtraLong = /extra-?long/i.test(lowerNotes);
   const asks20_26 = /20\s*seat|26\s*seat|20\s*posti|26\s*posti/i.test(lowerNotes);
-  const asks19 = /19\s*seat|19\s*posti/i.test(lowerNotes);
+  const asks19 = /(18|19)\s*seat|(18|19)\s*posti|capri/i.test(lowerNotes);
   const asks22 = /22\s*seat|22\s*posti/i.test(lowerNotes);
   const asksUnlisted = /other buses|not on the website|not add to the website|presented on the website or the 3|only.*or other|altri mezzi|oltre al sito/i.test(lowerNotes);
   const asksCapacity = /how many people|how many the fit|fit\?|quanti posti|capienza/i.test(lowerNotes);
@@ -555,7 +555,7 @@ export function buildBusOutreachDraft(partner = {}, stepKey = 'T1_intro') {
     if (asks50Focus) {
       personalIntro = `Ho notato che la vostra flotta si concentra principalmente sui pullman da 50 posti (a cui siamo molto interessati per grandi gruppi ed eventi).`;
     } else if (asks22 && asks19) {
-      personalIntro = `In particolare ho notato sul vostro sito lo Sprinter 22 posti e lo Sprinter Grande Capri (19 posti), e vorremmo verificare disponibilità e tariffe B2B per questa tipologia di mezzi.`;
+      personalIntro = `In particolare ho notato sul vostro sito lo Sprinter 22 posti e lo Sprinter Grande Capri (18–19 posti), e vorremmo verificare disponibilità e tariffe B2B per questa tipologia di mezzi.`;
     } else if (asks22) {
       personalIntro = `In particolare ho notato il vostro Sprinter 22 posti e vorremmo verificare disponibilità e tariffe B2B per questo mezzo.`;
     } else if (asksExtraLong && asks20_26) {
