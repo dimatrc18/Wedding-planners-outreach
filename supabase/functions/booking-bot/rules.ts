@@ -343,7 +343,7 @@ export function applyBusinessRules(
     randomRef).toUpperCase();
 
   // 1. Process Rides
-  const parsedBaseDate = parseDateStrict(raw.raw_date || raw.rides?.[0]?.raw_date, now);
+  const parsedBaseDate = parseDateStrict(raw.raw_date || raw.date || raw.rides?.[0]?.raw_date || raw.rides?.[0]?.date, now);
   const baseDate = parsedBaseDate || todayIso;
   let dateMissing = !parsedBaseDate;
   const rawRides = Array.isArray(raw.rides) && raw.rides.length > 0 ? raw.rides : [{ role: "outbound", stops: [] }];
@@ -354,8 +354,8 @@ export function applyBusinessRules(
     if (rawRides.length === 2 && idx === 1) role = "return";
 
     // Ride's own date wins; otherwise inherit booking date (never silently default to today without flagging)
-    const ownDate = parseDateStrict(r.raw_date, now);
-    const rideDate = ownDate || parseDateStrict(raw.raw_date, now) || baseDate;
+    const ownDate = parseDateStrict(r.raw_date || r.date, now);
+    const rideDate = ownDate || parseDateStrict(raw.raw_date || raw.date, now) || baseDate;
     if (!ownDate && !parsedBaseDate) dateMissing = true;
 
     // Process Stops
