@@ -249,12 +249,13 @@ async function handleIncomingMessage(msg: any) {
     if (recent && recent.updated_at) {
       const ageMs = Date.now() - new Date(recent.updated_at).getTime();
       if (ageMs < 30 * 60 * 1000) {
-        const isShortUpdate = text.length < 200 && (
-          /^(?:phone|name|email|notes?|flight|fare|price|time|pickup|date)\b/i.test(text) ||
+        const isShortUpdate = text.length < 250 && (
+          /^(?:phone|name|email|notes?|flight|fare|price|time|pickup|date|kids?|children|child|seats?|рейс|телефон|тел|имя|время|дети|детям|кресло|заметк[аи])\b/i.test(text) ||
           /(?:\+\d[\d\s\-()]{7,18}\d)/.test(text) ||
           /^[A-ZА-ЯЁ][a-zа-яё]+(?:\s+[A-ZА-ЯЁ]['’]?[A-Za-zА-Яа-яЁё]+)+$/.test(text) ||
           /^\d{1,2}:\d{2}(?:\s*(?:&|-|and)\s*\d{1,2}:\d{2})?$/.test(text) ||
-          /^[€$£]?\s*\d+(?:\s*[\/\-]\s*[€$£]?\s*\d+)?$/.test(text)
+          /^[€$£]?\s*\d+(?:\s*[\/\-]\s*[€$£]?\s*\d+)?$/.test(text) ||
+          (recent.booking_data?.missing_fields?.length > 0 && text.length < 120)
         );
         if (isShortUpdate) {
           existingDraft = recent;
