@@ -369,24 +369,24 @@ export const STANDARD_FLEET_TYPES = [
     label: 'Mercedes-Benz V-Class VIP (7–8 seats)',
     short: 'V-Class (7-8s)',
     icon: '🚐',
-    badge: 'Chauffeur NCC',
-    desc: 'Bespoke VIP minivan for wedding couple, family & VIP guests'
+    badge: 'Minivan (Not Minibus)',
+    desc: 'Bespoke VIP minivan (Classe V / Vito). Handled internally by DOROGO proprietary fleet.'
   },
   {
     key: 'sprinter_vip',
     label: 'Mercedes Sprinter VIP (8–16 seats)',
     short: 'Sprinter VIP (8-16s)',
     icon: '🚐',
-    badge: 'Lounge Specs',
-    desc: 'Leather recliners, conference tables, privacy glass, Wi-Fi'
+    badge: 'Minibus (Not V-Class)',
+    desc: 'True Minibus chassis (8–16 seats, strictly NOT V-Class/Vito). Leather recliners, conference tables, privacy glass'
   },
   {
     key: 'sprinter_lux',
     label: 'Mercedes Sprinter Luxury (16–20 seats)',
     short: 'Sprinter Lux (16-20s)',
     icon: '🚐',
-    badge: 'Guest Shuttle',
-    desc: 'High-volume luxury shuttle, ideal for airport & hotel circuits'
+    badge: 'Minibus (Not V-Class)',
+    desc: 'True Minibus chassis (16–20 seats, strictly NOT V-Class/Vito). High-volume luxury shuttle'
   },
   {
     key: 'midibus',
@@ -3409,6 +3409,9 @@ export function render(el) {
           <span class="tiny muted">
             Short CEO-to-Owner Italian message (~70 words): presents DOROGO's Lake Como &amp; Milan client demand and asks for <b>Models + Pax Capacity, Standby &amp; Hourly Rates, and Direct WhatsApp</b>.
           </span>
+          <div style="font-size:.75rem;color:#1e40af;background:#eff6ff;padding:4px 8px;border-radius:4px;border:1px solid #bfdbfe;margin-top:2px">
+            <b>🚐 Minibus B2B Clarification:</b> Explicitly specifies true Minibus chassis (Mercedes Sprinter / Daily 8–20+ pax) and clarifies it is <b>NOT</b> a V-Class or Vito minivan (operated directly by DOROGO).
+          </div>
         </div>
       </div>
 

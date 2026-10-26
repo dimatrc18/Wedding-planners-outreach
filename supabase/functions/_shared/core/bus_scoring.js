@@ -576,7 +576,7 @@ export function buildBusOutreachDraft(partner = {}, stepKey = 'T1_intro') {
 
 Vi scrivo rapidamente in merito alla mia precedente email per verificare disponibilità B2B su Como e Milano per minibus e pullman.
 
-Operiamo con flotta di proprietà V-Class ed S-Class e cerchiamo partner affidabili per gruppi più numerosi (sia linea Luxury sia Standard).
+Operiamo con flotta di proprietà V-Class ed S-Class e cerchiamo partner affidabili per gruppi più numerosi: minibus (telaio Sprinter 8–20+ posti, non minivan V-Class o Vito) e pullman Gran Turismo.
 
 Se per voi è possibile, potete rispondermi direttamente a questa email (oppure su WhatsApp al +32 456 14 14 97) indicando:
 - Tariffe B2B per transfer (es. Milano Centro – Malpensa MXP, Milano – Como, con relativo minimo d'ordine)
@@ -598,7 +598,7 @@ Dmitri Traciuc`;
 
   if (stepKey === 'WA_pitch') {
     const extraPersonal = personalIntro ? ` ${personalIntro}` : '';
-    const body = `Buongiorno ${cleanName}, sono Dmitri di DOROGO (trasferimenti eventi e matrimoni su Lago di Como e Milano con flotta V-Class ed S-Class). Cerchiamo partner affidabili esclusivamente per minibus (da 8–20 posti) e pullman di capienza maggiore.${extraPersonal} Potreste indicarmi qui su WhatsApp tariffe per transfer (es. Milano – Malpensa con minimo d'ordine) e prezzi per servizio orario e a disposizione (4h/8h)? Grazie mille!\n\nDmitri Traciuc`;
+    const body = `Buongiorno ${cleanName}, sono Dmitri di DOROGO (trasferimenti su Lago di Como e Milano con flotta interna V-Class ed S-Class). Cerchiamo partner affidabili per minibus (telaio Sprinter da 8–20 posti, non minivan V-Class o Vito) e pullman GT di capienza maggiore.${extraPersonal} Potreste indicarmi qui su WhatsApp tariffe per transfer (es. Milano – Malpensa con minimo d'ordine) e prezzi per servizio orario e a disposizione (4h/8h)? Grazie mille!\n\nDmitri Traciuc`;
     return {
       step_name: 'WA_pitch',
       language: 'it',
@@ -668,7 +668,7 @@ Dmitri Traciuc`;
 
 Sono Dmitri di DOROGO. Gestiamo trasferimenti per eventi privati e matrimoni sul Lago di Como e Milano con flotta di proprietà Mercedes V-Class, S-Class, E-Class e Maybach.
 
-Per i gruppi più numerosi dei nostri clienti cerchiamo partner affidabili esclusivamente per minibus e pullman di capienza maggiore (sia allestimenti Luxury sia Standard).${fleetSection}${personalLine}
+Per i gruppi più numerosi dei nostri clienti cerchiamo partner affidabili per minibus (chassis Sprinter da 8 a 20+ posti — non minivan V-Class o Vito) e pullman di capienza maggiore (sia allestimenti Luxury sia Standard).${fleetSection}${personalLine}
 
 Per collaborare, potreste indicarmi brevemente:
 ${qLines}

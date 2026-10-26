@@ -603,16 +603,19 @@ test('CEO-Level Short Italian Outreach Templates: generates concise Italian B2B 
   assert(t1.body.includes('servizio orario e a disposizione'), 'T1 body must ask for hourly and standby rates with minimum service time');
   assert(t1.body.includes('Setra & Mercedes GT Coach'), 'T1 body must cite website coach fleet');
   assert(!t1.body.includes('Mercedes-Benz V-Class VIP'), 'T1 body must exclude V-Class from partner citations');
+  assert(t1.body.includes('non minivan V-Class o Vito'), 'T1 body must explicitly clarify that minibus is not V-Class or Vito');
   assert(t1.body.includes('contatto WhatsApp diretto'), 'T1 body must ask for direct WhatsApp contact');
   assert(t1.word_count < 190, `CEO template must remain short, got ${t1.word_count}`);
 
   const t2 = buildBusOutreachDraft(partner, 'T2_followup');
   assert(t2.subject.startsWith('Re:'), 'Follow-up subject must thread with Re:');
   assert(t2.body.includes('WhatsApp'), 'Follow-up must ask for WhatsApp');
+  assert(t2.body.includes('non minivan V-Class o Vito'), 'T2 body must clarify minibus is not V-Class');
 
   const wa = buildBusOutreachDraft(partner, 'WA_pitch');
   assert(wa.body.includes('Buongiorno'), 'WhatsApp pitch must be in Italian');
   assert(wa.body.includes('servizio orario e a disposizione (4h/8h)'), 'WhatsApp pitch must ask for hourly and standby rates');
+  assert(wa.body.includes('non minivan V-Class o Vito'), 'WA pitch must clarify minibus is not V-Class');
 });
 
 test('parseBusPartnerReply: automatically extracts bus models, pax capacity, hourly/standby rates, and WhatsApp from Italian reply', () => {
