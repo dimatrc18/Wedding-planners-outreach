@@ -420,6 +420,35 @@ function addMinutesLocalIso(dateStr: string, timeStr: string, addMins: number): 
 }
 
 /**
+ * Formats calendar event description HTML cleanly:
+ * - Direct <hr> block dividers without artificial blank line padding
+ * - No redundant empty strings or doubled <br> tags (prevents Google Calendar whitespace bloat)
+ */
+export function formatCalendarDescription(lines: string[]): string {
+  let result = "";
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i];
+    if (raw === undefined || raw === null) continue;
+    const line = raw.trim();
+    if (!line) continue;
+
+    if (line === "<hr>" || line.startsWith("<hr")) {
+      // Remove trailing <br> before the horizontal divider if any
+      if (result.endsWith("<br>")) {
+        result = result.slice(0, -4);
+      }
+      result += "<hr>";
+    } else {
+      if (result.length > 0 && !result.endsWith("<hr>") && !result.endsWith("<br>")) {
+        result += "<br>";
+      }
+      result += line;
+    }
+  }
+  return result;
+}
+
+/**
  * Creates or updates Google Calendar events for each ride
  */
 export async function saveBookingToGoogleCalendar(
@@ -504,17 +533,14 @@ export async function saveBookingToGoogleCalendar(
       `<b>👤 Client:</b> ${booking.client.name || "VIP Guest"}`,
       `<b>📞 Phone:</b> ${booking.client.phone || "N/A"}`,
       `<b>✉️ Email:</b> ${emailHtml}`,
-      "",
       `<b>🚘 Fleet:</b> ${booking.vehicle.class || "Mercedes-Benz"}`,
       `<b>👥 Party:</b> ${partyDesc} | <b>🧳 Luggage:</b> ${booking.party.luggage || 0}`,
       `<b>⏱ Service:</b> ${hours}-Hour Standby Service (${startTimeStr} — ${endIso.split("T")[1]?.substring(0, 5) || ""})`,
-      "",
       `<hr>`,
       `<b>📍 ITINERARY & TRANSFERS SCHEDULE:</b>`,
     ];
 
     booking.rides.forEach((r, rIdx) => {
-      descLines.push("");
       descLines.push(`<b>• Leg ${rIdx + 1} (${r.time || ""}${r.end_time ? ` — ~${r.end_time}` : ""})</b>`);
       r.stops.forEach((st) => {
         const isPick = st.kind === "pickup";
@@ -523,13 +549,12 @@ export async function saveBookingToGoogleCalendar(
         const placeHtml = st.maps_url ? `<a href="${st.maps_url}">${st.place}</a>` : st.place;
         descLines.push(`${icon} <b>${label}:</b> ${placeHtml}`);
         if (st.instructions) {
-          descLines.push(`   <i>ℹ️ ${st.instructions}</i>`);
+          descLines.push(`&nbsp;&nbsp;<i>ℹ️ ${st.instructions}</i>`);
         }
       });
     });
 
     if (booking.party.children.length > 0) {
-      descLines.push("");
       const seats = booking.party.children
         .map((c) => (c.age !== null ? `Seat (${c.age} y/o)` : "Child seat (age pending ⚠️)"))
         .join(", ");
@@ -537,7 +562,6 @@ export async function saveBookingToGoogleCalendar(
     }
 
     if (booking.finance.total_price !== null) {
-      descLines.push("");
       descLines.push(`<hr>`);
       descLines.push(`<b>💶 FINANCIALS:</b>`);
       descLines.push(`• <b>Fare:</b> €${booking.finance.total_price}`);
@@ -548,7 +572,6 @@ export async function saveBookingToGoogleCalendar(
     }
 
     if (booking.client_notes) {
-      descLines.push("");
       descLines.push(`<hr>`);
       descLines.push(`<b>📝 NOTES:</b>`);
       descLines.push(booking.client_notes);
@@ -558,7 +581,7 @@ export async function saveBookingToGoogleCalendar(
     const eventBody = {
       summary,
       location: pStop?.address || pStop?.place || "",
-      description: descLines.join("<br>\n"),
+      description: formatCalendarDescription(descLines),
       start: { dateTime: startIso, timeZone: timezone },
       end: { dateTime: endIso, timeZone: timezone },
       reminders: {
@@ -680,7 +703,6 @@ export async function saveBookingToGoogleCalendar(
       `<b>👤 Client:</b> ${booking.client.name || "VIP Guest"}`,
       `<b>📞 Phone:</b> ${booking.client.phone || "N/A"}`,
       `<b>✉️ Email:</b> ${emailHtml}`,
-      "",
       `<b>🚘 Fleet:</b> ${booking.vehicle.class || "Mercedes-Benz V-Class"}`,
       `<b>👥 Party:</b> ${partyDesc} | <b>🧳 Luggage:</b> ${booking.party.luggage || 0}`,
     ];
@@ -697,7 +719,6 @@ export async function saveBookingToGoogleCalendar(
       descLines.push(`<b>👶 Child Seats:</b> ${seats}`);
     }
 
-    descLines.push("");
     descLines.push(`<hr>`);
     descLines.push("<b>📍 ITINERARY & STOPS:</b>");
     ride.stops.forEach((st) => {
@@ -715,7 +736,6 @@ export async function saveBookingToGoogleCalendar(
     });
 
     if (ride.price !== null) {
-      descLines.push("");
       descLines.push(`<hr>`);
       descLines.push(`<b>💶 FINANCIALS:</b>`);
       descLines.push(`• <b>Fare:</b> €${ride.price}`);
@@ -728,7 +748,6 @@ export async function saveBookingToGoogleCalendar(
     }
 
     if (booking.client_notes) {
-      descLines.push("");
       descLines.push(`<hr>`);
       descLines.push(`<b>📝 NOTES:</b>`);
       descLines.push(booking.client_notes);
@@ -737,7 +756,7 @@ export async function saveBookingToGoogleCalendar(
     const eventBody = {
       summary,
       location: pStop?.address || pStop?.place || "",
-      description: descLines.join("<br>\n"),
+      description: formatCalendarDescription(descLines),
       start: { dateTime: startIso, timeZone: timezone },
       end: { dateTime: endIso, timeZone: timezone },
       reminders: {

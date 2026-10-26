@@ -2,7 +2,7 @@
 import { assertEquals, assertNotEquals, assert } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { normalizeDate, normalizeTime, parseGoogleMapsUrl, mapChildSeat, applyBusinessRules, calculateStandbyHours } from "./rules.ts";
 import { extractBookingWithGemini } from "./extract.ts";
-import { getGoogleAccessToken, toCalendarEventId } from "./google.ts";
+import { getGoogleAccessToken, toCalendarEventId, formatCalendarDescription } from "./google.ts";
 import { buildCompactCopyText, buildEditableBookingText, buildFullCardPlainText, renderEditCopyCard, renderBookingCard } from "./card.ts";
 import defaultCreds from "./service_account.json" with { type: "json" };
 
@@ -640,11 +640,11 @@ DOROGO | Private Transportation
   assert(card.text.includes("€1852 (€952 + €900 per leg)"), "Card must display explicit per-leg due amounts");
 
   // 4. Verify Reply instruction is rendered under MISSING INFO
-  assert(card.text.includes("Reply directly to this message to add missing details"), "Card must include reply instructions under MISSING INFO");
+  assert(card.text.includes("«Reply» to this message"), "Card must include reply instructions under MISSING INFO");
 
   // 5. Verify plain-text tap-to-copy card also includes reply instructions
   const plainText = buildFullCardPlainText(booking);
-  assert(plainText.includes("Reply directly to this message to add missing details"), "Plain-text card must include reply instructions");
+  assert(plainText.includes("«Reply» to this message"), "Plain-text card must include reply instructions");
 
   console.log("✅ Flexible per-leg pricing, due amounts, and reply instructions test passed!");
 });
@@ -735,4 +735,43 @@ Also, home old are the kids that travel with you? So we could prepare car seats 
   assert(card.text.includes("Child seat (age not specified ⚠️)"), "Card must display child seat warnings");
 
   console.log("✅ Extra details in notes & card test passed!");
+});
+
+// 15. UNIT TEST: Calendar description formatting eliminates giant vertical gaps around dividers
+Deno.test("formatCalendarDescription eliminates whitespace bloat and empty line padding around dividers", () => {
+  const lines = [
+    "<b>Status:</b> Prepayment Received",
+    "<b>🔖 Reference:</b> DRG-9SYYWZ-RET",
+    "<b>👤 Client:</b> charlotte allen",
+    "<b>📞 Phone:</b> +17035094809",
+    "<b>✉️ Email:</b> <a href=\"mailto:charlotte.ca@gmail.com\">charlotte.ca@gmail.com</a>",
+    "<b>🚘 Fleet:</b> Mercedes V-Class",
+    "<b>👥 Party:</b> 4 Pax | <b>🧳 Luggage:</b> 7",
+    "<hr>",
+    "<b>📍 ITINERARY & STOPS:</b>",
+    "📍 <b>Pick-up (11:00):</b> Zermatt (Matterhorn)",
+    "🏁 <b>Drop-off:</b> Excelsior Hotel Gallia",
+    "<hr>",
+    "<b>💶 FINANCIALS:</b>",
+    "• <b>Fare:</b> €760",
+    "• <b>Collect on site:</b> €570 💵",
+    "<hr>",
+    "<b>📝 NOTES:</b>",
+    "no kids",
+  ];
+
+  const formatted = formatCalendarDescription(lines);
+
+  // Must not have double <br>
+  assert(!formatted.includes("<br><br>"), "Formatted description must not have doubled <br><br>");
+  // Must not have <br> immediately preceding <hr>
+  assert(!formatted.includes("<br><hr>"), "Must not have <br> immediately preceding <hr>");
+  // Must not have <br> immediately following <hr>
+  assert(!formatted.includes("<hr><br>"), "Must not have <br> immediately following <hr>");
+  // Must contain all core sections
+  assert(formatted.includes("<b>📍 ITINERARY & STOPS:</b>"), "Must contain ITINERARY header");
+  assert(formatted.includes("<b>💶 FINANCIALS:</b>"), "Must contain FINANCIALS header");
+  assert(formatted.includes("<b>📝 NOTES:</b>"), "Must contain NOTES header");
+
+  console.log("✅ Calendar description formatting test passed cleanly!");
 });

@@ -206,7 +206,7 @@ export function renderBookingCard(
     lines.push(`\n───────────────────────────`);
     lines.push(`❓ <b>MISSING INFO:</b>`);
     booking.missing_fields.forEach((m) => lines.push(`• ❓ ${esc(m)}`));
-    lines.push(`\n<i>💬 Reply directly to this message to add missing details</i>`);
+    lines.push(`\n<i>↩️ <b>To add:</b> Swipe left or tap «Reply» to this message, then type the details</i>`);
   }
 
   // Inline Buttons layout requested by user:
@@ -367,7 +367,7 @@ export function buildFullCardPlainText(booking: BookingData): string {
     lines.push(`\n───────────────────────────`);
     lines.push(`❓ MISSING INFO:`);
     booking.missing_fields.forEach((m) => lines.push(`• ❓ ${m}`));
-    lines.push(`\n💬 Reply directly to this message to add missing details`);
+    lines.push(`\n↩️ To add: Swipe left or tap «Reply» to this message, then type the details`);
   }
 
   return lines.join("\n").trim();
