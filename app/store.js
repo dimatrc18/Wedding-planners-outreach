@@ -12,7 +12,10 @@ import {
   addExcludedBusPartner,
   removeExcludedBusPartner,
   isBusPartnerExcluded,
-  hydratePartnerCard
+  hydratePartnerCard,
+  mergePartnerRecords,
+  normalizeName,
+  normalizeDomain
 } from './bus_partners_data.js';
 
 export const S = {
@@ -345,6 +348,28 @@ export async function updateBusPartner(id, patch) {
 }
 
 export async function addBusPartner(partner) {
+  const normName = normalizeName(partner.name);
+  const normDom = normalizeDomain(partner.website);
+
+  const existing = (S.busPartners || []).find((p) => {
+    const pn = normalizeName(p.name);
+    const pd = normalizeDomain(p.website);
+    return (normName && pn && pn === normName) || (normDom && pd && pd === normDom);
+  });
+
+  if (existing) {
+    mergePartnerRecords(existing, partner);
+    const updated = syncBusPartnerCardFields(existing);
+    saveStoredBusPartners(S.busPartners);
+    if (S.mode === 'live' && sb) {
+      try {
+        await sb.from('bus_partners').update(pickBusDbColumns(updated)).eq('id', updated.id);
+      } catch (_) {}
+    }
+    emit('bus_partners:updated');
+    return updated;
+  }
+
   const newRow = syncBusPartnerCardFields({
     id: partner.id || `partner_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
     ...partner,

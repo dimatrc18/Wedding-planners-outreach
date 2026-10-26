@@ -24,7 +24,9 @@ import {
   removeExcludedBusPartner,
   normalizeDomain,
   LEGACY_DEAD_DOMAINS,
-  findLegacyReplacement
+  findLegacyReplacement,
+  mergeNotes,
+  mergePartnerRecords
 } from '../app/bus_partners_data.js';
 import { S, removeBusPartner, removeManyBusPartners } from '../app/store.js';
 import {
@@ -766,6 +768,91 @@ test('shortFleetName: pairs model and passenger capacity in one compact tag for 
   assert.equal(shortFleetName('Mercedes-Benz Sprinter Luxury Long (16 seats)'), 'Sprinter Lux (16p)');
   assert.equal(shortFleetName('Iveco Wing Midibus (28 posti)'), 'Iveco Wing (28p)');
   assert.equal(shortFleetName('Setra S515 HD GT Coach (54 pax)'), 'Setra (54p)');
+});
+
+test('mergeNotes preserves user comments with dashes and numbers without duplication', () => {
+  // Scenario 1: Notes with bullet dashes (-)
+  const notesA = '- Confirm whether they do not have stickers on cars?\n- i see they have 3 different ones';
+  const notesB = '- prices/how many people the fit?\n- Confirm whether they do not have stickers on cars?';
+  const mergedAB = mergeNotes(notesA, notesB);
+  assert(mergedAB.includes('- Confirm whether they do not have stickers on cars?'));
+  assert(mergedAB.includes('- i see they have 3 different ones'));
+  assert(mergedAB.includes('- prices/how many people the fit?'));
+  // Should not repeat the duplicate bullet line
+  const matches = mergedAB.match(/stickers on cars/gi) || [];
+  assert.equal(matches.length, 1, 'Duplicate line should appear only once');
+
+  // Scenario 2: Notes with numbers (1., 2., 3.)
+  const numNotesA = '1. i am interested in the prices of the Iveco (29 passengers)\n2. The same thing for Mercedes Sprinter';
+  const numNotesB = '3. the same for the 50 seaters?';
+  const mergedNum = mergeNotes(numNotesA, numNotesB);
+  assert(mergedNum.includes('1. i am interested in the prices of the Iveco (29 passengers)'));
+  assert(mergedNum.includes('2. The same thing for Mercedes Sprinter'));
+  assert(mergedNum.includes('3. the same for the 50 seaters?'));
+
+  // Scenario 3: Empty inputs
+  assert.equal(mergeNotes('', 'hello'), 'hello');
+  assert.equal(mergeNotes('hello', ''), 'hello');
+  assert.equal(mergeNotes('', null), '');
+});
+
+test('mergePartnerRecords combines duplicate operators, merges bullet and numbered comments, and keeps highest status', () => {
+  const target = {
+    id: 'partner_landway',
+    name: 'Landway Tourism',
+    website: 'https://www.landwaytourism.com',
+    status: 'TO_REVIEW',
+    notes: '1. i am interested in the prices of the Iveco (29 passengers) - how much is it standby service and transfer',
+    fleet_categories: ['Iveco Wing (29 seats)'],
+    relevance_score: 85,
+    score_breakdown: {
+      partner_card: {
+        client_notes: '1. Iveco 29 pax standby',
+        rate_hourly: '',
+      }
+    }
+  };
+
+  const incoming = {
+    id: 'partner_landway_dup',
+    name: 'Landway Tourism',
+    website: 'https://landwaytourism.com',
+    status: 'WANT_TO_CONTACT',
+    notes: '2. The same thing for Mercedes Sprinter (19 passagers).\n3. the same for the 50 seaters?',
+    fleet_categories: ['Mercedes Sprinter (19 seats)', 'Autobus GT (50 seats)'],
+    relevance_score: 90,
+    phone: '+39 031 123456',
+    email: 'info@landwaytourism.com',
+    score_breakdown: {
+      partner_card: {
+        client_notes: '2. Sprinter 19 pax\n3. 50 seaters',
+        rate_hourly: '€95/h',
+      }
+    }
+  };
+
+  const merged = mergePartnerRecords(target, incoming);
+
+  // Status priority: WANT_TO_CONTACT > TO_REVIEW
+  assert.equal(merged.status, 'WANT_TO_CONTACT');
+  // Relevance score: max(85, 90) = 90
+  assert.equal(merged.relevance_score, 90);
+  // Email and phone populated
+  assert.equal(merged.email, 'info@landwaytourism.com');
+  assert.equal(merged.phone, '+39 031 123456');
+  // Fleet categories unioned
+  assert.equal(merged.fleet_categories.length, 3);
+  assert(merged.fleet_categories.includes('Iveco Wing (29 seats)'));
+  assert(merged.fleet_categories.includes('Mercedes Sprinter (19 seats)'));
+  assert(merged.fleet_categories.includes('Autobus GT (50 seats)'));
+  // Notes merged with all numbers 1., 2., 3. preserved
+  assert(merged.notes.includes('1. i am interested in the prices of the Iveco'));
+  assert(merged.notes.includes('2. The same thing for Mercedes Sprinter'));
+  assert(merged.notes.includes('3. the same for the 50 seaters?'));
+  // Partner card client_notes merged
+  assert(merged.score_breakdown.partner_card.client_notes.includes('1. Iveco 29 pax standby'));
+  assert(merged.score_breakdown.partner_card.client_notes.includes('2. Sprinter 19 pax'));
+  assert(merged.score_breakdown.partner_card.rate_hourly, '€95/h');
 });
 
 

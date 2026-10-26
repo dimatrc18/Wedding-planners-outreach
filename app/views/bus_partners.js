@@ -12,7 +12,7 @@ import {
   loadExcludedBusPartners, 
   isBusPartnerExcluded 
 } from '../store.js';
-import { INITIAL_BUS_PARTNERS } from '../bus_partners_data.js';
+import { INITIAL_BUS_PARTNERS, mergePartnerRecords, mergeNotes } from '../bus_partners_data.js';
 import { esc, attr, icon, pct, plural, download, toast, confirmDialog, copyText } from '../ui.js';
 
 let activeFilter = 'all'; // all | latest_added | newly_added | top_tier | replied_rates
@@ -312,8 +312,8 @@ function reconcileLegacyPartnersInPlace() {
   if (!Array.isArray(S.busPartners) || !S.busPartners.length) return;
   let changed = false;
   const cleaned = [];
-  const seenNames = new Set();
-  const seenDomains = new Set();
+  const nameMap = new Map();
+  const domainMap = new Map();
 
   for (const p of S.busPartners) {
     const nNorm = normalizeName(p.name);
@@ -330,12 +330,16 @@ function reconcileLegacyPartnersInPlace() {
 
     const finalName = normalizeName(item.name);
     const finalDom = normalizeDomain(item.website);
-    if ((finalName && seenNames.has(finalName)) || (finalDom && seenDomains.has(finalDom))) {
+    const existing = (finalName && nameMap.get(finalName)) || (finalDom && domainMap.get(finalDom));
+    if (existing) {
+      mergePartnerRecords(existing, item);
       changed = true;
+      if (finalName && !nameMap.has(finalName)) nameMap.set(finalName, existing);
+      if (finalDom && !domainMap.has(finalDom)) domainMap.set(finalDom, existing);
       continue;
     }
-    if (finalName) seenNames.add(finalName);
-    if (finalDom) seenDomains.add(finalDom);
+    if (finalName) nameMap.set(finalName, item);
+    if (finalDom) domainMap.set(finalDom, item);
     cleaned.push(item);
   }
 
