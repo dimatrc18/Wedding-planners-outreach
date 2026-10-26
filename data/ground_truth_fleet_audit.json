@@ -6,12 +6,13 @@
     "website": "https://www.rampinini.it",
     "fleet_url": "https://www.rampinini.it/flotta/",
     "current_categories": [
-      "Mercedes Sprinter VIP (8–16 seats)",
-      "Executive Midibus (24–30 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Mercedes Sprinter (8 seats)",
+      "Temsa Wing / Iveco Midibus (25–28 seats)",
+      "Scania Touring & Iveco Magelys GT Coach (54–56 seats)",
+      "Van Hool Astromega Double-Decker (86 seats)"
     ],
-    "current_models": "Mercedes Sprinter VIP (16 pax), Midibus 25 (24–30 pax), 28 pax) (28 pax) (28 pax) (28 pax) (28 pax), Setra GT Coach 40 (50–56 pax), 56 pax) (56 pax) (56 pax) (56 pax) (56 pax), 54",
-    "current_pax": "16, 25, 28, 40, 54, 56 pax",
+    "current_models": "Mercedes Sprinter (8 pax), Temsa Wing / Iveco Midibus (25–28 pax), Scania Touring & Iveco Magelys GT (54–56 pax), Van Hool Astromega (86 pax)",
+    "current_pax": "8, 25–28, 54–56, 86 pax",
     "fleet_lines": [
       "Noleggio pullman, agenzia viaggi e tour operator."
     ],
@@ -24,14 +25,14 @@
     "website": "https://www.lineaazzurrabus.com",
     "fleet_url": "https://www.lineaazzurrabus.com/la-flotta/",
     "current_categories": [
-      "Mercedes Minivan (6–8 seats)",
+      "Minivan (6–8 seats)",
       "Minibus (16–19 seats)",
       "Midibus (25–30 seats)",
       "Autobus GT Coaches (45–54 seats)",
-      "Autobus Long / Double-Decker GT (60–75 seats)"
+      "Autobus Long / Double-Decker (60–80 seats)"
     ],
-    "current_models": "Mercedes Minivan (6–8 pax), Minibus (16–19 pax), Midibus (25–30 pax), Autobus GT (45–54 pax), Double-Decker (60–75 pax), Autobus Long",
-    "current_pax": "6–8, 16–19, 25–30, 45–54, 60–75 pax",
+    "current_models": "Minivan (6–8 pax), Minibus (16–19 pax), Midibus (25–30 pax), Autobus GT (45–54 pax), Autobus Long/Double-Decker (60–80 pax)",
+    "current_pax": "6–8, 16–19, 25–30, 45–54, 60–80 pax",
     "fleet_lines": [
       "Autobus /",
       "Autobus long /",
@@ -73,11 +74,11 @@
     "website": "https://carservicemilan.com",
     "fleet_url": "https://carservicemilan.com/fleet/",
     "current_categories": [
-      "Mercedes-Benz V-Class Luxury Van (7 seats)",
-      "Mercedes-Benz Sprinter Luxury Minibus (8–16 seats)"
+      "Mercedes-Benz Classe V (7 seats)",
+      "Mercedes-Benz Sprinter Luxury Minibus (8 seats)"
     ],
-    "current_models": "Mercedes-Benz Classe V Luxury Van (7 pax), Mercedes-Benz Sprinter Luxury Minibus (8–16 pax), reclining leather seats & tinted windows",
-    "current_pax": "7, 8–16 pax",
+    "current_models": "Mercedes-Benz Sprinter Luxury Minibus (8 pax, reclining leather & privacy glass), Mercedes-Benz Classe V (7 pax)",
+    "current_pax": "7, 8 pax",
     "fleet_lines": [
       "V-Class",
       "Sprinter",
@@ -104,11 +105,12 @@
     "website": "https://www.aircarservice.com",
     "fleet_url": "https://www.aircarservice.com/",
     "current_categories": [
-      "Mercedes-Benz V-Class VIP (7–8 seats)",
-      "Mercedes Sprinter VIP (8–16 seats)"
+      "Mercedes-Benz Classe V (7 seats)",
+      "Mercedes Sprinter VIP (16 seats)",
+      "Autobus Granturismo (54 seats)"
     ],
-    "current_models": "",
-    "current_pax": "",
+    "current_models": "Mercedes Sprinter VIP (16 pax), Autobus Granturismo (54 pax), Mercedes Classe V (7 pax)",
+    "current_pax": "7, 16, 54 pax",
     "fleet_lines": [
       "Minibus",
       "Autobus Granturismo",
@@ -124,11 +126,12 @@
     "website": "https://www.moranditour.it",
     "fleet_url": "https://www.moranditour.it/flotta/",
     "current_categories": [
-      "Executive Midibus (24–30 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Minibus GT (8–19 seats)",
+      "Midibus (25–35 seats)",
+      "Mercedes Tourismo & Setra GT (54–85 seats)"
     ],
-    "current_models": "Setra TopClass VIP (30–54 pax), Mercedes Tourismo (50–54 pax)",
-    "current_pax": "30, 50–54 pax",
+    "current_models": "Minibus GT (8–19 pax), Midibus (25–35 pax), Mercedes Tourismo & Setra GT (54–85 pax)",
+    "current_pax": "8–19, 25–35, 54–85 pax",
     "fleet_lines": [
       "ULTIMI POSTI",
       "AUTO, MINIBUS, AUTOBUS GT DA 4 A 85 POSTI",
@@ -148,12 +151,11 @@
     "website": "https://www.rosabus.it",
     "fleet_url": "https://www.rosabus.it/la-nostra-flotta/",
     "current_categories": [
-      "Minivan NCC (7–8 seats)",
       "Mercedes Tourengo 818 Midibus (29–30 seats)",
       "Autobus Gran Turismo (54, 64, 83 seats)"
     ],
-    "current_models": "Minivan NCC (7–8 pax), Mercedes Tourengo 818 Midibus (29–30 pax), 83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax) (83 pax), Autobus Gran Turismo 54, 64",
-    "current_pax": "7–8, 29–30, 54, 64, 83 pax",
+    "current_models": "Mercedes Tourengo 818 Midibus (29–30 pax), Autobus GT (54, 64, 83 pax)",
+    "current_pax": "29–30, 54, 64, 83 pax",
     "fleet_lines": [
       "*   [Autobus](https://www.rosabus.it/tipo-veicolo/autobus/)",
       "*   [Minibus](https://www.rosabus.it/tipo-veicolo/minibus/)",
@@ -181,11 +183,11 @@
     "website": "https://www.iltonautonoleggi.com",
     "fleet_url": "https://www.iltonautonoleggi.com/flotta",
     "current_categories": [
-      "Mercedes-Benz V-Class VIP (7–8 seats)",
-      "Mercedes Sprinter Luxury (16–20 seats)"
+      "Mercedes Classe V VIP (6 & 8 seats)",
+      "Autobus Gran Turismo (12–50 seats)"
     ],
-    "current_models": "",
-    "current_pax": "",
+    "current_models": "Mercedes Classe V VIP (6 & 8 pax), Autobus Gran Turismo (12–50 pax)",
+    "current_pax": "6, 8, 12–50 pax",
     "fleet_lines": [
       "Noleggio minibus Bergamo e Brescia con conducente | Il. To.n",
       "Noleggio minibus",
@@ -220,13 +222,13 @@
     "website": "https://www.beriniautonoleggio.com",
     "fleet_url": "https://www.beriniautonoleggio.com/vip-services/",
     "current_categories": [
-      "Mercedes-Benz V-Class VIP Van (8 seats)",
-      "Mercedes Minibus & Extralong Luxury (8 seats)",
+      "Mercedes Classe V VIP (7 seats)",
+      "Mercedes Minibus Extralong Luxury (8 seats)",
       "Executive Minibus (20 seats)",
       "Executive Midibus (26 seats)"
     ],
-    "current_models": "Mercedes Van Classe V VIP (8 pax), Minibus Extralong Luxury (8 pax), Minibus (20 pax), Midibus (26 pax)",
-    "current_pax": "8, 20, 26 pax",
+    "current_models": "Mercedes Minibus Extralong Luxury (8 pax), Executive Minibus (20 pax), Executive Midibus (26 pax), Mercedes Classe V (7 pax)",
+    "current_pax": "7, 8, 20, 26 pax",
     "fleet_lines": [
       "Servizio esclusivo con autista e auto premium, minivan e minibus a Como, e per tutte le destinazioni!",
       "AUTO PREMIUM, MINIVAN E MINIBUS",
@@ -246,10 +248,15 @@
     "website": "https://www.bormioviaggi.com",
     "fleet_url": "https://www.bormioviaggi.com/flotta",
     "current_categories": [
-      "Mercedes Sprinter Luxury (16–20 seats)"
+      "Mercedes Classe V (7 seats)",
+      "Mercedes Sprinter 317 (8 seats)",
+      "Mercedes Sprinter 518 (19 seats)",
+      "Daily Tourismo (21 seats)",
+      "Setra 515 & Mercedes Tourismo GT (49–51 seats)",
+      "MAN Lion's Coach (63 seats)"
     ],
-    "current_models": "Mercedes Sprinter Luxury (16–20 pax)",
-    "current_pax": "16–20 pax",
+    "current_models": "Mercedes Classe V (7 pax), Mercedes Sprinter 317 (8 pax), Mercedes Sprinter 518 (19 pax), Daily Tourismo (21 pax), Setra 515 & Mercedes Tourismo GT (49–51 pax), MAN Lion's Coach (63 pax)",
+    "current_pax": "7, 8, 19, 21, 49–51, 63 pax",
     "fleet_lines": [
       "Noleggio autobus e minibus a Bormio – Viaggia con Bormio Viaggi - Noleggio autobus e minibus a Bormio – Viaggia con Bormio Viaggi",
       "Noleggio autobus e minibus a Bormio – Viaggia con Bormio Viaggi - Noleggio autobus e minibus a Bormio – Viaggia con Bormio Viaggi"
@@ -263,11 +270,11 @@
     "website": "https://www.comodriver.com",
     "fleet_url": "https://www.comodriver.com/autovetture/",
     "current_categories": [
-      "Mercedes-Benz Classe V Luxury Minivan (7 seats)",
-      "Mercedes-Benz Sprinter Minibus (12 seats)",
+      "Mercedes-Benz Classe V (7 seats)",
+      "Mercedes Sprinter Minibus (12 seats)",
       "Ford Transit Minibus (16 seats)"
     ],
-    "current_models": "Mercedes-Benz Classe V Luxury Minivan (7 pax), Mercedes-Benz Sprinter Minibus (12 pax), Ford Transit Minibus (16 pax)",
+    "current_models": "Mercedes Sprinter Minibus (12 pax), Ford Transit Minibus (16 pax), Mercedes Classe V (7 pax)",
     "current_pax": "7, 12, 16 pax",
     "fleet_lines": [
       "Minibus Ford Transit",
@@ -294,11 +301,12 @@
     "website": "https://www.autoservizisonzogni.it",
     "fleet_url": "https://www.autoservizisonzogni.it/",
     "current_categories": [
-      "Executive Midibus (24–30 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Minivan NCC (8 seats)",
+      "Minibus (41 seats)",
+      "Pullman Gran Turismo Irizar (48–64 seats)"
     ],
-    "current_models": "Executive Midibus (24–30 pax), Setra & Mercedes GT Coach (50–56 pax)",
-    "current_pax": "24–30, 50–56 pax",
+    "current_models": "Minivan NCC (8 pax), Minibus (41 pax), Pullman Gran Turismo Irizar (48–64 pax)",
+    "current_pax": "8, 41, 48–64 pax",
     "fleet_lines": [
       "Title: Noleggio pullman con conducente | Autoservizi Sonzogni Renato & C",
       "*   [Servizi](https://www.autoservizisonzogni.it/noleggio-pullman-bergamo/)",
@@ -336,11 +344,13 @@
     "website": "https://www.autoserviziguizzetti.com",
     "fleet_url": "https://www.autoserviziguizzetti.com/",
     "current_categories": [
-      "Executive Midibus (24–30 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Iveco Daily Tourist / Indcar Wing (19–28 seats)",
+      "Setra 515 HD & Irizar i6 (53–54 seats)",
+      "Setra 415 GT-HD (55 seats)",
+      "Setra 416 GT & 417 HDH (59–64 seats)"
     ],
-    "current_models": "",
-    "current_pax": "",
+    "current_models": "Iveco Daily / Indcar Wing (19–28 pax), Setra 515 HD & Irizar i6 (53–54 pax), Setra 415 GT-HD (55 pax), Setra 416/417 HDH (59–64 pax)",
+    "current_pax": "19–28, 53–55, 59–64 pax",
     "fleet_lines": [
       "Autoservizi Guizzetti noleggio autobus Bergamo - Guizzetti",
       "Autoservizi Guizzetti noleggio autobus Bergamo - Guizzetti",
@@ -382,12 +392,12 @@
     "website": "https://www.transervicelimousine.com",
     "fleet_url": "https://www.transervicelimousine.com/la-flotta/",
     "current_categories": [
-      "Mercedes-Benz V-Class Extra Long Luxury (7 seats)",
-      "Mercedes-Benz Sprinter Luxury Minibus (8 seats)",
-      "Mercedes \"Alis\" Custom VIP Luxury Bus (19 seats)",
-      "Pullman Lusso / GT Coaches (16–75 seats)"
+      "Mercedes Classe V (7 seats)",
+      "Mercedes Sprinter Luxury Minibus (8 seats)",
+      "Mercedes \"Alis\" Custom VIP Bus (19 seats)",
+      "Pullman Lusso GT (16–75 seats)"
     ],
-    "current_models": "Mercedes V-Class XL Luxury (7 pax), Mercedes Sprinter Luxury (8 pax), Mercedes \"Alis\" Custom VIP Bus on 30-seat chassis (19 pax), Pullman Lusso GT (16–75 pax)",
+    "current_models": "Mercedes Sprinter Luxury (8 pax), Mercedes \"Alis\" Custom VIP Bus (19 pax), Mercedes Classe V (7 pax), Pullman Lusso (16–75 pax)",
     "current_pax": "7, 8, 19, 16–75 pax",
     "fleet_lines": [
       "Suv 5 posti",
@@ -432,7 +442,7 @@
     "current_categories": [
       "Mercedes-Benz V-Class Luxury Minivan (7 seats)"
     ],
-    "current_models": "Mercedes-Benz V-Class Luxury Minivan (7 pax), face-to-face leather",
+    "current_models": "Mercedes-Benz V-Class Luxury Minivan (7 pax)",
     "current_pax": "7 pax",
     "fleet_lines": [
       "Il Vantaggio Mercedes V-Class per i Gruppi",
@@ -456,12 +466,12 @@
     "fleet_url": "https://www.autonoleggiocarnelli.it/i-nostri-mezzi/",
     "current_categories": [
       "Mercedes Minivan (8 seats)",
-      "Mercedes-Benz Sprinter Minibus (16–20 seats)",
-      "Temsa MD-7 Midibus (32 seats) & King Long (36 seats)",
-      "Neoplan Tourliner (52 seats) & Iveco Magelys Pro GT (53–56 seats)"
+      "Mercedes Sprinter (20 seats)",
+      "Temsa MD-7 (32–36 seats)",
+      "Neoplan Tourliner (52–56 seats)"
     ],
-    "current_models": "Minivan Mercedes (8 pax), Mercedes Sprinter (16–20 pax), Temsa MD-7 (32 pax), King Long (36 pax), Neoplan Tourliner (52 pax), Iveco Magelys Pro 53 & (56 pax)",
-    "current_pax": "8, 16–20, 32, 36, 52, 53, 56 pax",
+    "current_models": "Mercedes Minivan (8 pax), Mercedes Sprinter (20 pax), Temsa MD-7 (32–36 pax), Neoplan Tourliner (52–56 pax)",
+    "current_pax": "8, 20, 32–36, 52–56 pax",
     "fleet_lines": [
       "Noleggio Pullman, Autobus, Minibus per viaggi, gite, eventi - Carnelli Bus",
       "Pullman",
@@ -503,11 +513,12 @@
     "website": "https://www.ncc3.it",
     "fleet_url": "https://www.ncc3.it/flotta",
     "current_categories": [
-      "Mercedes-Benz V-Class VIP (7–8 seats)",
-      "Mercedes Sprinter Luxury (16–20 seats)"
+      "Mercedes Minibus (8, 16, 19 seats)",
+      "Midibus GT (27 seats)",
+      "Setra & Mercedes GT Coach (56 seats)"
     ],
-    "current_models": "",
-    "current_pax": "",
+    "current_models": "Mercedes Minibus (8, 16, 19 pax), Midibus GT (27 pax), Setra & Mercedes GT Coach (56 pax)",
+    "current_pax": "8, 16, 19, 27, 56 pax",
     "fleet_lines": [
       "Auto berline e minivan 7/8 posti Transfer, Matrimoni, Soccorso stradale, Consegna merci",
       "Auto lussuose e minivan 7/8/20 posti",
@@ -524,10 +535,10 @@
     "website": "https://www.italeurobus.it",
     "fleet_url": "https://www.italeurobus.it/servizi/",
     "current_categories": [
-      "Mercedes Sprinter Luxury (16–20 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Mercedes Sprinter Minibus (19 seats)",
+      "Pullman Gran Turismo (54 seats)"
     ],
-    "current_models": "Minibus (19 pax), Pullman Gran Turismo (54 pax)",
+    "current_models": "Mercedes Sprinter Minibus (19 pax), Pullman Gran Turismo (54 pax)",
     "current_pax": "19, 54 pax",
     "fleet_lines": [
       "*   [Viaggi per gite scolastiche](https://italeurobus.it/noleggio-pullman-per-gite-scolastiche/)",
@@ -543,10 +554,10 @@
     "website": "https://www.luxurytransfermilan.com",
     "fleet_url": "https://www.luxurytransfermilan.com/",
     "current_categories": [
-      "Mercedes Sprinter Luxury (16–20 seats)"
+      "Mercedes Sprinter Bus (14 seats)"
     ],
-    "current_models": "Mercedes Sprinter Luxury (16–20 pax)",
-    "current_pax": "16–20 pax",
+    "current_models": "Mercedes Sprinter Bus (14 pax)",
+    "current_pax": "14 pax",
     "fleet_lines": [
       "Quanti passeggeri 1 persona 2 persone 3 persone 4 persone 5 persone 6 persone 7 persone 8 persone 9 persone 10 persone 11 persone 12 persone 13 persone 14 persone oltre",
       "Seleziona un autoveicolo Mercedes Classe E Mercedes Classe S Mercedes Classe V Mercedes Sprinter Bus",
@@ -568,11 +579,11 @@
     "website": "https://www.frigerioviaggi.com",
     "fleet_url": "https://www.frigerioviaggi.com/noleggio-bus",
     "current_categories": [
-      "Executive Midibus (24–30 seats)",
-      "Mercedes-Benz V-Class VIP (7–8 seats)"
+      "Executive Midibus (28 seats)",
+      "Pullman GT (54 seats)"
     ],
-    "current_models": "Executive Midibus (24–30 pax), Mercedes-Benz V-Class VIP (7–8 pax)",
-    "current_pax": "24–30, 7–8 pax",
+    "current_models": "Executive Midibus (28 pax), Pullman GT (54 pax)",
+    "current_pax": "28, 54 pax",
     "fleet_lines": [
       "ULTIMI POSTI - Bus da Giussano e Milano",
       "Whistleblowing"
@@ -586,11 +597,11 @@
     "website": "https://i-vivaldi.com",
     "fleet_url": "https://i-vivaldi.com/parco-auto/",
     "current_categories": [
-      "Mercedes-Benz V-Class VIP (7 seats)",
+      "Mercedes-Benz Classe V (7 seats)",
       "Mercedes-Benz Sprinter VIP (8 seats)",
       "Mercedes-Benz Sprinter Nero VIP w/ Hostess (19 seats)"
     ],
-    "current_models": "Mercedes-Benz Classe V VIP (7 pax), Mercedes-Benz Sprinter VIP (8 pax), Mercedes-Benz Sprinter Nero VIP + Hostess (19 pax)",
+    "current_models": "Mercedes-Benz Sprinter VIP (8 pax), Mercedes Sprinter Nero VIP w/ Hostess (19 pax), Mercedes Classe V (7 pax)",
     "current_pax": "7, 8, 19 pax",
     "fleet_lines": [
       "NOLEGGIO MINIBUS",
@@ -618,11 +629,13 @@
     "website": "https://www.autoserviziperico.com",
     "fleet_url": "https://www.autoserviziperico.com/flotta/",
     "current_categories": [
-      "Mercedes Sprinter Luxury (16–20 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Minivan NCC (7–8 seats)",
+      "Mercedes Tourismo & Travego (50–54 seats)",
+      "Volvo 9700 (52 seats)",
+      "Irizar i6 & Century (53–55 seats)"
     ],
-    "current_models": "Minibus (16 pax), Irizar & Volvo GT Coaches (52–56 pax)",
-    "current_pax": "16, 52–56 pax",
+    "current_models": "Mercedes Tourismo & Travego (50–54 pax), Volvo 9700 (52 pax), Irizar i6 & Century (53–55 pax), Minivan NCC (7–8 pax)",
+    "current_pax": "7–8, 50–55 pax",
     "fleet_lines": [
       "Noleggio autobus granturismo Bergamo - Autoservizi Perico",
       "Irizar I6",
@@ -649,11 +662,11 @@
     "website": "https://www.gardabus.it",
     "fleet_url": "https://www.gardabus.it/flotta",
     "current_categories": [
-      "Executive Midibus (24–30 seats)",
-      "Mercedes Sprinter Luxury (16–20 seats)"
+      "Mercedes Sprinter VIP (16 seats)",
+      "Setra GT Coach (54 seats)"
     ],
-    "current_models": "",
-    "current_pax": "",
+    "current_models": "Mercedes Sprinter VIP (16 pax), Setra GT Coach (54 pax)",
+    "current_pax": "16, 54 pax",
     "fleet_lines": [],
     "raw_text_snippet": "\n194.242.61.71 \n 26/10/2026 17:40:13 \n Sito in allestimento\n 194.242.61.71\n194.242.61.71 \n 26/10/2026 17:40:14 \n Sito in allestimento\n 194.242.61.71"
   },
@@ -664,11 +677,11 @@
     "website": "https://www.ugoliniviaggi.it",
     "fleet_url": "https://www.ugoliniviaggi.it/",
     "current_categories": [
-      "Executive Midibus (24–30 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Executive Midibus (28 seats)",
+      "Setra & Mercedes GT Coach (54 seats)"
     ],
-    "current_models": "Executive Midibus (24–30 pax), Setra & Mercedes GT Coach (50–56 pax)",
-    "current_pax": "24–30, 50–56 pax",
+    "current_models": "Executive Midibus (28 pax), Setra & Mercedes GT Coach (54 pax)",
+    "current_pax": "28, 54 pax",
     "fleet_lines": [
       "Noleggio Pullman Verona - Ugolini Viaggi",
       "Autobus e ncc",
@@ -684,10 +697,10 @@
     "website": "https://www.prestigecarlimousine.it",
     "fleet_url": "https://www.prestigecarlimousine.it/car/car-service-milan-luxury-minibus/",
     "current_categories": [
-      "Mercedes-Benz V-Class Luxury Van (7 seats)",
+      "Mercedes-Benz Classe V (7 seats)",
       "Mercedes-Benz Sprinter Luxury Minibus (8 & 16 seats)"
     ],
-    "current_models": "Mercedes-Benz V-Class Luxury Van (7 pax), Mercedes-Benz Sprinter Luxury Minibus & (8 pax), conference leather, reclining leather & tables",
+    "current_models": "Mercedes-Benz Sprinter Luxury Minibus (8 & 16 pax, reclining leather & tables), Mercedes Classe V (7 pax)",
     "current_pax": "7, 8, 16 pax",
     "fleet_lines": [
       "Car Service Milan | Luxury Minibus | Prestige Car Limousine",
@@ -709,11 +722,11 @@
     "website": "https://www.bergamotransfer.com",
     "fleet_url": "https://www.bergamotransfer.com/flotta",
     "current_categories": [
-      "Mercedes Sprinter VIP (8–16 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Mercedes-Benz Berlina (3–4 seats)",
+      "Minivan & Minibus NCC (fino a 8 seats)"
     ],
-    "current_models": "Mercedes Sprinter VIP (8 & 16 pax), Coach GT (50 pax)",
-    "current_pax": "8, 16, 50 pax",
+    "current_models": "Mercedes-Benz Minivan & Minibus NCC (8 pax), Mercedes Berlina (3–4 pax)",
+    "current_pax": "3–4, 8 pax",
     "fleet_lines": [
       "NOLEGGIO MINIBUS",
       "NOLEGGIO AUTOBUS",
@@ -731,12 +744,12 @@
     "website": "https://www.comazzibus.com",
     "fleet_url": "https://www.comazzibus.com/flotta",
     "current_categories": [
-      "Mercedes Sprinter Luxury (16–20 seats)",
-      "Executive Midibus (24–30 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Mercedes Sprinter Minibus (19 seats)",
+      "Iveco & Otokar Midibus (30 seats)",
+      "Bova VDL & Van Hool Astromega GT Coaches (54–94 seats)"
     ],
-    "current_models": "Minibus (19 pax), Midibus (30 pax), Pullman GT (54 pax)",
-    "current_pax": "19, 30, 54 pax",
+    "current_models": "Mercedes Sprinter Minibus (19 pax), Iveco & Otokar Midibus (30 pax), Bova VDL & Van Hool Astromega GT (54–94 pax)",
+    "current_pax": "19, 30, 54–94 pax",
     "fleet_lines": [
       "Procedure da tenersi per l'accesso agli autobus &raquo;",
       "Consulta gli altri servizi offerti da Comazzi, come la vendita autobus o altro.",
@@ -752,9 +765,9 @@
     "website": "https://www.bologninibus.it",
     "fleet_url": "https://www.bologninibus.it/flotta/",
     "current_categories": [
-      "Mercedes Sprinter Luxury (16–20 seats)",
-      "Executive Midibus (24–30 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Mercedes Sprinter Minibus (19 seats)",
+      "Midibus (29 seats)",
+      "Pullman GT (52 seats)"
     ],
     "current_models": "Mercedes Sprinter Minibus (19 pax), Midibus (29 pax), Pullman GT (52 pax)",
     "current_pax": "19, 29, 52 pax",
@@ -768,11 +781,12 @@
     "website": "https://eurobusverona.it",
     "fleet_url": "https://eurobusverona.it/",
     "current_categories": [
-      "Mercedes-Benz V-Class VIP (7–8 seats)",
-      "Executive Midibus (24–30 seats)"
+      "Minibus GT (19 seats)",
+      "Pullman Gran Turismo (54 seats)",
+      "Autobus Maxi (84 seats)"
     ],
-    "current_models": "",
-    "current_pax": "",
+    "current_models": "Minibus (19 pax), Pullman GT (54 pax), Autobus Maxi (84 pax)",
+    "current_pax": "19, 54, 84 pax",
     "fleet_lines": [
       "Trasporti turistici, autobus, pullman, NCC | Consorzio Eurobus +39 045 834 9973",
       "Dal minibus con capienza massima 16 persone, al bus bipiano da 84 posti disponibili. Siamo pronti a soddisfare ogni Vostra esigenza.",
@@ -790,11 +804,14 @@
     "website": "https://www.castanobus.it",
     "fleet_url": "https://www.castanobus.it/flotta/",
     "current_categories": [
-      "Mercedes Sprinter Luxury (16–20 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Auto NCC (4 seats)",
+      "Minibus (8 seats)",
+      "Autobus Minibus (20 seats)",
+      "Midibus (36 seats)",
+      "Pullman Gran Turismo (52–54 seats)"
     ],
-    "current_models": "Mercedes Sprinter Minibus (16–19 pax), Euro 6 GT Coach (50–56 pax)",
-    "current_pax": "16–19, 50–56 pax",
+    "current_models": "Minibus (8 pax), Autobus Minibus (20 pax), Midibus (36 pax), Pullman Gran Turismo (52–54 pax)",
+    "current_pax": "4, 8, 20, 36, 52–54 pax",
     "fleet_lines": [
       "Castano Autobus Viaggi e Turismo VARESE e MILANO",
       "Autobus e viaggi",
@@ -809,14 +826,14 @@
     "website": "https://www.lariobus.com",
     "fleet_url": "https://www.lariobus.com/automezzi/",
     "current_categories": [
-      "Mercedes-Benz Viano / Vito Minivan (7–8 seats)",
-      "Ford Transit Bus (13 seats) & Mercedes Sprinter IBIS 2 (20 seats)",
-      "Irisbus Iveco Smile 3 Midibus (30 seats)",
-      "Iveco Calipso (36 seats) & Temsa MD9 (40 seats)",
-      "Mercedes Tourismo / Volvo 9700 / Irizar i6 GT Coaches (54–56 seats)"
+      "Ford Transit Minibus (13 seats)",
+      "Mercedes Sprinter IBIS 2 (20 seats)",
+      "Iveco Calipso Midibus (36 seats)",
+      "Temsa MD9 (40 seats)",
+      "Mercedes Tourismo & Irizar i6 (54–56 seats)"
     ],
-    "current_models": "Vito (7–8 pax), Ford Transit (13 pax), Mercedes Sprinter IBIS 2 (20 pax), Iveco Smile 3 (30 pax), Iveco Calipso (36 pax), Temsa MD9 (40 pax), Volvo 9700 (54 pax), Mercedes Tourismo (54–56 pax), Irizar i6 (50–56 pax), Scania Century (56 pax), Mercedes Viano",
-    "current_pax": "7–8, 13, 20, 30, 36, 40, 54, 56 pax",
+    "current_models": "Ford Transit (13 pax), Mercedes Sprinter IBIS 2 (20 pax), Iveco Calipso (36 pax), Temsa MD9 (40 pax), Mercedes Tourismo & Irizar i6 (54–56 pax)",
+    "current_pax": "13, 20, 36, 40, 54–56 pax",
     "fleet_lines": [
       "Autobus, Minibus e NCC | Flotta automezzi LarioBus Lecco",
       "MINIBUS 13-30 POSTI",
@@ -857,14 +874,14 @@
     "website": "https://www.caprioliviaggi.it",
     "fleet_url": "https://www.caprioliviaggi.it/mezzi/",
     "current_categories": [
-      "Mercedes-Benz Classe V Exclusive Leather (7 seats)",
-      "Mercedes-Benz Sprinter Minibus (8 & 16–20 seats)",
-      "Minibus (25 seats)",
-      "Setra GT Coaches (30, 42, 54 seats)",
-      "Irizar i8 Pullman Gran Turismo Lusso GTL (60 seats)"
+      "Monovolume NCC (7 seats)",
+      "Mercedes Sprinter Minibus (16 seats)",
+      "Minibus GT (25 seats)",
+      "Setra GT Coaches (30, 42, 52 seats)",
+      "Irizar i8 Pullman GTL Lusso (60 seats)"
     ],
-    "current_models": "Mercedes Classe V Exclusive (7 pax), Mercedes Sprinter 8 & (16–20 pax), Minibus (25 pax), Setra GT 30 (50–56 pax), 54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax) (54 pax), Irizar i8 Pullman GTL Lusso (60 pax), 42",
-    "current_pax": "7, 8, 16–20, 25, 30, 42, 54, 60 pax",
+    "current_models": "Monovolume NCC (7 pax), Mercedes Sprinter Minibus (16 pax), Minibus GT (25 pax), Setra GT Coaches (30, 42, 52 pax), Irizar i8 Pullman GTL Lusso (60 pax)",
+    "current_pax": "7, 16, 25, 30, 42, 52, 60 pax",
     "fleet_lines": [
       "Parco mezzi: autobus e minibus di Caprioli Viaggi",
       "info@caprioliviaggi.it",
@@ -906,11 +923,11 @@
     "website": "https://www.bresciatransfer.it",
     "fleet_url": "https://www.bresciatransfer.it/flotta/",
     "current_categories": [
-      "Mercedes Viano Extra Long (7 seats)",
+      "Mercedes Viano (7 seats)",
       "Mercedes Sprinter Minibus (8 seats)",
       "Iveco Daily Minibus (20 seats)"
     ],
-    "current_models": "Mercedes Viano Extra Long (7 pax), Mercedes Sprinter Minibus (8 pax), 2x Iveco Daily Minibus (20 pax)",
+    "current_models": "Mercedes Sprinter Minibus (8 pax), Iveco Daily Minibus (20 pax), Mercedes Viano (7 pax)",
     "current_pax": "7, 8, 20 pax",
     "fleet_lines": [
       "Noleggio Minibus 20 Posti con Conducente",
@@ -946,11 +963,13 @@
     "website": "https://www.autoservizifacchinetti.it",
     "fleet_url": "https://www.autoservizifacchinetti.it/flotta",
     "current_categories": [
-      "Mercedes Sprinter Luxury (16–20 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Mercedes Sprinter (20 seats)",
+      "Iveco Midibus (29 seats)",
+      "Temsa VIP Safari (46 seats)",
+      "Temsa Safari HD (54–58 seats)"
     ],
-    "current_models": "Mercedes Sprinter (20 pax), Temsa Safari GT (54/58 pax), VDL Coach (52 pax)",
-    "current_pax": "20, 52, 54–58 pax",
+    "current_models": "Mercedes Sprinter (20 pax), Iveco Midibus (29 pax), Temsa VIP Safari (46 pax), Temsa Safari HD (54–58 pax)",
+    "current_pax": "20, 29, 46, 54–58 pax",
     "fleet_lines": [
       "- Noleggio autobus e minibus Milano",
       "Noleggio autobus e minibus Milano",
@@ -992,12 +1011,13 @@
     "website": "https://www.bassitours.com",
     "fleet_url": "https://www.bassitours.com/parco-mezzi/",
     "current_categories": [
-      "Mercedes Sprinter VIP (8–16 seats)",
-      "Executive Midibus (24–30 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Mercedes Sprinter (16 seats)",
+      "Iveco Midibus (28 seats)",
+      "Setra GT Coach (54 & 64 seats)",
+      "Autobus GT Maxi (80 seats)"
     ],
-    "current_models": "Mercedes Sprinter VIP (16 pax), Iveco Midibus (28 pax), Setra GT (54–64 pax)",
-    "current_pax": "16, 28, 54–64 pax",
+    "current_models": "Mercedes Sprinter (16 pax), Iveco Midibus (28 pax), Setra GT Coach (54 & 64 pax), Autobus GT Maxi (80 pax)",
+    "current_pax": "16, 28, 54, 64, 80 pax",
     "fleet_lines": [
       "Noleggio auto business, pullman granturismo, minubus a Brescia, Mantova",
       "Noleggio auto business, pullman granturismo, minibus",
@@ -1032,11 +1052,13 @@
     "website": "https://cattazzopullman.com",
     "fleet_url": "https://cattazzopullman.com/",
     "current_categories": [
-      "Executive Midibus (24–30 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Mercedes Sprinter Capri (17 seats)",
+      "Mercedes Sprinter Amalfi & Tourline (20 seats)",
+      "Executive Midibus (30 seats)",
+      "Neoplan Tourliner (54 seats)"
     ],
-    "current_models": "",
-    "current_pax": "",
+    "current_models": "Mercedes Sprinter Capri (17 pax), Mercedes Sprinter Amalfi/Tourline (20 pax), Executive Midibus (30 pax), Neoplan Tourliner (54 pax)",
+    "current_pax": "17, 20, 30, 54 pax",
     "fleet_lines": [
       "Noleggio Pullman e Auto con Conducente | Cattazzo Pullman",
       "Noleggio pullman",
@@ -1078,12 +1100,14 @@
     "website": "https://www.viganobus.com",
     "fleet_url": "https://www.viganobus.com/flotta/",
     "current_categories": [
-      "Mercedes Sprinter Luxury (16–20 seats)",
-      "Executive Midibus (24–30 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Mercedes Sprinter (22 seats)",
+      "Sprinter Grande Capri (19 seats)",
+      "Setra 515 (51 seats)",
+      "Mercedes Tourismo (53–55 seats)",
+      "Mercedes Travego (53 seats)"
     ],
-    "current_models": "Mercedes Sprinter Luxury (16–20 pax), Executive Midibus (24–30 pax), Setra & Mercedes GT Coach (50–56 pax)",
-    "current_pax": "16–20, 24–30, 50–56 pax",
+    "current_models": "Mercedes Sprinter (22 pax), Sprinter Grande Capri (19 pax), Setra 515 (51 pax), Mercedes Tourismo (53–55 pax), Mercedes Travego (53 pax)",
+    "current_pax": "19, 22, 51, 53–55 pax",
     "fleet_lines": [
       "*   [Noleggio autobus](https://www.viganobus.com/noleggio-con-conducente/noleggio-autobus/)",
       "Viganò snc effettua noleggio con conducente di vetture, minibus e autobus su territorio nazionale ed estero, disponendo di una flotta di veicoli che risponde ad ogni vostra esigenza.",
@@ -1098,11 +1122,11 @@
     "website": "https://www.autoserviziradaelli.it",
     "fleet_url": "https://www.autoserviziradaelli.it/flotta",
     "current_categories": [
-      "Mercedes Sprinter Luxury (16–20 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Mercedes Sprinter Minibus (19 seats)",
+      "Pullman Gran Turismo (52 seats)"
     ],
-    "current_models": "Mercedes Sprinter Minibus (19 pax), Mercedes Tourismo GT (52–54 pax)",
-    "current_pax": "19, 52–54 pax",
+    "current_models": "Mercedes Sprinter Minibus (19 pax), Pullman Gran Turismo (52 pax)",
+    "current_pax": "19, 52 pax",
     "fleet_lines": [
       "NOLEGGIO PULLMAN GT",
       "PER IL NOLEGGIO AUTOBUS"
@@ -1116,12 +1140,12 @@
     "website": "https://www.buscompany.it",
     "fleet_url": "https://www.buscompany.it/noleggio/",
     "current_categories": [
-      "Mercedes Sprinter Luxury (16–20 seats)",
-      "Executive Midibus (24–30 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Minibus (20 seats)",
+      "Midibus (28–32 seats)",
+      "Pullman GT (52–80 seats)"
     ],
-    "current_models": "Mercedes Sprinter Minibus (19 pax), Midibus (28 pax), Pullman Gran Turismo (54–78 pax)",
-    "current_pax": "19, 28, 54–78 pax",
+    "current_models": "Minibus (20 pax), Midibus (28–32 pax), Pullman GT (52–80 pax)",
+    "current_pax": "20, 28–32, 52–80 pax",
     "fleet_lines": [
       "Noleggio autobus Torino - Piemonte - BUS COMPANY",
       "Whistleblowing",
@@ -1139,11 +1163,13 @@
     "website": "https://www.pasqualinibus.it",
     "fleet_url": "https://www.pasqualinibus.it/flotta/",
     "current_categories": [
-      "Mercedes Sprinter VIP (8–16 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Minibus GT (16–19 seats)",
+      "Midibus (28–32 seats)",
+      "Pullman GT (52–60 seats)",
+      "Double Decker GT (80 seats)"
     ],
-    "current_models": "Minibus VIP (8–19 pax), Mercedes Tourismo GT (54 pax), Setra Double Decker (70 pax)",
-    "current_pax": "8–19, 54, 70 pax",
+    "current_models": "Minibus (16–19 pax), Midibus (28–32 pax), Pullman GT (52–60 pax), Double Decker GT (80 pax)",
+    "current_pax": "16–19, 28–32, 52–60, 80 pax",
     "fleet_lines": [
       "Title: Pasqualini Bus | Noleggio Pullman Autobus e Auto con conducente",
       "## Sicurezza dei passeggeri, una priorità assoluta",
@@ -1158,11 +1184,11 @@
     "website": "https://www.rossipietrobus.it",
     "fleet_url": "https://www.rossipietrobus.it/parco-mezzi/",
     "current_categories": [
-      "Executive Midibus (24–30 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Mercedes Sprinter Minibus (19 seats)",
+      "Pullman Gran Turismo (52–56 seats)"
     ],
-    "current_models": "Midibus (28 pax), Pullman Gran Turismo (52 pax)",
-    "current_pax": "28, 52 pax",
+    "current_models": "Mercedes Sprinter Minibus (19 pax), Pullman Gran Turismo (52–56 pax)",
+    "current_pax": "19, 52–56 pax",
     "fleet_lines": [],
     "raw_text_snippet": ""
   },
@@ -1173,11 +1199,11 @@
     "website": "https://www.bonaccorsitours.com",
     "fleet_url": "https://www.bonaccorsitours.com/flotta",
     "current_categories": [
-      "Mercedes Sprinter Luxury (16–20 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Mercedes Sprinter Minibus (19 seats)",
+      "Pullman Gran Turismo (54 seats)"
     ],
-    "current_models": "Minibus (16 pax), Pullman GT (50–54 pax)",
-    "current_pax": "16, 50–54 pax",
+    "current_models": "Mercedes Sprinter Minibus (19 pax), Pullman Gran Turismo (54 pax)",
+    "current_pax": "19, 54 pax",
     "fleet_lines": [
       "Noleggio pullman e minivan a Torino | Noleggio Bonaccorsi",
       "PULLMAN PER SCUOLE E GITE SCOLASTICHE",
@@ -1196,11 +1222,11 @@
     "website": "https://www.zaniviaggi.it",
     "fleet_url": "https://www.zaniviaggi.it/noleggio-autobus",
     "current_categories": [
-      "Mercedes Sprinter Luxury (16–20 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Mercedes Sprinter Executive (19 seats)",
+      "Pullman Gran Turismo (54 seats)"
     ],
-    "current_models": "Mercedes Sprinter Luxury (16–20 pax), Setra & Mercedes GT Coach (50–56 pax)",
-    "current_pax": "16–20, 50–56 pax",
+    "current_models": "Mercedes Sprinter Executive (19 pax), Pullman Gran Turismo (54 pax)",
+    "current_pax": "19, 54 pax",
     "fleet_lines": [
       "URL Source: https://www.zaniviaggi.it/noleggio-autobus",
       "[Vai al contenuto](https://www.zaniviaggi.it/noleggio-autobus#content)",
@@ -1228,12 +1254,12 @@
     "current_categories": [
       "Minivan NCC (5–8 seats)",
       "Minibus (14–20 seats)",
-      "Midibus (up to 31 seats)",
+      "Midibus (31 seats)",
       "Pullman GT Coaches (50–54, 55–56, 57–64 seats)",
-      "Double-Decker Coaches (90–94 seats)"
+      "Double-Decker GT (90–94 seats)"
     ],
-    "current_models": "Minivan NCC (5–8 pax), Minibus (14–20 pax), Midibus (31 pax), Pullman GT 50–54 (50–56 pax), 57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax) (57–64 pax), Double-Decker Pullman (90–94 pax), 55–56",
-    "current_pax": "5–8, 14–20, 31, 50–54, 55–56, 57–64, 90–94 pax",
+    "current_models": "Minibus (14–20 pax), Midibus (31 pax), Pullman GT (50–64 pax), Double-Decker Pullman (90–94 pax)",
+    "current_pax": "5–8, 14–20, 31, 50–64, 90–94 pax",
     "fleet_lines": [
       "*   [Mezzi](https://www.travelandservice.it/flotta)#### Pullman",
       "[Minibus 14-20 posti](https://www.travelandservice.it/automezzo/noleggio-minibus-con-conducente-14-20-posti/)[Minibus fino a 31 posti](https://www.travelandservice.it/automezzo/noleggio-minibus-con-conducente-fino-31-posti/) #### Monovolume e Minivan",
@@ -1272,12 +1298,12 @@
     "current_categories": [
       "Mercedes-Benz Classe V 250 (7 seats)",
       "Mercedes Gran Capri Minibus (20 seats)",
-      "Iveco Wing (28 seats) & Iveco Mago 2 Midibus (29 seats)",
-      "Setra 515 HD / Mercedes Tourismo / Neoplan Tourliner / Irizar i6S (51–55 seats)",
+      "Iveco Wing & Mago 2 (28–29 seats)",
+      "Mercedes Tourismo & Setra 515 GT (51–55 seats)",
       "Mercedes Tourismo RHD-L Maxibus (64 seats)"
     ],
-    "current_models": "Mercedes Classe V 250 (7 pax), Mercedes Gran Capri Minibus (20 pax), Iveco Wing (28 pax), Iveco Mago 2 (29 pax), Setra 515 HD (50–56 pax), Mercedes Tourismo (50–56 pax), Neoplan Tourliner (50–56 pax), Irizar i6S (51–55 pax), Mercedes Tourismo RHD-L (64 pax)",
-    "current_pax": "7, 20, 28, 29, 51–55, 64 pax",
+    "current_models": "Mercedes Gran Capri (20 pax), Iveco Wing & Mago 2 (28–29 pax), Mercedes Tourismo & Setra 515 GT (51–55 pax), Mercedes Tourismo RHD-L Maxibus (64 pax)",
+    "current_pax": "7, 20, 28–29, 51–55, 64 pax",
     "fleet_lines": [
       "Noleggio bus autobus pullman a Bergamo Milano Brescia Lodi Monza",
       "Perletti Bus da oltre 30 anni nel settore del noleggio autobus ; Ecco il nostro parco mezzi costituito da bus, mini bus, bus da 64 posti, scuola bus, auto e furgoni.",
@@ -1305,12 +1331,12 @@
     "website": "https://www.viplimousine.it",
     "fleet_url": "https://www.viplimousine.it/auto-di-lusso-con-conducente/pullman-di-lusso",
     "current_categories": [
-      "Mercedes-Benz Viano / V-Class 250 Extralungo Luxury (7 seats)",
-      "Mercedes-Benz Sprinter 315 Luxury (8 seats)",
-      "Mercedes-Benz Sprinter 315/519 Luxury Long Tomassini Style (16 seats)",
-      "Luxury Coaches / Pullman di Lusso (21, 28, 30, 56, 64, 79 seats)"
+      "Mercedes Classe V (7 seats)",
+      "Mercedes Sprinter 315 Luxury (8 seats)",
+      "Mercedes Sprinter 519 Tomassini Luxury (16 seats)",
+      "Pullman di Lusso (21, 28, 30, 56, 64, 79 seats)"
     ],
-    "current_models": "Mercedes V-Class (7–8 pax), Viano Luxury (7 pax), Mercedes Sprinter 315 Luxury (8 pax), Mercedes Sprinter 519 Tomassini Luxury (16 pax), Pullman di Lusso 21 (50–56 pax), 79 pax) (79 pax) (79 pax) (79 pax) (79 pax) (79 pax) (79 pax) (79 pax) (79 pax) (79 pax) (79 pax) (79 pax) (79 pax) (79 pax) (79 pax) (79 pax) (79 pax) (79 pax) (79 pax) (79 pax) (79 pax), 28, 30, 56, 64",
+    "current_models": "Mercedes Sprinter 315 Luxury (8 pax), Mercedes Sprinter 519 Tomassini Luxury (16 pax), Pullman di Lusso (21, 28, 30, 56, 64, 79 pax)",
     "current_pax": "7, 8, 16, 21, 28, 30, 56, 64, 79 pax",
     "fleet_lines": [
       "Noleggio con conducente di pullman e autobus di lusso",
@@ -1353,11 +1379,12 @@
     "website": "https://www.airpullman.it",
     "fleet_url": "https://www.airpullman.it/noleggio",
     "current_categories": [
-      "Setra & Mercedes GT Coach (50–56 seats)",
-      "Mercedes Sprinter Luxury (16–20 seats)"
+      "Minibus VIP (9 seats)",
+      "Executive Midibus (38 seats)",
+      "Setra GT Coach (54–80 seats)"
     ],
-    "current_models": "Setra & Mercedes GT Coach (50–56 pax), Mercedes Sprinter Luxury (16–20 pax)",
-    "current_pax": "50–56, 16–20 pax",
+    "current_models": "Minibus VIP (9 pax), Executive Midibus (38 pax), Setra GT Coach (54–80 pax)",
+    "current_pax": "9, 38, 54–80 pax",
     "fleet_lines": [
       "Homepage - AirPullman",
       "AIR PULLMAN SpA - Via Enrico Fermi, 9 - 20057 Assago (MI) - CF e P.Iva 00216510123",
@@ -1387,11 +1414,12 @@
     "website": "https://www.gruppostat.com",
     "fleet_url": "https://www.gruppostat.com/flotta",
     "current_categories": [
-      "Mercedes Sprinter Luxury (16–20 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Irizar PB & Century HDH (38–53 seats)",
+      "Irizar i6 HDH (51–63 seats)",
+      "Scania & Mercedes GT Coach (50–64 seats)"
     ],
-    "current_models": "Mercedes Sprinter Minibus (19 pax), Setra GT Coach (52–64 pax)",
-    "current_pax": "19, 52–64 pax",
+    "current_models": "Irizar PB & Century HDH (38–53 pax), Irizar i6 HDH (51–63 pax), Scania & Mercedes GT (50–64 pax)",
+    "current_pax": "38–64 pax",
     "fleet_lines": [],
     "raw_text_snippet": "\nTitle: Errore dettagliato IIS 10.0 - 404.0\n\nURL Source: https://www.gruppostat.com/flotta\n\nWarning: Target URL returned error 404: Not Found\n\nMarkdown Content:\n### Errore HTTP 404.0 - Not Found\n\n#### La risorsa desiderata è stata rimossa, rinominata o è temporaneamente non disponibile.\n\n#### Cause più probabili:\n\n*   La directory o il file specificato non esiste nel server Web.\n*   L'URL contiene un errore di battitura.\n*   Un modulo o un filtro personalizzato, ad esempio URLScan, limita l'accesso al file.\n\n#### Possibili operazioni:\n\n*   Creare il contenuto nel server Web.\n*   Verificare l'URL del browser.\n*   Creare una regola per tenere traccia delle richieste non riuscite per questo codice di stato HTTP e controllare quale modulo chiama SetStatus. Per ulteriori informazioni sulla creazione di una regola di traccia per richieste non riuscite, fare clic [qui](http://go.microsoft.com/fwlink/?LinkID=66439). \n\n#### Informazioni dettagliate sull'errore:\n\n| Modulo | IIS Web Core |\n| --- "
   },
@@ -1402,12 +1430,13 @@
     "website": "https://www.avantgardelimousineservice.it",
     "fleet_url": "https://www.avantgardelimousineservice.it/mezzi/",
     "current_categories": [
-      "Mercedes-Benz V-Class / Viano Luxury (7–8 seats)",
-      "Mercedes-Benz Sprinter VIP / Total Black (8 & 16 seats)",
+      "Mercedes Classe V (7–8 seats)",
+      "Mercedes Sprinter VIP (8 seats)",
+      "Mercedes Minibus (16 seats)",
       "Mercedes Minibus VIP Class (18 seats)",
-      "Executive Minibus (25 seats)"
+      "Executive Midibus (25 seats)"
     ],
-    "current_models": "Mercedes Classe V (7–8 pax), Viano (7–8 pax), Mercedes Sprinter VIP Total Black 8 & (16 pax), Mercedes Minibus VIP Class (18 pax), Minibus (25 pax)",
+    "current_models": "Mercedes Sprinter VIP (8 pax), Mercedes Minibus (16 pax), Mercedes Minibus VIP Class (18 pax), Executive Midibus (25 pax)",
     "current_pax": "7–8, 8, 16, 18, 25 pax",
     "fleet_lines": [
       "Noleggio minibus con conducente Milano - Avantgarde Service",
@@ -1448,12 +1477,12 @@
     "website": "https://exclusivecarsmilano.it",
     "fleet_url": "https://exclusivecarsmilano.it/noleggio-autobus/",
     "current_categories": [
-      "Mercedes-Benz V-Class 250 d Luxury Van (7–8 seats)",
+      "Mercedes-Benz Classe V (7 seats)",
       "Mercedes-Benz Sprinter Minibus (20 seats)",
       "Irizar GT Coach (52 seats)"
     ],
-    "current_models": "Mercedes V-Class 250 d Luxury (7–8 pax), Mercedes Sprinter Minibus (20 pax), Irizar GT Coach (52 pax)",
-    "current_pax": "7–8, 20, 52 pax",
+    "current_models": "Mercedes-Benz Sprinter Minibus (20 pax), Mercedes-Benz Classe V (7 pax), Irizar GT Coach (52 pax)",
+    "current_pax": "7, 20, 52 pax",
     "fleet_lines": [
       "Noleggio Autobus e Minibus | Exclusive Cars Milano Vai al contenuto",
       "Noleggio autobus",
@@ -1495,13 +1524,12 @@
     "website": "https://www.landwaytourism.com",
     "fleet_url": "https://www.landwaytourism.com/flotta/",
     "current_categories": [
-      "Minivan NCC (7 seats)",
-      "Mercedes-Benz Sprinter Minibus (19–20 seats)",
-      "Iveco Executive Midibus (29–30 seats)",
-      "Mercedes Tourismo / Setra / Neoplan GT Coach (51–57 seats)"
+      "Minibus GT (20 seats)",
+      "Iveco Midibus (30 seats)",
+      "Mercedes Tourismo & Setra GT Coach (50 seats)"
     ],
-    "current_models": "Minivan NCC (7 pax), Mercedes Sprinter Minibus (19–20 pax), Iveco Midibus (29–30 pax), Mercedes Tourismo (50–56 pax), Setra (50–56 pax), Neoplan GT (51–57 pax)",
-    "current_pax": "7, 19–20, 29–30, 51–57 pax",
+    "current_models": "Minibus GT (20 pax), Iveco Midibus (30 pax), Mercedes Tourismo & Setra GT (50 pax)",
+    "current_pax": "20, 30, 50 pax",
     "fleet_lines": [
       "NOLEGGIO PULLMAN/BUS",
       "Noleggio autobus per hotel e ristoranti",
@@ -1543,12 +1571,13 @@
     "website": "https://www.cavourese.it",
     "fleet_url": "https://www.cavourese.it/it/noleggio-autobus",
     "current_categories": [
-      "Mercedes Sprinter Luxury (16–20 seats)",
-      "Executive Midibus (24–30 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Minivan NCC (16 seats)",
+      "Minibus (35 seats)",
+      "Autobus Gran Turismo (63 seats)",
+      "Autobus Doppio Piano (79 seats)"
     ],
-    "current_models": "Mercedes Sprinter Minibus (16–19 pax), Midibus (28 pax), Setra GT Coach (52–60 pax)",
-    "current_pax": "16–19, 28, 52–60 pax",
+    "current_models": "Minivan NCC (16 pax), Minibus (35 pax), Autobus GT (63 pax), Autobus Doppio Piano (79 pax)",
+    "current_pax": "16, 35, 63, 79 pax",
     "fleet_lines": [
       "Noleggia il tuo autobus - Cavourese",
       "Noleggio autobus",
@@ -1590,12 +1619,13 @@
     "website": "https://www.autoservizicazzaniga.it",
     "fleet_url": "https://www.autoservizicazzaniga.it/parco-mezzi",
     "current_categories": [
-      "Mercedes Sprinter Luxury (16–20 seats)",
-      "Executive Midibus (24–30 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "VW Caravelle (8 seats)",
+      "Mercedes Capri (20 seats)",
+      "Irizar MAN Century Midibus (40 seats)",
+      "Setra & Mercedes Tourismo GT Coaches (52–60 seats)"
     ],
-    "current_models": "Minibus (19 pax), Midibus (28 pax), Autobus GT (52 pax)",
-    "current_pax": "19, 28, 52 pax",
+    "current_models": "VW Caravelle (8 pax), Mercedes Capri (20 pax), Irizar MAN Century Midibus (40 pax), Setra & Mercedes Tourismo GT Coaches (52–60 pax)",
+    "current_pax": "8, 20, 40, 52–60 pax",
     "fleet_lines": [
       "Autoservizi Cazzaniga - Barzago (Lecco) - Servizio di pullman a autonoleggio con conducente a Lecco, Milano, Monza e Brianza",
       "Bus, minibus e noleggio con conducente."
@@ -1609,12 +1639,13 @@
     "website": "https://www.zambettibus.com",
     "fleet_url": "https://www.zambettibus.com/flotta",
     "current_categories": [
-      "Mercedes Sprinter VIP (8–16 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)",
-      "Autobus GT Maxi / Double Decker (60–80+ seats)"
+      "Iveco Daily Tourys Minibus (19 seats)",
+      "Executive Midibus (28–34 seats)",
+      "Scania Touring HD & Mercedes Tourismo (54 seats)",
+      "Double Decker GT (82 seats)"
     ],
-    "current_models": "Minibus NCC (8–19 pax), Scania Touring GT (54 pax), Double Decker GT (82 pax)",
-    "current_pax": "8–19, 54, 82 pax",
+    "current_models": "Iveco Daily Tourys Minibus (19 pax), Executive Midibus (28–34 pax), Scania Touring HD & Mercedes Tourismo (54 pax), Double Decker GT (82 pax)",
+    "current_pax": "19, 28–34, 54, 82 pax",
     "fleet_lines": [
       "Scopri la nostra flotta di autobus a noleggio | Zambetti Bus",
       "Posti a sedere Seleziona 10-27 posti 28-44 posti 45-55 posti 56-82 posti Fino a 9 posti da 1 a 4 posti",
@@ -1656,11 +1687,12 @@
     "website": "https://www.peschieraviaggi.it",
     "fleet_url": "https://www.peschieraviaggi.it/flotta",
     "current_categories": [
-      "Executive Midibus (24–30 seats)",
-      "Setra & Mercedes GT Coach (50–56 seats)"
+      "Mercedes Sprinter Minibus (19 seats)",
+      "Midibus (30 seats)",
+      "Pullman GT (54–62 seats)"
     ],
-    "current_models": "",
-    "current_pax": "",
+    "current_models": "Mercedes Sprinter Minibus (19 pax), Midibus (30 pax), Pullman GT (54–62 pax)",
+    "current_pax": "19, 30, 54–62 pax",
     "fleet_lines": [
       "*   [Autobus Granturismo](https://www.peschieraviaggi.it/noleggio-autobus/)",
       "*   [Autobus con pedana disabili](https://www.peschieraviaggi.it/mezzi/noleggio-autobus-con-pedana-per-disabili-fino-a-3-carrozzine/)",

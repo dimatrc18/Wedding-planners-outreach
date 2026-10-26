@@ -915,6 +915,45 @@ test('mergePartnerRecords combines duplicate operators, merges bullet and number
   assert(merged.score_breakdown.partner_card.rate_hourly, '€95/h');
 });
 
+test('Ground Truth Fleet Re-evaluation: Car Service Milan and all bus leads have exact website capacities', async () => {
+  const { INITIAL_BUS_PARTNERS } = await import('../app/bus_partners_data.js');
+  const { shortFleetName } = await import('../app/views/bus_partners.js');
+
+  const csm = INITIAL_BUS_PARTNERS.find((p) => p.name === 'Car Service Milan');
+  assert(csm, 'Car Service Milan must exist in INITIAL_BUS_PARTNERS');
+  assert.equal(csm.website, 'https://carservicemilan.com');
+
+  // Verify Car Service Milan has exact 8 seats, not 8-16
+  const sprinterCat = csm.fleet_categories.find((c) => /sprinter/i.test(c));
+  assert(sprinterCat, 'Must have Sprinter category');
+  assert.equal(sprinterCat, 'Mercedes-Benz Sprinter Luxury Minibus (8 seats)');
+  assert.equal(shortFleetName(sprinterCat), 'Sprinter Lux (8p)');
+
+  // Verify pax capacity
+  assert.equal(csm.score_breakdown?.partner_card?.pax_capacity, '7, 8 pax');
+  assert.equal(csm.score_breakdown?.partner_card?.fleet_segment, 'luxury');
+
+  // Verify Perletti has exact Capri, Wing, and Maxibus
+  const perletti = INITIAL_BUS_PARTNERS.find((p) => /perletti/i.test(p.name));
+  assert(perletti, 'Perletti must exist');
+  assert(perletti.fleet_categories.some((c) => /capri/i.test(c) && /20/i.test(c)));
+  assert(perletti.fleet_categories.some((c) => /wing/i.test(c) && /28/i.test(c)));
+  assert(perletti.fleet_categories.some((c) => /64/i.test(c)));
+
+  // Verify Viganò has exact Sprinter 22 and Capri 19
+  const vigano = INITIAL_BUS_PARTNERS.find((p) => /viganò/i.test(p.name));
+  assert(vigano, 'Viganò must exist');
+  assert(vigano.fleet_categories.some((c) => /22/i.test(c)));
+  assert(vigano.fleet_categories.some((c) => /19/i.test(c)));
+
+  // Verify Rainoldi has official domain and exact capacities
+  const rainoldi = INITIAL_BUS_PARTNERS.find((p) => /rainoldi/i.test(p.name));
+  assert(rainoldi, 'Rainoldi must exist');
+  assert.equal(rainoldi.website, 'https://www.rainoldibus.com');
+  assert.equal(rainoldi.email, 'info@rainoldibus.com');
+});
+
+
 
 
 
