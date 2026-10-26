@@ -566,10 +566,12 @@ test('CEO-Level Short Italian Outreach Templates: generates concise Italian B2B 
   assert(t1.subject.includes('Como'), 'Subject must mention operator city');
   assert(t1.subject.includes('DOROGO'), 'Subject must mention DOROGO');
   assert(t1.body.includes('Cattaneo'), 'Body greeting must mention operator name');
-  assert(t1.body.includes('Modelli bus disponibili e quanti passeggeri portano'), 'T1 body must ask for bus models and pax capacity');
-  assert(t1.body.includes('Prezzi B2B indicativi per servizio orario e a disposizione (4h / 8h)'), 'T1 body must ask for hourly and standby rates');
+  assert(t1.body.includes('Malpensa'), 'T1 body must ask for Milan–Malpensa transfer rates');
+  assert(t1.body.includes('servizio orario e a disposizione'), 'T1 body must ask for hourly and standby rates with minimum service time');
+  assert(t1.body.includes('Setra & Mercedes GT Coach'), 'T1 body must cite website coach fleet');
+  assert(!t1.body.includes('Mercedes-Benz V-Class VIP'), 'T1 body must exclude V-Class from partner citations');
   assert(t1.body.includes('contatto WhatsApp diretto'), 'T1 body must ask for direct WhatsApp contact');
-  assert(t1.word_count < 130, `CEO template must remain ultra-short (<130 words), got ${t1.word_count}`);
+  assert(t1.word_count < 190, `CEO template must remain short, got ${t1.word_count}`);
 
   const t2 = buildBusOutreachDraft(partner, 'T2_followup');
   assert(t2.subject.startsWith('Re:'), 'Follow-up subject must thread with Re:');

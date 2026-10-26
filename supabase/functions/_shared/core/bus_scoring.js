@@ -424,32 +424,50 @@ export function canSendBusOutreach(partner = {}, now = new Date(), opts = {}) {
     };
   }
 
+  // Business hours window: 08:30 - 15:30 Europe/Rome (strictly avoid sending too late)
+  if (!opts.allowOffHoursOverride) {
+    const romeTimeStr = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit', hour12: false }).format(d);
+    const [rHour, rMin] = romeTimeStr.split(':').map(Number);
+    const currentMins = rHour * 60 + rMin;
+    const startMins = 8 * 60 + 30; // 08:30
+    const endMins = 15 * 60 + 30;   // 15:30
+    if (currentMins < startMins || currentMins > endMins) {
+      return {
+        ok: false,
+        reason: 'outside_business_hours',
+        message: 'Outside business hours (08:30–15:30 Rome time). Scheduled for next morning dispatch window.',
+        dow,
+      };
+    }
+  }
+
   return { ok: true, reason: 'allowed_mon_sat', dow };
 }
 
 /**
  * Computes the next valid Mon–Sat send slot (skipping Sunday unless replying to a Sunday inbound).
- * Spaces out operators across weekdays (max 4 per morning window, spaced by 25–30 mins),
- * mirroring the venue outreach cadence.
+ * Enforces business morning/early afternoon window (08:30–14:30 Europe/Rome), never late afternoon or night.
+ * Pacing: max 12 per day to support aggressive 50-contact target by Friday.
  */
 export function nextBusSendSlot(now = new Date(), indexOffset = 0, opts = {}) {
-  const maxPerDay = 4;
+  const maxPerDay = 12; // Scaled for 50-by-Friday target (10–12 sends/day)
   const dayShift = Math.floor(indexOffset / maxPerDay);
   const slotInDay = indexOffset % maxPerDay;
-  const minuteOffsets = [0, 25, 50, 75];
-  const mins = minuteOffsets[slotInDay] || 0;
+  const minsFromStart = 30 + (slotInDay * 25); // 08:30, 08:55, 09:20... up to ~13:05 UTC
+  const hourOffset = Math.floor(minsFromStart / 60);
+  const remMins = minsFromStart % 60;
 
   const n = now instanceof Date ? now : new Date(now);
   let d = new Date(n.getTime());
-  // Base at 07:00 UTC (08:00/09:00 Rome time morning window)
-  d.setUTCHours(7, mins, 0, 0);
+  // Base at 07:00 UTC (~08:30 Rome time)
+  d.setUTCHours(7 + hourOffset, remMins, 0, 0);
 
   const romeDow = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Rome', weekday: 'short' }).format(n);
-  if (d <= n || romeDow === 'Sun' || (romeDow === 'Sat' && n.getUTCHours() >= 12)) {
+  if (d <= n || romeDow === 'Sun' || (romeDow === 'Sat' && n.getUTCHours() >= 13)) {
     // Advance to next valid Mon–Sat morning
     do {
       d = new Date(d.getTime() + 24 * 3600 * 1000);
-      d.setUTCHours(7, mins, 0, 0);
+      d.setUTCHours(7 + hourOffset, remMins, 0, 0);
     } while (
       new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Rome', weekday: 'short' }).format(d) === 'Sun' ||
       d <= n
@@ -460,7 +478,7 @@ export function nextBusSendSlot(now = new Date(), indexOffset = 0, opts = {}) {
   let addedDays = 0;
   while (addedDays < dayShift) {
     d = new Date(d.getTime() + 24 * 3600 * 1000);
-    d.setUTCHours(7, mins, 0, 0);
+    d.setUTCHours(7 + hourOffset, remMins, 0, 0);
     const dow = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Rome', weekday: 'short' }).format(d);
     if (dow !== 'Sun') {
       addedDays++;
@@ -509,6 +527,28 @@ export function buildBusOutreachDraft(partner = {}, stepKey = 'T1_intro') {
   const asksCancellation = /cancel|cancell|disdett|penal/i.test(lowerNotes);
   const asksAdvanceNotice = /in advance|anticipo|preavviso/i.test(lowerNotes);
 
+  // Helper to filter out standalone V-Class/minivans (<8 pax): focus exclusively on Minibuses & larger coaches
+  const isMinibusOrCoach = (catStr = '') => {
+    const s = String(catStr || '').toLowerCase();
+    if (/(classe\s*v|v-?class|viano|vito)/i.test(s) && !/(sprinter|minibus|1[0-9]|2[0-9]|posti|pax)/i.test(s)) {
+      return false;
+    }
+    if (/minivan/i.test(s) && /(?:5|6|7|8)\s*(?:pax|posti|seats)/i.test(s) && !/sprinter|minibus/i.test(s)) {
+      return false;
+    }
+    return true;
+  };
+
+  const rawCats = Array.isArray(partner.fleet_categories) ? partner.fleet_categories : [];
+  const busCategories = rawCats.filter(isMinibusOrCoach);
+  let fleetBullets = '';
+  if (busCategories.length > 0) {
+    fleetBullets = busCategories.slice(0, 3).map((c) => `• ${c.replace(/mercedes-benz/i, 'Mercedes')}`).join('\n');
+  } else if (partner.bus_models && !/classe\s*v|v-?class/i.test(partner.bus_models)) {
+    fleetBullets = `• ${partner.bus_models}`;
+  }
+  const fleetSection = fleetBullets ? `\n\nSul vostro sito abbiamo notato in particolare:\n${fleetBullets}` : '';
+
   let personalIntro = '';
   if (isUserAuthored) {
     if (asks50Focus) {
@@ -524,22 +564,19 @@ export function buildBusOutreachDraft(partner = {}, stepKey = 'T1_intro') {
     } else if (asksLuxury) {
       personalIntro = `Vorremmo capire meglio la composizione del vostro parco mezzi per verificare la disponibilità di allestimenti Luxury / VIP.`;
     }
-  } else if (Array.isArray(partner.fleet_categories) && partner.fleet_categories.length >= 2) {
-    const busNames = partner.fleet_categories.slice(0, 2).map((c) => c.split('(')[0].replace(/mercedes-benz/i, 'Mercedes').trim()).join(' e ');
-    if (busNames) {
-      personalIntro = `In particolare ho notato i vostri ${busNames}; vorremmo valutare tariffe e disponibilità per questi mezzi.`;
-    }
   }
 
   if (stepKey === 'T2_followup') {
     const body = `Buongiorno Team ${cleanName},
 
-Vi scrivo rapidamente in merito alla mia precedente email per verificare disponibilità B2B su Como e Milano.
+Vi scrivo rapidamente in merito alla mia precedente email per verificare disponibilità B2B su Como e Milano per minibus e pullman.
+
+Operiamo con flotta di proprietà V-Class ed S-Class e cerchiamo partner affidabili per gruppi più numerosi (sia linea Luxury sia Standard).
 
 Se per voi è possibile, potete rispondermi direttamente a questa email (oppure su WhatsApp al +32 456 14 14 97) indicando:
+- Tariffe B2B per transfer (es. Milano Centro – Malpensa MXP, Milano – Como, con relativo minimo d'ordine)
+- Prezzi B2B indicativi per servizio orario e a disposizione (4h / 8h) e tempo minimo di servizio
 - Modelli bus disponibili e quanti passeggeri portano per ciascun mezzo
-- Tariffe B2B per transfer (es. Milano Centro – Malpensa, Milano – Como, con relativo minimo d'ordine)
-- Prezzi B2B indicativi per servizio orario e a disposizione (4h / 8h)
 - Politiche di cancellazione e conferma se disponete di veicoli privi di scritte commerciali
 
 Grazie e buon lavoro,
@@ -556,7 +593,7 @@ Dmitri Traciuc`;
 
   if (stepKey === 'WA_pitch') {
     const extraPersonal = personalIntro ? ` ${personalIntro}` : '';
-    const body = `Buongiorno ${cleanName}, sono Dmitri di DOROGO (trasferimenti eventi e matrimoni su Lago di Como e Milano). Abbiamo forte richiesta clienti per ${segmentPhrase} e vorremmo collaborare con voi.${extraPersonal} Potreste indicarmi qui su WhatsApp modelli, quanti passeggeri portano, tariffe per transfer (con relativo minimo d'ordine) e prezzi per servizio orario e a disposizione (4h/8h)? Grazie mille!\n\nDmitri Traciuc`;
+    const body = `Buongiorno ${cleanName}, sono Dmitri di DOROGO (trasferimenti eventi e matrimoni su Lago di Como e Milano con flotta V-Class ed S-Class). Cerchiamo partner affidabili esclusivamente per minibus (da 8–20 posti) e pullman di capienza maggiore.${extraPersonal} Potreste indicarmi qui su WhatsApp tariffe per transfer (es. Milano – Malpensa con minimo d'ordine) e prezzi per servizio orario e a disposizione (4h/8h)? Grazie mille!\n\nDmitri Traciuc`;
     return {
       step_name: 'WA_pitch',
       language: 'it',
@@ -569,7 +606,13 @@ Dmitri Traciuc`;
   // Default: T1_intro (Tailored CEO-level Italian outreach)
   const questions = [];
 
-  // Question 1: Fleet Models, Seating Capacity & Unlisted Fleet
+  // Question 1: Transfer Pricing (Milan <-> Malpensa MXP / Como + Minimum Order)
+  questions.push(`Prezzi B2B indicativi per transfer punto a punto (es. tratta Milano Centro – Aeroporto di Malpensa MXP, con relativo minimo d'ordine e preavviso richiesto)`);
+
+  // Question 2: Hourly / Standby Pricing (4h / 8h + Minimum Service Time)
+  questions.push(`Tariffe B2B per servizio orario e a disposizione (es. mezza giornata 4h / giornata intera 8h) e relativo tempo minimo di servizio`);
+
+  // Question 3: Fleet Models, Seating Capacity & Unlisted Fleet
   if (asks50Focus) {
     questions.push(`Oltre ai pullman da 50 posti, avete a disposizione anche minibus o bus in versione Luxury/VIP (o contatti fidati di colleghi da consigliare)? Siamo comunque molto interessati anche ai pullman normali.`);
   } else if (asksUnlisted && (asksMinibuses || asksExtraLong || asks19 || asks20_26)) {
@@ -585,37 +628,38 @@ Dmitri Traciuc`;
   } else if (asksCapacity) {
     questions.push(`Modelli bus disponibili e quanti passeggeri portano (capienza esatta ed effettiva per ciascun mezzo)`);
   } else {
-    questions.push(`Modelli bus disponibili e quanti passeggeri portano (capienza esatta per mezzo)`);
+    questions.push(`Se oltre ai modelli indicati disponete di altri minibus o pullman in flotta (o contatti fidati di colleghi con cui collaborate per capienze maggiori)`);
   }
 
-  // Question 2: Zero Stickers / Luxury Line vs Standard
+  // Question 4: Discretion / Zero Stickers / Luxury Line vs Standard
   if (asksStickers) {
     questions.push(`Potreste confermarmi se disponete di mezzi completamente privi di scritte o adesivi commerciali sulla carrozzeria?`);
   } else if (asksLuxury && !asks50Focus) {
     questions.push(`Oltre ai bus turistici standard, disponete anche di mezzi in allestimento Luxury/VIP (interni in pelle, vetri oscurati privacy, total black)?`);
   }
 
-  // Question 3: PRICING - Transfer (with Milan/Como Minimum Order) AND Hourly / Standby
-  questions.push(`Prezzi B2B indicativi per servizio orario e a disposizione (4h / 8h) e per transfer (es. Milano – Malpensa o Como, con relativo minimo d'ordine)`);
-
-  // Question 4: Cancellation Policy & Advance Booking Notice
+  // Question 5: Cancellation Policy & Advance Booking Notice
   if (asksCancellation && asksAdvanceNotice) {
     questions.push(`Con quanto preavviso richiedete solitamente la prenotazione e quali sono le vostre politiche e penali di cancellazione (cancellation policy)?`);
   } else if (asksCancellation) {
     questions.push(`Quali sono i vostri termini e penali di cancellazione (cancellation policy)?`);
   } else if (asksAdvanceNotice) {
     questions.push(`Con quanto preavviso è necessario prenotare per bloccare i mezzi?`);
+  } else if (!asksStickers && !asksLuxury) {
+    questions.push(`Termini e penali di cancellazione (cancellation policy)`);
   }
 
   // Final Question: Direct WhatsApp
-  questions.push(`Un vostro contatto WhatsApp diretto per le disponibilità rapide`);
+  questions.push(`Un vostro contatto WhatsApp diretto per verificare disponibilità rapide`);
 
   const qLines = questions.map((q, idx) => `${idx + 1}. ${q}`).join('\n');
   const personalLine = personalIntro ? `\n\n${personalIntro}` : '';
 
   const body = `Buongiorno Team ${cleanName},
 
-Sono Dmitri di DOROGO. Gestiamo trasferimenti per eventi privati e matrimoni sul Lago di Como e Milano con flotta V-Class ed S-Class. Abbiamo frequente richiesta per ${segmentPhrase} su ${city}.${personalLine}
+Sono Dmitri di DOROGO. Gestiamo trasferimenti per eventi privati e matrimoni sul Lago di Como e Milano con flotta di proprietà Mercedes V-Class, S-Class, E-Class e Maybach.
+
+Per i gruppi più numerosi dei nostri clienti cerchiamo partner affidabili esclusivamente per minibus e pullman di capienza maggiore (sia allestimenti Luxury sia Standard).${fleetSection}${personalLine}
 
 Per collaborare, potreste indicarmi brevemente:
 ${qLines}

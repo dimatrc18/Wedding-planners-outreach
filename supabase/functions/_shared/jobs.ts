@@ -434,18 +434,61 @@ export async function sendDueBusPartners(db: any, settings: any, now = new Date(
   if (onlyPartnerId) {
     query = query.eq('id', onlyPartnerId);
   } else {
-    query = query.eq('status', 'WANT_TO_CONTACT');
+    // Both new intros (WANT_TO_CONTACT) and active follow-up candidates (CONTACTED)
+    query = query.in('status', ['WANT_TO_CONTACT', 'CONTACTED']);
   }
 
   const { data: partners, error } = await query;
   if (error || !partners || !partners.length) return { sent: 0, checked: 0 };
 
+  // 1. Check 72h manual escalation on any contacted partners who received T2 and did not reply
+  for (const p of partners) {
+    const card = p.score_breakdown?.partner_card || {};
+    if (card.outreach_stage === 't2_sent' && !card.replied_at && p.status !== 'APPROVED_PARTNER') {
+      const t2Time = card.t2_sent_at ? new Date(card.t2_sent_at).getTime() : (card.last_outreach_at ? new Date(card.last_outreach_at).getTime() : 0);
+      if (t2Time > 0 && now.getTime() - t2Time >= 72 * 3600 * 1000) {
+        const updatedCard = { ...card, outreach_stage: 'manual_escalation' };
+        await db.from('bus_partners').update({
+          score_breakdown: { ...(p.score_breakdown || {}), partner_card: updatedCard },
+          updated_at: now.toISOString(),
+        }).eq('id', p.id);
+        await logEvent(db, 'bus_partner_manual_escalation', {
+          partner_id: p.id,
+          name: p.name,
+          phone: p.phone,
+          whatsapp: card.whatsapp || p.phone,
+        }, null, 'cron');
+        await tgSend(
+          `📞 <b>Bus Partner Needs Manual Call / WhatsApp</b>\n\n` +
+          `Operator: <b>${tgEscape(p.name)}</b> (${tgEscape(p.base_city || 'Northern Italy')})\n` +
+          `Phone: <code>${p.phone || 'N/A'}</code>\n` +
+          `WhatsApp: <code>${card.whatsapp || p.phone || 'N/A'}</code>\n` +
+          `Reason: 72 hours passed after 2 emails with no reply. Open dashboard to call or message.`,
+        );
+      }
+    }
+  }
+
+  // 2. Filter for due sends
   const due = partners.filter((p: any) => {
     if (onlyPartnerId) return true;
     const card = p.score_breakdown?.partner_card || {};
-    const sched = card.scheduled_at || p.scheduled_at;
-    if (!sched) return true;
-    return new Date(sched) <= now;
+
+    // T1: status is WANT_TO_CONTACT
+    if (p.status === 'WANT_TO_CONTACT') {
+      const sched = card.scheduled_at || p.scheduled_at;
+      if (!sched) return true;
+      return new Date(sched) <= now;
+    }
+
+    // T2 Follow-up: status is CONTACTED and stage is t1_sent, 24-36h elapsed without reply
+    if (p.status === 'CONTACTED' && card.outreach_stage === 't1_sent' && !card.replied_at) {
+      if (!card.last_outreach_at) return false;
+      const hoursElapsed = (now.getTime() - new Date(card.last_outreach_at).getTime()) / (3600 * 1000);
+      return hoursElapsed >= 24; // Prompt next-morning follow-up
+    }
+
+    return false;
   });
 
   if (!due.length) return { sent: 0, checked: partners.length, message: 'none_due' };
@@ -454,11 +497,14 @@ export async function sendDueBusPartners(db: any, settings: any, now = new Date(
   due.sort((a: any, b: any) => (a.relevance_score || 70) - (b.relevance_score || 70));
 
   let sent = 0;
-  // Send at most 1 per cron cycle to guarantee safe pacing (no blast)
-  const batch = due.slice(0, 1);
+  // Send at most 3 per cron cycle to guarantee safe pacing toward 50 by Friday
+  const batch = due.slice(0, 3);
 
   for (const partner of batch) {
     const card = partner.score_breakdown?.partner_card || {};
+    const isFollowup = partner.status === 'CONTACTED' && card.outreach_stage === 't1_sent';
+    const stepKey = isFollowup ? 'T2_followup' : 'T1_intro';
+
     const gate = core.canSendBusOutreach(partner, now, { allowUnverifiedOverride: Boolean(onlyPartnerId) });
     if (!gate.ok && !onlyPartnerId) {
       console.log(`Bus outreach paused for ${partner.name}: ${gate.message}`);
@@ -480,7 +526,7 @@ export async function sendDueBusPartners(db: any, settings: any, now = new Date(
     }
 
     // 2. Build personalized Italian CEO pitch
-    const draft = core.buildBusOutreachDraft(partner, 'T1_intro');
+    const draft = core.buildBusOutreachDraft(partner, stepKey);
     const fromEmail = env('OUTREACH_FROM_EMAIL') || settings?.sender?.email || 'dmitri@dorogo.eu';
     const fromName = 'Dmitri | DOROGO Transfers';
 
@@ -494,6 +540,8 @@ export async function sendDueBusPartners(db: any, settings: any, now = new Date(
         text: draft.body,
         lang: 'it',
         footerStyle: settings?.email_footer_style || 'wordmark',
+        inReplyTo: isFollowup ? card.last_message_id : undefined,
+        references: isFollowup && card.last_message_id ? [card.last_message_id] : undefined,
       });
 
       const sentAt = now.toISOString();
@@ -505,8 +553,9 @@ export async function sendDueBusPartners(db: any, settings: any, now = new Date(
 
       const updatedCard = {
         ...card,
-        outreach_stage: 't1_sent',
+        outreach_stage: isFollowup ? 't2_sent' : 't1_sent',
         last_outreach_at: sentAt,
+        ...(isFollowup ? { t2_sent_at: sentAt } : {}),
         last_message_id: messageId,
         email_status: ver.resultcode === 1 ? 'verified' : (ver.resultcode === 2 ? 'catch_all' : 'mx_ok'),
         verification: ver,
@@ -518,28 +567,28 @@ export async function sendDueBusPartners(db: any, settings: any, now = new Date(
         updated_at: sentAt,
       }).eq('id', partner.id);
 
-      await logEvent(db, 'bus_partner_contacted', {
+      await logEvent(db, isFollowup ? 'bus_partner_followup_sent' : 'bus_partner_contacted', {
         partner_id: partner.id,
         name: partner.name,
         email: partner.email,
+        step: stepKey,
         message_id: messageId,
         score: partner.relevance_score,
       }, null, actor);
 
       await tgSend(
-        `🚌 <b>Bus Partner CEO Outreach Sent</b>\n\n` +
+        `🚌 <b>Bus Partner ${isFollowup ? 'Follow-Up (T2) Sent' : 'CEO Outreach Sent'}</b>\n\n` +
         `Operator: <b>${tgEscape(partner.name)}</b> (${tgEscape(partner.base_city)})\n` +
         `Email: <code>${tgEscape(partner.email)}</code>\n` +
+        `Step: <b>${stepKey}</b>\n` +
         `Relevance Score: <b>${partner.relevance_score}/100</b>\n` +
         `Verification: <b>${ver.provider} (${ver.result})</b>\n` +
         `Sent at: ${sentAt.slice(0, 16)}`,
       );
 
       sent++;
-      return { sent: 1, partner_id: partner.id, name: partner.name, email: partner.email, message_id: messageId };
     } catch (sendErr) {
       console.error(`Failed to send bus outreach to ${partner.name}:`, (sendErr as Error).message);
-      throw sendErr;
     }
   }
 

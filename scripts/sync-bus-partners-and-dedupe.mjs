@@ -156,8 +156,25 @@ async function run() {
     });
   }
 
-  // Update data/bus_partners.json
+  // Update data/bus_partners.json while preserving core seed records
   const jsonPath = path.resolve('data/bus_partners.json');
+  let existingSeeds = [];
+  try {
+    if (fs.existsSync(jsonPath)) {
+      const current = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+      existingSeeds = current.filter((p) => p.id === 'partner_moveolux' || p.id === 'partner_cima_luxury');
+    }
+  } catch (err) {
+    // Ignore read errors
+  }
+  const dedupedIds = new Set(deduped.map((d) => d.id));
+  for (const seed of existingSeeds) {
+    if (!dedupedIds.has(seed.id)) {
+      deduped.unshift(seed);
+      dedupedIds.add(seed.id);
+    }
+  }
+
   fs.writeFileSync(jsonPath, JSON.stringify(deduped, null, 2), 'utf-8');
   console.log(`Updated ${jsonPath} with ${deduped.length} partners.`);
 

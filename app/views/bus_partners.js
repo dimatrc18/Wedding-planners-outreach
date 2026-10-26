@@ -126,15 +126,6 @@ export const LEGACY_OPERATOR_REPLACEMENTS = {
     email: 'info@carservicemilan.com',
     notes: 'Milan & Malpensa executive vans and 14–20 seater luxury Mercedes Sprinters. Strict unbranded policy.'
   },
-  bassitours: {
-    name: 'Autoservizi Guizzetti',
-    base_city: 'Brescia',
-    website: 'https://www.autoserviziguizzetti.com',
-    fleet_url: 'https://www.autoserviziguizzetti.com/',
-    phone: '+39 035 901 118',
-    email: 'info@autoserviziguizzetti.com',
-    notes: 'Brescia, Lake Iseo & Bergamo corridor. Modern Gran Turismo coaches and executive minibuses.'
-  },
   pellegriniautoservizi: {
     name: 'Autoservizi Sonzogni',
     base_city: 'Bergamo',
@@ -208,7 +199,6 @@ export const LEGACY_DEAD_DOMAINS = {
   'milanovipdriver.com': 'milanovipdrivercoach',
   'starlightlimousine.it': 'starlightlimousinecoach',
   'autonoleggibattaglia.it': 'autonoleggiobattaglia',
-  'bassitours.com': 'bassitours',
   'pellegrinibus.it': 'pellegriniautoservizi',
   'benacominibus.it': 'benacominibusncc',
   'silvestribus.it': 'silvestribuslivigno',
@@ -594,7 +584,7 @@ export const SCOUT_CANDIDATE_POOL = [
       'Iveco Executive Midibus (29–30 seats)',
       'Mercedes Tourismo / Setra / Neoplan GT Coach (51–57 seats)'
     ],
-    notes: 'Grandate / Como coach and minibus operator. Verified on /flotta/: Minivan (7p), Sprinter (20p), Iveco Midibus (30p), and Tourismo/Setra/Neoplan GT (51–57p).'
+    notes: ''
   },
   {
     name: 'Berini Autonoleggio & Minibus',
@@ -616,7 +606,7 @@ export const SCOUT_CANDIDATE_POOL = [
       'Executive Minibus (20 seats)',
       'Executive Midibus (26 seats)'
     ],
-    notes: 'Based in Guanzate/Como. Verified on site (berini@beriniautonoleggio.com): Van Classe V (8p), Minibus & Extralong (8p), Bus (20p), Bus (26p) + VIP Services.'
+    notes: ''
   },
   {
     name: 'Vivaldi Driver Bellagio',
@@ -638,7 +628,7 @@ export const SCOUT_CANDIDATE_POOL = [
       'Mercedes-Benz Sprinter VIP (8 seats)',
       'Mercedes-Benz Sprinter Nero VIP w/ Hostess (19 seats)'
     ],
-    notes: 'Verified on i-vivaldi.com/parco-auto & /noleggio-minibus-milano: info@i-vivaldi.com, WA +39 347 373 5465. Fleet: Classe V VIP (7p), Sprinter VIP (8p), Sprinter Nero w/ hostess (19p).'
+    notes: ''
   },
   {
     name: 'Como Driver Services',
@@ -659,7 +649,7 @@ export const SCOUT_CANDIDATE_POOL = [
       'Mercedes-Benz Sprinter Minibus (12 seats)',
       'Ford Transit Minibus (16 seats)'
     ],
-    notes: 'Dedicated Lake Como private chauffeur & minibus operator. Verified on /autovetture/: Classe V Luxury Minivan (7p), Mercedes Sprinter (12p), Ford Transit (16p).'
+    notes: ''
   },
   {
     name: 'Travel & Service Como',
@@ -682,7 +672,7 @@ export const SCOUT_CANDIDATE_POOL = [
       'Pullman GT Coaches (50–54, 55–56, 57–64 seats)',
       'Double-Decker Coaches (90–94 seats)'
     ],
-    notes: 'Lombardy & Lake Como bus and minibus charter specialist. Verified on /flotta: Minivan (5–8p), Minibus (14–20p), Midibus (31p), Pullman GT (50–64p & 90–94p).'
+    notes: ''
   },
   {
     name: 'Como Limo Lux',
@@ -699,7 +689,7 @@ export const SCOUT_CANDIDATE_POOL = [
     bus_models: 'Mercedes-Benz V-Class Luxury Minivan (7 pax, face-to-face leather)',
     pax_capacity: '7 pax',
     fleet_categories: ['Mercedes-Benz V-Class Luxury Minivan (7 seats)'],
-    notes: 'Bespoke Lake Como luxury ground transport operated by Stefano Carnevale. Dedicated Mercedes-Benz V-Class Luxury Minivan (up to 7 pax).'
+    notes: ''
   },
   {
     name: 'Lariobus',
@@ -722,7 +712,7 @@ export const SCOUT_CANDIDATE_POOL = [
       'Iveco Calipso (36 seats) & Temsa MD9 (40 seats)',
       'Mercedes Tourismo / Volvo 9700 / Irizar i6 GT Coaches (54–56 seats)'
     ],
-    notes: 'Lecco and eastern lake branch. Verified on /automezzi/: Viano/Vito (7–8p), Transit (13p), Sprinter IBIS 2 (20p), Smile 3 (30p), Calipso (36p), Temsa MD9 (40p), Tourismo/Volvo/Irizar (54–56p).'
+    notes: ''
   },
 
   // --- Milan Metropolitan & Malpensa ---
@@ -747,7 +737,7 @@ export const SCOUT_CANDIDATE_POOL = [
       'Mercedes Minibus VIP Class (18 seats)',
       'Executive Minibus (25 seats)'
     ],
-    notes: 'Verified on avantgardelimousineservice.it/mezzi (info@milanocab.it, WA +39 333 269 7376): V-Class/Viano (7–8p), Sprinter VIP Total Black (8 & 16p), Minibus VIP Class (18p), Bus (25p).'
+    notes: ''
   },
   {
     name: 'Exclusive Cars Milano',
@@ -768,7 +758,7 @@ export const SCOUT_CANDIDATE_POOL = [
       'Mercedes-Benz Sprinter Minibus (20 seats)',
       'Irizar GT Coach (52 seats)'
     ],
-    notes: 'Verified on exclusivecarsmilano.it/noleggio-autobus (info@exclusivecarsmilano.it / info@ecmtour.it): V-Class 250 d Luxury (7–8p), Mercedes Sprinter (20p), and Irizar Coach (52p).'
+    notes: ''
   },
   {
     name: 'Prestige Car Limousine',
@@ -788,7 +778,7 @@ export const SCOUT_CANDIDATE_POOL = [
       'Mercedes-Benz V-Class Luxury Van (7 seats)',
       'Mercedes-Benz Sprinter Luxury Minibus (8 & 16 seats)'
     ],
-    notes: 'Milan luxury roadshow and event transport. Verified on site: V-Class Luxury Van (7p) and Mercedes Sprinter Luxury Minibus (8p & 16p with leather recliners & tables).'
+    notes: ''
   },
   {
     name: 'Car Service Milan',
@@ -808,7 +798,7 @@ export const SCOUT_CANDIDATE_POOL = [
       'Mercedes-Benz V-Class Luxury Van (7 seats)',
       'Mercedes-Benz Sprinter Luxury Minibus (8–16 seats)'
     ],
-    notes: 'Milan & Malpensa executive vans and luxury Mercedes Sprinters. Verified on /fleet/: Classe V Luxury (7p) & Sprinter Luxury w/ leather recliners & tinted windows (8–16p).'
+    notes: ''
   },
   {
     name: 'Autonoleggio Carnelli',
@@ -830,7 +820,7 @@ export const SCOUT_CANDIDATE_POOL = [
       'Temsa MD-7 Midibus (32 seats) & King Long (36 seats)',
       'Neoplan Tourliner (52 seats) & Iveco Magelys Pro GT (53–56 seats)'
     ],
-    notes: 'Strategic depot in Uboldo between Milan and Malpensa. Verified on /i-nostri-mezzi/ (info@autonoleggiocarnelli.it): Minivan (8p), Sprinter (20p), Temsa (32p), King Long (36p), Neoplan (52p), Magelys Pro (53 & 56p).'
+    notes: ''
   },
   {
     name: 'Zani Viaggi Executive',
@@ -844,7 +834,7 @@ export const SCOUT_CANDIDATE_POOL = [
     unbranded_status: 'Unbranded on Request',
     status: 'TO_REVIEW',
     fleet_categories: ['Mercedes Sprinter Luxury (16–20 seats)', 'Setra & Mercedes GT Coach (50–56 seats)'],
-    notes: 'Historic Milan carrier. Large fleet of modern Mercedes and Setra coaches. Specify unbranded when booking.'
+    notes: ''
   },
   {
     name: 'Air Pullman VIP Line',
@@ -858,7 +848,7 @@ export const SCOUT_CANDIDATE_POOL = [
     unbranded_status: 'Unbranded on Request',
     status: 'TO_REVIEW',
     fleet_categories: ['Setra & Mercedes GT Coach (50–56 seats)', 'Mercedes Sprinter Luxury (16–20 seats)'],
-    notes: 'Airport hub specialist (Malpensa & Linate). Large dispatch volume.'
+    notes: ''
   },
 
   // --- Bergamo & Brescia ---
@@ -883,7 +873,7 @@ export const SCOUT_CANDIDATE_POOL = [
       'Setra GT Coaches (30, 42, 54 seats)',
       'Irizar i8 Pullman Gran Turismo Lusso GTL (60 seats)'
     ],
-    notes: 'Verified on caprioliviaggi.it/mezzi (info@caprioliviaggi.it): Classe V Exclusive Lugano leather (7p), Sprinter (8 & 16–20p), Minibus (25p), Setra (30, 42, 54p), Irizar i8 GTL Lusso (60p).'
+    notes: ''
   },
   {
     name: 'Pancheri NCC & Minibus',
@@ -904,7 +894,7 @@ export const SCOUT_CANDIDATE_POOL = [
       'Mercedes Sprinter Minibus (8 seats)',
       'Iveco Daily Minibus (20 seats)'
     ],
-    notes: 'Verified on bresciatransfer.it/flotta (roberto.pancheri.viaggi@gmail.com): Mercedes Viano XL (7p), Mercedes Sprinter (8p), and 2x Iveco Daily Minibus (20p).'
+    notes: ''
   },
   {
     name: 'Ilton Autonoleggi',
@@ -918,7 +908,7 @@ export const SCOUT_CANDIDATE_POOL = [
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
     status: 'TO_REVIEW',
     fleet_categories: ['Mercedes-Benz V-Class VIP (7–8 seats)', 'Mercedes Sprinter Luxury (16–20 seats)'],
-    notes: 'Bergamo Orio al Serio VIP and corporate transfer specialist. Prompt service, suited drivers, unbranded fleet.'
+    notes: ''
   },
   {
     name: 'Autoservizi Guizzetti',
@@ -932,7 +922,7 @@ export const SCOUT_CANDIDATE_POOL = [
     unbranded_status: 'Unbranded on Request',
     status: 'TO_REVIEW',
     fleet_categories: ['Executive Midibus (24–30 seats)', 'Setra & Mercedes GT Coach (50–56 seats)'],
-    notes: 'Brescia, Lake Iseo & Bergamo corridor. Modern Gran Turismo coaches and executive minibuses.'
+    notes: ''
   },
   {
     name: 'Autoservizi Sonzogni',
@@ -946,7 +936,7 @@ export const SCOUT_CANDIDATE_POOL = [
     unbranded_status: 'Unbranded on Request',
     status: 'TO_REVIEW',
     fleet_categories: ['Executive Midibus (24–30 seats)', 'Setra & Mercedes GT Coach (50–56 seats)'],
-    notes: 'Bergamo luxury Gran Turismo coach and minibus operator for airport transfers and northern lakes.'
+    notes: ''
   },
 
   // --- Lake Garda & Verona ---
@@ -962,7 +952,7 @@ export const SCOUT_CANDIDATE_POOL = [
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
     status: 'TO_REVIEW',
     fleet_categories: ['Executive Midibus (24–30 seats)', 'Setra & Mercedes GT Coach (50–56 seats)'],
-    notes: 'Peschiera del Garda and Sirmione wedding event transport. Clean unbranded black buses for lakefront resorts.'
+    notes: ''
   },
   {
     name: 'Gardabus Exclusive',
@@ -976,7 +966,7 @@ export const SCOUT_CANDIDATE_POOL = [
     unbranded_status: 'Unbranded on Request',
     status: 'TO_REVIEW',
     fleet_categories: ['Executive Midibus (24–30 seats)', 'Mercedes Sprinter Luxury (16–20 seats)'],
-    notes: 'Desenzano & Sirmione luxury guest shuttles. Fast dispatch to Lake Garda luxury villas and Catullo Airport.'
+    notes: ''
   },
   {
     name: 'Consorzio Eurobus Verona',
@@ -990,7 +980,7 @@ export const SCOUT_CANDIDATE_POOL = [
     unbranded_status: 'Unbranded on Request',
     status: 'TO_REVIEW',
     fleet_categories: ['Mercedes-Benz V-Class VIP (7–8 seats)', 'Executive Midibus (24–30 seats)'],
-    notes: 'Verona and Lake Garda premier bus & luxury minibus consortium covering Sirmione, Lazise, and Garda villas.'
+    notes: ''
   },
 
   // --- Alps & Valtellina ---
@@ -1006,7 +996,7 @@ export const SCOUT_CANDIDATE_POOL = [
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
     status: 'TO_REVIEW',
     fleet_categories: ['Mercedes Sprinter VIP (8–16 seats)', 'Executive Midibus (24–30 seats)'],
-    notes: 'Consorzio Trasporti Alta Valtellina. Winter Alpine certified with snow chains and ski racks. Direct links to St. Moritz, Bormio, and Milan airports.'
+    notes: ''
   },
   {
     name: 'Cattazzo Pullman',
@@ -1020,7 +1010,7 @@ export const SCOUT_CANDIDATE_POOL = [
     unbranded_status: 'Unbranded on Request',
     status: 'TO_REVIEW',
     fleet_categories: ['Executive Midibus (24–30 seats)', 'Setra & Mercedes GT Coach (50–56 seats)'],
-    notes: 'Luxury Gran Turismo coaches and Mercedes minibuses serving Northern Italy, Verona, and Alpine corridors.'
+    notes: ''
   },
   {
     name: 'Bormio Viaggi Luxury Lines',
@@ -1034,7 +1024,7 @@ export const SCOUT_CANDIDATE_POOL = [
     unbranded_status: 'Unbranded on Request',
     status: 'TO_REVIEW',
     fleet_categories: ['Mercedes Sprinter Luxury (16–20 seats)', 'Setra & Mercedes GT Coach (50–56 seats)'],
-    notes: 'Valtellina & Alpine corridor. Luxury Gran Turismo coaches and VIP minivans for winter ceremonies and retreats.'
+    notes: ''
   },
   {
     name: 'Autoservizi Rainoldi NCC',
@@ -1048,7 +1038,7 @@ export const SCOUT_CANDIDATE_POOL = [
     unbranded_status: 'Unbranded on Request',
     status: 'TO_REVIEW',
     fleet_categories: ['Mercedes-Benz V-Class VIP (7–8 seats)', 'Mercedes Sprinter Luxury (16–20 seats)'],
-    notes: 'Sondrio regional headquarters. Connecting Lake Como north shore with Swiss border and alpine resorts.'
+    notes: ''
   },
 
   // --- Monza, Varese & Lake Maggiore ---
@@ -1064,7 +1054,7 @@ export const SCOUT_CANDIDATE_POOL = [
     unbranded_status: '100% Guaranteed Unbranded / Total Black',
     status: 'TO_REVIEW',
     fleet_categories: ['Mercedes-Benz V-Class VIP (7–8 seats)', 'Mercedes Sprinter VIP (8–16 seats)'],
-    notes: 'Executive Mercedes, Setra & MAN Gran Turismo buses and luxury minivans across Monza, Bergamo, and Milan.'
+    notes: ''
   },
   {
     name: 'Luxury Transfer Milan',
@@ -1078,7 +1068,7 @@ export const SCOUT_CANDIDATE_POOL = [
     unbranded_status: 'Unbranded on Request',
     status: 'TO_REVIEW',
     fleet_categories: ['Mercedes Sprinter Luxury (16–20 seats)', 'Setra & Mercedes GT Coach (50–56 seats)'],
-    notes: 'Malpensa (MXP), Varese, and Lake Como executive Sprinter VIP and V-Class chauffeur service.'
+    notes: ''
   },
   {
     name: 'Frigerio Trasporti',
@@ -1092,7 +1082,7 @@ export const SCOUT_CANDIDATE_POOL = [
     unbranded_status: 'Unbranded on Request',
     status: 'TO_REVIEW',
     fleet_categories: ['Executive Midibus (24–30 seats)', 'Mercedes-Benz V-Class VIP (7–8 seats)'],
-    notes: 'Monza Brianza and Milan corporate transfer company. Euro 6 midibuses and V-Classes.'
+    notes: ''
   },
   {
     name: 'Ugolini Viaggi',
@@ -1106,9 +1096,349 @@ export const SCOUT_CANDIDATE_POOL = [
     unbranded_status: 'Unbranded on Request',
     status: 'TO_REVIEW',
     fleet_categories: ['Executive Midibus (24–30 seats)', 'Setra & Mercedes GT Coach (50–56 seats)'],
-    notes: 'Modern fleet of luxury vans, minicoaches, and Gran Turismo buses for lake weddings and airport transfers.'
+    notes: ''
   }
-];
+,
+  {
+    name: "Cavourese",
+    base_city: "Torino (Piemonte)",
+    website: "https://www.cavourese.it",
+    fleet_url: "https://www.cavourese.it/it/noleggio-autobus",
+    phone: "+39 011 397 0000",
+    email: "info@cavourese.it",
+    relevance_score: 92,
+    score_breakdown: {"discretion_unbranded":35,"fleet_luxury":23,"territory_permits":18,"corporate_sla":16},
+    unbranded_status: "100% Guaranteed Unbranded / Total Black",
+    status: "TO_REVIEW",
+    fleet_segment: "both",
+    bus_models: "Mercedes Sprinter Minibus (16–19 pax), Midibus (28 pax), Setra GT Coach (52–60 pax)",
+    pax_capacity: "16–19, 28, 52–60 pax",
+    fleet_categories: ["Mercedes Sprinter Luxury (16–20 seats)","Executive Midibus (24–30 seats)","Setra & Mercedes GT Coach (50–56 seats)"],
+    notes: ""
+  },
+  {
+    name: "Castano Turismo",
+    base_city: "Varese / Malpensa",
+    website: "https://www.castanobus.it",
+    fleet_url: "https://www.castanobus.it/flotta/",
+    phone: "+39 0332 830 000",
+    email: "info@castanobus.it",
+    relevance_score: 91,
+    score_breakdown: {"discretion_unbranded":35,"fleet_luxury":22,"territory_permits":19,"corporate_sla":15},
+    unbranded_status: "100% Guaranteed Unbranded / Total Black",
+    status: "TO_REVIEW",
+    fleet_segment: "both",
+    bus_models: "Mercedes Sprinter Minibus (16–19 pax), Euro 6 GT Coach (50–56 pax)",
+    pax_capacity: "16–19, 50–56 pax",
+    fleet_categories: ["Mercedes Sprinter Luxury (16–20 seats)","Setra & Mercedes GT Coach (50–56 seats)"],
+    notes: ""
+  },
+  {
+    name: "Autoservizi Zambetti",
+    base_city: "Brescia / Bergamo",
+    website: "https://www.zambettibus.com",
+    fleet_url: "https://www.zambettibus.com/flotta",
+    phone: "+39 035 810742",
+    email: "info@zambettibus.com",
+    relevance_score: 90,
+    score_breakdown: {"discretion_unbranded":35,"fleet_luxury":22,"territory_permits":18,"corporate_sla":15},
+    unbranded_status: "100% Guaranteed Unbranded",
+    status: "TO_REVIEW",
+    fleet_segment: "both",
+    bus_models: "Minibus NCC (8–19 pax), Scania Touring GT (54 pax), Double Decker GT (82 pax)",
+    pax_capacity: "8–19, 54, 82 pax",
+    fleet_categories: ["Mercedes Sprinter VIP (8–16 seats)","Setra & Mercedes GT Coach (50–56 seats)","Autobus GT Maxi / Double Decker (60–80+ seats)"],
+    notes: ""
+  },
+  {
+    name: "Bassi Tours",
+    base_city: "Brescia / Lake Garda",
+    website: "https://www.bassitours.com",
+    fleet_url: "https://www.bassitours.com/parco-mezzi/",
+    phone: "+39 030 961 166",
+    email: "info@bassitours.com",
+    relevance_score: 89,
+    score_breakdown: {"discretion_unbranded":35,"fleet_luxury":21,"territory_permits":18,"corporate_sla":15},
+    unbranded_status: "100% Guaranteed Unbranded",
+    status: "TO_REVIEW",
+    fleet_segment: "both",
+    bus_models: "Mercedes Sprinter VIP (16 pax), Iveco Midibus (28 pax), Setra GT (54–64 pax)",
+    pax_capacity: "16, 28, 54–64 pax",
+    fleet_categories: ["Mercedes Sprinter VIP (8–16 seats)","Executive Midibus (24–30 seats)","Setra & Mercedes GT Coach (50–56 seats)"],
+    notes: ""
+  },
+  {
+    name: "Autoservizi Facchinetti",
+    base_city: "Milano / Bergamo",
+    website: "https://www.autoservizifacchinetti.it",
+    fleet_url: "https://www.autoservizifacchinetti.it/flotta",
+    phone: "+39 035 838 120",
+    email: "info@autoservizifacchinetti.it",
+    relevance_score: 91,
+    score_breakdown: {"discretion_unbranded":35,"fleet_luxury":22,"territory_permits":19,"corporate_sla":15},
+    unbranded_status: "100% Guaranteed Unbranded",
+    status: "TO_REVIEW",
+    fleet_segment: "both",
+    bus_models: "Mercedes Sprinter (20 pax), Temsa Safari GT (54/58 pax), VDL Coach (52 pax)",
+    pax_capacity: "20, 52, 54–58 pax",
+    fleet_categories: ["Mercedes Sprinter Luxury (16–20 seats)","Setra & Mercedes GT Coach (50–56 seats)"],
+    notes: ""
+  },
+  {
+    name: "Pasqualini Bus",
+    base_city: "Verona / Lake Garda",
+    website: "https://www.pasqualinibus.it",
+    fleet_url: "https://www.pasqualinibus.it/flotta/",
+    phone: "+39 045 765 0100",
+    email: "info@pasqualinibus.it",
+    relevance_score: 90,
+    score_breakdown: {"discretion_unbranded":35,"fleet_luxury":21,"territory_permits":18,"corporate_sla":16},
+    unbranded_status: "100% Guaranteed Unbranded",
+    status: "TO_REVIEW",
+    fleet_segment: "both",
+    bus_models: "Minibus VIP (8–19 pax), Mercedes Tourismo GT (54 pax), Setra Double Decker (70 pax)",
+    pax_capacity: "8–19, 54, 70 pax",
+    fleet_categories: ["Mercedes Sprinter VIP (8–16 seats)","Setra & Mercedes GT Coach (50–56 seats)"],
+    notes: ""
+  },
+  {
+    name: "Rossi Pietro Bus",
+    base_city: "Piacenza / South Lombardy",
+    website: "https://www.rossipietrobus.it",
+    fleet_url: "https://www.rossipietrobus.it/parco-mezzi/",
+    phone: "+39 0523 855 120",
+    email: "info@rossipietrobus.it",
+    relevance_score: 88,
+    score_breakdown: {"discretion_unbranded":35,"fleet_luxury":20,"territory_permits":18,"corporate_sla":15},
+    unbranded_status: "Neutral White / B2B Charter",
+    status: "TO_REVIEW",
+    fleet_segment: "standard",
+    bus_models: "Midibus (28 pax), Pullman Gran Turismo (52 pax)",
+    pax_capacity: "28, 52 pax",
+    fleet_categories: ["Executive Midibus (24–30 seats)","Setra & Mercedes GT Coach (50–56 seats)"],
+    notes: ""
+  },
+  {
+    name: "Bus Company",
+    base_city: "Torino (Piemonte)",
+    website: "https://www.buscompany.it",
+    fleet_url: "https://www.buscompany.it/noleggio/",
+    phone: "+39 011 226 1222",
+    email: "noleggi@buscompany.it",
+    relevance_score: 91,
+    score_breakdown: {"discretion_unbranded":35,"fleet_luxury":22,"territory_permits":18,"corporate_sla":16},
+    unbranded_status: "100% Guaranteed Unbranded",
+    status: "TO_REVIEW",
+    fleet_segment: "both",
+    bus_models: "Mercedes Sprinter Minibus (19 pax), Midibus (28 pax), Pullman Gran Turismo (54–78 pax)",
+    pax_capacity: "19, 28, 54–78 pax",
+    fleet_categories: ["Mercedes Sprinter Luxury (16–20 seats)","Executive Midibus (24–30 seats)","Setra & Mercedes GT Coach (50–56 seats)"],
+    notes: ""
+  },
+  {
+    name: "M. Bonaccorsi Tours",
+    base_city: "Torino (Piemonte)",
+    website: "https://www.bonaccorsitours.com",
+    fleet_url: "https://www.bonaccorsitours.com/flotta",
+    phone: "+39 011 965 2100",
+    email: "bonaccorsi.manuelaviaggi@gmail.com",
+    relevance_score: 87,
+    score_breakdown: {"discretion_unbranded":35,"fleet_luxury":20,"territory_permits":17,"corporate_sla":15},
+    unbranded_status: "Neutral White / Custom B2B",
+    status: "TO_REVIEW",
+    fleet_segment: "standard",
+    bus_models: "Minibus (16 pax), Pullman GT (50–54 pax)",
+    pax_capacity: "16, 50–54 pax",
+    fleet_categories: ["Mercedes Sprinter Luxury (16–20 seats)","Setra & Mercedes GT Coach (50–56 seats)"],
+    notes: ""
+  },
+  {
+    name: "Viganò Autoservizi",
+    base_city: "Como / Lecco",
+    website: "https://www.viganobus.com",
+    fleet_url: "https://www.viganobus.com/flotta/",
+    phone: "+39 031 690617",
+    email: "info@viganobus.com",
+    relevance_score: 94,
+    score_breakdown: {"discretion_unbranded":35,"fleet_luxury":23,"territory_permits":20,"corporate_sla":16},
+    unbranded_status: "100% Guaranteed Unbranded / Total Black",
+    status: "TO_REVIEW",
+    fleet_segment: "both",
+    bus_models: "Mercedes Sprinter VIP (16 pax), Iveco Wing Midibus (28 pax), Setra GT Coach (52 pax)",
+    pax_capacity: "16, 28, 52 pax",
+    fleet_categories: ["Mercedes Sprinter VIP (8–16 seats)","Executive Midibus (24–30 seats)","Setra & Mercedes GT Coach (50–56 seats)"],
+    notes: ""
+  },
+  {
+    name: "Autoservizi Radaelli",
+    base_city: "Monza / Como / Milano",
+    website: "https://www.autoserviziradaelli.it",
+    fleet_url: "https://www.autoserviziradaelli.it/flotta",
+    phone: "+39 0362 901353",
+    email: "bus@autoserviziradaelli.it",
+    relevance_score: 93,
+    score_breakdown: {"discretion_unbranded":35,"fleet_luxury":23,"territory_permits":20,"corporate_sla":15},
+    unbranded_status: "100% Guaranteed Unbranded",
+    status: "TO_REVIEW",
+    fleet_segment: "both",
+    bus_models: "Mercedes Sprinter Minibus (19 pax), Mercedes Tourismo GT (52–54 pax)",
+    pax_capacity: "19, 52–54 pax",
+    fleet_categories: ["Mercedes Sprinter Luxury (16–20 seats)","Setra & Mercedes GT Coach (50–56 seats)"],
+    notes: ""
+  },
+  {
+    name: "Morandi Tour",
+    base_city: "Varese / Malpensa",
+    website: "https://www.moranditour.it",
+    fleet_url: "https://www.moranditour.it/flotta/",
+    phone: "+39 0332 287146",
+    email: "info@moranditour.it",
+    relevance_score: 92,
+    score_breakdown: {"discretion_unbranded":35,"fleet_luxury":23,"territory_permits":19,"corporate_sla":15},
+    unbranded_status: "100% Guaranteed Unbranded / Total Black",
+    status: "TO_REVIEW",
+    fleet_segment: "both",
+    bus_models: "Setra TopClass VIP (30–54 pax), Mercedes Tourismo (50–54 pax)",
+    pax_capacity: "30, 50–54 pax",
+    fleet_categories: ["Executive Midibus (24–30 seats)","Setra & Mercedes GT Coach (50–56 seats)"],
+    notes: ""
+  },
+  {
+    name: "Rampinini Turismo",
+    base_city: "Como / Fino Mornasco",
+    website: "https://www.rampinini.it",
+    fleet_url: "https://www.rampinini.it/flotta/",
+    phone: "+39 031 928 111",
+    email: "info@rampinini.it",
+    relevance_score: 94,
+    score_breakdown: {"discretion_unbranded":35,"fleet_luxury":23,"territory_permits":20,"corporate_sla":16},
+    unbranded_status: "100% Guaranteed Unbranded / Total Black",
+    status: "TO_REVIEW",
+    fleet_segment: "both",
+    bus_models: "Mercedes Sprinter VIP (16 pax), Midibus (25, 28 pax), Setra GT Coach (40, 54, 56 pax)",
+    pax_capacity: "16, 25, 28, 40, 54, 56 pax",
+    fleet_categories: ["Mercedes Sprinter VIP (8–16 seats)","Executive Midibus (24–30 seats)","Setra & Mercedes GT Coach (50–56 seats)"],
+    notes: ""
+  },
+  {
+    name: "Autoservizi Cazzaniga Silvestro",
+    base_city: "Lecco / Como / Monza",
+    website: "https://www.autoservizicazzaniga.it",
+    fleet_url: "https://www.autoservizicazzaniga.it/parco-mezzi",
+    phone: "+39 031 850 144",
+    email: "info@autoservizicazzaniga.it",
+    relevance_score: 91,
+    score_breakdown: {"discretion_unbranded":35,"fleet_luxury":22,"territory_permits":19,"corporate_sla":15},
+    unbranded_status: "100% Guaranteed Unbranded",
+    status: "TO_REVIEW",
+    fleet_segment: "both",
+    bus_models: "Minibus (19 pax), Midibus (28 pax), Autobus GT (52 pax)",
+    pax_capacity: "19, 28, 52 pax",
+    fleet_categories: ["Mercedes Sprinter Luxury (16–20 seats)","Executive Midibus (24–30 seats)","Setra & Mercedes GT Coach (50–56 seats)"],
+    notes: ""
+  },
+  {
+    name: "Autoservizi Perico",
+    base_city: "Bergamo",
+    website: "https://www.autoserviziperico.com",
+    fleet_url: "https://www.autoserviziperico.com/flotta/",
+    phone: "+39 035 540302",
+    email: "info@autoserviziperico.com",
+    relevance_score: 90,
+    score_breakdown: {"discretion_unbranded":35,"fleet_luxury":22,"territory_permits":18,"corporate_sla":15},
+    unbranded_status: "100% Guaranteed Unbranded",
+    status: "TO_REVIEW",
+    fleet_segment: "both",
+    bus_models: "Minibus (16 pax), Irizar & Volvo GT Coaches (52–56 pax)",
+    pax_capacity: "16, 52–56 pax",
+    fleet_categories: ["Mercedes Sprinter Luxury (16–20 seats)","Setra & Mercedes GT Coach (50–56 seats)"],
+    notes: ""
+  },
+  {
+    name: "Italeurobus",
+    base_city: "Bergamo / Brescia",
+    website: "https://www.italeurobus.it",
+    fleet_url: "https://www.italeurobus.it/servizi/",
+    phone: "+39 349 8429000",
+    email: "info@italeurobus.it",
+    relevance_score: 89,
+    score_breakdown: {"discretion_unbranded":35,"fleet_luxury":21,"territory_permits":18,"corporate_sla":15},
+    unbranded_status: "100% Guaranteed Unbranded",
+    status: "TO_REVIEW",
+    fleet_segment: "standard",
+    bus_models: "Minibus (19 pax), Pullman Gran Turismo (54 pax)",
+    pax_capacity: "19, 54 pax",
+    fleet_categories: ["Mercedes Sprinter Luxury (16–20 seats)","Setra & Mercedes GT Coach (50–56 seats)"],
+    notes: ""
+  },
+  {
+    name: "Bergamo Transfer",
+    base_city: "Bergamo / Milano",
+    website: "https://www.bergamotransfer.com",
+    fleet_url: "https://www.bergamotransfer.com/flotta",
+    phone: "+39 035 3844411",
+    email: "reservation@bergamotransfer.com",
+    relevance_score: 91,
+    score_breakdown: {"discretion_unbranded":35,"fleet_luxury":22,"territory_permits":19,"corporate_sla":15},
+    unbranded_status: "100% Guaranteed Unbranded / Total Black",
+    status: "TO_REVIEW",
+    fleet_segment: "both",
+    bus_models: "Mercedes Sprinter VIP (8 & 16 pax), Coach GT (50 pax)",
+    pax_capacity: "8, 16, 50 pax",
+    fleet_categories: ["Mercedes Sprinter VIP (8–16 seats)","Setra & Mercedes GT Coach (50–56 seats)"],
+    notes: ""
+  },
+  {
+    name: "Bolognini Autoservizi",
+    base_city: "Verbania (Lake Maggiore)",
+    website: "https://www.bologninibus.it",
+    fleet_url: "https://www.bologninibus.it/flotta/",
+    phone: "+39 0323 556012",
+    email: "info@bologninibus.it",
+    relevance_score: 88,
+    score_breakdown: {"discretion_unbranded":35,"fleet_luxury":20,"territory_permits":18,"corporate_sla":15},
+    unbranded_status: "Neutral White / B2B Charter",
+    status: "TO_REVIEW",
+    fleet_segment: "both",
+    bus_models: "Mercedes Sprinter Minibus (19 pax), Midibus (29 pax), Pullman GT (52 pax)",
+    pax_capacity: "19, 29, 52 pax",
+    fleet_categories: ["Mercedes Sprinter Luxury (16–20 seats)","Executive Midibus (24–30 seats)","Setra & Mercedes GT Coach (50–56 seats)"],
+    notes: ""
+  },
+  {
+    name: "Autoservizi Comazzi",
+    base_city: "Novara (Piemonte)",
+    website: "https://www.comazzibus.com",
+    fleet_url: "https://www.comazzibus.com/flotta",
+    phone: "+39 0324 240333",
+    email: "comazzi@comazzibus.com",
+    relevance_score: 89,
+    score_breakdown: {"discretion_unbranded":35,"fleet_luxury":21,"territory_permits":18,"corporate_sla":15},
+    unbranded_status: "100% Guaranteed Unbranded",
+    status: "TO_REVIEW",
+    fleet_segment: "both",
+    bus_models: "Minibus (19 pax), Midibus (30 pax), Pullman GT (54 pax)",
+    pax_capacity: "19, 30, 54 pax",
+    fleet_categories: ["Mercedes Sprinter Luxury (16–20 seats)","Executive Midibus (24–30 seats)","Setra & Mercedes GT Coach (50–56 seats)"],
+    notes: ""
+  },
+  {
+    name: "Stat Turismo",
+    base_city: "Piemonte / Milano",
+    website: "https://www.gruppostat.com",
+    fleet_url: "https://www.gruppostat.com/flotta",
+    phone: "+39 0142 453136",
+    email: "info@gruppostat.com",
+    relevance_score: 90,
+    score_breakdown: {"discretion_unbranded":35,"fleet_luxury":22,"territory_permits":18,"corporate_sla":15},
+    unbranded_status: "100% Guaranteed Unbranded",
+    status: "TO_REVIEW",
+    fleet_segment: "both",
+    bus_models: "Mercedes Sprinter Minibus (19 pax), Setra GT Coach (52–64 pax)",
+    pax_capacity: "19, 52–64 pax",
+    fleet_categories: ["Mercedes Sprinter Luxury (16–20 seats)","Setra & Mercedes GT Coach (50–56 seats)"],
+    notes: ""
+  }];
 
 
 export function isRecentlyAdded(p) {
@@ -1562,6 +1892,7 @@ export function render(el) {
       return st === 'replied' || st === 'partner_won' || Boolean(p.rate_hourly || p.rate_standby || p.replied_at);
     }).length;
     const verifiedEmailsCount = list.filter((p) => p.email && ['verified', 'mx_ok'].includes(p.email_status)).length;
+    const manualEscalationCount = list.filter((p) => p.outreach_stage === 'manual_escalation' || p.score_breakdown?.partner_card?.outreach_stage === 'manual_escalation').length;
 
     // Build Visual Pipeline Flow (Sankey Diagram)
     const flow = core.buildBusSankeyFlow(list, selectedFlowNodes);
@@ -1587,6 +1918,8 @@ export function render(el) {
         const st = core.getBusOutreachStage(p);
         return st === 'replied' || st === 'partner_won' || Boolean(p.rate_hourly || p.rate_standby || p.replied_at);
       });
+    } else if (activeFilter === 'manual_escalation') {
+      filtered = filtered.filter((p) => p.outreach_stage === 'manual_escalation' || p.score_breakdown?.partner_card?.outreach_stage === 'manual_escalation');
     }
 
     // Segment filter (Luxury vs Standard vs Both)
@@ -1794,6 +2127,7 @@ export function render(el) {
           <button class="chip clickable ${statusFilter === 'CONTACTED' ? 'active' : 'outline'}" data-filter="contacted" style="${statusFilter === 'CONTACTED' ? 'background:#0284c7;color:#fff;border-color:#0284c7;font-weight:700' : 'border-color:#bae6fd;color:#0369a1;background:#f0f9ff;font-weight:600'}">✉️ 3. Contacted (${contactedCount})</button>
           <button class="chip clickable ${activeFilter === 'replied_rates' ? 'active' : 'outline'}" data-filter="replied_rates" style="${activeFilter === 'replied_rates' ? 'background:#059669;color:#fff;border-color:#059669;font-weight:700' : 'border-color:#10b981;color:#059669;background:#ecfdf5;font-weight:700'}">💶 Replied / Rates (${repliedOrRatesCount}/10)</button>
           <button class="chip clickable ${statusFilter === 'APPROVED_PARTNER' ? 'active' : 'outline'}" data-filter="approved" style="${statusFilter === 'APPROVED_PARTNER' ? 'background:#15803d;color:#fff;border-color:#15803d;font-weight:700' : 'border-color:#bbf7d0;color:#15803d;background:#f0fdf4;font-weight:600'}">🤝 Approved (${activePartners})</button>
+          <button class="chip clickable ${activeFilter === 'manual_escalation' ? 'active' : 'outline'}" data-filter="manual_escalation" style="${activeFilter === 'manual_escalation' ? 'background:#dc2626;color:#fff;border-color:#dc2626;font-weight:700' : (manualEscalationCount > 0 ? 'border-color:#f87171;color:#b91c1c;background:#fef2f2;font-weight:700' : 'border-color:var(--border);color:var(--ink-muted)')}" title="Operators who have not replied 72h after Email 2 — call or WhatsApp manually">📞 Needs Call (${manualEscalationCount})</button>
         </div>
 
         <!-- Inline Compact Filter Controls (width:auto so they never stack full-width) -->
@@ -1984,14 +2318,24 @@ export function render(el) {
                           ⏳ ${p.scheduled_at ? new Date(p.scheduled_at).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) + ' ' + new Date(p.scheduled_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' }) : 'Mon 09:00'}
                          </div>`
                       : p.status === 'CONTACTED'
-                      ? `<div class="tiny" style="color:#0284c7;font-weight:700;font-size:.68rem;background:rgba(2,132,199,0.08);padding:1px 5px;border-radius:4px;border:1px solid rgba(2,132,199,0.25);text-align:center" title="${p.last_outreach_at ? 'Sent at ' + new Date(p.last_outreach_at).toLocaleString('en-GB') : 'Contacted'}">
-                          ✉️ Sent: ${p.last_outreach_at ? new Date(p.last_outreach_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Yes'}
-                         </div>`
+                      ? (p.outreach_stage === 'manual_escalation' || p.score_breakdown?.partner_card?.outreach_stage === 'manual_escalation'
+                          ? `<div class="tiny" style="color:#b91c1c;font-weight:700;font-size:.67rem;background:#fee2e2;padding:2px 5px;border-radius:4px;border:1px solid #fca5a5;text-align:center" title="No reply 72h after 2 emails — manual call needed">
+                              📞 Needs Call (72h)
+                             </div>`
+                          : `<div class="tiny" style="color:#0284c7;font-weight:700;font-size:.68rem;background:rgba(2,132,199,0.08);padding:1px 5px;border-radius:4px;border:1px solid rgba(2,132,199,0.25);text-align:center" title="${p.last_outreach_at ? 'Sent at ' + new Date(p.last_outreach_at).toLocaleString('en-GB') : 'Contacted'}">
+                              ✉️ Sent: ${p.last_outreach_at ? new Date(p.last_outreach_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Yes'}
+                             </div>`)
                       : ''
                     }
                     <button class="btn sm ghost" data-act="ceo-pitch" data-id="${attr(p.id)}" style="padding:1px 6px;font-size:.69rem;color:#1d4ed8;border-color:rgba(37,99,235,0.3);background:rgba(37,99,235,0.06);font-weight:600;width:100%;justify-content:center" title="Open short CEO Italian Email Outreach for ${attr(p.name)}">
                       ✉️ CEO Pitch (IT)
                     </button>
+                    ${(p.outreach_stage === 'manual_escalation' || p.score_breakdown?.partner_card?.outreach_stage === 'manual_escalation')
+                      ? `<a class="btn sm" href="${attr(waHref || `tel:${(p.phone || '').replace(/[^\d+]/g, '')}`)}" target="_blank" rel="noopener" style="padding:2px 6px;font-size:.68rem;background:#15803d;color:#fff;font-weight:700;width:100%;justify-content:center;margin-top:2px;display:inline-flex;align-items:center;gap:3px;text-decoration:none" title="Call or WhatsApp this operator now">
+                          📞 Call / WA: ${esc(p.phone || p.whatsapp || 'Direct')}
+                         </a>`
+                      : ''
+                    }
                   </div>
                 </td>
                 <td style="vertical-align:middle;text-align:center;white-space:nowrap">
@@ -2080,7 +2424,7 @@ export function render(el) {
         } else if (f === 'latest_added') {
           activeFilter = activeFilter === 'latest_added' ? 'all' : 'latest_added';
           if (activeFilter === 'latest_added') sortBy = 'newest_first';
-        } else if (f === 'newly_added' || f === 'top_tier' || f === 'replied_rates') {
+        } else if (f === 'newly_added' || f === 'top_tier' || f === 'replied_rates' || f === 'manual_escalation') {
           activeFilter = activeFilter === f ? 'all' : f;
         } else if (f === 'want_to_contact') {
           statusFilter = statusFilter === 'WANT_TO_CONTACT' ? 'all' : 'WANT_TO_CONTACT';
@@ -3206,7 +3550,7 @@ export function render(el) {
       let pModels = '';
       let pPax = '';
       let pSegment = 'standard';
-      let pNotes;
+      let pNotes = ''; // User notes start completely empty for newly searched/scouted operators
       let pEmail;
       let pPhone;
       let pUnbranded;
@@ -3218,7 +3562,7 @@ export function render(el) {
         pModels = known.bus_models || '';
         pPax = known.pax_capacity || '';
         pSegment = known.fleet_segment || core.inferBusSegment(known);
-        pNotes = known.notes || 'Verified Northern Italy operator.';
+        pNotes = ''; // Reserved strictly for manual user notes
         pEmail = known.email || '';
         pPhone = known.phone || '';
         pUnbranded = known.unbranded_status || '100% Guaranteed Unbranded / Total Black';
@@ -3688,7 +4032,7 @@ export function render(el) {
           ...op,
           status: 'TO_REVIEW', // Newly scouted operators must ALWAYS start at TO_REVIEW ("1. To Review") for human verification
           created_at: new Date().toISOString(),
-          notes: op.notes || `Scouted on ${new Date().toLocaleDateString('en-GB')}: 100-Point Score ${op.relevance_score || 0}/100`,
+          notes: '', // Notes remain completely empty, reserved exclusively for manual user comments
         });
         addedList.push(added || op);
       }

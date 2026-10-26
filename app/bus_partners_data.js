@@ -1252,15 +1252,6 @@ export const LEGACY_OPERATOR_REPLACEMENTS = {
     email: 'info@carservicemilan.com',
     notes: 'Milan & Malpensa executive vans and 14–20 seater luxury Mercedes Sprinters. Strict unbranded policy.'
   },
-  bassitours: {
-    name: 'Autoservizi Guizzetti',
-    base_city: 'Brescia',
-    website: 'https://www.autoserviziguizzetti.com',
-    fleet_url: 'https://www.autoserviziguizzetti.com/',
-    phone: '+39 035 901 118',
-    email: 'info@autoserviziguizzetti.com',
-    notes: 'Brescia, Lake Iseo & Bergamo corridor. Modern Gran Turismo coaches and executive minibuses.'
-  },
   pellegriniautoservizi: {
     name: 'Autoservizi Sonzogni',
     base_city: 'Bergamo',
@@ -1334,7 +1325,6 @@ export const LEGACY_DEAD_DOMAINS = {
   'milanovipdriver.com': 'milanovipdrivercoach',
   'starlightlimousine.it': 'starlightlimousinecoach',
   'autonoleggibattaglia.it': 'autonoleggiobattaglia',
-  'bassitours.com': 'bassitours',
   'pellegrinibus.it': 'pellegriniautoservizi',
   'benacominibus.it': 'benacominibusncc',
   'silvestribus.it': 'silvestribuslivigno',
