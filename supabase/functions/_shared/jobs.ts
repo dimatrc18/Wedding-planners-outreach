@@ -589,6 +589,12 @@ export async function sendDueBusPartners(db: any, settings: any, now = new Date(
       sent++;
     } catch (sendErr) {
       console.error(`Failed to send bus outreach to ${partner.name}:`, (sendErr as Error).message);
+      await logEvent(db, 'bus_partner_send_failed', {
+        partner_id: partner.id,
+        name: partner.name,
+        email: partner.email,
+        error: (sendErr as Error).message,
+      }, null, actor).catch(() => {});
     }
   }
 

@@ -63,46 +63,32 @@ export async function upsertDraft(draft: {
   }
 }
 
-export async function getDraftById(id: string): Promise<StoredDraft | null> {
+async function querySingleDraft(queryString: string): Promise<StoredDraft | null> {
   const { url } = getDbConfig();
-  const res = await fetch(`${url}/rest/v1/booking_drafts?id=eq.${encodeURIComponent(id)}&select=*`, {
+  const res = await fetch(`${url}/rest/v1/booking_drafts?${queryString}`, {
     headers: getHeaders(),
   });
   if (!res.ok) return null;
   const list = await res.json();
   return list && list.length > 0 ? list[0] : null;
+}
+
+export async function getDraftById(id: string): Promise<StoredDraft | null> {
+  return querySingleDraft(`id=eq.${encodeURIComponent(id)}&select=*`);
 }
 
 export async function getDraftByBookingRef(ref: string): Promise<StoredDraft | null> {
-  const { url } = getDbConfig();
-  const res = await fetch(`${url}/rest/v1/booking_drafts?booking_ref=eq.${encodeURIComponent(ref)}&order=updated_at.desc&limit=1`, {
-    headers: getHeaders(),
-  });
-  if (!res.ok) return null;
-  const list = await res.json();
-  return list && list.length > 0 ? list[0] : null;
+  return querySingleDraft(`booking_ref=eq.${encodeURIComponent(ref)}&order=updated_at.desc&limit=1`);
 }
 
 export async function getDraftByMessageId(chatId: number, messageId: number): Promise<StoredDraft | null> {
-  const { url } = getDbConfig();
-  const res = await fetch(
-    `${url}/rest/v1/booking_drafts?chat_id=eq.${chatId}&or=(card_message_id.eq.${messageId},prompt_message_id.eq.${messageId})&order=updated_at.desc&limit=1`,
-    { headers: getHeaders() }
+  return querySingleDraft(
+    `chat_id=eq.${chatId}&or=(card_message_id.eq.${messageId},prompt_message_id.eq.${messageId})&order=updated_at.desc&limit=1`
   );
-  if (!res.ok) return null;
-  const list = await res.json();
-  return list && list.length > 0 ? list[0] : null;
 }
 
 export async function getLatestDraftForChat(chatId: number): Promise<StoredDraft | null> {
-  const { url } = getDbConfig();
-  const res = await fetch(
-    `${url}/rest/v1/booking_drafts?chat_id=eq.${chatId}&order=updated_at.desc&limit=1`,
-    { headers: getHeaders() }
-  );
-  if (!res.ok) return null;
-  const list = await res.json();
-  return list && list.length > 0 ? list[0] : null;
+  return querySingleDraft(`chat_id=eq.${chatId}&order=updated_at.desc&limit=1`);
 }
 
 export async function deleteDraftById(id: string): Promise<void> {
