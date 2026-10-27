@@ -587,6 +587,25 @@ test('CEO Outreach Schedule Rule: Mon-Sat allowed, Sunday blocked unless operato
   assert(nextSlot > sundayMorning, 'Next slot from Sunday must be in the future (Monday)');
 });
 
+test('nextBusSendSlot: invariant 08:30 Europe/Rome start time in both Summer (CEST) and Winter (CET)', () => {
+  // Summer date: Wednesday July 15, 2026 at 06:00 UTC (08:00 CEST)
+  const summerWedEarly = new Date('2026-07-15T06:00:00.000Z');
+  const summerSlot0 = nextBusSendSlot(summerWedEarly, 0);
+  const summerRomeStr = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit', hour12: false }).format(summerSlot0);
+  assert.equal(summerRomeStr, '08:30', 'Summer slot 0 must be 08:30 Europe/Rome');
+
+  // Winter date: Wednesday December 2, 2026 at 06:00 UTC (07:00 CET)
+  const winterWedEarly = new Date('2026-12-02T06:00:00.000Z');
+  const winterSlot0 = nextBusSendSlot(winterWedEarly, 0);
+  const winterRomeStr = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit', hour12: false }).format(winterSlot0);
+  assert.equal(winterRomeStr, '08:30', 'Winter slot 0 must be 08:30 Europe/Rome');
+
+  // Slot spacing: slot 1 is +25m (08:55)
+  const summerSlot1 = nextBusSendSlot(summerWedEarly, 1);
+  const summerSlot1Rome = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit', hour12: false }).format(summerSlot1);
+  assert.equal(summerSlot1Rome, '08:55', 'Slot 1 must be spaced by 25 mins to 08:55 Europe/Rome');
+});
+
 test('CEO-Level Short Italian Outreach Templates: generates concise Italian B2B copy asking for models, capacity, standby/hourly rates & WA', () => {
   const partner = {
     name: 'Cattaneo Autoservizi',

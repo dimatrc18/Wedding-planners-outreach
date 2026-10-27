@@ -1,6 +1,8 @@
 // 100-Point Relevance Scoring Engine for Luxury Bus & Minibus Partners in Northern Italy
 // Pillars: Discretion (35) + Fleet Tier (25) + Territory (20) + SLA (20)
 
+import { localParts, zonedTimeToUtc } from './time.js';
+
 export const BUS_STATUSES = [
   { key: 'TO_REVIEW', label: '1. To Review', tone: 'warn', desc: 'Discovered; awaiting manual check' },
   { key: 'WANT_TO_CONTACT', label: '2. Want to Contact', tone: 'gold', desc: 'Priority prospect Dorogo intends to contact' },
@@ -453,39 +455,36 @@ export function nextBusSendSlot(now = new Date(), indexOffset = 0, opts = {}) {
   const maxPerDay = 12; // Scaled for 50-by-Friday target (10–12 sends/day)
   const dayShift = Math.floor(indexOffset / maxPerDay);
   const slotInDay = indexOffset % maxPerDay;
-  const minsFromStart = 30 + (slotInDay * 25); // 08:30, 08:55, 09:20... up to ~13:05 UTC
-  const hourOffset = Math.floor(minsFromStart / 60);
-  const remMins = minsFromStart % 60;
+  const totalMins = 8 * 60 + 30 + (slotInDay * 25); // 08:30, 08:55, 09:20... invariant Europe/Rome
+  const targetH = Math.floor(totalMins / 60);
+  const targetM = totalMins % 60;
 
   const n = now instanceof Date ? now : new Date(now);
-  let d = new Date(n.getTime());
-  // Base at 07:00 UTC (~08:30 Rome time)
-  d.setUTCHours(7 + hourOffset, remMins, 0, 0);
+  const p = localParts(n, 'Europe/Rome');
+  let candidate = zonedTimeToUtc(p.y, p.m, p.d, targetH, targetM, 'Europe/Rome');
 
-  const romeDow = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Rome', weekday: 'short' }).format(n);
-  if (d <= n || romeDow === 'Sun' || (romeDow === 'Sat' && n.getUTCHours() >= 13)) {
-    // Advance to next valid Mon–Sat morning
+  if (candidate <= n || p.dow === 7) {
+    let cur = new Date(candidate.getTime());
     do {
-      d = new Date(d.getTime() + 24 * 3600 * 1000);
-      d.setUTCHours(7 + hourOffset, remMins, 0, 0);
-    } while (
-      new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Rome', weekday: 'short' }).format(d) === 'Sun' ||
-      d <= n
-    );
+      cur = new Date(cur.getTime() + 24 * 3600 * 1000);
+      const cp = localParts(cur, 'Europe/Rome');
+      candidate = zonedTimeToUtc(cp.y, cp.m, cp.d, targetH, targetM, 'Europe/Rome');
+    } while (localParts(candidate, 'Europe/Rome').dow === 7 || candidate <= n);
   }
 
   // Shift by dayShift weekdays (skipping Sundays)
   let addedDays = 0;
+  let curDate = new Date(candidate.getTime());
   while (addedDays < dayShift) {
-    d = new Date(d.getTime() + 24 * 3600 * 1000);
-    d.setUTCHours(7 + hourOffset, remMins, 0, 0);
-    const dow = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Rome', weekday: 'short' }).format(d);
-    if (dow !== 'Sun') {
+    curDate = new Date(curDate.getTime() + 24 * 3600 * 1000);
+    const cp = localParts(curDate, 'Europe/Rome');
+    if (cp.dow !== 7) {
       addedDays++;
+      candidate = zonedTimeToUtc(cp.y, cp.m, cp.d, targetH, targetM, 'Europe/Rome');
     }
   }
 
-  return d;
+  return candidate;
 }
 
 /**
