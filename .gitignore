@@ -14,3 +14,6 @@ supabase/.temp/
 
 # Generated HTML vouchers and invoices
 DOROGO_*.html
+
+# ub-mode / crapper / dryer metrics
+.metrics/
