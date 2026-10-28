@@ -469,6 +469,64 @@ export async function sendDueBusPartners(db: any, settings: any, now = new Date(
     }
   }
 
+  let sent = 0;
+
+  // 1b. Process any scheduled custom thread replies (e.g. CEO follow-up replies scheduled for 08:00-09:00 AM)
+  for (const p of partners) {
+    const card = p.score_breakdown?.partner_card || {};
+    const sr = card.scheduled_reply;
+    if (sr && !sr.sent_at && sr.scheduled_at && new Date(sr.scheduled_at) <= now && p.email) {
+      const fromEmail = env('OUTREACH_FROM_EMAIL') || settings?.sender?.email || 'dmitri@dorogo.eu';
+      const fromName = 'Dmitri | DOROGO Transfers';
+      try {
+        const sendResult = await sendMail({
+          fromName,
+          fromEmail,
+          replyTo: fromEmail,
+          to: p.email,
+          subject: sr.subject,
+          text: sr.body,
+          lang: 'it',
+          footerStyle: settings?.email_footer_style || 'wordmark',
+          inReplyTo: sr.in_reply_to || undefined,
+          references: Array.isArray(sr.references) && sr.references.length ? sr.references : (sr.in_reply_to ? [sr.in_reply_to] : undefined),
+        });
+        const sentAt = now.toISOString();
+        const messageId = sendResult?.messageId || `<sent-bus-reply-${Date.now()}@dorogo.eu>`;
+        if (sendResult?.raw) {
+          await appendToSent(sendResult.raw).catch((e: Error) => console.error('appendToSent failed:', e.message));
+        }
+        const updatedCard = {
+          ...card,
+          last_outreach_at: sentAt,
+          last_message_id: messageId,
+          scheduled_reply: { ...sr, sent_at: sentAt, message_id: messageId },
+        };
+        await db.from('bus_partners').update({
+          score_breakdown: { ...(p.score_breakdown || {}), partner_card: updatedCard },
+          updated_at: sentAt,
+        }).eq('id', p.id);
+        await logEvent(db, 'bus_partner_reply_sent', {
+          partner_id: p.id,
+          name: p.name,
+          email: p.email,
+          subject: sr.subject,
+          message_id: messageId,
+        }, null, actor);
+        await tgSend(
+          `🚌 <b>Bus Partner Scheduled Reply Sent</b>\n\n` +
+          `Operator: <b>${tgEscape(p.name)}</b>\n` +
+          `To: <code>${tgEscape(p.email)}</code>\n` +
+          `Subject: <i>${tgEscape(sr.subject)}</i>\n` +
+          `Sent at: ${sentAt.slice(0, 16)}`,
+        );
+        sent++;
+      } catch (err) {
+        console.error(`Failed to send scheduled bus reply to ${p.name}:`, (err as Error).message);
+      }
+    }
+  }
+
   // 2. Filter for due sends
   const due = partners.filter((p: any) => {
     if (onlyPartnerId) return true;
@@ -491,12 +549,11 @@ export async function sendDueBusPartners(db: any, settings: any, now = new Date(
     return false;
   });
 
-  if (!due.length) return { sent: 0, checked: partners.length, message: 'none_due' };
+  if (!due.length) return { sent, checked: partners.length, message: sent > 0 ? 'scheduled_reply_sent' : 'none_due' };
 
   // Prioritize lower relevance score if user requested least relevant first
   due.sort((a: any, b: any) => (a.relevance_score || 70) - (b.relevance_score || 70));
 
-  let sent = 0;
   // Send at most 3 per cron cycle to guarantee safe pacing toward 50 by Friday
   const batch = due.slice(0, 3);
 
