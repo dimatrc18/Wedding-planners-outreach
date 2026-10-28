@@ -262,3 +262,53 @@ test('computeGraderHistoricalComparison calculates bi-weekly 14-day deltas', asy
   assert.equal(delta.perp_rank_delta, 1, 'Perplexity moved from #3 to #2 (+1)');
 });
 
+test('computeGraderHistoricalSeries returns chronological series with progress metrics and leader gaps', async () => {
+  const { computeGraderHistoricalSeries } = await import('../app/services/live_audit.js');
+
+  const history = [
+    {
+      timestamp: '2026-10-14T10:00:00.000Z',
+      overall_composite_score: 36.0,
+      engines: {
+        chatgpt: { score: 24, dorogo_sov_pct: 5.0, dorogo_rank: 5 },
+        perplexity: { score: 42, dorogo_sov_pct: 12.0, dorogo_rank: 3 },
+        gemini: { score: 42, dorogo_sov_pct: 1.5, dorogo_rank: 7 }
+      },
+      podium: {
+        first: { name: 'Blacklane', avg_sov_pct: 28.7 },
+        dorogo: { overall_rank: 5, avg_sov_pct: 6.2, perplexity_rank: 3 }
+      }
+    },
+    {
+      timestamp: '2026-10-28T09:42:00.000Z',
+      overall_composite_score: 42.3,
+      engines: {
+        chatgpt: { score: 29, dorogo_sov_pct: 8.0, dorogo_rank: 4 },
+        perplexity: { score: 49, dorogo_sov_pct: 18.0, dorogo_rank: 2 },
+        gemini: { score: 49, dorogo_sov_pct: 3.5, dorogo_rank: 6 }
+      },
+      podium: {
+        first: { name: 'Blacklane', avg_sov_pct: 26.0 },
+        dorogo: { overall_rank: 4, avg_sov_pct: 9.8, perplexity_rank: 2 }
+      }
+    }
+  ];
+
+  const series = computeGraderHistoricalSeries(history);
+  assert.equal(series.length, 2);
+  
+  // Baseline run
+  assert.equal(series[0].isBaseline, true);
+  assert.equal(series[0].intervalLabel, 'Baseline');
+  assert.equal(series[0].gapToLeader, 22.5); // 28.7 - 6.2
+
+  // Latest run (Sprint 1)
+  assert.equal(series[1].isLatest, true);
+  assert.equal(series[1].scoreDelta, 6.3); // 42.3 - 36.0
+  assert.equal(series[1].sovDelta, 3.6); // 9.8 - 6.2
+  assert.equal(series[1].rankDelta, 1); // 5 - 4 = +1
+  assert.equal(series[1].perpDelta, 7); // 49 - 42
+  assert.equal(series[1].gapToLeader, 16.2); // 26.0 - 9.8
+});
+
+

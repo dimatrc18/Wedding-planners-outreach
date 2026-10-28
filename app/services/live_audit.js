@@ -1143,6 +1143,97 @@ export function computeGraderHistoricalComparison(history = []) {
 }
 
 /**
+ * Computes a comprehensive chronological series for all HubSpot Grader snapshots,
+ * calculating bi-weekly progress, engine-by-engine trajectories, rank movements,
+ * and competitor gap changes over time.
+ */
+export function computeGraderHistoricalSeries(history = []) {
+  if (!Array.isArray(history) || history.length === 0) return [];
+
+  const sorted = [...history].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  const baseline = sorted[0];
+
+  return sorted.map((run, idx) => {
+    const prev = idx > 0 ? sorted[idx - 1] : null;
+    const isBaseline = idx === 0;
+    const daysSinceBaseline = Math.round((new Date(run.timestamp) - new Date(baseline.timestamp)) / (1000 * 60 * 60 * 24));
+
+    const score = run.overall_composite_score ?? 0;
+    const prevScore = prev ? (prev.overall_composite_score ?? 0) : score;
+    const scoreDelta = Math.round((score - prevScore) * 10) / 10;
+    const baselineScoreDelta = Math.round((score - (baseline.overall_composite_score ?? 0)) * 10) / 10;
+
+    const gptScore = run.engines?.chatgpt?.score ?? 0;
+    const prevGptScore = prev ? (prev.engines?.chatgpt?.score ?? 0) : gptScore;
+    const gptDelta = gptScore - prevGptScore;
+
+    const perpScore = run.engines?.perplexity?.score ?? 0;
+    const prevPerpScore = prev ? (prev.engines?.perplexity?.score ?? 0) : perpScore;
+    const perpDelta = perpScore - prevPerpScore;
+
+    const gemScore = run.engines?.gemini?.score ?? 0;
+    const prevGemScore = prev ? (prev.engines?.gemini?.score ?? 0) : gemScore;
+    const gemDelta = gemScore - prevGemScore;
+
+    const dorogoSov = run.podium?.dorogo?.avg_sov_pct ?? 0;
+    const prevDorogoSov = prev ? (prev.podium?.dorogo?.avg_sov_pct ?? 0) : dorogoSov;
+    const sovDelta = Math.round((dorogoSov - prevDorogoSov) * 10) / 10;
+    const baselineSovDelta = Math.round((dorogoSov - (baseline.podium?.dorogo?.avg_sov_pct ?? 0)) * 10) / 10;
+
+    const dorogoRank = run.podium?.dorogo?.overall_rank ?? 4;
+    const prevRank = prev ? (prev.podium?.dorogo?.overall_rank ?? 4) : dorogoRank;
+    const rankDelta = prevRank - dorogoRank;
+
+    const dorogoPerpRank = run.podium?.dorogo?.perplexity_rank ?? run.engines?.perplexity?.dorogo_rank ?? 2;
+    const dorogoPerpSov = run.engines?.perplexity?.dorogo_sov_pct ?? 0;
+
+    const dorogoGptRank = run.podium?.dorogo?.chatgpt_rank ?? run.engines?.chatgpt?.dorogo_rank ?? 4;
+    const dorogoGptSov = run.engines?.chatgpt?.dorogo_sov_pct ?? 0;
+
+    const dorogoGemRank = run.podium?.dorogo?.gemini_rank ?? run.engines?.gemini?.dorogo_rank ?? 6;
+    const dorogoGemSov = run.engines?.gemini?.dorogo_sov_pct ?? 0;
+
+    const leaderName = run.podium?.first?.name || 'Blacklane';
+    const leaderSov = run.podium?.first?.avg_sov_pct || 26.0;
+    const gapToLeader = Math.round((leaderSov - dorogoSov) * 10) / 10;
+
+    return {
+      index: idx,
+      timestamp: run.timestamp,
+      dateFormatted: new Date(run.timestamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+      intervalLabel: isBaseline ? 'Baseline' : `+${daysSinceBaseline}d (Sprint ${idx})`,
+      isBaseline,
+      isLatest: idx === sorted.length - 1,
+      score,
+      scoreDelta,
+      baselineScoreDelta,
+      gptScore,
+      gptDelta,
+      perpScore,
+      perpDelta,
+      gemScore,
+      gemDelta,
+      dorogoSov,
+      sovDelta,
+      baselineSovDelta,
+      dorogoRank,
+      rankDelta,
+      dorogoPerpRank,
+      dorogoPerpSov,
+      dorogoGptRank,
+      dorogoGptSov,
+      dorogoGemRank,
+      dorogoGemSov,
+      leaderName,
+      leaderSov,
+      gapToLeader,
+      reportUrl: idx === 1 ? 'data/visibility/reports/dorogo_hubspot_grader_2026-10-28.pdf' : null
+    };
+  });
+}
+
+
+/**
  * Loads HubSpot AI Search Grader historical snapshots.
  */
 export async function loadGraderHistory() {

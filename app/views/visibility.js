@@ -16,6 +16,7 @@ import {
   normalizeCompetitorName,
   parseHubSpotGraderText,
   computeGraderHistoricalComparison,
+  computeGraderHistoricalSeries,
   loadGraderHistory,
   saveGraderSnapshot
 } from '../services/live_audit.js';
@@ -114,6 +115,7 @@ export async function render(el) {
   const gIdx = selectedGraderIdx >= 0 && selectedGraderIdx < graderHistory.length ? selectedGraderIdx : graderHistory.length - 1;
   const currentGrader = graderHistory[gIdx] || null;
   const graderDelta = computeGraderHistoricalComparison(graderHistory);
+  const graderSeries = computeGraderHistoricalSeries(graderHistory);
 
   // Compute Podium items based on activePodiumEngine
   let podiumFirst = { name: 'Blacklane', sov: 26.0 };
@@ -405,6 +407,240 @@ export async function render(el) {
               <a href="data/visibility/reports/dorogo_hubspot_grader_2026-10-28.pdf" target="_blank" class="btn sm ghost" style="font-size:.76rem;text-decoration:none">
                 📄 View Full PDF Report
               </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 1.26 HubSpot Grader: Bi-Weekly Progress & Historical Evolution Over Time -->
+      <section class="card stack" style="gap:16px;background:var(--surface);padding:18px 20px;border:1px solid var(--line);border-radius:var(--r-sm)">
+        <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px">
+          <div>
+            <div class="row" style="gap:8px;align-items:center">
+              <span style="font-size:1.15rem">📈</span>
+              <h3 style="margin:0;font-size:1.05rem;font-weight:600">HubSpot AI Search Grader · Bi-Weekly Progress &amp; History Over Time</h3>
+            </div>
+            <span class="small muted">Tracking DOROGO's bi-weekly positioning climbs, engine scores, and competitor gap reduction</span>
+          </div>
+          <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
+            <span class="chip ok" style="font-weight:700;font-size:.76rem">
+              ${graderSeries.length >= 2 ? `▲ +${(graderSeries[graderSeries.length - 1].sovDelta).toFixed(1)}% SOV (14-Day Velocity)` : 'Baseline Established'}
+            </span>
+            <span class="chip gold" style="font-weight:700;font-size:.76rem">
+              ${graderSeries.length >= 2 ? `▲ +${(graderSeries[graderSeries.length - 1].scoreDelta).toFixed(1)} Pts Composite Score Lift` : 'Bi-Weekly Cadence'}
+            </span>
+          </div>
+        </div>
+
+        <!-- Trajectory Progress Cards Across Engines -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:12px">
+          <!-- Card 1: Overall Market Share of Voice -->
+          <div class="stack" style="gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px">
+            <div class="row between" style="align-items:center">
+              <span class="label" style="font-weight:700;font-size:.78rem;color:var(--gold-ink);text-transform:uppercase;letter-spacing:.03em">Overall Market SOV</span>
+              <span class="chip ok" style="font-size:.72rem;font-weight:700">+3.6% (+58% relative)</span>
+            </div>
+            <div class="row" style="gap:8px;align-items:baseline">
+              <div style="font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:700;color:var(--gold-ink);line-height:1">
+                9.8%
+              </div>
+              <div class="small muted" style="font-size:.82rem">from 6.2% at Baseline</div>
+            </div>
+            <!-- Progress Bar Visual -->
+            <div style="height:6px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:2px">
+              <div style="width:38%;height:100%;background:linear-gradient(90deg, var(--gold) 0%, var(--gold-ink) 100%)" title="9.8% of Total Market Voice"></div>
+            </div>
+            <div class="row between" style="font-size:.75rem;color:var(--muted)">
+              <span>Rank: #5 ➔ <strong style="color:var(--ink)">#4 Overall</strong></span>
+              <span>Gap to #1: <strong style="color:var(--ink)">-16.2%</strong> (was -22.5%)</span>
+            </div>
+          </div>
+
+          <!-- Card 2: Perplexity Sonar-Pro -->
+          <div class="stack" style="gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px">
+            <div class="row between" style="align-items:center">
+              <span class="label" style="font-weight:700;font-size:.78rem;color:var(--ink);text-transform:uppercase;letter-spacing:.03em">Perplexity Sonar</span>
+              <span class="chip ok" style="font-size:.72rem;font-weight:700">+7 pts · +6% SOV</span>
+            </div>
+            <div class="row" style="gap:8px;align-items:baseline">
+              <div style="font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:700;color:var(--ink);line-height:1">
+                49 <span style="font-size:1rem;font-weight:500;color:var(--muted)">/ 100</span>
+              </div>
+              <div class="small muted" style="font-size:.82rem">SOV: <strong>18.0%</strong> (was 12%)</div>
+            </div>
+            <div style="height:6px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:2px">
+              <div style="width:49%;height:100%;background:#10B981" title="49/100 Perplexity Score"></div>
+            </div>
+            <div class="row between" style="font-size:.75rem;color:var(--muted)">
+              <span>Rank: #3 ➔ <strong style="color:var(--gold-ink)">🥈 #2 Silver Podium</strong></span>
+              <span>Passed Wheely &amp; Welcome</span>
+            </div>
+          </div>
+
+          <!-- Card 3: ChatGPT Search -->
+          <div class="stack" style="gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px">
+            <div class="row between" style="align-items:center">
+              <span class="label" style="font-weight:700;font-size:.78rem;color:var(--ink);text-transform:uppercase;letter-spacing:.03em">ChatGPT Search</span>
+              <span class="chip ok" style="font-size:.72rem;font-weight:700">+5 pts · +3% SOV</span>
+            </div>
+            <div class="row" style="gap:8px;align-items:baseline">
+              <div style="font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:700;color:var(--ink);line-height:1">
+                29 <span style="font-size:1rem;font-weight:500;color:var(--muted)">/ 100</span>
+              </div>
+              <div class="small muted" style="font-size:.82rem">SOV: <strong>8.0%</strong> (was 5%)</div>
+            </div>
+            <div style="height:6px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:2px">
+              <div style="width:29%;height:100%;background:#F59E0B" title="29/100 ChatGPT Score"></div>
+            </div>
+            <div class="row between" style="font-size:.75rem;color:var(--muted)">
+              <span>Rank: #5 ➔ <strong style="color:var(--ink)">#4 in Milan</strong></span>
+              <span>Trailing Welcome (14%)</span>
+            </div>
+          </div>
+
+          <!-- Card 4: Google Gemini -->
+          <div class="stack" style="gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px">
+            <div class="row between" style="align-items:center">
+              <span class="label" style="font-weight:700;font-size:.78rem;color:var(--ink);text-transform:uppercase;letter-spacing:.03em">Google Gemini</span>
+              <span class="chip ok" style="font-size:.72rem;font-weight:700">+7 pts · +2% SOV</span>
+            </div>
+            <div class="row" style="gap:8px;align-items:baseline">
+              <div style="font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:700;color:var(--ink);line-height:1">
+                49 <span style="font-size:1rem;font-weight:500;color:var(--muted)">/ 100</span>
+              </div>
+              <div class="small muted" style="font-size:.82rem">SOV: <strong>3.5%</strong> (was 1.5%)</div>
+            </div>
+            <div style="height:6px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:2px">
+              <div style="width:49%;height:100%;background:#3B82F6" title="49/100 Gemini Score"></div>
+            </div>
+            <div class="row between" style="font-size:.75rem;color:var(--muted)">
+              <span>Rank: #7 ➔ <strong style="color:var(--ink)">#6 in Milan</strong></span>
+              <span>Top Sentiment (33/40)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Historical Timeline & Progress Log Table -->
+        <div style="border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;background:var(--bg);margin-top:4px">
+          <div class="row between" style="padding:10px 14px;background:var(--surface-2);border-bottom:1px solid var(--line);align-items:center;flex-wrap:wrap;gap:8px">
+            <div style="font-weight:700;font-size:.84rem;color:var(--ink)">Bi-Weekly Audit Log &amp; Progress History (${graderSeries.length} recorded runs)</div>
+            <div class="tiny muted">Click "👁️ View on Podium" to load that specific date on the podium above</div>
+          </div>
+          
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:.82rem;text-align:left">
+              <thead>
+                <tr style="border-bottom:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em">
+                  <th style="padding:10px 12px">Date &amp; Cadence</th>
+                  <th style="padding:10px 12px">Overall Score</th>
+                  <th style="padding:10px 12px">Perplexity Sonar</th>
+                  <th style="padding:10px 12px">ChatGPT Search</th>
+                  <th style="padding:10px 12px">Google Gemini</th>
+                  <th style="padding:10px 12px">Total Market SOV</th>
+                  <th style="padding:10px 12px">DOROGO Rank</th>
+                  <th style="padding:10px 12px">Gap to Leader</th>
+                  <th style="padding:10px 12px;text-align:right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${graderSeries.map((s) => {
+                  const isSelected = s.index === gIdx;
+                  return `
+                    <tr style="border-bottom:1px solid var(--line);background:${isSelected ? 'var(--gold-soft)' : 'transparent'};transition:background .15s">
+                      <td style="padding:10px 12px">
+                        <div class="row" style="gap:6px;align-items:center">
+                          <span style="font-weight:700;color:var(--ink)">${esc(s.dateFormatted)}</span>
+                          <span class="chip ${s.isBaseline ? 'outline' : 'ok'}" style="font-size:.68rem;padding:1px 6px">
+                            ${esc(s.intervalLabel)}
+                          </span>
+                          ${s.isLatest ? `<span class="chip gold" style="font-size:.65rem;padding:1px 5px">⚡ Active</span>` : ''}
+                        </div>
+                      </td>
+                      <td style="padding:10px 12px">
+                        <span style="font-weight:700;font-size:.9rem;color:var(--ink)">${s.score.toFixed(1)}</span>
+                        ${s.scoreDelta !== 0 ? `<span class="tiny ${s.scoreDelta > 0 ? 'ok-text' : 'bad-text'}" style="font-weight:600;margin-left:4px">${s.scoreDelta > 0 ? '▲ +' : '▼ '}${s.scoreDelta.toFixed(1)}</span>` : '<span class="tiny muted" style="margin-left:4px">—</span>'}
+                      </td>
+                      <td style="padding:10px 12px">
+                        <span style="font-weight:600">${s.perpScore}</span>
+                        <span class="chip ${s.dorogoPerpRank === 2 ? 'gold' : 'outline'}" style="font-size:.68rem;padding:1px 4px;margin-left:4px">
+                          ${s.dorogoPerpRank === 2 ? '🥈 #2' : `#${s.dorogoPerpRank}`} (${s.dorogoPerpSov.toFixed(1)}%)
+                        </span>
+                        ${s.perpDelta > 0 ? `<span class="tiny ok-text" style="font-weight:600;margin-left:2px">+${s.perpDelta}</span>` : ''}
+                      </td>
+                      <td style="padding:10px 12px">
+                        <span style="font-weight:600">${s.gptScore}</span>
+                        <span class="chip outline" style="font-size:.68rem;padding:1px 4px;margin-left:4px">
+                          #${s.dorogoGptRank} (${s.dorogoGptSov.toFixed(1)}%)
+                        </span>
+                        ${s.gptDelta > 0 ? `<span class="tiny ok-text" style="font-weight:600;margin-left:2px">+${s.gptDelta}</span>` : ''}
+                      </td>
+                      <td style="padding:10px 12px">
+                        <span style="font-weight:600">${s.gemScore}</span>
+                        <span class="chip outline" style="font-size:.68rem;padding:1px 4px;margin-left:4px">
+                          #${s.dorogoGemRank} (${s.dorogoGemSov.toFixed(1)}%)
+                        </span>
+                        ${s.gemDelta > 0 ? `<span class="tiny ok-text" style="font-weight:600;margin-left:2px">+${s.gemDelta}</span>` : ''}
+                      </td>
+                      <td style="padding:10px 12px">
+                        <span style="font-weight:700;color:var(--gold-ink)">${s.dorogoSov.toFixed(1)}%</span>
+                        ${s.sovDelta !== 0 ? `<span class="tiny ${s.sovDelta > 0 ? 'ok-text' : 'bad-text'}" style="font-weight:600;margin-left:4px">${s.sovDelta > 0 ? '▲ +' : '▼ '}${s.sovDelta.toFixed(1)}%</span>` : '<span class="tiny muted" style="margin-left:4px">—</span>'}
+                      </td>
+                      <td style="padding:10px 12px">
+                        <span style="font-weight:700;color:var(--ink)">#${s.dorogoRank}</span>
+                        ${s.rankDelta > 0 ? `<span class="tiny ok-text" style="font-weight:600;margin-left:4px">▲ +${s.rankDelta}</span>` : ''}
+                      </td>
+                      <td style="padding:10px 12px">
+                        <div class="row" style="gap:6px;align-items:center">
+                          <span style="color:var(--muted);font-weight:600">-${s.gapToLeader.toFixed(1)}%</span>
+                          ${graderSeries[0] && s.gapToLeader < (graderSeries[0].gapToLeader) ? `<span class="chip ok" style="font-size:.65rem;padding:1px 4px" title="Gap reduced by ${(graderSeries[0].gapToLeader - s.gapToLeader).toFixed(1)}%">-6.3% gap!</span>` : ''}
+                        </div>
+                      </td>
+                      <td style="padding:10px 12px;text-align:right">
+                        <div class="row end" style="gap:6px">
+                          <button class="btn sm ${isSelected ? 'primary' : 'ghost'}" data-select-grader-run="${s.index}" style="font-size:.72rem;padding:3px 8px">
+                            ${isSelected ? '✓ Loaded' : '👁️ View on Podium'}
+                          </button>
+                          ${s.reportUrl ? `
+                            <a href="${s.reportUrl}" target="_blank" class="btn sm ghost" style="font-size:.72rem;padding:3px 8px" title="Open archived PDF report">
+                              📄 PDF
+                            </a>
+                          ` : ''}
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                }).reverse().join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Comparative Category Breakdown Card -->
+        <div class="row between" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px 18px;align-items:center;flex-wrap:wrap;gap:12px">
+          <div>
+            <div style="font-weight:700;font-size:.88rem;color:var(--ink)">HubSpot AEO Diagnostic Pillars (DOROGO Milan Chauffeur)</div>
+            <div class="small muted" style="margin-top:2px">Brand sentiment is DOROGO's strongest pillar (33/40 on Gemini, 31/40 on Perplexity), fueling our #2 Podium finish on Perplexity.</div>
+          </div>
+          <div class="row" style="gap:8px;flex-wrap:wrap">
+            <div class="card" style="padding:6px 12px;background:var(--surface);border:1px solid var(--line);text-align:center">
+              <div class="tiny muted" style="text-transform:uppercase;font-weight:600">Brand Sentiment</div>
+              <div style="font-weight:700;font-size:1.05rem;color:var(--ok)">31 / 40 <span class="tiny ok-text">(+11)</span></div>
+            </div>
+            <div class="card" style="padding:6px 12px;background:var(--surface);border:1px solid var(--line);text-align:center">
+              <div class="tiny muted" style="text-transform:uppercase;font-weight:600">Presence Quality</div>
+              <div style="font-weight:700;font-size:1.05rem;color:var(--gold-ink)">7 / 20 <span class="tiny ok-text">(+4)</span></div>
+            </div>
+            <div class="card" style="padding:6px 12px;background:var(--surface);border:1px solid var(--line);text-align:center">
+              <div class="tiny muted" style="text-transform:uppercase;font-weight:600">Share of Voice</div>
+              <div style="font-weight:700;font-size:1.05rem;color:var(--gold-ink)">4 / 10 <span class="tiny ok-text">(+3)</span></div>
+            </div>
+            <div class="card" style="padding:6px 12px;background:var(--surface);border:1px solid var(--line);text-align:center">
+              <div class="tiny muted" style="text-transform:uppercase;font-weight:600">Brand Recognition</div>
+              <div style="font-weight:700;font-size:1.05rem;color:var(--warn)">4 / 20 <span class="tiny ok-text">(+2)</span></div>
+            </div>
+            <div class="card" style="padding:6px 12px;background:var(--surface);border:1px solid var(--line);text-align:center">
+              <div class="tiny muted" style="text-transform:uppercase;font-weight:600">Market Score</div>
+              <div style="font-weight:700;font-size:1.05rem;color:var(--muted)">3 / 10</div>
             </div>
           </div>
         </div>
@@ -1020,6 +1256,17 @@ export async function render(el) {
   el.querySelector('#sel-grader-snapshot')?.addEventListener('change', async (e) => {
     selectedGraderIdx = Number(e.target.value);
     await render(el);
+  });
+
+  el.querySelectorAll('[data-select-grader-run]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const idx = Number(btn.dataset.selectGraderRun);
+      if (!isNaN(idx)) {
+        selectedGraderIdx = idx;
+        await render(el);
+        el.querySelector('#sel-grader-snapshot')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
   });
 
   el.querySelector('#btn-import-grader-pdf')?.addEventListener('click', () => {

@@ -10,7 +10,7 @@ import * as templates from './views/templates.js?v=3.7';
 import * as analytics from './views/analytics.js?v=3.7';
 import * as partners from './views/partners.js?v=3.7';
 import * as tools from './views/tools.js?v=3.7';
-import * as visibility from './views/visibility.js?v=3.8';
+import * as visibility from './views/visibility.js?v=3.9';
 import * as settings from './views/settings.js?v=3.7';
 import * as busPartners from './views/bus_partners.js?v=5.8';
 
