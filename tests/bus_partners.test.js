@@ -1133,6 +1133,34 @@ test('Como Driver Services is verified as APPROVED_PARTNER with replied status, 
   assert.ok(como.score_breakdown?.partner_card?.fleet_photos?.length >= 2);
 });
 
+test('buildBusOutreachDraft with reply_vclass_clarification clarifies internal V-Class and asks for 8-50 seat bus network contacts', () => {
+  const partner = {
+    name: 'Como Limo Lux',
+    base_city: 'Como',
+    contact_person: 'Stefano Carnevale',
+    phone: '+39 346 7039569'
+  };
+  const draft = buildBusOutreachDraft(partner, 'reply_vclass_clarification');
+  assert.ok(draft.subject.includes('Disponibilità'));
+  assert.ok(draft.body.includes('Stefano'));
+  assert.ok(draft.body.includes('Mercedes Classe V'));
+  assert.ok(draft.body.includes('8 ai 50 posti'));
+  assert.ok(draft.body.includes('collega o azienda partner'));
+  assert.ok(draft.body.includes('Dmitri Traciuc'));
+});
+
+test('Como Limo Lux is verified with Stefano Carnevale, replied status and V-Class note in data/bus_partners.json', async () => {
+  const fs = await import('node:fs');
+  const partners = JSON.parse(fs.readFileSync('data/bus_partners.json', 'utf8'));
+  const cll = partners.find(p => p.id === 'partner_1792765279410_2zml');
+  assert.ok(cll, 'Como Limo Lux must exist in data/bus_partners.json');
+  assert.equal(cll.contact_person, 'Stefano Carnevale');
+  assert.equal(cll.phone, '+39 346 7039569');
+  assert.equal(cll.outreach_stage, 'replied');
+  assert.ok(cll.notes.includes('Stefano Carnevale ha risposto'));
+  assert.ok(cll.notes.includes('Mercedes Classe V'));
+});
+
 
 
 

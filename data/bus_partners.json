@@ -270,9 +270,9 @@
     "score_breakdown": {
       "fleet_luxury": 23,
       "partner_card": {
-        "whatsapp": "+39 031 264 780",
+        "whatsapp": "+39 346 7039569",
         "bus_models": "Mercedes-Benz V-Class Luxury Minivan (7 pax)",
-        "replied_at": null,
+        "replied_at": "2026-10-27T16:17:00.000Z",
         "rate_hourly": "",
         "client_notes": "",
         "email_status": "mx_ok",
@@ -280,31 +280,37 @@
         "rate_standby": "",
         "scheduled_at": "2026-10-27T12:00:00.000Z",
         "fleet_segment": "luxury",
-        "outreach_stage": "ready",
+        "outreach_stage": "replied",
         "last_message_id": null,
         "user_set_status": true,
-        "last_outreach_at": null,
+        "last_outreach_at": "2026-10-27T13:00:00.000Z",
         "user_set_segment": true,
-        "fleet_audit_verified_at": "2026-10-26T18:25:11.587Z"
+        "fleet_audit_verified_at": "2026-10-26T18:25:11.587Z",
+        "contact_person": "Stefano Carnevale"
       },
       "corporate_sla": 15,
       "territory_permits": 20,
       "discretion_unbranded": 35
     },
-    "status": "WANT_TO_CONTACT",
+    "status": "CONTACTED",
     "unbranded_status": "100% Guaranteed Unbranded / Total Black",
     "fleet_categories": [
       "Mercedes-Benz V-Class Luxury Minivan (7 seats)"
     ],
-    "phone": "+39 031 264 780",
+    "phone": "+39 346 7039569",
     "email": "info@comolimolux.com",
-    "notes": "1. i am interested to know how much for transfer (milan -> MXP) and stand by service for a) Mercedes sprinter 20 posti, b) Irizar 52 posti",
+    "notes": "Stefano Carnevale ha risposto il 27 Ott: dispone solo di 1x Mercedes Classe V (7 posti), non ha bus/minibus 8-50 posti. Contatto salvato (+39 346 7039569) per eventuale overflow Classe V; inviata richiesta contatto colleghi network per minibus/pullman 8-50 pax.",
     "source": "crawler",
     "created_at": "2026-10-23T14:21:19.41+00:00",
     "updated_at": "2026-10-26T16:45:24.561943+00:00",
     "bus_models": "Mercedes-Benz V-Class Luxury Minivan (7 pax)",
     "pax_capacity": "7 pax",
-    "fleet_segment": "luxury"
+    "fleet_segment": "luxury",
+    "contact_person": "Stefano Carnevale",
+    "whatsapp": "+39 346 7039569",
+    "outreach_stage": "replied",
+    "replied_at": "2026-10-27T16:17:00.000Z",
+    "last_outreach_at": "2026-10-27T13:00:00.000Z"
   },
   {
     "id": "partner_1792761170109_96nx",

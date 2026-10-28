@@ -1235,6 +1235,37 @@ booking@dorogo.eu · dorogo.eu`;
     };
   }
 
+  if (stepKey === 'reply_vclass_clarification' || stepKey === 'reply_bus_referral') {
+    const contactPerson = partner.contact_person || 'Stefano';
+    const body = `Buongiorno ${contactPerson},
+
+La ringrazio per la pronta risposta!
+
+Ci tenevo a chiarire che con la nostra flotta interna DOROGO copriamo già direttamente i servizi con Mercedes Classe V e berline executive per gli ospiti VIP. Tuttavia, per matrimoni ed eventi privati sul Lago di Como e Milano, riceviamo un volume costante di richieste per gruppi più numerosi che necessitano di minibus e pullman di lusso (dagli 8 ai 50 posti).
+
+Per questo motivo siamo alla ricerca di partner specializzati proprio su queste capienze maggiori.
+
+Dato che opera attivamente sul Lago di Como nel settore NCC, Le andrebbe di condividere con noi il contatto di qualche collega o azienda partner di Sua fiducia che dispone di minibus (Sprinter 8–20 posti) o autobus gran turismo (fino a 50 posti) con standard di alto livello?
+
+Nel frattempo salviamo volentieri il Suo contatto diretto per eventuali richieste aggiuntive di Classe V sul Lago di Como quando la nostra flotta è al completo.
+
+La ringrazio ancora per la disponibilità e Le auguro buon lavoro.
+
+Un cordiale saluto,
+Dmitri Traciuc
+DOROGO Chauffeur Service
+Tel / WhatsApp: +39 347 184 8920
+booking@dorogo.eu · dorogo.eu`;
+
+    return {
+      step_name: 'reply_vclass_clarification',
+      language: 'it',
+      subject: `Re: Disponibilità transfer ed eventi Lago di Como — DOROGO Transfers`,
+      body,
+      word_count: body.trim().split(/\s+/).length,
+    };
+  }
+
   // Default: T1_intro (Tailored CEO-level Italian outreach)
   let questions = [];
 
