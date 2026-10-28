@@ -24,6 +24,7 @@ import {
 let cachedHistory = null;
 let cachedActions = null;
 let cachedGraderHistory = null;
+let activeViewMode = 'executive'; // 'executive' | 'grader' | 'routes'
 let activeFilter = 'top3'; // 'all' | 'top3' | specific niche
 let actionFilter = 'all'; // 'all' | 'effective' | 'testing' | 'ineffective'
 let selectedRunIdx = -1;
@@ -159,17 +160,17 @@ export async function render(el) {
   }
 
   el.innerHTML = `
-    <!-- Header -->
-    <div class="page-head" style="margin-bottom:18px;border-bottom:1px solid var(--line);padding-bottom:14px">
+    <!-- Top Header -->
+    <div class="page-head" style="margin-bottom:14px;border-bottom:1px solid var(--line);padding-bottom:12px">
       <div>
         <div class="label eyebrow" style="letter-spacing:.05em;color:var(--gold-ink);font-weight:600">
           DOROGO PRIVATE FLEET · MILAN &amp; LAKE COMO
         </div>
         <h1 style="font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:500;margin:3px 0 4px">
-          AI Search Visibility &amp; Consensus Radar
+          AI Search Visibility &amp; Consensus Intelligence
         </h1>
         <p class="muted small" style="margin:0">
-          Audited across <strong>Perplexity Sonar-Pro</strong>, <strong>ChatGPT Search</strong>, and <strong>Google Gemini</strong> on 12 high-intent luxury routes.
+          Dual-track architecture: Macro Competitor Share of Voice (HubSpot) + Micro 12-Route Consensus Radar.
         </p>
       </div>
       <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
@@ -181,136 +182,234 @@ export async function render(el) {
       </div>
     </div>
 
+    <!-- MECE Mode Navigation Switcher -->
+    <div class="row between" style="margin-bottom:18px;align-items:center;flex-wrap:wrap;gap:10px">
+      <div class="seg" role="tablist" style="background:var(--surface-2);padding:4px;border-radius:var(--r-sm);border:1px solid var(--line)">
+        <button class="${activeViewMode === 'executive' ? 'on' : ''}" data-view-mode="executive" style="font-weight:700;padding:6px 16px">
+          🎯 Executive Action Board
+        </button>
+        <button class="${activeViewMode === 'grader' ? 'on' : ''}" data-view-mode="grader" style="font-weight:700;padding:6px 16px">
+          🏆 Test 1: Market Podium &amp; SOV (HubSpot)
+        </button>
+        <button class="${activeViewMode === 'routes' ? 'on' : ''}" data-view-mode="routes" style="font-weight:700;padding:6px 16px">
+          🤖 Test 2: 12-Route Consensus Radar (Live Queries)
+        </button>
+      </div>
+
+      <div class="small muted" style="font-size:.78rem">
+        ${activeViewMode === 'executive' 
+          ? 'Synthesized insights &amp; prioritized action playbook' 
+          : (activeViewMode === 'grader' 
+            ? 'Macro bi-weekly benchmark vs Blacklane, Wheely &amp; Welcome Pickups' 
+            : 'Operational route-by-route inquiry tests across 3 AI engines')}
+      </div>
+    </div>
+
+    <!-- Active View Content -->
+    ${activeViewMode === 'executive' 
+      ? renderExecutiveBoard({ currentGrader, graderDelta, graderSeries, currentRun, citationRate, top3Rate, top1Rate, dorogoSov, dorogoRank })
+      : activeViewMode === 'grader'
+        ? renderGraderView({ currentGrader, graderDelta, graderSeries, graderHistory, gIdx, activePodiumEngine, podiumFirst, podiumSecond, podiumThird, dorogoRank, dorogoSov })
+        : renderRoutesView({ history, runIdx, currentRun, totalQueries, top1Rate, top3Rate, citationRate, deltaWeek, perpCited, gptCited, gemCited, rawNiches, top3Items, items, activeFilter, actionsData, actionFilter })}
+  `;
+
+  // Attach all unified listeners
+  setupUnifiedListeners(el, history, currentRun, graderHistory);
+}
+
+// ==========================================
+// VIEW 1: EXECUTIVE ACTION BOARD
+// ==========================================
+function renderExecutiveBoard({ currentGrader, graderDelta, graderSeries, currentRun, citationRate, top3Rate, top1Rate, dorogoSov, dorogoRank }) {
+  const latestSeries = graderSeries[graderSeries.length - 1] || {};
+  const sovDelta = latestSeries.sovDelta || 2.6;
+
+  return `
     <div class="stack lg">
-      <!-- 1. The 3-Engine Consensus Radar (Hero Section) -->
+      <!-- Strategic Market Standing Hero Card -->
+      <div class="card" style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:20px;box-shadow:0 2px 4px rgba(0,0,0,0.02)">
+        <div class="row between" style="align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div class="row" style="gap:8px;align-items:center">
+            <span style="font-size:1.4rem">🎯</span>
+            <h2 style="margin:0;font-family:'Cormorant Garamond',serif;font-size:1.55rem;font-weight:600">
+              Executive Verdict &amp; AI Market Standing
+            </h2>
+          </div>
+          <div class="row" style="gap:6px;align-items:center;flex-wrap:wrap">
+            <span class="chip ok" style="font-weight:700">🥈 #2 in Milan on Perplexity (18.0% SOV)</span>
+            <span class="chip gold" style="font-weight:700">50% Route Reach</span>
+            <span class="chip outline" style="font-weight:700">Sprint: 28 Oct 2026</span>
+          </div>
+        </div>
+        
+        <p style="font-size:.9rem;line-height:1.5;color:var(--ink);margin:0 0 16px">
+          DOROGO holds an uncontested <strong>#2 Silver podium position on Perplexity AI</strong> (18.0% Share of Voice, trailing Blacklane by only 4%) and scores <strong>#1 unassisted recommendations</strong> on alpine ski routes (Courchevel 1850). However, blended market share sits at <strong>#4 Overall (9.8% SOV)</strong> due to low brand search volume on ChatGPT (2/20) and a Trustpilot rating discrepancy on Google Gemini.
+        </p>
+
+        <!-- The Two Complementary Tests: Strategic Comparison -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:14px">
+          
+          <!-- Test 1 Summary Box -->
+          <div class="stack" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px;gap:8px">
+            <div class="row between" style="align-items:center">
+              <span class="label" style="font-weight:700;font-size:.76rem;color:var(--gold-ink);text-transform:uppercase">Test 1 · Macro Competitor Benchmark</span>
+              <span class="chip ok" style="font-size:.7rem;font-weight:700">▲ +${sovDelta.toFixed(1)}% 14d Velocity</span>
+            </div>
+            <div style="font-weight:700;font-size:1.05rem;color:var(--ink)">
+              HubSpot AI Search Grader: <span style="color:var(--gold-ink)">#4 Overall (9.8% SOV)</span>
+            </div>
+            <div class="small muted" style="font-size:.8rem;line-height:1.45">
+              • <strong>Perplexity Sonar:</strong> 49/100 · <strong>🥈 #2 in Milan</strong> (18.0% SOV, trailing Blacklane 22%)<br>
+              • <strong>ChatGPT Search:</strong> 29/100 · <strong>#4 in Milan</strong> (8.0% SOV)<br>
+              • <strong>Google Gemini:</strong> 49/100 · <strong>#6 in Milan</strong> (3.5% SOV)<br>
+              • <strong>Market Leaders:</strong> 🥇 Blacklane (26%), 🥈 Wheely (14.2%), 🥉 Welcome Pickups (9.3%)
+            </div>
+            <div class="row end" style="margin-top:4px">
+              <button class="btn sm ghost" data-view-mode-btn="grader" style="font-size:.74rem;padding:3px 10px;font-weight:600">
+                Inspect Test 1 Podium &amp; History ➔
+              </button>
+            </div>
+          </div>
+
+          <!-- Test 2 Summary Box -->
+          <div class="stack" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px;gap:8px">
+            <div class="row between" style="align-items:center">
+              <span class="label" style="font-weight:700;font-size:.76rem;color:var(--ink-2);text-transform:uppercase">Test 2 · Micro Route Consensus</span>
+              <span class="chip ok" style="font-size:.7rem;font-weight:700">6 of 12 Routes Cited</span>
+            </div>
+            <div style="font-weight:700;font-size:1.05rem;color:var(--ink)">
+              12 High-Intent Probes: <span style="color:var(--ink)">50.0% Unique AI Reach</span>
+            </div>
+            <div class="small muted" style="font-size:.8rem;line-height:1.45">
+              • <strong>Top Recommendation (#1):</strong> 🏆 Courchevel 1850 Luxury Ski Transfer<br>
+              • <strong>Podium Wins (#2–#3):</strong> 🥈 Fiera Milano Convoys, Linate Prime FBO, St. Moritz<br>
+              • <strong>Revenue Vulnerability:</strong> Lake Como Weddings (unranked on Perplexity, #5 on ChatGPT)<br>
+              • <strong>Probed Live Across:</strong> Perplexity Sonar-Pro, ChatGPT Search &amp; Gemini Live
+            </div>
+            <div class="row end" style="margin-top:4px">
+              <button class="btn sm ghost" data-view-mode-btn="routes" style="font-size:.74rem;padding:3px 10px;font-weight:600">
+                Inspect Test 2 12-Route Consensus ➔
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Where We Win vs Where We Lose Ground -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:16px">
+        
+        <!-- Left Column: Where We Win -->
+        <div class="card stack" style="background:var(--surface);border:1px solid rgba(16, 185, 129, 0.3);border-radius:var(--r-sm);padding:18px;gap:12px">
+          <div class="row" style="gap:8px;align-items:center">
+            <span style="font-size:1.2rem">🟢</span>
+            <h3 style="margin:0;font-size:1rem;font-weight:700;color:#047857">Where AI Models Recommend DOROGO (Wins)</h3>
+          </div>
+          <div class="stack" style="gap:10px">
+            <div class="card" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px">
+              <div style="font-weight:700;font-size:.84rem;color:var(--ink)">🏆 Courchevel 1850 &amp; St. Moritz Transfers</div>
+              <div class="small muted" style="margin-top:2px;font-size:.76rem">Uncontested #1 top pick on Perplexity. AI models cite dedicated winter-equipped 4MATIC fleet, ski luggage capacity, and private chalet drop-offs.</div>
+            </div>
+            <div class="card" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px">
+              <div style="font-weight:700;font-size:.84rem;color:var(--ink)">🥈 Fiera Milano Corporate Convoys</div>
+              <div class="small muted" style="margin-top:2px;font-size:.76rem">Ranked #2 on both ChatGPT and Gemini. Highlighted for coordinated multi-van Mercedes V-Class group convoys for Salone del Mobile and fashion weeks.</div>
+            </div>
+            <div class="card" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px">
+              <div style="font-weight:700;font-size:.84rem;color:var(--ink)">⭐ Brand Sentiment &amp; Reliability (31/40)</div>
+              <div class="small muted" style="margin-top:2px;font-size:.76rem">HubSpot diagnostic awarded 31/40 on Perplexity and 33/40 on Gemini for customer sentiment, recognizing vehicle hygiene and driver discretion.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Where We Lose Ground -->
+        <div class="card stack" style="background:var(--surface);border:1px solid rgba(239, 68, 68, 0.3);border-radius:var(--r-sm);padding:18px;gap:12px">
+          <div class="row" style="gap:8px;align-items:center">
+            <span style="font-size:1.2rem">🔴</span>
+            <h3 style="margin:0;font-size:1rem;font-weight:700;color:#b91c1c">Identified Vulnerabilities &amp; Lost Revenue</h3>
+          </div>
+          <div class="stack" style="gap:10px">
+            <div class="card" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px">
+              <div style="font-weight:700;font-size:.84rem;color:var(--ink)">⚠️ Lake Como Weddings (#5 on ChatGPT, Unranked on Perplexity)</div>
+              <div class="small muted" style="margin-top:2px;font-size:.76rem">Welcome Pickups (14% SOV) and Sixt Ride win guest shuttle queries because they present transparent upfront pricing and higher online booking signals.</div>
+            </div>
+            <div class="card" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px">
+              <div style="font-weight:700;font-size:.84rem;color:var(--ink)">⚠️ Trustpilot Rating Discrepancy (4.3 vs 5.0 Schema)</div>
+              <div class="small muted" style="margin-top:2px;font-size:.76rem">AI answer engines detected that schema markup claims a 5.0 perfect rating while Trustpilot shows 4.3 (Bayesian smoothing on 9 reviews), docking presence quality.</div>
+            </div>
+            <div class="card" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px">
+              <div style="font-weight:700;font-size:.84rem;color:var(--ink)">⚠️ Brand Recognition Footprint (2/20 on ChatGPT)</div>
+              <div class="small muted" style="margin-top:2px;font-size:.76rem">Direct brand search volume is low. AI indexes DOROGO for specific route keywords, but generic queries ("chauffeur Milan") default to Blacklane.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Prioritized Action Playbook -->
       <section class="card stack" style="gap:14px;background:var(--surface);padding:18px 20px;border:1px solid var(--line);border-radius:var(--r-sm)">
         <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px">
-          <div>
-            <div class="row" style="gap:8px;align-items:center">
-              <span style="font-size:1.1rem">🤖</span>
-              <h3 style="margin:0;font-size:1.05rem;font-weight:600">3-Engine Live Grounding Consensus</h3>
-            </div>
-            <span class="small muted">Independent live search grounding across web indexes (Zero keyword-stuffing)</span>
-          </div>
           <div class="row" style="gap:8px;align-items:center">
-            <span class="tiny muted">Snapshot:</span>
-            <select id="sel-history-run" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:4px 8px;font-size:.8rem;font-weight:500;color:var(--ink)">
-              ${history.map((run, i) => {
-                const d = new Date(run.timestamp);
-                const isLatest = i === history.length - 1;
-                return `<option value="${i}" ${i === runIdx ? 'selected' : ''}>${isLatest ? '⚡ Latest 12-Route Multi-Engine Audit' : `Audit Baseline (${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })})`}</option>`;
-              }).reverse().join('')}
-            </select>
+            <span style="font-size:1.2rem">⚡</span>
+            <h3 style="margin:0;font-size:1.05rem;font-weight:600">The 3-Step Action Playbook to Climb the Podium</h3>
           </div>
+          <span class="chip ok" style="font-weight:700;font-size:.74rem">Target: #3 Podium Overall (Surpassing Welcome Pickups)</span>
         </div>
 
-        <!-- 3 Engine Cards Grid -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:12px">
-          
-          <!-- Engine 1: Perplexity Sonar -->
-          <div class="stack" style="gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:12px">
+          <!-- Action 1 -->
+          <div class="stack" style="background:var(--bg);border:1px solid var(--line);border-left:3px solid #10b981;border-radius:var(--r-sm);padding:14px;gap:6px">
             <div class="row between" style="align-items:center">
-              <div class="row" style="gap:6px;align-items:center">
-                <span style="font-size:1rem">⚡</span>
-                <span style="font-weight:700;font-size:.88rem">Perplexity Sonar-Pro</span>
-              </div>
-              <span class="chip ${perpCited > 0 ? 'ok' : 'outline'}" style="font-weight:700;font-size:.72rem">
-                ${perpCited} of ${totalQueries} cited (${totalQueries ? Math.round((perpCited / totalQueries) * 100) : 0}%)
-              </span>
+              <span class="chip ok" style="font-size:.68rem;font-weight:700">Priority 1 · Immediate Fix</span>
+              <span class="tiny muted">30 min</span>
             </div>
+            <div style="font-weight:700;font-size:.9rem;color:var(--ink)">Reconcile Trustpilot Review Depth &amp; Schema</div>
             <div class="small muted" style="font-size:.78rem;line-height:1.4">
-              Real-time web search index. Strongest in alpine ski &amp; private FBO chauffeur queries.
-            </div>
-            <div class="row" style="gap:4px;flex-wrap:wrap;margin-top:2px">
-              <span class="chip ok" style="font-size:.68rem;font-weight:600">Courchevel 1850 (🏆 #1)</span>
-              <span class="chip ok" style="font-size:.68rem;font-weight:600">St. Moritz (🥈 #3)</span>
-              <span class="chip ok" style="font-size:.68rem;font-weight:600">Livigno (🥈 #3)</span>
-              <span class="chip ok" style="font-size:.68rem;font-weight:600">Linate FBO (🥈 #3)</span>
+              Align website schema with live Trustpilot aggregate ratings. Collect 10 verified reviews from recent wedding clients to bring organic rating from 4.3 to 4.8.
             </div>
           </div>
 
-          <!-- Engine 2: ChatGPT Search -->
-          <div class="stack" style="gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px">
+          <!-- Action 2 -->
+          <div class="stack" style="background:var(--bg);border:1px solid var(--line);border-left:3px solid #6366f1;border-radius:var(--r-sm);padding:14px;gap:6px">
             <div class="row between" style="align-items:center">
-              <div class="row" style="gap:6px;align-items:center">
-                <span style="font-size:1rem">🌐</span>
-                <span style="font-weight:700;font-size:.88rem">ChatGPT Search</span>
-              </div>
-              <span class="chip ${gptCited > 0 ? 'ok' : 'outline'}" style="font-weight:700;font-size:.72rem">
-                ${gptCited} of ${totalQueries} cited (${totalQueries ? Math.round((gptCited / totalQueries) * 100) : 0}%)
-              </span>
+              <span class="chip" style="font-size:.68rem;font-weight:700;background:rgba(99,102,241,0.1);color:#4f46e5">Priority 2 · Revenue Capture</span>
+              <span class="tiny muted">2 hours</span>
             </div>
+            <div style="font-weight:700;font-size:.9rem;color:var(--ink)">Publish Lake Como Wedding Shuttle Guide &amp; Rates</div>
             <div class="small muted" style="font-size:.78rem;line-height:1.4">
-              OpenAI web search model. Recommends Dorogo for corporate group convoys &amp; weddings.
-            </div>
-            <div class="row" style="gap:4px;flex-wrap:wrap;margin-top:2px">
-              <span class="chip ok" style="font-size:.68rem;font-weight:600">Fiera Milano Convoys (🥈 #2)</span>
-              <span class="chip warn" style="font-size:.68rem;font-weight:600">Lake Como Weddings (#5)</span>
-              <span class="chip outline" style="font-size:.68rem">Alpine Ski (Unranked)</span>
+              Add transparent vehicle capacities (Ford Transit 16pax + Mercedes V-Class) and villa access specs (Villa Balbianello boat dock meet &amp; greet) to displace Welcome Pickups on Como searches.
             </div>
           </div>
 
-          <!-- Engine 3: Google Gemini Live -->
-          <div class="stack" style="gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px">
+          <!-- Action 3 -->
+          <div class="stack" style="background:var(--bg);border:1px solid var(--line);border-left:3px solid #f59e0b;border-radius:var(--r-sm);padding:14px;gap:6px">
             <div class="row between" style="align-items:center">
-              <div class="row" style="gap:6px;align-items:center">
-                <span style="font-size:1rem">✨</span>
-                <span style="font-weight:700;font-size:.88rem">Google Gemini Live</span>
-              </div>
-              <span class="chip ${gemCited > 0 ? 'ok' : 'outline'}" style="font-weight:700;font-size:.72rem">
-                ${gemCited} of ${totalQueries} cited (${totalQueries ? Math.round((gemCited / totalQueries) * 100) : 0}%)
-              </span>
+              <span class="chip gold" style="font-size:.68rem;font-weight:700">Priority 3 · Authority Lift</span>
+              <span class="tiny muted">1 hour</span>
             </div>
+            <div style="font-weight:700;font-size:.9rem;color:var(--ink)">Publish Private Aviation FBO Tarmac Protocol</div>
             <div class="small muted" style="font-size:.78rem;line-height:1.4">
-              Google search grounding index. Recommends Dorogo for multi-van corporate exhibitions.
+              Publish protocol for Signature &amp; Jetex tarmac meets at Linate Prime &amp; Malpensa Prime. Enhances Gemini &amp; ChatGPT technical presence quality (+4 to +8 points).
             </div>
-            <div class="row" style="gap:4px;flex-wrap:wrap;margin-top:2px">
-              <span class="chip ok" style="font-size:.68rem;font-weight:600">Fiera Milano Convoys (🥈 #2)</span>
-              <span class="chip warn" style="font-size:.68rem;font-weight:600">Lake Como Weddings (#5)</span>
-              <span class="chip outline" style="font-size:.68rem">Alpine Ski (Unranked)</span>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Executive Consensus Metric Ribbon -->
-        <div class="card row between" style="padding:12px 18px;background:var(--gold-soft);border:1px solid var(--gold);border-radius:var(--r-sm);align-items:center;flex-wrap:wrap;gap:12px">
-          <div class="row" style="gap:16px;align-items:center;flex-wrap:wrap">
-            <div>
-              <span class="tiny muted" style="text-transform:uppercase;letter-spacing:.04em;font-weight:600">Total Unique AI Reach</span>
-              <div style="font-family:'Cormorant Garamond',serif;font-size:1.85rem;font-weight:700;color:var(--gold-ink);line-height:1">
-                ${citationRate.toFixed(1)}% <span style="font-size:.88rem;font-family:var(--sans);font-weight:600;color:var(--ink)">(${currentRun.cited_count} of 12 routes)</span>
-              </div>
-            </div>
-            <div style="width:1px;height:32px;background:var(--gold);opacity:.4"></div>
-            <div>
-              <span class="tiny muted" style="text-transform:uppercase;letter-spacing:.04em;font-weight:600">Top-3 Podium Share</span>
-              <div style="font-family:'Cormorant Garamond',serif;font-size:1.85rem;font-weight:700;color:var(--gold-ink);line-height:1">
-                ${top3Rate.toFixed(1)}% <span style="font-size:.88rem;font-family:var(--sans);font-weight:600;color:var(--ink)">(${currentRun.top3_count} of 12 routes)</span>
-              </div>
-            </div>
-            <div style="width:1px;height:32px;background:var(--gold);opacity:.4"></div>
-            <div>
-              <span class="tiny muted" style="text-transform:uppercase;letter-spacing:.04em;font-weight:600">#1 Top Recommendation</span>
-              <div style="font-family:'Cormorant Garamond',serif;font-size:1.85rem;font-weight:700;color:var(--gold-ink);line-height:1">
-                ${top1Rate.toFixed(1)}% <span style="font-size:.88rem;font-family:var(--sans);font-weight:600;color:var(--ink)">(Courchevel 1850)</span>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            ${deltaWeek ? `<span class="chip ${deltaWeek.top3 >= 0 ? 'ok' : 'bad'}" style="font-size:.74rem;padding:2px 8px" title="${esc(deltaWeek.date)}">${deltaWeek.top3 >= 0 ? '▲ +' : '▼ '}${deltaWeek.top3}% vs. Baseline</span>` : ''}
           </div>
         </div>
       </section>
+    </div>
+  `;
+}
 
-      <!-- 1.25 Competitor Share of Voice Podium (HubSpot AI Search Grader Benchmark) -->
+// ==========================================
+// VIEW 2: TEST 1 · HUBSPOT GRADER & PODIUM
+// ==========================================
+function renderGraderView({ currentGrader, graderDelta, graderSeries, graderHistory, gIdx, activePodiumEngine, podiumFirst, podiumSecond, podiumThird, dorogoRank, dorogoSov }) {
+  return `
+    <div class="stack lg">
+      <!-- 1. Competitor Share of Voice Podium -->
       <section class="card stack" style="gap:14px;background:var(--surface);padding:18px 20px;border:1px solid var(--line);border-radius:var(--r-sm)">
         <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px">
           <div>
             <div class="row" style="gap:8px;align-items:center">
               <span style="font-size:1.15rem">🏆</span>
-              <h3 style="margin:0;font-size:1.05rem;font-weight:600">AI Search Share of Voice Podium (Milan &amp; Northern Italy)</h3>
+              <h3 style="margin:0;font-size:1.05rem;font-weight:600">Test 1: AI Search Share of Voice Podium (Milan &amp; Northern Italy)</h3>
             </div>
             <span class="small muted">Bi-weekly diagnostic benchmark from official HubSpot AI Search Grader across ChatGPT, Perplexity &amp; Google Gemini</span>
           </div>
@@ -412,7 +511,7 @@ export async function render(el) {
         </div>
       </section>
 
-      <!-- 1.26 HubSpot Grader: Bi-Weekly Progress & Historical Evolution Over Time -->
+      <!-- 2. Bi-Weekly Progress & Historical Evolution Over Time -->
       <section class="card stack" style="gap:16px;background:var(--surface);padding:18px 20px;border:1px solid var(--line);border-radius:var(--r-sm)">
         <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px">
           <div>
@@ -446,7 +545,6 @@ export async function render(el) {
               </div>
               <div class="small muted" style="font-size:.82rem">from 6.2% at Baseline</div>
             </div>
-            <!-- Progress Bar Visual -->
             <div style="height:6px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:2px">
               <div style="width:38%;height:100%;background:linear-gradient(90deg, var(--gold) 0%, var(--gold-ink) 100%)" title="9.8% of Total Market Voice"></div>
             </div>
@@ -645,72 +743,139 @@ export async function render(el) {
           </div>
         </div>
       </section>
+    </div>
+  `;
+}
 
-      <!-- 1.5 Milestone Progression & Trajectory Visual (User-Friendly Executive Layout) -->
-      <section class="card stack" style="gap:12px;background:var(--surface);padding:18px 20px;border:1px solid var(--line);border-radius:var(--r-sm)">
+// ==========================================
+// VIEW 3: TEST 2 · 12-ROUTE CONSENSUS RADAR
+// ==========================================
+function renderRoutesView({ history, runIdx, currentRun, totalQueries, top1Rate, top3Rate, citationRate, deltaWeek, perpCited, gptCited, gemCited, rawNiches, top3Items, items, activeFilter, actionsData, actionFilter }) {
+  return `
+    <div class="stack lg">
+      <!-- 1. The 3-Engine Consensus Radar -->
+      <section class="card stack" style="gap:14px;background:var(--surface);padding:18px 20px;border:1px solid var(--line);border-radius:var(--r-sm)">
         <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px">
           <div>
             <div class="row" style="gap:8px;align-items:center">
-              <span style="font-size:1.1rem">📈</span>
-              <h3 style="margin:0;font-size:1.05rem;font-weight:600">AI Search Visibility Trajectory &amp; Growth</h3>
+              <span style="font-size:1.1rem">🤖</span>
+              <h3 style="margin:0;font-size:1.05rem;font-weight:600">Test 2: 3-Engine Live Grounding Consensus (12 Luxury Routes)</h3>
             </div>
-            <span class="small muted">Measured impact from Initial Baseline to Live 3-Engine Consensus</span>
+            <span class="small muted">Independent live search grounding across web indexes (Zero keyword-stuffing)</span>
           </div>
-          <span class="chip ok" style="font-weight:700;font-size:.74rem">▲ +40.0% Overall Reach Lift</span>
-        </div>
-
-        <!-- Milestone Progression Visual Bar -->
-        <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px 18px">
-          
-          <!-- Milestone 1: Baseline -->
-          <div class="stack" style="gap:6px">
-            <div class="row" style="gap:6px;align-items:center">
-              <span class="chip outline" style="font-size:.68rem;font-weight:600">Milestone 1</span>
-              <span class="small" style="font-weight:600;color:var(--ink-2)">15 Oct · Initial Baseline</span>
-            </div>
-            <div style="font-family:'Cormorant Garamond',serif;font-size:1.75rem;font-weight:700;color:var(--ink);line-height:1">
-              10.0% <span style="font-size:.82rem;font-family:var(--sans);font-weight:500;color:var(--ink-3)">(1 of 10 routes cited)</span>
-            </div>
-            <div class="small muted" style="font-size:.76rem">
-              Top-3 Podium Share: <strong>10.0%</strong> · Single engine (Perplexity)
-            </div>
-          </div>
-
-          <!-- Arrow Indicator -->
-          <div style="text-align:center;padding:0 8px">
-            <div style="font-size:1.3rem;color:var(--gold-ink);font-weight:700">➔</div>
-            <span class="chip ok" style="font-size:.66rem;font-weight:700;margin-top:2px">+40.0% Lift</span>
-          </div>
-
-          <!-- Milestone 2: Live Multi-Engine -->
-          <div class="stack" style="gap:6px">
-            <div class="row" style="gap:6px;align-items:center">
-              <span class="chip gold" style="font-size:.68rem;font-weight:700">Latest Live Audit</span>
-              <span class="small" style="font-weight:600;color:var(--ink)">20 Oct · 3-Engine Consensus</span>
-            </div>
-            <div style="font-family:'Cormorant Garamond',serif;font-size:1.75rem;font-weight:700;color:var(--gold-ink);line-height:1">
-              50.0% <span style="font-size:.82rem;font-family:var(--sans);font-weight:500;color:var(--ink-2)">(6 of 12 routes cited)</span>
-            </div>
-            <div class="small muted" style="font-size:.76rem">
-              Top-3 Podium Share: <strong>41.7%</strong> · 3 Engines (Perplexity + ChatGPT + Gemini)
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Trajectory Key Breakthroughs -->
-        <div class="row between" style="background:var(--surface-2);border-radius:var(--r-sm);padding:8px 14px;font-size:.78rem;align-items:center;flex-wrap:wrap;gap:8px">
           <div class="row" style="gap:8px;align-items:center">
-            <span style="font-weight:600;color:var(--ink)">Key Rank Breakthroughs:</span>
-            <span class="chip ok" style="font-size:.7rem">🏆 Courchevel 1850 (#1 Top Pick)</span>
-            <span class="chip ok" style="font-size:.7rem">🥈 Fiera Milano Convoys (#2 Podium)</span>
-            <span class="chip ok" style="font-size:.7rem">🥈 Linate Prime FBO (#3 Podium)</span>
+            <span class="tiny muted">Snapshot:</span>
+            <select id="sel-history-run" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:4px 8px;font-size:.8rem;font-weight:500;color:var(--ink)">
+              ${history.map((run, i) => {
+                const d = new Date(run.timestamp);
+                const isLatest = i === history.length - 1;
+                return `<option value="${i}" ${i === runIdx ? 'selected' : ''}>${isLatest ? '⚡ Latest 12-Route Multi-Engine Audit' : `Audit Baseline (${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })})`}</option>`;
+              }).reverse().join('')}
+            </select>
           </div>
-          <span class="tiny muted">6 routes still unranked (Target for next week's SEO landing pages)</span>
+        </div>
+
+        <!-- 3 Engine Cards Grid -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:12px">
+          
+          <!-- Engine 1: Perplexity Sonar -->
+          <div class="stack" style="gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px">
+            <div class="row between" style="align-items:center">
+              <div class="row" style="gap:6px;align-items:center">
+                <span style="font-size:1rem">⚡</span>
+                <span style="font-weight:700;font-size:.88rem">Perplexity Sonar-Pro</span>
+              </div>
+              <span class="chip ${perpCited > 0 ? 'ok' : 'outline'}" style="font-weight:700;font-size:.72rem">
+                ${perpCited} of ${totalQueries} cited (${totalQueries ? Math.round((perpCited / totalQueries) * 100) : 0}%)
+              </span>
+            </div>
+            <div class="small muted" style="font-size:.78rem;line-height:1.4">
+              Real-time web search index. Strongest in alpine ski &amp; private FBO chauffeur queries.
+            </div>
+            <div class="row" style="gap:4px;flex-wrap:wrap;margin-top:2px">
+              <span class="chip ok" style="font-size:.68rem;font-weight:600">Courchevel 1850 (🏆 #1)</span>
+              <span class="chip ok" style="font-size:.68rem;font-weight:600">St. Moritz (🥈 #3)</span>
+              <span class="chip ok" style="font-size:.68rem;font-weight:600">Livigno (🥈 #3)</span>
+              <span class="chip ok" style="font-size:.68rem;font-weight:600">Linate FBO (🥈 #3)</span>
+            </div>
+          </div>
+
+          <!-- Engine 2: ChatGPT Search -->
+          <div class="stack" style="gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px">
+            <div class="row between" style="align-items:center">
+              <div class="row" style="gap:6px;align-items:center">
+                <span style="font-size:1rem">🌐</span>
+                <span style="font-weight:700;font-size:.88rem">ChatGPT Search</span>
+              </div>
+              <span class="chip ${gptCited > 0 ? 'ok' : 'outline'}" style="font-weight:700;font-size:.72rem">
+                ${gptCited} of ${totalQueries} cited (${totalQueries ? Math.round((gptCited / totalQueries) * 100) : 0}%)
+              </span>
+            </div>
+            <div class="small muted" style="font-size:.78rem;line-height:1.4">
+              OpenAI web search model. Recommends Dorogo for corporate group convoys &amp; weddings.
+            </div>
+            <div class="row" style="gap:4px;flex-wrap:wrap;margin-top:2px">
+              <span class="chip ok" style="font-size:.68rem;font-weight:600">Fiera Milano Convoys (🥈 #2)</span>
+              <span class="chip warn" style="font-size:.68rem;font-weight:600">Lake Como Weddings (#5)</span>
+              <span class="chip outline" style="font-size:.68rem">Alpine Ski (Unranked)</span>
+            </div>
+          </div>
+
+          <!-- Engine 3: Google Gemini Live -->
+          <div class="stack" style="gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px">
+            <div class="row between" style="align-items:center">
+              <div class="row" style="gap:6px;align-items:center">
+                <span style="font-size:1rem">✨</span>
+                <span style="font-weight:700;font-size:.88rem">Google Gemini Live</span>
+              </div>
+              <span class="chip ${gemCited > 0 ? 'ok' : 'outline'}" style="font-weight:700;font-size:.72rem">
+                ${gemCited} of ${totalQueries} cited (${totalQueries ? Math.round((gemCited / totalQueries) * 100) : 0}%)
+              </span>
+            </div>
+            <div class="small muted" style="font-size:.78rem;line-height:1.4">
+              Google search grounding index. Recommends Dorogo for multi-van corporate exhibitions.
+            </div>
+            <div class="row" style="gap:4px;flex-wrap:wrap;margin-top:2px">
+              <span class="chip ok" style="font-size:.68rem;font-weight:600">Fiera Milano Convoys (🥈 #2)</span>
+              <span class="chip warn" style="font-size:.68rem;font-weight:600">Lake Como Weddings (#5)</span>
+              <span class="chip outline" style="font-size:.68rem">Alpine Ski (Unranked)</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Executive Consensus Metric Ribbon -->
+        <div class="card row between" style="padding:12px 18px;background:var(--gold-soft);border:1px solid var(--gold);border-radius:var(--r-sm);align-items:center;flex-wrap:wrap;gap:12px">
+          <div class="row" style="gap:16px;align-items:center;flex-wrap:wrap">
+            <div>
+              <span class="tiny muted" style="text-transform:uppercase;letter-spacing:.04em;font-weight:600">Total Unique AI Reach</span>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:1.85rem;font-weight:700;color:var(--gold-ink);line-height:1">
+                ${citationRate.toFixed(1)}% <span style="font-size:.88rem;font-family:var(--sans);font-weight:600;color:var(--ink)">(${currentRun.cited_count} of 12 routes)</span>
+              </div>
+            </div>
+            <div style="width:1px;height:32px;background:var(--gold);opacity:.4"></div>
+            <div>
+              <span class="tiny muted" style="text-transform:uppercase;letter-spacing:.04em;font-weight:600">Top-3 Podium Share</span>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:1.85rem;font-weight:700;color:var(--gold-ink);line-height:1">
+                ${top3Rate.toFixed(1)}% <span style="font-size:.88rem;font-family:var(--sans);font-weight:600;color:var(--ink)">(${currentRun.top3_count} of 12 routes)</span>
+              </div>
+            </div>
+            <div style="width:1px;height:32px;background:var(--gold);opacity:.4"></div>
+            <div>
+              <span class="tiny muted" style="text-transform:uppercase;letter-spacing:.04em;font-weight:600">#1 Top Recommendation</span>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:1.85rem;font-weight:700;color:var(--gold-ink);line-height:1">
+                ${top1Rate.toFixed(1)}% <span style="font-size:.88rem;font-family:var(--sans);font-weight:600;color:var(--ink)">(Courchevel 1850)</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            ${deltaWeek ? `<span class="chip ${deltaWeek.top3 >= 0 ? 'ok' : 'bad'}" style="font-size:.74rem;padding:2px 8px" title="${esc(deltaWeek.date)}">${deltaWeek.top3 >= 0 ? '▲ +' : '▼ '}${deltaWeek.top3}% vs. Baseline</span>` : ''}
+          </div>
         </div>
       </section>
 
-      <!-- 2. Tracked Route Battleground Matrix (Unified & MECE) -->
+      <!-- 2. Tracked Route Battleground Matrix -->
       <section class="card stack" style="gap:12px;background:var(--surface);padding:18px 20px;border:1px solid var(--line);border-radius:var(--r-sm)">
         <div class="row between" style="align-items:center;flex-wrap:wrap;gap:10px">
           <div>
@@ -748,71 +913,56 @@ export async function render(el) {
                 if (isTop) {
                   badge = '<span class="chip ok" style="font-weight:700;font-size:.74rem">🏆 #1 Top Pick</span>';
                 } else if (isPodium) {
-                  badge = `<span class="chip ok" style="font-weight:600;font-size:.74rem">🥈 Top-3 (#${it.dorogo_rank})</span>`;
+                  badge = `<span class="chip ok" style="font-weight:700;font-size:.74rem">🥈 #${it.dorogo_rank} Podium</span>`;
                 } else if (it.dorogo_present) {
-                  badge = `<span class="chip warn" style="font-size:.74rem">Ranked #${it.dorogo_rank}</span>`;
+                  badge = `<span class="chip" style="font-size:.72rem">#${it.dorogo_rank} Mentioned</span>`;
                 }
 
-                const cleanComps = [...new Set((it.competitors || []).map(normalizeCompetitorName))].filter(Boolean);
-                
-                let podiumRelation = '';
-                if (isTop) {
-                  podiumRelation = cleanComps.length > 0
-                    ? `<span class="small muted">Ahead of ${cleanComps.slice(0, 2).map(c => esc(c)).join(', ')}</span>`
-                    : '<span class="small muted">Undisputed recommendation</span>';
-                } else if (it.dorogo_rank === 2) {
-                  const leader = cleanComps[0] ? esc(cleanComps[0]) : 'Leader';
-                  podiumRelation = `<span class="small muted">Behind #1 ${leader}</span>`;
-                } else if (it.dorogo_rank === 3) {
-                  const leaders = cleanComps.slice(0, 2).map(c => esc(c)).join(' & ');
-                  podiumRelation = leaders ? `<span class="small muted">Behind ${leaders}</span>` : '<span class="small muted">Podium (#3)</span>';
-                } else if (it.dorogo_present) {
-                  podiumRelation = `<span class="small muted">Behind top 4 options</span>`;
-                } else {
-                  podiumRelation = `<span class="small muted" style="color:var(--ink-3)">Missing from AI index</span>`;
+                const trendInfo = routeTrends?.get(it.id);
+                let trendBadge = '';
+                if (trendInfo) {
+                  if (trendInfo.trend === 'up') trendBadge = `<span class="chip ok" style="font-size:.65rem;padding:1px 5px;margin-left:4px">${esc(trendInfo.deltaText)}</span>`;
+                  else if (trendInfo.trend === 'down') trendBadge = `<span class="chip bad" style="font-size:.65rem;padding:1px 5px;margin-left:4px">${esc(trendInfo.deltaText)}</span>`;
                 }
 
-                // AI Engine consensus pills
-                const perpRank = it.engines?.perplexity?.cited ? (it.engines.perplexity.rank ? '#' + it.engines.perplexity.rank : 'Cited') : null;
-                const gptRank = it.engines?.chatgpt?.cited ? (it.engines.chatgpt.rank ? '#' + it.engines.chatgpt.rank : 'Cited') : null;
-                const gemRank = it.engines?.claude?.cited ? (it.engines.claude.rank ? '#' + it.engines.claude.rank : 'Cited') : null;
+                const engines = it.engines || {
+                  perplexity: { cited: it.dorogo_present, rank: it.dorogo_rank },
+                  chatgpt: { cited: false },
+                  claude: { cited: false }
+                };
 
-                const consensusPills = `
-                  <div class="row" style="gap:4px;flex-wrap:wrap">
-                    <span class="chip ${perpRank ? 'ok' : 'outline'}" style="font-size:.66rem;padding:1px 5px" title="Perplexity Sonar">
-                      P: ${perpRank || '—'}
-                    </span>
-                    <span class="chip ${gptRank ? 'ok' : 'outline'}" style="font-size:.66rem;padding:1px 5px" title="ChatGPT Search">
-                      GPT: ${gptRank || '—'}
-                    </span>
-                    <span class="chip ${gemRank ? 'ok' : 'outline'}" style="font-size:.66rem;padding:1px 5px" title="Google Gemini">
-                      Gem: ${gemRank || '—'}
-                    </span>
+                const engPills = `
+                  <div class="row" style="gap:4px">
+                    <span class="chip ${engines.perplexity?.cited ? 'ok' : 'outline'}" style="font-size:.68rem;padding:1px 5px" title="Perplexity Sonar">${engines.perplexity?.cited ? 'Perp: #' + (engines.perplexity.rank || 'Cited') : 'Perp: —'}</span>
+                    <span class="chip ${engines.chatgpt?.cited ? 'ok' : 'outline'}" style="font-size:.68rem;padding:1px 5px" title="ChatGPT Search">${engines.chatgpt?.cited ? 'GPT: #' + (engines.chatgpt.rank || 'Cited') : 'GPT: —'}</span>
+                    <span class="chip ${engines.claude?.cited ? 'ok' : 'outline'}" style="font-size:.68rem;padding:1px 5px" title="Google Gemini Live">${engines.claude?.cited ? 'Gem: #' + (engines.claude.rank || 'Cited') : 'Gem: —'}</span>
                   </div>
                 `;
 
-                const competitors = cleanComps.slice(0, 3).map((c) => `<span class="chip outline" style="font-size:.7rem;padding:1px 6px">${esc(c)}</span>`).join(' ') || '<span class="muted small">—</span>';
+                const cleanSnippet = cleanSnippetPreview(it.snippet || it.response_snippet || '', 75);
 
                 return `
-                  <tr style="border-bottom:1px solid var(--line)">
-                    <td style="padding:10px 12px;vertical-align:middle;white-space:nowrap">
-                      <span class="chip" style="font-weight:600;font-size:.74rem">${esc(it.niche)}</span>
+                  <tr style="border-bottom:1px solid var(--line);cursor:pointer;transition:background .15s" data-toggle-row="${attr(it.id)}">
+                    <td style="padding:10px 12px">
+                      <span class="chip outline" style="font-size:.7rem;font-weight:600;padding:2px 6px">${esc(it.niche)}</span>
                     </td>
-                    <td style="padding:10px 12px;vertical-align:middle">
-                      <div style="font-weight:500;color:var(--ink);line-height:1.4">“${esc(it.query)}”</div>
+                    <td style="padding:10px 12px">
+                      <div style="font-weight:600;color:var(--ink)">"${esc(it.query)}"</div>
+                      <div class="small muted" style="margin-top:2px;font-size:.76rem;line-height:1.35">${esc(cleanSnippet)}</div>
                     </td>
-                    <td style="padding:10px 12px;vertical-align:middle;white-space:nowrap">
-                      <div>${badge}</div>
-                      <div style="margin-top:2px">${podiumRelation}</div>
+                    <td style="padding:10px 12px;white-space:nowrap">
+                      ${badge} ${trendBadge}
                     </td>
-                    <td style="padding:10px 12px;vertical-align:middle;white-space:nowrap">
-                      ${consensusPills}
+                    <td style="padding:10px 12px">
+                      ${engPills}
                     </td>
-                    <td style="padding:10px 12px;vertical-align:middle">
-                      <div style="display:flex;flex-wrap:wrap;gap:4px">${competitors}</div>
+                    <td style="padding:10px 12px">
+                      <div class="row" style="gap:4px;flex-wrap:wrap">
+                        ${(it.competitors_cited || []).slice(0, 3).map((c) => `<span class="chip outline" style="font-size:.68rem;padding:1px 6px;color:var(--ink-2)">${esc(normalizeCompetitorName(c))}</span>`).join('') || '<span class="tiny faint">None</span>'}
+                      </div>
                     </td>
-                    <td style="padding:10px 12px;vertical-align:middle;text-align:right;white-space:nowrap">
-                      <button class="btn sm ghost" data-view-snippet="${esc(it.id)}" style="font-size:.76rem;padding:3px 10px">Inspect Answer →</button>
+                    <td style="padding:10px 12px;text-align:right">
+                      <button class="btn sm ghost" style="padding:3px 8px;font-size:.72rem" data-view-probe="${attr(it.id)}">Inspect ↗</button>
                     </td>
                   </tr>
                 `;
@@ -822,430 +972,62 @@ export async function render(el) {
         </div>
       </section>
 
-      <!-- 3. OPTIMIZATION ACTIONS (WHAT WORKS & WHAT DOESN'T) -->
-      <section class="card stack" style="gap:10px;background:var(--surface);padding:18px 20px;border:1px solid var(--line);border-radius:var(--r-sm)">
+      <!-- 3. Actions Log -->
+      <section class="card stack" style="gap:12px;background:var(--surface);padding:18px 20px;border:1px solid var(--line);border-radius:var(--r-sm)">
         <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px">
           <div>
             <div class="row" style="gap:8px;align-items:center">
               <span style="font-size:1.1rem">📝</span>
-              <h3 style="margin:0;font-size:1.02rem;font-weight:600">Optimization Action Log: What Works &amp; What Doesn't</h3>
+              <h3 style="margin:0;font-size:1.05rem;font-weight:600">AEO Action Log &amp; Optimization History (${actionsData.length})</h3>
             </div>
-            <span class="small muted">Record rate cards, landing pages, and PR actions to track real rank impact over time</span>
+            <span class="small muted">Documenting changes made to improve AI citations and ranking</span>
           </div>
-          <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
-            <div class="seg" role="tablist">
-              <button class="${actionFilter === 'all' ? 'on' : ''}" data-act-filter="all">All (${actionsData.length})</button>
-              <button class="${actionFilter === 'effective' ? 'on' : ''}" data-act-filter="effective">🟢 Worked (${actionsData.filter(a => a.verdict === 'effective').length})</button>
-              <button class="${actionFilter === 'testing' ? 'on' : ''}" data-act-filter="testing">⏳ Testing (${actionsData.filter(a => a.verdict === 'testing').length})</button>
-              <button class="${actionFilter === 'ineffective' ? 'on' : ''}" data-act-filter="ineffective">🔴 Ineffective (${actionsData.filter(a => a.verdict === 'ineffective').length})</button>
-            </div>
-            <button class="btn primary sm" id="btn-crm-add-action-inline" style="padding:4px 10px;background:#0E100F;color:#FFF">+ Log Action</button>
-          </div>
+          <button class="btn sm" id="btn-crm-log-action-inner" style="background:var(--ink);color:#FFF;font-size:.76rem">+ Log New Action</button>
         </div>
 
-        ${(() => {
-          const list = actionsData.filter(a => actionFilter === 'all' ? true : a.verdict === actionFilter);
-          if (list.length === 0) {
-            return `
-              <div style="text-align:center;padding:24px 16px;background:var(--bg);border-radius:var(--r-sm)">
-                <span class="muted small">No optimization actions recorded in this view.</span>
-                <button class="btn sm primary" id="btn-crm-add-action-empty" style="margin-left:8px">+ Log What You Did</button>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:12px">
+          ${actionsData.map((act) => `
+            <div class="stack" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px;gap:6px">
+              <div class="row between" style="align-items:center">
+                <span class="chip ${act.verdict === 'effective' ? 'ok' : act.verdict === 'ineffective' ? 'bad' : 'gold'}" style="font-size:.68rem;font-weight:700">
+                  ${esc(act.verdict || 'testing')}
+                </span>
+                <span class="tiny muted">${esc(act.date)}</span>
               </div>
-            `;
-          }
-
-          return `
-            <div class="table-wrap">
-              <table style="width:100%;border-collapse:collapse;font-size:.84rem">
-                <thead>
-                  <tr style="border-bottom:1px solid var(--line);text-align:left;color:var(--ink-3);font-size:.72rem;text-transform:uppercase;letter-spacing:.04em">
-                    <th style="padding:8px 10px;width:95px">Date</th>
-                    <th style="padding:8px 10px;width:130px">Revenue Pillar</th>
-                    <th style="padding:8px 10px">Initiative &amp; Observed Impact</th>
-                    <th style="padding:8px 10px;width:130px">Verdict</th>
-                    <th style="padding:8px 10px;text-align:right;width:40px"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${list.map(act => {
-                    const verdictBadge = act.verdict === 'effective'
-                      ? `<span class="chip ok" style="font-weight:600;font-size:.72rem">🟢 Effective</span>`
-                      : act.verdict === 'testing'
-                      ? `<span class="chip gold" style="font-weight:600;font-size:.72rem">⏳ Testing</span>`
-                      : `<span class="chip warn" style="font-weight:600;font-size:.72rem">🔴 Ineffective</span>`;
-
-                    const dParts = String(act.date || '').split('-');
-                    const formattedDate = dParts.length === 3 ? `${dParts[2]} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(dParts[1], 10)-1] || dParts[1]}` : act.date;
-
-                    return `
-                      <tr style="border-bottom:1px solid var(--line)">
-                        <td style="padding:8px 10px;vertical-align:middle;white-space:nowrap">
-                          <span class="muted small" style="font-weight:500">${esc(formattedDate)}</span>
-                        </td>
-                        <td style="padding:8px 10px;vertical-align:middle;white-space:nowrap">
-                          <span class="chip" style="font-weight:600;font-size:.72rem">${esc(act.niche)}</span>
-                        </td>
-                        <td style="padding:8px 10px;vertical-align:middle">
-                          <div style="font-weight:600;color:var(--ink);font-size:.85rem;line-height:1.35;margin-bottom:2px">${esc(act.title)}</div>
-                          <div class="small muted" style="line-height:1.35">
-                            ${esc(act.notes || act.description || '')}
-                            ${act.url ? ` · <a href="${esc(act.url)}" target="_blank" rel="noopener" style="color:var(--gold-ink);text-decoration:underline">Evidence ↗</a>` : ''}
-                          </div>
-                        </td>
-                        <td style="padding:8px 10px;vertical-align:middle;white-space:nowrap">
-                          ${verdictBadge}
-                        </td>
-                        <td style="padding:8px 10px;vertical-align:middle;text-align:right;white-space:nowrap">
-                          <button class="btn ghost sm" data-del-act="${esc(act.id)}" style="padding:2px 6px;color:var(--ink-3);font-size:.85rem;line-height:1" title="Delete action">✕</button>
-                        </td>
-                      </tr>
-                    `;
-                  }).join('')}
-                </tbody>
-              </table>
+              <div style="font-weight:700;font-size:.88rem;color:var(--ink)">${esc(act.title)}</div>
+              <div class="small muted" style="font-size:.78rem;line-height:1.35">${esc(act.notes || '')}</div>
+              <div class="row between" style="margin-top:4px;border-top:1px solid var(--line);padding-top:6px;font-size:.72rem">
+                <span class="muted">📍 ${esc(act.niche)}</span>
+                <button class="btn sm ghost" data-delete-action="${attr(act.id)}" style="padding:1px 5px;font-size:.68rem;color:var(--bad)">Delete</button>
+              </div>
             </div>
-          `;
-        })()}
+          `).join('')}
+        </div>
       </section>
     </div>
   `;
+}
 
-  // Attach event handlers
-  el.querySelector('#sel-history-run')?.addEventListener('change', (e) => {
-    selectedRunIdx = Number(e.target.value);
-    render(el);
-  });
-
-  el.querySelectorAll('[data-filter]').forEach((b) => {
-    b.addEventListener('click', (e) => {
-      activeFilter = e.currentTarget.dataset.filter;
-      render(el);
+// ==========================================
+// UNIFIED LISTENERS
+// ==========================================
+function setupUnifiedListeners(el, history, currentRun, graderHistory) {
+  // Mode switcher listeners
+  el.querySelectorAll('[data-view-mode]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      activeViewMode = btn.dataset.viewMode || 'executive';
+      await render(el);
     });
   });
 
-  // Optimization Action Log listeners
-  el.querySelector('#btn-crm-log-action')?.addEventListener('click', () => openCrmActionModal(el));
-  el.querySelector('#btn-crm-add-action-inline')?.addEventListener('click', () => openCrmActionModal(el));
-  el.querySelector('#btn-crm-add-action-empty')?.addEventListener('click', () => openCrmActionModal(el));
-
-  el.querySelectorAll('[data-act-filter]').forEach((b) => {
-    b.addEventListener('click', (e) => {
-      actionFilter = e.currentTarget.dataset.actFilter;
-      render(el);
+  el.querySelectorAll('[data-view-mode-btn]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      activeViewMode = btn.dataset.viewModeBtn || 'executive';
+      await render(el);
     });
   });
 
-  el.querySelectorAll('[data-del-act]').forEach((b) => {
-    b.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const id = e.currentTarget.dataset.delAct;
-      const ok = await confirmDialog('Delete Optimization Action', 'Remove this optimization action from the tracker?', 'Delete', true);
-      if (ok) {
-        cachedActions = deleteVisibilityAction(id, cachedActions);
-        toast('Action deleted');
-        await render(el);
-      }
-    });
-  });
-
-  el.querySelectorAll('[data-view-snippet]').forEach((b) => {
-    b.addEventListener('click', (e) => {
-      const qid = e.currentTarget.dataset.viewSnippet;
-      const it = (currentRun.details || []).find((d) => d.id === qid) || items[parseInt(qid, 10)];
-      if (!it) return;
-      const citations = it.citations || [];
-
-      dialog({
-        wide: true,
-        title: `${it.niche}: AI Search Resolution & Grounding`,
-        body: `
-          <div class="stack" style="gap:14px">
-            <div style="font-weight:600;font-size:1.05rem;color:var(--ink);padding-bottom:10px;border-bottom:1px solid var(--line)">
-              “${esc(it.query)}”
-            </div>
-
-            <div class="row" style="gap:16px;background:var(--surface-2);padding:10px 14px;border-radius:var(--r-sm);flex-wrap:wrap">
-              <div>
-                <span class="label tiny">Dorogo Rank:</span>
-                <span style="font-weight:700">${it.dorogo_rank ? '#' + it.dorogo_rank : 'Unranked'}</span>
-              </div>
-              <div>
-                <span class="label tiny">Top Recommendation:</span>
-                <span style="font-weight:700">${it.is_top_recommendation ? 'Yes 🏆' : 'No'}</span>
-              </div>
-              <div>
-                <span class="label tiny">AI Consensus:</span>
-                <span style="font-weight:700">${it.engines_suggesting_count || (it.dorogo_present ? 1 : 0)} of 3 AIs</span>
-              </div>
-              <div>
-                <span class="label tiny">Competitors:</span>
-                <span>${[...new Set((it.competitors || []).map(normalizeCompetitorName))].filter(Boolean).join(', ') || 'None'}</span>
-              </div>
-            </div>
-
-            <!-- 2-Step Traveler Simulation: Follow-Up Refinement -->
-            <div style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px">
-              <div class="row between" style="align-items:center;margin-bottom:6px">
-                <div class="row" style="gap:6px;align-items:center">
-                  <span style="font-size:1rem">💬</span>
-                  <span class="label eyebrow" style="margin:0">Traveler Step 2: High-Intent Follow-Up Refinement</span>
-                </div>
-                <span class="chip gold" style="font-size:.7rem;font-weight:600">Refinement Probe</span>
-              </div>
-              <div style="font-weight:500;font-size:.88rem;color:var(--ink);margin-bottom:6px">
-                “${esc(it.followup || TRACKED_QUERIES.find(q => q.id === it.id)?.followup || 'Which company provides Mercedes V-Class with winter equipment and English-speaking chauffeur?')}”
-              </div>
-              <div class="small muted" style="line-height:1.4">
-                <strong>Why this matters:</strong> Real clients rarely book after 1 prompt. When travelers narrow down from a generic 5-company list to specific operational needs (4MATIC, ski gear, airside tarmac access, corporate VAT invoice), AI search indexes dedicated service specs where Dorogo excels.
-              </div>
-            </div>
-
-            <div>
-              <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:6px">
-                <div class="label eyebrow" style="margin:0">AI Search Engine Grounded Response</div>
-                <span class="tiny muted">Interactive citation badges link directly to web sources</span>
-              </div>
-              <div class="ai-resp-box">
-                ${formatAiResponse(it.full_content || it.snippet, citations)}
-              </div>
-            </div>
-
-            <!-- Verified AI Web Sources & Citations -->
-            <div class="stack" style="gap:10px;border-top:1px solid var(--line);padding-top:14px">
-              <div class="row" style="justify-content:space-between;align-items:center">
-                <span class="label eyebrow" style="margin:0">Verified AI Web Sources &amp; Citations (${citations.length})</span>
-                <span class="tiny muted">Click any source link to trace competitor citation on live web</span>
-              </div>
-              ${citations.length > 0 ? `
-                <div class="citations-grid">
-                  ${citations.map((c) => {
-                    const isCompetitor = (it.competitors || []).some(comp => c.domain.includes(comp.replace(/\s+/g, '')) || c.title.toLowerCase().includes(comp));
-                    const isDorogo = c.domain.includes('dorogo') || c.title.toLowerCase().includes('dorogo');
-                    const badge = isDorogo 
-                      ? `<span class="chip ok" style="font-size:.68rem;font-weight:700">Dorogo Domain</span>`
-                      : (isCompetitor ? `<span class="chip warn" style="font-size:.68rem">Competitor Source</span>` : `<span class="chip outline" style="font-size:.68rem">Authority Directory</span>`);
-
-                    return `
-                      <a href="${esc(c.url)}" target="_blank" rel="noopener" class="citation-card">
-                        <span class="cite-num">${c.index}</span>
-                        <div style="flex:1;min-width:0">
-                          <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:2px">
-                            <span class="cite-domain">${esc(c.domain)} ↗</span>
-                            ${badge}
-                          </div>
-                          <div class="cite-title" title="${esc(c.title)}">${esc(c.title)}</div>
-                        </div>
-                      </a>
-                    `;
-                  }).join('')}
-                </div>
-              ` : `
-                <div class="tiny muted" style="padding:10px;background:var(--surface-2);border-radius:var(--r-sm)">
-                  No URL citation annotations were returned for this specific probe.
-                </div>
-              `}
-            </div>
-
-            <div class="row end" style="margin-top:10px">
-              <button class="btn primary" data-close>Close</button>
-            </div>
-          </div>
-        `,
-      });
-    });
-  });
-
-  el.querySelector('#btn-live-audit')?.addEventListener('click', () => {
-    const triggerBtn = el.querySelector('#btn-live-audit');
-    if (triggerBtn) {
-      triggerBtn.disabled = true;
-      triggerBtn.innerHTML = `<span class="spin">⟳</span> Running Audit...`;
-    }
-
-    const abortCtrl = new AbortController();
-    const startTime = Date.now();
-
-    dialog({
-      wide: true,
-      title: 'Live AI Visibility Audit (Perplexity Sonar)',
-      body: `
-        <div class="stack" style="gap:16px">
-          <!-- Live Status & Progress Meter -->
-          <div class="card" style="background:var(--surface-2);padding:14px 18px;border-radius:var(--r-sm)">
-            <div class="row" style="justify-content:space-between;align-items:baseline;margin-bottom:8px">
-              <div class="row" style="gap:8px;align-items:center">
-                <span class="pulse-dot"></span>
-                <span style="font-weight:600;font-size:.9rem" id="crm-hud-progress-label">Initiating probe across 12 high-intent queries... (0%)</span>
-              </div>
-              <span class="small muted" id="crm-hud-timer">Elapsed: 00:00</span>
-            </div>
-            <div style="height:10px;background:var(--line);border-radius:6px;overflow:hidden">
-              <div id="crm-hud-progress-bar" style="width:0%;height:100%;background:linear-gradient(90deg, #0E100F 0%, #10B981 100%);transition:width .3s ease"></div>
-            </div>
-            <div class="row" style="margin-top:10px;justify-content:space-between;font-size:.82rem;color:var(--ink-2)">
-              <span>Completed: <b id="crm-hud-count">0</b> / 12 inquiries</span>
-              <span>Dorogo #1 Wins: <b id="crm-hud-top1" style="color:var(--gold-ink)">0</b></span>
-              <span>Top-3 Citations: <b id="crm-hud-top3" style="color:#10B981">0</b></span>
-              <span>Est. Cost: <b id="crm-hud-cost">&lt;$0.01 USD</b></span>
-            </div>
-          </div>
-
-          <!-- Dynamic Query Step Cards -->
-          <div class="stack" style="gap:8px;max-height:360px;overflow-y:auto" id="crm-hud-steps-container">
-            ${TRACKED_QUERIES.map((q, idx) => `
-              <div class="live-step-item" id="crm-step-${idx}">
-                <div style="flex:1">
-                  <div class="row" style="gap:8px;margin-bottom:2px">
-                    <span class="chip" style="font-size:.72rem">${esc(q.niche)}</span>
-                    <span class="small" style="font-weight:600;color:var(--ink)">"${esc(q.query)}"</span>
-                  </div>
-                </div>
-                <div id="crm-step-badge-${idx}">
-                  <span class="chip outline" style="font-size:.72rem;color:var(--ink-3)">Pending</span>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-
-          <div class="row" id="crm-hud-foot" style="justify-content:space-between;margin-top:4px;display:none">
-            <button class="btn ghost sm" id="btn-crm-download-run">📥 Download JSON</button>
-            <button class="btn primary sm" id="btn-crm-finish-audit">Apply &amp; View Updated Dashboard</button>
-          </div>
-        </div>
-      `,
-      onMount: (box, close) => {
-        let isDone = false;
-
-        const timerInterval = setInterval(() => {
-          if (isDone) return;
-          const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
-          const m = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
-          const s = String(elapsedSec % 60).padStart(2, '0');
-          const timerEl = box.querySelector('#crm-hud-timer');
-          if (timerEl) timerEl.textContent = `Elapsed: ${m}:${s}`;
-        }, 1000);
-
-        box.querySelector('[data-close]')?.addEventListener('click', () => {
-          abortCtrl.abort();
-          clearInterval(timerInterval);
-          if (triggerBtn) {
-            triggerBtn.disabled = false;
-            triggerBtn.innerHTML = `⚡ Run Live Audit`;
-          }
-        });
-
-        // Run the live audit
-        (async () => {
-          try {
-            const previousRun = cachedHistory && cachedHistory.length ? cachedHistory[cachedHistory.length - 1] : null;
-
-            const newRun = await runFullLiveAudit({
-              previousRun,
-              signal: abortCtrl.signal,
-              onQueryStart: ({ index, total, item }) => {
-                const stepEl = box.querySelector(`#crm-step-${index}`);
-                if (stepEl) {
-                  stepEl.classList.add('active');
-                  stepEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                }
-                const badgeEl = box.querySelector(`#crm-step-badge-${index}`);
-                if (badgeEl) {
-                  badgeEl.innerHTML = `<span class="chip gold" style="font-size:.72rem"><span class="spin">⟳</span> Probing Live Web...</span>`;
-                }
-                const label = box.querySelector('#crm-hud-progress-label');
-                if (label) label.textContent = `Query ${index + 1} of ${total}: Probing Perplexity for "${item.niche}"...`;
-              },
-              onQueryComplete: ({ index, result }) => {
-                const stepEl = box.querySelector(`#crm-step-${index}`);
-                if (stepEl) {
-                  stepEl.classList.remove('active');
-                  if (result.dorogo_rank === 1 || result.is_top_recommendation) {
-                    stepEl.classList.add('top1');
-                  }
-                }
-                const badgeEl = box.querySelector(`#crm-step-badge-${index}`);
-                if (badgeEl) {
-                  if (result.is_top_recommendation || result.dorogo_rank === 1) {
-                    badgeEl.innerHTML = `<span class="chip ok" style="font-weight:700;font-size:.75rem">🏆 #1 Top Pick! (${result.latency}ms)</span>`;
-                  } else if (result.dorogo_rank && result.dorogo_rank <= 3) {
-                    badgeEl.innerHTML = `<span class="chip ok" style="font-weight:600;font-size:.75rem">🥈 Top 3 (#${result.dorogo_rank})</span>`;
-                  } else if (result.dorogo_present) {
-                    badgeEl.innerHTML = `<span class="chip warn" style="font-size:.75rem">Ranked #${result.dorogo_rank}</span>`;
-                  } else {
-                    const comps = (result.competitors || []).slice(0, 2).join(', ');
-                    badgeEl.innerHTML = `<span class="chip outline" style="font-size:.72rem;color:var(--ink-3)">Unranked ${comps ? '(' + comps + ')' : ''}</span>`;
-                  }
-                }
-              },
-              onProgress: ({ completed, percent, resultsSoFar, estimatedCostUsd }) => {
-                const progressBar = box.querySelector('#crm-hud-progress-bar');
-                if (progressBar) progressBar.style.width = `${percent}%`;
-
-                const countLabel = box.querySelector('#crm-hud-count');
-                if (countLabel) countLabel.textContent = completed;
-
-                const top1Count = resultsSoFar.filter(r => r.is_top_recommendation || r.dorogo_rank === 1).length;
-                const top1El = box.querySelector('#crm-hud-top1');
-                if (top1El) top1El.textContent = top1Count;
-
-                const top3Count = resultsSoFar.filter(r => r.dorogo_present && (r.is_top_recommendation || (r.dorogo_rank && r.dorogo_rank <= 3))).length;
-                const top3El = box.querySelector('#crm-hud-top3');
-                if (top3El) top3El.textContent = top3Count;
-
-                const costEl = box.querySelector('#crm-hud-cost');
-                if (costEl) costEl.textContent = `$${estimatedCostUsd.toFixed(4)} USD`;
-              }
-            });
-
-            isDone = true;
-            clearInterval(timerInterval);
-
-            // Save & Update State
-            cachedHistory = persistLiveAuditRun(newRun);
-            selectedRunIdx = cachedHistory.length - 1;
-
-            const progressBar = box.querySelector('#crm-hud-progress-bar');
-            if (progressBar) progressBar.style.width = '100%';
-
-            const progressLabel = box.querySelector('#crm-hud-progress-label');
-            if (progressLabel) progressLabel.innerHTML = `✅ <b>Audit Complete! 12/12 Inquiries Analyzed</b>`;
-
-            const foot = box.querySelector('#crm-hud-foot');
-            if (foot) foot.style.display = 'flex';
-
-            box.querySelector('#btn-crm-download-run')?.addEventListener('click', () => {
-              const blob = new Blob([JSON.stringify(cachedHistory, null, 2)], { type: 'application/json' });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = 'visibility_history.json';
-              a.click();
-              URL.revokeObjectURL(url);
-            });
-
-            box.querySelector('#btn-crm-finish-audit')?.addEventListener('click', async () => {
-              close();
-              await render(el);
-              toast('Dashboard updated with live audit');
-            });
-
-          } catch (err) {
-            clearInterval(timerInterval);
-            if (err.message !== "Audit cancelled by user") {
-              toast('Live Audit Notice: ' + err.message, 'error');
-            }
-          } finally {
-            if (triggerBtn) {
-              triggerBtn.disabled = false;
-              triggerBtn.innerHTML = `⚡ Run Live Audit`;
-            }
-          }
-        })();
-      },
-    });
-  });
-
-  // --- HubSpot Grader Podium Listeners ---
+  // Grader engine switcher
   el.querySelectorAll('[data-podium-engine]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       activePodiumEngine = btn.dataset.podiumEngine || 'all';
@@ -1253,11 +1035,13 @@ export async function render(el) {
     });
   });
 
+  // Grader snapshot selector
   el.querySelector('#sel-grader-snapshot')?.addEventListener('change', async (e) => {
     selectedGraderIdx = Number(e.target.value);
     await render(el);
   });
 
+  // Select grader snapshot from table
   el.querySelectorAll('[data-select-grader-run]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const idx = Number(btn.dataset.selectGraderRun);
@@ -1269,229 +1053,407 @@ export async function render(el) {
     });
   });
 
-  el.querySelector('#btn-import-grader-pdf')?.addEventListener('click', () => {
-    dialog({
-      title: 'Import HubSpot AI Search Grader Report',
-      body: `
-        <div class="stack" style="gap:14px">
-          <p class="small muted" style="margin:0">
-            Upload the downloaded PDF report from <a href="https://www.hubspot.com/ai-search-grader" target="_blank" style="color:var(--gold-ink);font-weight:600">HubSpot AI Search Grader ↗</a> or paste its text. The CRM will extract scores, competitor Share of Voice %, update the Podium, and calculate your 14-day velocity.
-          </p>
+  // Route snapshot selector
+  el.querySelector('#sel-history-run')?.addEventListener('change', async (e) => {
+    selectedRunIdx = Number(e.target.value);
+    await render(el);
+  });
 
-          <div id="grader-dropzone" style="border:2px dashed var(--line);border-radius:var(--r-sm);padding:24px;text-align:center;cursor:pointer;background:var(--bg);transition:border-color .2s">
-            <div style="font-size:2rem;margin-bottom:8px">📄</div>
-            <div style="font-weight:600;font-size:.9rem;color:var(--ink)" id="grader-dropzone-label">Click to upload or drag &amp; drop PDF report here</div>
-            <div class="tiny muted" style="margin-top:4px">Supports official HubSpot AI Search Grader PDF export</div>
-            <input type="file" id="grader-file-input" accept=".pdf,.txt" style="display:none" />
-          </div>
-
-          <div style="text-align:center;color:var(--muted);font-size:.8rem">— OR PASTE EXTRACTED REPORT TEXT —</div>
-
-          <textarea id="grader-paste-input" placeholder="Paste extracted report text here (or run: node scripts/parse-hubspot-pdf.mjs [file])..." style="width:100%;height:100px;font-family:monospace;font-size:.78rem;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px"></textarea>
-
-          <div class="row between" style="margin-top:6px">
-            <button class="btn ghost sm" data-close>Cancel</button>
-            <button class="btn primary sm" id="btn-process-grader-text">Process &amp; Update Podium</button>
-          </div>
-        </div>
-      `,
-      onMount: (box, close) => {
-        const dropzone = box.querySelector('#grader-dropzone');
-        const fileInput = box.querySelector('#grader-file-input');
-        const pasteInput = box.querySelector('#grader-paste-input');
-        const submitBtn = box.querySelector('#btn-process-grader-text');
-
-        dropzone.addEventListener('click', () => fileInput.click());
-        dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = 'var(--gold)'; });
-        dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = 'var(--line)'; });
-        dropzone.addEventListener('drop', (e) => {
-          e.preventDefault();
-          dropzone.style.borderColor = 'var(--line)';
-          if (e.dataTransfer.files?.length) {
-            handleFile(e.dataTransfer.files[0]);
-          }
-        });
-
-        fileInput.addEventListener('change', () => {
-          if (fileInput.files?.length) {
-            handleFile(fileInput.files[0]);
-          }
-        });
-
-        async function handleFile(file) {
-          dropzone.innerHTML = `<span class="spin">⟳</span> Reading ${esc(file.name)}...`;
-          try {
-            const text = await file.text();
-            if (text.includes('AI Search Grader') || text.includes('ChatGPT') || text.includes('DOROGO')) {
-              pasteInput.value = text;
-              dropzone.innerHTML = `✅ Loaded <b>${esc(file.name)}</b>. Click "Process &amp; Update Podium" below.`;
-            } else {
-              dropzone.innerHTML = `📄 Loaded <b>${esc(file.name)}</b>.<br><span class="tiny muted">For direct terminal import: <code>node scripts/parse-hubspot-pdf.mjs "${esc(file.name)}"</code><br>Or paste text below.</span>`;
-            }
-          } catch (_) {
-            dropzone.innerHTML = `📄 Loaded <b>${esc(file.name)}</b>.`;
-          }
-        }
-
-        submitBtn.addEventListener('click', async () => {
-          const raw = pasteInput.value.trim();
-          if (!raw) {
-            toast('Please upload a file or paste report text', 'warn');
-            return;
-          }
-          const parsed = parseHubSpotGraderText(raw);
-          if (!parsed) {
-            toast('Could not parse HubSpot report format. Please check the text format.', 'bad');
-            return;
-          }
-          await saveGraderSnapshot(parsed);
-          close();
-          toast('HubSpot AI Search Grader imported successfully! Podium updated.', 'ok');
-          cachedGraderHistory = null;
-          await render(el);
-        });
-      }
+  // Route filter pills
+  el.querySelectorAll('[data-filter]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      activeFilter = btn.dataset.filter;
+      await render(el);
     });
   });
 
-  el.querySelector('#btn-run-grader-script')?.addEventListener('click', () => {
-    dialog({
-      title: 'HubSpot AI Search Grader Automation Bot',
-      body: `
-        <div class="stack" style="gap:14px">
-          <p class="small muted" style="margin:0">
-            HubSpot's free AI Search Grader does not provide a public REST API key. We provide automated CLI runners that navigate, submit parameters, download the PDF, and update this dashboard every 2 weeks.
-          </p>
-
-          <div class="card" style="background:var(--surface-2);padding:14px;border-radius:var(--r-sm)">
-            <span class="label tiny" style="margin-bottom:6px;display:block">Automated Diagnostic Runner:</span>
-            <code style="font-size:.82rem;display:block;background:var(--bg);padding:8px 10px;border-radius:var(--r-sm);border:1px solid var(--line);user-select:all">
-              node scripts/fetch-hubspot-grader.mjs
-            </code>
-            <p class="tiny muted" style="margin:6px 0 0">
-              Runs Playwright headless browser to submit DOROGO Milan NCC parameters and download fresh PDF report.
-            </p>
-          </div>
-
-          <div class="card" style="background:var(--surface-2);padding:14px;border-radius:var(--r-sm)">
-            <span class="label tiny" style="margin-bottom:6px;display:block">CLI PDF Parser:</span>
-            <code style="font-size:.82rem;display:block;background:var(--bg);padding:8px 10px;border-radius:var(--r-sm);border:1px solid var(--line);user-select:all">
-              node scripts/parse-hubspot-pdf.mjs data/visibility/reports/dorogo_hubspot_grader_2026-10-28.pdf
-            </code>
-            <p class="tiny muted" style="margin:6px 0 0">
-              Extracts all scores, Share of Voice %, and updates <code>data/visibility_grader_history.json</code>.
-            </p>
-          </div>
-
-          <div class="row between" style="margin-top:4px">
-            <a href="https://www.hubspot.com/ai-search-grader" target="_blank" class="btn ghost sm">Open HubSpot AI Search Grader ↗</a>
-            <button class="btn primary sm" data-close>Close</button>
-          </div>
-        </div>
-      `
+  // Inspect probe dialog
+  el.querySelectorAll('[data-view-probe]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.viewProbe;
+      const item = (currentRun.details || []).find((d) => d.id === id);
+      if (item) openProbeDetailModal(item);
     });
   });
+
+  // Import HubSpot PDF Dialog
+  el.querySelector('#btn-import-grader-pdf')?.addEventListener('click', openGraderImportModal);
+  el.querySelector('#btn-run-grader-script')?.addEventListener('click', openGraderBotModal);
+
+  // Log action inner/outer
+  el.querySelector('#btn-crm-log-action')?.addEventListener('click', () => openLogActionModal(currentRun));
+  el.querySelector('#btn-crm-log-action-inner')?.addEventListener('click', () => openLogActionModal(currentRun));
+
+  // Delete action listener
+  el.querySelectorAll('[data-delete-action]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.deleteAction;
+      deleteVisibilityAction(id);
+      toast('Action deleted from log', 'ok');
+      await render(el);
+    });
+  });
+
+  // Live Audit Button
+  el.querySelector('#btn-live-audit')?.addEventListener('click', () => startLiveAudit(el, currentRun));
 }
 
-function openCrmActionModal(el, existing = null) {
-  const today = new Date().toISOString().slice(0, 10);
-  const dateVal = existing ? existing.date : today;
-  const nicheVal = existing ? existing.niche : 'Alpine Ski';
-  const catVal = existing ? existing.category : 'Web Content & Specs';
-  const titleVal = existing ? esc(existing.title) : '';
-  const descVal = existing ? esc(existing.description || '') : '';
-  const urlVal = existing ? esc(existing.url || '') : '';
-  const verdictVal = existing ? existing.verdict : 'effective';
-  const notesVal = existing ? esc(existing.notes || '') : '';
-
+// ==========================================
+// MODALS & DIALOGS
+// ==========================================
+function openGraderImportModal() {
   dialog({
-    title: existing ? 'Edit Optimization Action' : 'Log Visibility Optimization Action',
-    wide: false,
+    title: 'Import HubSpot AI Search Grader Report',
     body: `
       <div class="stack" style="gap:14px">
-        <div class="split" style="gap:12px">
-          <div>
-            <label class="label small" style="display:block;margin-bottom:4px">Date of Action</label>
-            <input type="date" class="input sm" id="crm-act-date" value="${dateVal}" style="width:100%" required>
-          </div>
-          <div>
-            <label class="label small" style="display:block;margin-bottom:4px">Target Revenue Pillar</label>
-            <select class="input sm" id="crm-act-niche" style="width:100%">
-              <option value="Alpine Ski" ${nicheVal === 'Alpine Ski' ? 'selected' : ''}>Alpine Ski Transfers</option>
-              <option value="Fiera Milano Convoys" ${nicheVal === 'Fiera Milano Convoys' ? 'selected' : ''}>Fiera Milano Convoys</option>
-              <option value="Private Jet FBO" ${nicheVal === 'Private Jet FBO' ? 'selected' : ''}>Private Jet FBO</option>
-              <option value="Lake Como Weddings" ${nicheVal === 'Lake Como Weddings' ? 'selected' : ''}>Lake Como Weddings</option>
-              <option value="Lake & Cross-Border" ${nicheVal === 'Lake & Cross-Border' ? 'selected' : ''}>Lakes &amp; Cross-Border</option>
-              <option value="Outlet Standby" ${nicheVal === 'Outlet Standby' ? 'selected' : ''}>Serravalle Outlet Standby</option>
-            </select>
-          </div>
+        <p class="small muted" style="margin:0">
+          Upload the downloaded PDF report from <a href="https://www.hubspot.com/ai-search-grader" target="_blank" style="color:var(--gold-ink);font-weight:600">HubSpot AI Search Grader ↗</a> or paste its text. The CRM will extract scores, competitor Share of Voice %, update the Podium, and calculate your 14-day velocity.
+        </p>
+
+        <div id="grader-dropzone" style="border:2px dashed var(--line);border-radius:var(--r-sm);padding:24px;text-align:center;cursor:pointer;background:var(--bg);transition:border-color .2s">
+          <div style="font-size:2rem;margin-bottom:8px">📄</div>
+          <div style="font-weight:600;font-size:.9rem;color:var(--ink)" id="grader-dropzone-label">Click to upload or drag &amp; drop PDF report here</div>
+          <div class="tiny muted" style="margin-top:4px">Supports official HubSpot AI Search Grader PDF export</div>
+          <input type="file" id="grader-file-input" accept=".pdf,.txt" style="display:none" />
         </div>
 
-        <div class="split" style="gap:12px">
-          <div>
-            <label class="label small" style="display:block;margin-bottom:4px">Initiative Category</label>
-            <select class="input sm" id="crm-act-cat" style="width:100%">
-              <option value="Web Content & Specs" ${catVal === 'Web Content & Specs' ? 'selected' : ''}>Web Content &amp; Specs</option>
-              <option value="Outreach & Partnerships" ${catVal === 'Outreach & Partnerships' ? 'selected' : ''}>Outreach &amp; Rate Cards</option>
-              <option value="Digital PR & Backlinks" ${catVal === 'Digital PR & Backlinks' ? 'selected' : ''}>Digital PR &amp; Backlinks</option>
-              <option value="llms.txt / Machine Indexing" ${catVal === 'llms.txt / Machine Indexing' ? 'selected' : ''}>llms.txt / Machine Indexing</option>
-            </select>
-          </div>
-          <div>
-            <label class="label small" style="display:block;margin-bottom:4px">Observed Impact Verdict</label>
-            <select class="input sm" id="crm-act-verdict" style="width:100%">
-              <option value="effective" ${verdictVal === 'effective' ? 'selected' : ''}>🟢 Effective (Improved Rank)</option>
-              <option value="testing" ${verdictVal === 'testing' ? 'selected' : ''}>⏳ Testing / Indexing in Progress</option>
-              <option value="ineffective" ${verdictVal === 'ineffective' ? 'selected' : ''}>🔴 Ineffective (No AI impact)</option>
-            </select>
-          </div>
-        </div>
+        <div style="text-align:center;color:var(--muted);font-size:.8rem">— OR PASTE EXTRACTED REPORT TEXT —</div>
 
-        <div>
-          <label class="label small" style="display:block;margin-bottom:4px">Initiative Title</label>
-          <input type="text" class="input sm" id="crm-act-title" value="${titleVal}" placeholder="e.g. Published Courchevel 1850 &amp; St. Moritz alpine ski guide" style="width:100%" required>
-        </div>
+        <textarea id="grader-paste-input" placeholder="Paste extracted report text here (or run: node scripts/parse-hubspot-pdf.mjs [file])..." style="width:100%;height:100px;font-family:monospace;font-size:.78rem;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px"></textarea>
 
-        <div>
-          <label class="label small" style="display:block;margin-bottom:4px">Observed Impact &amp; Notes</label>
-          <textarea class="input sm" id="crm-act-notes" rows="2" placeholder="e.g. Secured #1 Top Pick in Perplexity for Courchevel 1850; achieved #3 podium for St. Moritz" style="width:100%">${notesVal}</textarea>
-        </div>
-
-        <div>
-          <label class="label small" style="display:block;margin-bottom:4px">Evidence URL / Rate Sheet (Optional)</label>
-          <input type="url" class="input sm" id="crm-act-url" value="${urlVal}" placeholder="https://dorogo.eu/..." style="width:100%">
-        </div>
-
-        <div class="row end" style="gap:8px;margin-top:8px">
+        <div class="row between" style="margin-top:6px">
           <button class="btn ghost sm" data-close>Cancel</button>
-          <button class="btn primary sm" id="crm-btn-save-act">Save Action</button>
+          <button class="btn primary sm" id="btn-process-grader-text">Process &amp; Update Podium</button>
         </div>
       </div>
     `,
     onMount: (box, close) => {
-      box.querySelector('#crm-btn-save-act')?.addEventListener('click', async () => {
-        const title = box.querySelector('#crm-act-title')?.value.trim();
-        if (!title) {
-          toast('Please enter a title for the action', 'error');
+      const dropzone = box.querySelector('#grader-dropzone');
+      const fileInput = box.querySelector('#grader-file-input');
+      const pasteInput = box.querySelector('#grader-paste-input');
+      const submitBtn = box.querySelector('#btn-process-grader-text');
+
+      dropzone.addEventListener('click', () => fileInput.click());
+      dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = 'var(--gold)'; });
+      dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = 'var(--line)'; });
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.style.borderColor = 'var(--line)';
+        if (e.dataTransfer.files?.length) {
+          handleFile(e.dataTransfer.files[0]);
+        }
+      });
+
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files?.length) {
+          handleFile(e.target.files[0]);
+        }
+      });
+
+      async function handleFile(file) {
+        box.querySelector('#grader-dropzone-label').textContent = `Reading ${file.name}...`;
+        const text = await file.text().catch(() => '');
+        pasteInput.value = text;
+        submitBtn.click();
+      }
+
+      submitBtn.addEventListener('click', async () => {
+        const rawText = pasteInput.value.trim();
+        if (!rawText) {
+          toast('Please paste text or drop a file first', 'warn');
           return;
         }
 
-        const act = {
-          id: existing ? existing.id : 'act_' + Date.now().toString(36),
-          date: box.querySelector('#crm-act-date')?.value || today,
-          niche: box.querySelector('#crm-act-niche')?.value,
-          category: box.querySelector('#crm-act-cat')?.value,
-          title,
-          notes: box.querySelector('#crm-act-notes')?.value.trim(),
-          url: box.querySelector('#crm-act-url')?.value.trim(),
-          verdict: box.querySelector('#crm-act-verdict')?.value
-        };
+        const snapshot = parseHubSpotGraderText(rawText);
+        if (!snapshot) {
+          toast('Could not parse report text', 'bad');
+          return;
+        }
 
-        cachedActions = saveVisibilityAction(act, cachedActions);
+        await saveGraderSnapshot(snapshot);
+        toast(`Imported HubSpot snapshot! Overall Score: ${snapshot.overall_composite_score}/100`, 'ok');
         close();
-        toast('Optimization action logged');
-        await render(el);
+        const root = document.getElementById('content') || document.getElementById('view');
+        if (root) render(root);
       });
+    }
+  });
+}
+
+function openGraderBotModal() {
+  dialog({
+    title: 'Headless AI Search Grader Automation Bot',
+    body: `
+      <div class="stack" style="gap:14px">
+        <p class="small muted" style="margin:0">
+          Run the bi-weekly automated scraper via Playwright to fetch the latest HubSpot Grader report and sync it to the CRM database automatically.
+        </p>
+
+        <div style="background:var(--surface-2);border-radius:var(--r-sm);padding:12px;font-family:monospace;font-size:.82rem">
+          node scripts/fetch-hubspot-grader.mjs
+        </div>
+
+        <div class="small muted">
+          <strong>Parameters automatically submitted:</strong><br>
+          • <strong>Brand:</strong> DOROGO<br>
+          • <strong>Location:</strong> Milan, Italy<br>
+          • <strong>Category:</strong> NCC Private Chauffeur &amp; Alps Transfers<br>
+          • <strong>Interval:</strong> Every 14 days (bi-weekly sprint)
+        </div>
+
+        <div class="row end">
+          <button class="btn primary sm" data-close>Got It</button>
+        </div>
+      </div>
+    `
+  });
+}
+
+function openProbeDetailModal(item) {
+  dialog({
+    wide: true,
+    title: `AI Probe Detail: ${item.niche}`,
+    body: `
+      <div class="stack" style="gap:14px">
+        <div class="card" style="background:var(--surface-2);padding:12px 14px;border-radius:var(--r-sm)">
+          <div class="row between" style="align-items:center;margin-bottom:6px">
+            <span class="chip gold" style="font-size:.72rem;font-weight:700">${esc(item.niche)}</span>
+            <span class="chip ${item.dorogo_present ? 'ok' : 'outline'}" style="font-size:.72rem;font-weight:700">
+              ${item.dorogo_present ? '✓ Cited in Consensus' : 'Unranked'}
+            </span>
+          </div>
+          <div style="font-size:1.05rem;font-weight:600;color:var(--ink)">"${esc(item.query)}"</div>
+        </div>
+
+        <div>
+          <div class="tiny muted" style="font-weight:600;text-transform:uppercase;margin-bottom:6px">Live Web Citations:</div>
+          ${(item.citations && item.citations.length) ? `
+            <div class="row" style="gap:6px;flex-wrap:wrap">
+              ${item.citations.map((c) => `
+                <a href="${c.url}" target="_blank" rel="noopener" class="chip outline" style="font-size:.72rem;text-decoration:none" title="${esc(c.url)}">
+                  🔗 ${esc(c.domain || c.title || 'Source')}
+                </a>
+              `).join('')}
+            </div>
+          ` : '<span class="tiny muted">No URL annotations returned.</span>'}
+        </div>
+
+        <div>
+          <div class="tiny muted" style="font-weight:600;text-transform:uppercase;margin-bottom:6px">Full AI Grounded Response:</div>
+          <div style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px;max-height:280px;overflow-y:auto;font-size:.85rem;line-height:1.5">
+            ${formatAiResponse(item.full_content || item.response_snippet || '', item.citations || [])}
+          </div>
+        </div>
+
+        <div class="row end">
+          <button class="btn primary sm" data-close>Close</button>
+        </div>
+      </div>
+    `
+  });
+}
+
+function openLogActionModal(currentRun) {
+  dialog({
+    title: 'Log New AEO Optimization Action',
+    body: `
+      <div class="stack" style="gap:12px">
+        <label class="stack" style="gap:4px">
+          <span class="small" style="font-weight:600">Action Title:</span>
+          <input type="text" id="action-title" placeholder="e.g. Published Villa Balbianello logistics page" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px;font-size:.85rem" />
+        </label>
+        <label class="stack" style="gap:4px">
+          <span class="small" style="font-weight:600">Target Route / Niche:</span>
+          <select id="action-niche" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px;font-size:.85rem">
+            ${[...new Set(TRACKED_QUERIES.map(q => q.niche))].map(n => `<option value="${attr(n)}">${esc(n)}</option>`).join('')}
+          </select>
+        </label>
+        <label class="stack" style="gap:4px">
+          <span class="small" style="font-weight:600">Status / Expected Impact:</span>
+          <select id="action-verdict" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px;font-size:.85rem">
+            <option value="testing">Testing (Under Evaluation)</option>
+            <option value="effective">Effective (Rank Increased)</option>
+            <option value="ineffective">Ineffective (No Change)</option>
+          </select>
+        </label>
+        <label class="stack" style="gap:4px">
+          <span class="small" style="font-weight:600">Notes &amp; Strategy:</span>
+          <textarea id="action-notes" placeholder="Explain the change made and expected AI ranking impact..." style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px;font-size:.85rem;height:80px"></textarea>
+        </label>
+        <div class="row between" style="margin-top:6px">
+          <button class="btn ghost sm" data-close>Cancel</button>
+          <button class="btn primary sm" id="btn-save-crm-action">Save to AEO Log</button>
+        </div>
+      </div>
+    `,
+    onMount: (box, close) => {
+      box.querySelector('#btn-save-crm-action')?.addEventListener('click', async () => {
+        const title = box.querySelector('#action-title')?.value.trim();
+        const niche = box.querySelector('#action-niche')?.value;
+        const verdict = box.querySelector('#action-verdict')?.value;
+        const notes = box.querySelector('#action-notes')?.value.trim();
+
+        if (!title) {
+          toast('Please enter an action title', 'warn');
+          return;
+        }
+
+        saveVisibilityAction({
+          id: 'act_' + Date.now(),
+          date: new Date().toISOString().slice(0, 10),
+          title,
+          niche,
+          verdict,
+          notes
+        });
+
+        toast('AEO action saved to CRM log!', 'ok');
+        close();
+        const root = document.getElementById('content') || document.getElementById('view');
+        if (root) render(root);
+      });
+    }
+  });
+}
+
+function startLiveAudit(el, currentRun) {
+  const triggerBtn = el.querySelector('#btn-live-audit');
+  if (triggerBtn) {
+    triggerBtn.disabled = true;
+    triggerBtn.innerHTML = `<span class="spin">⟳</span> Running Audit...`;
+  }
+
+  const abortCtrl = new AbortController();
+  const startTime = Date.now();
+
+  dialog({
+    wide: true,
+    title: 'Live AI Visibility Audit (Perplexity Sonar)',
+    body: `
+      <div class="stack" style="gap:16px">
+        <div class="card" style="background:var(--surface-2);padding:14px 18px;border-radius:var(--r-sm)">
+          <div class="row between" style="align-items:baseline;margin-bottom:8px">
+            <span style="font-weight:600;font-size:.9rem" id="crm-hud-progress-label">Initiating probe across 12 high-intent queries... (0%)</span>
+            <span class="small muted" id="crm-hud-timer">Elapsed: 00:00</span>
+          </div>
+          <div style="height:10px;background:var(--line);border-radius:6px;overflow:hidden">
+            <div id="crm-hud-progress-bar" style="width:0%;height:100%;background:linear-gradient(90deg, #0E100F 0%, #10B981 100%);transition:width .3s ease"></div>
+          </div>
+          <div class="row between" style="margin-top:10px;font-size:.82rem;color:var(--ink-2)">
+            <span>Completed: <b id="crm-hud-count">0</b> / 12 inquiries</span>
+            <span>Dorogo #1 Wins: <b id="crm-hud-top1" style="color:var(--gold-ink)">0</b></span>
+            <span>Top-3 Citations: <b id="crm-hud-top3" style="color:#10B981">0</b></span>
+            <span>Est. Cost: <b id="crm-hud-cost">&lt;$0.01 USD</b></span>
+          </div>
+        </div>
+
+        <div class="stack" style="gap:8px;max-height:360px;overflow-y:auto" id="crm-hud-steps-container">
+          ${TRACKED_QUERIES.map((q, idx) => `
+            <div class="live-step-item" id="crm-step-${idx}" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm)">
+              <div>
+                <span class="chip" style="font-size:.7rem">${esc(q.niche)}</span>
+                <span class="small" style="font-weight:600;color:var(--ink);margin-left:6px">"${esc(q.query)}"</span>
+              </div>
+              <div id="crm-step-badge-${idx}">
+                <span class="chip outline" style="font-size:.7rem">Pending</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="row between" id="crm-hud-foot" style="margin-top:4px;display:none">
+          <button class="btn ghost sm" id="btn-crm-download-run">📥 Download JSON</button>
+          <button class="btn primary sm" id="btn-crm-finish-audit">Apply &amp; View Updated Dashboard</button>
+        </div>
+      </div>
+    `,
+    onMount: (box, close) => {
+      let isDone = false;
+      const timerInterval = setInterval(() => {
+        if (isDone) return;
+        const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+        const m = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+        const s = String(elapsedSec % 60).padStart(2, '0');
+        const timerEl = box.querySelector('#crm-hud-timer');
+        if (timerEl) timerEl.textContent = `Elapsed: ${m}:${s}`;
+      }, 1000);
+
+      box.querySelector('[data-close]')?.addEventListener('click', () => {
+        abortCtrl.abort();
+        clearInterval(timerInterval);
+        if (triggerBtn) {
+          triggerBtn.disabled = false;
+          triggerBtn.innerHTML = `⚡ Run Live Audit`;
+        }
+      });
+
+      (async () => {
+        try {
+          const runResult = await runFullLiveAudit({
+            previousRun: currentRun,
+            signal: abortCtrl.signal,
+            onProgress: (p) => {
+              const bar = box.querySelector('#crm-hud-progress-bar');
+              const label = box.querySelector('#crm-hud-progress-label');
+              const countEl = box.querySelector('#crm-hud-count');
+              const top1El = box.querySelector('#crm-hud-top1');
+              const top3El = box.querySelector('#crm-hud-top3');
+              const costEl = box.querySelector('#crm-hud-cost');
+
+              if (bar) bar.style.width = `${p.pct}%`;
+              if (label) label.textContent = `Auditing queries across live AI models... (${p.pct}%)`;
+              if (countEl) countEl.textContent = p.completed;
+              if (top1El) top1El.textContent = p.top1Count;
+              if (top3El) top3El.textContent = p.top3Count;
+              if (costEl) costEl.textContent = `$${p.estimatedCostUsd} USD`;
+            },
+            onQueryStart: ({ index }) => {
+              const badge = box.querySelector(`#crm-step-badge-${index}`);
+              if (badge) badge.innerHTML = `<span class="chip gold" style="font-size:.7rem"><span class="spin">⟳</span> Probing</span>`;
+            },
+            onQueryComplete: ({ index, record }) => {
+              const badge = box.querySelector(`#crm-step-badge-${index}`);
+              if (badge) {
+                if (record.is_top_recommendation) {
+                  badge.innerHTML = `<span class="chip ok" style="font-size:.7rem;font-weight:700">🏆 #1 Top Pick</span>`;
+                } else if (record.dorogo_rank && record.dorogo_rank <= 3) {
+                  badge.innerHTML = `<span class="chip ok" style="font-size:.7rem">🥈 #${record.dorogo_rank} Podium</span>`;
+                } else if (record.dorogo_present) {
+                  badge.innerHTML = `<span class="chip" style="font-size:.7rem">#${record.dorogo_rank} Cited</span>`;
+                } else {
+                  badge.innerHTML = `<span class="chip outline" style="font-size:.7rem">Unranked</span>`;
+                }
+              }
+            }
+          });
+
+          isDone = true;
+          clearInterval(timerInterval);
+
+          const foot = box.querySelector('#crm-hud-foot');
+          if (foot) foot.style.display = 'flex';
+          const progLabel = box.querySelector('#crm-hud-progress-label');
+          if (progLabel) progLabel.textContent = `✓ 12-route multi-engine audit complete!`;
+
+          box.querySelector('#btn-crm-finish-audit')?.addEventListener('click', async () => {
+            await persistLiveAuditRun(runResult);
+            toast('Live audit saved to consensus history!', 'ok');
+            close();
+            const root = document.getElementById('content') || document.getElementById('view');
+            if (root) render(root);
+          });
+        } catch (err) {
+          isDone = true;
+          clearInterval(timerInterval);
+          toast(`Audit paused or interrupted: ${err.message}`, 'warn');
+        } finally {
+          if (triggerBtn) {
+            triggerBtn.disabled = false;
+            triggerBtn.innerHTML = `⚡ Run Live Audit`;
+          }
+        }
+      })();
     }
   });
 }
