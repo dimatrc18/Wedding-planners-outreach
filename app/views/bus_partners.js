@@ -2414,6 +2414,7 @@ export function render(el) {
         <h1>🚌 Bus & Minibus Partner Outreach</h1>
       </div>
       <div class="row" style="gap:8px;flex-wrap:wrap">
+        <a class="btn sm" href="#fleet_showcase" style="background:var(--gold-soft);color:var(--ink);border-color:var(--gold-strong);font-weight:700;display:inline-flex;align-items:center;gap:4px" title="View partner fleet showroom, vehicle photos & prices">📸 Fleet &amp; Rates (${repliedOrRatesCount})</a>
         <button class="btn sm" id="btn-ceo-outreach" style="background:#7c3aed;color:#fff;border-color:#6d28d9;font-weight:700" title="Manage Italian CEO outreach queue and sending">✉️ CEO Outreach & Queue (${wantToContactCount})</button>
         <button class="btn sm" id="btn-scout-url" style="color:var(--gold-ink);border-color:var(--gold)" title="Evaluate website through 100-Point Gate">⚡ Scout URL</button>
         <button class="btn sm" id="btn-scout-market" style="background:var(--gold-soft);color:var(--ink);border-color:var(--gold-strong);font-weight:600" title="Auto-scout operators by location, score & vehicle types">🔍 Auto-Scout Fleet</button>
@@ -2703,6 +2704,9 @@ export function render(el) {
                 </td>
                 <td style="vertical-align:middle">
                   <div class="clickable" data-act="edit-rates" data-id="${attr(p.id)}" style="cursor:pointer;max-width:205px;display:flex;flex-direction:column;gap:3px;line-height:1.25" title="Click to view/edit Rates and My Pre-Contact Notes">
+                    ${(p.rate_document || p.score_breakdown?.partner_card?.fleet_photos?.length || p.id === 'partner_1792765279097_26hr') ? `
+                      <a href="#fleet_showcase" class="chip tiny gold" style="font-size:.65rem;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:2px;margin-bottom:2px" title="Click to view photos and rate card in Fleet Showcase">📸 6 Photos &amp; PDF Rate Card ➔</a>
+                    ` : ''}
                     ${hasRates ? `
                       <div style="font-size:.74rem;font-weight:700;color:#059669;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
                         💶 ${esc([p.rate_hourly, p.rate_standby].filter(Boolean).join(' · '))}

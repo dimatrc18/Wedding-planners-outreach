@@ -748,47 +748,90 @@
     "base_city": "Como",
     "website": "https://www.comodriver.com",
     "fleet_url": "https://www.comodriver.com/autovetture/",
-    "relevance_score": 91,
+    "relevance_score": 95,
     "score_breakdown": {
-      "fleet_luxury": 21,
+      "fleet_luxury": 25,
       "partner_card": {
-        "whatsapp": "+39 347 184 8920",
-        "bus_models": "Mercedes Sprinter Minibus (12 pax), Ford Transit Minibus (16 pax), Mercedes Classe V (7 pax)",
-        "replied_at": null,
-        "rate_hourly": "",
+        "whatsapp": "+39 320 72 70 552",
+        "bus_models": "Ford Transit Minibus (16 pax), Mercedes Sprinter Minibus (12 pax), Mercedes Classe V (7 pax)",
+        "replied_at": "2026-10-28T09:22:00.000Z",
+        "rate_hourly": "Disponibile su richiesta (in DORONG...27.pdf)",
         "client_notes": "",
         "email_status": "mx_ok",
         "pax_capacity": "7, 12, 16 pax",
-        "rate_standby": "",
+        "rate_standby": "Tariffe e politiche in DORONG...27.pdf",
         "scheduled_at": "2026-10-27T10:00:00.000Z",
         "fleet_segment": "both",
-        "outreach_stage": "ready",
+        "outreach_stage": "replied",
         "last_message_id": null,
         "user_set_status": true,
-        "last_outreach_at": null,
+        "last_outreach_at": "2026-10-27T11:00:00.000Z",
         "user_set_segment": true,
-        "fleet_audit_verified_at": "2026-10-26T18:25:11.587Z"
+        "fleet_audit_verified_at": "2026-10-28T09:22:00.000Z",
+        "contact_person": "Salvatore Calzolaio",
+        "rate_document": "DORONG...27.pdf",
+        "fleet_photos": [
+          {
+            "id": "como_ford_1",
+            "name": "Minibus Fo... 2.jpg",
+            "vehicle": "Ford Transit Minibus (16 Seats)",
+            "pax": 16,
+            "type": "Group Shuttle Minibus",
+            "desc": "Minibus Ford Transit 16 posti — ideale per transfer ville Lago di Como e navette aeroporto"
+          },
+          {
+            "id": "como_ford_2",
+            "name": "Minibus F...ia.jpg",
+            "vehicle": "Ford Transit Minibus (16 Seats) - Salotto",
+            "pax": 16,
+            "type": "Group Shuttle Minibus",
+            "desc": "Accesso cabina passeggeri e configurazione sedili confort"
+          },
+          {
+            "id": "como_merc_1",
+            "name": "Immagine...e4.jpg",
+            "vehicle": "Mercedes-Benz Classe V / Minivan Executive",
+            "pax": 7,
+            "type": "Luxury NCC Minivan",
+            "desc": "Mezzo total black unbranded per transfer VIP Lago di Como & Milano"
+          },
+          {
+            "id": "como_merc_2",
+            "name": "Mercedes Sprinter Minibus (12 Seats)",
+            "vehicle": "Mercedes-Benz Sprinter Minibus",
+            "pax": 12,
+            "type": "Executive Minibus",
+            "desc": "12 passeggeri, allestimento executive, vetri oscurati"
+          }
+        ]
       },
       "corporate_sla": 15,
       "territory_permits": 20,
       "discretion_unbranded": 35
     },
-    "status": "WANT_TO_CONTACT",
+    "status": "APPROVED_PARTNER",
     "unbranded_status": "100% Guaranteed Unbranded / NCC Black",
     "fleet_categories": [
-      "Mercedes-Benz Classe V (7 seats)",
+      "Ford Transit Minibus (16 seats)",
       "Mercedes Sprinter Minibus (12 seats)",
-      "Ford Transit Minibus (16 seats)"
+      "Mercedes-Benz Classe V (7 seats)"
     ],
-    "phone": "+39 347 184 8920",
+    "phone": "+39 320 72 70 552",
     "email": "info@comodriver.com",
-    "notes": "interested in Minibus Mercedes Sprinter ( 12 passeggeri), do they have other mini vans?",
+    "notes": "Salvatore Calzolaio ha risposto il 28 Ott con foto Ford Transit Minibus (16pax) e Mercedes, listino prezzi e politiche di cancellazione (DORONG...27.pdf). Cell: +39 320 72 70 552.",
     "source": "crawler",
     "created_at": "2026-10-23T14:21:19.097+00:00",
     "updated_at": "2026-10-26T17:24:27.870639+00:00",
-    "bus_models": "Mercedes Sprinter Minibus (12 pax), Ford Transit Minibus (16 pax), Mercedes Classe V (7 pax)",
+    "bus_models": "Ford Transit Minibus (16 pax), Mercedes Sprinter Minibus (12 pax), Mercedes Classe V (7 pax)",
     "pax_capacity": "7, 12, 16 pax",
-    "fleet_segment": "both"
+    "fleet_segment": "both",
+    "contact_person": "Salvatore Calzolaio",
+    "whatsapp": "+39 320 72 70 552",
+    "replied_at": "2026-10-28T09:22:00.000Z",
+    "outreach_stage": "replied",
+    "rate_standby": "Tariffe e politiche in DORONG...27.pdf",
+    "rate_hourly": "Disponibile su richiesta (in DORONG...27.pdf)",
+    "rate_document": "DORONG...27.pdf"
   },
   {
     "id": "partner_1792761050695_9k2e",

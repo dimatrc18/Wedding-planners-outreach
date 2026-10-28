@@ -1208,6 +1208,33 @@ Dmitri Traciuc`;
     };
   }
 
+  if (stepKey === 'T3_reply_thanks' || stepKey === 'reply_thanks') {
+    const contactPerson = partner.contact_person || 'Salvatore';
+    const body = `Gentile ${contactPerson},
+
+La ringrazio molto per la disponibilità e per aver condiviso con noi foto, listino prezzi e politiche di prenotazione e cancellazione.
+
+Abbiamo registrato con piacere la scheda di ${cleanName} nel nostro database partner per i prossimi servizi ed eventi privati tra Milano e Lago di Como. Terremo sicuramente conto dei Vostri minibus Ford Transit e Mercedes per le richieste in linea con queste capienze.
+
+Approfitto per chiederLe se all'interno del Vostro network collabora o ha contatti diretti con colleghi di fiducia che dispongono di autobus gran turismo o luxury di capienza maggiore (dai 20 ai 50 posti). Nel caso, avrebbe piacere di fornirci un loro riferimento per future collaborazioni?
+
+Restiamo volentieri a disposizione e La ringrazio ancora per la collaborazione.
+
+Un cordiale saluto,
+Dmitri
+DOROGO Chauffeur Service
+Tel / WhatsApp: +39 347 184 8920
+booking@dorogo.eu · dorogo.eu`;
+
+    return {
+      step_name: 'T3_reply_thanks',
+      language: 'it',
+      subject: `Re: Disponibilità e flotta transfer Lago di Como & Milano — DOROGO Transfers`,
+      body,
+      word_count: body.trim().split(/\s+/).length,
+    };
+  }
+
   // Default: T1_intro (Tailored CEO-level Italian outreach)
   let questions = [];
 

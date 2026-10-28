@@ -1104,6 +1104,37 @@ test('All 41 Bus Partners with User Comments: verify each company has their spec
   });
 });
 
+test('buildBusOutreachDraft with reply_thanks drafts thank you and network inquiry for 20-50 seat coaches', () => {
+  const partner = {
+    name: 'Como Driver Services',
+    base_city: 'Como',
+    contact_person: 'Salvatore Calzolaio',
+    phone: '+39 320 72 70 552'
+  };
+  const draft = buildBusOutreachDraft(partner, 'reply_thanks');
+  assert.ok(draft.subject.includes('Disponibilità'));
+  assert.ok(draft.body.includes('Salvatore'));
+  assert.ok(draft.body.includes('politiche di prenotazione e cancellazione'));
+  assert.ok(draft.body.includes('database partner'));
+  assert.ok(draft.body.includes('20 ai 50 posti'));
+});
+
+test('Como Driver Services is verified as APPROVED_PARTNER with replied status, rates and photos on file', async () => {
+  const fs = await import('node:fs');
+  const partners = JSON.parse(fs.readFileSync('data/bus_partners.json', 'utf8'));
+  const como = partners.find(p => p.id === 'partner_1792765279097_26hr');
+  assert.ok(como, 'Como Driver Services must exist');
+  assert.equal(como.status, 'APPROVED_PARTNER');
+  assert.equal(como.outreach_stage, 'replied');
+  assert.equal(como.contact_person, 'Salvatore Calzolaio');
+  assert.equal(como.phone, '+39 320 72 70 552');
+  assert.ok(como.bus_models.includes('Ford Transit Minibus'));
+  assert.ok(como.bus_models.includes('Mercedes'));
+  assert.ok(como.score_breakdown?.partner_card?.fleet_photos?.length >= 2);
+});
+
+
+
 
 
 
