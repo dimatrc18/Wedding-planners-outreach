@@ -1,0 +1,335 @@
+[
+  {
+    "timestamp": "2026-10-14T10:00:00.000Z",
+    "brand": "DOROGO",
+    "location": "Milan, Italy",
+    "overall_composite_score": 36,
+    "engines": {
+      "chatgpt": {
+        "name": "ChatGPT (GPT-6 Luna)",
+        "score": 24,
+        "dorogo_sov_pct": 5,
+        "dorogo_rank": 5,
+        "competitors": [
+          {
+            "name": "Blacklane",
+            "sov_pct": 28,
+            "rank": 1
+          },
+          {
+            "name": "SIXT ride",
+            "sov_pct": 20,
+            "rank": 2
+          },
+          {
+            "name": "Welcome Pickups",
+            "sov_pct": 15,
+            "rank": 3
+          },
+          {
+            "name": "Wheely",
+            "sov_pct": 8,
+            "rank": 4
+          },
+          {
+            "name": "DOROGO",
+            "sov_pct": 5,
+            "rank": 5
+          }
+        ]
+      },
+      "perplexity": {
+        "name": "Perplexity Sonar",
+        "score": 42,
+        "dorogo_sov_pct": 12,
+        "dorogo_rank": 3,
+        "competitors": [
+          {
+            "name": "Blacklane",
+            "sov_pct": 24,
+            "rank": 1
+          },
+          {
+            "name": "Welcome Pickups",
+            "sov_pct": 15,
+            "rank": 2
+          },
+          {
+            "name": "DOROGO",
+            "sov_pct": 12,
+            "rank": 3
+          },
+          {
+            "name": "Wheely",
+            "sov_pct": 10,
+            "rank": 4
+          },
+          {
+            "name": "Sixt ride",
+            "sov_pct": 9,
+            "rank": 5
+          }
+        ]
+      },
+      "gemini": {
+        "name": "Google Gemini",
+        "score": 42,
+        "dorogo_sov_pct": 1.5,
+        "dorogo_rank": 7,
+        "competitors": [
+          {
+            "name": "Blacklane",
+            "sov_pct": 34,
+            "rank": 1
+          },
+          {
+            "name": "Wheely",
+            "sov_pct": 19,
+            "rank": 2
+          },
+          {
+            "name": "Sixt Limousine",
+            "sov_pct": 15,
+            "rank": 3
+          },
+          {
+            "name": "Uber Black",
+            "sov_pct": 12,
+            "rank": 4
+          },
+          {
+            "name": "DOROGO",
+            "sov_pct": 1.5,
+            "rank": 7
+          }
+        ]
+      }
+    },
+    "podium": {
+      "first": {
+        "name": "Blacklane",
+        "avg_sov_pct": 28.7
+      },
+      "second": {
+        "name": "Wheely / Sixt",
+        "avg_sov_pct": 13.5
+      },
+      "third": {
+        "name": "Welcome Pickups",
+        "avg_sov_pct": 10
+      },
+      "dorogo": {
+        "overall_rank": 5,
+        "avg_sov_pct": 6.2,
+        "perplexity_rank": 3,
+        "chatgpt_rank": 5,
+        "gemini_rank": 7
+      }
+    }
+  },
+  {
+    "timestamp": "2026-10-28T09:17:39.875Z",
+    "brand": "DOROGO",
+    "location": "Milan, Italy",
+    "overall_composite_score": 42.3,
+    "engines": {
+      "chatgpt": {
+        "name": "ChatGPT (GPT-6 Luna)",
+        "score": 29,
+        "categories": {
+          "brand_recognition": {
+            "score": 2,
+            "max": 20
+          },
+          "market_score": {
+            "score": 3,
+            "max": 10
+          },
+          "presence_quality": {
+            "score": 3,
+            "max": 20
+          },
+          "brand_sentiment": {
+            "score": 20,
+            "max": 40
+          },
+          "share_of_voice": {
+            "score": 1,
+            "max": 10
+          }
+        },
+        "dorogo_sov_pct": 8,
+        "dorogo_rank": 4,
+        "competitors": [
+          {
+            "name": "Blacklane",
+            "sov_pct": 24,
+            "rank": 1
+          },
+          {
+            "name": "SIXT ride",
+            "sov_pct": 19,
+            "rank": 2
+          },
+          {
+            "name": "Welcome Pickups",
+            "sov_pct": 14,
+            "rank": 3
+          },
+          {
+            "name": "DOROGO",
+            "sov_pct": 8,
+            "rank": 4
+          }
+        ]
+      },
+      "perplexity": {
+        "name": "Perplexity Sonar",
+        "score": 49,
+        "categories": {
+          "brand_recognition": {
+            "score": 4,
+            "max": 20
+          },
+          "market_score": {
+            "score": 3,
+            "max": 10
+          },
+          "presence_quality": {
+            "score": 7,
+            "max": 20
+          },
+          "brand_sentiment": {
+            "score": 31,
+            "max": 40
+          },
+          "share_of_voice": {
+            "score": 4,
+            "max": 10
+          }
+        },
+        "dorogo_sov_pct": 18,
+        "dorogo_rank": 2,
+        "competitors": [
+          {
+            "name": "Blacklane",
+            "sov_pct": 22,
+            "rank": 1
+          },
+          {
+            "name": "DOROGO",
+            "sov_pct": 18,
+            "rank": 2
+          },
+          {
+            "name": "Welcome Pickups",
+            "sov_pct": 14,
+            "rank": 3
+          },
+          {
+            "name": "Viator",
+            "sov_pct": 12,
+            "rank": 4
+          },
+          {
+            "name": "Wheely",
+            "sov_pct": 10,
+            "rank": 5
+          },
+          {
+            "name": "Sixt ride",
+            "sov_pct": 9,
+            "rank": 6
+          },
+          {
+            "name": "Local Milan",
+            "sov_pct": 8,
+            "rank": 7
+          }
+        ]
+      },
+      "gemini": {
+        "name": "Google Gemini",
+        "score": 49,
+        "categories": {
+          "brand_recognition": {
+            "score": 6,
+            "max": 20
+          },
+          "market_score": {
+            "score": 3,
+            "max": 10
+          },
+          "presence_quality": {
+            "score": 7,
+            "max": 20
+          },
+          "brand_sentiment": {
+            "score": 33,
+            "max": 40
+          },
+          "share_of_voice": {
+            "score": 0,
+            "max": 10
+          }
+        },
+        "dorogo_sov_pct": 3.5,
+        "dorogo_rank": 6,
+        "competitors": [
+          {
+            "name": "Blacklane",
+            "sov_pct": 32,
+            "rank": 1
+          },
+          {
+            "name": "Wheely",
+            "sov_pct": 18.5,
+            "rank": 2
+          },
+          {
+            "name": "Sixt Limousine",
+            "sov_pct": 14,
+            "rank": 3
+          },
+          {
+            "name": "Uber Black",
+            "sov_pct": 12,
+            "rank": 4
+          },
+          {
+            "name": "Siptea Limousine",
+            "sov_pct": 8,
+            "rank": 5
+          },
+          {
+            "name": "DOROGO",
+            "sov_pct": 3.5,
+            "rank": 6
+          }
+        ]
+      }
+    },
+    "podium": {
+      "first": {
+        "name": "Blacklane",
+        "avg_sov_pct": 26
+      },
+      "second": {
+        "name": "Wheely / Sixt",
+        "avg_sov_pct": 11.8
+      },
+      "third": {
+        "name": "Welcome Pickups",
+        "avg_sov_pct": 9.3
+      },
+      "dorogo": {
+        "overall_rank": 4,
+        "avg_sov_pct": 9.8,
+        "perplexity_rank": 2,
+        "chatgpt_rank": 4,
+        "gemini_rank": 6
+      }
+    },
+    "report_file": "data/visibility/reports/dorogo_hubspot_grader_2026-10-28.pdf"
+  }
+]

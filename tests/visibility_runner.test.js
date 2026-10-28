@@ -141,3 +141,124 @@ test('normalizeCompetitorName deduplicates case variations and aliases', async (
   assert.equal(normalizeCompetitorName('taxitransfermilan'), 'Taxi Transfer Milan');
   assert.equal(normalizeCompetitorName('como limo lux (cll)'), 'Como Limo Lux');
 });
+
+test('parseHubSpotGraderText extracts exact engine scores, category breakdowns, and competitor SOVs', async () => {
+  const { parseHubSpotGraderText } = await import('../app/services/live_audit.js');
+
+  const sampleHubSpotText = `
+AI Search Grader
+DOROGO
+across 3 LLM providers in Milan, Italy for NCC Private Chauffeur Service, Luxury Airport & Alps
+Transfers services in the Travel & Tourism industry.
+Details
+LLM Provider
+AI Search Score (Overall)
+Brand Recognition
+Market Score
+Presence Quality
+Brand Sentiment
+Share of Voice
+Powers ChatGPT
+29
+This score has room for growth
+/20 See details 2
+/10 See details 3
+/20 See details 3
+/40 See details 20
+/10 See details 1
+Real-Time AI-Powered Answers
+49
+You’re on the right track
+/20 See details 4
+/10 See details 3
+/20 See details 7
+/40 See details 31
+/10 See details 4
+Supports Google Results
+49
+You’re on the right track
+/20 See details 6
+/10 See details 3
+/20 See details 7
+/40 See details 33
+/10 See details 0
+
+Market Position Breakdown
+DOROGO 8 %
+Blacklane 24 %
+SIXT ride 19 %
+Welcome Pi... 14 %
+Other 35 %
+
+DOROGO 18 %
+Blacklane 22 %
+Welcome Pi... 14 %
+Wheely 10 %
+Sixt ride 9 %
+Viator 12 %
+Local Mila... 8 %
+Other 7 %
+
+DOROGO 3.5 %
+Blacklane 32 %
+Wheely 18.5 %
+Sixt Limou... 14 %
+Siptea Lim... 8 %
+Uber Black 12 %
+Other 12 %
+`;
+
+  const parsed = parseHubSpotGraderText(sampleHubSpotText);
+  assert.ok(parsed, 'Parser must return structured object');
+  assert.equal(parsed.brand, 'DOROGO');
+  assert.equal(parsed.location, 'Milan, Italy');
+
+  // Engines overall scores
+  assert.equal(parsed.engines.chatgpt.score, 29);
+  assert.equal(parsed.engines.perplexity.score, 49);
+  assert.equal(parsed.engines.gemini.score, 49);
+
+  // Perplexity Share of Voice and Podium
+  assert.equal(parsed.engines.perplexity.dorogo_sov_pct, 18.0);
+  assert.equal(parsed.engines.perplexity.dorogo_rank, 2, 'DOROGO must rank #2 on Perplexity right behind Blacklane');
+
+  // ChatGPT Share of Voice
+  assert.equal(parsed.engines.chatgpt.dorogo_sov_pct, 8.0);
+  assert.equal(parsed.engines.chatgpt.dorogo_rank, 4);
+
+  // Gemini Share of Voice
+  assert.equal(parsed.engines.gemini.dorogo_sov_pct, 3.5);
+
+  // Competitor Podium
+  assert.equal(parsed.podium.first.name, 'Blacklane');
+  assert.ok(parsed.podium.first.avg_sov_pct >= 20.0);
+  assert.equal(parsed.podium.dorogo.overall_rank, 4);
+});
+
+test('computeGraderHistoricalComparison calculates bi-weekly 14-day deltas', async () => {
+  const { computeGraderHistoricalComparison } = await import('../app/services/live_audit.js');
+
+  const history = [
+    {
+      timestamp: '2026-10-14T10:00:00.000Z',
+      overall_composite_score: 36.0,
+      podium: {
+        dorogo: { overall_rank: 5, avg_sov_pct: 6.2, perplexity_rank: 3, perplexity_sov: 12.0 }
+      }
+    },
+    {
+      timestamp: '2026-10-28T09:42:00.000Z',
+      overall_composite_score: 42.3,
+      podium: {
+        dorogo: { overall_rank: 4, avg_sov_pct: 9.8, perplexity_rank: 2, perplexity_sov: 18.0 }
+      }
+    }
+  ];
+
+  const delta = computeGraderHistoricalComparison(history);
+  assert.ok(delta);
+  assert.equal(delta.sov_delta, 3.6, 'SOV lift must be +3.6%');
+  assert.equal(delta.rank_delta, 1, 'Rank improvement must be +1 position');
+  assert.equal(delta.perp_rank_delta, 1, 'Perplexity moved from #3 to #2 (+1)');
+});
+

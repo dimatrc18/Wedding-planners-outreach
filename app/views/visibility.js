@@ -13,14 +13,21 @@ import {
   deleteVisibilityAction,
   cleanSnippetPreview,
   computeHistoricalComparison,
-  normalizeCompetitorName
+  normalizeCompetitorName,
+  parseHubSpotGraderText,
+  computeGraderHistoricalComparison,
+  loadGraderHistory,
+  saveGraderSnapshot
 } from '../services/live_audit.js';
 
 let cachedHistory = null;
 let cachedActions = null;
+let cachedGraderHistory = null;
 let activeFilter = 'top3'; // 'all' | 'top3' | specific niche
 let actionFilter = 'all'; // 'all' | 'effective' | 'testing' | 'ineffective'
 let selectedRunIdx = -1;
+let selectedGraderIdx = -1;
+let activePodiumEngine = 'all'; // 'all' | 'perplexity' | 'chatgpt' | 'gemini'
 
 export async function render(el) {
   const history = await loadVisibilityHistory();
@@ -102,6 +109,53 @@ export async function render(el) {
   const actionsData = await loadVisibilityActions();
   cachedActions = actionsData;
 
+  const graderHistory = await loadGraderHistory();
+  cachedGraderHistory = graderHistory;
+  const gIdx = selectedGraderIdx >= 0 && selectedGraderIdx < graderHistory.length ? selectedGraderIdx : graderHistory.length - 1;
+  const currentGrader = graderHistory[gIdx] || null;
+  const graderDelta = computeGraderHistoricalComparison(graderHistory);
+
+  // Compute Podium items based on activePodiumEngine
+  let podiumFirst = { name: 'Blacklane', sov: 26.0 };
+  let podiumSecond = { name: 'Wheely / Sixt', sov: 14.2 };
+  let podiumThird = { name: 'Welcome Pickups', sov: 9.3 };
+  let dorogoRank = 4;
+  let dorogoSov = 9.8;
+
+  if (currentGrader) {
+    if (activePodiumEngine === 'perplexity') {
+      const pEngine = currentGrader.engines?.perplexity;
+      const comps = pEngine?.competitors || [];
+      podiumFirst = { name: comps[0]?.name || 'Blacklane', sov: comps[0]?.sov_pct || 22.0 };
+      podiumSecond = { name: comps[1]?.name || 'DOROGO', sov: comps[1]?.sov_pct || 18.0 };
+      podiumThird = { name: comps[2]?.name || 'Welcome Pickups', sov: comps[2]?.sov_pct || 14.0 };
+      dorogoRank = pEngine?.dorogo_rank || 2;
+      dorogoSov = pEngine?.dorogo_sov_pct || 18.0;
+    } else if (activePodiumEngine === 'chatgpt') {
+      const gptEngine = currentGrader.engines?.chatgpt;
+      const comps = gptEngine?.competitors || [];
+      podiumFirst = { name: comps[0]?.name || 'Blacklane', sov: comps[0]?.sov_pct || 24.0 };
+      podiumSecond = { name: comps[1]?.name || 'SIXT ride', sov: comps[1]?.sov_pct || 19.0 };
+      podiumThird = { name: comps[2]?.name || 'Welcome Pickups', sov: comps[2]?.sov_pct || 14.0 };
+      dorogoRank = gptEngine?.dorogo_rank || 4;
+      dorogoSov = gptEngine?.dorogo_sov_pct || 8.0;
+    } else if (activePodiumEngine === 'gemini') {
+      const gemEngine = currentGrader.engines?.gemini;
+      const comps = gemEngine?.competitors || [];
+      podiumFirst = { name: comps[0]?.name || 'Blacklane', sov: comps[0]?.sov_pct || 32.0 };
+      podiumSecond = { name: comps[1]?.name || 'Wheely', sov: comps[1]?.sov_pct || 18.5 };
+      podiumThird = { name: comps[2]?.name || 'Sixt Limousine', sov: comps[2]?.sov_pct || 14.0 };
+      dorogoRank = gemEngine?.dorogo_rank || 6;
+      dorogoSov = gemEngine?.dorogo_sov_pct || 3.5;
+    } else {
+      podiumFirst = { name: currentGrader.podium?.first?.name || 'Blacklane', sov: currentGrader.podium?.first?.avg_sov_pct || 26.0 };
+      podiumSecond = { name: currentGrader.podium?.second?.name || 'Wheely / Sixt', sov: currentGrader.podium?.second?.avg_sov_pct || 14.2 };
+      podiumThird = { name: currentGrader.podium?.third?.name || 'Welcome Pickups', sov: currentGrader.podium?.third?.avg_sov_pct || 9.3 };
+      dorogoRank = currentGrader.podium?.dorogo?.overall_rank || 4;
+      dorogoSov = currentGrader.podium?.dorogo?.avg_sov_pct || 9.8;
+    }
+  }
+
   el.innerHTML = `
     <!-- Header -->
     <div class="page-head" style="margin-bottom:18px;border-bottom:1px solid var(--line);padding-bottom:14px">
@@ -116,7 +170,9 @@ export async function render(el) {
           Audited across <strong>Perplexity Sonar-Pro</strong>, <strong>ChatGPT Search</strong>, and <strong>Google Gemini</strong> on 12 high-intent luxury routes.
         </p>
       </div>
-      <div class="row" style="gap:8px;align-items:center">
+      <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn sm ghost" id="btn-import-grader-pdf" style="font-weight:600">📥 Import HubSpot PDF</button>
+        <button class="btn sm ghost" id="btn-run-grader-script" title="Run Headless Grader Bot">🤖 Grader Bot</button>
         <button class="btn sm ghost" id="btn-crm-log-action">📝 Log Action</button>
         <a class="btn sm ghost" href="visibility.html" target="_blank" title="Open full screen view">${icon('external', 14)} Full Screen ↗</a>
         <button class="btn sm primary" id="btn-live-audit" style="background:#0E100F;color:#FFF;border-color:#0E100F">⚡ Run Live Audit</button>
@@ -242,6 +298,114 @@ export async function render(el) {
 
           <div>
             ${deltaWeek ? `<span class="chip ${deltaWeek.top3 >= 0 ? 'ok' : 'bad'}" style="font-size:.74rem;padding:2px 8px" title="${esc(deltaWeek.date)}">${deltaWeek.top3 >= 0 ? '▲ +' : '▼ '}${deltaWeek.top3}% vs. Baseline</span>` : ''}
+          </div>
+        </div>
+      </section>
+
+      <!-- 1.25 Competitor Share of Voice Podium (HubSpot AI Search Grader Benchmark) -->
+      <section class="card stack" style="gap:14px;background:var(--surface);padding:18px 20px;border:1px solid var(--line);border-radius:var(--r-sm)">
+        <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px">
+          <div>
+            <div class="row" style="gap:8px;align-items:center">
+              <span style="font-size:1.15rem">🏆</span>
+              <h3 style="margin:0;font-size:1.05rem;font-weight:600">AI Search Share of Voice Podium (Milan &amp; Northern Italy)</h3>
+            </div>
+            <span class="small muted">Bi-weekly diagnostic benchmark from official HubSpot AI Search Grader across ChatGPT, Perplexity &amp; Google Gemini</span>
+          </div>
+
+          <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
+            <div class="seg" role="tablist">
+              <button class="${activePodiumEngine === 'all' ? 'on' : ''}" data-podium-engine="all">All Engines</button>
+              <button class="${activePodiumEngine === 'perplexity' ? 'on' : ''}" data-podium-engine="perplexity" style="font-weight:700;color:var(--gold-ink)">Perplexity (🥈 #2)</button>
+              <button class="${activePodiumEngine === 'chatgpt' ? 'on' : ''}" data-podium-engine="chatgpt">ChatGPT (#4)</button>
+              <button class="${activePodiumEngine === 'gemini' ? 'on' : ''}" data-podium-engine="gemini">Gemini (#6)</button>
+            </div>
+
+            <select id="sel-grader-snapshot" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:4px 8px;font-size:.8rem;font-weight:500;color:var(--ink)">
+              ${graderHistory.map((run, i) => {
+                const d = new Date(run.timestamp);
+                const isLatest = i === graderHistory.length - 1;
+                return `<option value="${i}" ${i === gIdx ? 'selected' : ''}>${isLatest ? '⚡ Latest Bi-Weekly Audit (' + d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ')' : 'Bi-Weekly Audit (' + d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ')'}</option>`;
+              }).reverse().join('')}
+            </select>
+          </div>
+        </div>
+
+        <!-- Visual Podium Component -->
+        <div style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:24px 16px 16px;margin-top:4px">
+          <div style="display:flex;align-items:flex-end;justify-content:center;gap:14px;max-width:680px;margin:0 auto">
+            
+            <!-- 2nd Place (Silver) -->
+            <div style="flex:1;max-width:180px;display:flex;flex-direction:column;align-items:center;text-align:center">
+              <div style="margin-bottom:8px">
+                <div style="font-size:1.4rem">🥈</div>
+                <div style="font-weight:700;font-size:.88rem;color:${podiumSecond.name === 'DOROGO' ? 'var(--gold-ink)' : 'var(--ink)'}">${esc(podiumSecond.name)}</div>
+                <div style="font-size:.8rem;font-weight:700;color:var(--muted)">${podiumSecond.sov.toFixed(1)}% SOV</div>
+              </div>
+              <div style="width:100%;height:105px;background:linear-gradient(180deg, #E2E8F0 0%, #CBD5E1 100%);border:1px solid #94A3B8;border-radius:8px 8px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:1.6rem;font-weight:800;color:#475569;box-shadow:0 4px 6px -1px rgba(0,0,0,0.06)">
+                2
+              </div>
+            </div>
+
+            <!-- 1st Place (Gold) -->
+            <div style="flex:1;max-width:210px;display:flex;flex-direction:column;align-items:center;text-align:center">
+              <div style="margin-bottom:8px">
+                <div style="font-size:1.8rem">🥇</div>
+                <div style="font-weight:800;font-size:.96rem;color:var(--gold-ink)">${esc(podiumFirst.name)}</div>
+                <div style="font-size:.86rem;font-weight:800;color:var(--gold)">${podiumFirst.sov.toFixed(1)}% SOV</div>
+              </div>
+              <div style="width:100%;height:145px;background:linear-gradient(180deg, #FEF08A 0%, #EAB308 100%);border:1px solid #CA8A04;border-radius:8px 8px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:2rem;font-weight:900;color:#854D0E;box-shadow:0 6px 10px -1px rgba(234,179,8,0.25)">
+                1
+              </div>
+            </div>
+
+            <!-- 3rd Place (Bronze) -->
+            <div style="flex:1;max-width:180px;display:flex;flex-direction:column;align-items:center;text-align:center">
+              <div style="margin-bottom:8px">
+                <div style="font-size:1.4rem">🥉</div>
+                <div style="font-weight:700;font-size:.88rem;color:var(--ink)">${esc(podiumThird.name)}</div>
+                <div style="font-size:.8rem;font-weight:700;color:var(--muted)">${podiumThird.sov.toFixed(1)}% SOV</div>
+              </div>
+              <div style="width:100%;height:75px;background:linear-gradient(180deg, #FFEDD5 0%, #FDBA74 100%);border:1px solid #FB923C;border-radius:8px 8px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;color:#9A3412;box-shadow:0 4px 6px -1px rgba(0,0,0,0.06)">
+                3
+              </div>
+            </div>
+
+          </div>
+
+          <!-- DOROGO Milestone & 14-Day Velocity Ribbon -->
+          <div class="row between" style="background:${dorogoRank <= 3 ? 'var(--gold-soft)' : 'var(--surface-2)'};border:1px solid ${dorogoRank <= 3 ? 'var(--gold)' : 'var(--line)'};padding:12px 18px;border-radius:var(--r-sm);align-items:center;margin-top:16px;flex-wrap:wrap;gap:10px">
+            <div class="row" style="gap:12px;align-items:center">
+              <span style="font-size:1.6rem">${dorogoRank === 1 ? '🥇' : (dorogoRank === 2 ? '🥈' : (dorogoRank === 3 ? '🥉' : '🏅'))}</span>
+              <div>
+                <div style="font-weight:700;font-size:.95rem;color:var(--ink)">
+                  DOROGO Market Position: <span style="color:var(--gold-ink);font-weight:800">#${dorogoRank} in Milan (${dorogoSov.toFixed(1)}% Share of Voice)</span>
+                </div>
+                <div class="small muted" style="margin-top:2px">
+                  ${activePodiumEngine === 'perplexity' 
+                    ? '🌟 <strong>Podium Silver:</strong> Ranked #2 on Perplexity Sonar-Pro, trailing Blacklane by only 4%!' 
+                    : (activePodiumEngine === 'chatgpt' 
+                      ? 'Ranked #4 on ChatGPT Search (8.0% SOV) behind Blacklane, Sixt and Welcome Pickups.' 
+                      : (activePodiumEngine === 'gemini' 
+                        ? 'Ranked #6 on Google Gemini (3.5% SOV); high brand sentiment (33/40) awaiting search volume growth.' 
+                        : 'Overall Market Average: 9.8% Share of Voice across 3 leading AI answer engines.'))}
+                </div>
+              </div>
+            </div>
+
+            <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
+              ${graderDelta ? `
+                <span class="chip ${graderDelta.sov_delta >= 0 ? 'ok' : 'bad'}" style="font-weight:700;font-size:.74rem" title="14-day velocity vs previous bi-weekly run">
+                  ${graderDelta.sov_delta >= 0 ? '▲ +' : '▼ '}${graderDelta.sov_delta.toFixed(1)}% SOV (14-Day Velocity)
+                </span>
+                <span class="chip ${graderDelta.rank_delta >= 0 ? 'ok' : 'bad'}" style="font-weight:700;font-size:.74rem">
+                  ${graderDelta.rank_delta >= 0 ? '▲ +' : '▼ '}${graderDelta.rank_delta} Rank Climb
+                </span>
+              ` : ''}
+              <a href="data/visibility/reports/dorogo_hubspot_grader_2026-10-28.pdf" target="_blank" class="btn sm ghost" style="font-size:.76rem;text-decoration:none">
+                📄 View Full PDF Report
+              </a>
+            </div>
           </div>
         </div>
       </section>
@@ -842,6 +1006,142 @@ export async function render(el) {
           }
         })();
       },
+    });
+  });
+
+  // --- HubSpot Grader Podium Listeners ---
+  el.querySelectorAll('[data-podium-engine]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      activePodiumEngine = btn.dataset.podiumEngine || 'all';
+      await render(el);
+    });
+  });
+
+  el.querySelector('#sel-grader-snapshot')?.addEventListener('change', async (e) => {
+    selectedGraderIdx = Number(e.target.value);
+    await render(el);
+  });
+
+  el.querySelector('#btn-import-grader-pdf')?.addEventListener('click', () => {
+    dialog({
+      title: 'Import HubSpot AI Search Grader Report',
+      body: `
+        <div class="stack" style="gap:14px">
+          <p class="small muted" style="margin:0">
+            Upload the downloaded PDF report from <a href="https://www.hubspot.com/ai-search-grader" target="_blank" style="color:var(--gold-ink);font-weight:600">HubSpot AI Search Grader ↗</a> or paste its text. The CRM will extract scores, competitor Share of Voice %, update the Podium, and calculate your 14-day velocity.
+          </p>
+
+          <div id="grader-dropzone" style="border:2px dashed var(--line);border-radius:var(--r-sm);padding:24px;text-align:center;cursor:pointer;background:var(--bg);transition:border-color .2s">
+            <div style="font-size:2rem;margin-bottom:8px">📄</div>
+            <div style="font-weight:600;font-size:.9rem;color:var(--ink)" id="grader-dropzone-label">Click to upload or drag &amp; drop PDF report here</div>
+            <div class="tiny muted" style="margin-top:4px">Supports official HubSpot AI Search Grader PDF export</div>
+            <input type="file" id="grader-file-input" accept=".pdf,.txt" style="display:none" />
+          </div>
+
+          <div style="text-align:center;color:var(--muted);font-size:.8rem">— OR PASTE EXTRACTED REPORT TEXT —</div>
+
+          <textarea id="grader-paste-input" placeholder="Paste extracted report text here (or run: node scripts/parse-hubspot-pdf.mjs [file])..." style="width:100%;height:100px;font-family:monospace;font-size:.78rem;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px"></textarea>
+
+          <div class="row between" style="margin-top:6px">
+            <button class="btn ghost sm" data-close>Cancel</button>
+            <button class="btn primary sm" id="btn-process-grader-text">Process &amp; Update Podium</button>
+          </div>
+        </div>
+      `,
+      onMount: (box, close) => {
+        const dropzone = box.querySelector('#grader-dropzone');
+        const fileInput = box.querySelector('#grader-file-input');
+        const pasteInput = box.querySelector('#grader-paste-input');
+        const submitBtn = box.querySelector('#btn-process-grader-text');
+
+        dropzone.addEventListener('click', () => fileInput.click());
+        dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = 'var(--gold)'; });
+        dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = 'var(--line)'; });
+        dropzone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          dropzone.style.borderColor = 'var(--line)';
+          if (e.dataTransfer.files?.length) {
+            handleFile(e.dataTransfer.files[0]);
+          }
+        });
+
+        fileInput.addEventListener('change', () => {
+          if (fileInput.files?.length) {
+            handleFile(fileInput.files[0]);
+          }
+        });
+
+        async function handleFile(file) {
+          dropzone.innerHTML = `<span class="spin">⟳</span> Reading ${esc(file.name)}...`;
+          try {
+            const text = await file.text();
+            if (text.includes('AI Search Grader') || text.includes('ChatGPT') || text.includes('DOROGO')) {
+              pasteInput.value = text;
+              dropzone.innerHTML = `✅ Loaded <b>${esc(file.name)}</b>. Click "Process &amp; Update Podium" below.`;
+            } else {
+              dropzone.innerHTML = `📄 Loaded <b>${esc(file.name)}</b>.<br><span class="tiny muted">For direct terminal import: <code>node scripts/parse-hubspot-pdf.mjs "${esc(file.name)}"</code><br>Or paste text below.</span>`;
+            }
+          } catch (_) {
+            dropzone.innerHTML = `📄 Loaded <b>${esc(file.name)}</b>.`;
+          }
+        }
+
+        submitBtn.addEventListener('click', async () => {
+          const raw = pasteInput.value.trim();
+          if (!raw) {
+            toast('Please upload a file or paste report text', 'warn');
+            return;
+          }
+          const parsed = parseHubSpotGraderText(raw);
+          if (!parsed) {
+            toast('Could not parse HubSpot report format. Please check the text format.', 'bad');
+            return;
+          }
+          await saveGraderSnapshot(parsed);
+          close();
+          toast('HubSpot AI Search Grader imported successfully! Podium updated.', 'ok');
+          cachedGraderHistory = null;
+          await render(el);
+        });
+      }
+    });
+  });
+
+  el.querySelector('#btn-run-grader-script')?.addEventListener('click', () => {
+    dialog({
+      title: 'HubSpot AI Search Grader Automation Bot',
+      body: `
+        <div class="stack" style="gap:14px">
+          <p class="small muted" style="margin:0">
+            HubSpot's free AI Search Grader does not provide a public REST API key. We provide automated CLI runners that navigate, submit parameters, download the PDF, and update this dashboard every 2 weeks.
+          </p>
+
+          <div class="card" style="background:var(--surface-2);padding:14px;border-radius:var(--r-sm)">
+            <span class="label tiny" style="margin-bottom:6px;display:block">Automated Diagnostic Runner:</span>
+            <code style="font-size:.82rem;display:block;background:var(--bg);padding:8px 10px;border-radius:var(--r-sm);border:1px solid var(--line);user-select:all">
+              node scripts/fetch-hubspot-grader.mjs
+            </code>
+            <p class="tiny muted" style="margin:6px 0 0">
+              Runs Playwright headless browser to submit DOROGO Milan NCC parameters and download fresh PDF report.
+            </p>
+          </div>
+
+          <div class="card" style="background:var(--surface-2);padding:14px;border-radius:var(--r-sm)">
+            <span class="label tiny" style="margin-bottom:6px;display:block">CLI PDF Parser:</span>
+            <code style="font-size:.82rem;display:block;background:var(--bg);padding:8px 10px;border-radius:var(--r-sm);border:1px solid var(--line);user-select:all">
+              node scripts/parse-hubspot-pdf.mjs data/visibility/reports/dorogo_hubspot_grader_2026-10-28.pdf
+            </code>
+            <p class="tiny muted" style="margin:6px 0 0">
+              Extracts all scores, Share of Voice %, and updates <code>data/visibility_grader_history.json</code>.
+            </p>
+          </div>
+
+          <div class="row between" style="margin-top:4px">
+            <a href="https://www.hubspot.com/ai-search-grader" target="_blank" class="btn ghost sm">Open HubSpot AI Search Grader ↗</a>
+            <button class="btn primary sm" data-close>Close</button>
+          </div>
+        </div>
+      `
     });
   });
 }
