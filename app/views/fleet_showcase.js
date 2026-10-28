@@ -163,35 +163,50 @@ export const FLEET_LEDGER_ROWS = [
   {
     id: 'avantgarde_minibus_18',
     partnerId: 'partner_1792765279535_l9ei',
-    vehicleModel: 'Mercedes Minibus VIP Class 16–18',
-    coachbuilder: 'Mercedes-Benz · VIP Configuration',
-    pax: 18,
+    vehicleModel: 'Mercedes Sprinter (8) & Minibus (16–18)',
+    coachbuilder: 'Executive 8 pax · Minibus 16 pax · VIP 18 pax',
+    pax: 16,
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: 'Milan city depot (Via Calatafimi 12) · Also operates 8-pax Sprinter',
+    tierSpec: 'Milan depot (Via Calatafimi 12) · Clarifying 8-pax vs 16-pax rate difference & Lake Como standby',
     partnerName: 'Avantgarde Limousine Service (Milanocab)',
-    baseCity: 'Milano (20122)',
+    baseCity: 'Milano (Via Calatafimi 12)',
     contactPerson: 'Vincent Lombardi',
     phone: '+39 333 269 7376',
     email: 'info@milanocab.it',
-    website: 'http://www.milanocab.it',
-    status: 'pending',
-    statusLabel: 'Replied · Awaiting Milan rates',
-    repliedAt: '28 Oct 2026 · 12:04',
+    website: 'https://www.milanocab.it/cars/',
+    status: 'confirmed',
+    statusLabel: 'Rates quoted · Clarifying 8 vs 16 pax & photos',
+    repliedAt: '28 Oct 2026 · 16:36',
     ratePdf: null,
     ratePdfName: null,
-    transfers: null,
-    transferNote: 'Not provided for MXP–Como (uncompetitive due to Milan→MXP empty leg). Follow-up sent for Milan-origin trips.',
-    standby: null,
-    standbyNote: 'Not provided yet (Website sedan ref: €280/8h Milan · Minibus quote requested)',
+    transfers: {
+      mxp_milano: { label: 'Malpensa (MXP) ⇄ Milano (+ Area C ZTL)', net: 330 }
+    },
+    transferNote: 'Quoted €330 net (+10% VAT = €363 + eventual Area C ZTL). Confirming if 8-pax Sprinter vs 16-pax Minibus differs.',
+    standby: {
+      dispo_4h: { label: '4 Hours (+ Area C ZTL)', net: 550, hourlyEq: 137.5 },
+      dispo_8h: { label: '8 Hours (+ Area C ZTL)', net: 950, hourlyEq: 118.75 },
+      extra_hour: null,
+      extra_wait: null
+    },
+    standbyNote: 'VAT (10%) & ZTL Area C excluded ("più IVA ed eventuale ZTL"). Confirming Lake Como coverage & cancellation policy.',
     terms: {
       payment: 'POS on board / Invoice',
-      vat: '10% VAT excluded',
-      included: 'Milan depot base — competitive for trips starting or ending in Milan',
-      nightSurcharge: 'Not specified',
-      cancellation: 'Not provided yet'
+      vat: '10% VAT excluded ("più IVA") + eventual Area C ZTL',
+      included: 'Milan base — confirming if standby covers Lake Como & if 8-pax vs 16-pax prices differ',
+      nightSurcharge: 'Confirming with partner',
+      cancellation: 'Requested in follow-up'
     },
-    photos: []
+    photos: [
+      {
+        id: 'avantgarde_18_ext',
+        src: 'assets/partner_fleet/avantgarde/minibus_18_ext_website.jpg',
+        file: 'IMG_2307-270.jpg (milanocab.it/cars)',
+        title: 'Website Photo — Mercedes Minibus 18 pax (Exterior)',
+        caption: 'Only bus photo shown on milanocab.it/cars/ — requested 1 exterior + 1 interior photo for the 8-pax Sprinter and 16-pax Minibus.'
+      }
+    ]
   },
   {
     id: 'landway_fleet',
@@ -332,8 +347,8 @@ export async function render(el) {
             <span>Priced Vehicles</span>
             <span class="sail-pill ok" style="padding:1px 6px;font-size:10.5px"><span class="sail-pill-dot"></span>Active</span>
           </div>
-          <div class="sail-stat-val">2 <span style="font-size:13px;font-weight:500;color:var(--sail-muted)">/ ${FLEET_LEDGER_ROWS.length} replied</span></div>
-          <div class="sail-stat-meta">12-seat Sprinter (Lux) &amp; 16-seat Transit (Std)</div>
+          <div class="sail-stat-val">${confirmedCount} <span style="font-size:13px;font-weight:500;color:var(--sail-muted)">/ ${FLEET_LEDGER_ROWS.length} replied</span></div>
+          <div class="sail-stat-meta">Como Driver (12 &amp; 16p) · Avantgarde (8 &amp; 16p)</div>
         </div>
 
         <div class="sail-stat-cell">
@@ -482,6 +497,7 @@ function renderLedgerRow(row) {
           `;
         }).join('')}
       </div>
+      ${row.transferNote ? `<div style="margin-top:6px;font-size:11px;color:var(--sail-muted);line-height:1.35">${esc(row.transferNote)}</div>` : ''}
     `;
   } else {
     transferHtml = `
@@ -496,19 +512,18 @@ function renderLedgerRow(row) {
   if (hasStandby) {
     const s4 = calculateAdjustedPrice(row.standby.dispo_4h.net, pricingMode);
     const s8 = calculateAdjustedPrice(row.standby.dispo_8h.net, pricingMode);
-    const exH = calculateAdjustedPrice(row.standby.extra_hour.net, pricingMode);
-    const exW = calculateAdjustedPrice(row.standby.extra_wait.net, pricingMode);
+    const exH = row.standby.extra_hour ? calculateAdjustedPrice(row.standby.extra_hour.net, pricingMode) : null;
+    const exW = row.standby.extra_wait ? calculateAdjustedPrice(row.standby.extra_wait.net, pricingMode) : null;
     standbyHtml = `
       <div class="sail-rate-grid">
-        <span class="sail-rate-route">4h Standby (100 km)</span>
+        <span class="sail-rate-route">${esc(row.standby.dispo_4h.label || '4h Standby')}</span>
         <span class="sail-rate-amt">${formatEur(s4)} <span class="sail-rate-sub">(${formatEur(Math.round(s4 / 4))}/h)</span></span>
-        <span class="sail-rate-route">8h Standby (200 km)</span>
+        <span class="sail-rate-route">${esc(row.standby.dispo_8h.label || '8h Standby')}</span>
         <span class="sail-rate-amt">${formatEur(s8)} <span class="sail-rate-sub">(${formatEur(Math.round(s8 / 8))}/h)</span></span>
-        <span class="sail-rate-route">Extra Hour</span>
-        <span class="sail-rate-amt">${formatEur(exH)}/h</span>
-        <span class="sail-rate-route">Wait &gt;60m Airport</span>
-        <span class="sail-rate-amt">${formatEur(exW)}/h</span>
+        ${exH !== null ? `<span class="sail-rate-route">Extra Hour</span><span class="sail-rate-amt">${formatEur(exH)}/h</span>` : ''}
+        ${exW !== null ? `<span class="sail-rate-route">Wait &gt;60m Airport</span><span class="sail-rate-amt">${formatEur(exW)}/h</span>` : ''}
       </div>
+      ${row.standbyNote ? `<div style="margin-top:6px;font-size:11px;color:var(--sail-muted);line-height:1.35">${esc(row.standbyNote)}</div>` : ''}
     `;
   } else {
     standbyHtml = `
@@ -594,17 +609,16 @@ function renderLedgerRow(row) {
 
 function renderPriceCalculatorCard() {
   const veh = FLEET_LEDGER_ROWS.find((r) => r.id === calcState.vehicleId) || FLEET_LEDGER_ROWS[0];
-  const allServices = [
-    { key: 'mxp_como', label: 'Transfer: Malpensa (MXP) ⇄ Como/Cernobbio', net: veh.transfers.mxp_como.net },
-    { key: 'milano_como', label: 'Transfer: Milano Centro / FS ⇄ Como', net: veh.transfers.milano_como.net },
-    { key: 'lin_como', label: 'Transfer: Linate (LIN) ⇄ Como/Cernobbio', net: veh.transfers.lin_como.net },
-    { key: 'bgy_como', label: 'Transfer: Bergamo (BGY) ⇄ Como/Cernobbio', net: veh.transfers.bgy_como.net },
-    { key: 'tremezzo', label: 'Transfer: Como/Cernobbio ⇄ Tremezzo', net: veh.transfers.tremezzo.net },
-    { key: 'bellagio', label: 'Transfer: Como/Cernobbio ⇄ Bellagio', net: veh.transfers.bellagio.net },
-    { key: 'dispo_4h', label: 'Standby: 4 Hours (incl. 100 km)', net: veh.standby.dispo_4h.net },
-    { key: 'dispo_8h', label: 'Standby: 8 Hours (incl. 200 km)', net: veh.standby.dispo_8h.net }
-  ];
-  const selService = allServices.find((s) => s.key === calcState.serviceKey) || allServices[7];
+  const transferOptions = Object.entries(veh.transfers || {}).map(([key, val]) => ({
+    key,
+    label: `Transfer: ${val.label}`,
+    net: val.net
+  }));
+  const standbyOptions = [];
+  if (veh.standby?.dispo_4h) standbyOptions.push({ key: 'dispo_4h', label: `Standby: ${veh.standby.dispo_4h.label}`, net: veh.standby.dispo_4h.net });
+  if (veh.standby?.dispo_8h) standbyOptions.push({ key: 'dispo_8h', label: `Standby: ${veh.standby.dispo_8h.label}`, net: veh.standby.dispo_8h.net });
+  const allServices = [...transferOptions, ...standbyOptions];
+  const selService = allServices.find((s) => s.key === calcState.serviceKey) || allServices[allServices.length - 1] || { key: 'dispo_8h', label: '8h Standby', net: 900 };
 
   const baseNet = selService.net;
   const extraHoursCost = (Number(calcState.extraHours) || 0) * 100;
@@ -624,7 +638,7 @@ function renderPriceCalculatorCard() {
         <div>
           <div class="sail-card-title">B2B Trip &amp; Client Quote Calculator</div>
           <div style="font-size:12px;color:var(--sail-muted);margin-top:2px">
-            Exact formula from <code>DORONGO 2027.pdf</code> (Como Driver Services)
+            Calculates net B2B tariff, +10% VAT, night surcharge, and client markup
           </div>
         </div>
         <span class="sail-pill info">Instant Calculation</span>
@@ -635,8 +649,9 @@ function renderPriceCalculatorCard() {
           <div>
             <label style="display:block;font-size:11.5px;font-weight:600;color:var(--sail-body);margin-bottom:4px">Vehicle</label>
             <select id="calc-vehicle" style="width:100%;height:34px;padding:0 10px;border:1px solid var(--sail-line);border-radius:6px;font-size:13px;background:#FFF">
-              <option value="como_sprinter_12" ${calcState.vehicleId === 'como_sprinter_12' ? 'selected' : ''}>Mercedes Sprinter (12 pax · Luxury VIP)</option>
-              <option value="como_transit_16" ${calcState.vehicleId === 'como_transit_16' ? 'selected' : ''}>Ford Transit (16 pax · Standard Shuttle)</option>
+              <option value="como_sprinter_12" ${calcState.vehicleId === 'como_sprinter_12' ? 'selected' : ''}>Como Driver · Mercedes Sprinter (12 pax · Luxury VIP)</option>
+              <option value="como_transit_16" ${calcState.vehicleId === 'como_transit_16' ? 'selected' : ''}>Como Driver · Ford Transit (16 pax · Standard Shuttle)</option>
+              <option value="avantgarde_minibus_18" ${calcState.vehicleId === 'avantgarde_minibus_18' ? 'selected' : ''}>Avantgarde · Mercedes Minibus (8 / 16 pax · Milano)</option>
             </select>
           </div>
 
