@@ -869,9 +869,22 @@ export async function syncInbox(db: any, settings: any, now = new Date()) {
           const bpBounce = (busPartners || []).find((bp: any) => bp.email && failed && bp.email.toLowerCase() === failed.toLowerCase());
           if (bpBounce) {
             const card = bpBounce.score_breakdown?.partner_card || {};
+            const bounceNote = `Bounced (${now.toISOString().slice(0, 10)}): ${failed} rejected (${m.subject || 'Returned mail'}).`;
+            const existingNotes = (card.client_notes || '').trim();
+            const updatedNotes = existingNotes.includes(failed) ? existingNotes : (existingNotes ? `${existingNotes} | ${bounceNote}` : bounceNote);
             await db.from('bus_partners').update({
               status: 'TO_REVIEW',
-              score_breakdown: { ...(bpBounce.score_breakdown || {}), partner_card: { ...card, email_status: 'bounced' } },
+              score_breakdown: {
+                ...(bpBounce.score_breakdown || {}),
+                partner_card: {
+                  ...card,
+                  email_status: 'bounced',
+                  outreach_stage: 'bounced',
+                  bounced_email: failed,
+                  bounced_at: now.toISOString(),
+                  client_notes: updatedNotes,
+                },
+              },
               updated_at: now.toISOString(),
             }).eq('id', bpBounce.id);
             await logEvent(db, 'bus_partner_bounce', { partner_id: bpBounce.id, name: bpBounce.name, failed, subject: m.subject }, null, 'imap');

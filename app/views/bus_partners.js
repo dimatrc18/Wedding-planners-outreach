@@ -252,14 +252,18 @@ function hydratePartnerCardLocal(p) {
   const rate_standby = p.rate_standby ?? card.rate_standby ?? (isMoveolux ? '€550 (4h disp.) · €1,050 (8h disp.)' : '');
   const whatsapp = p.whatsapp ?? card.whatsapp ?? p.phone ?? '';
   const client_notes = p.client_notes || card.client_notes || '';
-  const email_status = p.email_status || card.email_status || (p.email ? 'mx_ok' : 'unknown');
-  const outreach_stage = p.outreach_stage || card.outreach_stage || (
-    p.status === 'APPROVED_PARTNER' ? 'partner_won' :
-    (rate_hourly || rate_standby || p.replied_at || card.replied_at) ? 'replied' :
-    p.status === 'CONTACTED' ? 't1_sent' :
-    p.status === 'WANT_TO_CONTACT' ? 'ready' :
-    (p.status === 'REJECTED' || p.status === 'NOT_RELEVANT') ? 'closed' : 'to_check'
-  );
+  const email_status = (card.email_status === 'bounced' || p.email_status === 'bounced')
+    ? 'bounced'
+    : (p.email_status || card.email_status || (p.email ? 'mx_ok' : 'unknown'));
+  const outreach_stage = (card.outreach_stage === 'bounced' || p.outreach_stage === 'bounced')
+    ? 'bounced'
+    : (p.outreach_stage || card.outreach_stage || (
+      p.status === 'APPROVED_PARTNER' ? 'partner_won' :
+      (rate_hourly || rate_standby || p.replied_at || card.replied_at) ? 'replied' :
+      p.status === 'CONTACTED' ? 't1_sent' :
+      p.status === 'WANT_TO_CONTACT' ? 'ready' :
+      (p.status === 'REJECTED' || p.status === 'NOT_RELEVANT') ? 'closed' : 'to_check'
+    ));
 
   const nextCard = {
     ...card,
@@ -2632,11 +2636,13 @@ export function render(el) {
               const isLatest = isLatestAddition(p, list);
               const seg = p.fleet_segment || core.inferBusSegment(p);
 
-              const emailSt = p.email_status || 'unknown';
-              const emailDot = ['verified', 'mx_ok'].includes(emailSt)
+              const emailSt = p.email_status || p.score_breakdown?.partner_card?.email_status || 'unknown';
+              const altEmail = p.score_breakdown?.partner_card?.alt_email || '';
+              const isBounced = emailSt === 'bounced' || p.outreach_stage === 'bounced' || p.score_breakdown?.partner_card?.outreach_stage === 'bounced';
+              const emailDot = ['verified', 'mx_ok'].includes(emailSt) && !isBounced
                 ? `<span style="width:6px;height:6px;border-radius:50%;background:#166534;display:inline-block;flex:none" title="Verified Deliverable Domain & MX Record"></span>`
-                : emailSt === 'invalid' || emailSt === 'no_mx'
-                  ? `<span style="width:6px;height:6px;border-radius:50%;background:#DC2626;display:inline-block;flex:none" title="Invalid / No MX Record — Blocked from sending"></span>`
+                : (emailSt === 'invalid' || emailSt === 'no_mx' || isBounced)
+                  ? `<span style="width:6px;height:6px;border-radius:50%;background:#DC2626;display:inline-block;flex:none" title="${isBounced ? 'Bounced (550) — Rejected by recipient mail server' : 'Invalid / No MX Record — Blocked from sending'}"></span>`
                   : `<span style="width:6px;height:6px;border-radius:50%;background:#D97706;display:inline-block;flex:none" title="Unchecked email — Click Check"></span>`;
 
               const rawWa = (p.whatsapp || p.phone || '').replace(/[^\d+]/g, '');
@@ -2645,7 +2651,9 @@ export function render(el) {
               const photoCount = p.score_breakdown?.partner_card?.fleet_photos?.length || (p.id === 'partner_1792765279097_26hr' ? 7 : 0);
               const hasRatePdf = Boolean(p.rate_document || p.score_breakdown?.partner_card?.rate_document || p.id === 'partner_1792765279097_26hr');
 
-              const rowStyle = isLatest 
+              const rowStyle = isBounced
+                ? 'background:#FEF2F2;border-left:3px solid #DC2626;'
+                : isLatest 
                 ? 'background:#F0FDF4;border-left:3px solid #16A34A;' 
                 : isNew 
                 ? 'background:#F8FAFC;border-left:3px solid #635BFF;' 
@@ -2689,7 +2697,7 @@ export function render(el) {
                   ${p.email 
                     ? `<div style="display:flex;align-items:center;gap:6px">
                         ${emailDot}
-                        <a href="mailto:${attr(p.email)}" style="color:#0A2540;font-size:12px;font-weight:500;text-decoration:none;max-width:118px;overflow:hidden;text-overflow:ellipsis" title="Email: ${attr(p.email)} (${esc(emailSt)})">
+                        <a href="mailto:${attr(p.email)}" style="color:${isBounced ? '#991B1B;text-decoration:line-through' : '#0A2540;text-decoration:none'};font-size:12px;font-weight:500;max-width:118px;overflow:hidden;text-overflow:ellipsis" title="Email: ${attr(p.email)} (${esc(emailSt)})">
                           ${esc(p.email)}
                         </a>
                         <button class="clickable btn-edit-pencil" data-act="edit-email" data-id="${attr(p.id)}" style="background:none;border:none;padding:2px;cursor:pointer;color:#697386;display:inline-flex" title="Edit Email & Website">${pencilIcon(11)}</button>
@@ -2698,6 +2706,11 @@ export function render(el) {
                         + Add email
                       </button>`
                   }
+                  ${isBounced && altEmail ? `
+                    <div style="margin-top:3px">
+                      <span class="sail-pill indigo" style="font-size:10px;padding:1px 5px" title="Found on official website contact page">Site: ${esc(altEmail)}</span>
+                    </div>
+                  ` : ''}
                   ${p.phone ? `<div class="num" style="font-size:11px;color:#697386;margin-top:2px">${esc(p.phone)}</div>` : ''}
                 </td>
                 <td>
@@ -2733,11 +2746,15 @@ export function render(el) {
                         ${esc([p.rate_hourly, p.rate_standby].filter(Boolean).join(' · '))}
                       </div>
                     ` : ''}
-                    ${p.client_notes ? `
+                    ${p.client_notes ? (isBounced || /^bounced/i.test(p.client_notes) ? `
+                      <div style="font-size:11px;color:#991B1B;background:#FEE2E2;border:1px solid #FECACA;padding:3px 6px;border-radius:4px;line-height:1.35;max-height:48px;overflow:hidden;text-overflow:ellipsis" title="${attr(p.client_notes)}">
+                        <b>Bounce:</b> ${esc(p.client_notes.replace(/^Bounced\s*:?\s*/i, ''))}
+                      </div>
+                    ` : `
                       <div style="font-size:11px;color:#166534;background:#F0FDF4;border:1px solid #BBF7D0;padding:3px 6px;border-radius:4px;line-height:1.35;max-height:44px;overflow:hidden;text-overflow:ellipsis" title="${attr(p.client_notes)}">
                         <b>Reply:</b> ${esc(p.client_notes)}
                       </div>
-                    ` : ''}
+                    `) : ''}
                     ${p.notes ? `
                       <div style="font-size:11px;color:#425466;line-height:1.35;white-space:pre-line;max-height:44px;overflow-y:auto;background:#F8FAFC;padding:3px 6px;border-radius:4px;border:1px solid #E3E8EE" title="${attr(p.notes)}">
                         ${esc(p.notes)}
@@ -2754,7 +2771,11 @@ export function render(el) {
                     <select class="bus-status-select" data-id="${attr(p.id)}" style="padding:3px 6px;border-radius:5px;font-size:11.5px;width:100%;height:26px;cursor:pointer;${getStatusBadgeStyle(p.status)}">
                       ${core.BUS_STATUSES.map((st) => `<option value="${st.key}" ${p.status === st.key ? 'selected' : ''} style="background:#FFFFFF;color:#0A2540">${st.label}</option>`).join('')}
                     </select>
-                    ${p.status === 'WANT_TO_CONTACT'
+                    ${isBounced
+                      ? `<div style="color:#991B1B;font-weight:600;font-size:10.5px;background:#FEE2E2;padding:2px 6px;border-radius:4px;border:1px solid #FECACA;text-align:center" title="Hard Bounce (550) on ${attr(p.email)} — Moved back to To Review">
+                          Bounced (550)
+                         </div>`
+                      : p.status === 'WANT_TO_CONTACT'
                       ? `<div class="num" style="color:#4338CA;font-weight:600;font-size:10.5px;background:#EEF2FF;padding:2px 6px;border-radius:4px;border:1px solid #C7D2FE;text-align:center" title="${p.scheduled_at ? 'Scheduled for ' + new Date(p.scheduled_at).toLocaleString('en-GB') : 'In Queue'}">
                           Queue: ${p.scheduled_at ? new Date(p.scheduled_at).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) + ' ' + new Date(p.scheduled_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' }) : 'Mon 09:00'}
                          </div>`
