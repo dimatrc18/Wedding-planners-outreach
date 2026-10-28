@@ -467,4 +467,458 @@ tr.clickable { cursor: pointer; } tr.clickable:hover td { background: var(--surf
 .cite-domain { font-weight: 600; font-size: .8rem; color: var(--ink); }
 .cite-title { font-size: .75rem; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
 
+/* ---------- Stripe Sail Design System (Fleet Ledger & Bus Partners) ---------- */
+.sail-page {
+  --sail-ink: #0A2540;
+  --sail-body: #425466;
+  --sail-muted: #697386;
+  --sail-faint: #8792A2;
+  --sail-bg: #F7F9FC;
+  --sail-surface: #FFFFFF;
+  --sail-subtle: #F8FAFC;
+  --sail-line: #E3E8EE;
+  --sail-line-soft: #EEF2F6;
+  --sail-accent: #635BFF;
+  --sail-accent-hover: #5249F5;
+  --sail-accent-soft: #EEF0FF;
+  color: var(--sail-ink);
+  font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--sail-line);
+}
+
+.sail-breadcrumb {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sail-accent);
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.sail-title {
+  font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Segoe UI', sans-serif !important;
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.022em !important;
+  color: var(--sail-ink) !important;
+  margin: 0 !important;
+}
+
+.sail-subtitle {
+  font-size: 13.5px;
+  color: var(--sail-body);
+  margin-top: 4px;
+  line-height: 1.45;
+}
+
+.sail-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid var(--sail-line);
+  background: #FFFFFF;
+  color: var(--sail-ink);
+  box-shadow: 0 1px 2px rgba(10, 37, 64, 0.04);
+  cursor: pointer;
+  text-decoration: none !important;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+}
+.sail-btn:hover {
+  border-color: #CBD5E1;
+  background: #F8FAFC;
+  color: var(--sail-ink);
+}
+.sail-btn.primary {
+  background: var(--sail-accent);
+  border-color: var(--sail-accent);
+  color: #FFFFFF;
+  box-shadow: 0 1px 2px rgba(99, 91, 255, 0.25);
+}
+.sail-btn.primary:hover {
+  background: var(--sail-accent-hover);
+  border-color: var(--sail-accent-hover);
+  color: #FFFFFF;
+}
+.sail-btn.dark {
+  background: var(--sail-ink);
+  border-color: var(--sail-ink);
+  color: #FFFFFF;
+}
+.sail-btn.dark:hover {
+  background: #1A365D;
+}
+.sail-btn.xs {
+  height: 26px;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 5px;
+}
+
+/* Stripe Segmented Control */
+.sail-seg {
+  display: inline-flex;
+  background: #EEF2F6;
+  padding: 3px;
+  border-radius: 7px;
+  border: 1px solid var(--sail-line);
+  gap: 2px;
+}
+.sail-seg button {
+  border: none;
+  background: transparent;
+  padding: 5px 11px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sail-body);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+}
+.sail-seg button:hover {
+  color: var(--sail-ink);
+}
+.sail-seg button.on {
+  background: #FFFFFF;
+  color: var(--sail-ink);
+  box-shadow: 0 1px 3px rgba(10, 37, 64, 0.08);
+}
+
+/* Stripe 4-Column Telemetry Strip */
+.sail-stat-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+  background: #FFFFFF;
+  border: 1px solid var(--sail-line);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(10, 37, 64, 0.03);
+  overflow: hidden;
+}
+.sail-stat-cell {
+  padding: 14px 18px;
+  border-right: 1px solid var(--sail-line-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sail-stat-cell:last-child {
+  border-right: none;
+}
+.sail-stat-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--sail-muted);
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sail-stat-val {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--sail-ink);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.sail-stat-meta {
+  font-size: 11.5px;
+  color: var(--sail-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Stripe View Filter Tabs */
+.sail-tabs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--sail-line);
+  padding-bottom: 0;
+}
+.sail-tabs {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  overflow-x: auto;
+}
+.sail-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 8px 2px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--sail-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: color 0.12s ease, border-color 0.12s ease;
+}
+.sail-tab:hover {
+  color: var(--sail-ink);
+}
+.sail-tab.active {
+  color: var(--sail-accent);
+  border-bottom-color: var(--sail-accent);
+  font-weight: 600;
+}
+.sail-tab-count {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: #EEF2F6;
+  color: var(--sail-body);
+  font-variant-numeric: tabular-nums;
+}
+.sail-tab.active .sail-tab-count {
+  background: var(--sail-accent-soft);
+  color: var(--sail-accent);
+}
+
+/* Stripe Data Table Card */
+.sail-card {
+  background: #FFFFFF;
+  border: 1px solid var(--sail-line);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(10, 37, 64, 0.03);
+  overflow: hidden;
+}
+.sail-card-head {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--sail-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: #FFFFFF;
+}
+.sail-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sail-ink);
+}
+
+.sail-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+.sail-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.sail-table th {
+  background: #F8FAFC;
+  border-bottom: 1px solid var(--sail-line);
+  padding: 9px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sail-muted);
+  white-space: nowrap;
+}
+.sail-table th.num, .sail-table td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.sail-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--sail-line-soft);
+  font-size: 13px;
+  color: var(--sail-ink);
+  vertical-align: top;
+}
+.sail-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.sail-table tbody tr {
+  transition: background-color 0.1s ease;
+}
+.sail-table tbody tr:hover {
+  background-color: #F8FAFC;
+}
+
+/* Semantic Stripe Pills */
+.sail-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+.sail-pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.sail-pill.lux {
+  background: #EEF2FF;
+  color: #3730A3;
+  border-color: #C7D2FE;
+}
+.sail-pill.lux .sail-pill-dot { background: #4F46E5; }
+
+.sail-pill.std {
+  background: #F1F5F9;
+  color: #334155;
+  border-color: #CBD5E1;
+}
+.sail-pill.std .sail-pill-dot { background: #64748B; }
+
+.sail-pill.ok {
+  background: #DCFCE7;
+  color: #166534;
+  border-color: #BBF7D0;
+}
+.sail-pill.ok .sail-pill-dot { background: #16A34A; }
+
+.sail-pill.info {
+  background: #E0F2FE;
+  color: #075985;
+  border-color: #BAE6FD;
+}
+.sail-pill.info .sail-pill-dot { background: #0284C7; }
+
+.sail-pill.warn {
+  background: #FEF3C7;
+  color: #92400E;
+  border-color: #FDE68A;
+}
+.sail-pill.warn .sail-pill-dot { background: #D97706; }
+
+.sail-pill.missing {
+  background: #F8FAFC;
+  color: #64748B;
+  border-color: #E2E8F0;
+  font-weight: 500;
+}
+
+/* Rate Matrix Inside Table Cell */
+.sail-rate-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 3px 12px;
+  font-size: 12.5px;
+  min-width: 170px;
+}
+.sail-rate-route {
+  color: var(--sail-body);
+}
+.sail-rate-amt {
+  font-weight: 600;
+  color: var(--sail-ink);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.sail-rate-sub {
+  font-size: 11px;
+  color: var(--sail-muted);
+  font-weight: 400;
+}
+
+/* Thumbnail Strip Inside Table */
+.sail-thumb-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.sail-thumb {
+  width: 44px;
+  height: 32px;
+  border-radius: 4px;
+  object-fit: cover;
+  border: 1px solid var(--sail-line);
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+  background: #F1F5F9;
+}
+.sail-thumb:hover {
+  transform: scale(1.06);
+  border-color: var(--sail-accent);
+}
+
+/* Inspection Gallery Cards */
+.sail-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 12px;
+  padding: 16px 18px;
+}
+.sail-photo-card {
+  border: 1px solid var(--sail-line);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #FFFFFF;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  display: flex;
+  flex-direction: column;
+}
+.sail-photo-card:hover {
+  border-color: var(--sail-accent);
+  box-shadow: 0 4px 12px rgba(10, 37, 64, 0.08);
+}
+.sail-photo-card img {
+  width: 100%;
+  height: 148px;
+  object-fit: cover;
+  display: block;
+  background: #F1F5F9;
+}
+.sail-photo-meta {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.sail-photo-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--sail-ink);
+}
+.sail-photo-sub {
+  font-size: 11.5px;
+  color: var(--sail-muted);
+}
+
 

@@ -1,513 +1,867 @@
-// Partner Fleet & Rate Book Showcase: visual showroom for verified bus/minibus partners
-// with confirmed models, rates, booking/cancellation policies, and click-to-view photo galleries.
+// Partner Fleet & Rate Ledger — Stripe Sail Design System
+// Displays verified partner vehicles, calculated transfer & standby rates from PDF rate cards,
+// Luxury vs. Standard classification, and real vehicle inspection photos.
 
-import { esc, attr, icon, toast, dialog } from '../ui.js';
+import { esc, attr, toast, dialog } from '../ui.js';
 import * as core from '../../supabase/functions/_shared/core/index.js';
 
-let activeCategoryFilter = 'all'; // 'all' | 'como' | 'milan' | 'minibus' | 'coach'
-let cachedPartners = null;
+let pricingMode = 'net'; // 'net' | 'vat' (+10%) | 'night' (+20% net) | 'night_vat' (+20% + 10% VAT)
+let activeTab = 'all'; // 'all' | 'confirmed' | 'luxury' | 'standard' | 'pending'
+let searchQuery = '';
 
-// Built-in verified partner media registry
-const VERIFIED_PARTNER_MEDIA = {
-  partner_1792765279097_26hr: { // Como Driver Services
-    featured: true,
-    contact_person: 'Salvatore Calzolaio',
-    phone: '+39 320 72 70 552',
-    whatsapp: '+39 320 72 70 552',
+// Calc state for the interactive Stripe Quote Calculator
+let calcState = {
+  vehicleId: 'como_sprinter_12',
+  serviceKey: 'dispo_8h',
+  extraHours: 0,
+  extraWaitHours: 0,
+  nightWindow: false,
+  includeVat: false,
+  clientMarkupPct: 25
+};
+
+const PDF_COMO_DRIVER = 'assets/partner_fleet/como_driver/como_driver_rates_2027.pdf';
+
+export const FLEET_LEDGER_ROWS = [
+  {
+    id: 'como_sprinter_12',
+    partnerId: 'partner_1792765279097_26hr',
+    vehicleModel: 'Mercedes-Benz Sprinter 12',
+    coachbuilder: 'Tomassini Style · Executive Conversion',
+    pax: 12,
+    tier: 'luxury',
+    tierLabel: 'Luxury VIP',
+    tierSpec: 'Total Black · Unbranded · Two-tone leather · Privacy curtains',
+    partnerName: 'Como Driver Services',
+    baseCity: 'Lurate Caccivio (Como)',
+    contactPerson: 'Salvatore Calzolaio',
+    phone: '+39 320 727 0552',
     email: 'info@comodriver.com',
-    location: 'Como, Lake Como & Milan',
-    replied_date: '28 Oct 2026, 09:22',
-    rate_document: {
-      name: 'DORONG...27.pdf',
-      size: '128 KB',
-      description: 'Listino prezzi B2B personalizzato per DOROGO, politiche di prenotazione e cancellazione'
+    website: 'https://www.comodriver.com',
+    status: 'confirmed',
+    statusLabel: 'Rates & 4 photos verified',
+    repliedAt: '28 Oct 2026 · 09:22',
+    ratePdf: PDF_COMO_DRIVER,
+    ratePdfName: 'DORONGO 2027.pdf (2 pages)',
+    transfers: {
+      mxp_como: { label: 'Malpensa (MXP) ⇄ Como/Cernobbio', net: 350 },
+      milano_como: { label: 'Milano Centro / FS ⇄ Como', net: 400 },
+      lin_como: { label: 'Linate (LIN) ⇄ Como/Cernobbio', net: 400 },
+      bgy_como: { label: 'Bergamo (BGY) ⇄ Como/Cernobbio', net: 450 },
+      tremezzo: { label: 'Como/Cernobbio ⇄ Tremezzo', net: 300 },
+      bellagio: { label: 'Como/Cernobbio ⇄ Bellagio', net: 300 }
     },
-    vehicles: [
+    standby: {
+      dispo_4h: { label: '4 Hours (incl. 100 km)', net: 500, hourlyEq: 125 },
+      dispo_8h: { label: '8 Hours (incl. 200 km)', net: 900, hourlyEq: 112.5 },
+      extra_hour: { label: 'Extra Hour', net: 100 },
+      extra_wait: { label: 'Extra Wait (>60m airport / >20m hotel)', net: 80 }
+    },
+    terms: {
+      payment: 'Prepayment upon invoice (vista fattura)',
+      vat: '10% VAT excluded',
+      included: 'Fuel, highway tolls, parking, 60m airport wait, 20m hotel/station wait',
+      nightSurcharge: '+20% between 22:00 and 06:00',
+      cancellation: '14–28 days: 50% refund · <14 days: no refund (100% penalty)'
+    },
+    photos: [
       {
-        id: 'v_ford_16',
-        name: 'Ford Transit Minibus (16 Seats)',
-        category: 'Group Shuttle Minibus',
-        pax: 16,
-        badge: '16 Seats · Group Shuttle',
-        summary: 'Minibus 16 posti a tetto alto con ampio vano bagagli. Ideale per collegamenti aeroportuali MXP/LIN e navette ospiti tra hotel e ville del Lago di Como (Villa Balbianello, Villa d\'Este).',
-        photos: [
-          {
-            id: 'photo_ford_ext',
-            title: 'Ford Transit Minibus (16 Seats) - Esterno',
-            file_label: 'Minibus Fo... 2.jpg (291 KB)',
-            color: '#1e3a8a',
-            bg: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-            caption: 'Esterno Ford Transit 16 posti total black, privacy glass'
-          },
-          {
-            id: 'photo_ford_in',
-            title: 'Ford Transit Minibus (16 Seats) - Cabina & Sedili',
-            file_label: 'Minibus F...ia.jpg (230 KB)',
-            color: '#0f766e',
-            bg: 'linear-gradient(135deg, #134e4a 0%, #042f2e 100%)',
-            caption: 'Accesso passeggeri e selleria confort per transfer nuziali'
-          }
-        ]
+        id: 'sprinter_ext_1',
+        src: 'assets/partner_fleet/como_driver/sprinter_12_ext_1.jpg',
+        file: 'Esterno Sprinter .jpeg',
+        title: 'Exterior — Total Black Tomassini Style',
+        caption: 'Unbranded total-black Mercedes-Benz Sprinter 12-seater with tinted privacy glass.'
       },
       {
-        id: 'v_merc_12',
-        name: 'Mercedes-Benz Sprinter Minibus (12 Seats)',
-        category: 'Executive Minibus',
-        pax: 12,
-        badge: '12 Seats · Executive VIP',
-        summary: 'Minibus VIP compatto 12 passeggeri. Selleria in pelle, climatizzazione bi-zona e sospensioni confort. Ottimale per comitive ristrette ed eventi corporate Fiera Milano.',
-        photos: [
-          {
-            id: 'photo_merc_sprinter',
-            title: 'Mercedes-Benz Sprinter Minibus - Linea Executive',
-            file_label: 'Minibus_Mercedes_Sprinter.jpg',
-            color: '#4338ca',
-            bg: 'linear-gradient(135deg, #312e81 0%, #1e1b4b 100%)',
-            caption: 'Minibus Mercedes Sprinter unbranded per transfer VIP'
-          }
-        ]
+        id: 'sprinter_int_1',
+        src: 'assets/partner_fleet/como_driver/sprinter_12_int_1.jpg',
+        file: 'Interno Sprinter 01.jpeg',
+        title: 'Interior Cabin — Entry & Leather Seating',
+        caption: 'Two-tone black & grey leather seats, wood-effect floor, and sliding door entry step.'
       },
       {
-        id: 'v_merc_7',
-        name: 'Mercedes-Benz Classe V (7-8 Seats)',
-        category: 'Luxury NCC Minivan',
-        pax: 7,
-        badge: '7-8 Seats · Luxury NCC',
-        summary: 'Minivan di lusso extra-long con disposizione sedili a salotto (face-to-face). Ideale per sposi, fotografi e famiglie VIP.',
-        photos: [
-          {
-            id: 'photo_merc_vclass',
-            title: 'Mercedes-Benz Classe V - Esterno Total Black',
-            file_label: 'Immagine...e4.jpg (477 KB)',
-            color: '#854d0e',
-            bg: 'linear-gradient(135deg, #713f12 0%, #451a03 100%)',
-            caption: 'Mercedes Classe V total black senza scritte commerciali'
-          }
-        ]
+        id: 'sprinter_int_2',
+        src: 'assets/partner_fleet/como_driver/sprinter_12_int_2.jpg',
+        file: 'Interno Sprinter 02.jpeg',
+        title: 'Interior Cabin — Passenger Rows & Curtains',
+        caption: 'Individual contoured leather seats with 3-point belts and pleated window curtains.'
+      },
+      {
+        id: 'sprinter_int_3',
+        src: 'assets/partner_fleet/como_driver/sprinter_12_int_3.jpg',
+        file: 'Interno Sprinter 03.jpeg',
+        title: 'Interior Cabin — Rear 4-Seat Row',
+        caption: 'Back row 4-passenger bench in matching black/grey leather trim.'
       }
     ]
   },
-  partner_moveolux: { // Moveolux
-    featured: true,
-    contact_person: 'Booking Desk Moveolux',
-    phone: '+39 02 8905 4444',
-    whatsapp: '+39 02 8905 4444',
-    email: 'booking@moveolux.com',
-    location: 'Milano / Tutta Italia',
-    replied_date: 'Tariffe B2B verificate',
-    rate_document: {
-      name: 'Moveolux_B2B_Fleet_Tariffs_2026.pdf',
-      size: '2.4 MB',
-      description: 'Listino ufficiale NCC VIP Milano: €120/h · €550 (4h disp.) · €1,050 (8h disp.)'
+  {
+    id: 'como_transit_16',
+    partnerId: 'partner_1792765279097_26hr',
+    vehicleModel: 'Ford Transit Minibus 16',
+    coachbuilder: 'Carind · High-Roof Shuttle',
+    pax: 16,
+    tier: 'standard',
+    tierLabel: 'Standard Shuttle',
+    tierSpec: 'White exterior · High-back cloth/leatherette seats · Wood floor',
+    partnerName: 'Como Driver Services',
+    baseCity: 'Lurate Caccivio (Como)',
+    contactPerson: 'Salvatore Calzolaio',
+    phone: '+39 320 727 0552',
+    email: 'info@comodriver.com',
+    website: 'https://www.comodriver.com',
+    status: 'confirmed',
+    statusLabel: 'Rates & 3 photos verified',
+    repliedAt: '28 Oct 2026 · 09:22',
+    ratePdf: PDF_COMO_DRIVER,
+    ratePdfName: 'DORONGO 2027.pdf (2 pages)',
+    transfers: {
+      mxp_como: { label: 'Malpensa (MXP) ⇄ Como/Cernobbio', net: 400 },
+      milano_como: { label: 'Milano Centro / FS ⇄ Como', net: 450 },
+      lin_como: { label: 'Linate (LIN) ⇄ Como/Cernobbio', net: 450 },
+      bgy_como: { label: 'Bergamo (BGY) ⇄ Como/Cernobbio', net: 500 },
+      tremezzo: { label: 'Como/Cernobbio ⇄ Tremezzo', net: 350 },
+      bellagio: { label: 'Como/Cernobbio ⇄ Bellagio', net: 350 }
     },
-    vehicles: [
+    standby: {
+      dispo_4h: { label: '4 Hours (incl. 100 km)', net: 500, hourlyEq: 125 },
+      dispo_8h: { label: '8 Hours (incl. 200 km)', net: 900, hourlyEq: 112.5 },
+      extra_hour: { label: 'Extra Hour', net: 100 },
+      extra_wait: { label: 'Extra Wait (>60m airport / >20m hotel)', net: 80 }
+    },
+    terms: {
+      payment: 'Prepayment upon invoice (vista fattura)',
+      vat: '10% VAT excluded',
+      included: 'Fuel, highway tolls, parking, 60m airport wait, 20m hotel/station wait',
+      nightSurcharge: '+20% between 22:00 and 06:00',
+      cancellation: '14–28 days: 50% refund · <14 days: no refund (100% penalty)'
+    },
+    photos: [
       {
-        id: 'v_moveo_coach',
-        name: 'Mercedes Tourismo & Setra TopClass VIP (30–50 Seats)',
-        category: 'Luxury Coach GT',
-        pax: 50,
-        badge: '30–50 Seats · VIP Pullman',
-        summary: 'Pullman gran turismo di massima eleganza, selleria in pelle, prese USB, Wi-Fi, toilette e allestimento total black senza loghi pubblicitari.',
-        photos: [
-          {
-            id: 'photo_moveo_1',
-            title: 'Mercedes Tourismo VIP - Flotta Total Black',
-            file_label: 'Moveolux_Mercedes_Tourismo_VIP.jpg',
-            color: '#1e293b',
-            bg: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-            caption: 'Pullman 50 posti VIP per grandi matrimoni e transfer aeroporto'
-          }
-        ]
+        id: 'transit_ext_1',
+        src: 'assets/partner_fleet/como_driver/transit_16_ext_villa_erba.jpg',
+        file: 'Immagine WhatsApp 2024-11-14 ore 10.38.37_00b2dee4.jpg',
+        title: 'Exterior — Villa Erba (Cernobbio)',
+        caption: 'White Ford Transit 16-seat minibus staged at Villa Erba on Lake Como.'
+      },
+      {
+        id: 'transit_ext_2',
+        src: 'assets/partner_fleet/como_driver/transit_16_ext_2.jpg',
+        file: 'Minibus Ford Esterno 2.jpg',
+        title: 'Exterior — Front Quarter & Boarding Step',
+        caption: 'Carind conversion with power sliding door and automatic boarding step.'
+      },
+      {
+        id: 'transit_int_1',
+        src: 'assets/partner_fleet/como_driver/transit_16_int_1.jpg',
+        file: 'Minibus Ford Interno - Copia.jpg',
+        title: 'Interior Cabin — 16 Passenger Seats',
+        caption: 'Center aisle layout with 16 high-back cloth/leatherette seats and dark wood-look floor.'
       }
     ]
+  },
+  {
+    id: 'avantgarde_minibus_18',
+    partnerId: 'partner_1792765279535_l9ei',
+    vehicleModel: 'Mercedes Minibus VIP Class 16–18',
+    coachbuilder: 'Mercedes-Benz · VIP Configuration',
+    pax: 18,
+    tier: 'luxury',
+    tierLabel: 'Luxury VIP',
+    tierSpec: 'Milan city depot (Via Calatafimi 12) · Also operates 8-pax Sprinter',
+    partnerName: 'Avantgarde Limousine Service (Milanocab)',
+    baseCity: 'Milano (20122)',
+    contactPerson: 'Vincent Lombardi',
+    phone: '+39 333 269 7376',
+    email: 'info@milanocab.it',
+    website: 'http://www.milanocab.it',
+    status: 'pending',
+    statusLabel: 'Replied · Awaiting Milan rates',
+    repliedAt: '28 Oct 2026 · 12:04',
+    ratePdf: null,
+    ratePdfName: null,
+    transfers: null,
+    transferNote: 'Not provided for MXP–Como (uncompetitive due to Milan→MXP empty leg). Follow-up sent for Milan-origin trips.',
+    standby: null,
+    standbyNote: 'Not provided yet (Website sedan ref: €280/8h Milan · Minibus quote requested)',
+    terms: {
+      payment: 'POS on board / Invoice',
+      vat: '10% VAT excluded',
+      included: 'Milan depot base — competitive for trips starting or ending in Milan',
+      nightSurcharge: 'Not specified',
+      cancellation: 'Not provided yet'
+    },
+    photos: []
+  },
+  {
+    id: 'landway_fleet',
+    partnerId: 'partner_1792761170109_96nx',
+    vehicleModel: 'Mercedes Sprinter & GT Coach Fleet',
+    coachbuilder: '16–54 Seats · Executive & GT',
+    pax: 50,
+    tier: 'luxury',
+    tierLabel: 'Luxury + Standard',
+    tierSpec: 'Como & Milan depot (Via Gattamelata 34) · Royal Garden Group',
+    partnerName: 'Landway Tourism (Land Way S.r.l.)',
+    baseCity: 'Como / Milano',
+    contactPerson: 'Melissa',
+    phone: '+39 02 3929 7050',
+    email: 'info@landwaytourism.com',
+    website: 'https://www.landwaytourism.com',
+    status: 'pending',
+    statusLabel: 'Replied · In pricing dept',
+    repliedAt: '28 Oct 2026 · 10:14',
+    ratePdf: null,
+    ratePdfName: null,
+    transfers: null,
+    transferNote: 'Not provided yet — Melissa forwarded request to fleet pricing department on 28 Oct.',
+    standby: null,
+    standbyNote: 'Not provided yet — awaiting B2B rate sheet',
+    terms: null,
+    photos: []
+  },
+  {
+    id: 'comolimolux_vclass',
+    partnerId: 'partner_1792765279410_2zml',
+    vehicleModel: 'Mercedes-Benz V-Class (Overflow Only)',
+    coachbuilder: '7 Seats · No Minibus / Coach',
+    pax: 7,
+    tier: 'luxury',
+    tierLabel: 'Luxury Minivan',
+    tierSpec: 'Single V-Class operator · Saved for Lake Como V-Class overflow',
+    partnerName: 'Como Limo Lux',
+    baseCity: 'Como',
+    contactPerson: 'Stefano Carnevale',
+    phone: '+39 346 703 9569',
+    email: 'info@comolimolux.com',
+    website: 'https://comolimolux.com',
+    status: 'pending',
+    statusLabel: 'Replied · V-Class only',
+    repliedAt: '27 Oct 2026 · 16:17',
+    ratePdf: null,
+    ratePdfName: null,
+    transfers: null,
+    transferNote: 'Not provided — operates only 1x V-Class (no 8–50 seat buses). Asked for Lake Como network referral.',
+    standby: null,
+    standbyNote: 'Not provided',
+    terms: null,
+    photos: []
   }
-};
+];
+
+export function calculateAdjustedPrice(netAmount, mode = 'net') {
+  const n = Number(netAmount) || 0;
+  if (mode === 'vat') return Math.round(n * 1.10);
+  if (mode === 'night') return Math.round(n * 1.20);
+  if (mode === 'night_vat') return Math.round(n * 1.20 * 1.10);
+  return n;
+}
+
+function formatEur(amount) {
+  return `€${Number(amount).toLocaleString('en-IE', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+}
+
+function modeBadgeText(mode) {
+  if (mode === 'vat') return 'Gross (+10% VAT)';
+  if (mode === 'night') return 'Night (+20% net)';
+  if (mode === 'night_vat') return 'Night Gross (+20% + 10% VAT)';
+  return 'Net B2B (Excl. 10% VAT)';
+}
 
 export async function render(el) {
-  let list = [];
-  try {
-    const res = await fetch('data/bus_partners.json?v=' + Date.now());
-    if (res.ok) list = await res.json();
-  } catch (_) {}
+  const filteredRows = FLEET_LEDGER_ROWS.filter((r) => {
+    if (activeTab === 'confirmed' && r.status !== 'confirmed') return false;
+    if (activeTab === 'luxury' && r.tier !== 'luxury') return false;
+    if (activeTab === 'standard' && r.tier !== 'standard') return false;
+    if (activeTab === 'pending' && r.status !== 'pending') return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      const hay = `${r.vehicleModel} ${r.coachbuilder} ${r.partnerName} ${r.baseCity} ${r.contactPerson} ${r.tierLabel} ${r.tierSpec}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
 
-  // Merge local user-added photos from localStorage
-  let customMedia = {};
-  if (typeof localStorage !== 'undefined') {
-    try {
-      customMedia = JSON.parse(localStorage.getItem('dorogo_partner_custom_media') || '{}');
-    } catch (_) {}
-  }
+  const confirmedCount = FLEET_LEDGER_ROWS.filter((r) => r.status === 'confirmed').length;
+  const luxCount = FLEET_LEDGER_ROWS.filter((r) => r.tier === 'luxury').length;
+  const stdCount = FLEET_LEDGER_ROWS.filter((r) => r.tier === 'standard').length;
+  const pendingCount = FLEET_LEDGER_ROWS.filter((r) => r.status === 'pending').length;
 
-  const comoPartner = list.find((p) => p.id === 'partner_1792765279097_26hr' || /como driver/i.test(p.name)) || {
-    id: 'partner_1792765279097_26hr',
-    name: 'Como Driver Services',
-    base_city: 'Como'
-  };
+  const sprinterMxp = calculateAdjustedPrice(350, pricingMode);
+  const transitMxp = calculateAdjustedPrice(400, pricingMode);
+  const dispo4h = calculateAdjustedPrice(500, pricingMode);
+  const dispo8h = calculateAdjustedPrice(900, pricingMode);
 
   el.innerHTML = `
-    <!-- Header -->
-    <div class="page-head" style="margin-bottom:18px;border-bottom:1px solid var(--line);padding-bottom:14px">
-      <div>
-        <div class="label eyebrow" style="letter-spacing:.05em;color:var(--gold-ink);font-weight:600">
-          DOROGO PARTNER NETWORK · NORTHERN ITALY
-        </div>
-        <h1 style="font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:500;margin:3px 0 4px">
-          📸 Partner Fleet &amp; Rate Book Showcase
-        </h1>
-        <p class="muted small" style="margin:0">
-          Verified fleet partners with confirmed vehicle models, pricing, cancellation policies &amp; photos.
-        </p>
-      </div>
-
-      <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
-        <a class="btn sm ghost" href="#bus_partners" style="font-weight:600">← Back to Fleet Pipeline (56)</a>
-        <button class="btn sm ghost" id="btn-import-partner-media">📥 Upload Photos / PDF</button>
-        <button class="btn sm primary" id="btn-quick-reply-como" style="background:#7c3aed;color:#FFF;border-color:#6d28d9">
-          ✉️ Reply to Salvatore (Como Driver)
-        </button>
-      </div>
-    </div>
-
-    <div class="stack lg">
-      <!-- Top Alert Ribbon: New Inbound Partner Reply -->
-      <div class="card row between" style="padding:14px 18px;background:linear-gradient(90deg, rgba(16, 185, 129, 0.1) 0%, rgba(124, 58, 237, 0.08) 100%);border:1px solid rgba(16, 185, 129, 0.4);border-radius:var(--r-sm);align-items:center;flex-wrap:wrap;gap:12px">
-        <div class="row" style="gap:12px;align-items:center">
-          <span style="font-size:1.8rem">🎯</span>
-          <div>
-            <div style="font-weight:700;font-size:.95rem;color:var(--ink)">
-              Inbound Partner Reply: <strong>Como Driver Services (Salvatore Calzolaio)</strong>
-            </div>
-            <div class="small muted" style="margin-top:2px">
-              Received 28 Oct at 09:22: Attached rate card (<strong>DORONG...27.pdf</strong>), booking/cancellation policies, and <strong>6 vehicle photos</strong> (Ford Transit 16pax + Mercedes).
-            </div>
-          </div>
-        </div>
-        <div class="row" style="gap:8px;align-items:center">
-          <span class="chip ok" style="font-weight:700">✓ Rates On File</span>
-          <span class="chip gold" style="font-weight:700">6 Photos Sent</span>
-          <button class="btn sm" id="btn-view-reply-modal" style="background:var(--ink);color:#FFF;font-size:.76rem">
-            Drafted CEO Reply ➔
-          </button>
-        </div>
-      </div>
-
-      <!-- Category Filter Tabs -->
-      <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px">
-        <div class="seg" role="tablist">
-          <button class="${activeCategoryFilter === 'all' ? 'on' : ''}" data-cat-filter="all">All Fleet Showcases</button>
-          <button class="${activeCategoryFilter === 'como' ? 'on' : ''}" data-cat-filter="como">Lake Como Partners</button>
-          <button class="${activeCategoryFilter === 'milan' ? 'on' : ''}" data-cat-filter="milan">Milan Luxury Partners</button>
-          <button class="${activeCategoryFilter === 'minibus' ? 'on' : ''}" data-cat-filter="minibus">Minibuses (12–16 Pax)</button>
-          <button class="${activeCategoryFilter === 'coach' ? 'on' : ''}" data-cat-filter="coach">Coaches (30–50 Pax)</button>
-        </div>
-
-        <span class="tiny muted">Showing verified operators with photos and rates on file</span>
-      </div>
-
-      <!-- Partner Showcase 1: Como Driver Services (Featured) -->
-      ${renderPartnerCard(comoPartner, VERIFIED_PARTNER_MEDIA.partner_1792765279097_26hr, customMedia.partner_1792765279097_26hr)}
-
-      <!-- Partner Showcase 2: Moveolux S.r.l. (Milan VIP Fleet) -->
-      ${renderMoveoluxCard(VERIFIED_PARTNER_MEDIA.partner_moveolux)}
-    </div>
-  `;
-
-  // --- Attach Event Listeners ---
-  setupShowcaseListeners(el, comoPartner);
-}
-
-function renderPartnerCard(partner, meta, custom = {}) {
-  const vList = meta?.vehicles || [];
-  const contact = meta?.contact_person || 'Salvatore Calzolaio';
-  const wa = meta?.whatsapp || partner.phone || '+39 320 72 70 552';
-  const rawWa = wa.replace(/[^\d+]/g, '');
-  const email = partner.email || 'info@comodriver.com';
-
-  return `
-    <section class="card stack" style="gap:16px;background:var(--surface);padding:20px;border:1px solid var(--line);border-radius:var(--r-sm);box-shadow:0 2px 4px rgba(0,0,0,0.02)">
-      <!-- Partner Header -->
-      <div class="row between" style="align-items:flex-start;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--line);padding-bottom:14px">
+    <div class="sail-page">
+      <!-- Stripe Top Header -->
+      <div class="sail-header">
         <div>
-          <div class="row" style="gap:8px;align-items:center">
-            <span style="font-size:1.4rem">🚐</span>
-            <h2 style="margin:0;font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:600">
-              ${esc(partner.name || 'Como Driver Services')}
-            </h2>
-            <span class="chip ok" style="font-weight:700;font-size:.72rem">🎯 REPLIED · RATES ON FILE</span>
-            <span class="chip gold" style="font-weight:700;font-size:.72rem">⭐ Score 95</span>
+          <div class="sail-breadcrumb">
+            <a href="#bus_partners" style="color:inherit;text-decoration:none">Partner Network</a>
+            <span style="color:#CBD5E1">/</span>
+            <span>Fleet &amp; Rate Ledger</span>
           </div>
-          <div class="row" style="gap:14px;align-items:center;margin-top:6px;font-size:.84rem;color:var(--ink-2);flex-wrap:wrap">
-            <span>📍 <strong>${esc(meta?.location || partner.base_city || 'Como')}</strong></span>
-            <span>👤 Contact: <strong>${esc(contact)}</strong></span>
-            <span>📞 Tel / WA: <strong>${esc(wa)}</strong></span>
-            <span>✉️ <strong>${esc(email)}</strong></span>
+          <h1 class="sail-title">Partner Fleet &amp; Rate Ledger</h1>
+          <div class="sail-subtitle">
+            Reconciled vehicle specifications, calculated transfer &amp; standby tariffs, class tiering (Luxury vs. Standard), and inspection photos.
           </div>
         </div>
 
-        <!-- Quick Action Buttons -->
         <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
-          <a class="btn sm" href="https://wa.me/${rawWa.replace(/^\+/, '')}" target="_blank" rel="noopener" style="background:#25D366;color:#FFF;border-color:#25D366;font-weight:600">
-            💬 WhatsApp
+          <div class="sail-seg" role="tablist" aria-label="Pricing calculation mode">
+            <button class="${pricingMode === 'net' ? 'on' : ''}" data-price-mode="net">Net B2B</button>
+            <button class="${pricingMode === 'vat' ? 'on' : ''}" data-price-mode="vat">+10% VAT</button>
+            <button class="${pricingMode === 'night' ? 'on' : ''}" data-price-mode="night">Night (+20%)</button>
+            <button class="${pricingMode === 'night_vat' ? 'on' : ''}" data-price-mode="night_vat">Night + VAT</button>
+          </div>
+          <a class="sail-btn" href="${attr(PDF_COMO_DRIVER)}" target="_blank" rel="noopener">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 1.5H4a1.5 1.5 0 0 0-1.5 1.5v10A1.5 1.5 0 0 0 4 14.5h8a1.5 1.5 0 0 0 1.5-1.5V6L9 1.5Z"/><path d="M9 1.5V6h4.5"/></svg>
+            Original Rate PDF
           </a>
-          <a class="btn sm ghost" href="mailto:${attr(email)}" style="font-weight:600">
-            ✉️ Email Direct
-          </a>
-          <button class="btn sm" id="btn-open-draft-reply" style="background:#7c3aed;color:#FFF;border-color:#6d28d9;font-weight:600">
-            ✉️ Draft Reply
-          </button>
-          <a class="btn sm ghost" href="${attr(partner.website || 'https://www.comodriver.com')}" target="_blank" rel="noopener">
-            ${icon('external', 13)} Website
+          <a class="sail-btn" href="#bus_partners">
+            All 56 Bus Operators →
           </a>
         </div>
       </div>
 
-      <!-- Rate Card & Policies Banner -->
-      <div class="card" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px 18px">
-        <div class="row between" style="align-items:center;flex-wrap:wrap;gap:10px">
-          <div class="row" style="gap:10px;align-items:center">
-            <span style="font-size:1.8rem">📄</span>
-            <div>
-              <div style="font-weight:700;font-size:.92rem;color:var(--ink)">
-                Attached Rate Sheet &amp; Policies: <code>${esc(meta?.rate_document?.name || 'DORONG...27.pdf')}</code>
-                <span class="tiny muted">(${esc(meta?.rate_document?.size || '128 KB')})</span>
-              </div>
-              <div class="small muted" style="margin-top:2px">
-                ${esc(meta?.rate_document?.description || 'Prezzi e politiche di prenotazione e cancellazione inviate via email')}
-              </div>
-            </div>
+      <!-- Stripe 4-Column Telemetry Strip -->
+      <div class="sail-stat-strip">
+        <div class="sail-stat-cell">
+          <div class="sail-stat-label">
+            <span>Priced Vehicles</span>
+            <span class="sail-pill ok" style="padding:1px 6px;font-size:10.5px"><span class="sail-pill-dot"></span>Active</span>
           </div>
+          <div class="sail-stat-val">2 <span style="font-size:13px;font-weight:500;color:var(--sail-muted)">/ ${FLEET_LEDGER_ROWS.length} replied</span></div>
+          <div class="sail-stat-meta">12-seat Sprinter (Lux) &amp; 16-seat Transit (Std)</div>
+        </div>
 
-          <div class="row" style="gap:8px;align-items:center">
-            <span class="chip outline" style="font-size:.72rem">Cancellation Policy Included</span>
-            <span class="chip outline" style="font-size:.72rem">Hourly &amp; Standby Rates</span>
-            <button class="btn sm ghost" id="btn-trigger-upload-drop" style="font-size:.74rem">
-              📥 Drop Downloaded PDF Here
+        <div class="sail-stat-cell">
+          <div class="sail-stat-label">
+            <span>Malpensa (MXP) ⇄ Como</span>
+            <span style="font-size:11px;color:var(--sail-accent);font-weight:600">${esc(modeBadgeText(pricingMode))}</span>
+          </div>
+          <div class="sail-stat-val">${formatEur(sprinterMxp)} <span style="font-size:14px;font-weight:500;color:var(--sail-muted)">– ${formatEur(transitMxp)}</span></div>
+          <div class="sail-stat-meta">${formatEur(Math.round(sprinterMxp / 12))}–${formatEur(Math.round(transitMxp / 16))}/seat · 60m airport wait incl.</div>
+        </div>
+
+        <div class="sail-stat-cell">
+          <div class="sail-stat-label">
+            <span>Standby (4h / 8h Disposizione)</span>
+            <span style="font-size:11px;color:var(--sail-muted)">100km / 200km</span>
+          </div>
+          <div class="sail-stat-val">${formatEur(dispo4h)} <span style="font-size:14px;font-weight:500;color:var(--sail-muted)">/ ${formatEur(dispo8h)}</span></div>
+          <div class="sail-stat-meta">Extra hour: ${formatEur(calculateAdjustedPrice(100, pricingMode))}/h · Extra wait: ${formatEur(calculateAdjustedPrice(80, pricingMode))}/h</div>
+        </div>
+
+        <div class="sail-stat-cell">
+          <div class="sail-stat-label">
+            <span>Verified Inspection Media</span>
+            <span class="sail-pill info" style="padding:1px 6px;font-size:10.5px">100% Real Files</span>
+          </div>
+          <div class="sail-stat-val">7 photos <span style="font-size:14px;font-weight:500;color:var(--sail-muted)">· 1 PDF</span></div>
+          <div class="sail-stat-meta">4 Mercedes Sprinter · 3 Ford Transit</div>
+        </div>
+      </div>
+
+      <!-- Stripe Ledger Card -->
+      <div class="sail-card">
+        <!-- View Filter Tabs + Search -->
+        <div class="sail-card-head" style="padding-bottom:0;border-bottom:1px solid var(--sail-line)">
+          <div class="sail-tabs" role="tablist">
+            <button class="sail-tab ${activeTab === 'all' ? 'active' : ''}" data-ledger-tab="all">
+              All Replied Fleet <span class="sail-tab-count">${FLEET_LEDGER_ROWS.length}</span>
+            </button>
+            <button class="sail-tab ${activeTab === 'confirmed' ? 'active' : ''}" data-ledger-tab="confirmed">
+              Confirmed Rates &amp; Photos <span class="sail-tab-count">${confirmedCount}</span>
+            </button>
+            <button class="sail-tab ${activeTab === 'luxury' ? 'active' : ''}" data-ledger-tab="luxury">
+              Luxury VIP <span class="sail-tab-count">${luxCount}</span>
+            </button>
+            <button class="sail-tab ${activeTab === 'standard' ? 'active' : ''}" data-ledger-tab="standard">
+              Standard Shuttle <span class="sail-tab-count">${stdCount}</span>
+            </button>
+            <button class="sail-tab ${activeTab === 'pending' ? 'active' : ''}" data-ledger-tab="pending">
+              Awaiting Rate Sheet <span class="sail-tab-count">${pendingCount}</span>
             </button>
           </div>
-        </div>
-      </div>
 
-      <!-- Vehicle Fleet Grid: What They Have -->
-      <div>
-        <div class="row between" style="align-items:baseline;margin-bottom:10px">
-          <h3 style="margin:0;font-size:1.05rem;font-weight:600">What They Have (Fleet &amp; Capacities)</h3>
-          <span class="small muted">Salvatore confirmed Ford Transit Minibus (16 pax) &amp; Mercedes models</span>
-        </div>
-
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(310px, 1fr));gap:14px">
-          ${vList.map((v) => `
-            <div class="stack" style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px;gap:10px">
-              <div class="row between" style="align-items:center">
-                <span class="chip gold" style="font-weight:700;font-size:.72rem">${esc(v.badge)}</span>
-                <span class="chip ok" style="font-size:.7rem;font-weight:600">${v.pax} Passengers</span>
-              </div>
-
-              <div>
-                <div style="font-weight:700;font-size:.98rem;color:var(--ink)">${esc(v.name)}</div>
-                <div class="small muted" style="margin-top:4px;line-height:1.4">${esc(v.summary)}</div>
-              </div>
-
-              <!-- Photo Gallery Thumbnails for This Vehicle -->
-              <div style="border-top:1px solid var(--line);padding-top:10px;margin-top:2px">
-                <div class="tiny muted" style="font-weight:600;text-transform:uppercase;margin-bottom:6px">Photos Sent (${v.photos.length}):</div>
-                <div class="row" style="gap:8px;flex-wrap:wrap">
-                  ${v.photos.map((ph) => `
-                    <div class="photo-card clickable" data-view-photo="${attr(ph.id)}" data-photo-title="${attr(ph.title)}" data-photo-label="${attr(ph.file_label)}" data-photo-desc="${attr(ph.caption)}" style="flex:1;min-width:130px;height:75px;border-radius:6px;background:${ph.bg};display:flex;flex-direction:column;justify-content:space-between;padding:8px;color:#FFF;cursor:pointer;border:1px solid rgba(255,255,255,0.15);transition:transform .15s, box-shadow .15s" title="Click to view full photo">
-                      <div class="row between" style="font-size:.65rem;opacity:.9">
-                        <span>📸 ${esc(ph.file_label.split(' ')[0])}</span>
-                        <span>🔍 Click</span>
-                      </div>
-                      <div style="font-size:.72rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-                        ${esc(ph.title)}
-                      </div>
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-
-      <!-- File Dropzone for Storing Real Attachments -->
-      <div id="fleet-file-dropzone" style="border:2px dashed var(--line);border-radius:var(--r-sm);padding:20px;text-align:center;background:var(--surface-2);cursor:pointer;transition:border-color .2s">
-        <div style="font-size:1.8rem;margin-bottom:6px">📥</div>
-        <div style="font-weight:600;font-size:.88rem;color:var(--ink)" id="fleet-dropzone-label">
-          Drop downloaded photos from Salvatore's email here (or click to upload)
-        </div>
-        <div class="tiny muted" style="margin-top:3px">
-          Accepts <code>Minibus Fo... 2.jpg</code>, <code>Minibus F...ia.jpg</code>, <code>Immagine...e4.jpg</code>, and <code>DORONG...27.pdf</code> to link full-res files.
-        </div>
-        <input type="file" id="fleet-file-input" multiple accept=".jpg,.jpeg,.png,.pdf" style="display:none" />
-      </div>
-    </section>
-  `;
-}
-
-function renderMoveoluxCard(meta) {
-  return `
-    <section class="card stack" style="gap:14px;background:var(--surface);padding:18px 20px;border:1px solid var(--line);border-radius:var(--r-sm)">
-      <div class="row between" style="align-items:center;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--line);padding-bottom:12px">
-        <div class="row" style="gap:8px;align-items:center">
-          <span style="font-size:1.4rem">⭐</span>
-          <div>
-            <h3 style="margin:0;font-size:1.15rem;font-weight:600">Moveolux S.r.l. (Milan Luxury VIP Fleet)</h3>
-            <span class="small muted">Verified Luxury Partner · Mercedes Tourismo VIP (50 pax), Setra TopClass, Sprinter VIP (8–16 pax)</span>
+          <div class="row" style="gap:8px;padding-bottom:8px;align-items:center">
+            <input type="text" id="ledger-search" placeholder="Filter by model, partner, city..." value="${attr(searchQuery)}" style="height:30px;padding:0 10px;border:1px solid var(--sail-line);border-radius:6px;font-size:12.5px;width:220px;background:#F8FAFC;color:var(--sail-ink)">
           </div>
         </div>
-        <div class="row" style="gap:8px;align-items:center">
-          <span class="chip gold" style="font-weight:700">Rates: €120/h · €550 (4h) · €1,050 (8h)</span>
-          <a class="btn sm ghost" href="mailto:booking@moveolux.com">✉️ Contact</a>
+
+        <!-- Primary Stripe Data Table -->
+        <div class="sail-table-wrap">
+          <table class="sail-table">
+            <thead>
+              <tr>
+                <th style="width:210px">Vehicle &amp; Capacity</th>
+                <th style="width:130px">Class Tier</th>
+                <th style="width:185px">Partner &amp; Direct Contact</th>
+                <th style="width:240px">Transfer Rates (${esc(modeBadgeText(pricingMode))})</th>
+                <th style="width:210px">Standby / Disposizione</th>
+                <th style="width:245px">Inspection Photos &amp; Rate Sheet</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredRows.map((row) => renderLedgerRow(row)).join('')}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:12px">
-        ${meta.vehicles.map((v) => `
-          <div style="background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px">
-            <div class="row between" style="align-items:center;margin-bottom:6px">
-              <span class="chip gold" style="font-size:.68rem;font-weight:700">${esc(v.badge)}</span>
-              <span class="small muted">${v.pax} Seats</span>
+      <!-- Direct Visual Inspection Section: All 7 Real Photos Side-by-Side (Sprinter vs Ford Transit) -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(440px, 1fr));gap:16px">
+        ${FLEET_LEDGER_ROWS.filter((r) => r.photos && r.photos.length > 0).map((veh) => `
+          <div class="sail-card">
+            <div class="sail-card-head">
+              <div>
+                <div class="row" style="gap:8px;align-items:center">
+                  <span class="sail-card-title">${esc(veh.vehicleModel)} (${veh.pax} Seats)</span>
+                  <span class="sail-pill ${veh.tier === 'luxury' ? 'lux' : 'std'}">
+                    <span class="sail-pill-dot"></span>${esc(veh.tierLabel)}
+                  </span>
+                </div>
+                <div style="font-size:12px;color:var(--sail-muted);margin-top:2px">
+                  ${esc(veh.tierSpec)}
+                </div>
+              </div>
+              <button class="sail-btn xs" data-open-gallery="${attr(veh.id)}" data-photo-idx="0">
+                Inspect All ${veh.photos.length} Photos
+              </button>
             </div>
-            <div style="font-weight:700;font-size:.92rem">${esc(v.name)}</div>
-            <div class="small muted" style="margin-top:4px;font-size:.78rem">${esc(v.summary)}</div>
+
+            <div class="sail-gallery-grid">
+              ${veh.photos.map((ph, idx) => `
+                <div class="sail-photo-card" data-open-gallery="${attr(veh.id)}" data-photo-idx="${idx}" title="Click to enlarge photo">
+                  <img src="${attr(ph.src)}" alt="${attr(ph.title)}" loading="lazy" />
+                  <div class="sail-photo-meta">
+                    <div class="sail-photo-title">${esc(ph.title)}</div>
+                    <div class="sail-photo-sub">${esc(ph.caption)}</div>
+                    <div style="margin-top:4px;font-size:11px;font-weight:600;color:var(--sail-accent);display:flex;align-items:center;justify-content:space-between">
+                      <span>Click to enlarge</span>
+                      <a href="${attr(ph.src)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--sail-muted);font-weight:500">Raw file ↗</a>
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
           </div>
         `).join('')}
       </div>
-    </section>
+
+      <!-- Bottom Split: Interactive Stripe Price & Margin Calculator + PDF Contract Terms -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(420px, 1fr));gap:16px">
+        ${renderPriceCalculatorCard()}
+        ${renderTermsAndSlaCard()}
+      </div>
+    </div>
+  `;
+
+  attachLedgerListeners(el);
+}
+
+function renderLedgerRow(row) {
+  const hasTransfers = Boolean(row.transfers);
+  const hasStandby = Boolean(row.standby);
+  const hasPhotos = Array.isArray(row.photos) && row.photos.length > 0;
+  const rawWa = (row.phone || '').replace(/[^\d+]/g, '');
+
+  let transferHtml = '';
+  if (hasTransfers) {
+    const entries = Object.values(row.transfers);
+    transferHtml = `
+      <div class="sail-rate-grid">
+        ${entries.map((t) => {
+          const adj = calculateAdjustedPrice(t.net, pricingMode);
+          const perPax = Math.round(adj / row.pax);
+          return `
+            <span class="sail-rate-route">${esc(t.label)}</span>
+            <span class="sail-rate-amt">${formatEur(adj)} <span class="sail-rate-sub">(${formatEur(perPax)}/p)</span></span>
+          `;
+        }).join('')}
+      </div>
+    `;
+  } else {
+    transferHtml = `
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <span class="sail-pill missing" style="width:fit-content">Not provided</span>
+        <span style="font-size:11.5px;color:var(--sail-muted);line-height:1.35">${esc(row.transferNote || 'No transfer rate sheet submitted yet.')}</span>
+      </div>
+    `;
+  }
+
+  let standbyHtml = '';
+  if (hasStandby) {
+    const s4 = calculateAdjustedPrice(row.standby.dispo_4h.net, pricingMode);
+    const s8 = calculateAdjustedPrice(row.standby.dispo_8h.net, pricingMode);
+    const exH = calculateAdjustedPrice(row.standby.extra_hour.net, pricingMode);
+    const exW = calculateAdjustedPrice(row.standby.extra_wait.net, pricingMode);
+    standbyHtml = `
+      <div class="sail-rate-grid">
+        <span class="sail-rate-route">4h Standby (100 km)</span>
+        <span class="sail-rate-amt">${formatEur(s4)} <span class="sail-rate-sub">(${formatEur(Math.round(s4 / 4))}/h)</span></span>
+        <span class="sail-rate-route">8h Standby (200 km)</span>
+        <span class="sail-rate-amt">${formatEur(s8)} <span class="sail-rate-sub">(${formatEur(Math.round(s8 / 8))}/h)</span></span>
+        <span class="sail-rate-route">Extra Hour</span>
+        <span class="sail-rate-amt">${formatEur(exH)}/h</span>
+        <span class="sail-rate-route">Wait &gt;60m Airport</span>
+        <span class="sail-rate-amt">${formatEur(exW)}/h</span>
+      </div>
+    `;
+  } else {
+    standbyHtml = `
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <span class="sail-pill missing" style="width:fit-content">Not provided</span>
+        <span style="font-size:11.5px;color:var(--sail-muted);line-height:1.35">${esc(row.standbyNote || 'No standby rates submitted yet.')}</span>
+      </div>
+    `;
+  }
+
+  let mediaHtml = '';
+  if (hasPhotos || row.ratePdf) {
+    mediaHtml = `
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${hasPhotos ? `
+          <div class="sail-thumb-strip">
+            ${row.photos.map((ph, idx) => `
+              <img class="sail-thumb" src="${attr(ph.src)}" alt="${attr(ph.title)}" title="${attr(ph.title)} — Click to view" data-open-gallery="${attr(row.id)}" data-photo-idx="${idx}" />
+            `).join('')}
+          </div>
+          <div class="row" style="gap:6px">
+            <button class="sail-btn xs primary" data-open-gallery="${attr(row.id)}" data-photo-idx="0">
+              View ${row.photos.length} photos
+            </button>
+            ${row.ratePdf ? `
+              <a class="sail-btn xs" href="${attr(row.ratePdf)}" target="_blank" rel="noopener" title="Open original PDF rate sheet">
+                Rate PDF ↗
+              </a>
+            ` : ''}
+          </div>
+        ` : `<span class="sail-pill missing">No photos provided</span>`}
+      </div>
+    `;
+  } else {
+    mediaHtml = `
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <span class="sail-pill missing" style="width:fit-content">No photos provided</span>
+        <span style="font-size:11.5px;color:var(--sail-muted)">Rate sheet PDF not provided</span>
+      </div>
+    `;
+  }
+
+  return `
+    <tr>
+      <td>
+        <div style="font-weight:600;color:var(--sail-ink);font-size:13.5px">${esc(row.vehicleModel)}</div>
+        <div style="font-size:12px;color:var(--sail-body);margin-top:2px;font-variant-numeric:tabular-nums">
+          <strong>${row.pax} passenger seats</strong> · ${esc(row.coachbuilder)}
+        </div>
+        <div style="font-size:11.5px;color:var(--sail-muted);margin-top:3px;line-height:1.35">
+          ${esc(row.tierSpec)}
+        </div>
+      </td>
+
+      <td>
+        <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start">
+          <span class="sail-pill ${row.tier === 'luxury' ? 'lux' : 'std'}">
+            <span class="sail-pill-dot"></span>${esc(row.tierLabel)}
+          </span>
+          <span class="sail-pill ${row.status === 'confirmed' ? 'ok' : 'info'}" style="font-size:11px">
+            ${esc(row.statusLabel)}
+          </span>
+        </div>
+      </td>
+
+      <td>
+        <div style="font-weight:600;color:var(--sail-ink)">${esc(row.partnerName)}</div>
+        <div style="font-size:12px;color:var(--sail-body);margin-top:2px">${esc(row.baseCity)}</div>
+        <div style="font-size:11.5px;color:var(--sail-muted);margin-top:2px">${esc(row.contactPerson)}</div>
+        <div class="row" style="gap:8px;margin-top:6px;font-size:11.5px">
+          <a href="https://wa.me/${rawWa.replace(/^\+/, '')}" target="_blank" rel="noopener" style="color:var(--sail-accent);font-weight:600">WhatsApp</a>
+          <span style="color:#CBD5E1">·</span>
+          <a href="mailto:${attr(row.email)}" style="color:var(--sail-body)">${esc(row.email)}</a>
+        </div>
+      </td>
+
+      <td>${transferHtml}</td>
+      <td>${standbyHtml}</td>
+      <td>${mediaHtml}</td>
+    </tr>
   `;
 }
 
-function setupShowcaseListeners(el, partner) {
-  // Category tabs filter
-  el.querySelectorAll('[data-cat-filter]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      activeCategoryFilter = btn.dataset.catFilter || 'all';
-      await render(el);
-    });
-  });
+function renderPriceCalculatorCard() {
+  const veh = FLEET_LEDGER_ROWS.find((r) => r.id === calcState.vehicleId) || FLEET_LEDGER_ROWS[0];
+  const allServices = [
+    { key: 'mxp_como', label: 'Transfer: Malpensa (MXP) ⇄ Como/Cernobbio', net: veh.transfers.mxp_como.net },
+    { key: 'milano_como', label: 'Transfer: Milano Centro / FS ⇄ Como', net: veh.transfers.milano_como.net },
+    { key: 'lin_como', label: 'Transfer: Linate (LIN) ⇄ Como/Cernobbio', net: veh.transfers.lin_como.net },
+    { key: 'bgy_como', label: 'Transfer: Bergamo (BGY) ⇄ Como/Cernobbio', net: veh.transfers.bgy_como.net },
+    { key: 'tremezzo', label: 'Transfer: Como/Cernobbio ⇄ Tremezzo', net: veh.transfers.tremezzo.net },
+    { key: 'bellagio', label: 'Transfer: Como/Cernobbio ⇄ Bellagio', net: veh.transfers.bellagio.net },
+    { key: 'dispo_4h', label: 'Standby: 4 Hours (incl. 100 km)', net: veh.standby.dispo_4h.net },
+    { key: 'dispo_8h', label: 'Standby: 8 Hours (incl. 200 km)', net: veh.standby.dispo_8h.net }
+  ];
+  const selService = allServices.find((s) => s.key === calcState.serviceKey) || allServices[7];
 
-  // Open Draft Reply Modal
-  const openReplyModal = () => {
-    const draft = core.buildBusOutreachDraft(partner, 'reply_thanks');
-    dialog({
-      wide: true,
-      title: 'Reply to Salvatore Calzolaio (Como Driver Services)',
-      body: `
-        <div class="stack" style="gap:14px">
-          <div class="card" style="background:var(--surface-2);padding:10px 14px;border-radius:var(--r-sm);font-size:.82rem">
-            <div class="row between">
-              <span><strong>To:</strong> Salvatore Calzolaio &lt;info@comodriver.com&gt;</span>
-              <span><strong>Cell:</strong> +39 320 72 70 552</span>
-            </div>
-            <div style="margin-top:4px">
-              <strong>Subject:</strong> ${esc(draft.subject)}
-            </div>
+  const baseNet = selService.net;
+  const extraHoursCost = (Number(calcState.extraHours) || 0) * 100;
+  const extraWaitCost = (Number(calcState.extraWaitHours) || 0) * 80;
+  const subtotalBeforeNight = baseNet + extraHoursCost + extraWaitCost;
+  const nightSurcharge = calcState.nightWindow ? Math.round(subtotalBeforeNight * 0.20) : 0;
+  const totalNetB2B = subtotalBeforeNight + nightSurcharge;
+  const vatAmount = calcState.includeVat ? Math.round(totalNetB2B * 0.10) : 0;
+  const totalPartnerCost = totalNetB2B + vatAmount;
+  const perPaxCost = (totalPartnerCost / veh.pax).toFixed(2);
+  const clientQuote = Math.round(totalPartnerCost * (1 + (Number(calcState.clientMarkupPct) || 0) / 100));
+  const netMargin = clientQuote - totalPartnerCost;
+
+  return `
+    <div class="sail-card">
+      <div class="sail-card-head">
+        <div>
+          <div class="sail-card-title">B2B Trip &amp; Client Quote Calculator</div>
+          <div style="font-size:12px;color:var(--sail-muted);margin-top:2px">
+            Exact formula from <code>DORONGO 2027.pdf</code> (Como Driver Services)
+          </div>
+        </div>
+        <span class="sail-pill info">Instant Calculation</span>
+      </div>
+
+      <div style="padding:16px 18px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:600;color:var(--sail-body);margin-bottom:4px">Vehicle</label>
+            <select id="calc-vehicle" style="width:100%;height:34px;padding:0 10px;border:1px solid var(--sail-line);border-radius:6px;font-size:13px;background:#FFF">
+              <option value="como_sprinter_12" ${calcState.vehicleId === 'como_sprinter_12' ? 'selected' : ''}>Mercedes Sprinter (12 pax · Luxury VIP)</option>
+              <option value="como_transit_16" ${calcState.vehicleId === 'como_transit_16' ? 'selected' : ''}>Ford Transit (16 pax · Standard Shuttle)</option>
+            </select>
           </div>
 
           <div>
-            <div class="tiny muted" style="font-weight:600;text-transform:uppercase;margin-bottom:4px">Italian B2B Reply Draft:</div>
-            <textarea id="reply-body-text" style="width:100%;height:220px;font-family:sans-serif;font-size:.86rem;line-height:1.5;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px">${esc(draft.body)}</textarea>
-          </div>
-
-          <div class="row between" style="margin-top:6px;align-items:center;flex-wrap:wrap;gap:8px">
-            <div class="small muted">
-              ✓ Thanks for rates/photos · ✓ Saves contact for future events · ✓ Asks for 20–50 seat bus network contacts
-            </div>
-            <div class="row" style="gap:8px">
-              <button class="btn sm ghost" id="btn-copy-reply">📋 Copy Text</button>
-              <a class="btn sm ghost" id="btn-mailto-reply" href="mailto:info@comodriver.com?subject=${encodeURIComponent(draft.subject)}&body=${encodeURIComponent(draft.body)}">
-                📬 Open in Mail App (1-Click)
-              </a>
-              <button class="btn sm primary" id="btn-confirm-sent-reply" style="background:#7c3aed;color:#FFF;border-color:#6d28d9">
-                ✓ Mark Replied &amp; Saved
-              </button>
-            </div>
+            <label style="display:block;font-size:11.5px;font-weight:600;color:var(--sail-body);margin-bottom:4px">Route or Standby Package</label>
+            <select id="calc-service" style="width:100%;height:34px;padding:0 10px;border:1px solid var(--sail-line);border-radius:6px;font-size:13px;background:#FFF">
+              ${allServices.map((s) => `
+                <option value="${attr(s.key)}" ${calcState.serviceKey === s.key ? 'selected' : ''}>${esc(s.label)} — €${s.net}</option>
+              `).join('')}
+            </select>
           </div>
         </div>
-      `,
-      onMount: (box, close) => {
-        box.querySelector('#btn-copy-reply')?.addEventListener('click', () => {
-          const txt = box.querySelector('#reply-body-text')?.value;
-          navigator.clipboard.writeText(txt);
-          toast('Copied Italian reply text to clipboard!', 'ok');
-        });
 
-        box.querySelector('#btn-confirm-sent-reply')?.addEventListener('click', () => {
-          toast('Saved status: Replied and in partner network!', 'ok');
-          close();
-        });
-      }
-    });
-  };
-
-  el.querySelector('#btn-quick-reply-como')?.addEventListener('click', openReplyModal);
-  el.querySelector('#btn-open-draft-reply')?.addEventListener('click', openReplyModal);
-  el.querySelector('#btn-view-reply-modal')?.addEventListener('click', openReplyModal);
-
-  // Click-to-View Photo Lightbox Modal
-  el.querySelectorAll('[data-view-photo]').forEach((item) => {
-    item.addEventListener('click', () => {
-      const title = item.dataset.photoTitle || 'Vehicle Photo';
-      const label = item.dataset.photoLabel || '';
-      const desc = item.dataset.photoDesc || '';
-
-      dialog({
-        wide: true,
-        title: title,
-        body: `
-          <div class="stack" style="gap:14px;text-align:center">
-            <!-- Simulated High-Res Vehicle Photo Frame -->
-            <div style="background:#0F172A;border-radius:8px;padding:36px 20px;min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#FFF;border:1px solid var(--line);box-shadow:inset 0 2px 8px rgba(0,0,0,0.4)">
-              <div style="font-size:3.5rem;margin-bottom:12px">🚐</div>
-              <div style="font-size:1.25rem;font-weight:700;color:var(--gold)">${esc(title)}</div>
-              <div class="small" style="color:#94A3B8;margin-top:6px;max-width:500px">${esc(desc)}</div>
-              <div class="tiny" style="margin-top:14px;background:rgba(255,255,255,0.1);padding:4px 12px;border-radius:12px;font-family:monospace">
-                Source: ${esc(label)} · Received from info@comodriver.com on 28 Oct 2026
-              </div>
-            </div>
-
-            <div class="row between" style="align-items:center;margin-top:4px">
-              <span class="small muted">Como Driver Services · Salvatore Calzolaio (+39 320 72 70 552)</span>
-              <button class="btn sm primary" data-close>Close Photo</button>
-            </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:600;color:var(--sail-body);margin-bottom:4px">Extra Hours (€100/h)</label>
+            <input type="number" id="calc-extra-hours" min="0" max="12" value="${calcState.extraHours}" style="width:100%;height:32px;padding:0 10px;border:1px solid var(--sail-line);border-radius:6px;font-size:13px">
           </div>
-        `
-      });
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:600;color:var(--sail-body);margin-bottom:4px">Extra Wait (€80/h)</label>
+            <input type="number" id="calc-extra-wait" min="0" max="6" value="${calcState.extraWaitHours}" style="width:100%;height:32px;padding:0 10px;border:1px solid var(--sail-line);border-radius:6px;font-size:13px">
+          </div>
+          <div>
+            <label style="display:block;font-size:11.5px;font-weight:600;color:var(--sail-body);margin-bottom:4px">DOROGO Markup (%)</label>
+            <input type="number" id="calc-markup" min="0" max="100" step="5" value="${calcState.clientMarkupPct}" style="width:100%;height:32px;padding:0 10px;border:1px solid var(--sail-line);border-radius:6px;font-size:13px">
+          </div>
+        </div>
+
+        <div class="row" style="gap:18px;padding:4px 0">
+          <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--sail-ink);cursor:pointer">
+            <input type="checkbox" id="calc-night" ${calcState.nightWindow ? 'checked' : ''}>
+            Night service 22:00–06:00 (+20%)
+          </label>
+          <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--sail-ink);cursor:pointer">
+            <input type="checkbox" id="calc-vat" ${calcState.includeVat ? 'checked' : ''}>
+            Include 10% Italian VAT
+          </label>
+        </div>
+
+        <!-- Ledger Breakdown Output -->
+        <div style="background:#F8FAFC;border:1px solid var(--sail-line);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;font-variant-numeric:tabular-nums">
+          <div class="row between" style="font-size:12.5px;color:var(--sail-body)">
+            <span>Base rate (${esc(selService.label)})</span>
+            <span>€${baseNet}</span>
+          </div>
+          ${extraHoursCost > 0 ? `<div class="row between" style="font-size:12.5px;color:var(--sail-body)"><span>Extra hours (${calcState.extraHours}h × €100)</span><span>+€${extraHoursCost}</span></div>` : ''}
+          ${extraWaitCost > 0 ? `<div class="row between" style="font-size:12.5px;color:var(--sail-body)"><span>Extra waiting (${calcState.extraWaitHours}h × €80)</span><span>+€${extraWaitCost}</span></div>` : ''}
+          ${nightSurcharge > 0 ? `<div class="row between" style="font-size:12.5px;color:var(--sail-body)"><span>Night surcharge (+20%)</span><span>+€${nightSurcharge}</span></div>` : ''}
+          ${vatAmount > 0 ? `<div class="row between" style="font-size:12.5px;color:var(--sail-body)"><span>Italian passenger transport VAT (10%)</span><span>+€${vatAmount}</span></div>` : ''}
+          <div class="row between" style="border-top:1px solid var(--sail-line);padding-top:8px;margin-top:2px;font-size:14px;font-weight:700;color:var(--sail-ink)">
+            <span>Partner B2B Cost (${veh.pax} seats · €${perPaxCost}/pax)</span>
+            <span>€${totalPartnerCost}</span>
+          </div>
+          <div class="row between" style="font-size:13.5px;font-weight:600;color:var(--sail-accent)">
+            <span>Suggested Client Price (+${calcState.clientMarkupPct}% · €${netMargin} margin)</span>
+            <span>€${clientQuote}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderTermsAndSlaCard() {
+  return `
+    <div class="sail-card">
+      <div class="sail-card-head">
+        <div>
+          <div class="sail-card-title">Contract Terms &amp; Cancellation Policy</div>
+          <div style="font-size:12px;color:var(--sail-muted);margin-top:2px">
+            Extracted from <code>DORONGO 2027.pdf</code> (Page 2 · Signed by Salvatore Calzolaio)
+          </div>
+        </div>
+        <a class="sail-btn xs" href="${attr(PDF_COMO_DRIVER)}" target="_blank" rel="noopener">Open PDF ↗</a>
+      </div>
+
+      <div style="padding:16px 18px;display:flex;flex-direction:column;gap:10px;font-size:12.5px;color:var(--sail-body);line-height:1.5">
+        <div style="display:grid;grid-template-columns:145px 1fr;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--sail-line-soft)">
+          <strong style="color:var(--sail-ink)">Payment Terms</strong>
+          <span>Advance payment upon invoice receipt (<em>Pagamento anticipato vista fattura</em>). All listed rates exclude 10% VAT.</span>
+        </div>
+        <div style="display:grid;grid-template-columns:145px 1fr;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--sail-line-soft)">
+          <strong style="color:var(--sail-ink)">Included in Quote</strong>
+          <span>Fuel, highway tolls (<em>pedaggi autostradali</em>), parking, <strong>60 min</strong> airport waiting after landing, <strong>20 min</strong> station/hotel waiting.</span>
+        </div>
+        <div style="display:grid;grid-template-columns:145px 1fr;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--sail-line-soft)">
+          <strong style="color:var(--sail-ink)">Supplements</strong>
+          <span>Extra waiting beyond grace period: <strong>€80/hour</strong>. Night window (22:00 – 06:00): <strong>+20% surcharge</strong>.</span>
+        </div>
+        <div style="display:grid;grid-template-columns:145px 1fr;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--sail-line-soft)">
+          <strong style="color:var(--sail-ink)">Cancellation 14–28d</strong>
+          <span><strong>50% refund</strong> (50% penalty) for cancellations or unfeasible schedule changes between 28 and 14 days prior.</span>
+        </div>
+        <div style="display:grid;grid-template-columns:145px 1fr;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--sail-line-soft)">
+          <strong style="color:var(--sail-ink)">Cancellation &lt;14d</strong>
+          <span><strong>No refund (100% penalty)</strong> for cancellations or unfeasible modifications less than 14 days before service.</span>
+        </div>
+        <div style="display:grid;grid-template-columns:145px 1fr;gap:8px">
+          <strong style="color:var(--sail-ink)">Force Majeure</strong>
+          <span>100% refund if service cannot be performed due to force majeure. Operator reserves right to cancel during Protezione Civile yellow/orange/red weather alerts.</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function attachLedgerListeners(el) {
+  // Pricing mode switcher
+  el.querySelectorAll('[data-price-mode]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      pricingMode = btn.dataset.priceMode || 'net';
+      render(el);
     });
   });
 
-  // Drag & drop upload handler for attachments
-  const dropzone = el.querySelector('#fleet-file-dropzone');
-  const fileInput = el.querySelector('#fleet-file-input');
+  // View filter tabs
+  el.querySelectorAll('[data-ledger-tab]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      activeTab = btn.dataset.ledgerTab || 'all';
+      render(el);
+    });
+  });
 
-  if (dropzone && fileInput) {
-    dropzone.addEventListener('click', () => fileInput.click());
-    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = 'var(--gold)'; });
-    dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = 'var(--line)'; });
-    dropzone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropzone.style.borderColor = 'var(--line)';
-      if (e.dataTransfer.files?.length) {
-        handleDroppedFiles(e.dataTransfer.files, partner);
+  // Search input
+  const searchInput = el.querySelector('#ledger-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      render(el);
+      const next = el.querySelector('#ledger-search');
+      if (next) {
+        next.focus();
+        next.setSelectionRange(searchQuery.length, searchQuery.length);
       }
     });
-
-    fileInput.addEventListener('change', (e) => {
-      if (e.target.files?.length) {
-        handleDroppedFiles(e.target.files, partner);
-      }
-    });
-
-    el.querySelector('#btn-import-partner-media')?.addEventListener('click', () => fileInput.click());
-    el.querySelector('#btn-trigger-upload-drop')?.addEventListener('click', () => fileInput.click());
   }
+
+  // Calculator inputs
+  const bindCalc = (sel, fn) => {
+    const node = el.querySelector(sel);
+    if (node) {
+      node.addEventListener('change', (e) => {
+        fn(e.target);
+        render(el);
+      });
+    }
+  };
+  bindCalc('#calc-vehicle', (t) => { calcState.vehicleId = t.value; });
+  bindCalc('#calc-service', (t) => { calcState.serviceKey = t.value; });
+  bindCalc('#calc-extra-hours', (t) => { calcState.extraHours = Math.max(0, Number(t.value) || 0); });
+  bindCalc('#calc-extra-wait', (t) => { calcState.extraWaitHours = Math.max(0, Number(t.value) || 0); });
+  bindCalc('#calc-markup', (t) => { calcState.clientMarkupPct = Math.max(0, Number(t.value) || 0); });
+  bindCalc('#calc-night', (t) => { calcState.nightWindow = Boolean(t.checked); });
+  bindCalc('#calc-vat', (t) => { calcState.includeVat = Boolean(t.checked); });
+
+  // Photo Gallery Lightbox Modal
+  el.querySelectorAll('[data-open-gallery]').forEach((trigger) => {
+    trigger.addEventListener('click', () => {
+      const vehId = trigger.dataset.openGallery;
+      const startIdx = Number(trigger.dataset.photoIdx) || 0;
+      const veh = FLEET_LEDGER_ROWS.find((r) => r.id === vehId);
+      if (!veh || !veh.photos?.length) return;
+      openPhotoLightbox(veh, startIdx);
+    });
+  });
 }
 
-function handleDroppedFiles(files, partner) {
-  const names = Array.from(files).map((f) => f.name).join(', ');
-  toast(`Attached ${files.length} file(s) to ${partner.name}: ${names}!`, 'ok');
-  const label = document.getElementById('fleet-dropzone-label');
-  if (label) {
-    label.innerHTML = `✓ <strong>${files.length} file(s) attached:</strong> ${names}`;
-  }
+function openPhotoLightbox(veh, initialIndex = 0) {
+  let idx = initialIndex;
+
+  dialog({
+    wide: true,
+    title: `${veh.vehicleModel} (${veh.pax} Seats · ${veh.tierLabel})`,
+    body: `<div id="sail-lightbox-root"></div>`,
+    onMount: (box) => {
+      const root = box.querySelector('#sail-lightbox-root');
+      const paintSlide = () => {
+        const ph = veh.photos[idx];
+        root.innerHTML = `
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="background:#0A2540;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:380px;max-height:540px;position:relative">
+              <img src="${attr(ph.src)}" alt="${attr(ph.title)}" style="max-width:100%;max-height:520px;object-fit:contain;display:block" />
+              <div style="position:absolute;top:12px;left:12px;background:rgba(10,37,64,0.82);color:#FFF;padding:4px 10px;border-radius:4px;font-size:12px;font-weight:600">
+                Photo ${idx + 1} of ${veh.photos.length} · ${esc(ph.file)}
+              </div>
+            </div>
+
+            <div class="row between" style="align-items:center;gap:12px;flex-wrap:wrap">
+              <div>
+                <div style="font-size:14px;font-weight:600;color:#0A2540">${esc(ph.title)}</div>
+                <div style="font-size:12.5px;color:#425466;margin-top:2px">${esc(ph.caption)}</div>
+              </div>
+
+              <div class="row" style="gap:8px">
+                <button class="sail-btn xs" id="lb-prev" ${veh.photos.length <= 1 ? 'disabled' : ''}>← Previous</button>
+                <button class="sail-btn xs" id="lb-next" ${veh.photos.length <= 1 ? 'disabled' : ''}>Next →</button>
+                <a class="sail-btn xs primary" href="${attr(ph.src)}" target="_blank" rel="noopener">Open Full Resolution ↗</a>
+              </div>
+            </div>
+
+            <div class="row" style="gap:8px;padding-top:8px;border-top:1px solid #E3E8EE;overflow-x:auto">
+              ${veh.photos.map((thumb, tIdx) => `
+                <img src="${attr(thumb.src)}" alt="${attr(thumb.title)}" data-lb-idx="${tIdx}" style="width:76px;height:52px;object-fit:cover;border-radius:5px;cursor:pointer;border:2px solid ${tIdx === idx ? '#635BFF' : 'transparent'};opacity:${tIdx === idx ? '1' : '0.6'}" />
+              `).join('')}
+            </div>
+          </div>
+        `;
+
+        root.querySelector('#lb-prev')?.addEventListener('click', () => {
+          idx = (idx - 1 + veh.photos.length) % veh.photos.length;
+          paintSlide();
+        });
+        root.querySelector('#lb-next')?.addEventListener('click', () => {
+          idx = (idx + 1) % veh.photos.length;
+          paintSlide();
+        });
+        root.querySelectorAll('[data-lb-idx]').forEach((tEl) => {
+          tEl.addEventListener('click', () => {
+            idx = Number(tEl.dataset.lbIdx) || 0;
+            paintSlide();
+          });
+        });
+      };
+
+      paintSlide();
+    }
+  });
 }

@@ -273,41 +273,48 @@ export const INITIAL_BUS_PARTNERS = [
     "score_breakdown": {
       "fleet_luxury": 23,
       "partner_card": {
-        "whatsapp": "+39 031 264 780",
+        "whatsapp": "+39 346 7039569",
         "bus_models": "Mercedes-Benz V-Class Luxury Minivan (7 pax)",
-        "replied_at": null,
+        "replied_at": "2026-10-27T16:17:00.000Z",
         "rate_hourly": "",
-        "client_notes": "",
+        "client_notes": "Stefano Carnevale (27 Oct): Only 1x Mercedes V-Class (7p), no 8–50p buses. Saved for V-Class overflow; asked for 8–50p referral.",
         "email_status": "mx_ok",
         "pax_capacity": "7 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-27T12:00:00.000Z",
         "fleet_segment": "luxury",
-        "outreach_stage": "ready",
+        "outreach_stage": "replied",
         "last_message_id": null,
         "user_set_status": true,
-        "last_outreach_at": null,
+        "last_outreach_at": "2026-10-28T13:18:00.000Z",
         "user_set_segment": true,
-        "fleet_audit_verified_at": "2026-10-26T18:25:11.587Z"
+        "fleet_audit_verified_at": "2026-10-26T18:25:11.587Z",
+        "contact_person": "Stefano Carnevale"
       },
       "corporate_sla": 15,
       "territory_permits": 20,
       "discretion_unbranded": 35
     },
-    "status": "WANT_TO_CONTACT",
+    "status": "CONTACTED",
     "unbranded_status": "100% Guaranteed Unbranded / Total Black",
     "fleet_categories": [
       "Mercedes-Benz V-Class Luxury Minivan (7 seats)"
     ],
-    "phone": "+39 031 264 780",
+    "phone": "+39 346 7039569",
     "email": "info@comolimolux.com",
     "notes": "1. i am interested to know how much for transfer (milan -> MXP) and stand by service for a) Mercedes sprinter 20 posti, b) Irizar 52 posti",
+    "client_notes": "Stefano Carnevale (27 Oct): dispone solo di 1x Mercedes Classe V (7 posti), non ha bus/minibus 8-50 posti. Contatto salvato (+39 346 7039569) per overflow Classe V; inviata richiesta contatto colleghi per 8-50 pax.",
     "source": "crawler",
     "created_at": "2026-10-23T14:21:19.41+00:00",
-    "updated_at": "2026-10-26T16:45:24.561943+00:00",
+    "updated_at": "2026-10-28T13:18:00.000+00:00",
     "bus_models": "Mercedes-Benz V-Class Luxury Minivan (7 pax)",
     "pax_capacity": "7 pax",
-    "fleet_segment": "luxury"
+    "fleet_segment": "luxury",
+    "contact_person": "Stefano Carnevale",
+    "whatsapp": "+39 346 7039569",
+    "outreach_stage": "replied",
+    "replied_at": "2026-10-27T16:17:00.000Z",
+    "last_outreach_at": "2026-10-28T13:18:00.000Z"
   },
   {
     "id": "partner_1792761170109_96nx",
@@ -321,26 +328,27 @@ export const INITIAL_BUS_PARTNERS = [
       "partner_card": {
         "whatsapp": "+39 031 513 189",
         "bus_models": "Minibus GT (20 pax), Iveco Midibus (30 pax), Mercedes Tourismo & Setra GT (50 pax)",
-        "replied_at": null,
+        "replied_at": "2026-10-28T10:14:07.000Z",
         "rate_hourly": "",
-        "client_notes": "",
+        "client_notes": "Melissa (28 Oct): Forwarded our B2B partnership inquiry to fleet pricing department; rates arriving shortly.",
         "email_status": "mx_ok",
         "pax_capacity": "20, 30, 50 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-28T09:00:00.000Z",
         "fleet_segment": "both",
-        "outreach_stage": "ready",
+        "outreach_stage": "replied",
         "last_message_id": null,
         "user_set_status": true,
-        "last_outreach_at": null,
+        "last_outreach_at": "2026-10-27T10:00:00.000Z",
         "user_set_segment": true,
-        "fleet_audit_verified_at": "2026-10-26T18:25:11.587Z"
+        "fleet_audit_verified_at": "2026-10-26T18:25:11.587Z",
+        "contact_person": "Melissa"
       },
       "corporate_sla": 15,
       "territory_permits": 20,
       "discretion_unbranded": 35
     },
-    "status": "WANT_TO_CONTACT",
+    "status": "CONTACTED",
     "unbranded_status": "100% Guaranteed Unbranded / Total Black",
     "fleet_categories": [
       "Minibus GT (20 seats)",
@@ -350,12 +358,16 @@ export const INITIAL_BUS_PARTNERS = [
     "phone": "+39 031 513 189",
     "email": "info@landwaytourism.com",
     "notes": "1. i am interested in the prices of the Iveco (29 passengers) - how much is it standby service and transfer (e,g, MXP -> milan Central)\n2. The same thing for Mercedes Sprinter (19 passagers).\n3.  the same for the 50 seaters?",
+    "client_notes": "Melissa (28 Oct): Forwarded our B2B partnership request to their fleet pricing department; rates arriving shortly.",
     "source": "crawler",
     "created_at": "2026-10-23T13:12:50.109+00:00",
-    "updated_at": "2026-10-26T16:45:27.755066+00:00",
+    "updated_at": "2026-10-28T13:18:00.000+00:00",
     "bus_models": "Minibus GT (20 pax), Iveco Midibus (30 pax), Mercedes Tourismo & Setra GT (50 pax)",
     "pax_capacity": "20, 30, 50 pax",
-    "fleet_segment": "both"
+    "fleet_segment": "both",
+    "outreach_stage": "replied",
+    "replied_at": "2026-10-28T10:14:07.000Z",
+    "contact_person": "Melissa"
   },
   {
     "id": "partner_1792765278630_r4vp",
@@ -608,28 +620,29 @@ export const INITIAL_BUS_PARTNERS = [
     "score_breakdown": {
       "fleet_luxury": 22,
       "partner_card": {
-        "whatsapp": "+39 333 269 7376",
+        "whatsapp": "+39 333 2697376",
         "bus_models": "Mercedes Sprinter VIP (8 pax), Mercedes Minibus (16 pax), Mercedes Minibus VIP Class (18 pax), Executive Midibus (25 pax)",
-        "replied_at": null,
+        "replied_at": "2026-10-28T12:05:00.000Z",
         "rate_hourly": "",
-        "client_notes": "",
+        "client_notes": "Vincent Lombardi (28 Oct): Milan-based; MXP->Como uncompetitive due to empty Milan->MXP positioning leg. Replied requesting Milan-origin rates & disposal.",
         "email_status": "mx_ok",
         "pax_capacity": "7–8, 8, 16, 18, 25 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-27T11:00:00.000Z",
         "fleet_segment": "luxury",
-        "outreach_stage": "ready",
+        "outreach_stage": "replied",
         "last_message_id": null,
         "user_set_status": true,
-        "last_outreach_at": null,
+        "last_outreach_at": "2026-10-28T13:18:00.000Z",
         "user_set_segment": false,
-        "fleet_audit_verified_at": "2026-10-26T18:25:11.587Z"
+        "fleet_audit_verified_at": "2026-10-26T18:25:11.587Z",
+        "contact_person": "Vincent Lombardi (Avantgarde Service)"
       },
       "corporate_sla": 15,
       "territory_permits": 19,
       "discretion_unbranded": 35
     },
-    "status": "WANT_TO_CONTACT",
+    "status": "CONTACTED",
     "unbranded_status": "100% Guaranteed Unbranded / Total Black",
     "fleet_categories": [
       "Mercedes Classe V (7–8 seats)",
@@ -638,15 +651,20 @@ export const INITIAL_BUS_PARTNERS = [
       "Mercedes Minibus VIP Class (18 seats)",
       "Executive Midibus (25 seats)"
     ],
-    "phone": "+39 333 269 7376",
+    "phone": "+39 333 2697376",
     "email": "info@milanocab.it",
     "notes": "- Confirm whether they do not have stickers on cars?\n- i see they have 3 different ones, i want to know the prices/how many people the fit?",
+    "client_notes": "Vincent Lombardi (28 Oct): Base a Milano; non competitivi su Malpensa–Como per vuoto Milano->MXP. Inviata risposta per tariffe partenze Milano città o disposizione.",
     "source": "crawler",
     "created_at": "2026-10-23T14:21:19.535+00:00",
-    "updated_at": "2026-10-26T16:45:27.610264+00:00",
+    "updated_at": "2026-10-28T13:18:00.000+00:00",
     "bus_models": "Mercedes Sprinter VIP (8 pax), Mercedes Minibus (16 pax), Mercedes Minibus VIP Class (18 pax), Executive Midibus (25 pax)",
     "pax_capacity": "7–8, 8, 16, 18, 25 pax",
-    "fleet_segment": "luxury"
+    "fleet_segment": "luxury",
+    "outreach_stage": "replied",
+    "replied_at": "2026-10-28T12:05:00.000Z",
+    "last_outreach_at": "2026-10-28T13:18:00.000Z",
+    "contact_person": "Vincent Lombardi (Avantgarde Service)"
   },
   {
     "id": "partner_1793031479651_1_wjsp",
@@ -751,47 +769,108 @@ export const INITIAL_BUS_PARTNERS = [
     "base_city": "Como",
     "website": "https://www.comodriver.com",
     "fleet_url": "https://www.comodriver.com/autovetture/",
-    "relevance_score": 91,
+    "relevance_score": 95,
     "score_breakdown": {
-      "fleet_luxury": 21,
+      "fleet_luxury": 25,
       "partner_card": {
-        "whatsapp": "+39 347 184 8920",
-        "bus_models": "Mercedes Sprinter Minibus (12 pax), Ford Transit Minibus (16 pax), Mercedes Classe V (7 pax)",
-        "replied_at": null,
-        "rate_hourly": "",
-        "client_notes": "",
+        "whatsapp": "+39 320 72 70 552",
+        "bus_models": "Mercedes Sprinter 12 pax (Luxury VIP Tomassini), Ford Transit Minibus 16 pax (Standard Shuttle)",
+        "replied_at": "2026-10-28T09:22:36.000Z",
+        "rate_hourly": "€100/h extra · MXP €350 (12p) / €400 (16p) · Milano/LIN €400/€450",
+        "client_notes": "Salvatore Calzolaio (28 Oct): Sent DORONGO 2027.pdf + 7 photos (4x Sprinter 12p Luxury Black, 3x Ford Transit 16p White).",
         "email_status": "mx_ok",
-        "pax_capacity": "7, 12, 16 pax",
-        "rate_standby": "",
+        "pax_capacity": "12, 16 pax",
+        "rate_standby": "4h (100km): €500 · 8h (200km): €900 (+10% IVA)",
         "scheduled_at": "2026-10-27T10:00:00.000Z",
         "fleet_segment": "both",
-        "outreach_stage": "ready",
+        "outreach_stage": "replied",
         "last_message_id": null,
         "user_set_status": true,
-        "last_outreach_at": null,
+        "last_outreach_at": "2026-10-28T13:18:00.000Z",
         "user_set_segment": true,
-        "fleet_audit_verified_at": "2026-10-26T18:25:11.587Z"
+        "fleet_audit_verified_at": "2026-10-28T09:22:00.000Z",
+        "contact_person": "Salvatore Calzolaio",
+        "rate_document": "assets/partner_fleet/como_driver/como_driver_rates_2027.pdf",
+        "fleet_photos": [
+          {
+            "id": "sprinter_ext_1",
+            "src": "assets/partner_fleet/como_driver/sprinter_12_ext_1.jpg",
+            "vehicle": "Mercedes Sprinter (12 Seats)",
+            "pax": 12,
+            "tier": "Luxury VIP"
+          },
+          {
+            "id": "sprinter_int_1",
+            "src": "assets/partner_fleet/como_driver/sprinter_12_int_1.jpg",
+            "vehicle": "Mercedes Sprinter (12 Seats)",
+            "pax": 12,
+            "tier": "Luxury VIP"
+          },
+          {
+            "id": "sprinter_int_2",
+            "src": "assets/partner_fleet/como_driver/sprinter_12_int_2.jpg",
+            "vehicle": "Mercedes Sprinter (12 Seats)",
+            "pax": 12,
+            "tier": "Luxury VIP"
+          },
+          {
+            "id": "sprinter_int_3",
+            "src": "assets/partner_fleet/como_driver/sprinter_12_int_3.jpg",
+            "vehicle": "Mercedes Sprinter (12 Seats)",
+            "pax": 12,
+            "tier": "Luxury VIP"
+          },
+          {
+            "id": "transit_ext_1",
+            "src": "assets/partner_fleet/como_driver/transit_16_ext_villa_erba.jpg",
+            "vehicle": "Ford Transit Minibus (16 Seats)",
+            "pax": 16,
+            "tier": "Standard Shuttle"
+          },
+          {
+            "id": "transit_ext_2",
+            "src": "assets/partner_fleet/como_driver/transit_16_ext_2.jpg",
+            "vehicle": "Ford Transit Minibus (16 Seats)",
+            "pax": 16,
+            "tier": "Standard Shuttle"
+          },
+          {
+            "id": "transit_int_1",
+            "src": "assets/partner_fleet/como_driver/transit_16_int_1.jpg",
+            "vehicle": "Ford Transit Minibus (16 Seats)",
+            "pax": 16,
+            "tier": "Standard Shuttle"
+          }
+        ]
       },
       "corporate_sla": 15,
       "territory_permits": 20,
       "discretion_unbranded": 35
     },
-    "status": "WANT_TO_CONTACT",
+    "status": "APPROVED_PARTNER",
     "unbranded_status": "100% Guaranteed Unbranded / NCC Black",
     "fleet_categories": [
-      "Mercedes-Benz Classe V (7 seats)",
       "Mercedes Sprinter Minibus (12 seats)",
       "Ford Transit Minibus (16 seats)"
     ],
-    "phone": "+39 347 184 8920",
+    "phone": "+39 320 72 70 552",
     "email": "info@comodriver.com",
     "notes": "interested in Minibus Mercedes Sprinter ( 12 passeggeri), do they have other mini vans?",
+    "client_notes": "Salvatore Calzolaio (28 Oct): Sent DORONGO 2027.pdf + 7 photos (4x Sprinter 12p Luxury Black Tomassini, 3x Ford Transit 16p White). MXP €350/€400, LIN/Milano €400/€450, Dispo 4h €500, 8h €900.",
     "source": "crawler",
     "created_at": "2026-10-23T14:21:19.097+00:00",
-    "updated_at": "2026-10-26T17:24:27.870639+00:00",
-    "bus_models": "Mercedes Sprinter Minibus (12 pax), Ford Transit Minibus (16 pax), Mercedes Classe V (7 pax)",
-    "pax_capacity": "7, 12, 16 pax",
-    "fleet_segment": "both"
+    "updated_at": "2026-10-28T13:18:00.000+00:00",
+    "bus_models": "Mercedes Sprinter 12 pax (Luxury VIP Tomassini), Ford Transit Minibus 16 pax (Standard Shuttle)",
+    "pax_capacity": "12, 16 pax",
+    "fleet_segment": "both",
+    "contact_person": "Salvatore Calzolaio",
+    "whatsapp": "+39 320 72 70 552",
+    "outreach_stage": "replied",
+    "replied_at": "2026-10-28T09:22:36.000Z",
+    "last_outreach_at": "2026-10-28T13:18:00.000Z",
+    "rate_hourly": "€100/h extra · MXP €350 (12p) / €400 (16p) · Milano/LIN €400/€450",
+    "rate_standby": "4h (100km): €500 · 8h (200km): €900 (+10% IVA)",
+    "rate_document": "assets/partner_fleet/como_driver/como_driver_rates_2027.pdf"
   },
   {
     "id": "partner_1792761050695_9k2e",

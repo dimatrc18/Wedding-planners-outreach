@@ -27,9 +27,9 @@ const FLOW_VIS_KEY = 'dorogo_bus_flow_visible';
 let showVisualFlow = (() => {
   try {
     const v = localStorage.getItem(FLOW_VIS_KEY);
-    return v === null ? true : v === '1';
+    return v === null ? false : v === '1';
   } catch (_) {
-    return true;
+    return false;
   }
 })();
 let selectedFlowNodes = {}; // { [colIndex]: nodeKey }
@@ -346,19 +346,19 @@ function reconcileLegacyPartnersInPlace() {
 function getStatusBadgeStyle(status) {
   switch (status) {
     case 'TO_REVIEW':
-      return 'background:#fffbeb;color:#b45309;border:1px solid #fde68a;font-weight:600';
+      return 'background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;font-weight:600';
     case 'WANT_TO_CONTACT':
-      return 'background:#ede9fe;color:#6d28d9;border:1px solid #ddd6fe;font-weight:600';
+      return 'background:#EEF2FF;color:#4338CA;border:1px solid #C7D2FE;font-weight:600';
     case 'CONTACTED':
-      return 'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-weight:600';
+      return 'background:#E0F2FE;color:#075985;border:1px solid #BAE6FD;font-weight:600';
     case 'APPROVED_PARTNER':
-      return 'background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;font-weight:600';
+      return 'background:#DCFCE7;color:#166534;border:1px solid #BBF7D0;font-weight:600';
     case 'REJECTED':
-      return 'background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;font-weight:600';
+      return 'background:#FEE2E2;color:#991B1B;border:1px solid #FECACA;font-weight:600';
     case 'NOT_RELEVANT':
-      return 'background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;font-weight:600';
+      return 'background:#F1F5F9;color:#475569;border:1px solid #E2E8F0;font-weight:600';
     default:
-      return 'background:var(--surface);color:var(--ink);border:1px solid var(--border);';
+      return 'background:#FFFFFF;color:#0A2540;border:1px solid #E3E8EE;';
   }
 }
 
@@ -2401,98 +2401,159 @@ export function render(el) {
     const hasActiveFilters = activeFilter !== 'all' || segmentFilter !== 'all' || statusFilter !== 'all' || vehicleFilter !== 'all' || cityFilter !== 'all' || searchQ.trim() !== '' || hasFlowSel;
 
     const flowColHeaders = [
-      { step: '1. BUS CLASS', title: 'Allocated Segment (Lux / Std)', color: '#d97706', bg: 'rgba(217, 119, 6, 0.07)', border: 'rgba(217, 119, 6, 0.35)' },
-      { step: '2. VEHICLES & PAX', title: 'Fleet Size & Passenger Fit', color: '#0d9488', bg: 'rgba(13, 148, 136, 0.07)', border: 'rgba(13, 148, 136, 0.35)' },
-      { step: '3. OUTREACH STAGE', title: 'Current Pipeline Step', color: '#7c3aed', bg: 'rgba(124, 58, 237, 0.07)', border: 'rgba(124, 58, 237, 0.35)' },
-      { step: '4. GOAL: RATES & WA', title: 'Replied · Rates & WA (10 Goal)', color: '#059669', bg: 'rgba(16, 185, 129, 0.08)', border: 'rgba(16, 185, 129, 0.4)' },
+      { step: '1. BUS CLASS', title: 'Allocated Segment (Lux / Std)', color: '#635BFF', bg: '#F8FAFC', border: '#E3E8EE' },
+      { step: '2. VEHICLES & PAX', title: 'Fleet Size & Passenger Fit', color: '#0A2540', bg: '#F8FAFC', border: '#E3E8EE' },
+      { step: '3. OUTREACH STAGE', title: 'Current Pipeline Step', color: '#425466', bg: '#F8FAFC', border: '#E3E8EE' },
+      { step: '4. GOAL: RATES & WA', title: 'Replied · Rates & WA (10 Goal)', color: '#166534', bg: '#F0FDF4', border: '#BBF7D0' },
     ];
 
     el.innerHTML = `
-    <div class="page-head">
-      <div>
-        <div class="label eyebrow">Northern Italy Luxury & Standard Fleet Pipeline</div>
-        <h1>🚌 Bus & Minibus Partner Outreach</h1>
-      </div>
-      <div class="row" style="gap:8px;flex-wrap:wrap">
-        <a class="btn sm" href="#fleet_showcase" style="background:var(--gold-soft);color:var(--ink);border-color:var(--gold-strong);font-weight:700;display:inline-flex;align-items:center;gap:4px" title="View partner fleet showroom, vehicle photos & prices">📸 Fleet &amp; Rates (${repliedOrRatesCount})</a>
-        <button class="btn sm" id="btn-ceo-outreach" style="background:#7c3aed;color:#fff;border-color:#6d28d9;font-weight:700" title="Manage Italian CEO outreach queue and sending">✉️ CEO Outreach & Queue (${wantToContactCount})</button>
-        <button class="btn sm" id="btn-scout-url" style="color:var(--gold-ink);border-color:var(--gold)" title="Evaluate website through 100-Point Gate">⚡ Scout URL</button>
-        <button class="btn sm" id="btn-scout-market" style="background:var(--gold-soft);color:var(--ink);border-color:var(--gold-strong);font-weight:600" title="Auto-scout operators by location, score & vehicle types">🔍 Auto-Scout Fleet</button>
-        <button class="btn ghost sm" id="btn-view-excluded" style="color:var(--text-3);border-color:var(--border);display:inline-flex;align-items:center;gap:4px" title="View operators permanently blocked from discovery and searches">
-          🚫 Excluded (${excludedList.length})
-        </button>
-      </div>
-    </div>
-
-    <div class="stack lg">
-      <!-- Top Stat Bar (High-Density Counters + Weekly 10-Reply Goal) -->
-      <div class="kpis">
-        <div class="kpi">
-          <span class="label">Total Fleet Roster</span>
-          <span class="val">${totalDiscovered}</span>
-          <span class="ci">Luxury VIP & Standard GT (${verifiedEmailsCount} MX verified)</span>
+    <div class="sail-page">
+      <div class="sail-header">
+        <div>
+          <div class="sail-eyebrow">Northern Italy B2B Charter &amp; Minibus Pipeline</div>
+          <h1>Bus &amp; Minibus Partners</h1>
+          <div class="sail-subtitle">Directory of ${totalDiscovered} vetted operators across Como, Milan, Bergamo &amp; Lake Garda — ${repliedOrRatesCount} active replies on file.</div>
         </div>
-        <div class="kpi">
-          <span class="label">1. To Check</span>
-          <span class="val" style="color:#d97706">${toReviewCount}</span>
-          <span class="ci">Discovered & awaiting review</span>
-        </div>
-        <div class="kpi">
-          <span class="label">2. In Queue (Ready)</span>
-          <span class="val" style="color:#6d28d9">${wantToContactCount}</span>
-          <span class="ci">Spaced Mon–Sat (max 4/day, 25m offset)</span>
-        </div>
-        <div class="kpi">
-          <span class="label">3. Contacted / Sent</span>
-          <span class="val" style="color:#0284c7">${contactedCount}</span>
-          <span class="ci">Sent via Hostinger SMTP</span>
-        </div>
-        <div class="kpi" style="border-left:3px solid #10b981;padding-left:12px">
-          <span class="label">🎯 Replied (Models & Rates)</span>
-          <span class="val" style="color:#059669">${repliedOrRatesCount} <span style="font-size:1rem;color:var(--text-3);font-weight:500">/ 10 Goal</span></span>
-          <span class="ci">Target: ≥10 replies by end of next week</span>
-        </div>
-        <div class="kpi">
-          <span class="label">Approved Partners</span>
-          <span class="val" style="color:#15803d">${activePartners}</span>
-          <span class="ci">Standby/hourly rates & WA confirmed</span>
+        <div class="sail-actions">
+          <a class="sail-btn primary" href="#fleet_showcase" title="View partner fleet ledger, vehicle photos & calculated PDF rates">
+            Fleet &amp; Rate Ledger (${repliedOrRatesCount})
+          </a>
+          <button class="sail-btn" id="btn-ceo-outreach" title="Manage Italian CEO outreach queue and sending">
+            CEO Outreach Queue (${wantToContactCount})
+          </button>
+          <button class="sail-btn" id="btn-scout-url" title="Evaluate website through 100-Point Gate">
+            Scout URL
+          </button>
+          <button class="sail-btn" id="btn-scout-market" title="Auto-scout operators by location, score & vehicle types">
+            Auto-Scout
+          </button>
+          <button class="sail-btn ghost" id="btn-view-excluded" title="View operators permanently blocked from discovery and searches">
+            Excluded (${excludedList.length})
+          </button>
         </div>
       </div>
 
-      <!-- Collapsible Visual Pipeline Flow (Sankey Diagram) Between Stats & Table -->
-      <section class="path-card" style="padding:12px 16px;border:1px solid var(--border);background:var(--surface)">
-        <div class="row between" style="align-items:center;flex-wrap:wrap;gap:8px">
-          <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">
-            <span class="chip outline" style="font-weight:700;font-size:.74rem;color:#1e40af;border-color:#93c5fd;background:#eff6ff">📊 Visual Pipeline Flow</span>
-            <span class="small muted">
-              <b>Click any bar to filter</b> · Class auto-detected from allocated buses · <b>Mon–Sat Schedule</b>
-            </span>
-            <div class="row" style="gap:8px;align-items:center;font-size:.72rem;color:var(--ink-2);margin-left:4px">
-              <span style="display:inline-flex;align-items:center;gap:4px"><i style="width:8px;height:8px;border-radius:50%;background:#d97706;display:inline-block"></i>Luxury VIP</span>
-              <span style="display:inline-flex;align-items:center;gap:4px"><i style="width:8px;height:8px;border-radius:50%;background:#7c3aed;display:inline-block"></i>Lux+Std / Ready</span>
-              <span style="display:inline-flex;align-items:center;gap:4px"><i style="width:8px;height:8px;border-radius:50%;background:#2563eb;display:inline-block"></i>Standard GT / Sent</span>
-              <span style="display:inline-flex;align-items:center;gap:4px"><i style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block"></i>Replied / Rates 🎯</span>
-            </div>
-            ${hasFlowSel ? `<button class="btn sm ghost" id="btn-clear-flow-sel" style="padding:2px 8px;font-size:.74rem;color:#2563eb;border-color:#2563eb;background:#eff6ff;font-weight:600">✕ Clear Flow Filter (${filtered.length}/${totalDiscovered})</button>` : ''}
-          </div>
-          <div class="row" style="gap:8px;align-items:center">
-            <button class="btn sm ghost" id="btn-toggle-visual-flow" style="font-weight:600;font-size:.78rem;padding:4px 10px;border-color:var(--border);background:var(--surface-2)" title="Show or hide the visual Sankey pipeline diagram">
-              ${showVisualFlow ? '🙈 Hide Visual Flow' : '📊 Show Visual Flow'}
+      <!-- Stripe 6-Column Telemetry Strip -->
+      <div class="sail-stat-strip" style="grid-template-columns: repeat(6, 1fr);">
+        <div class="sail-stat-cell">
+          <span class="sail-stat-label">Total Roster</span>
+          <span class="sail-stat-val">${totalDiscovered}</span>
+          <span class="sail-stat-sub">${verifiedEmailsCount} MX verified domains</span>
+        </div>
+        <div class="sail-stat-cell">
+          <span class="sail-stat-label">1. To Review</span>
+          <span class="sail-stat-val">${toReviewCount}</span>
+          <span class="sail-stat-sub">Awaiting fleet check</span>
+        </div>
+        <div class="sail-stat-cell">
+          <span class="sail-stat-label">2. In Queue</span>
+          <span class="sail-stat-val" style="color:#635BFF">${wantToContactCount}</span>
+          <span class="sail-stat-sub">Mon–Sat · max 4/day</span>
+        </div>
+        <div class="sail-stat-cell">
+          <span class="sail-stat-label">3. Contacted</span>
+          <span class="sail-stat-val">${contactedCount}</span>
+          <span class="sail-stat-sub">Sent via Hostinger SMTP</span>
+        </div>
+        <div class="sail-stat-cell">
+          <span class="sail-stat-label">Replied / Rates</span>
+          <span class="sail-stat-val" style="color:#166534">${repliedOrRatesCount} <span style="font-size:13px;color:#697386;font-weight:500">/ 10</span></span>
+          <span class="sail-stat-sub">Target: 10 verified partners</span>
+        </div>
+        <div class="sail-stat-cell">
+          <span class="sail-stat-label">Approved Partners</span>
+          <span class="sail-stat-val" style="color:#166534">${activePartners}</span>
+          <span class="sail-stat-sub">Rates &amp; photos verified</span>
+        </div>
+      </div>
+
+      <!-- Stripe Filter Tabs & Controls Bar -->
+      <div class="sail-tabs-bar">
+        <div class="sail-tabs">
+          <button class="sail-tab clickable ${activeFilter === 'all' && segmentFilter === 'all' && statusFilter === 'all' && vehicleFilter === 'all' && cityFilter === 'all' && !searchQ && !hasFlowSel ? 'active' : ''}" data-filter="all">
+            All <span class="sail-tab-count">${totalDiscovered}</span>
+          </button>
+          <button class="sail-tab clickable ${activeFilter === 'replied_rates' ? 'active' : ''}" data-filter="replied_rates" title="Operators who replied or sent rates">
+            Replied &amp; Rates <span class="sail-tab-count">${repliedOrRatesCount}</span>
+          </button>
+          <button class="sail-tab clickable ${statusFilter === 'APPROVED_PARTNER' ? 'active' : ''}" data-filter="approved">
+            Approved <span class="sail-tab-count">${activePartners}</span>
+          </button>
+          <button class="sail-tab clickable ${statusFilter === 'WANT_TO_CONTACT' ? 'active' : ''}" data-filter="want_to_contact">
+            In Queue <span class="sail-tab-count">${wantToContactCount}</span>
+          </button>
+          <button class="sail-tab clickable ${statusFilter === 'CONTACTED' ? 'active' : ''}" data-filter="contacted">
+            Contacted <span class="sail-tab-count">${contactedCount}</span>
+          </button>
+          <button class="sail-tab clickable ${statusFilter === 'TO_REVIEW' ? 'active' : ''}" data-filter="to_review">
+            To Review <span class="sail-tab-count">${toReviewCount}</span>
+          </button>
+          <button class="sail-tab clickable ${segmentFilter === 'luxury' ? 'active' : ''}" data-segment="luxury" title="Filter operators with Luxury VIP buses allocated">
+            Luxury VIP
+          </button>
+          <button class="sail-tab clickable ${segmentFilter === 'standard' ? 'active' : ''}" data-segment="standard" title="Filter operators with Standard GT / Shuttle fleet allocated">
+            Standard Shuttle
+          </button>
+          ${manualEscalationCount > 0 ? `
+            <button class="sail-tab clickable ${activeFilter === 'manual_escalation' ? 'active' : ''}" data-filter="manual_escalation" title="Operators who have not replied 72h after Email 2">
+              Needs Call <span class="sail-tab-count">${manualEscalationCount}</span>
             </button>
-          </div>
+          ` : ''}
         </div>
 
-        ${showVisualFlow ? `
-          <div class="path-canvas-wrap" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line);overflow-x:auto">
+        <div class="sail-filter-controls">
+          <select id="select-vehicle" class="sail-select" title="Filter by Allocated Bus Type">
+            <option value="all">All Bus Types</option>
+            ${STANDARD_FLEET_TYPES.map((vt) => `
+              <option value="${attr(vt.key)}" ${vehicleFilter === vt.key ? 'selected' : ''}>
+                ${esc(vt.short)} (${list.filter((p) => operatorHasVehicleType(p, vt.key)).length})
+              </option>
+            `).join('')}
+          </select>
+
+          <select id="select-city" class="sail-select" title="Filter by City">
+            <option value="all">All Cities</option>
+            ${cities.map((c) => `
+              <option value="${attr(c)}" ${cityFilter.toLowerCase() === c.toLowerCase() ? 'selected' : ''}>
+                ${esc(c)} (${list.filter((p) => (p.base_city || '').toLowerCase().includes(c.toLowerCase())).length})
+              </option>
+            `).join('')}
+          </select>
+
+          <input type="text" id="bus-search" class="sail-input" placeholder="Search company, models, pax, rates..." value="${attr(searchQ)}" style="width:200px">
+
+          <button class="sail-btn sm ghost" id="btn-toggle-visual-flow" title="Toggle visual Sankey pipeline diagram">
+            ${showVisualFlow ? 'Hide Flow' : 'Pipeline Flow'}
+          </button>
+
+          ${hasActiveFilters ? `
+            <button class="sail-btn sm" id="btn-clear-filters" style="color:#991B1B;border-color:#FECACA;background:#FEE2E2" title="Reset all filters">
+              Reset (${filtered.length}/${totalDiscovered})
+            </button>
+          ` : ''}
+        </div>
+      </div>
+
+      ${showVisualFlow ? `
+        <section class="sail-card" style="padding:14px 18px;margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="sail-pill indigo">Pipeline Flow</span>
+              <span style="font-size:12px;color:#697386">Click any bar to filter the directory table below</span>
+            </div>
+            ${hasFlowSel ? `<button class="sail-btn sm" id="btn-clear-flow-sel">Clear Flow Filter (${filtered.length}/${totalDiscovered})</button>` : ''}
+          </div>
+          <div class="path-canvas-wrap" style="overflow-x:auto">
             <div class="path-canvas" style="min-width:920px">
               <div class="path-col-headers" style="display:grid;grid-template-columns:repeat(4, 1fr);gap:12px;margin-bottom:8px;padding:0 12px">
                 ${flowColHeaders.map((h, i) => `
                   <div style="display:flex;align-items:center;gap:8px">
                     <div style="background:${h.bg};border:1px solid ${h.border};border-left:3px solid ${h.color};border-radius:6px;padding:6px 12px;flex:1">
-                      <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.06em;color:${h.color};font-weight:800">${esc(h.step)}</div>
-                      <div style="font-size:.81rem;font-weight:600;color:var(--ink)">${esc(h.title)}</div>
+                      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:${h.color};font-weight:700">${esc(h.step)}</div>
+                      <div style="font-size:12px;font-weight:600;color:#0A2540">${esc(h.title)}</div>
                     </div>
-                    ${i < 3 ? `<span style="font-size:.95rem;color:${h.color};font-weight:700">→</span>` : ''}
+                    ${i < 3 ? `<span style="font-size:13px;color:#8792A2;font-weight:600">→</span>` : ''}
                   </div>
                 `).join('')}
               </div>
@@ -2526,95 +2587,46 @@ export function render(el) {
               </svg>
             </div>
           </div>
-        ` : ''}
-      </section>
+        </section>
+      ` : ''}
 
-      <!-- Single-Row Colorful Filter & Search Bar -->
-      <div class="row between" style="gap:8px;flex-wrap:wrap;align-items:center">
-        <!-- Quick filter pills with semantic colors -->
-        <div class="row" style="gap:5px;flex-wrap:wrap;align-items:center">
-          <button class="chip clickable ${activeFilter === 'all' && segmentFilter === 'all' && statusFilter === 'all' && vehicleFilter === 'all' && cityFilter === 'all' && !searchQ && !hasFlowSel ? 'active' : 'outline'}" data-filter="all" style="${activeFilter === 'all' && segmentFilter === 'all' && statusFilter === 'all' && vehicleFilter === 'all' && cityFilter === 'all' && !searchQ && !hasFlowSel ? 'background:#0f172a;color:#fff;border-color:#0f172a;font-weight:700' : ''}">All (${totalDiscovered})</button>
-          <button class="chip clickable ${segmentFilter === 'luxury' ? 'active' : 'outline'}" data-segment="luxury" style="${segmentFilter === 'luxury' ? 'background:#d97706;color:#fff;border-color:#d97706;font-weight:700' : 'border-color:#f59e0b;color:#b45309;background:#fffbeb;font-weight:600'}" title="Filter operators with Luxury VIP buses allocated (V-Class, Sprinter VIP/Lux, Limobus)">✨ Luxury VIP</button>
-          <button class="chip clickable ${segmentFilter === 'standard' ? 'active' : 'outline'}" data-segment="standard" style="${segmentFilter === 'standard' ? 'background:#2563eb;color:#fff;border-color:#2563eb;font-weight:700' : 'border-color:#93c5fd;color:#1d4ed8;background:#eff6ff;font-weight:600'}" title="Filter operators with Standard GT / Midibus fleet allocated (24–56 pax)">🚌 Standard GT</button>
-          <button class="chip clickable ${statusFilter === 'TO_REVIEW' ? 'active' : 'outline'}" data-filter="to_review" style="${statusFilter === 'TO_REVIEW' ? 'background:#d97706;color:#fff;border-color:#d97706;font-weight:700' : 'border-color:#fde68a;color:#b45309;background:#fffbeb'}">⏳ 1. To Check (${toReviewCount})</button>
-          <button class="chip clickable ${statusFilter === 'WANT_TO_CONTACT' ? 'active' : 'outline'}" data-filter="want_to_contact" style="${statusFilter === 'WANT_TO_CONTACT' ? 'background:#6d28d9;color:#fff;border-color:#6d28d9;font-weight:700' : 'border-color:#ddd6fe;color:#6d28d9;background:#f5f3ff;font-weight:600'}">📋 2. In Queue (${wantToContactCount})</button>
-          <button class="chip clickable ${statusFilter === 'CONTACTED' ? 'active' : 'outline'}" data-filter="contacted" style="${statusFilter === 'CONTACTED' ? 'background:#0284c7;color:#fff;border-color:#0284c7;font-weight:700' : 'border-color:#bae6fd;color:#0369a1;background:#f0f9ff;font-weight:600'}">✉️ 3. Contacted (${contactedCount})</button>
-          <button class="chip clickable ${activeFilter === 'replied_rates' ? 'active' : 'outline'}" data-filter="replied_rates" style="${activeFilter === 'replied_rates' ? 'background:#059669;color:#fff;border-color:#059669;font-weight:700' : 'border-color:#10b981;color:#059669;background:#ecfdf5;font-weight:700'}">💶 Replied / Rates (${repliedOrRatesCount}/10)</button>
-          <button class="chip clickable ${statusFilter === 'APPROVED_PARTNER' ? 'active' : 'outline'}" data-filter="approved" style="${statusFilter === 'APPROVED_PARTNER' ? 'background:#15803d;color:#fff;border-color:#15803d;font-weight:700' : 'border-color:#bbf7d0;color:#15803d;background:#f0fdf4;font-weight:600'}">🤝 Approved (${activePartners})</button>
-          <button class="chip clickable ${activeFilter === 'manual_escalation' ? 'active' : 'outline'}" data-filter="manual_escalation" style="${activeFilter === 'manual_escalation' ? 'background:#dc2626;color:#fff;border-color:#dc2626;font-weight:700' : (manualEscalationCount > 0 ? 'border-color:#f87171;color:#b91c1c;background:#fef2f2;font-weight:700' : 'border-color:var(--border);color:var(--ink-muted)')}" title="Operators who have not replied 72h after Email 2 — call or WhatsApp manually">📞 Needs Call (${manualEscalationCount})</button>
-        </div>
-
-        <!-- Inline Compact Filter Controls (width:auto so they never stack full-width) -->
-        <div class="row" style="gap:6px;flex-wrap:wrap;align-items:center">
-          <!-- Vehicle Type Dropdown -->
-          <select id="select-vehicle" class="sm" style="width:auto;padding:4px 8px;border-radius:6px;border:1px solid ${vehicleFilter !== 'all' ? '#d97706' : 'var(--border)'};background:${vehicleFilter !== 'all' ? '#fffbeb' : 'var(--surface)'};font-size:.78rem;font-weight:${vehicleFilter !== 'all' ? '700' : '500'}" title="Filter by Allocated Bus Type">
-            <option value="all">🚐 All Bus Types</option>
-            ${STANDARD_FLEET_TYPES.map((vt) => `
-              <option value="${attr(vt.key)}" ${vehicleFilter === vt.key ? 'selected' : ''}>
-                ${vt.icon} ${esc(vt.short)} (${list.filter((p) => operatorHasVehicleType(p, vt.key)).length})
-              </option>
-            `).join('')}
-          </select>
-
-          <!-- City Dropdown -->
-          <select id="select-city" class="sm" style="width:auto;padding:4px 8px;border-radius:6px;border:1px solid ${cityFilter !== 'all' ? '#2563eb' : 'var(--border)'};background:${cityFilter !== 'all' ? '#eff6ff' : 'var(--surface)'};font-size:.78rem;font-weight:${cityFilter !== 'all' ? '700' : '500'}" title="Filter by City">
-            <option value="all">📍 All Cities</option>
-            ${cities.map((c) => `
-              <option value="${attr(c)}" ${cityFilter.toLowerCase() === c.toLowerCase() ? 'selected' : ''}>
-                📍 ${esc(c)} (${list.filter((p) => (p.base_city || '').toLowerCase().includes(c.toLowerCase())).length})
-              </option>
-            `).join('')}
-          </select>
-
-          <!-- Search Input -->
-          <input type="text" id="bus-search" placeholder="Search company, models, pax, rates..." value="${attr(searchQ)}" style="width:210px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);font-size:.8rem">
-
-          <!-- Reset Filter Button -->
-          ${hasActiveFilters ? `
-            <button class="btn sm ghost" id="btn-clear-filters" style="padding:3px 8px;font-size:.76rem;color:#dc2626;border-color:#fca5a5;background:#fef2f2;display:inline-flex;align-items:center;gap:3px;font-weight:600" title="Reset all filters">
-              ✕ Reset (${filtered.length}/${totalDiscovered})
-            </button>
-          ` : ''}
-        </div>
-      </div>
-
-      <!-- Minimalist Bus Partner Manifest Table (100% Fits in One View, Zero Horizontal Scroll) -->
-      <div class="card flush table-wrap" style="overflow-x:hidden">
-        <table class="table" style="width:100%;table-layout:fixed;border-collapse:collapse">
+      <!-- Stripe Sail Partner Directory Table -->
+      <div class="sail-card" style="overflow-x:auto">
+        <table class="sail-table" style="width:100%;table-layout:fixed">
           <thead>
             <tr>
-              <th style="width:52px;text-align:center;padding:8px 2px">Score</th>
-              <th style="width:150px">Company & Base</th>
-              <th style="width:108px;text-align:center">Web & Verify</th>
-              <th style="width:140px">Contact Email</th>
-              <th style="width:175px">
-                <div class="row nowrap" style="gap:4px;align-items:center">
-                  <span>Models & Pax Fit</span>
+              <th style="width:68px;text-align:center">Score</th>
+              <th style="width:170px">Operator &amp; Base</th>
+              <th style="width:108px;text-align:center">Domain Check</th>
+              <th style="width:155px">Contact Email</th>
+              <th style="width:185px">
+                <div style="display:flex;align-items:center;gap:4px">
+                  <span>Fleet &amp; Pax Fit</span>
                   ${vehicleFilter !== 'all' ? `
-                    <button class="chip tiny clickable" id="header-clear-vehicle" style="padding:0 5px;font-size:.62rem;font-weight:700;background:var(--gold-soft);color:var(--gold-ink);border:1px solid var(--gold-strong);border-radius:8px" title="Clear vehicle filter">
-                      ${esc(STANDARD_FLEET_TYPES.find(v => v.key === vehicleFilter)?.short || vehicleFilter)} ✕
+                    <button class="sail-pill indigo clickable" id="header-clear-vehicle" style="cursor:pointer;border:none" title="Clear vehicle filter">
+                      ${esc(STANDARD_FLEET_TYPES.find(v => v.key === vehicleFilter)?.short || vehicleFilter)} ×
                     </button>
                   ` : ''}
                 </div>
               </th>
-              <th style="width:190px" title="Standby (A Disposizione 4h/8h) & Hourly Service Prices / My Notes">Rates & My Notes</th>
-              <th style="width:145px">
-                <div class="row nowrap" style="gap:4px;align-items:center">
-                  <span>Outreach & Status</span>
+              <th style="width:225px" title="Standby (A Disposizione 4h/8h), Transfer Rates, Photos & Notes">Rates, Photos &amp; Notes</th>
+              <th style="width:150px">
+                <div style="display:flex;align-items:center;gap:4px">
+                  <span>Outreach Stage</span>
                   ${statusFilter !== 'all' ? `
-                    <button class="chip tiny clickable" id="header-clear-status" style="padding:0 5px;font-size:.62rem;font-weight:700;background:#ede9fe;color:#6d28d9;border:1px solid #ddd6fe;border-radius:8px" title="Clear status filter">
-                      ${esc(core.BUS_STATUSES.find(s => s.key === statusFilter)?.label.replace(/^\d+\.\s*/, '') || statusFilter)} ✕
+                    <button class="sail-pill indigo clickable" id="header-clear-status" style="cursor:pointer;border:none" title="Clear status filter">
+                      ${esc(core.BUS_STATUSES.find(s => s.key === statusFilter)?.label.replace(/^\d+\.\s*/, '') || statusFilter)} ×
                     </button>
                   ` : ''}
                 </div>
               </th>
-              <th style="width:32px;text-align:center" title="Delete & Block">Del</th>
+              <th style="width:40px;text-align:center" title="Delete & Block"></th>
             </tr>
           </thead>
           <tbody>
-            ${filtered.length ? filtered.map((p, idx) => {
+            ${filtered.length ? filtered.map((p) => {
               const score = p.relevance_score || 0;
-              const scoreClass = score >= 90 ? 'chip ok' : score >= 75 ? 'chip' : score >= 50 ? 'chip gold' : 'chip bad';
+              const scorePillCls = score >= 90 ? 'sail-pill green' : score >= 75 ? 'sail-pill indigo' : score >= 50 ? 'sail-pill amber' : 'sail-pill slate';
               const categories = Array.isArray(p.fleet_categories) ? p.fleet_categories : [];
               const isNew = isRecentlyAdded(p);
               const isLatest = isLatestAddition(p, list);
@@ -2622,151 +2634,162 @@ export function render(el) {
 
               const emailSt = p.email_status || 'unknown';
               const emailDot = ['verified', 'mx_ok'].includes(emailSt)
-                ? `<span style="color:#10b981;font-weight:800;font-size:.75rem" title="Verified Deliverable Domain & MX Record">✓</span>`
+                ? `<span style="width:6px;height:6px;border-radius:50%;background:#166534;display:inline-block;flex:none" title="Verified Deliverable Domain & MX Record"></span>`
                 : emailSt === 'invalid' || emailSt === 'no_mx'
-                  ? `<span style="color:#ef4444;font-weight:800;font-size:.75rem" title="Invalid / No MX Record — Blocked from sending">✕</span>`
-                  : `<span style="color:#f59e0b;font-weight:800;font-size:.75rem" title="Unchecked email — Click 🔍 Check">●</span>`;
+                  ? `<span style="width:6px;height:6px;border-radius:50%;background:#DC2626;display:inline-block;flex:none" title="Invalid / No MX Record — Blocked from sending"></span>`
+                  : `<span style="width:6px;height:6px;border-radius:50%;background:#D97706;display:inline-block;flex:none" title="Unchecked email — Click Check"></span>`;
 
               const rawWa = (p.whatsapp || p.phone || '').replace(/[^\d+]/g, '');
               const waHref = rawWa ? `https://wa.me/${rawWa.replace(/^\+/, '')}?text=${encodeURIComponent(core.buildBusOutreachDraft(p, 'WA_pitch').body)}` : '';
               const hasRates = Boolean(p.rate_hourly || p.rate_standby);
+              const photoCount = p.score_breakdown?.partner_card?.fleet_photos?.length || (p.id === 'partner_1792765279097_26hr' ? 7 : 0);
+              const hasRatePdf = Boolean(p.rate_document || p.score_breakdown?.partner_card?.rate_document || p.id === 'partner_1792765279097_26hr');
 
               const rowStyle = isLatest 
-                ? 'background:rgba(16, 185, 129, 0.08);border-left:3px solid #10b981;' 
+                ? 'background:#F0FDF4;border-left:3px solid #16A34A;' 
                 : isNew 
-                ? 'background:rgba(16, 185, 129, 0.03);border-left:3px solid rgba(16, 185, 129, 0.35);' 
+                ? 'background:#F8FAFC;border-left:3px solid #635BFF;' 
                 : '';
 
-              return `<tr class="hover-row ${isLatest ? 'latest-added-row' : isNew ? 'newly-added-row' : ''}" data-id="${attr(p.id)}" style="min-height:58px;${rowStyle}">
-                <td style="text-align:center;vertical-align:middle;padding:6px 2px">
-                  <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-                    <span class="${scoreClass} clickable" data-act="view-score" data-id="${attr(p.id)}" style="font-weight:700;font-size:.82rem;padding:2px 5px;cursor:pointer" title="Click to view 4-pillar score breakdown">
+              return `<tr class="hover-row ${isLatest ? 'latest-added-row' : isNew ? 'newly-added-row' : ''}" data-id="${attr(p.id)}" style="${rowStyle}">
+                <td style="text-align:center">
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+                    <span class="${scorePillCls} clickable num" data-act="view-score" data-id="${attr(p.id)}" style="cursor:pointer;font-weight:700" title="Click to view 4-pillar score breakdown">
                       ${score}
                     </span>
                     ${seg === 'both' 
-                      ? `<button class="chip tiny clickable btn-toggle-seg" data-act="toggle-segment" data-id="${attr(p.id)}" style="font-size:.60rem;padding:1px 5px;font-weight:700;background:rgba(16,185,129,0.12);color:#059669;border:1px solid rgba(16,185,129,0.3);border-radius:4px;white-space:nowrap;line-height:1.2;cursor:pointer" title="Fleet Segment: STD + LUX (Click to cycle LUX / STD)">STD + LUX</button>`
+                      ? `<button class="sail-pill indigo clickable btn-toggle-seg" data-act="toggle-segment" data-id="${attr(p.id)}" style="font-size:10px;padding:1px 5px;cursor:pointer" title="Fleet Segment: LUX + STD (Click to cycle)">LUX+STD</button>`
                       : seg === 'luxury'
-                      ? `<button class="chip tiny clickable btn-toggle-seg" data-act="toggle-segment" data-id="${attr(p.id)}" style="font-size:.60rem;padding:1px 5px;font-weight:700;background:var(--gold-soft);color:var(--gold-ink);border:1px solid var(--gold-strong);border-radius:4px;white-space:nowrap;line-height:1.2;cursor:pointer" title="Fleet Segment: LUX (Click to cycle STD / STD + LUX)">LUX</button>`
-                      : `<button class="chip tiny clickable btn-toggle-seg" data-act="toggle-segment" data-id="${attr(p.id)}" style="font-size:.60rem;padding:1px 5px;font-weight:600;background:var(--surface-2);color:var(--text-2);border:1px solid var(--line);border-radius:4px;white-space:nowrap;line-height:1.2;cursor:pointer" title="Fleet Segment: STD (Click to cycle STD + LUX / LUX)">STD</button>`
+                      ? `<button class="sail-pill vip clickable btn-toggle-seg" data-act="toggle-segment" data-id="${attr(p.id)}" style="font-size:10px;padding:1px 5px;cursor:pointer" title="Fleet Segment: LUXURY VIP (Click to cycle)">LUX VIP</button>`
+                      : `<button class="sail-pill std clickable btn-toggle-seg" data-act="toggle-segment" data-id="${attr(p.id)}" style="font-size:10px;padding:1px 5px;cursor:pointer" title="Fleet Segment: STANDARD (Click to cycle)">STD</button>`
                     }
                   </div>
                 </td>
-                <td style="vertical-align:middle">
-                  <div class="row" style="gap:4px;align-items:center;white-space:nowrap">
-                    <span style="font-weight:600;font-size:.86rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(p.name)}">${esc(p.name)}</span>
+                <td>
+                  <div style="display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden">
+                    <span style="font-weight:600;font-size:13px;color:#0A2540;overflow:hidden;text-overflow:ellipsis" title="${attr(p.name)}">${esc(p.name)}</span>
                     ${newBadgeHtml(p, list)}
                   </div>
-                  <div class="tiny muted" style="white-space:nowrap;margin-top:2px">📍 ${esc(p.base_city || 'Northern Italy')}</div>
+                  <div style="font-size:11.5px;color:#697386;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                    ${esc(p.base_city || 'Northern Italy')}${p.contact_person ? ` · ${esc(p.contact_person)}` : ''}
+                  </div>
                 </td>
-                <td style="vertical-align:middle;text-align:center;white-space:nowrap">
-                  <div class="row nowrap" style="gap:4px;align-items:center;justify-content:center">
+                <td style="text-align:center;white-space:nowrap">
+                  <div style="display:inline-flex;align-items:center;gap:4px">
                     ${p.website 
-                      ? `<a class="btn sm ghost" href="${attr(p.website)}" target="_blank" rel="noopener" style="padding:3px 6px;font-size:.73rem;white-space:nowrap;display:inline-flex;align-items:center;gap:2px" title="Open Website">${icon('external', 11)} Web</a>` 
-                      : `<span class="tiny faint" style="display:inline-block;padding:3px 4px">—</span>`
+                      ? `<a class="sail-btn sm" href="${attr(p.website)}" target="_blank" rel="noopener" style="padding:3px 7px;font-size:11px" title="Open Website">Site ↗</a>` 
+                      : `<span style="color:#8792A2;font-size:11px">—</span>`
                     }
-                    <button class="btn sm ghost btn-find-email" data-act="find-email" data-id="${attr(p.id)}" style="padding:3px 6px;font-size:.73rem;white-space:nowrap;display:inline-flex;align-items:center;gap:2px;color:var(--series-1);border-color:rgba(59,130,246,0.3);background:rgba(59,130,246,0.06);cursor:pointer" title="Verify live website, DNS MX record & email">
-                      🔍 Check
+                    <button class="sail-btn sm btn-find-email" data-act="find-email" data-id="${attr(p.id)}" style="padding:3px 7px;font-size:11px" title="Verify live website, DNS MX record & email">
+                      Verify
                     </button>
                   </div>
                 </td>
-                <td style="vertical-align:middle;white-space:nowrap">
+                <td style="white-space:nowrap">
                   ${p.email 
-                    ? `<div class="row nowrap" style="gap:4px;align-items:center;white-space:nowrap">
+                    ? `<div style="display:flex;align-items:center;gap:6px">
                         ${emailDot}
-                        <a href="mailto:${attr(p.email)}" style="color:var(--series-1);font-size:.78rem;text-decoration:none;display:inline-flex;align-items:center;gap:2px;white-space:nowrap;max-width:115px;overflow:hidden;text-overflow:ellipsis" title="Email: ${attr(p.email)} (${esc(emailSt)})">
-                          <span style="overflow:hidden;text-overflow:ellipsis">${esc(p.email)}</span>
+                        <a href="mailto:${attr(p.email)}" style="color:#0A2540;font-size:12px;font-weight:500;text-decoration:none;max-width:118px;overflow:hidden;text-overflow:ellipsis" title="Email: ${attr(p.email)} (${esc(emailSt)})">
+                          ${esc(p.email)}
                         </a>
-                        <button class="clickable btn-edit-pencil" data-act="edit-email" data-id="${attr(p.id)}" style="background:none;border:none;padding:2px 3px;cursor:pointer;color:var(--text-3);opacity:0.6;display:inline-flex;align-items:center;justify-content:center;border-radius:3px" title="Edit Email & Website">${pencilIcon(11)}</button>
+                        <button class="clickable btn-edit-pencil" data-act="edit-email" data-id="${attr(p.id)}" style="background:none;border:none;padding:2px;cursor:pointer;color:#697386;display:inline-flex" title="Edit Email & Website">${pencilIcon(11)}</button>
                       </div>`
-                    : `<button class="clickable" data-act="edit-email" data-id="${attr(p.id)}" style="background:var(--surface-2);border:1px dashed var(--line-strong);padding:2px 6px;border-radius:4px;color:var(--gold-ink);cursor:pointer;font-size:.72rem;white-space:nowrap;display:inline-flex;align-items:center;gap:3px" title="Click to add email">
+                    : `<button class="sail-btn sm" data-act="edit-email" data-id="${attr(p.id)}" style="font-size:11px;padding:2px 7px" title="Click to add email">
                         + Add email
                       </button>`
                   }
+                  ${p.phone ? `<div class="num" style="font-size:11px;color:#697386;margin-top:2px">${esc(p.phone)}</div>` : ''}
                 </td>
-                <td style="vertical-align:middle">
-                  <div style="display:flex;flex-wrap:wrap;gap:3px;align-items:center;line-height:1.2;max-width:175px">
+                <td>
+                  <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">
                     ${categories.map((c) => {
                       const vKey = detectVehicleKey(c);
                       const isMatch = vehicleFilter !== 'all' && (vehicleFilter === vKey || operatorHasVehicleType(p, vehicleFilter));
                       return `
-                        <button class="chip tiny outline fleet-filter-btn ${isMatch ? 'active-fleet-match' : ''}" 
+                        <button class="sail-pill ${isMatch ? 'indigo' : 'std'} fleet-filter-btn clickable" 
                           data-vkey="${attr(vKey)}" 
-                          style="font-size:.68rem;padding:1px 6px;line-height:1.2;white-space:nowrap;cursor:pointer;border-radius:4px;${isMatch ? 'background:var(--gold-soft);border-color:var(--gold-strong);color:var(--gold-ink);font-weight:700;' : 'border-color:var(--line);background:var(--surface-2);'}" 
+                          style="font-size:11px;padding:2px 6px;cursor:pointer" 
                           title="Click to filter by ${esc(shortFleetName(c))}">
                           ${esc(shortFleetName(c))}
                         </button>
                       `;
                     }).join('')}
-                    <button class="clickable" data-act="edit-fleet" data-id="${attr(p.id)}" style="background:none;border:none;padding:1px 3px;cursor:pointer;font-size:.66rem;color:var(--gold-ink);display:inline-flex;align-items:center;gap:2px" title="Edit fleet categories & models">
+                    <button class="clickable" data-act="edit-fleet" data-id="${attr(p.id)}" style="background:none;border:none;padding:2px;cursor:pointer;color:#697386;display:inline-flex" title="Edit fleet categories & models">
                       ${pencilIcon(10)}
                     </button>
                   </div>
                 </td>
-                <td style="vertical-align:middle">
-                  <div class="clickable" data-act="edit-rates" data-id="${attr(p.id)}" style="cursor:pointer;max-width:205px;display:flex;flex-direction:column;gap:3px;line-height:1.25" title="Click to view/edit Rates and My Pre-Contact Notes">
-                    ${(p.rate_document || p.score_breakdown?.partner_card?.fleet_photos?.length || p.id === 'partner_1792765279097_26hr') ? `
-                      <a href="#fleet_showcase" class="chip tiny gold" style="font-size:.65rem;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:2px;margin-bottom:2px" title="Click to view photos and rate card in Fleet Showcase">📸 6 Photos &amp; PDF Rate Card ➔</a>
+                <td>
+                  <div class="clickable" data-act="edit-rates" data-id="${attr(p.id)}" style="cursor:pointer;display:flex;flex-direction:column;gap:4px" title="Click to view/edit Rates and Notes">
+                    ${(photoCount > 0 || hasRatePdf) ? `
+                      <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+                        <a href="#fleet_showcase" class="sail-pill green" style="font-size:10.5px;text-decoration:none" onclick="event.stopPropagation()" title="Open verified photos & rate table in Fleet Ledger">
+                          <span class="dot"></span>${photoCount} Photos &amp; PDF Rates ↗
+                        </a>
+                      </div>
                     ` : ''}
                     ${hasRates ? `
-                      <div style="font-size:.74rem;font-weight:700;color:#059669;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-                        💶 ${esc([p.rate_hourly, p.rate_standby].filter(Boolean).join(' · '))}
+                      <div class="num" style="font-size:11.5px;font-weight:600;color:#0A2540;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                        ${esc([p.rate_hourly, p.rate_standby].filter(Boolean).join(' · '))}
+                      </div>
+                    ` : ''}
+                    ${p.client_notes ? `
+                      <div style="font-size:11px;color:#166534;background:#F0FDF4;border:1px solid #BBF7D0;padding:3px 6px;border-radius:4px;line-height:1.35;max-height:44px;overflow:hidden;text-overflow:ellipsis" title="${attr(p.client_notes)}">
+                        <b>Reply:</b> ${esc(p.client_notes)}
                       </div>
                     ` : ''}
                     ${p.notes ? `
-                      <div class="tiny" style="font-size:.71rem;color:#1e293b;line-height:1.3;white-space:pre-line;max-height:56px;overflow-y:auto;background:rgba(245,158,11,0.09);padding:3px 6px;border-radius:4px;border-left:2px solid #f59e0b" title="${attr(p.notes)}">
-                        <b>📝</b> ${esc(p.notes)}
+                      <div style="font-size:11px;color:#425466;line-height:1.35;white-space:pre-line;max-height:44px;overflow-y:auto;background:#F8FAFC;padding:3px 6px;border-radius:4px;border:1px solid #E3E8EE" title="${attr(p.notes)}">
+                        ${esc(p.notes)}
                       </div>
-                    ` : `
-                      <div class="row nowrap" style="gap:4px;align-items:center">
-                        <span class="chip tiny outline" style="font-size:.68rem;padding:1px 6px;border-color:var(--border);color:var(--text-3);background:var(--surface-2)">+ Notes / Rates</span>
-                        <span class="clickable" data-act="edit-notes" data-id="${attr(p.id)}" style="font-size:.7rem;color:var(--text-3)" title="Edit notes">${pencilIcon(10)}</span>
+                    ` : (!hasRates && !p.client_notes ? `
+                      <div style="display:flex;align-items:center;gap:4px">
+                        <span class="sail-pill slate" style="font-size:10.5px">+ Add Notes / Rates</span>
                       </div>
-                    `}
-                    ${p.client_notes ? `<div class="tiny" style="color:#059669;font-weight:600;font-size:.68rem;line-height:1.2;overflow:hidden;text-overflow:ellipsis" title="${attr(p.client_notes)}">💬 Reply: ${esc(p.client_notes)}</div>` : ''}
+                    ` : '')}
                   </div>
                 </td>
-                <td style="vertical-align:middle;white-space:nowrap">
-                  <div style="display:flex;flex-direction:column;gap:3px">
-                    <select class="sm bus-status-select" data-id="${attr(p.id)}" style="padding:2px 5px;border-radius:6px;font-size:.73rem;width:100%;height:26px;line-height:1.1;cursor:pointer;white-space:nowrap;${getStatusBadgeStyle(p.status)}">
-                      ${core.BUS_STATUSES.map((st) => `<option value="${st.key}" ${p.status === st.key ? 'selected' : ''} style="background:var(--surface);color:var(--ink)">${st.label}</option>`).join('')}
+                <td style="white-space:nowrap">
+                  <div style="display:flex;flex-direction:column;gap:4px">
+                    <select class="bus-status-select" data-id="${attr(p.id)}" style="padding:3px 6px;border-radius:5px;font-size:11.5px;width:100%;height:26px;cursor:pointer;${getStatusBadgeStyle(p.status)}">
+                      ${core.BUS_STATUSES.map((st) => `<option value="${st.key}" ${p.status === st.key ? 'selected' : ''} style="background:#FFFFFF;color:#0A2540">${st.label}</option>`).join('')}
                     </select>
                     ${p.status === 'WANT_TO_CONTACT'
-                      ? `<div class="tiny" style="color:#7c3aed;font-weight:700;font-size:.68rem;background:rgba(124,58,237,0.08);padding:1px 5px;border-radius:4px;border:1px solid rgba(124,58,237,0.25);text-align:center" title="${p.scheduled_at ? 'Scheduled for ' + new Date(p.scheduled_at).toLocaleString('en-GB') : 'In Queue'}">
-                          ⏳ ${p.scheduled_at ? new Date(p.scheduled_at).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) + ' ' + new Date(p.scheduled_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' }) : 'Mon 09:00'}
+                      ? `<div class="num" style="color:#4338CA;font-weight:600;font-size:10.5px;background:#EEF2FF;padding:2px 6px;border-radius:4px;border:1px solid #C7D2FE;text-align:center" title="${p.scheduled_at ? 'Scheduled for ' + new Date(p.scheduled_at).toLocaleString('en-GB') : 'In Queue'}">
+                          Queue: ${p.scheduled_at ? new Date(p.scheduled_at).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) + ' ' + new Date(p.scheduled_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' }) : 'Mon 09:00'}
                          </div>`
                       : p.status === 'CONTACTED'
                       ? (p.outreach_stage === 'manual_escalation' || p.score_breakdown?.partner_card?.outreach_stage === 'manual_escalation'
-                          ? `<div class="tiny" style="color:#b91c1c;font-weight:700;font-size:.67rem;background:#fee2e2;padding:2px 5px;border-radius:4px;border:1px solid #fca5a5;text-align:center" title="No reply 72h after 2 emails — manual call needed">
-                              📞 Needs Call (72h)
+                          ? `<div style="color:#991B1B;font-weight:600;font-size:10.5px;background:#FEE2E2;padding:2px 6px;border-radius:4px;border:1px solid #FECACA;text-align:center" title="No reply 72h after 2 emails — manual call needed">
+                              Needs Call (72h)
                              </div>`
-                          : `<div class="tiny" style="color:#0284c7;font-weight:700;font-size:.68rem;background:rgba(2,132,199,0.08);padding:1px 5px;border-radius:4px;border:1px solid rgba(2,132,199,0.25);text-align:center" title="${p.last_outreach_at ? 'Sent at ' + new Date(p.last_outreach_at).toLocaleString('en-GB') : 'Contacted'}">
-                              ✉️ Sent: ${p.last_outreach_at ? new Date(p.last_outreach_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Yes'}
+                          : `<div class="num" style="color:#075985;font-weight:600;font-size:10.5px;background:#E0F2FE;padding:2px 6px;border-radius:4px;border:1px solid #BAE6FD;text-align:center" title="${p.last_outreach_at ? 'Sent at ' + new Date(p.last_outreach_at).toLocaleString('en-GB') : 'Contacted'}">
+                              ${p.outreach_stage === 'replied' ? 'Replied · In Thread' : `Sent ${p.last_outreach_at ? new Date(p.last_outreach_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''}`}
                              </div>`)
                       : ''
                     }
-                    <button class="btn sm ghost" data-act="ceo-pitch" data-id="${attr(p.id)}" style="padding:1px 6px;font-size:.69rem;color:#1d4ed8;border-color:rgba(37,99,235,0.3);background:rgba(37,99,235,0.06);font-weight:600;width:100%;justify-content:center" title="Open short CEO Italian Email Outreach for ${attr(p.name)}">
-                      ✉️ CEO Pitch (IT)
+                    <button class="sail-btn sm" data-act="ceo-pitch" data-id="${attr(p.id)}" style="width:100%;justify-content:center;font-size:11px;padding:3px 6px" title="Open short CEO Italian Email Outreach for ${attr(p.name)}">
+                      CEO Pitch (IT)
                     </button>
                     ${(p.outreach_stage === 'manual_escalation' || p.score_breakdown?.partner_card?.outreach_stage === 'manual_escalation')
-                      ? `<a class="btn sm" href="${attr(waHref || `tel:${(p.phone || '').replace(/[^\d+]/g, '')}`)}" target="_blank" rel="noopener" style="padding:2px 6px;font-size:.68rem;background:#15803d;color:#fff;font-weight:700;width:100%;justify-content:center;margin-top:2px;display:inline-flex;align-items:center;gap:3px;text-decoration:none" title="Call or WhatsApp this operator now">
-                          📞 Call / WA: ${esc(p.phone || p.whatsapp || 'Direct')}
+                      ? `<a class="sail-btn sm primary" href="${attr(waHref || `tel:${(p.phone || '').replace(/[^\d+]/g, '')}`)}" target="_blank" rel="noopener" style="width:100%;justify-content:center;font-size:11px;padding:3px 6px" title="Call or WhatsApp this operator now">
+                          Call / WA
                          </a>`
                       : ''
                     }
                   </div>
                 </td>
-                <td style="vertical-align:middle;text-align:center;white-space:nowrap">
-                  <button class="btn sm ghost" data-act="delete-partner" data-id="${attr(p.id)}" style="padding:4px 5px;color:var(--bad);display:inline-flex;align-items:center" title="Delete & Never Suggest Again">${icon('trash', 13)}</button>
+                <td style="text-align:center;white-space:nowrap">
+                  <button class="sail-btn sm ghost" data-act="delete-partner" data-id="${attr(p.id)}" style="padding:4px;color:#697386" title="Delete & Never Suggest Again">${icon('trash', 13)}</button>
                 </td>
               </tr>`;
             }).join('') : `
               <tr>
-                <td colspan="9" class="empty small" style="padding:28px 16px;text-align:center">
-                  <div class="stack" style="gap:8px;align-items:center;justify-content:center">
-                    <span style="font-size:1.5rem">🔍</span>
-                    <b>No bus operators found matching the current filters.</b>
-                    <button class="btn sm ghost" id="empty-clear-filters" style="margin-top:4px;color:var(--series-1);border-color:var(--border)">
-                      ✕ Reset All Filters
+                <td colspan="8" style="padding:36px 16px;text-align:center;color:#697386">
+                  <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
+                    <b style="color:#0A2540">No bus operators match the current filters.</b>
+                    <button class="sail-btn sm" id="empty-clear-filters">
+                      Reset All Filters
                     </button>
                   </div>
                 </td>

@@ -12,8 +12,8 @@ import * as partners from './views/partners.js?v=3.7';
 import * as tools from './views/tools.js?v=3.7';
 import * as visibility from './views/visibility.js?v=4.0';
 import * as settings from './views/settings.js?v=3.7';
-import * as busPartners from './views/bus_partners.js?v=5.9';
-import * as fleetShowcase from './views/fleet_showcase.js?v=1.0';
+import * as busPartners from './views/bus_partners.js?v=6.0';
+import * as fleetShowcase from './views/fleet_showcase.js?v=6.0';
 
 const ROUTES = {
   today: { view: today, label: 'Today', icon: 'today' },
@@ -73,8 +73,8 @@ function shell() {
         ${links.map(([k, v]) => `<a class="nav-link ${r.name === k ? 'active' : ''}" href="#${k}">${icon(v.icon)}<span>${esc(v.label)}</span>${k === 'today' && n ? `<span class="count">${n}</span>` : ''}</a>`).join('')}
         <a class="nav-link" href="#add" style="margin-top:10px">${icon('plus')}<span>Add prospects</span></a>
         <div class="divider" style="margin: 12px 10px;"></div>
-        <a class="nav-link ${r.name === 'bus_partners' ? 'active' : ''}" href="#bus_partners" style="font-weight:600;display:flex;align-items:center"><span style="font-size:1.15rem;margin-right:8px;line-height:1">🚌</span><span>Bus Fleet Partners</span></a>
-        <a class="nav-link ${r.name === 'fleet_showcase' ? 'active' : ''}" href="#fleet_showcase" style="font-weight:600;display:flex;align-items:center"><span style="font-size:1.15rem;margin-right:8px;line-height:1">📸</span><span>Partner Fleet &amp; Rates</span></a>
+        <a class="nav-link ${r.name === 'bus_partners' ? 'active' : ''}" href="#bus_partners" style="font-weight:600;display:flex;align-items:center">${icon('partners')}<span>Bus Fleet Partners</span></a>
+        <a class="nav-link ${r.name === 'fleet_showcase' ? 'active' : ''}" href="#fleet_showcase" style="font-weight:600;display:flex;align-items:center">${icon('board')}<span>Partner Fleet &amp; Rates</span></a>
       `}
       <div class="rail-foot">
         <span class="tiny faint">${esc(S.user?.email || '')}</span>
