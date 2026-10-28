@@ -1210,21 +1210,15 @@ Dmitri Traciuc`;
 
   if (stepKey === 'T3_reply_thanks' || stepKey === 'reply_thanks') {
     const contactPerson = partner.contact_person || 'Salvatore';
-    const body = `Gentile ${contactPerson},
+    const body = `Buongiorno ${contactPerson}, grazie del riscontro.
 
-La ringrazio molto per la disponibilità e per aver condiviso con noi foto, listino prezzi e politiche di prenotazione e cancellazione.
+Ho registrato foto, tariffe e politiche di prenotazione e cancellazione nel nostro database partner: terremo sicuramente conto dei vostri Transit e Mercedes per i prossimi eventi sul Lago di Como.
 
-Abbiamo registrato con piacere la scheda di ${cleanName} nel nostro database partner per i prossimi servizi ed eventi privati tra Milano e Lago di Como. Terremo sicuramente conto dei Vostri minibus Ford Transit e Mercedes per le richieste in linea con queste capienze.
+Avete anche colleghi o partner fidati nel vostro network con bus più grandi (dai 20 ai 50 posti) da poterci presentare?
 
-Approfitto per chiederLe se all'interno del Vostro network collabora o ha contatti diretti con colleghi di fiducia che dispongono di autobus gran turismo o luxury di capienza maggiore (dai 20 ai 50 posti). Nel caso, avrebbe piacere di fornirci un loro riferimento per future collaborazioni?
-
-Restiamo volentieri a disposizione e La ringrazio ancora per la collaborazione.
-
-Un cordiale saluto,
-Dmitri
-DOROGO Chauffeur Service
-Tel / WhatsApp: +39 347 184 8920
-booking@dorogo.eu · dorogo.eu`;
+Un cordiale saluto e buon lavoro,
+Dmitri Traciuc — DOROGO
++39 347 184 8920 · dorogo.eu`;
 
     return {
       step_name: 'T3_reply_thanks',
@@ -1237,25 +1231,17 @@ booking@dorogo.eu · dorogo.eu`;
 
   if (stepKey === 'reply_vclass_clarification' || stepKey === 'reply_bus_referral') {
     const contactPerson = partner.contact_person || 'Stefano';
-    const body = `Buongiorno ${contactPerson},
+    const body = `Buongiorno ${contactPerson}, grazie del rapido riscontro.
 
-La ringrazio per la pronta risposta!
+I Mercedes Classe V li copriamo già direttamente con la nostra flotta interna; cerchiamo specificamente partner per minibus e pullman (dagli 8 ai 50 posti) per i grandi eventi sul Lago di Como.
 
-Ci tenevo a chiarire che con la nostra flotta interna DOROGO copriamo già direttamente i servizi con Mercedes Classe V e berline executive per gli ospiti VIP. Tuttavia, per matrimoni ed eventi privati sul Lago di Como e Milano, riceviamo un volume costante di richieste per gruppi più numerosi che necessitano di minibus e pullman di lusso (dagli 8 ai 50 posti).
+Ha qualche collega o azienda partner di fiducia nel Suo network NCC con mezzi dagli 8 ai 50 posti da indicarmi?
 
-Per questo motivo siamo alla ricerca di partner specializzati proprio su queste capienze maggiori.
-
-Dato che opera attivamente sul Lago di Como nel settore NCC, Le andrebbe di condividere con noi il contatto di qualche collega o azienda partner di Sua fiducia che dispone di minibus (Sprinter 8–20 posti) o autobus gran turismo (fino a 50 posti) con standard di alto livello?
-
-Nel frattempo salviamo volentieri il Suo contatto diretto per eventuali richieste aggiuntive di Classe V sul Lago di Como quando la nostra flotta è al completo.
-
-La ringrazio ancora per la disponibilità e Le auguro buon lavoro.
+Salvo intanto il Suo contatto diretto per eventuale overflow di Classe V quando siamo al completo.
 
 Un cordiale saluto,
-Dmitri Traciuc
-DOROGO Chauffeur Service
-Tel / WhatsApp: +39 347 184 8920
-booking@dorogo.eu · dorogo.eu`;
+Dmitri Traciuc — DOROGO
++39 347 184 8920 · dorogo.eu`;
 
     return {
       step_name: 'reply_vclass_clarification',
