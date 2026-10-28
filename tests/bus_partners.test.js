@@ -1161,6 +1161,28 @@ test('Como Limo Lux is verified with Stefano Carnevale, replied status and V-Cla
   assert.ok(cll.notes.includes('Mercedes Classe V'));
 });
 
+test('Reply templates use clean footer without placeholder phone numbers', () => {
+  const partner = { name: 'Test Partner', contact_person: 'Mario' };
+  const d1 = buildBusOutreachDraft(partner, 'reply_thanks');
+  const d2 = buildBusOutreachDraft(partner, 'reply_vclass_clarification');
+  const d3 = buildBusOutreachDraft(partner, 'reply_milan_routes');
+
+  for (const d of [d1, d2, d3]) {
+    assert.ok(!d.body.includes('+39 347 184'), 'Must not include random placeholder phone number');
+    assert.ok(d.body.includes('dmitri@dorogo.eu · dorogo.eu'), 'Must include standard DOROGO brand signature');
+  }
+});
+
+test('Avantgarde Limousine Service is recorded with Milan depot clarification and replied status', async () => {
+  const fs = await import('node:fs');
+  const partners = JSON.parse(fs.readFileSync('data/bus_partners.json', 'utf8'));
+  const av = partners.find(p => p.id === 'partner_1792765279535_l9ei');
+  assert.ok(av, 'Avantgarde must exist');
+  assert.equal(av.outreach_stage, 'replied');
+  assert.ok(av.notes.includes('base a Milano'));
+  assert.ok(av.notes.includes('Malpensa'));
+});
+
 
 
 

@@ -1218,7 +1218,7 @@ Avete anche colleghi o partner fidati nel vostro network con bus più grandi (da
 
 Un cordiale saluto e buon lavoro,
 Dmitri Traciuc — DOROGO
-+39 347 184 8920 · dorogo.eu`;
+dmitri@dorogo.eu · dorogo.eu`;
 
     return {
       step_name: 'T3_reply_thanks',
@@ -1241,12 +1241,34 @@ Salvo intanto il Suo contatto diretto per eventuale overflow di Classe V quando 
 
 Un cordiale saluto,
 Dmitri Traciuc — DOROGO
-+39 347 184 8920 · dorogo.eu`;
+dmitri@dorogo.eu · dorogo.eu`;
 
     return {
       step_name: 'reply_vclass_clarification',
       language: 'it',
       subject: `Re: Disponibilità transfer ed eventi Lago di Como — DOROGO Transfers`,
+      body,
+      word_count: body.trim().split(/\s+/).length,
+    };
+  }
+
+  if (stepKey === 'reply_milan_routes') {
+    const body = `Buongiorno, grazie del riscontro sincero e trasparente.
+
+Ha perfettamente ragione sul vuoto per la tratta Malpensa–Como. 
+
+Gestiamo tuttavia molti servizi con partenza o arrivo direttamente a Milano città (transfer Milano–Como, Milano–Malpensa e servizi a disposizione 4h/8h per eventi aziendali e wedding).
+
+Avreste piacere di condividere le vostre tariffe B2B per i servizi con base Milano (in particolare per il vostro Mercedes Minibus 16–18 posti)?
+
+Un cordiale saluto,
+Dmitri Traciuc — DOROGO
+dmitri@dorogo.eu · dorogo.eu`;
+
+    return {
+      step_name: 'reply_milan_routes',
+      language: 'it',
+      subject: `Re: Collaborazione B2B minibus/pullman · Milano — DOROGO`,
       body,
       word_count: body.trim().split(/\s+/).length,
     };

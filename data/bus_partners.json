@@ -611,9 +611,9 @@
     "score_breakdown": {
       "fleet_luxury": 22,
       "partner_card": {
-        "whatsapp": "+39 333 269 7376",
+        "whatsapp": "+39 333 2697376",
         "bus_models": "Mercedes Sprinter VIP (8 pax), Mercedes Minibus (16 pax), Mercedes Minibus VIP Class (18 pax), Executive Midibus (25 pax)",
-        "replied_at": null,
+        "replied_at": "2026-10-28T12:05:00.000Z",
         "rate_hourly": "",
         "client_notes": "",
         "email_status": "mx_ok",
@@ -621,18 +621,19 @@
         "rate_standby": "",
         "scheduled_at": "2026-10-27T11:00:00.000Z",
         "fleet_segment": "luxury",
-        "outreach_stage": "ready",
+        "outreach_stage": "replied",
         "last_message_id": null,
         "user_set_status": true,
-        "last_outreach_at": null,
+        "last_outreach_at": "2026-10-28T12:00:00.000Z",
         "user_set_segment": false,
-        "fleet_audit_verified_at": "2026-10-26T18:25:11.587Z"
+        "fleet_audit_verified_at": "2026-10-26T18:25:11.587Z",
+        "contact_person": "Vincent Lombardi (Avantgarde Service)"
       },
       "corporate_sla": 15,
       "territory_permits": 19,
       "discretion_unbranded": 35
     },
-    "status": "WANT_TO_CONTACT",
+    "status": "CONTACTED",
     "unbranded_status": "100% Guaranteed Unbranded / Total Black",
     "fleet_categories": [
       "Mercedes Classe V (7–8 seats)",
@@ -641,15 +642,19 @@
       "Mercedes Minibus VIP Class (18 seats)",
       "Executive Midibus (25 seats)"
     ],
-    "phone": "+39 333 269 7376",
+    "phone": "+39 333 2697376",
     "email": "info@milanocab.it",
-    "notes": "- Confirm whether they do not have stickers on cars?\n- i see they have 3 different ones, i want to know the prices/how many people the fit?",
+    "notes": "Replied 28 Oct: base a Milano; non competitivi su Malpensa–Como per vuoto Milano->MXP. Disponibili per tratte con partenza/arrivo Milano città o disposizione (Mercedes V-Class, Minibus 16-18 pax). Proposta risposta per tariffe partenze Milano.",
     "source": "crawler",
     "created_at": "2026-10-23T14:21:19.535+00:00",
     "updated_at": "2026-10-26T16:45:27.610264+00:00",
     "bus_models": "Mercedes Sprinter VIP (8 pax), Mercedes Minibus (16 pax), Mercedes Minibus VIP Class (18 pax), Executive Midibus (25 pax)",
     "pax_capacity": "7–8, 8, 16, 18, 25 pax",
-    "fleet_segment": "luxury"
+    "fleet_segment": "luxury",
+    "outreach_stage": "replied",
+    "replied_at": "2026-10-28T12:05:00.000Z",
+    "last_outreach_at": "2026-10-28T12:00:00.000Z",
+    "contact_person": "Vincent Lombardi (Avantgarde Service)"
   },
   {
     "id": "partner_1793031479651_1_wjsp",
