@@ -264,8 +264,9 @@ export function classifyReply(msg = {}, now = new Date()) {
     matched.push('specific_question');
   }
 
+  const warmKeepOnFile = /\b(keep (you|your (contact )?(details|info(rmation)?|card|brochure)) (in mind|on (our )?(records?|file))|save(d)? your (brochure|details|contact|rate card)|teniamo in considerazione|salvato la vostra brochure)\b/i.test(text);
   let sentiment = 'neutral';
-  if (['meeting_request', 'wants_rate_card', 'asks_pricing'].includes(intent)) sentiment = 'positive';
+  if (['meeting_request', 'wants_rate_card', 'asks_pricing'].includes(intent) || (warmKeepOnFile && !negative && intent !== 'has_supplier')) sentiment = 'positive';
   else if (intent === 'has_supplier' || (negative && !intent)) sentiment = 'negative';
 
   const out = { sentiment, intent, confidence: intent ? (intent === 'specific_question' || matched.length > 2 ? 'medium' : 'high') : (negative ? 'medium' : 'low'), matched };

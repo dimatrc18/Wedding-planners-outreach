@@ -67,6 +67,27 @@ export async function appendToSent(raw: Uint8Array) {
   return true;
 }
 
+function htmlToPlainText(html: string): string {
+  if (!html) return '';
+  return String(html)
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<blockquote[\s\S]*?<\/blockquote>/gi, '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(div|p|tr|li|h[1-6])>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/\r/g, '')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 /**
  * New messages in INBOX (and recent bounces in INBOX.Junk) since the last UID.
  * Returns { messages, lastUid }.
@@ -86,6 +107,7 @@ export async function fetchNewMessages(lastUid: number | null, maxMessages = 50)
         if (lastUid && msg.uid <= lastUid) continue;
         newest = Math.max(newest, msg.uid);
         const parsed: any = await simpleParser(msg.source);
+        const bodyText = String(parsed.text || '').trim() || htmlToPlainText(String(parsed.html || ''));
         out.push({
           uid: msg.uid,
           messageId: parsed.messageId || null,
@@ -95,7 +117,7 @@ export async function fetchNewMessages(lastUid: number | null, maxMessages = 50)
           fromName: parsed.from?.value?.[0]?.name || '',
           subject: parsed.subject || '',
           date: (parsed.date || new Date()).toISOString(),
-          text: String(parsed.text || '').slice(0, 20000),
+          text: bodyText.slice(0, 20000),
           autoSubmitted: String(parsed.headers?.get('auto-submitted') || ''),
           failedRecipients: String(parsed.headers?.get('x-failed-recipients') || ''),
         });
@@ -112,6 +134,7 @@ export async function fetchNewMessages(lastUid: number | null, maxMessages = 50)
         const junkRange = { since: new Date(Date.now() - 3 * 86400000) };
         for await (const msg of client.fetch(junkRange as any, { uid: true, source: true, envelope: true })) {
           const parsed: any = await simpleParser(msg.source);
+          const bodyText = String(parsed.text || '').trim() || htmlToPlainText(String(parsed.html || ''));
           out.push({
             uid: null, // Junk folder has separate UIDs, do not mix with INBOX newest
             folder: 'INBOX.Junk',
@@ -122,7 +145,7 @@ export async function fetchNewMessages(lastUid: number | null, maxMessages = 50)
             fromName: parsed.from?.value?.[0]?.name || '',
             subject: parsed.subject || '',
             date: (parsed.date || new Date()).toISOString(),
-            text: String(parsed.text || '').slice(0, 20000),
+            text: bodyText.slice(0, 20000),
             autoSubmitted: String(parsed.headers?.get('auto-submitted') || ''),
             failedRecipients: String(parsed.headers?.get('x-failed-recipients') || ''),
           });
