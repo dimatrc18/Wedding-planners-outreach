@@ -341,7 +341,7 @@ export const FLEET_LEDGER_ROWS = [
       mxp_como: { label: 'Malpensa (MXP) ⇄ Como', net: 380 }
     },
     standby: {
-      dispo_8h: { label: 'Disposizione 8h (150 km inclusi)', net: 800 },
+      dispo_8h: { label: 'Disposizione 8h (150 km)', net: 800 },
       extra_hour: null,
       extra_wait: null
     },
@@ -413,7 +413,7 @@ export const FLEET_LEDGER_ROWS = [
       mxp_como: { label: 'Malpensa (MXP) ⇄ Como', net: 380 }
     },
     standby: {
-      dispo_8h: { label: 'Disposizione 8h (150 km inclusi)', net: 800 },
+      dispo_8h: { label: 'Disposizione 8h (150 km)', net: 800 },
       extra_hour: null,
       extra_wait: null
     },
@@ -467,7 +467,7 @@ export const FLEET_LEDGER_ROWS = [
     categoryLabel: 'VIP Minivan (8 Pax Top)',
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: 'Top VIP allestimento speciale · Video walkthrough · €140/h + IVA (8h €1,120 + IVA)',
+    tierSpec: 'Top VIP allestimento speciale · Video walkthrough · €140/h + IVA (8h €1,200 + IVA)',
     partnerName: 'Avantgarde Limousine Service (Milano Cab)',
     baseCity: 'Milano (Via Calatafimi 12)',
     contactPerson: 'Vincenzo Lombardi',
@@ -476,7 +476,7 @@ export const FLEET_LEDGER_ROWS = [
     website: 'https://www.avantgardelimousineservice.it/mezzi/',
     secondaryWebsite: 'https://www.milanocab.it',
     status: 'confirmed',
-    statusLabel: '€140/h + IVA (8h €1,120 + IVA) · Top VIP Allestimento Speciale',
+    statusLabel: '€140/h + IVA (8h €1,200 + IVA) · Top VIP Allestimento Speciale',
     repliedAt: '29 Oct 2026 · WA Confirmed',
     ratePdf: null,
     ratePdfName: null,
@@ -486,11 +486,10 @@ export const FLEET_LEDGER_ROWS = [
     },
     standby: {
       hourly: { label: 'Tariffa oraria a disposizione', net: 140 },
-      dispo_4h: { label: 'Disposizione 4h Top VIP', net: 560 },
-      dispo_8h: { label: 'Disposizione 8h Top VIP (150 km inclusi)', net: 1120 },
-      dispo_8h_vip: { label: 'Disposizione 8h Top VIP (150 km inclusi)', net: 1120 },
-      extra_hour: 140,
-      extra_wait: 140
+      dispo_4h: { label: 'Disposizione 4h', net: 560 },
+      dispo_8h: { label: 'Disposizione 8h (150 km)', net: 1200 },
+      extra_hour: { label: 'Ore Extra', net: 140 },
+      extra_wait: { label: 'Attesa extra', net: 140 }
     },
     terms: {
       payment: 'POS a bordo / Bonifico su fattura',
@@ -506,14 +505,7 @@ export const FLEET_LEDGER_ROWS = [
         src: 'assets/partner_fleet/avantgarde/top_8_pax.mp4',
         file: 'top 8 pax.mp4',
         title: 'Video Walkthrough — Sprinter Top 8 VIP (Allestimento Speciale)',
-        caption: 'Full HD video walkthrough of the Mercedes-Benz Sprinter Top 8 VIP trim (€140/h + IVA · €1,120 / 8h + IVA).'
-      },
-      {
-        id: 'avantgarde_8p_bw_ext_1_top',
-        src: 'assets/partner_fleet/avantgarde/sprinter_8p_bw_ext_1.jpg',
-        file: 'sprinter_8p_bw_ext_1.jpg',
-        title: 'Exterior — Mercedes Sprinter Top VIP (High Roof)',
-        caption: 'High-roof total black Mercedes Sprinter with tinted executive glass.'
+        caption: 'Full HD video walkthrough of the Mercedes-Benz Sprinter Top 8 VIP trim (€140/h + IVA · €1,200 / 8h + IVA).'
       }
     ]
   },
@@ -611,8 +603,8 @@ export const FLEET_LEDGER_ROWS = [
       mxp_como: { label: 'Malpensa (MXP) ⇄ Como', net: 500 }
     },
     standby: {
-      dispo_4h: { label: 'Disposizione 4h (75 km inclusi)', net: 600 },
-      dispo_8h: { label: 'Disposizione 8h (150 km inclusi)', net: 1200 },
+      dispo_4h: { label: 'Disposizione 4h (75 km)', net: 600 },
+      dispo_8h: { label: 'Disposizione 8h (150 km)', net: 1200 },
       extra_hour: null,
       extra_wait: null
     },
@@ -1113,9 +1105,21 @@ function renderLedgerRow(row) {
             ` : ''}
           </div>
           <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
-            <button class="sail-btn xs primary" data-open-gallery="${attr(row.id)}" data-photo-idx="0" style="padding:0 6px;height:23px;font-size:11px">
-              View ${row.photos.length} photos
-            </button>
+            ${(() => {
+              const videoCount = row.photos.filter((p) => p.src && p.src.endsWith('.mp4')).length;
+              const photoCount = row.photos.length - videoCount;
+              let viewBtnText = `View ${row.photos.length} photos`;
+              if (photoCount === 0 && videoCount > 0) {
+                viewBtnText = videoCount === 1 ? '▶ Watch video' : `▶ Watch ${videoCount} videos`;
+              } else if (photoCount > 0 && videoCount > 0) {
+                viewBtnText = `View ${photoCount} photos + ${videoCount} vid`;
+              }
+              return `
+                <button class="sail-btn xs primary" data-open-gallery="${attr(row.id)}" data-photo-idx="0" style="padding:0 6px;height:23px;font-size:11px">
+                  ${esc(viewBtnText)}
+                </button>
+              `;
+            })()}
             ${row.ratePdf ? `
               <a class="sail-btn xs" href="${attr(row.ratePdf)}" target="_blank" rel="noopener" style="padding:0 6px;height:23px;font-size:11px" title="Open original PDF rate sheet">
                 PDF ↗

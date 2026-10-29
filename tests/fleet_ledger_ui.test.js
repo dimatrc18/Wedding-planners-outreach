@@ -103,8 +103,9 @@ test('Fleet Showcase Data: Separated Sprinter variants (Red, Black, Top VIP)', (
   assert.ok(topVip, 'Top VIP Sprinter must exist as separate vehicle');
   assert.equal(topVip.pax, 8);
   assert.equal(topVip.standby.hourly.net, 140, 'Top VIP hourly must be €140/h as quoted by driver');
-  assert.equal(topVip.standby.dispo_8h.net, 1120, 'Top VIP 8h must be 8 x 140 = €1,120 as quoted by driver');
+  assert.equal(topVip.standby.dispo_8h.net, 1200, 'Top VIP 8h must be €1,200 as quoted by driver');
   assert.ok(topVip.photos.some((p) => p.src.endsWith('.mp4')), 'Top VIP must include video walkthrough');
+  assert.equal(topVip.photos.length, 1, 'Top VIP must only have the verified video walkthrough');
 
   // Verify video file exists on disk
   const videoPhoto = topVip.photos.find((p) => p.src.endsWith('.mp4'));
@@ -143,10 +144,10 @@ test('Fleet Showcase Calculator: Flexible direct vehicle selection chooses any v
   });
 
   assert.equal(quote.veh.id, 'avantgarde_sprinter_8_top_vip');
-  assert.equal(quote.baseNet, 1120, 'Top VIP 8h standby must be €1,120');
-  assert.equal(quote.totalPartnerCost, 1120);
-  assert.equal(quote.clientQuote, 1400, '€1,120 + 25% markup = €1,400');
-  assert.equal(quote.netMargin, 280, 'DOROGO gross profit = €280');
+  assert.equal(quote.baseNet, 1200, 'Top VIP 8h standby must be €1,200');
+  assert.equal(quote.totalPartnerCost, 1200);
+  assert.equal(quote.clientQuote, 1500, '€1,200 + 25% markup = €1,500');
+  assert.equal(quote.netMargin, 300, 'DOROGO gross profit = €300');
 });
 
 test('Fleet Showcase Calculator: Custom hourly standby calculates exact driver tariff', () => {

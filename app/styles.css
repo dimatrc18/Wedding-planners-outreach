@@ -874,10 +874,10 @@ tr.clickable { cursor: pointer; } tr.clickable:hover td { background: var(--surf
 }
 .sail-rate-route {
   color: var(--sail-body);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0; /* Ensures proper text truncation in grid columns without expanding cell */
+  white-space: normal;
+  word-break: normal;
+  line-height: 1.25;
+  min-width: 0; /* Ensures proper text display in grid columns without expanding cell */
 }
 .sail-rate-amt {
   font-weight: 600;
