@@ -640,22 +640,7 @@ export const INITIAL_BUS_PARTNERS = [
         "last_outreach_at": "2026-10-28T12:00:00.000Z",
         "user_set_segment": false,
         "fleet_audit_verified_at": "2026-10-26T18:25:11.587Z",
-        "contact_person": "Vincenzo (Vincent) Lombardi",
-        "scheduled_reply": {
-          "scheduled_at": "2026-10-29T07:30:00.000Z",
-          "scheduled_local": "2026-10-29 08:30 Europe/Rome",
-          "to": "info@milanocab.it",
-          "subject": "Re: Collaborazione B2B minibus/pullman · Milano — DOROGO",
-          "in_reply_to": "<AA9843BD-B1E1-4D98-8571-F4D94EE9095A@milanocab.it>",
-          "references": [
-            "<e3fbd0be-132c-4a48-9a2e-664ec16864da@dorogo.eu>",
-            "<79C01364-148A-40B9-9CAD-DD13958F4DEF@milanocab.it>",
-            "<8a7f53cc-4999-47a8-8277-f3f21c23560a@dorogo.eu>",
-            "<AA9843BD-B1E1-4D98-8571-F4D94EE9095A@milanocab.it>"
-          ],
-          "body": "Gentile Vincent, grazie per le tariffe del 18 posti.\n\nPotrebbe indicarci rapidamente anche:\n- Tariffe (Malpensa–Milano e disposizione 4h/8h) sia per il Mercedes Sprinter 8 pax che per il Mercedes Minibus 16 pax;\n- Se fate servizio a disposizione sia su Milano che su Lago di Como (per entrambi i mezzi) e le vostre condizioni di prenotazione e cancellazione;\n- 1 foto esterna e 1 foto interna per ciascuno dei due mezzi (sia per lo Sprinter 8 pax che per il Minibus 16 pax, dato che sul sito vediamo solo il 18 posti);\n- Se avete un contatto WhatsApp diretto per restare in contatto rapido.",
-          "sent_at": null
-        }
+        "contact_person": "Vincenzo (Vincent) Lombardi"
       },
       "corporate_sla": 15,
       "territory_permits": 19,
