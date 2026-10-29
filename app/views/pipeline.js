@@ -97,6 +97,7 @@ const FRIENDLY_COL_TITLE = {
 // Helper: identify leads that require manual social/messaging contact (bounced email, missing email, invalid mail server, or manual tag)
 export function isManualLead(p) {
   if (!p) return false;
+  if (p.do_not_contact || p.status === 'do_not_contact') return false;
   if (p.email_status === 'bounced') return true;
   if ((p.tags || []).includes('manual_touch') || (p.tags || []).includes('bounced')) return true;
   if (!p.email || !String(p.email).trim() || ['no_mx', 'invalid'].includes(p.email_status)) return true;

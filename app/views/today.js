@@ -175,7 +175,11 @@ export function render(el) {
     return ts && core.localDateKey(new Date(ts), S.settings.timezone || 'Europe/Rome') === todayKey;
   }).length;
   const wpSentToday = S.touches.filter((t) => t.direction === 'out' && t.state === 'sent' && t.sent_at && core.localDateKey(new Date(t.sent_at), S.settings.timezone || 'Europe/Rome') === todayKey).length;
-  const manualLeads = (S.prospects || []).filter((p) => p.email_status === 'bounced' || !p.email || ['no_mx', 'invalid'].includes(p.email_status));
+  const manualLeads = (S.prospects || []).filter((p) =>
+    !p.do_not_contact &&
+    p.status !== 'do_not_contact' &&
+    (p.email_status === 'bounced' || !p.email || ['no_mx', 'invalid'].includes(p.email_status))
+  );
   const busRepliedRows = busList.filter((b) => b.outreach_stage === 'replied' || b.replied_at);
 
   const renderQueuePanel = () => `
