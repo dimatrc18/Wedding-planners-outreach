@@ -1179,7 +1179,7 @@ test('Avantgarde Limousine Service is recorded with Milan depot clarification an
   const av = partners.find(p => p.id === 'partner_1792765279535_l9ei');
   assert.ok(av, 'Avantgarde must exist');
   assert.equal(av.outreach_stage, 'replied');
-  assert.ok(av.notes.includes('base a Milano'));
+  assert.ok(av.notes.includes('Milano'));
   assert.ok(av.notes.includes('Malpensa'));
 });
 

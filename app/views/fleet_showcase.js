@@ -44,19 +44,19 @@ export const FLEET_LEDGER_ROWS = [
     ratePdf: PDF_COMO_DRIVER,
     ratePdfName: 'DORONGO 2027.pdf (2 pages)',
     transfers: {
-      mxp_como: { label: 'Malpensa (MXP) ⇄ Como/Cernobbio', net: 350, km: 48, garageKm: 78 },
-      milano_como: { label: 'Milano Centro / FS ⇄ Como', net: 400, km: 52, garageKm: 95 },
-      lin_como: { label: 'Linate (LIN) ⇄ Como/Cernobbio', net: 400, km: 62, garageKm: 115 },
-      bgy_como: { label: 'Bergamo (BGY) ⇄ Como/Cernobbio', net: 450, km: 92, garageKm: 175 },
-      tremezzo: { label: 'Como/Cernobbio ⇄ Tremezzo', net: 300, km: 30, garageKm: 68 },
-      bellagio: { label: 'Como/Cernobbio ⇄ Bellagio', net: 300, km: 32, garageKm: 72 }
+      mxp_como: { label: 'MXP ⇄ Como', net: 350, km: 48, garageKm: 78 },
+      milano_como: { label: 'Milano Centro ⇄ Como', net: 400, km: 52, garageKm: 95 },
+      lin_como: { label: 'LIN ⇄ Como', net: 400, km: 62, garageKm: 115 },
+      bgy_como: { label: 'BGY ⇄ Como', net: 450, km: 92, garageKm: 175 },
+      tremezzo: { label: 'Como ⇄ Tremezzo', net: 300, km: 30, garageKm: 68 },
+      bellagio: { label: 'Como ⇄ Bellagio', net: 300, km: 32, garageKm: 72 }
     },
-    kmFormulaNote: 'Implied formula: €210 base call-out + ~€2.80/km (Standby: €4.50–€5.00/km)',
+    kmFormulaNote: 'Formula: €210 base + ~€2.80/km (Standby: €4.50–€5.00/km)',
     standby: {
-      dispo_4h: { label: '4 Hours (incl. 100 km)', net: 500, hourlyEq: 125 },
-      dispo_8h: { label: '8 Hours (incl. 200 km)', net: 900, hourlyEq: 112.5 },
+      dispo_4h: { label: '4h (incl. 100 km)', net: 500, hourlyEq: 125 },
+      dispo_8h: { label: '8h (incl. 200 km)', net: 900, hourlyEq: 112.5 },
       extra_hour: { label: 'Extra Hour', net: 100 },
-      extra_wait: { label: 'Extra Wait (>60m airport / >20m hotel)', net: 80 }
+      extra_wait: { label: 'Wait >60m Airport', net: 80 }
     },
     terms: {
       payment: 'Prepayment upon invoice (vista fattura)',
@@ -117,19 +117,19 @@ export const FLEET_LEDGER_ROWS = [
     ratePdf: PDF_COMO_DRIVER,
     ratePdfName: 'DORONGO 2027.pdf (2 pages)',
     transfers: {
-      mxp_como: { label: 'Malpensa (MXP) ⇄ Como/Cernobbio', net: 400, km: 48, garageKm: 78 },
-      milano_como: { label: 'Milano Centro / FS ⇄ Como', net: 450, km: 52, garageKm: 95 },
-      lin_como: { label: 'Linate (LIN) ⇄ Como/Cernobbio', net: 450, km: 62, garageKm: 115 },
-      bgy_como: { label: 'Bergamo (BGY) ⇄ Como/Cernobbio', net: 500, km: 92, garageKm: 175 },
-      tremezzo: { label: 'Como/Cernobbio ⇄ Tremezzo', net: 350, km: 30, garageKm: 68 },
-      bellagio: { label: 'Como/Cernobbio ⇄ Bellagio', net: 350, km: 32, garageKm: 72 }
+      mxp_como: { label: 'MXP ⇄ Como', net: 400, km: 48, garageKm: 78 },
+      milano_como: { label: 'Milano Centro ⇄ Como', net: 450, km: 52, garageKm: 95 },
+      lin_como: { label: 'LIN ⇄ Como', net: 450, km: 62, garageKm: 115 },
+      bgy_como: { label: 'BGY ⇄ Como', net: 500, km: 92, garageKm: 175 },
+      tremezzo: { label: 'Como ⇄ Tremezzo', net: 350, km: 30, garageKm: 68 },
+      bellagio: { label: 'Como ⇄ Bellagio', net: 350, km: 32, garageKm: 72 }
     },
-    kmFormulaNote: 'Implied formula: €260 base call-out + ~€2.80/km (Standby: €4.50–€5.00/km)',
+    kmFormulaNote: 'Formula: €260 base + ~€2.80/km (Standby: €4.50–€5.00/km)',
     standby: {
-      dispo_4h: { label: '4 Hours (incl. 100 km)', net: 500, hourlyEq: 125 },
-      dispo_8h: { label: '8 Hours (incl. 200 km)', net: 900, hourlyEq: 112.5 },
+      dispo_4h: { label: '4h (incl. 100 km)', net: 500, hourlyEq: 125 },
+      dispo_8h: { label: '8h (incl. 200 km)', net: 900, hourlyEq: 112.5 },
       extra_hour: { label: 'Extra Hour', net: 100 },
-      extra_wait: { label: 'Extra Wait (>60m airport / >20m hotel)', net: 80 }
+      extra_wait: { label: 'Wait >60m Airport', net: 80 }
     },
     terms: {
       payment: 'Prepayment upon invoice (vista fattura)',
@@ -183,14 +183,14 @@ export const FLEET_LEDGER_ROWS = [
     ratePdf: null,
     ratePdfName: null,
     transfers: {
-      mxp_milano: { label: 'Malpensa (MXP) ⇄ Milano (Sprinter 8p)', net: 250, km: 50, garageKm: 100 }
+      mxp_milano: { label: 'MXP ⇄ Milano', net: 250, km: 50, garageKm: 100 }
     },
     kmFormulaNote: 'Round-trip from Milan depot (100 km): €2.50/km net',
     transferNote: 'Quoted €250 net (+10% IVA = €275 gross). Confirming if Red 7-pax / Standard 8-pax / Top 8-pax share €250 MXP rate.',
     standby: {
-      dispo_4h: { label: '4h Est. (€90/h · Standard 8p)', net: 360, hourlyEq: 90 },
-      dispo_8h: { label: '8h Est. (€90/h · Standard 8p)', net: 720, hourlyEq: 90 },
-      extra_hour: { label: 'Hourly Rate (Std €90 – Top €140/h)', net: 90 },
+      dispo_4h: { label: '4h Std (€90/h)', net: 360, hourlyEq: 90 },
+      dispo_8h: { label: '8h Std (€90/h)', net: 720, hourlyEq: 90 },
+      extra_hour: { label: 'Hourly (Std–VIP)', net: 90 },
       extra_wait: null
     },
     standbyNote: 'Quoted "da €90 a €140/ora + IVA" by configuration (Red 7p, Std 8p, Top 8p). Outside-Milan (Como) standby not confirmed yet.',
@@ -239,13 +239,13 @@ export const FLEET_LEDGER_ROWS = [
     ratePdf: null,
     ratePdfName: null,
     transfers: {
-      mxp_milano: { label: 'Malpensa (MXP) ⇄ Milano (+ Area C ZTL)', net: 330, km: 50, garageKm: 100 }
+      mxp_milano: { label: 'MXP ⇄ Milano (+ZTL)', net: 330, km: 50, garageKm: 100 }
     },
     kmFormulaNote: 'Round-trip from Milan depot (100 km): €3.30/km net',
     transferNote: 'Quoted €330 net (+10% VAT = €363 + eventual Area C ZTL). Confirming if both 20-pax units share this tariff.',
     standby: {
-      dispo_4h: { label: '4 Hours (+ Area C ZTL)', net: 550, hourlyEq: 137.5 },
-      dispo_8h: { label: '8 Hours (+ Area C ZTL)', net: 950, hourlyEq: 118.75 },
+      dispo_4h: { label: '4h (+Area C ZTL)', net: 550, hourlyEq: 137.5 },
+      dispo_8h: { label: '8h (+Area C ZTL)', net: 950, hourlyEq: 118.75 },
       extra_hour: null,
       extra_wait: null
     },
@@ -350,6 +350,34 @@ export const FLEET_LEDGER_ROWS = [
   }
 ];
 
+const TIER_OVERRIDES_STORAGE_KEY = 'dorogo_fleet_tier_overrides_v1';
+
+function loadTierOverrides() {
+  try {
+    return JSON.parse(localStorage.getItem(TIER_OVERRIDES_STORAGE_KEY) || '{}') || {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function saveTierOverride(vehicleId, tier) {
+  try {
+    const map = loadTierOverrides();
+    map[vehicleId] = tier;
+    localStorage.setItem(TIER_OVERRIDES_STORAGE_KEY, JSON.stringify(map));
+  } catch (_) {}
+}
+
+function applySavedTierOverrides() {
+  const map = loadTierOverrides();
+  FLEET_LEDGER_ROWS.forEach((r) => {
+    if (map[r.id] === 'luxury' || map[r.id] === 'standard') {
+      r.tier = map[r.id];
+      r.tierLabel = map[r.id] === 'luxury' ? 'Luxury VIP' : 'Standard Shuttle';
+    }
+  });
+}
+
 export function calculateAdjustedPrice(netAmount, mode = 'net') {
   const n = Number(netAmount) || 0;
   if (mode === 'vat') return Math.round(n * 1.10);
@@ -370,6 +398,7 @@ function modeBadgeText(mode) {
 }
 
 export async function render(el) {
+  applySavedTierOverrides();
   const filteredRows = FLEET_LEDGER_ROWS.filter((r) => {
     if (activeTab === 'confirmed' && r.status !== 'confirmed') return false;
     if (activeTab === 'luxury' && r.tier !== 'luxury') return false;
@@ -497,11 +526,11 @@ export async function render(el) {
           <table class="sail-table" style="table-layout:fixed;width:100%">
             <thead>
               <tr>
-                <th style="width:18%">Vehicle &amp; Capacity</th>
-                <th style="width:12%">Class Tier</th>
-                <th style="width:15%">Partner &amp; Direct Contact</th>
-                <th style="width:22%">Transfer Rates (${esc(modeBadgeText(pricingMode))})</th>
-                <th style="width:18%">Standby / Disposizione</th>
+                <th style="width:15%">Vehicle &amp; Capacity</th>
+                <th style="width:11%">Class Tier</th>
+                <th style="width:16%">Partner &amp; Direct Contact</th>
+                <th style="width:23%">Transfer Rates (${esc(modeBadgeText(pricingMode))})</th>
+                <th style="width:20%">Standby / Disposizione</th>
                 <th style="width:15%">Inspection Photos &amp; Rate Sheet</th>
               </tr>
             </thead>
@@ -676,34 +705,44 @@ function renderLedgerRow(row) {
   return `
     <tr>
       <td>
-        <div style="font-weight:600;color:var(--sail-ink);font-size:13.5px">${esc(row.vehicleModel)}</div>
-        <div style="font-size:12px;color:var(--sail-body);margin-top:2px;font-variant-numeric:tabular-nums">
-          <strong>${row.pax} passenger seats</strong> · ${esc(row.coachbuilder)}
-        </div>
-        <div style="font-size:11.5px;color:var(--sail-muted);margin-top:3px;line-height:1.35">
-          ${esc(row.tierSpec)}
+        <div style="font-weight:600;color:var(--sail-ink);font-size:13px;line-height:1.3">${esc(row.vehicleModel)}</div>
+        <div style="margin-top:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span class="sail-pill info" style="font-size:11px;padding:1px 7px;font-variant-numeric:tabular-nums"><strong>${row.pax} pax</strong></span>
+          <details style="font-size:11px;color:var(--sail-muted)">
+            <summary style="cursor:pointer;user-select:none;font-weight:500;color:var(--sail-body)">Specs</summary>
+            <div style="margin-top:4px;line-height:1.35;color:var(--sail-muted)">
+              <div><strong>${esc(row.coachbuilder)}</strong></div>
+              <div style="margin-top:2px">${esc(row.tierSpec)}</div>
+            </div>
+          </details>
         </div>
       </td>
 
       <td>
         <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start">
-          <span class="sail-pill ${row.tier === 'luxury' ? 'lux' : 'std'}">
-            <span class="sail-pill-dot"></span>${esc(row.tierLabel)}
-          </span>
-          <span class="sail-pill ${row.status === 'confirmed' ? 'ok' : 'info'}" style="font-size:11px">
-            ${esc(row.statusLabel)}
+          <select class="sail-tier-select ${row.tier === 'luxury' ? 'lux' : 'std'}" data-tier-select="${attr(row.id)}" title="Switch between Luxury VIP and Standard Shuttle">
+            <option value="luxury" ${row.tier === 'luxury' ? 'selected' : ''}>Luxury VIP</option>
+            <option value="standard" ${row.tier === 'standard' ? 'selected' : ''}>Standard Shuttle</option>
+          </select>
+          <span class="sail-pill ${row.status === 'confirmed' ? 'ok' : 'info'}" style="font-size:10.5px;padding:1px 6px">
+            ${esc(row.status === 'confirmed' ? 'Verified' : 'Pending')}
           </span>
         </div>
       </td>
 
       <td>
-        <div style="font-weight:600;color:var(--sail-ink)">${esc(row.partnerName)}</div>
-        <div style="font-size:12px;color:var(--sail-body);margin-top:2px">${esc(row.baseCity)}</div>
-        <div style="font-size:11.5px;color:var(--sail-muted);margin-top:2px">${esc(row.contactPerson)}</div>
-        <div class="row" style="gap:8px;margin-top:6px;font-size:11.5px">
+        <div style="font-weight:600;color:var(--sail-ink);font-size:13px;line-height:1.3">
+          ${row.website ? `<a href="${attr(row.website)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;border-bottom:1px dotted #94A3B8" title="Open partner website">${esc(row.partnerName)} ↗</a>` : esc(row.partnerName)}
+        </div>
+        <div style="font-size:11.5px;color:var(--sail-body);margin-top:2px">${esc(row.baseCity)} · ${esc(row.contactPerson)}</div>
+        <div class="row" style="gap:6px;margin-top:6px;font-size:11.5px;flex-wrap:wrap">
           <a href="https://wa.me/${rawWa.replace(/^\+/, '')}" target="_blank" rel="noopener" style="color:var(--sail-accent);font-weight:600">WhatsApp</a>
           <span style="color:#CBD5E1">·</span>
-          <a href="mailto:${attr(row.email)}" style="color:var(--sail-body)">${esc(row.email)}</a>
+          <a href="mailto:${attr(row.email)}" style="color:var(--sail-body)" title="${attr(row.email)}">Email</a>
+          ${row.website ? `
+            <span style="color:#CBD5E1">·</span>
+            <a href="${attr(row.website)}" target="_blank" rel="noopener" style="color:var(--sail-accent);font-weight:600" title="${attr(row.website)}">Website ↗</a>
+          ` : ''}
         </div>
       </td>
 
@@ -880,6 +919,22 @@ function attachLedgerListeners(el) {
     btn.addEventListener('click', () => {
       activeTab = btn.dataset.ledgerTab || 'all';
       render(el);
+    });
+  });
+
+  // Class Tier dropdown switcher (Luxury VIP vs Standard Shuttle)
+  el.querySelectorAll('[data-tier-select]').forEach((sel) => {
+    sel.addEventListener('change', (e) => {
+      const vehId = sel.dataset.tierSelect;
+      const newTier = e.target.value === 'standard' ? 'standard' : 'luxury';
+      const veh = FLEET_LEDGER_ROWS.find((r) => r.id === vehId);
+      if (veh) {
+        veh.tier = newTier;
+        veh.tierLabel = newTier === 'luxury' ? 'Luxury VIP' : 'Standard Shuttle';
+        saveTierOverride(vehId, newTier);
+        toast(`${veh.vehicleModel} set to ${veh.tierLabel}`);
+        render(el);
+      }
     });
   });
 
