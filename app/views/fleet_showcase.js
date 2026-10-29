@@ -166,11 +166,11 @@ export const FLEET_LEDGER_ROWS = [
     id: 'avantgarde_sprinter_8',
     partnerId: 'partner_1792765279535_l9ei',
     vehicleModel: 'Mercedes Sprinter 7 & 8 Pax (+ Driver)',
-    coachbuilder: 'Red 7 Pax · Standard 8 Pax (×2) · Top 8 Pax VIP',
+    coachbuilder: 'Red 7 Pax · Standard 8 Pax · Top 8 Pax VIP',
     pax: 8,
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: 'WA-verified fleet: Red 7-pax + driver, 2× 8-pax + driver, and Top 8-pax ("allestimento speciale")',
+    tierSpec: 'WA-verified fleet: Red 7-pax + driver, Standard 8-pax + driver, and Top 8-pax ("allestimento speciale")',
     partnerName: 'Avantgarde Limousine Service (Milanocab)',
     baseCity: 'Milano (Via Calatafimi 12)',
     contactPerson: 'Vincenzo (Vincent) Lombardi',
@@ -207,7 +207,7 @@ export const FLEET_LEDGER_ROWS = [
         src: 'assets/partner_fleet/avantgarde/sprinter_8_ext_website.webp',
         file: 'sprinter_8_ext_website.webp',
         title: 'Exterior — Mercedes Sprinter 8 Pax VIP',
-        caption: 'Executive 8-passenger Sprinter (+ driver). Additional photos for Red 7-pax, 2× 8-pax, and Top 8-pax sent via WhatsApp.'
+        caption: 'Executive 8-passenger Sprinter (+ driver). Photos for Red 7-pax, Standard 8-pax, and Top 8-pax sent via WhatsApp.'
       },
       {
         id: 'avantgarde_sprinter_int',
@@ -221,12 +221,12 @@ export const FLEET_LEDGER_ROWS = [
   {
     id: 'avantgarde_minibus_18',
     partnerId: 'partner_1792765279535_l9ei',
-    vehicleModel: 'Mercedes Minibus 20 Pax (×2 Units)',
-    coachbuilder: '2× 20-Passenger Minibuses (WA Confirmed)',
+    vehicleModel: 'Mercedes Minibus 20 Pax',
+    coachbuilder: '20-Passenger Minibus (WA Ext + Int Confirmed)',
     pax: 20,
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: 'WA-verified: 2× 20-pax minibuses ("20 Pax" at 08:36 & "Questo è l’altro 20 posti" at 11:19)',
+    tierSpec: 'WA-verified: 20-pax minibus exterior (08:36) + interior (11:19)',
     partnerName: 'Avantgarde Limousine Service (Milanocab)',
     baseCity: 'Milano (Via Calatafimi 12)',
     contactPerson: 'Vincenzo (Vincent) Lombardi',
@@ -242,7 +242,7 @@ export const FLEET_LEDGER_ROWS = [
       mxp_milano: { label: 'MXP ⇄ Milano (+ZTL)', net: 330, km: 50, garageKm: 100 }
     },
     kmFormulaNote: 'Round-trip from Milan depot (100 km): €3.30/km net',
-    transferNote: 'Quoted €330 net (+10% VAT = €363 + eventual Area C ZTL). Confirming if both 20-pax units share this tariff.',
+    transferNote: 'Quoted €330 net (+10% VAT = €363 + eventual Area C ZTL).',
     standby: {
       dispo_4h: { label: '4h (+Area C ZTL)', net: 550, hourlyEq: 137.5 },
       dispo_8h: { label: '8h (+Area C ZTL)', net: 950, hourlyEq: 118.75 },
@@ -262,8 +262,8 @@ export const FLEET_LEDGER_ROWS = [
         id: 'avantgarde_18_ext',
         src: 'assets/partner_fleet/avantgarde/minibus_18_ext_website.jpg',
         file: 'IMG_2307-270.jpg (milanocab.it/cars)',
-        title: 'Exterior — Mercedes Minibus (18–20 Pax)',
-        caption: 'Vincenzo also sent photos of both 20-pax minibuses directly on WhatsApp (29 Oct 08:36 & 11:19).'
+        title: 'Exterior — Mercedes Minibus 20 Pax',
+        caption: 'Vincenzo also sent exterior & interior photos of the 20-pax minibus on WhatsApp (29 Oct 08:36 & 11:19).'
       }
     ]
   },
