@@ -701,56 +701,6 @@ export async function render(el) {
         </div>
       </div>
 
-      <!-- Direct Visual Inspection Section: All 7 Real Photos Side-by-Side (Sprinter vs Ford Transit) -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(440px, 1fr));gap:16px">
-        ${FLEET_LEDGER_ROWS.filter((r) => r.photos && r.photos.length > 0).map((veh) => `
-          <div class="sail-card">
-            <div class="sail-card-head">
-              <div>
-                <div class="row" style="gap:8px;align-items:center">
-                  <span class="sail-card-title">${esc(veh.vehicleModel)} (${veh.pax} Seats)</span>
-                  <span class="sail-pill ${veh.tier === 'luxury' ? 'lux' : 'std'}">
-                    <span class="sail-pill-dot"></span>${esc(veh.tierLabel)}
-                  </span>
-                </div>
-                <div style="font-size:12px;color:var(--sail-muted);margin-top:2px">
-                  ${esc(veh.tierSpec)}
-                </div>
-              </div>
-              <button class="sail-btn xs" data-open-gallery="${attr(veh.id)}" data-photo-idx="0">
-                Inspect All ${veh.photos.length} Photos
-              </button>
-            </div>
-
-            <div class="sail-gallery-grid">
-              ${veh.photos.map((ph, idx) => {
-                const isVid = ph.src && ph.src.endsWith('.mp4');
-                return `
-                <div class="sail-photo-card" data-open-gallery="${attr(veh.id)}" data-photo-idx="${idx}" title="${isVid ? 'Click to play walkthrough video' : 'Click to enlarge photo'}">
-                  ${isVid ? `
-                    <div style="height:190px;background:#0A2540;color:#FFF;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
-                      <div style="width:48px;height:48px;border-radius:50%;background:#635BFF;display:flex;align-items:center;justify-content:center;font-size:20px;padding-left:3px">▶</div>
-                      <span style="font-size:12px;font-weight:600">VIP Walkthrough Video</span>
-                    </div>
-                  ` : `
-                    <img src="${attr(ph.src)}" alt="${attr(ph.title)}" loading="lazy" />
-                  `}
-                  <div class="sail-photo-meta">
-                    <div class="sail-photo-title">${esc(ph.title)}</div>
-                    <div class="sail-photo-sub">${esc(ph.caption)}</div>
-                    <div style="margin-top:4px;font-size:11px;font-weight:600;color:var(--sail-accent);display:flex;align-items:center;justify-content:space-between">
-                      <span>${isVid ? 'Play video' : 'Click to enlarge'}</span>
-                      <a href="${attr(ph.src)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--sail-muted);font-weight:500">Raw file ↗</a>
-                    </div>
-                  </div>
-                </div>
-              `;
-              }).join('')}
-            </div>
-          </div>
-        `).join('')}
-      </div>
-
       <!-- Bottom Section: Customizable Multi-Tier Trip Calculator -->
       <div style="margin-bottom:16px">
         ${renderPriceCalculatorCard()}
