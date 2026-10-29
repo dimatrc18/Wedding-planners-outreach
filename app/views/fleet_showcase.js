@@ -195,46 +195,96 @@ export const FLEET_LEDGER_ROWS = [
     email: 'info@milanocab.it',
     website: 'https://www.avantgardelimousineservice.it/mezzi/',
     status: 'confirmed',
-    statusLabel: 'MXP €250 · Standby €90–140/h (+IVA)',
-    repliedAt: '29 Oct 2026 · 08:39 & 11:19 WA',
+    statusLabel: 'MXP–MI €250 · MXP–Como €380 · 8h €800 / Top €1,200 (+IVA)',
+    repliedAt: '29 Oct 2026 · WA Confirmed',
     ratePdf: null,
     ratePdfName: null,
     transfers: {
-      mxp_milano: { label: 'MXP ⇄ Milano', net: 250, km: 50, garageKm: 100 }
+      mxp_milano: { label: 'MXP ⇄ Milano', net: 250, km: 50, garageKm: 100 },
+      mxp_como: { label: 'MXP ⇄ Como', net: 380, km: 50, garageKm: 120 }
     },
     rateSummary: {
       rtPerKmNet: 2.50,
       oneWayPerKmNet: 5.00,
-      standby1hRangeNet: [90, 140],
-      standby1hNote: 'Std–VIP'
+      standby1hRangeNet: [100, 150],
+      standby1hNote: 'Std–Top VIP (8h pkg)'
     },
     standby: {
-      dispo_4h: { label: '4h Standard', net: 360, hourlyEq: 90 },
-      dispo_8h: { label: '8h Standard', net: 720, hourlyEq: 90 },
-      extra_hour: { label: 'Hourly (Std–VIP)', net: 90 },
+      dispo_8h: { label: '8h Standard 7–8 Pax (150km)', net: 800, hourlyEq: 100 },
+      dispo_8h_vip: { label: '8h Top 8 VIP (150km)', net: 1200, hourlyEq: 150 },
+      extra_hour: null,
       extra_wait: null
     },
     terms: {
       payment: 'POS on board / Invoice',
       vat: '10% VAT excluded ("più IVA") + eventual Area C ZTL',
-      included: 'Milan depot — outside-Milan (Lake Como) standby still unconfirmed',
+      included: 'Includes 150 km on 8h disposal · Como transfer €380 + IVA',
       nightSurcharge: 'Confirming with partner',
       cancellation: 'Requested'
     },
     photos: [
       {
-        id: 'avantgarde_sprinter_ext',
-        src: 'assets/partner_fleet/avantgarde/sprinter_8_ext_website.webp',
-        file: 'sprinter_8_ext_website.webp',
-        title: 'Exterior — Mercedes Sprinter 8 Pax VIP',
-        caption: 'Executive 8-passenger Sprinter (+ driver). Photos for Red 7-pax, Standard 8-pax, and Top 8-pax sent via WhatsApp.'
+        id: 'avantgarde_7p_red_ext',
+        src: 'assets/partner_fleet/avantgarde/sprinter_7p_red_ext.jpg',
+        file: 'sprinter_7p_red_ext.jpg',
+        title: 'Exterior — Mercedes Sprinter 7 Pax (Red Interior)',
+        caption: 'Total black Mercedes Sprinter configured with VIP Carmine Red leather interior.'
       },
       {
-        id: 'avantgarde_sprinter_int',
-        src: 'assets/partner_fleet/avantgarde/sprinter_8_int_website.jpg',
-        file: 'sprinter_8_int_website.jpg',
-        title: 'Interior Cabin — VIP Allestimento Speciale (8 Pax)',
-        caption: 'Club seating with tables & ambient lighting ("allestimento speciale" €90–€140/h + IVA).'
+        id: 'avantgarde_7p_red_int_1',
+        src: 'assets/partner_fleet/avantgarde/sprinter_7p_red_int_1.jpg',
+        file: 'sprinter_7p_red_int_1.jpg',
+        title: 'Interior — Carmine Red Diamond-Quilted Leather (7 Pax)',
+        caption: 'Luxury diamond-stitched red leather armchairs with individual headrests.'
+      },
+      {
+        id: 'avantgarde_7p_red_int_2',
+        src: 'assets/partner_fleet/avantgarde/sprinter_7p_red_int_2.jpg',
+        file: 'sprinter_7p_red_int_2.jpg',
+        title: 'Interior Cabin — Red Seats & Wood-Tone Deck (7 Pax)',
+        caption: 'Spacious passenger cabin with wide aisle and ambient mood lighting.'
+      },
+      {
+        id: 'avantgarde_7p_red_int_3',
+        src: 'assets/partner_fleet/avantgarde/sprinter_7p_red_int_3.jpg',
+        file: 'sprinter_7p_red_int_3.jpg',
+        title: 'Interior — Rear Reclining Seats & Privacy Curtains (7 Pax)',
+        caption: 'Rear cabin view with pleated privacy curtains and deep luggage boot behind.'
+      },
+      {
+        id: 'avantgarde_8p_bw_ext_1',
+        src: 'assets/partner_fleet/avantgarde/sprinter_8p_bw_ext_1.jpg',
+        file: 'sprinter_8p_bw_ext_1.jpg',
+        title: 'Exterior — Mercedes Sprinter 8 Pax Executive (Side View)',
+        caption: 'High-roof total black Sprinter (8 passenger seats + driver).'
+      },
+      {
+        id: 'avantgarde_8p_bw_ext_2',
+        src: 'assets/partner_fleet/avantgarde/sprinter_8p_bw_ext_2.jpg',
+        file: 'sprinter_8p_bw_ext_2.jpg',
+        title: 'Exterior — Mercedes Sprinter 8 Pax (Front Quarter)',
+        caption: 'Discreet unbranded black exterior suitable for VIP weddings and diplomatic delegations.'
+      },
+      {
+        id: 'avantgarde_8p_bw_int_tv',
+        src: 'assets/partner_fleet/avantgarde/sprinter_8p_bw_int_tv.jpg',
+        file: 'sprinter_8p_bw_int_tv.jpg',
+        title: 'Interior — Black & White Two-Tone Leather with TV Partition',
+        caption: 'Forward cabin bulkhead with multimedia flat screen TV and soundbar.'
+      },
+      {
+        id: 'avantgarde_8p_bw_int_2',
+        src: 'assets/partner_fleet/avantgarde/sprinter_8p_bw_int_2.jpg',
+        file: 'sprinter_8p_bw_int_2.jpg',
+        title: 'Interior — Conference Armchairs with Executive Tables',
+        caption: 'Conference club seating facing center console table with cup holders.'
+      },
+      {
+        id: 'avantgarde_8p_top_vip_video',
+        src: 'assets/partner_fleet/avantgarde/sprinter_8p_top_vip_video.mp4',
+        file: 'sprinter_8p_top_vip_video.mp4',
+        title: 'Video Walkthrough — Sprinter Top 8 VIP (Allestimento Speciale)',
+        caption: 'Video walkthrough of the Top 8 Pax VIP trim (€1,200 / 8h + IVA).'
       }
     ]
   },
@@ -243,7 +293,7 @@ export const FLEET_LEDGER_ROWS = [
     partnerId: 'partner_1792765279535_l9ei',
     vehicleModel: 'Mercedes-Benz Minibus',
     paxLabel: '20 pax',
-    coachbuilder: 'Executive Coach Conversion (WA Ext + Int Verified)',
+    coachbuilder: 'Executive Coach Conversion (2x Units · WA Verified)',
     pax: 20,
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
@@ -256,7 +306,7 @@ export const FLEET_LEDGER_ROWS = [
     website: 'https://www.milanocab.it/cars/',
     status: 'confirmed',
     statusLabel: 'MXP €330 · 4h €550 · 8h €950 (+IVA)',
-    repliedAt: '28 Oct 16:36 & 29 Oct 11:19 WA',
+    repliedAt: '28–29 Oct 2026 · WA Confirmed',
     ratePdf: null,
     ratePdfName: null,
     transfers: {
@@ -277,17 +327,31 @@ export const FLEET_LEDGER_ROWS = [
     terms: {
       payment: 'POS on board / Invoice',
       vat: '10% VAT excluded ("più IVA") + eventual Area C ZTL',
-      included: 'Milan base — confirming if standby covers outside Milan (Lake Como)',
+      included: 'Milan base (Via Calatafimi 12) · 2 units available',
       nightSurcharge: 'Confirming with partner',
       cancellation: 'Requested'
     },
     photos: [
       {
-        id: 'avantgarde_18_ext',
-        src: 'assets/partner_fleet/avantgarde/minibus_18_ext_website.jpg',
-        file: 'IMG_2307-270.jpg (milanocab.it/cars)',
-        title: 'Exterior — Mercedes Minibus 20 Pax',
-        caption: 'Vincenzo also sent exterior & interior photos of the 20-pax minibus on WhatsApp (29 Oct 08:36 & 11:19).'
+        id: 'avantgarde_20_ext',
+        src: 'assets/partner_fleet/avantgarde/minibus_20p_ext.jpg',
+        file: 'minibus_20p_ext.jpg',
+        title: 'Exterior — Mercedes Minibus 20 Pax (Total Black)',
+        caption: 'Total black Mercedes touring minibus with tinted privacy windows and touring coach door.'
+      },
+      {
+        id: 'avantgarde_20_int_1',
+        src: 'assets/partner_fleet/avantgarde/minibus_20p_int_1.jpg',
+        file: 'minibus_20p_int_1.jpg',
+        title: 'Interior — 20 Passenger High-Back Leather Seats',
+        caption: 'Spacious high-back leather seats with 3-point belts, center aisle, and overhead parcel racks.'
+      },
+      {
+        id: 'avantgarde_20_int_ambient',
+        src: 'assets/partner_fleet/avantgarde/minibus_20p_int_ambient.jpg',
+        file: 'minibus_20p_int_ambient.jpg',
+        title: 'Interior — Nighttime Blue LED Mood Lighting',
+        caption: 'Interior illuminated with blue ambient ceiling LEDs for evening and late-night guest returns.'
       }
     ]
   },
@@ -298,26 +362,87 @@ export const FLEET_LEDGER_ROWS = [
     paxLabel: '30 pax',
     coachbuilder: 'Touring Coach (WA Ext + Int Verified)',
     pax: 30,
-    tier: 'standard',
-    tierLabel: 'Standard Shuttle',
-    tierSpec: 'WA photos verified (08:34 & 11:18) — awaiting rate sheet',
+    tier: 'luxury',
+    tierLabel: 'Luxury VIP',
+    tierSpec: 'Panoramic touring glass · High-back reclining seats · Reversing camera & AC',
     partnerName: 'Avantgarde Limousine Service',
     baseCity: 'Milano (Via Calatafimi 12)',
     contactPerson: 'Vincenzo Lombardi',
     phone: '+39 333 269 7376',
     email: 'info@milanocab.it',
     website: 'https://www.avantgardelimousineservice.it/mezzi/',
-    status: 'pending',
-    statusLabel: 'Photos on WA · Awaiting 30-pax prices',
-    repliedAt: '29 Oct 2026 · 08:34 & 11:18 WA',
+    status: 'confirmed',
+    statusLabel: 'MXP–MI €400 · MXP–Como €500 · 4h €600 · 8h €1,200 (+IVA)',
+    repliedAt: '29 Oct 2026 · WA Confirmed',
     ratePdf: null,
     ratePdfName: null,
-    transfers: null,
-    transferNote: 'Awaiting 30-pax transfer tariff.',
-    standby: null,
-    standbyNote: 'Awaiting 4h/8h standby & Lake Como availability.',
-    terms: null,
-    photos: []
+    transfers: {
+      mxp_milano: { label: 'MXP ⇄ Milano', net: 400, km: 50, garageKm: 100 },
+      mxp_como: { label: 'MXP ⇄ Como', net: 500, km: 50, garageKm: 120 }
+    },
+    rateSummary: {
+      rtPerKmNet: 4.00,
+      oneWayPerKmNet: 8.00,
+      standby1hRangeNet: [150, 150],
+      standby1hNote: '€150/h flat'
+    },
+    standby: {
+      dispo_4h: { label: '4h (75km incl)', net: 600, hourlyEq: 150 },
+      dispo_8h: { label: '8h (150km incl)', net: 1200, hourlyEq: 150 },
+      extra_hour: null,
+      extra_wait: null
+    },
+    terms: {
+      payment: 'POS on board / Invoice',
+      vat: '10% VAT excluded ("più IVA") + eventual Area C ZTL (€97.50 in Milan)',
+      included: '4h includes 75 km · 8h includes 150 km · Como transfer €500 + IVA',
+      nightSurcharge: 'Confirming with partner',
+      cancellation: 'Requested'
+    },
+    photos: [
+      {
+        id: 'avantgarde_30_ext_side',
+        src: 'assets/partner_fleet/avantgarde/coach_30p_ext_side.jpg',
+        file: 'coach_30p_ext_side.jpg',
+        title: 'Exterior — Executive Touring Midibus 30 Pax (Side Profile)',
+        caption: 'Total black executive midibus with deep tinted panoramic side windows.'
+      },
+      {
+        id: 'avantgarde_30_ext_back',
+        src: 'assets/partner_fleet/avantgarde/coach_30p_ext_back.jpg',
+        file: 'coach_30p_ext_back.jpg',
+        title: 'Exterior — 30 Pax Coach (Rear Luggage Boot)',
+        caption: 'Large rear luggage compartment for heavy guest suitcases and wedding equipment.'
+      },
+      {
+        id: 'avantgarde_30_int_1',
+        src: 'assets/partner_fleet/avantgarde/coach_30p_int_1.jpg',
+        file: 'coach_30p_int_1.jpg',
+        title: 'Interior — 30 Passenger Reclining Seats & Center Aisle',
+        caption: 'High-back touring seats with armrests, cup holders, and durable commercial fabric/leatherette.'
+      },
+      {
+        id: 'avantgarde_30_int_2',
+        src: 'assets/partner_fleet/avantgarde/coach_30p_int_2.jpg',
+        file: 'coach_30p_int_2.jpg',
+        title: 'Interior — Cockpit & Forward Panoramic Windshield',
+        caption: 'Clean driver cockpit with microphone for tour leader/guide and panoramic front visibility.'
+      },
+      {
+        id: 'avantgarde_30_int_3',
+        src: 'assets/partner_fleet/avantgarde/coach_30p_int_3.jpg',
+        file: 'coach_30p_int_3.jpg',
+        title: 'Interior — Overhead AC Vents & Reading Lights',
+        caption: 'Individual passenger climate control vents and individual reading spots.'
+      },
+      {
+        id: 'avantgarde_30_int_4',
+        src: 'assets/partner_fleet/avantgarde/coach_30p_int_4.jpg',
+        file: 'coach_30p_int_4.jpg',
+        title: 'Interior — Wide Aisle & Rear Cabin Seating',
+        caption: 'View toward rear cabin showing deep legroom and overhead parcel storage.'
+      }
+    ]
   },
   {
     id: 'landway_fleet',
@@ -490,7 +615,7 @@ export async function render(el) {
             <span class="sail-pill ok" style="padding:1px 6px;font-size:10.5px"><span class="sail-pill-dot"></span>Active</span>
           </div>
           <div class="sail-stat-val">${confirmedCount} <span style="font-size:13px;font-weight:500;color:var(--sail-muted)">/ ${FLEET_LEDGER_ROWS.length} replied</span></div>
-          <div class="sail-stat-meta">Como Driver (12 &amp; 16p) · Avantgarde (8 &amp; 16p)</div>
+          <div class="sail-stat-meta">Como Driver (12 &amp; 16p) · Avantgarde (8, 20 &amp; 30p)</div>
         </div>
 
         <div class="sail-stat-cell">
@@ -590,19 +715,29 @@ export async function render(el) {
             </div>
 
             <div class="sail-gallery-grid">
-              ${veh.photos.map((ph, idx) => `
-                <div class="sail-photo-card" data-open-gallery="${attr(veh.id)}" data-photo-idx="${idx}" title="Click to enlarge photo">
-                  <img src="${attr(ph.src)}" alt="${attr(ph.title)}" loading="lazy" />
+              ${veh.photos.map((ph, idx) => {
+                const isVid = ph.src && ph.src.endsWith('.mp4');
+                return `
+                <div class="sail-photo-card" data-open-gallery="${attr(veh.id)}" data-photo-idx="${idx}" title="${isVid ? 'Click to play walkthrough video' : 'Click to enlarge photo'}">
+                  ${isVid ? `
+                    <div style="height:190px;background:#0A2540;color:#FFF;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
+                      <div style="width:48px;height:48px;border-radius:50%;background:#635BFF;display:flex;align-items:center;justify-content:center;font-size:20px;padding-left:3px">▶</div>
+                      <span style="font-size:12px;font-weight:600">VIP Walkthrough Video</span>
+                    </div>
+                  ` : `
+                    <img src="${attr(ph.src)}" alt="${attr(ph.title)}" loading="lazy" />
+                  `}
                   <div class="sail-photo-meta">
                     <div class="sail-photo-title">${esc(ph.title)}</div>
                     <div class="sail-photo-sub">${esc(ph.caption)}</div>
                     <div style="margin-top:4px;font-size:11px;font-weight:600;color:var(--sail-accent);display:flex;align-items:center;justify-content:space-between">
-                      <span>Click to enlarge</span>
+                      <span>${isVid ? 'Play video' : 'Click to enlarge'}</span>
                       <a href="${attr(ph.src)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--sail-muted);font-weight:500">Raw file ↗</a>
                     </div>
                   </div>
                 </div>
-              `).join('')}
+              `;
+              }).join('')}
             </div>
           </div>
         `).join('')}
@@ -692,16 +827,16 @@ function renderLedgerRow(row) {
 
   let standbyHtml = '';
   if (hasStandby) {
-    const s4 = calculateAdjustedPrice(row.standby.dispo_4h.net, pricingMode);
-    const s8 = calculateAdjustedPrice(row.standby.dispo_8h.net, pricingMode);
+    const s4 = row.standby.dispo_4h ? calculateAdjustedPrice(row.standby.dispo_4h.net, pricingMode) : null;
+    const s8 = row.standby.dispo_8h ? calculateAdjustedPrice(row.standby.dispo_8h.net, pricingMode) : null;
+    const s8vip = row.standby.dispo_8h_vip ? calculateAdjustedPrice(row.standby.dispo_8h_vip.net, pricingMode) : null;
     const exH = row.standby.extra_hour ? calculateAdjustedPrice(row.standby.extra_hour.net, pricingMode) : null;
     const exW = row.standby.extra_wait ? calculateAdjustedPrice(row.standby.extra_wait.net, pricingMode) : null;
     standbyHtml = `
       <div class="sail-rate-grid">
-        <span class="sail-rate-route">${esc(row.standby.dispo_4h.label || '4h Standby')}</span>
-        <span class="sail-rate-amt">${formatEur(s4)} <span class="sail-rate-sub">(${formatEur(Math.round(s4 / 4))}/h)</span></span>
-        <span class="sail-rate-route">${esc(row.standby.dispo_8h.label || '8h Standby')}</span>
-        <span class="sail-rate-amt">${formatEur(s8)} <span class="sail-rate-sub">(${formatEur(Math.round(s8 / 8))}/h)</span></span>
+        ${s4 !== null ? `<span class="sail-rate-route">${esc(row.standby.dispo_4h.label || '4h Standby')}</span><span class="sail-rate-amt">${formatEur(s4)} <span class="sail-rate-sub">(${formatEur(Math.round(s4 / 4))}/h)</span></span>` : ''}
+        ${s8 !== null ? `<span class="sail-rate-route">${esc(row.standby.dispo_8h.label || '8h Standby')}</span><span class="sail-rate-amt">${formatEur(s8)} <span class="sail-rate-sub">(${formatEur(Math.round(s8 / 8))}/h)</span></span>` : ''}
+        ${s8vip !== null ? `<span class="sail-rate-route">${esc(row.standby.dispo_8h_vip.label || '8h Top VIP')}</span><span class="sail-rate-amt">${formatEur(s8vip)} <span class="sail-rate-sub">(${formatEur(Math.round(s8vip / 8))}/h)</span></span>` : ''}
         ${exH !== null ? `<span class="sail-rate-route">Extra Hour</span><span class="sail-rate-amt">${formatEur(exH)}/h</span>` : ''}
         ${exW !== null ? `<span class="sail-rate-route">Wait &gt;60m Airport</span><span class="sail-rate-amt">${formatEur(exW)}/h</span>` : ''}
       </div>
@@ -721,9 +856,16 @@ function renderLedgerRow(row) {
       <div style="display:flex;flex-direction:column;gap:8px">
         ${hasPhotos ? `
           <div class="sail-thumb-strip">
-            ${row.photos.map((ph, idx) => `
-              <img class="sail-thumb" src="${attr(ph.src)}" alt="${attr(ph.title)}" title="${attr(ph.title)} — Click to view" data-open-gallery="${attr(row.id)}" data-photo-idx="${idx}" />
-            `).join('')}
+            ${row.photos.map((ph, idx) => {
+              const isVid = ph.src && ph.src.endsWith('.mp4');
+              return isVid ? `
+                <div class="sail-thumb" data-open-gallery="${attr(row.id)}" data-photo-idx="${idx}" style="display:flex;align-items:center;justify-content:center;background:#0A2540;color:#FFF;font-size:9.5px;font-weight:700;cursor:pointer" title="${attr(ph.title)}">
+                  ▶ Video
+                </div>
+              ` : `
+                <img class="sail-thumb" src="${attr(ph.src)}" alt="${attr(ph.title)}" title="${attr(ph.title)} — Click to view" data-open-gallery="${attr(row.id)}" data-photo-idx="${idx}" />
+              `;
+            }).join('')}
           </div>
           <div class="row" style="gap:6px">
             <button class="sail-btn xs primary" data-open-gallery="${attr(row.id)}" data-photo-idx="0">
@@ -804,6 +946,7 @@ function renderPriceCalculatorCard() {
   const standbyOptions = [];
   if (veh.standby?.dispo_4h) standbyOptions.push({ key: 'dispo_4h', label: `Standby: ${veh.standby.dispo_4h.label}`, net: veh.standby.dispo_4h.net });
   if (veh.standby?.dispo_8h) standbyOptions.push({ key: 'dispo_8h', label: `Standby: ${veh.standby.dispo_8h.label}`, net: veh.standby.dispo_8h.net });
+  if (veh.standby?.dispo_8h_vip) standbyOptions.push({ key: 'dispo_8h_vip', label: `Standby: ${veh.standby.dispo_8h_vip.label}`, net: veh.standby.dispo_8h_vip.net });
   const allServices = [...transferOptions, ...standbyOptions];
   const selService = allServices.find((s) => s.key === calcState.serviceKey) || allServices[allServices.length - 1] || { key: 'dispo_8h', label: '8h Standby', net: 900 };
 
@@ -840,6 +983,7 @@ function renderPriceCalculatorCard() {
               <option value="como_transit_16" ${calcState.vehicleId === 'como_transit_16' ? 'selected' : ''}>Como Driver · Ford Transit (16 pax · Standard Shuttle)</option>
               <option value="avantgarde_sprinter_8" ${calcState.vehicleId === 'avantgarde_sprinter_8' ? 'selected' : ''}>Avantgarde · Mercedes Sprinter (7 &amp; 8 pax · Milano)</option>
               <option value="avantgarde_minibus_18" ${calcState.vehicleId === 'avantgarde_minibus_18' ? 'selected' : ''}>Avantgarde · Mercedes Minibus (20 pax · Milano)</option>
+              <option value="avantgarde_coach_30" ${calcState.vehicleId === 'avantgarde_coach_30' ? 'selected' : ''}>Avantgarde · Executive Midibus (30 pax · Milano)</option>
             </select>
           </div>
 
@@ -1034,12 +1178,17 @@ function openPhotoLightbox(veh, initialIndex = 0) {
       const root = box.querySelector('#sail-lightbox-root');
       const paintSlide = () => {
         const ph = veh.photos[idx];
+        const isVid = ph.src && ph.src.endsWith('.mp4');
         root.innerHTML = `
           <div style="display:flex;flex-direction:column;gap:12px">
             <div style="background:#0A2540;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:380px;max-height:540px;position:relative">
-              <img src="${attr(ph.src)}" alt="${attr(ph.title)}" style="max-width:100%;max-height:520px;object-fit:contain;display:block" />
+              ${isVid ? `
+                <video controls autoplay muted src="${attr(ph.src)}" style="max-width:100%;max-height:520px;display:block"></video>
+              ` : `
+                <img src="${attr(ph.src)}" alt="${attr(ph.title)}" style="max-width:100%;max-height:520px;object-fit:contain;display:block" />
+              `}
               <div style="position:absolute;top:12px;left:12px;background:rgba(10,37,64,0.82);color:#FFF;padding:4px 10px;border-radius:4px;font-size:12px;font-weight:600">
-                Photo ${idx + 1} of ${veh.photos.length} · ${esc(ph.file)}
+                ${isVid ? 'Video' : 'Photo'} ${idx + 1} of ${veh.photos.length} · ${esc(ph.file)}
               </div>
             </div>
 
@@ -1052,14 +1201,21 @@ function openPhotoLightbox(veh, initialIndex = 0) {
               <div class="row" style="gap:8px">
                 <button class="sail-btn xs" id="lb-prev" ${veh.photos.length <= 1 ? 'disabled' : ''}>← Previous</button>
                 <button class="sail-btn xs" id="lb-next" ${veh.photos.length <= 1 ? 'disabled' : ''}>Next →</button>
-                <a class="sail-btn xs primary" href="${attr(ph.src)}" target="_blank" rel="noopener">Open Full Resolution ↗</a>
+                <a class="sail-btn xs primary" href="${attr(ph.src)}" target="_blank" rel="noopener">Open ${isVid ? 'Video' : 'Full Resolution'} ↗</a>
               </div>
             </div>
 
             <div class="row" style="gap:8px;padding-top:8px;border-top:1px solid #E3E8EE;overflow-x:auto">
-              ${veh.photos.map((thumb, tIdx) => `
-                <img src="${attr(thumb.src)}" alt="${attr(thumb.title)}" data-lb-idx="${tIdx}" style="width:76px;height:52px;object-fit:cover;border-radius:5px;cursor:pointer;border:2px solid ${tIdx === idx ? '#635BFF' : 'transparent'};opacity:${tIdx === idx ? '1' : '0.6'}" />
-              `).join('')}
+              ${veh.photos.map((thumb, tIdx) => {
+                const isThumbVid = thumb.src && thumb.src.endsWith('.mp4');
+                return isThumbVid ? `
+                  <div data-lb-idx="${tIdx}" style="width:76px;height:52px;background:#0A2540;color:#FFF;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;cursor:pointer;border:2px solid ${tIdx === idx ? '#635BFF' : 'transparent'};opacity:${tIdx === idx ? '1' : '0.6'}">
+                    ▶ Video
+                  </div>
+                ` : `
+                  <img src="${attr(thumb.src)}" alt="${attr(thumb.title)}" data-lb-idx="${tIdx}" style="width:76px;height:52px;object-fit:cover;border-radius:5px;cursor:pointer;border:2px solid ${tIdx === idx ? '#635BFF' : 'transparent'};opacity:${tIdx === idx ? '1' : '0.6'}" />
+                `;
+              }).join('')}
             </div>
           </div>
         `;
