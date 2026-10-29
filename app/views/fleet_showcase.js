@@ -45,33 +45,25 @@ export const FLEET_LEDGER_ROWS = [
     ratePdf: PDF_COMO_DRIVER,
     ratePdfName: 'DORONGO 2027.pdf (2 pages)',
     transfers: {
-      mxp_como: { label: 'MXP ⇄ Como', net: 350, km: 48, garageKm: 78 },
-      milano_como: { label: 'Milano Centro ⇄ Como', net: 400, km: 52, garageKm: 95 },
-      lin_como: { label: 'LIN ⇄ Como', net: 400, km: 62, garageKm: 115 },
-      bgy_como: { label: 'BGY ⇄ Como', net: 450, km: 92, garageKm: 175 },
-      tremezzo: { label: 'Como ⇄ Tremezzo', net: 300, km: 30, garageKm: 68 },
-      bellagio: { label: 'Como ⇄ Bellagio', net: 350 - 50, km: 32, garageKm: 72 }
-    },
-    rateSummary: {
-      marginalPerKmNet: 2.42,
-      baseCalloutNet: 225,
-      rtPerKmNet: 3.48,
-      standby1hExtraNet: 100,
-      standby1hRangeNet: [113, 125],
-      standby1hNote: '8h–4h pkg'
+      mxp_como: { label: 'Aeroporto di Malpensa', net: 350 },
+      milano_como: { label: 'Milano Centro / Milano FS', net: 400 },
+      lin_como: { label: 'Aeroporto di Linate', net: 400 },
+      bgy_como: { label: 'Aeroporto di Bergamo', net: 450 },
+      tremezzo: { label: 'Tremezzo', net: 300 },
+      bellagio: { label: 'Bellagio', net: 300 }
     },
     standby: {
-      dispo_4h: { label: '4h (incl. 100 km)', net: 500, hourlyEq: 125 },
-      dispo_8h: { label: '8h (incl. 200 km)', net: 900, hourlyEq: 112.5 },
-      extra_hour: { label: 'Extra Hour', net: 100 },
-      extra_wait: { label: 'Wait >60m Airport', net: 80 }
+      dispo_4h: { label: 'Disposizione 4h (100 km inclusi)', net: 500 },
+      dispo_8h: { label: 'Disposizione 8h (200 km inclusi)', net: 900 },
+      extra_hour: { label: 'Ore Extra', net: 100 },
+      extra_wait: { label: 'Attesa extra (>1h aeroporto / >20m hotel)', net: 80 }
     },
     terms: {
-      payment: 'Prepayment upon invoice (vista fattura)',
-      vat: '10% VAT excluded',
-      included: 'Fuel, highway tolls, parking, 60m airport wait, 20m hotel/station wait',
-      nightSurcharge: '+20% between 22:00 and 06:00',
-      cancellation: '14–28 days: 50% refund · <14 days: no refund (100% penalty)'
+      payment: 'Pagamento anticipato vista fattura',
+      vat: 'Prezzi IVA 10% esclusa',
+      included: 'Carburante, pedaggi autostradali, parcheggi, attesa 1h volo / 20m hotel',
+      nightSurcharge: '+20% tra le 22:00 e le 06:00',
+      cancellation: '14–28 giorni: 50% rimborso · <14 giorni: nessun rimborso (100% penale)'
     },
     photos: [
       {
@@ -126,33 +118,25 @@ export const FLEET_LEDGER_ROWS = [
     ratePdf: PDF_COMO_DRIVER,
     ratePdfName: 'DORONGO 2027.pdf (2 pages)',
     transfers: {
-      mxp_como: { label: 'MXP ⇄ Como', net: 400, km: 48, garageKm: 78 },
-      milano_como: { label: 'Milano Centro ⇄ Como', net: 450, km: 52, garageKm: 95 },
-      lin_como: { label: 'LIN ⇄ Como', net: 450, km: 62, garageKm: 115 },
-      bgy_como: { label: 'BGY ⇄ Como', net: 500, km: 92, garageKm: 175 },
-      tremezzo: { label: 'Como ⇄ Tremezzo', net: 350, km: 30, garageKm: 68 },
-      bellagio: { label: 'Como ⇄ Bellagio', net: 350, km: 32, garageKm: 72 }
-    },
-    rateSummary: {
-      marginalPerKmNet: 2.42,
-      baseCalloutNet: 275,
-      rtPerKmNet: 3.95,
-      standby1hExtraNet: 100,
-      standby1hRangeNet: [113, 125],
-      standby1hNote: '8h–4h pkg'
+      mxp_como: { label: 'Aeroporto di Malpensa', net: 400 },
+      milano_como: { label: 'Milano Centro / Milano FS', net: 450 },
+      lin_como: { label: 'Aeroporto di Linate', net: 450 },
+      bgy_como: { label: 'Aeroporto di Bergamo', net: 500 },
+      tremezzo: { label: 'Tremezzo', net: 350 },
+      bellagio: { label: 'Bellagio', net: 350 }
     },
     standby: {
-      dispo_4h: { label: '4h (incl. 100 km)', net: 500, hourlyEq: 125 },
-      dispo_8h: { label: '8h (incl. 200 km)', net: 900, hourlyEq: 112.5 },
-      extra_hour: { label: 'Extra Hour', net: 100 },
-      extra_wait: { label: 'Wait >60m Airport', net: 80 }
+      dispo_4h: { label: 'Disposizione 4h (100 km inclusi)', net: 500 },
+      dispo_8h: { label: 'Disposizione 8h (200 km inclusi)', net: 900 },
+      extra_hour: { label: 'Ore Extra', net: 100 },
+      extra_wait: { label: 'Attesa extra (>1h aeroporto / >20m hotel)', net: 80 }
     },
     terms: {
-      payment: 'Prepayment upon invoice (vista fattura)',
-      vat: '10% VAT excluded',
-      included: 'Fuel, highway tolls, parking, 60m airport wait, 20m hotel/station wait',
-      nightSurcharge: '+20% between 22:00 and 06:00',
-      cancellation: '14–28 days: 50% refund · <14 days: no refund (100% penalty)'
+      payment: 'Pagamento anticipato vista fattura',
+      vat: 'Prezzi IVA 10% esclusa',
+      included: 'Carburante, pedaggi autostradali, parcheggi, attesa 1h volo / 20m hotel',
+      nightSurcharge: '+20% tra le 22:00 e le 06:00',
+      cancellation: '14–28 giorni: 50% rimborso · <14 giorni: nessun rimborso (100% penale)'
     },
     photos: [
       {
@@ -200,27 +184,22 @@ export const FLEET_LEDGER_ROWS = [
     ratePdf: null,
     ratePdfName: null,
     transfers: {
-      mxp_milano: { label: 'MXP ⇄ Milano', net: 250, km: 50, garageKm: 100 },
-      mxp_como: { label: 'MXP ⇄ Como', net: 380, km: 50, garageKm: 120 }
-    },
-    rateSummary: {
-      rtPerKmNet: 2.50,
-      oneWayPerKmNet: 5.00,
-      standby1hRangeNet: [100, 150],
-      standby1hNote: 'Std–Top VIP (8h pkg)'
+      mxp_milano: { label: 'Malpensa (MXP) ⇄ Milano', net: 250 },
+      mxp_como: { label: 'Malpensa (MXP) ⇄ Como', net: 380 }
     },
     standby: {
-      dispo_8h: { label: '8h Standard 7–8 Pax (150km)', net: 800, hourlyEq: 100 },
-      dispo_8h_vip: { label: '8h Top 8 VIP (150km)', net: 1200, hourlyEq: 150 },
+      dispo_8h: { label: 'Disposizione 8h Standard 7–8 Pax (150 km inclusi)', net: 800 },
+      dispo_8h_vip: { label: 'Disposizione 8h Top 8 VIP (150 km inclusi)', net: 1200 },
       extra_hour: null,
       extra_wait: null
     },
     terms: {
-      payment: 'POS on board / Invoice',
-      vat: '10% VAT excluded ("più IVA") + eventual Area C ZTL',
-      included: 'Includes 150 km on 8h disposal · Como transfer €380 + IVA',
-      nightSurcharge: 'Confirming with partner',
-      cancellation: 'Requested'
+      payment: 'POS a bordo / Bonifico su fattura',
+      vat: 'Prezzi IVA 10% esclusa ("più IVA")',
+      included: '150 km inclusi su disposizione 8h · Deposito Milano',
+      extra: 'Eventuale ZTL Area C Milano (€97.50)',
+      nightSurcharge: null,
+      cancellation: null
     },
     photos: [
       {
@@ -310,26 +289,21 @@ export const FLEET_LEDGER_ROWS = [
     ratePdf: null,
     ratePdfName: null,
     transfers: {
-      mxp_milano: { label: 'MXP ⇄ Milano', net: 330, km: 50, garageKm: 100 }
-    },
-    rateSummary: {
-      rtPerKmNet: 3.30,
-      oneWayPerKmNet: 6.60,
-      standby1hRangeNet: [119, 138],
-      standby1hNote: '8h–4h pkg'
+      mxp_milano: { label: 'Malpensa (MXP) ⇄ Milano', net: 330 }
     },
     standby: {
-      dispo_4h: { label: '4h (+Area C ZTL)', net: 550, hourlyEq: 137.5 },
-      dispo_8h: { label: '8h (+Area C ZTL)', net: 950, hourlyEq: 118.75 },
+      dispo_4h: { label: 'Disposizione 4h', net: 550 },
+      dispo_8h: { label: 'Disposizione 8h', net: 950 },
       extra_hour: null,
       extra_wait: null
     },
     terms: {
-      payment: 'POS on board / Invoice',
-      vat: '10% VAT excluded ("più IVA") + eventual Area C ZTL',
-      included: 'Milan base (Via Calatafimi 12) · 2 units available',
-      nightSurcharge: 'Confirming with partner',
-      cancellation: 'Requested'
+      payment: 'POS a bordo / Bonifico su fattura',
+      vat: 'Prezzi IVA 10% esclusa ("più IVA")',
+      included: '2 unità disponibili · Deposito Milano',
+      extra: 'Eventuale ZTL Area C Milano (€97.50)',
+      nightSurcharge: null,
+      cancellation: null
     },
     photos: [
       {
@@ -377,27 +351,22 @@ export const FLEET_LEDGER_ROWS = [
     ratePdf: null,
     ratePdfName: null,
     transfers: {
-      mxp_milano: { label: 'MXP ⇄ Milano', net: 400, km: 50, garageKm: 100 },
-      mxp_como: { label: 'MXP ⇄ Como', net: 500, km: 50, garageKm: 120 }
-    },
-    rateSummary: {
-      rtPerKmNet: 4.00,
-      oneWayPerKmNet: 8.00,
-      standby1hRangeNet: [150, 150],
-      standby1hNote: '€150/h flat'
+      mxp_milano: { label: 'Malpensa (MXP) ⇄ Milano', net: 400 },
+      mxp_como: { label: 'Malpensa (MXP) ⇄ Como', net: 500 }
     },
     standby: {
-      dispo_4h: { label: '4h (75km incl)', net: 600, hourlyEq: 150 },
-      dispo_8h: { label: '8h (150km incl)', net: 1200, hourlyEq: 150 },
+      dispo_4h: { label: 'Disposizione 4h (75 km inclusi)', net: 600 },
+      dispo_8h: { label: 'Disposizione 8h (150 km inclusi)', net: 1200 },
       extra_hour: null,
       extra_wait: null
     },
     terms: {
-      payment: 'POS on board / Invoice',
-      vat: '10% VAT excluded ("più IVA") + eventual Area C ZTL (€97.50 in Milan)',
-      included: '4h includes 75 km · 8h includes 150 km · Como transfer €500 + IVA',
-      nightSurcharge: 'Confirming with partner',
-      cancellation: 'Requested'
+      payment: 'POS a bordo / Bonifico su fattura',
+      vat: 'Prezzi IVA 10% esclusa ("più IVA")',
+      included: '75 km inclusi su 4h · 150 km inclusi su 8h',
+      extra: 'Eventuale ZTL Area C Milano (€97.50)',
+      nightSurcharge: null,
+      cancellation: null
     },
     photos: [
       {
@@ -618,25 +587,25 @@ export async function render(el) {
             <span style="font-size:11px;color:var(--sail-accent);font-weight:600">${esc(modeBadgeText(pricingMode))}</span>
           </div>
           <div class="sail-stat-val">${formatEur(sprinterMxp)} <span style="font-size:14px;font-weight:500;color:var(--sail-muted)">– ${formatEur(transitMxp)}</span></div>
-          <div class="sail-stat-meta">${formatEur(Math.round(sprinterMxp / 12))}–${formatEur(Math.round(transitMxp / 16))}/seat · 60m airport wait incl.</div>
+          <div class="sail-stat-meta">Como Driver: €350–€400 · Avantgarde: €380–€500</div>
         </div>
 
         <div class="sail-stat-cell">
           <div class="sail-stat-label">
             <span>Standby (4h / 8h Disposizione)</span>
-            <span style="font-size:11px;color:var(--sail-muted)">100km / 200km</span>
+            <span style="font-size:11px;color:var(--sail-muted)">Como &amp; Milan Depots</span>
           </div>
           <div class="sail-stat-val">${formatEur(dispo4h)} <span style="font-size:14px;font-weight:500;color:var(--sail-muted)">/ ${formatEur(dispo8h)}</span></div>
-          <div class="sail-stat-meta">Extra hour: ${formatEur(calculateAdjustedPrice(100, pricingMode))}/h · Extra wait: ${formatEur(calculateAdjustedPrice(80, pricingMode))}/h</div>
+          <div class="sail-stat-meta">Como Driver: €500 / €900 · Avantgarde: €550–€600 / €800–€1,200</div>
         </div>
 
         <div class="sail-stat-cell">
           <div class="sail-stat-label">
-            <span>Verified Inspection Media</span>
-            <span class="sail-pill info" style="padding:1px 6px;font-size:10.5px">100% Real Files</span>
+            <span>Verified Fleet Media</span>
+            <span class="sail-pill info" style="padding:1px 6px;font-size:10.5px">OEM &amp; WhatsApp</span>
           </div>
-          <div class="sail-stat-val">7 photos <span style="font-size:14px;font-weight:500;color:var(--sail-muted)">· 1 PDF</span></div>
-          <div class="sail-stat-meta">4 Mercedes Sprinter · 3 Ford Transit</div>
+          <div class="sail-stat-val">25 files <span style="font-size:14px;font-weight:500;color:var(--sail-muted)">· 24 photos + 1 video</span></div>
+          <div class="sail-stat-meta">Como Driver (7 photos) · Avantgarde (17 photos + 1 video)</div>
         </div>
       </div>
 
@@ -748,46 +717,6 @@ export async function render(el) {
   attachLedgerListeners(el);
 }
 
-function adjustDecimalRate(netVal, mode = 'net') {
-  const n = Number(netVal) || 0;
-  if (mode === 'vat') return (n * 1.10).toFixed(2);
-  if (mode === 'night') return (n * 1.20).toFixed(2);
-  if (mode === 'night_vat') return (n * 1.20 * 1.10).toFixed(2);
-  return n.toFixed(2);
-}
-
-function renderRateSummaryBullets(row, mode) {
-  const s = row.rateSummary;
-  if (!s) return '';
-
-  let kmLine = '';
-  if (s.marginalPerKmNet && s.baseCalloutNet) {
-    const marg = adjustDecimalRate(s.marginalPerKmNet, mode);
-    const base = calculateAdjustedPrice(s.baseCalloutNet, mode);
-    const rt = adjustDecimalRate(s.rtPerKmNet, mode);
-    kmLine = `<li><strong>€/km:</strong> €${marg}/km + €${base} base (€${rt}/km RT)</li>`;
-  } else if (s.rtPerKmNet && s.oneWayPerKmNet) {
-    const rt = adjustDecimalRate(s.rtPerKmNet, mode);
-    const ow = adjustDecimalRate(s.oneWayPerKmNet, mode);
-    kmLine = `<li><strong>€/km:</strong> €${rt}/km RT (€${ow}/km 1-way)</li>`;
-  }
-
-  let standbyLine = '';
-  if (s.standby1hExtraNet && Array.isArray(s.standby1hRangeNet)) {
-    const ex = calculateAdjustedPrice(s.standby1hExtraNet, mode);
-    const lo = calculateAdjustedPrice(s.standby1hRangeNet[0], mode);
-    const hi = calculateAdjustedPrice(s.standby1hRangeNet[1], mode);
-    standbyLine = `<li><strong>Standby 1h:</strong> €${ex}/h extra (€${lo}–€${hi}/h ${esc(s.standby1hNote || 'pkg')})</li>`;
-  } else if (Array.isArray(s.standby1hRangeNet)) {
-    const lo = calculateAdjustedPrice(s.standby1hRangeNet[0], mode);
-    const hi = calculateAdjustedPrice(s.standby1hRangeNet[1], mode);
-    standbyLine = `<li><strong>Standby 1h:</strong> €${lo}–€${hi}/h (${esc(s.standby1hNote || 'pkg')})</li>`;
-  }
-
-  if (!kmLine && !standbyLine) return '';
-  return `<ul class="sail-rate-bullets">${kmLine}${standbyLine}</ul>`;
-}
-
 function renderLedgerRow(row) {
   const hasTransfers = Boolean(row.transfers);
   const hasStandby = Boolean(row.standby);
@@ -801,14 +730,12 @@ function renderLedgerRow(row) {
       <div class="sail-rate-grid">
         ${entries.map((t) => {
           const adj = calculateAdjustedPrice(t.net, pricingMode);
-          const perPax = Math.round(adj / row.pax);
           return `
             <span class="sail-rate-route">${esc(t.label)}</span>
-            <span class="sail-rate-amt">${formatEur(adj)} <span class="sail-rate-sub">(${formatEur(perPax)}/p)</span></span>
+            <span class="sail-rate-amt">${formatEur(adj)}</span>
           `;
         }).join('')}
       </div>
-      ${renderRateSummaryBullets(row, pricingMode)}
     `;
   } else {
     transferHtml = `
@@ -828,11 +755,11 @@ function renderLedgerRow(row) {
     const exW = row.standby.extra_wait ? calculateAdjustedPrice(row.standby.extra_wait.net, pricingMode) : null;
     standbyHtml = `
       <div class="sail-rate-grid">
-        ${s4 !== null ? `<span class="sail-rate-route">${esc(row.standby.dispo_4h.label || '4h Standby')}</span><span class="sail-rate-amt">${formatEur(s4)} <span class="sail-rate-sub">(${formatEur(Math.round(s4 / 4))}/h)</span></span>` : ''}
-        ${s8 !== null ? `<span class="sail-rate-route">${esc(row.standby.dispo_8h.label || '8h Standby')}</span><span class="sail-rate-amt">${formatEur(s8)} <span class="sail-rate-sub">(${formatEur(Math.round(s8 / 8))}/h)</span></span>` : ''}
-        ${s8vip !== null ? `<span class="sail-rate-route">${esc(row.standby.dispo_8h_vip.label || '8h Top VIP')}</span><span class="sail-rate-amt">${formatEur(s8vip)} <span class="sail-rate-sub">(${formatEur(Math.round(s8vip / 8))}/h)</span></span>` : ''}
-        ${exH !== null ? `<span class="sail-rate-route">Extra Hour</span><span class="sail-rate-amt">${formatEur(exH)}/h</span>` : ''}
-        ${exW !== null ? `<span class="sail-rate-route">Wait &gt;60m Airport</span><span class="sail-rate-amt">${formatEur(exW)}/h</span>` : ''}
+        ${s4 !== null ? `<span class="sail-rate-route">${esc(row.standby.dispo_4h.label || '4h Standby')}</span><span class="sail-rate-amt">${formatEur(s4)}</span>` : ''}
+        ${s8 !== null ? `<span class="sail-rate-route">${esc(row.standby.dispo_8h.label || '8h Standby')}</span><span class="sail-rate-amt">${formatEur(s8)}</span>` : ''}
+        ${s8vip !== null ? `<span class="sail-rate-route">${esc(row.standby.dispo_8h_vip.label || '8h Top VIP')}</span><span class="sail-rate-amt">${formatEur(s8vip)}</span>` : ''}
+        ${exH !== null ? `<span class="sail-rate-route">${esc(row.standby.extra_hour.label || 'Ore Extra')}</span><span class="sail-rate-amt">${formatEur(exH)}/h</span>` : ''}
+        ${exW !== null ? `<span class="sail-rate-route">${esc(row.standby.extra_wait.label || 'Attesa extra')}</span><span class="sail-rate-amt">${formatEur(exW)}</span>` : ''}
       </div>
     `;
   } else {
