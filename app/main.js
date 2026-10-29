@@ -11,9 +11,9 @@ import * as analytics from './views/analytics.js?v=9.0';
 import * as partners from './views/partners.js?v=9.0';
 import * as tools from './views/tools.js?v=9.0';
 import * as visibility from './views/visibility.js?v=9.0';
-import * as settings from './views/settings.js?v=9.0';
-import * as busPartners from './views/bus_partners.js?v=9.0';
-import * as fleetShowcase from './views/fleet_showcase.js?v=9.0';
+import * as settings from './views/settings.js?v=9.1';
+import * as busPartners from './views/bus_partners.js?v=9.1';
+import * as fleetShowcase from './views/fleet_showcase.js?v=9.1';
 
 const ROUTES = {
   today: { view: today, label: 'Today', icon: 'today' },

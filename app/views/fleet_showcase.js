@@ -23,9 +23,68 @@ export const ROUTE_CATALOG = {
   standby: [
     { key: 'dispo_4h', label: 'Disposizione 4h (Half Day)', desc: '75–100 km included · Standby & local touring' },
     { key: 'dispo_8h', label: 'Disposizione 8h (Full Day)', desc: '150–200 km included · Full-day disposal' },
-    { key: 'dispo_8h_vip', label: 'Disposizione 8h Top VIP', desc: '150 km included · Club tables & mood lighting' }
+    { key: 'dispo_8h_vip', label: 'Disposizione 8h Top VIP', desc: '150 km included · Club tables & mood lighting' },
+    { key: 'hourly', label: 'Tariffa Oraria (Custom Hours)', desc: 'Hourly disposal at verified vehicle rate' }
   ]
 };
+
+// Dynamic Category Taxonomy (Auto-adapts to newly added vehicles in the table)
+export function inferCategoryFromPax(pax) {
+  const p = Number(pax) || 8;
+  if (p <= 4) return 'sedan_3_4';
+  if (p <= 8) return 'minivan_7_8';
+  if (p <= 16) return 'minibus_12_16';
+  if (p <= 22) return 'minibus_20';
+  if (p <= 35) return 'coach_30';
+  return 'coach_50';
+}
+
+export function inferCategoryLabel(cat, pax) {
+  switch (cat) {
+    case 'sedan_3_4': return `Luxury Sedan (${pax || '3–4'} Pax)`;
+    case 'minivan_7_8': return `VIP Minivan (${pax || '7–8'} Pax)`;
+    case 'minibus_12_16': return `Executive Minibus (${pax || '12–16'} Pax)`;
+    case 'minibus_20': return `Touring Minibus (${pax || '18–22'} Pax)`;
+    case 'coach_30': return `Executive Midibus / Coach (${pax || '30'} Pax)`;
+    case 'coach_50': return `Full-Size GT Coach (${pax || '50+'} Pax)`;
+    default: return `${cat} (${pax || ''} Pax)`;
+  }
+}
+
+export function getTransportCategories(rows = FLEET_LEDGER_ROWS) {
+  const allRows = Array.isArray(rows) && rows.length > 0 ? rows : FLEET_LEDGER_ROWS;
+  const paxes = allRows.map((r) => r.pax || 8).filter(Boolean);
+  const minPax = paxes.length > 0 ? Math.min(...paxes) : 7;
+  const maxPax = paxes.length > 0 ? Math.max(...paxes) : 30;
+
+  const standardLabels = {
+    all: { label: `All Transport Types (${minPax}–${maxPax} pax)`, paxRange: `${minPax}–${maxPax} pax`, desc: 'All available vehicles' },
+    sedan_3_4: { label: 'Luxury Sedan (3–4 Pax)', paxRange: '3–4 pax', desc: 'Mercedes S-Class & E-Class' },
+    minivan_7_8: { label: 'VIP Minivan (7–8 Pax)', paxRange: '7–8 pax', desc: 'Mercedes Sprinter VIP & V-Class' },
+    minibus_12_16: { label: 'Executive Minibus (12–16 Pax)', paxRange: '12–16 pax', desc: 'Mercedes Sprinter & Ford Transit' },
+    minibus_20: { label: 'Touring Minibus (18–22 Pax)', paxRange: '18–22 pax', desc: 'Mercedes Minibus 20 Pax' },
+    coach_30: { label: 'Executive Midibus / Coach (30 Pax)', paxRange: '30 pax', desc: 'Executive Midibus 30 Pax' },
+    coach_50: { label: 'Full-Size GT Coach (50+ Pax)', paxRange: '50+ pax', desc: 'Grand Tourismo Coaches' }
+  };
+
+  const map = new Map();
+  map.set('all', { key: 'all', ...standardLabels.all });
+
+  allRows.forEach((r) => {
+    const catKey = r.category || inferCategoryFromPax(r.pax);
+    if (!map.has(catKey)) {
+      const std = standardLabels[catKey];
+      map.set(catKey, {
+        key: catKey,
+        label: std ? std.label : (r.categoryLabel || inferCategoryLabel(catKey, r.pax)),
+        paxRange: std ? std.paxRange : `${r.pax} pax`,
+        desc: std ? std.desc : `${r.vehicleModel} category`
+      });
+    }
+  });
+
+  return Array.from(map.values());
+}
 
 export const TRANSPORT_CATEGORIES = [
   { key: 'all', label: 'All Transport Types (7–30 pax)', paxRange: '7–30 pax' },
@@ -35,14 +94,37 @@ export const TRANSPORT_CATEGORIES = [
   { key: 'coach_30', label: 'Touring Midibus / Coach (30 Pax)', paxRange: '30 pax', desc: 'Executive Midibus 30 Pax (Avantgarde)' }
 ];
 
+export function getAllTransferRoutes(rows = FLEET_LEDGER_ROWS) {
+  const routes = [...ROUTE_CATALOG.transfers];
+  const keys = new Set(routes.map((r) => r.key));
+
+  (rows || []).forEach((v) => {
+    if (v.transfers && typeof v.transfers === 'object') {
+      Object.entries(v.transfers).forEach(([k, t]) => {
+        if (!keys.has(k)) {
+          keys.add(k);
+          routes.push({
+            key: k,
+            label: t.label || k,
+            region: 'Partner Specific Routes'
+          });
+        }
+      });
+    }
+  });
+
+  return routes;
+}
+
 // Expanded State for the Customizable Multi-Tier Trip Calculator
 let calcState = {
   serviceType: 'transfer', // 'transfer' | 'standby'
   routeKey: 'mxp_como',
-  transportCategory: 'all', // 'all' | 'minivan_7_8' | 'minibus_12_16' | 'minibus_20' | 'coach_30'
+  transportCategory: 'all', // 'all' | any category
   tierFilter: 'all', // 'all' | 'luxury' | 'standard'
   passengerCount: 8,
   vehicleId: 'como_sprinter_12',
+  standbyHours: 8, // custom hourly standby duration
   tripDirection: 'one_way', // 'one_way' | 'round_trip' (2x)
   extraHours: 0,
   extraWaitHours: 0,
@@ -51,6 +133,38 @@ let calcState = {
   includeVat: false,
   clientMarkupPct: 25
 };
+
+export function selectSpecificVehicle(vehicleId, rows = FLEET_LEDGER_ROWS) {
+  const allRows = Array.isArray(rows) && rows.length > 0 ? rows : FLEET_LEDGER_ROWS;
+  const veh = allRows.find((r) => r.id === vehicleId);
+  if (!veh) return null;
+  calcState.vehicleId = veh.id;
+  if (veh.category) calcState.transportCategory = veh.category;
+  if (veh.tier) calcState.tierFilter = veh.tier;
+  if (veh.pax) calcState.passengerCount = veh.pax;
+
+  // Smart service & route adaptation
+  if (calcState.serviceType === 'transfer') {
+    const hasCurrentRoute = Boolean(veh.transfers && veh.transfers[calcState.routeKey]);
+    if (!hasCurrentRoute) {
+      if (veh.transfers && Object.keys(veh.transfers).length > 0) {
+        calcState.routeKey = Object.keys(veh.transfers)[0];
+      } else if (veh.standby) {
+        calcState.serviceType = 'standby';
+        calcState.routeKey = veh.standby.dispo_8h ? 'dispo_8h' : (veh.standby.hourly ? 'hourly' : 'dispo_4h');
+      }
+    }
+  } else {
+    // Standby mode
+    const hasCurrentStandby = Boolean(veh.standby && (veh.standby[calcState.routeKey] || (calcState.routeKey === 'hourly' && (veh.standby.hourly || veh.standby.extra_hour))));
+    if (!hasCurrentStandby) {
+      if (veh.standby) {
+        calcState.routeKey = veh.standby.dispo_8h ? 'dispo_8h' : (veh.standby.hourly ? 'hourly' : 'dispo_4h');
+      }
+    }
+  }
+  return veh;
+}
 
 const PDF_COMO_DRIVER = 'assets/partner_fleet/como_driver/como_driver_rates_2027.pdf';
 
@@ -613,6 +727,92 @@ export const FLEET_LEDGER_ROWS = [
   }
 ];
 
+// Persistent Custom & Newly Added Fleet Storage (Keeps table & calculator in sync)
+const STORAGE_KEY_CUSTOM_VEHICLES = 'dorogo_custom_fleet_vehicles';
+
+export function loadCustomVehicles() {
+  if (typeof localStorage === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_CUSTOM_VEHICLES);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+export function saveCustomVehicle(veh) {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    const existing = loadCustomVehicles();
+    const idx = existing.findIndex((v) => v.id === veh.id);
+    if (idx >= 0) {
+      existing[idx] = veh;
+    } else {
+      existing.unshift(veh);
+    }
+    localStorage.setItem(STORAGE_KEY_CUSTOM_VEHICLES, JSON.stringify(existing));
+    syncFleetLedgerRows();
+  } catch (_) {}
+}
+
+export function deleteCustomVehicle(vehId) {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    const existing = loadCustomVehicles();
+    const filtered = existing.filter((v) => v.id !== vehId);
+    localStorage.setItem(STORAGE_KEY_CUSTOM_VEHICLES, JSON.stringify(filtered));
+    const idx = FLEET_LEDGER_ROWS.findIndex((r) => r.id === vehId);
+    if (idx >= 0) {
+      FLEET_LEDGER_ROWS.splice(idx, 1);
+    }
+    if (calcState.vehicleId === vehId) {
+      calcState.vehicleId = FLEET_LEDGER_ROWS[0]?.id || null;
+    }
+  } catch (_) {}
+}
+
+export function syncFleetLedgerRows() {
+  const custom = loadCustomVehicles();
+  custom.forEach((cv) => {
+    const existingIdx = FLEET_LEDGER_ROWS.findIndex((r) => r.id === cv.id);
+    if (existingIdx >= 0) {
+      FLEET_LEDGER_ROWS[existingIdx] = cv;
+    } else {
+      FLEET_LEDGER_ROWS.unshift(cv);
+    }
+  });
+}
+
+export function addVehicleToFleet(veh) {
+  if (!veh.id) {
+    veh.id = 'veh_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+  }
+  if (!veh.pax) veh.pax = 8;
+  if (!veh.paxLabel) veh.paxLabel = `${veh.pax} pax`;
+  if (!veh.category) veh.category = inferCategoryFromPax(veh.pax);
+  if (!veh.categoryLabel) veh.categoryLabel = inferCategoryLabel(veh.category, veh.pax);
+  if (!veh.tier) veh.tier = 'luxury';
+  if (!veh.tierLabel) veh.tierLabel = veh.tier === 'standard' ? 'Standard Shuttle' : 'Luxury VIP';
+  if (!veh.status) veh.status = 'confirmed';
+  if (!veh.statusLabel) veh.statusLabel = veh.status === 'confirmed' ? 'Rates Verified in Table' : 'Pending Rate Sheet';
+  if (!veh.photos) veh.photos = [];
+  veh.isCustom = true;
+
+  saveCustomVehicle(veh);
+  const existingIdx = FLEET_LEDGER_ROWS.findIndex((r) => r.id === veh.id);
+  if (existingIdx >= 0) {
+    FLEET_LEDGER_ROWS[existingIdx] = veh;
+  } else {
+    FLEET_LEDGER_ROWS.unshift(veh);
+  }
+  return veh;
+}
+
+// Ensure custom vehicles are synced into FLEET_LEDGER_ROWS
+syncFleetLedgerRows();
+
 const TIER_OVERRIDES_STORAGE_KEY = 'dorogo_fleet_tier_overrides_v1';
 
 function loadTierOverrides() {
@@ -707,6 +907,10 @@ export async function render(el) {
             <button class="${pricingMode === 'net' ? 'on' : ''}" data-price-mode="net">Net B2B</button>
             <button class="${pricingMode === 'vat' ? 'on' : ''}" data-price-mode="vat">+10% VAT</button>
           </div>
+          <button class="sail-btn primary" id="btn-open-add-vehicle" style="gap:5px;font-weight:600">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v12M2 8h12"/></svg>
+            Add Vehicle to Table
+          </button>
           <a class="sail-btn" href="${attr(PDF_COMO_DRIVER)}" target="_blank" rel="noopener">
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 1.5H4a1.5 1.5 0 0 0-1.5 1.5v10A1.5 1.5 0 0 0 4 14.5h8a1.5 1.5 0 0 0 1.5-1.5V6L9 1.5Z"/><path d="M9 1.5V6h4.5"/></svg>
             Original Rate PDF
@@ -930,12 +1134,15 @@ function renderLedgerRow(row) {
     `;
   }
 
+  const isActiveInCalc = calcState.vehicleId === row.id;
+
   return `
-    <tr>
+    <tr class="${isActiveInCalc ? 'sail-table-row-active' : ''}">
       <td>
         <div style="font-weight:600;color:var(--sail-ink);font-size:12.5px;line-height:1.25">${esc(row.vehicleModel)}</div>
         <div style="margin-top:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
           <span class="sail-pill info" style="font-size:10.5px;padding:1px 6px;font-variant-numeric:tabular-nums"><strong>${esc(row.paxLabel || `${row.pax} pax`)}</strong></span>
+          ${isActiveInCalc ? `<span class="sail-pill ok" style="font-size:10px;padding:1px 5px">Active in Calc</span>` : ''}
           <details style="font-size:11px;color:var(--sail-muted)">
             <summary style="cursor:pointer;user-select:none;font-weight:500;color:var(--sail-body)">Specs</summary>
             <div style="margin-top:4px;line-height:1.3;color:var(--sail-muted);font-size:10.5px">
@@ -943,6 +1150,16 @@ function renderLedgerRow(row) {
               <div style="margin-top:2px">${esc(row.tierSpec)}</div>
             </div>
           </details>
+        </div>
+        <div style="margin-top:5px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+          <button class="sail-btn xs ${isActiveInCalc ? 'primary' : ''}" data-quote-veh="${attr(row.id)}" style="padding:0 7px;height:22px;font-size:11px;font-weight:600;white-space:nowrap" title="Calculate trip quote for this exact vehicle">
+            ${isActiveInCalc ? '✓ In Calculator' : '⚡ Quote'}
+          </button>
+          ${row.isCustom ? `
+            <button class="sail-btn xs" data-delete-custom-veh="${attr(row.id)}" style="padding:0 5px;height:22px;font-size:10px;color:#B91C1C;border-color:#FCA5A5" title="Remove custom vehicle from table">
+              ✕
+            </button>
+          ` : ''}
         </div>
       </td>
 
@@ -982,26 +1199,38 @@ function renderLedgerRow(row) {
   `;
 }
 
-export function getMatchingVehicles(state) {
-  return FLEET_LEDGER_ROWS.filter((v) => {
-    if (v.status !== 'confirmed') return false;
-    if (state.transportCategory !== 'all' && v.category !== state.transportCategory) return false;
+export function getMatchingVehicles(state, rows = FLEET_LEDGER_ROWS) {
+  const allRows = Array.isArray(rows) && rows.length > 0 ? rows : FLEET_LEDGER_ROWS;
+  return allRows.filter((v) => {
+    // If a specific vehicle is explicitly chosen by the user, ALWAYS keep it matched
+    if (state.vehicleId && v.id === state.vehicleId) return true;
+
+    // Filter by transport category if not 'all'
+    const cat = v.category || inferCategoryFromPax(v.pax);
+    if (state.transportCategory !== 'all' && cat !== state.transportCategory) return false;
+
+    // Filter by class tier if not 'all'
     if (state.tierFilter !== 'all' && v.tier !== state.tierFilter) return false;
 
+    // Match service availability
     if (state.serviceType === 'transfer') {
       return Boolean(v.transfers && v.transfers[state.routeKey]);
     } else {
+      if (state.routeKey === 'hourly') {
+        return Boolean(v.standby?.hourly || v.standby?.extra_hour || v.standby?.dispo_8h);
+      }
       return Boolean(v.standby && v.standby[state.routeKey]);
     }
   });
 }
 
-function calculateTripQuote(state) {
-  const matching = getMatchingVehicles(state);
-  let veh = FLEET_LEDGER_ROWS.find((r) => r.id === state.vehicleId);
-  if (!veh || !matching.some((m) => m.id === veh.id)) {
-    veh = matching[0] || null;
-    if (veh) state.vehicleId = veh.id;
+export function calculateTripQuote(state, rows = FLEET_LEDGER_ROWS) {
+  const allRows = Array.isArray(rows) && rows.length > 0 ? rows : FLEET_LEDGER_ROWS;
+  const matching = getMatchingVehicles(state, allRows);
+  let veh = allRows.find((r) => r.id === state.vehicleId);
+  if (!veh && matching.length > 0) {
+    veh = matching[0];
+    state.vehicleId = veh.id;
   }
 
   if (!veh) {
@@ -1031,26 +1260,46 @@ function calculateTripQuote(state) {
   let serviceLabel = '';
   if (state.serviceType === 'transfer') {
     const t = veh.transfers?.[state.routeKey];
-    unitNet = t ? t.net : 0;
-    const routeObj = ROUTE_CATALOG.transfers.find((r) => r.key === state.routeKey);
-    serviceLabel = routeObj ? routeObj.label : (t ? t.label : state.routeKey);
-    if (state.tripDirection === 'round_trip') {
-      serviceLabel += ' (Round Trip 2×)';
+    const allRoutes = getAllTransferRoutes(allRows);
+    const routeObj = allRoutes.find((r) => r.key === state.routeKey);
+    const routeName = routeObj ? routeObj.label : state.routeKey;
+
+    if (t) {
+      unitNet = t.net;
+      serviceLabel = `${routeName} (${state.tripDirection === 'round_trip' ? 'Round Trip 2×' : 'One-Way 1×'})`;
     } else {
-      serviceLabel += ' (One-Way 1×)';
+      const hourlyFallback = veh.standby?.hourly?.net || (typeof veh.standby?.extra_hour === 'number' ? veh.standby.extra_hour : 140);
+      unitNet = 0;
+      serviceLabel = `${routeName} (Quote on Request · Tariff: €${hourlyFallback}/h)`;
     }
   } else {
-    const s = veh.standby?.[state.routeKey];
-    unitNet = s ? s.net : 0;
-    const routeObj = ROUTE_CATALOG.standby.find((r) => r.key === state.routeKey);
-    serviceLabel = routeObj ? routeObj.label : (s ? s.label : state.routeKey);
+    // Standby mode
+    if (state.routeKey === 'hourly') {
+      const hourlyNet = veh.standby?.hourly?.net || (typeof veh.standby?.extra_hour === 'number' ? veh.standby.extra_hour : (veh.standby?.dispo_8h ? Math.round(veh.standby.dispo_8h.net / 8) : 140));
+      const hours = Math.max(1, Number(state.standbyHours) || 8);
+      unitNet = hourlyNet * hours;
+      serviceLabel = `Disposizione Oraria (${hours}h @ €${hourlyNet}/h)`;
+    } else {
+      const s = veh.standby?.[state.routeKey] || (state.routeKey === 'dispo_8h_vip' ? veh.standby?.dispo_8h : null);
+      unitNet = s ? s.net : 0;
+      const standbyObj = ROUTE_CATALOG.standby.find((r) => r.key === state.routeKey);
+      serviceLabel = standbyObj ? standbyObj.label : (s ? s.label : state.routeKey);
+    }
   }
 
   const baseNet = (state.serviceType === 'transfer' && state.tripDirection === 'round_trip') ? unitNet * 2 : unitNet;
 
   const isComoDriver = veh.partnerId === 'partner_1792765279097_26hr';
-  const extraHoursCost = (Number(state.extraHours) || 0) * 100;
-  const extraWaitCost = (Number(state.extraWaitHours) || 0) * 80;
+  const extraHourRate = (veh.standby?.extra_hour && typeof veh.standby.extra_hour.net === 'number')
+    ? veh.standby.extra_hour.net
+    : (typeof veh.standby?.extra_hour === 'number' ? veh.standby.extra_hour : 100);
+  const extraHoursCost = (Number(state.extraHours) || 0) * extraHourRate;
+
+  const extraWaitRate = (veh.standby?.extra_wait && typeof veh.standby.extra_wait.net === 'number')
+    ? veh.standby.extra_wait.net
+    : (typeof veh.standby?.extra_wait === 'number' ? veh.standby.extra_wait : 80);
+  const extraWaitCost = (Number(state.extraWaitHours) || 0) * extraWaitRate;
+
   const ztlCost = (state.includeZtl && (veh.id === 'avantgarde_coach_30' || state.routeKey === 'mxp_milano')) ? 97.50 : 0;
 
   const subtotalBeforeNight = baseNet + extraHoursCost + extraWaitCost + ztlCost;
@@ -1101,6 +1350,7 @@ function generateProposalText(quote, state) {
     `Fleet Partner: ${v.partnerName}`,
     `Party Size: ${state.passengerCount} Guests`,
     state.serviceType === 'transfer' ? `Direction: ${state.tripDirection === 'round_trip' ? 'Round Trip (2× transfers included)' : 'One-Way Transfer'}` : null,
+    (state.serviceType === 'standby' && state.routeKey === 'hourly') ? `Standby Duration: ${state.standbyHours || 8} Hours` : null,
     state.extraHours > 0 ? `Additional Standby: +${state.extraHours} hour(s) (€100/h)` : null,
     state.extraWaitHours > 0 ? `Extra Airport Waiting: +${state.extraWaitHours} hour(s) (€80/h)` : null,
     state.includeZtl ? `Milan Area C ZTL Permit: Included (€97.50)` : null,
@@ -1117,7 +1367,10 @@ function generateProposalText(quote, state) {
 }
 
 function renderPriceCalculatorCard() {
-  const quote = calculateTripQuote(calcState);
+  const allRows = FLEET_LEDGER_ROWS;
+  const categories = getTransportCategories(allRows);
+  const transferRoutes = getAllTransferRoutes(allRows);
+  const quote = calculateTripQuote(calcState, allRows);
   const v = quote.veh;
   const matching = quote.matching;
   const proposalRaw = generateProposalText(quote, calcState);
@@ -1132,7 +1385,7 @@ function renderPriceCalculatorCard() {
             <span class="sail-pill ok" style="padding:1px 7px;font-size:11px"><span class="sail-pill-dot"></span>Real Partner Rates</span>
           </div>
           <div style="font-size:12px;color:var(--sail-muted);margin-top:2px">
-            Select route/location, group vehicles by transport category (7–30 pax) &amp; class tier, and customize guest count, round trips, night surcharge, and DOROGO margin.
+            Select route/location, group vehicles by transport category (${categories.find(c => c.key === 'all')?.paxRange || '7–30 pax'}) &amp; class tier, and customize guest count, round trips, night surcharge, and DOROGO margin.
           </div>
         </div>
 
@@ -1148,6 +1401,42 @@ function renderPriceCalculatorCard() {
         <!-- Left Column: Inputs, Category Grouping & Matched Vehicles -->
         <div style="display:flex;flex-direction:column;gap:16px">
           
+          <!-- Direct Vehicle Selector: Choose any specific vehicle directly at any time -->
+          <div style="background:#F8FAFC;border:1px solid var(--sail-line);border-radius:8px;padding:10px 12px">
+            <div class="row between" style="align-items:center;margin-bottom:6px;gap:8px;flex-wrap:wrap">
+              <label class="sail-calc-label" style="margin-bottom:0;display:flex;align-items:center;gap:6px">
+                <span>🎯 Choose Specific Vehicle</span>
+                <span class="sail-pill ok" style="padding:1px 6px;font-size:10.5px">Direct Selection</span>
+              </label>
+              <span style="font-size:11px;color:var(--sail-muted)">Pick any vehicle or auto-match from table</span>
+            </div>
+
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="calc-specific-veh" class="sail-calc-input" style="font-weight:600;color:var(--sail-ink);flex:1">
+                <option value="auto" ${!calcState.vehicleId ? 'selected' : ''}>⚡ Auto-match by filters below</option>
+                <optgroup label="✨ Luxury VIP Vehicles">
+                  ${allRows.filter((r) => r.tier === 'luxury').map((r) => `
+                    <option value="${attr(r.id)}" ${calcState.vehicleId === r.id ? 'selected' : ''}>
+                      ${esc(r.vehicleModel)} (${esc(r.paxLabel || `${r.pax} pax`)}) — ${esc(r.partnerName)} (${esc(r.baseCity)})
+                    </option>
+                  `).join('')}
+                </optgroup>
+                <optgroup label="🚌 Standard Fleet">
+                  ${allRows.filter((r) => r.tier !== 'luxury').map((r) => `
+                    <option value="${attr(r.id)}" ${calcState.vehicleId === r.id ? 'selected' : ''}>
+                      ${esc(r.vehicleModel)} (${esc(r.paxLabel || `${r.pax} pax`)}) — ${esc(r.partnerName)} (${esc(r.baseCity)})
+                    </option>
+                  `).join('')}
+                </optgroup>
+              </select>
+              ${calcState.vehicleId ? `
+                <button class="sail-preset-btn" id="calc-clear-veh" title="Return to filter auto-match" style="height:34px;padding:0 10px;white-space:nowrap">
+                  Auto-match
+                </button>
+              ` : ''}
+            </div>
+          </div>
+
           <!-- Row 1: Location/Route & Transport Category -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div>
@@ -1155,30 +1444,49 @@ function renderPriceCalculatorCard() {
               <select id="calc-route" class="sail-calc-input">
                 ${calcState.serviceType === 'transfer' ? `
                   <optgroup label="Lake Como ⇄ Airports">
-                    <option value="mxp_como" ${calcState.routeKey === 'mxp_como' ? 'selected' : ''}>Malpensa (MXP) ⇄ Como</option>
-                    <option value="lin_como" ${calcState.routeKey === 'lin_como' ? 'selected' : ''}>Linate (LIN) ⇄ Como</option>
-                    <option value="bgy_como" ${calcState.routeKey === 'bgy_como' ? 'selected' : ''}>Bergamo (BGY) ⇄ Como</option>
+                    ${transferRoutes.filter((r) => r.region === 'Lake Como ⇄ Airports').map((r) => `
+                      <option value="${attr(r.key)}" ${calcState.routeKey === r.key ? 'selected' : ''}>${esc(r.label)}</option>
+                    `).join('')}
                   </optgroup>
                   <optgroup label="Milan ⇄ Airports">
-                    <option value="mxp_milano" ${calcState.routeKey === 'mxp_milano' ? 'selected' : ''}>Malpensa (MXP) ⇄ Milano</option>
+                    ${transferRoutes.filter((r) => r.region === 'Milan ⇄ Airports').map((r) => `
+                      <option value="${attr(r.key)}" ${calcState.routeKey === r.key ? 'selected' : ''}>${esc(r.label)}</option>
+                    `).join('')}
                   </optgroup>
                   <optgroup label="Lake Como Excursions & City">
-                    <option value="milano_como" ${calcState.routeKey === 'milano_como' ? 'selected' : ''}>Milano Centro / FS ⇄ Como</option>
-                    <option value="tremezzo" ${calcState.routeKey === 'tremezzo' ? 'selected' : ''}>Como ⇄ Tremezzo</option>
-                    <option value="bellagio" ${calcState.routeKey === 'bellagio' ? 'selected' : ''}>Como ⇄ Bellagio</option>
+                    ${transferRoutes.filter((r) => r.region === 'Lake Como Excursions & City').map((r) => `
+                      <option value="${attr(r.key)}" ${calcState.routeKey === r.key ? 'selected' : ''}>${esc(r.label)}</option>
+                    `).join('')}
                   </optgroup>
+                  ${transferRoutes.some((r) => r.region === 'Partner Specific Routes') ? `
+                    <optgroup label="Partner Specific Routes">
+                      ${transferRoutes.filter((r) => r.region === 'Partner Specific Routes').map((r) => `
+                        <option value="${attr(r.key)}" ${calcState.routeKey === r.key ? 'selected' : ''}>${esc(r.label)}</option>
+                      `).join('')}
+                    </optgroup>
+                  ` : ''}
                 ` : `
                   <option value="dispo_4h" ${calcState.routeKey === 'dispo_4h' ? 'selected' : ''}>Disposizione 4h (Half Day · 75–100 km)</option>
                   <option value="dispo_8h" ${calcState.routeKey === 'dispo_8h' ? 'selected' : ''}>Disposizione 8h (Full Day · 150–200 km)</option>
                   <option value="dispo_8h_vip" ${calcState.routeKey === 'dispo_8h_vip' ? 'selected' : ''}>Disposizione 8h Top VIP (Full Day VIP · 150 km)</option>
+                  <option value="hourly" ${calcState.routeKey === 'hourly' ? 'selected' : ''}>Tariffa Oraria (Custom Hours · verified €/h)</option>
                 `}
               </select>
+              ${(calcState.serviceType === 'standby' && calcState.routeKey === 'hourly') ? `
+                <div style="margin-top:6px">
+                  <div class="row between" style="margin-bottom:2px">
+                    <label class="sail-calc-label" style="margin-bottom:0">Standby Duration (Hours)</label>
+                    <span style="font-size:11px;color:var(--sail-accent);font-weight:600">@ €${v?.standby?.hourly?.net || (typeof v?.standby?.extra_hour === 'number' ? v.standby.extra_hour : 140)}/h</span>
+                  </div>
+                  <input type="number" id="calc-standby-hours" min="1" max="24" value="${calcState.standbyHours || 8}" class="sail-calc-input" placeholder="e.g. 8">
+                </div>
+              ` : ''}
             </div>
 
             <div>
               <label class="sail-calc-label">2. Transport Type / Category</label>
               <select id="calc-category" class="sail-calc-input">
-                ${TRANSPORT_CATEGORIES.map((cat) => `
+                ${categories.map((cat) => `
                   <option value="${attr(cat.key)}" ${calcState.transportCategory === cat.key ? 'selected' : ''}>${esc(cat.label)}</option>
                 `).join('')}
               </select>
@@ -1221,7 +1529,12 @@ function renderPriceCalculatorCard() {
                     itemPrice = vehItem.transfers?.[calcState.routeKey]?.net || 0;
                     if (calcState.tripDirection === 'round_trip') itemPrice *= 2;
                   } else {
-                    itemPrice = vehItem.standby?.[calcState.routeKey]?.net || 0;
+                    if (calcState.routeKey === 'hourly') {
+                      const hRate = vehItem.standby?.hourly?.net || (typeof vehItem.standby?.extra_hour === 'number' ? vehItem.standby.extra_hour : (vehItem.standby?.dispo_8h ? Math.round(vehItem.standby.dispo_8h.net / 8) : 140));
+                      itemPrice = hRate * (calcState.standbyHours || 8);
+                    } else {
+                      itemPrice = vehItem.standby?.[calcState.routeKey]?.net || (calcState.routeKey === 'dispo_8h_vip' ? vehItem.standby?.dispo_8h?.net : 0) || 0;
+                    }
                   }
                   const exceedsPax = calcState.passengerCount > vehItem.pax;
                   return `
@@ -1243,7 +1556,7 @@ function renderPriceCalculatorCard() {
                       <div class="row between" style="align-items:baseline;margin-top:4px">
                         <span style="font-size:11px;color:var(--sail-muted)">${esc(vehItem.baseCity)}</span>
                         <span style="font-size:13.5px;font-weight:700;color:var(--sail-ink);font-variant-numeric:tabular-nums">
-                          €${itemPrice} <span style="font-size:10.5px;font-weight:500;color:var(--sail-muted)">net</span>
+                          ${itemPrice > 0 ? `€${itemPrice} <span style="font-size:10.5px;font-weight:500;color:var(--sail-muted)">net</span>` : `<span style="font-size:11px;font-weight:500;color:var(--sail-muted)">Quote on req</span>`}
                         </span>
                       </div>
 
@@ -1760,6 +2073,7 @@ function attachLedgerListeners(el) {
         tierFilter: 'all',
         passengerCount: 8,
         vehicleId: 'como_sprinter_12',
+        standbyHours: 8,
         tripDirection: 'one_way',
         extraHours: 0,
         extraWaitHours: 0,
@@ -1774,6 +2088,83 @@ function attachLedgerListeners(el) {
     });
   }
 
+  // Direct Quote from Table Row
+  el.querySelectorAll('[data-quote-veh]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const vehId = btn.dataset.quoteVeh;
+      selectSpecificVehicle(vehId);
+      render(el);
+      const calcEl = el.querySelector('#trip-calculator');
+      if (calcEl) {
+        calcEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        calcEl.classList.add('sail-calc-glow');
+        setTimeout(() => calcEl.classList.remove('sail-calc-glow'), 1800);
+      }
+      const veh = FLEET_LEDGER_ROWS.find((r) => r.id === vehId);
+      toast(`${veh?.vehicleModel || 'Vehicle'} selected in Trip Calculator`);
+    });
+  });
+
+  // Delete Custom Vehicle from Table
+  el.querySelectorAll('[data-delete-custom-veh]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const vehId = btn.dataset.deleteCustomVeh;
+      const veh = FLEET_LEDGER_ROWS.find((r) => r.id === vehId);
+      if (confirm(`Remove custom vehicle "${veh?.vehicleModel || vehId}" from table?`)) {
+        deleteCustomVehicle(vehId);
+        render(el);
+        toast('Custom vehicle removed from table');
+      }
+    });
+  });
+
+  // Add Vehicle to Table Button
+  const btnAddVeh = el.querySelector('#btn-open-add-vehicle');
+  if (btnAddVeh) {
+    btnAddVeh.addEventListener('click', () => {
+      openAddVehicleModal(el);
+    });
+  }
+
+  // Direct Specific Vehicle Selector in Calculator
+  const specificVehSelect = el.querySelector('#calc-specific-veh');
+  if (specificVehSelect) {
+    specificVehSelect.addEventListener('change', (e) => {
+      const prevY = window.scrollY;
+      const selectedVal = e.target.value;
+      if (selectedVal === 'auto') {
+        calcState.vehicleId = null;
+      } else {
+        selectSpecificVehicle(selectedVal);
+      }
+      render(el);
+      window.scrollTo(0, prevY);
+    });
+  }
+
+  const clearVehBtn = el.querySelector('#calc-clear-veh');
+  if (clearVehBtn) {
+    clearVehBtn.addEventListener('click', () => {
+      const prevY = window.scrollY;
+      calcState.vehicleId = null;
+      render(el);
+      window.scrollTo(0, prevY);
+      toast('Returned to automatic filter matching');
+    });
+  }
+
+  // Standby custom hours input
+  const standbyHoursInput = el.querySelector('#calc-standby-hours');
+  if (standbyHoursInput) {
+    standbyHoursInput.addEventListener('input', (e) => {
+      const prevY = window.scrollY;
+      calcState.standbyHours = Math.max(1, Number(e.target.value) || 1);
+      render(el);
+      window.scrollTo(0, prevY);
+    });
+  }
+
   // Photo Gallery Lightbox Modal
   el.querySelectorAll('[data-open-gallery]').forEach((trigger) => {
     trigger.addEventListener('click', () => {
@@ -1783,6 +2174,187 @@ function attachLedgerListeners(el) {
       if (!veh || !veh.photos?.length) return;
       openPhotoLightbox(veh, startIdx);
     });
+  });
+}
+
+function openAddVehicleModal(el) {
+  dialog({
+    wide: true,
+    title: 'Add Vehicle to Fleet Ledger Table & Calculator',
+    body: `
+      <form id="form-add-fleet-vehicle" style="display:flex;flex-direction:column;gap:14px;padding:4px 0">
+        <div style="font-size:12.5px;color:var(--sail-muted);line-height:1.4">
+          Add any custom vehicle or newly quoted partner coach to the table. It will immediately appear in the Ledger and become selectable in the Trip &amp; Quote Calculator.
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label class="sail-calc-label">Vehicle Model *</label>
+            <input type="text" id="new-veh-model" class="sail-calc-input" placeholder="e.g. Mercedes-Benz Sprinter 19 Pax VIP" required>
+          </div>
+          <div>
+            <label class="sail-calc-label">Passenger Capacity (Pax Seats) *</label>
+            <input type="number" id="new-veh-pax" min="1" max="80" value="19" class="sail-calc-input" required>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label class="sail-calc-label">Transport Operator / Partner *</label>
+            <input type="text" id="new-veh-partner" class="sail-calc-input" placeholder="e.g. Perletti Autoservizi / Avantgarde" required>
+          </div>
+          <div>
+            <label class="sail-calc-label">Base Depot / City *</label>
+            <input type="text" id="new-veh-city" class="sail-calc-input" placeholder="e.g. Bergamo / Milano / Como" required>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+          <div>
+            <label class="sail-calc-label">Class Tier *</label>
+            <select id="new-veh-tier" class="sail-calc-input">
+              <option value="luxury" selected>✨ Luxury VIP</option>
+              <option value="standard">🚌 Standard Shuttle / GT</option>
+            </select>
+          </div>
+          <div>
+            <label class="sail-calc-label">Rate Status *</label>
+            <select id="new-veh-status" class="sail-calc-input">
+              <option value="confirmed" selected>✓ Rates Verified</option>
+              <option value="pending">⏳ Pending Rate Sheet</option>
+            </select>
+          </div>
+          <div>
+            <label class="sail-calc-label">Contact Phone / WhatsApp</label>
+            <input type="text" id="new-veh-phone" class="sail-calc-input" placeholder="+39 ...">
+          </div>
+        </div>
+
+        <div>
+          <label class="sail-calc-label">Vehicle Specifications / Coachbuilder Notes</label>
+          <input type="text" id="new-veh-specs" class="sail-calc-input" placeholder="e.g. Total Black, two-tone leather seats, wood-look floor, AC">
+        </div>
+
+        <!-- Rate Inputs Section -->
+        <div style="background:#F8FAFC;border:1px solid var(--sail-line);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:10px">
+          <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--sail-ink)">
+            Verified Net Tariffs (€ Net B2B, IVA 10% esclusa)
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+            <div>
+              <label class="sail-calc-label">Malpensa (MXP) ⇄ Como (€)</label>
+              <input type="number" id="new-rate-mxp-como" class="sail-calc-input" placeholder="e.g. 450">
+            </div>
+            <div>
+              <label class="sail-calc-label">Malpensa (MXP) ⇄ Milano (€)</label>
+              <input type="number" id="new-rate-mxp-milano" class="sail-calc-input" placeholder="e.g. 350">
+            </div>
+            <div>
+              <label class="sail-calc-label">Hourly Tariff (€/h)</label>
+              <input type="number" id="new-rate-hourly" class="sail-calc-input" placeholder="e.g. 140">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label class="sail-calc-label">Disposizione 4h (€)</label>
+              <input type="number" id="new-rate-dispo-4h" class="sail-calc-input" placeholder="e.g. 550">
+            </div>
+            <div>
+              <label class="sail-calc-label">Disposizione 8h (€)</label>
+              <input type="number" id="new-rate-dispo-8h" class="sail-calc-input" placeholder="e.g. 950">
+            </div>
+          </div>
+        </div>
+
+        <div class="row between" style="align-items:center;padding-top:10px;border-top:1px solid var(--sail-line-soft);margin-top:4px">
+          <button type="button" class="sail-btn" data-close>Cancel</button>
+          <button type="submit" class="sail-btn primary" style="font-weight:600">✓ Save &amp; Add to Calculator</button>
+        </div>
+      </form>
+    `,
+    onMount: (box) => {
+      const form = box.querySelector('#form-add-fleet-vehicle');
+      if (!form) return;
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const model = box.querySelector('#new-veh-model').value.trim();
+        const pax = Number(box.querySelector('#new-veh-pax').value) || 8;
+        const partner = box.querySelector('#new-veh-partner').value.trim() || 'Partner Operator';
+        const city = box.querySelector('#new-veh-city').value.trim() || 'Lombardia';
+        const tier = box.querySelector('#new-veh-tier').value;
+        const status = box.querySelector('#new-veh-status').value;
+        const phone = box.querySelector('#new-veh-phone').value.trim();
+        const specs = box.querySelector('#new-veh-specs').value.trim() || 'Executive luxury conversion';
+
+        const mxpComo = Number(box.querySelector('#new-rate-mxp-como').value);
+        const mxpMilano = Number(box.querySelector('#new-rate-mxp-milano').value);
+        const hourlyRate = Number(box.querySelector('#new-rate-hourly').value);
+        const dispo4h = Number(box.querySelector('#new-rate-dispo-4h').value);
+        const dispo8h = Number(box.querySelector('#new-rate-dispo-8h').value);
+
+        const newId = 'custom_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+        const transfers = {};
+        if (mxpComo > 0) transfers.mxp_como = { label: 'Malpensa (MXP) ⇄ Como', net: mxpComo };
+        if (mxpMilano > 0) transfers.mxp_milano = { label: 'Malpensa (MXP) ⇄ Milano', net: mxpMilano };
+
+        const standby = {};
+        if (hourlyRate > 0) standby.hourly = { label: 'Tariffa oraria a disposizione', net: hourlyRate };
+        if (dispo4h > 0) standby.dispo_4h = { label: 'Disposizione 4h', net: dispo4h };
+        if (dispo8h > 0) standby.dispo_8h = { label: 'Disposizione 8h', net: dispo8h };
+        standby.extra_hour = hourlyRate > 0 ? hourlyRate : 100;
+        standby.extra_wait = 80;
+
+        const newVeh = {
+          id: newId,
+          partnerId: 'custom_' + Date.now(),
+          vehicleModel: model,
+          paxLabel: `${pax} pax`,
+          coachbuilder: specs,
+          pax: pax,
+          category: inferCategoryFromPax(pax),
+          categoryLabel: inferCategoryLabel(inferCategoryFromPax(pax), pax),
+          tier: tier,
+          tierLabel: tier === 'luxury' ? 'Luxury VIP' : 'Standard Shuttle',
+          tierSpec: specs,
+          partnerName: partner,
+          baseCity: city,
+          contactPerson: 'Operations Desk',
+          phone: phone,
+          email: '',
+          website: '',
+          status: status,
+          statusLabel: status === 'confirmed' ? 'Rates Verified in Table' : 'Pending Rate Sheet',
+          repliedAt: 'Just added',
+          ratePdf: null,
+          ratePdfName: null,
+          transfers: Object.keys(transfers).length > 0 ? transfers : null,
+          standby: Object.keys(standby).length > 2 ? standby : null,
+          terms: {
+            payment: 'Pagamento anticipato vista fattura',
+            vat: 'Prezzi IVA 10% esclusa',
+            included: 'Carburante, pedaggi autostradali, parcheggi, attesa volo'
+          },
+          photos: [],
+          isCustom: true
+        };
+
+        addVehicleToFleet(newVeh);
+        selectSpecificVehicle(newVeh.id);
+
+        // Close dialog
+        const closeBtn = box.querySelector('[data-close]');
+        if (closeBtn) closeBtn.click();
+
+        render(el);
+        const calcEl = el.querySelector('#trip-calculator');
+        if (calcEl) {
+          calcEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          calcEl.classList.add('sail-calc-glow');
+          setTimeout(() => calcEl.classList.remove('sail-calc-glow'), 1800);
+        }
+        toast(`Vehicle "${newVeh.vehicleModel}" added to table and loaded in calculator!`);
+      });
+    }
   });
 }
 

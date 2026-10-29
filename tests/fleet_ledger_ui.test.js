@@ -3,7 +3,17 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { FLEET_LEDGER_ROWS, calculateAdjustedPrice } from '../app/views/fleet_showcase.js';
+import {
+  FLEET_LEDGER_ROWS,
+  calculateAdjustedPrice,
+  selectSpecificVehicle,
+  calculateTripQuote,
+  getMatchingVehicles,
+  getTransportCategories,
+  getAllTransferRoutes,
+  addVehicleToFleet,
+  deleteCustomVehicle
+} from '../app/views/fleet_showcase.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -115,3 +125,112 @@ test('Fleet Showcase Data: Rates and calculations are 100% authentic', () => {
   assert.equal(calculateAdjustedPrice(600, 'vat'), 660);
   assert.equal(calculateAdjustedPrice(1200, 'vat'), 1320);
 });
+
+test('Fleet Showcase Calculator: Flexible direct vehicle selection chooses any vehicle at any time', () => {
+  // Test picking Top VIP Sprinter directly
+  const topVeh = selectSpecificVehicle('avantgarde_sprinter_8_top_vip');
+  assert.ok(topVeh, 'Should select Top VIP Sprinter');
+  assert.equal(topVeh.id, 'avantgarde_sprinter_8_top_vip');
+
+  const quote = calculateTripQuote({
+    serviceType: 'standby',
+    routeKey: 'dispo_8h',
+    transportCategory: 'all',
+    tierFilter: 'all',
+    passengerCount: 8,
+    vehicleId: 'avantgarde_sprinter_8_top_vip',
+    clientMarkupPct: 25
+  });
+
+  assert.equal(quote.veh.id, 'avantgarde_sprinter_8_top_vip');
+  assert.equal(quote.baseNet, 1120, 'Top VIP 8h standby must be €1,120');
+  assert.equal(quote.totalPartnerCost, 1120);
+  assert.equal(quote.clientQuote, 1400, '€1,120 + 25% markup = €1,400');
+  assert.equal(quote.netMargin, 280, 'DOROGO gross profit = €280');
+});
+
+test('Fleet Showcase Calculator: Custom hourly standby calculates exact driver tariff', () => {
+  // 5 hours standby @ €140/h for Top VIP Sprinter
+  const hourlyQuote = calculateTripQuote({
+    serviceType: 'standby',
+    routeKey: 'hourly',
+    standbyHours: 5,
+    transportCategory: 'all',
+    tierFilter: 'all',
+    passengerCount: 6,
+    vehicleId: 'avantgarde_sprinter_8_top_vip',
+    clientMarkupPct: 20
+  });
+
+  assert.equal(hourlyQuote.veh.id, 'avantgarde_sprinter_8_top_vip');
+  assert.equal(hourlyQuote.baseNet, 700, '5 hours x €140/h = €700');
+  assert.equal(hourlyQuote.clientQuote, 840, '€700 + 20% markup = €840');
+  assert.ok(hourlyQuote.serviceLabel.includes('5h @ €140/h'));
+});
+
+test('Fleet Showcase Calculator: Automatically updates when new vehicle is added to table', () => {
+  const initialCategories = getTransportCategories();
+  const testVehId = 'test_setra_54_pax_' + Date.now();
+
+  const newCoach = {
+    id: testVehId,
+    vehicleModel: 'Setra S 515 HD Touring Coach',
+    pax: 54,
+    paxLabel: '54 pax',
+    partnerName: 'Perletti Autoservizi',
+    baseCity: 'Grumello del Monte BG',
+    tier: 'standard',
+    category: 'coach_50',
+    categoryLabel: 'Full-Size GT Coach (50+ Pax)',
+    status: 'confirmed',
+    transfers: {
+      mxp_como: { label: 'Malpensa (MXP) ⇄ Como', net: 650 },
+      bgy_como: { label: 'Bergamo (BGY) ⇄ Como', net: 500 }
+    },
+    standby: {
+      hourly: { label: 'Tariffa oraria', net: 120 },
+      dispo_8h: { label: 'Disposizione 8h', net: 960 },
+      extra_hour: 120
+    }
+  };
+
+  // Add vehicle to table
+  addVehicleToFleet(newCoach);
+
+  // 1. Verify it exists in FLEET_LEDGER_ROWS table
+  const foundInTable = FLEET_LEDGER_ROWS.find((r) => r.id === testVehId);
+  assert.ok(foundInTable, 'New vehicle must immediately exist in table array');
+  assert.equal(foundInTable.vehicleModel, 'Setra S 515 HD Touring Coach');
+
+  // 2. Verify categories dynamic update
+  const updatedCategories = getTransportCategories();
+  assert.ok(updatedCategories.some((c) => c.key === 'coach_50'), 'New coach category must exist in categories');
+
+  // 3. Verify it exists and can be quoted in the calculator
+  selectSpecificVehicle(testVehId);
+  const quote = calculateTripQuote({
+    serviceType: 'transfer',
+    routeKey: 'mxp_como',
+    transportCategory: 'all',
+    tierFilter: 'all',
+    passengerCount: 50,
+    vehicleId: testVehId,
+    clientMarkupPct: 30
+  });
+
+  assert.equal(quote.veh.id, testVehId);
+  assert.equal(quote.baseNet, 650, 'MXP-Como transfer net must be €650');
+  assert.equal(quote.clientQuote, 845, '€650 + 30% = €845');
+  assert.equal(quote.perGuestQuote, '16.90', '€845 / 50 guests = €16.90/guest');
+
+  // Clean up test vehicle
+  deleteCustomVehicle(testVehId);
+});
+
+test('Fleet Showcase Calculator: Dynamic route discovery pools routes across all vehicles', () => {
+  const routes = getAllTransferRoutes();
+  assert.ok(routes.length >= 7);
+  assert.ok(routes.some((r) => r.key === 'mxp_como'));
+  assert.ok(routes.some((r) => r.key === 'tremezzo'));
+});
+
