@@ -161,52 +161,134 @@ export const FLEET_LEDGER_ROWS = [
     ]
   },
   {
-    id: 'avantgarde_minibus_18',
+    id: 'avantgarde_sprinter_8',
     partnerId: 'partner_1792765279535_l9ei',
-    vehicleModel: 'Mercedes Sprinter (8) & Minibus (16–18)',
-    coachbuilder: 'Executive 8 pax · Minibus 16 pax · VIP 18 pax',
-    pax: 16,
+    vehicleModel: 'Mercedes Sprinter 7 & 8 Pax (+ Driver)',
+    coachbuilder: 'Red 7 Pax · Standard 8 Pax (×2) · Top 8 Pax VIP',
+    pax: 8,
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: 'Milan depot (Via Calatafimi 12) · Clarifying 8-pax vs 16-pax rate difference & Lake Como standby',
+    tierSpec: 'WA-verified fleet: Red 7-pax + driver, 2× 8-pax + driver, and Top 8-pax ("allestimento speciale")',
     partnerName: 'Avantgarde Limousine Service (Milanocab)',
     baseCity: 'Milano (Via Calatafimi 12)',
-    contactPerson: 'Vincent Lombardi',
+    contactPerson: 'Vincenzo (Vincent) Lombardi',
+    phone: '+39 333 269 7376',
+    email: 'info@milanocab.it',
+    website: 'https://www.avantgardelimousineservice.it/mezzi/',
+    status: 'confirmed',
+    statusLabel: 'MXP €250 · Standby €90–140/h (+IVA)',
+    repliedAt: '29 Oct 2026 · 08:39 & 11:19 WA',
+    ratePdf: null,
+    ratePdfName: null,
+    transfers: {
+      mxp_milano: { label: 'Malpensa (MXP) ⇄ Milano (Sprinter 8p)', net: 250 }
+    },
+    transferNote: 'Quoted €250 net (+10% IVA = €275 gross). Confirming if Red 7-pax / Standard 8-pax / Top 8-pax share €250 MXP rate.',
+    standby: {
+      dispo_4h: { label: '4h Est. (€90–€140/h · Standard 8p)', net: 360, hourlyEq: 90 },
+      dispo_8h: { label: '4h Est. (€140/h · Top 8p Special)', net: 560, hourlyEq: 140 },
+      extra_hour: { label: 'Hourly Rate (Std €90 – Top €140/h)', net: 90 },
+      extra_wait: null
+    },
+    standbyNote: 'Quoted "da €90 a €140/ora + IVA" by configuration (Red 7p, Std 8p, Top 8p). Outside-Milan (Como) standby not confirmed yet.',
+    terms: {
+      payment: 'POS on board / Invoice',
+      vat: '10% VAT excluded ("più IVA") + eventual Area C ZTL',
+      included: 'Milan depot — outside-Milan (Lake Como) standby still unconfirmed',
+      nightSurcharge: 'Confirming with partner',
+      cancellation: 'Requested'
+    },
+    photos: [
+      {
+        id: 'avantgarde_sprinter_ext',
+        src: 'assets/partner_fleet/avantgarde/sprinter_8_ext_website.webp',
+        file: 'sprinter_8_ext_website.webp',
+        title: 'Exterior — Mercedes Sprinter 8 Pax VIP',
+        caption: 'Executive 8-passenger Sprinter (+ driver). Additional photos for Red 7-pax, 2× 8-pax, and Top 8-pax sent via WhatsApp.'
+      },
+      {
+        id: 'avantgarde_sprinter_int',
+        src: 'assets/partner_fleet/avantgarde/sprinter_8_int_website.jpg',
+        file: 'sprinter_8_int_website.jpg',
+        title: 'Interior Cabin — VIP Allestimento Speciale (8 Pax)',
+        caption: 'Club seating with tables & ambient lighting ("allestimento speciale" €90–€140/h + IVA).'
+      }
+    ]
+  },
+  {
+    id: 'avantgarde_minibus_18',
+    partnerId: 'partner_1792765279535_l9ei',
+    vehicleModel: 'Mercedes Minibus 20 Pax (×2 Units)',
+    coachbuilder: '2× 20-Passenger Minibuses (WA Confirmed)',
+    pax: 20,
+    tier: 'luxury',
+    tierLabel: 'Luxury VIP',
+    tierSpec: 'WA-verified: 2× 20-pax minibuses ("20 Pax" at 08:36 & "Questo è l’altro 20 posti" at 11:19)',
+    partnerName: 'Avantgarde Limousine Service (Milanocab)',
+    baseCity: 'Milano (Via Calatafimi 12)',
+    contactPerson: 'Vincenzo (Vincent) Lombardi',
     phone: '+39 333 269 7376',
     email: 'info@milanocab.it',
     website: 'https://www.milanocab.it/cars/',
     status: 'confirmed',
-    statusLabel: 'Rates quoted · Clarifying 8 vs 16 pax & photos',
-    repliedAt: '28 Oct 2026 · 16:36',
+    statusLabel: 'MXP €330 · 4h €550 · 8h €950 (+IVA)',
+    repliedAt: '28 Oct 16:36 & 29 Oct 11:19 WA',
     ratePdf: null,
     ratePdfName: null,
     transfers: {
       mxp_milano: { label: 'Malpensa (MXP) ⇄ Milano (+ Area C ZTL)', net: 330 }
     },
-    transferNote: 'Quoted €330 net (+10% VAT = €363 + eventual Area C ZTL). Confirming if 8-pax Sprinter vs 16-pax Minibus differs.',
+    transferNote: 'Quoted €330 net (+10% VAT = €363 + eventual Area C ZTL). Confirming if both 20-pax units share this tariff.',
     standby: {
       dispo_4h: { label: '4 Hours (+ Area C ZTL)', net: 550, hourlyEq: 137.5 },
       dispo_8h: { label: '8 Hours (+ Area C ZTL)', net: 950, hourlyEq: 118.75 },
       extra_hour: null,
       extra_wait: null
     },
-    standbyNote: 'VAT (10%) & ZTL Area C excluded ("più IVA ed eventuale ZTL"). Confirming Lake Como coverage & cancellation policy.',
+    standbyNote: 'VAT (10%) & ZTL Area C excluded ("più IVA ed eventuale ZTL"). Outside-Milan (Lake Como) standby not confirmed yet.',
     terms: {
       payment: 'POS on board / Invoice',
       vat: '10% VAT excluded ("più IVA") + eventual Area C ZTL',
-      included: 'Milan base — confirming if standby covers Lake Como & if 8-pax vs 16-pax prices differ',
+      included: 'Milan base — confirming if standby covers outside Milan (Lake Como)',
       nightSurcharge: 'Confirming with partner',
-      cancellation: 'Requested in follow-up'
+      cancellation: 'Requested'
     },
     photos: [
       {
         id: 'avantgarde_18_ext',
         src: 'assets/partner_fleet/avantgarde/minibus_18_ext_website.jpg',
         file: 'IMG_2307-270.jpg (milanocab.it/cars)',
-        title: 'Website Photo — Mercedes Minibus 18 pax (Exterior)',
-        caption: 'Only bus photo shown on milanocab.it/cars/ — requested 1 exterior + 1 interior photo for the 8-pax Sprinter and 16-pax Minibus.'
+        title: 'Exterior — Mercedes Minibus (18–20 Pax)',
+        caption: 'Vincenzo also sent photos of both 20-pax minibuses directly on WhatsApp (29 Oct 08:36 & 11:19).'
       }
     ]
+  },
+  {
+    id: 'avantgarde_coach_30',
+    partnerId: 'partner_1792765279535_l9ei',
+    vehicleModel: 'Executive Midibus / Coach 30 Pax',
+    coachbuilder: '30-Passenger Coach (WA Ext + Int Confirmed)',
+    pax: 30,
+    tier: 'standard',
+    tierLabel: 'Executive Midibus',
+    tierSpec: 'WA-verified: "30 Pax" (08:34) + "Interni 30 posti" (11:18) — awaiting price list',
+    partnerName: 'Avantgarde Limousine Service (Milanocab)',
+    baseCity: 'Milano (Via Calatafimi 12)',
+    contactPerson: 'Vincenzo (Vincent) Lombardi',
+    phone: '+39 333 269 7376',
+    email: 'info@milanocab.it',
+    website: 'https://www.avantgardelimousineservice.it/mezzi/',
+    status: 'pending',
+    statusLabel: 'Photos on WA · Awaiting 30-pax prices',
+    repliedAt: '29 Oct 2026 · 08:34 & 11:18 WA',
+    ratePdf: null,
+    ratePdfName: null,
+    transfers: null,
+    transferNote: 'Not provided yet for the 30-seater (only 8-pax €250 and 20-pax €330 MXP–Milano quoted so far).',
+    standby: null,
+    standbyNote: 'Not provided yet for the 30-seater — need 4h/8h standby & outside-Milan (Como) availability.',
+    terms: null,
+    photos: []
   },
   {
     id: 'landway_fleet',
@@ -651,7 +733,8 @@ function renderPriceCalculatorCard() {
             <select id="calc-vehicle" style="width:100%;height:34px;padding:0 10px;border:1px solid var(--sail-line);border-radius:6px;font-size:13px;background:#FFF">
               <option value="como_sprinter_12" ${calcState.vehicleId === 'como_sprinter_12' ? 'selected' : ''}>Como Driver · Mercedes Sprinter (12 pax · Luxury VIP)</option>
               <option value="como_transit_16" ${calcState.vehicleId === 'como_transit_16' ? 'selected' : ''}>Como Driver · Ford Transit (16 pax · Standard Shuttle)</option>
-              <option value="avantgarde_minibus_18" ${calcState.vehicleId === 'avantgarde_minibus_18' ? 'selected' : ''}>Avantgarde · Mercedes Minibus (8 / 16 pax · Milano)</option>
+              <option value="avantgarde_sprinter_8" ${calcState.vehicleId === 'avantgarde_sprinter_8' ? 'selected' : ''}>Avantgarde · Mercedes Sprinter (7 &amp; 8 pax · Milano)</option>
+              <option value="avantgarde_minibus_18" ${calcState.vehicleId === 'avantgarde_minibus_18' ? 'selected' : ''}>Avantgarde · Mercedes Minibus (20 pax · Milano)</option>
             </select>
           </div>
 
