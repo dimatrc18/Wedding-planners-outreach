@@ -199,17 +199,17 @@ export const FLEET_LEDGER_ROWS = [
     ]
   },
   {
-    id: 'avantgarde_sprinter_8',
+    id: 'avantgarde_sprinter_7_red',
     partnerId: 'partner_1792765279535_l9ei',
-    vehicleModel: 'Mercedes-Benz Sprinter',
-    paxLabel: '7–8 pax',
-    coachbuilder: '3 Variants: Red (7p) · Standard (8p) · Top VIP (8p)',
-    pax: 8,
+    vehicleModel: 'Mercedes-Benz Sprinter (Red Interior)',
+    paxLabel: '7 pax',
+    coachbuilder: 'VIP Diamond Carmine Red Leather Interior',
+    pax: 7,
     category: 'minivan_7_8',
-    categoryLabel: 'VIP Minivan (7–8 Pax)',
+    categoryLabel: 'VIP Minivan (7 Pax)',
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: 'Club tables & ambient lighting ("allestimento speciale")',
+    tierSpec: 'Carmine red leather · Wood-effect deck · Reclining armchairs & curtains',
     partnerName: 'Avantgarde Limousine Service (Milano Cab)',
     baseCity: 'Milano (Via Calatafimi 12)',
     contactPerson: 'Vincenzo Lombardi',
@@ -218,7 +218,7 @@ export const FLEET_LEDGER_ROWS = [
     website: 'https://www.avantgardelimousineservice.it/mezzi/',
     secondaryWebsite: 'https://www.milanocab.it',
     status: 'confirmed',
-    statusLabel: 'MXP–MI €250 · MXP–Como €380 · 8h €800 / Top €1,200 (+IVA)',
+    statusLabel: 'MXP–MI €250 · MXP–Como €380 · 8h €800 (+IVA)',
     repliedAt: '29 Oct 2026 · WA Confirmed',
     ratePdf: null,
     ratePdfName: null,
@@ -227,8 +227,7 @@ export const FLEET_LEDGER_ROWS = [
       mxp_como: { label: 'Malpensa (MXP) ⇄ Como', net: 380 }
     },
     standby: {
-      dispo_8h: { label: 'Disposizione 8h Standard 7–8 Pax (150 km inclusi)', net: 800 },
-      dispo_8h_vip: { label: 'Disposizione 8h Top 8 VIP (150 km inclusi)', net: 1200 },
+      dispo_8h: { label: 'Disposizione 8h (150 km inclusi)', net: 800 },
       extra_hour: null,
       extra_wait: null
     },
@@ -268,7 +267,51 @@ export const FLEET_LEDGER_ROWS = [
         file: 'sprinter_7p_red_int_3.jpg',
         title: 'Interior — Rear Reclining Seats & Privacy Curtains (7 Pax)',
         caption: 'Rear cabin view with pleated privacy curtains and deep luggage boot behind.'
-      },
+      }
+    ]
+  },
+  {
+    id: 'avantgarde_sprinter_8_bw',
+    partnerId: 'partner_1792765279535_l9ei',
+    vehicleModel: 'Mercedes-Benz Sprinter (Black Interior)',
+    paxLabel: '8 pax',
+    coachbuilder: 'Executive Black & White Leather with Multimedia Partition',
+    pax: 8,
+    category: 'minivan_7_8',
+    categoryLabel: 'VIP Minivan (8 Pax)',
+    tier: 'luxury',
+    tierLabel: 'Luxury VIP',
+    tierSpec: 'Conference club armchairs · TV bulkhead partition · Center console tables',
+    partnerName: 'Avantgarde Limousine Service (Milano Cab)',
+    baseCity: 'Milano (Via Calatafimi 12)',
+    contactPerson: 'Vincenzo Lombardi',
+    phone: '+39 333 269 7376',
+    email: 'info@milanocab.it',
+    website: 'https://www.avantgardelimousineservice.it/mezzi/',
+    secondaryWebsite: 'https://www.milanocab.it',
+    status: 'confirmed',
+    statusLabel: 'MXP–MI €250 · MXP–Como €380 · 8h €800 (+IVA)',
+    repliedAt: '29 Oct 2026 · WA Confirmed',
+    ratePdf: null,
+    ratePdfName: null,
+    transfers: {
+      mxp_milano: { label: 'Malpensa (MXP) ⇄ Milano', net: 250 },
+      mxp_como: { label: 'Malpensa (MXP) ⇄ Como', net: 380 }
+    },
+    standby: {
+      dispo_8h: { label: 'Disposizione 8h (150 km inclusi)', net: 800 },
+      extra_hour: null,
+      extra_wait: null
+    },
+    terms: {
+      payment: 'POS a bordo / Bonifico su fattura',
+      vat: 'Prezzi IVA 10% esclusa ("più IVA")',
+      included: '150 km inclusi su disposizione 8h · Deposito Milano',
+      extra: 'Eventuale ZTL Area C Milano (€97.50)',
+      nightSurcharge: null,
+      cancellation: null
+    },
+    photos: [
       {
         id: 'avantgarde_8p_bw_ext_1',
         src: 'assets/partner_fleet/avantgarde/sprinter_8p_bw_ext_1.jpg',
@@ -296,13 +339,65 @@ export const FLEET_LEDGER_ROWS = [
         file: 'sprinter_8p_bw_int_2.jpg',
         title: 'Interior — Conference Armchairs with Executive Tables',
         caption: 'Conference club seating facing center console table with cup holders.'
-      },
+      }
+    ]
+  },
+  {
+    id: 'avantgarde_sprinter_8_top_vip',
+    partnerId: 'partner_1792765279535_l9ei',
+    vehicleModel: 'Mercedes-Benz Sprinter Top VIP',
+    paxLabel: '8 pax',
+    coachbuilder: 'Top Luxury Custom VIP (Allestimento Speciale · Video Verified)',
+    pax: 8,
+    category: 'minivan_7_8',
+    categoryLabel: 'VIP Minivan (8 Pax Top)',
+    tier: 'luxury',
+    tierLabel: 'Luxury VIP',
+    tierSpec: 'Top VIP allestimento speciale · Video walkthrough · 8h €1,200 (+IVA)',
+    partnerName: 'Avantgarde Limousine Service (Milano Cab)',
+    baseCity: 'Milano (Via Calatafimi 12)',
+    contactPerson: 'Vincenzo Lombardi',
+    phone: '+39 333 269 7376',
+    email: 'info@milanocab.it',
+    website: 'https://www.avantgardelimousineservice.it/mezzi/',
+    secondaryWebsite: 'https://www.milanocab.it',
+    status: 'confirmed',
+    statusLabel: '8h €1,200 (+IVA) · Top VIP Allestimento Speciale',
+    repliedAt: '29 Oct 2026 · WA Confirmed',
+    ratePdf: null,
+    ratePdfName: null,
+    transfers: {
+      mxp_milano: { label: 'Malpensa (MXP) ⇄ Milano', net: 250 },
+      mxp_como: { label: 'Malpensa (MXP) ⇄ Como', net: 380 }
+    },
+    standby: {
+      dispo_8h: { label: 'Disposizione 8h Top VIP (150 km inclusi)', net: 1200 },
+      dispo_8h_vip: { label: 'Disposizione 8h Top VIP (150 km inclusi)', net: 1200 },
+      extra_hour: null,
+      extra_wait: null
+    },
+    terms: {
+      payment: 'POS a bordo / Bonifico su fattura',
+      vat: 'Prezzi IVA 10% esclusa ("più IVA")',
+      included: '150 km inclusi su disposizione 8h · Deposito Milano',
+      extra: 'Eventuale ZTL Area C Milano (€97.50)',
+      nightSurcharge: null,
+      cancellation: null
+    },
+    photos: [
       {
         id: 'avantgarde_8p_top_vip_video',
-        src: 'assets/partner_fleet/avantgarde/sprinter_8p_top_vip_video.mp4',
-        file: 'sprinter_8p_top_vip_video.mp4',
+        src: 'assets/partner_fleet/avantgarde/top_8_pax.mp4',
+        file: 'top 8 pax.mp4',
         title: 'Video Walkthrough — Sprinter Top 8 VIP (Allestimento Speciale)',
-        caption: 'Video walkthrough of the Top 8 Pax VIP trim (€1,200 / 8h + IVA).'
+        caption: 'Full HD video walkthrough of the Mercedes-Benz Sprinter Top 8 VIP trim (€1,200 / 8h + IVA).'
+      },
+      {
+        id: 'avantgarde_8p_bw_ext_1_top',
+        src: 'assets/partner_fleet/avantgarde/sprinter_8p_bw_ext_1.jpg',
+        file: 'sprinter_8p_bw_ext_1.jpg',
+        title: 'Exterior — Mercedes Sprinter Top VIP (High Roof)',
+        caption: 'High-roof total black Mercedes Sprinter with tinted executive glass.'
       }
     ]
   },
@@ -579,6 +674,11 @@ export async function render(el) {
   const stdCount = FLEET_LEDGER_ROWS.filter((r) => r.tier === 'standard').length;
   const pendingCount = FLEET_LEDGER_ROWS.filter((r) => r.status === 'pending').length;
 
+  const totalPhotos = FLEET_LEDGER_ROWS.reduce((acc, r) => acc + (r.photos ? r.photos.filter((p) => !p.src.endsWith('.mp4')).length : 0), 0);
+  const totalVideos = FLEET_LEDGER_ROWS.reduce((acc, r) => acc + (r.photos ? r.photos.filter((p) => p.src.endsWith('.mp4')).length : 0), 0);
+  const comoPhotos = FLEET_LEDGER_ROWS.filter(r => r.partnerId === 'partner_1792765279097_26hr').reduce((acc, r) => acc + (r.photos?.length || 0), 0);
+  const avantgardePhotos = FLEET_LEDGER_ROWS.filter(r => r.partnerId === 'partner_1792765279535_l9ei').reduce((acc, r) => acc + (r.photos ? r.photos.filter(p => !p.src.endsWith('.mp4')).length : 0), 0);
+
   const sprinterMxp = calculateAdjustedPrice(350, pricingMode);
   const transitMxp = calculateAdjustedPrice(400, pricingMode);
   const dispo4h = calculateAdjustedPrice(500, pricingMode);
@@ -623,7 +723,7 @@ export async function render(el) {
             <span class="sail-pill ok" style="padding:1px 6px;font-size:10.5px"><span class="sail-pill-dot"></span>Active</span>
           </div>
           <div class="sail-stat-val">${confirmedCount} <span style="font-size:13px;font-weight:500;color:var(--sail-muted)">/ ${FLEET_LEDGER_ROWS.length} replied</span></div>
-          <div class="sail-stat-meta">Como Driver (12 &amp; 16p) · Avantgarde (8, 20 &amp; 30p)</div>
+          <div class="sail-stat-meta">Como Driver (12 &amp; 16p) · Avantgarde (7, 8, 20 &amp; 30p)</div>
         </div>
 
         <div class="sail-stat-cell">
@@ -649,8 +749,8 @@ export async function render(el) {
             <span>Verified Fleet Media</span>
             <span class="sail-pill info" style="padding:1px 6px;font-size:10.5px">OEM &amp; WhatsApp</span>
           </div>
-          <div class="sail-stat-val">25 files <span style="font-size:14px;font-weight:500;color:var(--sail-muted)">· 24 photos + 1 video</span></div>
-          <div class="sail-stat-meta">Como Driver (7 photos) · Avantgarde (17 photos + 1 video)</div>
+          <div class="sail-stat-val">${totalPhotos + totalVideos} files <span style="font-size:14px;font-weight:500;color:var(--sail-muted)">· ${totalPhotos} photos + ${totalVideos} video</span></div>
+          <div class="sail-stat-meta">Como Driver (${comoPhotos} photos) · Avantgarde (${avantgardePhotos} photos + ${totalVideos} video)</div>
         </div>
       </div>
 

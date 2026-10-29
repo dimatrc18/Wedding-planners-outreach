@@ -67,6 +67,39 @@ test('Fleet Showcase CSS: Eliminates text overlays and horizontal scroll on desk
     '.sail-rate-route must have min-width: 0 for proper CSS grid column text truncation');
 });
 
+test('Fleet Showcase Data: Separated Sprinter variants (Red, Black, Top VIP)', () => {
+  // Red Interior Sprinter 7 Pax
+  const redSprinter = FLEET_LEDGER_ROWS.find((r) => r.id === 'avantgarde_sprinter_7_red');
+  assert.ok(redSprinter, 'Red interior Sprinter must exist as separate vehicle');
+  assert.equal(redSprinter.pax, 7);
+  assert.equal(redSprinter.standby.dispo_8h.net, 800);
+  assert.equal(redSprinter.transfers.mxp_milano.net, 250);
+  assert.equal(redSprinter.transfers.mxp_como.net, 380);
+  assert.equal(redSprinter.photos.length, 4, 'Must have exactly 4 red photos');
+  assert.ok(redSprinter.photos.every((p) => p.src.includes('sprinter_7p_red')));
+
+  // Black Interior Sprinter 8 Pax
+  const bwSprinter = FLEET_LEDGER_ROWS.find((r) => r.id === 'avantgarde_sprinter_8_bw');
+  assert.ok(bwSprinter, 'Black interior Sprinter must exist as separate vehicle');
+  assert.equal(bwSprinter.pax, 8);
+  assert.equal(bwSprinter.standby.dispo_8h.net, 800);
+  assert.equal(bwSprinter.transfers.mxp_milano.net, 250);
+  assert.equal(bwSprinter.transfers.mxp_como.net, 380);
+  assert.equal(bwSprinter.photos.length, 4, 'Must have exactly 4 black & white photos');
+  assert.ok(bwSprinter.photos.every((p) => p.src.includes('sprinter_8p_bw')));
+
+  // Top VIP Sprinter 8 Pax
+  const topVip = FLEET_LEDGER_ROWS.find((r) => r.id === 'avantgarde_sprinter_8_top_vip');
+  assert.ok(topVip, 'Top VIP Sprinter must exist as separate vehicle');
+  assert.equal(topVip.pax, 8);
+  assert.equal(topVip.standby.dispo_8h.net, 1200, 'Top VIP 8h must be €1,200 as quoted by driver');
+  assert.ok(topVip.photos.some((p) => p.src.endsWith('.mp4')), 'Top VIP must include video walkthrough');
+
+  // Verify video file exists on disk
+  const videoPhoto = topVip.photos.find((p) => p.src.endsWith('.mp4'));
+  assert.ok(fs.existsSync(path.join(rootDir, videoPhoto.src)), `Video file ${videoPhoto.src} must exist`);
+});
+
 test('Fleet Showcase Data: Rates and calculations are 100% authentic', () => {
   const avantgardeCoach = FLEET_LEDGER_ROWS.find((r) => r.id === 'avantgarde_coach_30');
   assert.ok(avantgardeCoach);
