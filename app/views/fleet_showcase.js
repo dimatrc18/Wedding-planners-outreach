@@ -5,7 +5,7 @@
 import { esc, attr, toast, dialog } from '../ui.js';
 import * as core from '../../supabase/functions/_shared/core/index.js';
 
-let pricingMode = 'net'; // 'net' | 'vat' (+10%) | 'night' (+20% net) | 'night_vat' (+20% + 10% VAT)
+let pricingMode = 'net'; // 'net' | 'vat' (+10% Italian VAT)
 let activeTab = 'all'; // 'all' | 'confirmed' | 'luxury' | 'standard' | 'pending'
 let searchQuery = '';
 
@@ -533,8 +533,6 @@ function applySavedTierOverrides() {
 export function calculateAdjustedPrice(netAmount, mode = 'net') {
   const n = Number(netAmount) || 0;
   if (mode === 'vat') return Math.round(n * 1.10);
-  if (mode === 'night') return Math.round(n * 1.20);
-  if (mode === 'night_vat') return Math.round(n * 1.20 * 1.10);
   return n;
 }
 
@@ -544,8 +542,6 @@ function formatEur(amount) {
 
 function modeBadgeText(mode) {
   if (mode === 'vat') return 'Gross (+10% VAT)';
-  if (mode === 'night') return 'Night (+20% net)';
-  if (mode === 'night_vat') return 'Night Gross (+20% + 10% VAT)';
   return 'Net B2B (Excl. 10% VAT)';
 }
 
@@ -594,8 +590,6 @@ export async function render(el) {
           <div class="sail-seg" role="tablist" aria-label="Pricing calculation mode">
             <button class="${pricingMode === 'net' ? 'on' : ''}" data-price-mode="net">Net B2B</button>
             <button class="${pricingMode === 'vat' ? 'on' : ''}" data-price-mode="vat">+10% VAT</button>
-            <button class="${pricingMode === 'night' ? 'on' : ''}" data-price-mode="night">Night (+20%)</button>
-            <button class="${pricingMode === 'night_vat' ? 'on' : ''}" data-price-mode="night_vat">Night + VAT</button>
           </div>
           <a class="sail-btn" href="${attr(PDF_COMO_DRIVER)}" target="_blank" rel="noopener">
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 1.5H4a1.5 1.5 0 0 0-1.5 1.5v10A1.5 1.5 0 0 0 4 14.5h8a1.5 1.5 0 0 0 1.5-1.5V6L9 1.5Z"/><path d="M9 1.5V6h4.5"/></svg>
@@ -954,7 +948,8 @@ function renderPriceCalculatorCard() {
   const extraHoursCost = (Number(calcState.extraHours) || 0) * 100;
   const extraWaitCost = (Number(calcState.extraWaitHours) || 0) * 80;
   const subtotalBeforeNight = baseNet + extraHoursCost + extraWaitCost;
-  const nightSurcharge = calcState.nightWindow ? Math.round(subtotalBeforeNight * 0.20) : 0;
+  const isComoDriver = veh.partnerId === 'partner_1792765279097_26hr';
+  const nightSurcharge = (calcState.nightWindow && isComoDriver) ? Math.round(subtotalBeforeNight * 0.20) : 0;
   const totalNetB2B = subtotalBeforeNight + nightSurcharge;
   const vatAmount = calcState.includeVat ? Math.round(totalNetB2B * 0.10) : 0;
   const totalPartnerCost = totalNetB2B + vatAmount;
@@ -1013,10 +1008,12 @@ function renderPriceCalculatorCard() {
         </div>
 
         <div class="row" style="gap:18px;padding:4px 0">
-          <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--sail-ink);cursor:pointer">
-            <input type="checkbox" id="calc-night" ${calcState.nightWindow ? 'checked' : ''}>
-            Night service 22:00–06:00 (+20%)
-          </label>
+          ${isComoDriver ? `
+            <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--sail-ink);cursor:pointer">
+              <input type="checkbox" id="calc-night" ${calcState.nightWindow ? 'checked' : ''}>
+              Night service 22:00–06:00 (+20% Como Driver rate sheet)
+            </label>
+          ` : ''}
           <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--sail-ink);cursor:pointer">
             <input type="checkbox" id="calc-vat" ${calcState.includeVat ? 'checked' : ''}>
             Include 10% Italian VAT
