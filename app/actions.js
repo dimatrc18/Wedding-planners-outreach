@@ -200,6 +200,177 @@ export async function setStatus(p, status, extra = {}) {
   log('status_changed', { from: p.status, to: status }, p.id);
 }
 
+export async function saveProspect(id, patch) {
+  return update('prospects', id, patch);
+}
+
+/**
+ * Rescue a lead from manual IG/WA outreach (missing email or bounced):
+ * Updates the prospect's email, marks it verified, clears bounce flags,
+ * and re-queues Step 1 (Intro) into the active sending loop / Scheduled Outbox.
+ */
+export async function rescueManualLead(p, newEmail, { autoApprove = true } = {}) {
+  const email = (newEmail || '').trim().toLowerCase();
+  if (!email || !core.isValidEmailSyntax(email)) {
+    throw new Error('Please enter a valid email address');
+  }
+
+  // Clean known bad emails in enrichment if present
+  const existingBad = (p.enrichment?.known_bad_emails || []).filter(
+    (e) => String(e).toLowerCase().trim() !== email
+  );
+  const updatedEnrichment = {
+    ...(p.enrichment || {}),
+    known_bad_emails: existingBad,
+    verification: {
+      status: 'valid',
+      result: 'deliverable',
+      resultcode: 1,
+      provider: 'manual_verified',
+      verified_at: nowIso(),
+    },
+  };
+
+  const patch = {
+    email,
+    email_status: 'mx_ok',
+    bounced: false,
+    bounced_email: null,
+    bounced_at: null,
+    do_not_contact: false,
+    status: 'ready',
+    outreach_stage: 'ready',
+    tags: (p.tags || []).filter((t) => t !== 'bounced' && t !== 'manual_touch'),
+    enrichment: updatedEnrichment,
+  };
+  if (!p.personalization_hook) {
+    patch.personalization_hook = core.buildVerifiedFallbackHook(p);
+  }
+
+  await update('prospects', p.id, patch);
+  Object.assign(p, patch);
+
+  let scheduledAt = null;
+  let targetTouch = null;
+
+  // Cadence loop & touches
+  const existingTouches = touchesOf(p.id);
+  const now = new Date();
+  const taken = core.takenSlots(S.touches, now);
+  const firstSendAt = core.firstColdSend(S.touches);
+
+  // If a previous T1_intro attempt was sent and marked bounced, demote/archive it so unique constraint isn't violated
+  const bouncedSentTouch = existingTouches.find(
+    (t) => t.step_name === 'T1_intro' && t.direction === 'out' && t.bounced
+  );
+  if (bouncedSentTouch) {
+    await update('touches', bouncedSentTouch.id, {
+      state: 'skipped',
+      error: `Bounced on previous address (${bouncedSentTouch.to_address || p.bounced_email || 'unknown'}), archived for retry`,
+    });
+  }
+
+  const refreshedTouches = touchesOf(p.id);
+  const draft = refreshedTouches.find(
+    (t) => t.step_name === 'T1_intro' && t.direction === 'out' && t.state === 'draft'
+  );
+  const skipped = refreshedTouches.find(
+    (t) => t.step_name === 'T1_intro' && t.direction === 'out' && ['skipped', 'failed'].includes(t.state) && !t.bounced
+  );
+
+  if (autoApprove) {
+    if (draft) {
+      targetTouch = draft;
+      const at = core.scheduleApproved(draft, p, S.settings, taken, { now, firstSendAt });
+      scheduledAt = at;
+      await update('touches', draft.id, {
+        state: 'approved',
+        to_address: email,
+        approved_by: me(),
+        approved_at: nowIso(),
+        scheduled_at: at ? at.toISOString() : null,
+        error: null,
+        send_attempts: 0,
+        bounced: false,
+      });
+    } else if (skipped) {
+      targetTouch = skipped;
+      const at = core.scheduleApproved(skipped, p, S.settings, taken, { now, firstSendAt });
+      scheduledAt = at;
+      await update('touches', skipped.id, {
+        state: 'approved',
+        to_address: email,
+        approved_by: me(),
+        approved_at: nowIso(),
+        scheduled_at: at ? at.toISOString() : null,
+        error: null,
+        send_attempts: 0,
+        bounced: false,
+      });
+    } else {
+      const stepCfg = (S.settings.steps || core.DEFAULT_STEPS).find((s) => s.key === 'T1_intro');
+      const d = core.buildDraft({ prospect: p, key: 'T1_intro', templates: S.templates, step: stepCfg });
+      if (d) {
+        const row = {
+          prospect_id: p.id,
+          channel: 'email',
+          direction: 'out',
+          step_name: 'T1_intro',
+          state: 'approved',
+          to_address: email,
+          subject: d.subject,
+          body: d.body,
+          template_key: d.template_key,
+          variant: d.variant,
+          lint: d.lint,
+          attach_rate_card: d.attach_rate_card,
+          approved_by: me(),
+          approved_at: nowIso(),
+          error: null,
+          send_attempts: 0,
+          bounced: false,
+        };
+        const at = core.scheduleApproved(row, p, S.settings, taken, { now, firstSendAt });
+        scheduledAt = at;
+        row.scheduled_at = at ? at.toISOString() : null;
+        const [ins] = await insert('touches', row);
+        targetTouch = ins || row;
+      }
+    }
+  } else {
+    if (draft) {
+      targetTouch = draft;
+      await update('touches', draft.id, { to_address: email, error: null });
+    } else if (skipped) {
+      targetTouch = skipped;
+      await update('touches', skipped.id, { state: 'draft', to_address: email, error: null });
+    } else {
+      const stepCfg = (S.settings.steps || core.DEFAULT_STEPS).find((s) => s.key === 'T1_intro');
+      const d = core.buildDraft({ prospect: p, key: 'T1_intro', templates: S.templates, step: stepCfg });
+      if (d) {
+        const [ins] = await insert('touches', {
+          prospect_id: p.id,
+          channel: 'email',
+          direction: 'out',
+          step_name: 'T1_intro',
+          state: 'draft',
+          to_address: email,
+          subject: d.subject,
+          body: d.body,
+          template_key: d.template_key,
+          variant: d.variant,
+          lint: d.lint,
+          attach_rate_card: d.attach_rate_card,
+        });
+        targetTouch = ins;
+      }
+    }
+  }
+
+  log('lead_rescued', { prospect_id: p.id, agency: p.agency_name, email, autoApprove, scheduledAt }, p.id);
+  return { prospect: p, touch: targetTouch, scheduledAt };
+}
+
 /** Checks before a prospect enters the cadence. Returns a list of problems (empty = ready). */
 export function readinessProblems(p) {
   const probs = [];

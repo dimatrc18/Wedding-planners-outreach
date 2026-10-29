@@ -17,6 +17,16 @@ let focusIdx = 0;
 let editing = null;
 let todayTab = 'queue'; // 'queue' | 'scheduled' | 'manual' | 'bus' | 'research'
 
+const cleanWebUrl = (url) => {
+  if (!url) return '';
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+};
+
+const displayDomain = (url) => {
+  if (!url) return '';
+  return url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/.*$/, '');
+};
+
 function lintHtml(l) {
   if (!l || (!l.errors?.length && !l.warnings?.length)) return '';
   return `<div class="lint">${(l.errors || []).map((e) => `<span class="e">${esc(e)}</span>`).join('')}${(l.warnings || []).map((w) => `<span class="w">${esc(w)}</span>`).join('')}</div>`;
@@ -316,11 +326,11 @@ export function render(el) {
         <table class="sail-table" style="table-layout:fixed;width:100%">
           <thead>
             <tr>
-              <th style="width:22%">Agency &amp; Territory</th>
+              <th style="width:23%">Agency &amp; Website</th>
               <th style="width:16%">Reason</th>
-              <th style="width:24%">Direct Social / Phone</th>
-              <th style="width:22%">Opening Hook</th>
-              <th style="width:16%">Actions</th>
+              <th style="width:23%">Direct Channels</th>
+              <th style="width:20%">Opening Hook</th>
+              <th style="width:18%">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -328,23 +338,40 @@ export function render(el) {
               const mkt = p.market || core.inferMarket(p);
               const cleanPhone = (p.whatsapp || p.phone || '').replace(/[^0-9+]/g, '');
               const igHandle = p.instagram ? p.instagram.replace(/^@/, '') : '';
+              const webUrl = cleanWebUrl(p.website);
+              const webDomain = displayDomain(p.website);
+              const isBounced = p.email_status === 'bounced' || p.bounced;
+              const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(p.agency_name + ' wedding planner Lake Como')}`;
               return `
                 <tr>
                   <td>
                     <div style="font-weight:600;color:var(--sail-ink);font-size:13px">
-                      <a href="#prospect/${attr(p.id)}" style="color:inherit;text-decoration:none">${esc(p.agency_name)}</a>
+                      <a href="#prospect/${attr(p.id)}" style="color:inherit;text-decoration:none" title="Open planner CRM card">${esc(p.agency_name)}</a>
                     </div>
                     <div style="font-size:11px;color:var(--sail-muted);margin-top:2px">
                       ${core.marketFlag(mkt)} ${esc(p.location || 'Lake Como')}
                     </div>
+                    <div style="margin-top:4px;font-size:11.5px">
+                      ${webUrl
+                        ? `<a href="${attr(webUrl)}" target="_blank" rel="noopener" style="color:var(--sail-primary, #635bff);text-decoration:none;display:inline-flex;align-items:center;gap:3px;font-weight:500" title="Open ${attr(webDomain)} in new tab">🌐 ${esc(webDomain)} ↗</a>`
+                        : `<a href="${attr(searchUrl)}" target="_blank" rel="noopener" style="color:var(--sail-muted);text-decoration:none;display:inline-flex;align-items:center;gap:3px" title="Search agency website on Google">🔍 Search Site ↗</a>`
+                      }
+                    </div>
                   </td>
                   <td>
-                    <span class="sail-pill ${p.email_status === 'bounced' ? 'warn' : 'missing'}" style="font-size:10.5px;padding:1px 6px">
-                      ${p.email_status === 'bounced' ? 'Email Bounced' : 'Missing Email'}
-                    </span>
+                    <button class="sail-pill ${isBounced ? 'warn' : 'missing'}" style="font-size:10.5px;padding:2px 7px;cursor:pointer;border:1px solid transparent;display:inline-flex;align-items:center;gap:4px;font-family:inherit" data-act="rescue-lead" data-id="${attr(p.id)}" title="Click to add email & put lead back in queue">
+                      <span>${isBounced ? '⚠️ Bounced' : '⚠️ Missing Email'}</span>
+                      <span style="font-weight:700;text-decoration:underline">${isBounced ? 'Fix ↗' : '+Add ↗'}</span>
+                    </button>
+                    ${(p.bounced_email || (isBounced && p.email)) ? `
+                      <div style="font-size:10px;color:var(--sail-muted);margin-top:3px;max-width:140px;overflow:hidden;text-overflow:ellipsis" title="${attr(p.bounced_email || p.email)}">
+                        ${esc(p.bounced_email || p.email)}
+                      </div>
+                    ` : ''}
                   </td>
                   <td>
-                    <div class="row" style="gap:6px;flex-wrap:wrap;font-size:12px">
+                    <div class="row" style="gap:5px;flex-wrap:wrap;font-size:12px">
+                      ${webUrl ? `<a class="sail-btn xs" href="${attr(webUrl)}" target="_blank" rel="noopener" title="Open official agency website">Site ↗</a>` : ''}
                       ${cleanPhone ? `<a class="sail-btn xs primary" href="https://wa.me/${cleanPhone.replace(/^\+/, '')}" target="_blank" rel="noopener">WhatsApp ↗</a>` : ''}
                       ${igHandle ? `<a class="sail-btn xs" href="https://instagram.com/${attr(igHandle)}" target="_blank" rel="noopener">@${esc(igHandle)} ↗</a>` : `<a class="sail-btn xs" href="https://www.google.com/search?q=${encodeURIComponent(p.agency_name + ' Instagram wedding')}" target="_blank" rel="noopener">Find IG ↗</a>`}
                     </div>
@@ -353,9 +380,10 @@ export function render(el) {
                     ${esc((p.personalization_hook || 'Bespoke Lake Como & Milan guest logistics').slice(0, 95))}
                   </td>
                   <td>
-                    <div class="row" style="gap:5px">
-                      <button class="sail-btn xs primary" data-act="copy-social-pitch" data-id="${attr(p.id)}">Copy Pitch</button>
-                      <a class="sail-btn xs" href="#prospect/${attr(p.id)}">Open →</a>
+                    <div class="row" style="gap:5px;flex-wrap:wrap">
+                      <button class="sail-btn xs ${isBounced ? 'warn' : 'primary'}" data-act="rescue-lead" data-id="${attr(p.id)}" title="Add verified email and queue for sending">${isBounced ? 'Fix & Retry' : '+ Add Email'}</button>
+                      <button class="sail-btn xs" data-act="copy-social-pitch" data-id="${attr(p.id)}" title="Copy personalized social pitch">Pitch</button>
+                      <a class="sail-btn xs" href="#prospect/${attr(p.id)}" title="Open detail view">Open →</a>
                     </div>
                   </td>
                 </tr>
@@ -699,6 +727,19 @@ export function render(el) {
           }
           break;
         }
+        case 'rescue-lead': {
+          const p = A.prospectById(id);
+          if (p) {
+            openRescueLeadModal(p, (res) => {
+              paint();
+              const msg = res.scheduledAt
+                ? `Saved email! ${p.agency_name} scheduled in Outbox for ${fmtDateTime(res.scheduledAt)}`
+                : `Saved email! ${p.agency_name} returned to the active queue`;
+              toast(msg);
+            });
+          }
+          break;
+        }
       }
     } catch (e) {
       toast(e.message, 'error');
@@ -745,5 +786,103 @@ export function pickReplyTemplate() {
     title: 'Draft a reply',
     body: `<div class="list card flush">${opts.map((t) => `<button class="list-item clickable" style="border:0;background:none;text-align:left;width:100%" data-key="${attr(t.key)}"><div class="t"><b>${esc(t.name || t.key)}</b><span class="small muted">${esc((t.body || '').split('\n').filter(Boolean)[1] || '').slice(0, 90)}</span></div></button>`).join('')}</div>`,
     onMount: (box, close) => box.addEventListener('click', (e) => { const b = e.target.closest('[data-key]'); if (b) close(b.dataset.key); }),
+  });
+}
+
+export function openRescueLeadModal(p, onSaved) {
+  const mkt = p.market || core.inferMarket(p);
+  const webUrl = cleanWebUrl(p.website);
+  const webDomain = displayDomain(p.website);
+  const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(p.agency_name + ' wedding planner Lake Como contact')}`;
+  const isBounced = p.email_status === 'bounced' || p.bounced;
+  const prevEmail = p.bounced_email || p.email || '';
+
+  return dialog({
+    title: isBounced ? `Fix Bounced Email · ${p.agency_name}` : `Add Contact Email · ${p.agency_name}`,
+    body: `
+      <form id="rescue-form" style="display:flex;flex-direction:column;gap:14px">
+        <div style="background:var(--sail-card-subtle, #f8fafc);border:1px solid var(--sail-border, #e2e8f0);border-radius:8px;padding:12px;font-size:12.5px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-weight:600;color:var(--sail-ink, #0f172a);font-size:13.5px">${esc(p.agency_name)}</span>
+            <span class="sail-pill std" style="font-size:10px">${core.marketFlag(mkt)} ${esc(mkt.toUpperCase())}</span>
+          </div>
+          <div style="color:var(--sail-muted, #64748b);font-size:12px;display:flex;gap:12px;flex-wrap:wrap">
+            ${webUrl
+              ? `<a href="${attr(webUrl)}" target="_blank" rel="noopener" style="color:var(--sail-primary, #635bff);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:3px">🌐 ${esc(webDomain || p.website)} ↗</a>`
+              : `<a href="${attr(searchUrl)}" target="_blank" rel="noopener" style="color:var(--sail-muted, #64748b);text-decoration:none;display:inline-flex;align-items:center;gap:3px">🔍 Search Contact Page ↗</a>`}
+            ${p.contact_name ? `<span>👤 ${esc(p.contact_name)}</span>` : ''}
+            ${p.location ? `<span>📍 ${esc(p.location)}</span>` : ''}
+          </div>
+          ${isBounced && prevEmail ? `
+            <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--sail-border, #e2e8f0);color:var(--sail-missing-fg, #e11d48);font-size:11.5px">
+              ⚠️ Previous bounced address: <code>${esc(prevEmail)}</code>
+            </div>
+          ` : ''}
+        </div>
+
+        <label style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-weight:600;font-size:13px;color:var(--sail-ink, #0f172a)">New Contact Email Address</span>
+          <input
+            id="rescue-email-field"
+            type="email"
+            class="input"
+            required
+            placeholder="e.g. info@${webDomain || 'agency.com'}"
+            value="${isBounced ? '' : (p.email || '')}"
+            style="width:100%;font-size:14px;padding:8px 12px;border:1px solid var(--sail-border, #cbd5e1);border-radius:6px;background:var(--sail-input-bg, #fff);color:var(--sail-ink, #0f172a)"
+            autocomplete="email"
+          />
+        </label>
+
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;user-select:none;background:var(--surface, #fff);border:1px solid var(--sail-border, #e2e8f0);padding:10px 12px;border-radius:6px">
+          <input type="checkbox" id="rescue-requeue-check" checked style="margin-top:3px" />
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <span style="font-weight:600;font-size:13px;color:var(--sail-ink, #0f172a)">Put lead back in queue to be contacted</span>
+            <span style="font-size:11.5px;color:var(--sail-muted, #64748b)">
+              Auto-approve Step 1 (Intro) into Scheduled Outbox. It will send in the next active local window within your daily cap.
+            </span>
+          </div>
+        </label>
+
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px">
+          <button type="button" class="sail-btn" data-close>Cancel</button>
+          <button type="submit" class="sail-btn primary" id="rescue-submit-btn">
+            Save &amp; Queue Outreach →
+          </button>
+        </div>
+      </form>
+    `,
+    onMount: (box, close) => {
+      const form = box.querySelector('#rescue-form');
+      const input = box.querySelector('#rescue-email-field');
+      const check = box.querySelector('#rescue-requeue-check');
+      const submitBtn = box.querySelector('#rescue-submit-btn');
+
+      setTimeout(() => input?.focus(), 60);
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const entered = (input.value || '').trim();
+        if (!entered || !core.isValidEmailSyntax(entered)) {
+          toast('Please enter a valid email address', 'error');
+          input.focus();
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving & Queuing…';
+
+        try {
+          const autoQueue = check ? check.checked : true;
+          const res = await A.rescueManualLead(p, entered, { autoApprove: autoQueue });
+          close(res);
+          if (onSaved) onSaved(res);
+        } catch (err) {
+          toast(err.message, 'error');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Save & Queue Outreach →';
+        }
+      });
+    },
   });
 }
