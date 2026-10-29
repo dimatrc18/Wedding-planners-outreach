@@ -44,13 +44,14 @@ export const FLEET_LEDGER_ROWS = [
     ratePdf: PDF_COMO_DRIVER,
     ratePdfName: 'DORONGO 2027.pdf (2 pages)',
     transfers: {
-      mxp_como: { label: 'Malpensa (MXP) ⇄ Como/Cernobbio', net: 350 },
-      milano_como: { label: 'Milano Centro / FS ⇄ Como', net: 400 },
-      lin_como: { label: 'Linate (LIN) ⇄ Como/Cernobbio', net: 400 },
-      bgy_como: { label: 'Bergamo (BGY) ⇄ Como/Cernobbio', net: 450 },
-      tremezzo: { label: 'Como/Cernobbio ⇄ Tremezzo', net: 300 },
-      bellagio: { label: 'Como/Cernobbio ⇄ Bellagio', net: 300 }
+      mxp_como: { label: 'Malpensa (MXP) ⇄ Como/Cernobbio', net: 350, km: 48, garageKm: 78 },
+      milano_como: { label: 'Milano Centro / FS ⇄ Como', net: 400, km: 52, garageKm: 95 },
+      lin_como: { label: 'Linate (LIN) ⇄ Como/Cernobbio', net: 400, km: 62, garageKm: 115 },
+      bgy_como: { label: 'Bergamo (BGY) ⇄ Como/Cernobbio', net: 450, km: 92, garageKm: 175 },
+      tremezzo: { label: 'Como/Cernobbio ⇄ Tremezzo', net: 300, km: 30, garageKm: 68 },
+      bellagio: { label: 'Como/Cernobbio ⇄ Bellagio', net: 300, km: 32, garageKm: 72 }
     },
+    kmFormulaNote: 'Implied formula: €210 base call-out + ~€2.80/km (Standby: €4.50–€5.00/km)',
     standby: {
       dispo_4h: { label: '4 Hours (incl. 100 km)', net: 500, hourlyEq: 125 },
       dispo_8h: { label: '8 Hours (incl. 200 km)', net: 900, hourlyEq: 112.5 },
@@ -116,13 +117,14 @@ export const FLEET_LEDGER_ROWS = [
     ratePdf: PDF_COMO_DRIVER,
     ratePdfName: 'DORONGO 2027.pdf (2 pages)',
     transfers: {
-      mxp_como: { label: 'Malpensa (MXP) ⇄ Como/Cernobbio', net: 400 },
-      milano_como: { label: 'Milano Centro / FS ⇄ Como', net: 450 },
-      lin_como: { label: 'Linate (LIN) ⇄ Como/Cernobbio', net: 450 },
-      bgy_como: { label: 'Bergamo (BGY) ⇄ Como/Cernobbio', net: 500 },
-      tremezzo: { label: 'Como/Cernobbio ⇄ Tremezzo', net: 350 },
-      bellagio: { label: 'Como/Cernobbio ⇄ Bellagio', net: 350 }
+      mxp_como: { label: 'Malpensa (MXP) ⇄ Como/Cernobbio', net: 400, km: 48, garageKm: 78 },
+      milano_como: { label: 'Milano Centro / FS ⇄ Como', net: 450, km: 52, garageKm: 95 },
+      lin_como: { label: 'Linate (LIN) ⇄ Como/Cernobbio', net: 450, km: 62, garageKm: 115 },
+      bgy_como: { label: 'Bergamo (BGY) ⇄ Como/Cernobbio', net: 500, km: 92, garageKm: 175 },
+      tremezzo: { label: 'Como/Cernobbio ⇄ Tremezzo', net: 350, km: 30, garageKm: 68 },
+      bellagio: { label: 'Como/Cernobbio ⇄ Bellagio', net: 350, km: 32, garageKm: 72 }
     },
+    kmFormulaNote: 'Implied formula: €260 base call-out + ~€2.80/km (Standby: €4.50–€5.00/km)',
     standby: {
       dispo_4h: { label: '4 Hours (incl. 100 km)', net: 500, hourlyEq: 125 },
       dispo_8h: { label: '8 Hours (incl. 200 km)', net: 900, hourlyEq: 112.5 },
@@ -181,12 +183,13 @@ export const FLEET_LEDGER_ROWS = [
     ratePdf: null,
     ratePdfName: null,
     transfers: {
-      mxp_milano: { label: 'Malpensa (MXP) ⇄ Milano (Sprinter 8p)', net: 250 }
+      mxp_milano: { label: 'Malpensa (MXP) ⇄ Milano (Sprinter 8p)', net: 250, km: 50, garageKm: 100 }
     },
+    kmFormulaNote: 'Round-trip from Milan depot (100 km): €2.50/km net',
     transferNote: 'Quoted €250 net (+10% IVA = €275 gross). Confirming if Red 7-pax / Standard 8-pax / Top 8-pax share €250 MXP rate.',
     standby: {
-      dispo_4h: { label: '4h Est. (€90–€140/h · Standard 8p)', net: 360, hourlyEq: 90 },
-      dispo_8h: { label: '4h Est. (€140/h · Top 8p Special)', net: 560, hourlyEq: 140 },
+      dispo_4h: { label: '4h Est. (€90/h · Standard 8p)', net: 360, hourlyEq: 90 },
+      dispo_8h: { label: '8h Est. (€90/h · Standard 8p)', net: 720, hourlyEq: 90 },
       extra_hour: { label: 'Hourly Rate (Std €90 – Top €140/h)', net: 90 },
       extra_wait: null
     },
@@ -236,8 +239,9 @@ export const FLEET_LEDGER_ROWS = [
     ratePdf: null,
     ratePdfName: null,
     transfers: {
-      mxp_milano: { label: 'Malpensa (MXP) ⇄ Milano (+ Area C ZTL)', net: 330 }
+      mxp_milano: { label: 'Malpensa (MXP) ⇄ Milano (+ Area C ZTL)', net: 330, km: 50, garageKm: 100 }
     },
+    kmFormulaNote: 'Round-trip from Milan depot (100 km): €3.30/km net',
     transferNote: 'Quoted €330 net (+10% VAT = €363 + eventual Area C ZTL). Confirming if both 20-pax units share this tariff.',
     standby: {
       dispo_4h: { label: '4 Hours (+ Area C ZTL)', net: 550, hourlyEq: 137.5 },
@@ -490,15 +494,15 @@ export async function render(el) {
 
         <!-- Primary Stripe Data Table -->
         <div class="sail-table-wrap">
-          <table class="sail-table">
+          <table class="sail-table" style="table-layout:fixed;width:100%">
             <thead>
               <tr>
-                <th style="width:210px">Vehicle &amp; Capacity</th>
-                <th style="width:130px">Class Tier</th>
-                <th style="width:185px">Partner &amp; Direct Contact</th>
-                <th style="width:240px">Transfer Rates (${esc(modeBadgeText(pricingMode))})</th>
-                <th style="width:210px">Standby / Disposizione</th>
-                <th style="width:245px">Inspection Photos &amp; Rate Sheet</th>
+                <th style="width:18%">Vehicle &amp; Capacity</th>
+                <th style="width:12%">Class Tier</th>
+                <th style="width:15%">Partner &amp; Direct Contact</th>
+                <th style="width:22%">Transfer Rates (${esc(modeBadgeText(pricingMode))})</th>
+                <th style="width:18%">Standby / Disposizione</th>
+                <th style="width:15%">Inspection Photos &amp; Rate Sheet</th>
               </tr>
             </thead>
             <tbody>
@@ -559,11 +563,26 @@ export async function render(el) {
   attachLedgerListeners(el);
 }
 
+function estimateVehiclePerKm(row, mode) {
+  if (!row.transfers) return null;
+  const entries = Object.values(row.transfers).filter((t) => t.km > 0);
+  if (!entries.length) return null;
+  const totalPrice = entries.reduce((sum, t) => sum + calculateAdjustedPrice(t.net, mode), 0);
+  const totalClientKm = entries.reduce((sum, t) => sum + t.km, 0);
+  const totalGarageKm = entries.reduce((sum, t) => sum + (t.garageKm || t.km * 1.8), 0);
+  return {
+    clientPerKm: (totalPrice / totalClientKm).toFixed(2),
+    garagePerKm: (totalPrice / totalGarageKm).toFixed(2),
+    formulaNote: row.kmFormulaNote || ''
+  };
+}
+
 function renderLedgerRow(row) {
   const hasTransfers = Boolean(row.transfers);
   const hasStandby = Boolean(row.standby);
   const hasPhotos = Array.isArray(row.photos) && row.photos.length > 0;
   const rawWa = (row.phone || '').replace(/[^\d+]/g, '');
+  const kmEst = estimateVehiclePerKm(row, pricingMode);
 
   let transferHtml = '';
   if (hasTransfers) {
@@ -579,7 +598,13 @@ function renderLedgerRow(row) {
           `;
         }).join('')}
       </div>
-      ${row.transferNote ? `<div style="margin-top:6px;font-size:11px;color:var(--sail-muted);line-height:1.35">${esc(row.transferNote)}</div>` : ''}
+      ${kmEst ? `
+        <div style="margin-top:7px;padding-top:6px;border-top:1px dashed var(--sail-line);display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+          <span class="sail-pill info" style="font-size:10.5px;padding:1px 7px">Est. €${kmEst.clientPerKm}/km (client route) · €${kmEst.garagePerKm}/km (incl. depot return)</span>
+          ${kmEst.formulaNote ? `<span style="font-size:10.5px;color:var(--sail-muted)">${esc(kmEst.formulaNote)}</span>` : ''}
+        </div>
+      ` : ''}
+      ${row.transferNote ? `<div style="margin-top:5px;font-size:11px;color:var(--sail-muted);line-height:1.35">${esc(row.transferNote)}</div>` : ''}
     `;
   } else {
     transferHtml = `
