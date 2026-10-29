@@ -6,7 +6,7 @@ import { esc, attr, icon, ago, fmtDate, pct, plural, toast, download, dialog, co
 import * as A from '../actions.js';
 import { logTouchDialog } from './prospect.js';
 
-const KEY = 'dorogo-pipeline-v2';
+const KEY = 'dorogo-pipeline-sail-v3';
 const MIN_FIT_SCORE = 65;
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
 const save = (f) => { try { localStorage.setItem(KEY, JSON.stringify(f)); } catch { /* storage blocked */ } };
@@ -435,7 +435,8 @@ export function render(el) {
     location: '',
     language: '',
     tag: '',
-    view: 'flow',
+    view: 'list',
+    showFlow: false,
     hideClosed: false,
     onlyHighFit: false,
     manualOnly: false,
@@ -444,7 +445,7 @@ export function render(el) {
     steps: [...defaultPreset.steps],
     ...saved,
   };
-  if (!['flow', 'board', 'list'].includes(f.view)) f.view = 'flow';
+  if (!['flow', 'board', 'list'].includes(f.view)) f.view = 'list';
   if (!Array.isArray(f.steps) || f.steps.length < 2) f.steps = [...defaultPreset.steps];
 
   let { selectedPath, expandedCols, stageFilter, previewSample, customizeCols, detailedBoard } = pathSession;
@@ -532,51 +533,75 @@ export function render(el) {
     el.querySelectorAll('.path-link.hover, .path-node.hover').forEach((x) => x.classList.remove('hover'));
   };
 
-  function renderJourneyBar(list, data) {
-    const missingInfoCount = data.prospects.filter((p) =>
-      ['researching', 't1_sent'].includes(p.status) && (!p.email || !p.personalization_hook) && !isManualLead(p)
-    ).length;
-    const lowFitCount = data.prospects.filter((p) => core.priorityScore(p).score < MIN_FIT_SCORE).length;
-    const manualCount = data.prospects.filter(isManualLead).length;
+  function renderTelemetryStrip(list, data) {
+    const allProspects = data.prospects || [];
+    const mxVerified = allProspects.filter((p) => p.email && ['mx_ok', 'valid'].includes(p.email_status)).length;
+    const toCheckCnt = list.filter((p) => JOURNEY_STEPS[0].match(p)).length;
+    const readyCnt = list.filter((p) => JOURNEY_STEPS[1].match(p)).length;
+    const emailedCnt = list.filter((p) => JOURNEY_STEPS[2].match(p)).length;
+    const engagedCnt = list.filter((p) => JOURNEY_STEPS[3].match(p)).length;
+    const wonCnt = list.filter((p) => JOURNEY_STEPS[4].match(p)).length;
+    const manualCnt = list.filter((p) => JOURNEY_STEPS[5].match(p)).length;
+    const totalSentTouches = (data.touches || []).filter((t) => t.direction === 'out' && t.state === 'sent').length;
+    const scheduledTouches = (data.touches || []).filter((t) => t.direction === 'out' && t.state === 'approved').length;
 
-    return `<div class="journey-strip" role="region" aria-label="5-Step Outreach Journey">
-      <div class="journey-head">
-        <div>
-          <span class="journey-title">How Your Outreach Works</span>
-          <span class="muted small"> · 5-Step Email Sequence + dedicated 📱 Manual Outreach folder for bounced &amp; social leads</span>
+    return `
+      <div class="sail-stat-strip">
+        <div class="sail-stat-cell clickable ${stageFilter === 'all' && !f.manualOnly ? 'active-filter' : ''}" data-stage-filter="all" title="Click to show all leads">
+          <div class="sail-stat-label">
+            <span>Total Roster</span>
+            <span class="sail-pill ok" style="padding:1px 6px;font-size:10.5px"><span class="sail-pill-dot"></span>Active</span>
+          </div>
+          <div class="sail-stat-val">${list.length} <span style="font-size:13px;font-weight:500;color:var(--sail-muted)">/ ${allProspects.length}</span></div>
+          <div class="sail-stat-meta">${mxVerified} MX-verified · Target ≥ ${MIN_FIT_SCORE}/100</div>
         </div>
-        <div class="row" style="gap:8px">
-          ${manualCount > 0 ? `<button class="btn sm ${stageFilter === 'manual' ? 'primary' : 'gold-btn'}" data-stage-filter="manual" title="View ${manualCount} partners with bounced email or missing email to contact via Instagram or WhatsApp">
-            📱 Manual / Social (${manualCount})
-          </button>` : ''}
-          ${!data.isSample ? `<button class="btn sm" data-act="auto-discover-partners" title="Automatically search for new luxury wedding planners, venues &amp; hotel concierges scoring ≥ 65/100">
-            🔍 Auto-Find New Partners
-          </button>` : ''}
-          ${missingInfoCount > 0 ? `<button class="btn sm primary" data-act="batch-ai-research" ${pathSession.batchRunning ? 'disabled' : ''}>
-            ${pathSession.batchRunning ? `⏳ ${esc(pathSession.batchStatus || 'Researching…')}` : `🤖 Auto-Research ${missingInfoCount} Leads (Find Emails & Notes)`}
-          </button>` : ''}
-          ${lowFitCount > 0 && !data.isSample ? `<button class="btn sm ghost" data-act="purge-low-fit" title="Delete leads scoring below ${MIN_FIT_SCORE}/100">
-            🧹 Remove ${lowFitCount} leads &lt; ${MIN_FIT_SCORE}/100
-          </button>` : ''}
-          ${stageFilter !== 'all' ? `<button class="btn ghost sm" data-stage-filter="all">${icon('x', 13)} Show all ${list.length} leads</button>` : ''}
+
+        <div class="sail-stat-cell clickable ${stageFilter === 'researching' ? 'active-filter' : ''}" data-stage-filter="researching" title="Filter: 1. To Check (needs email or 1-line opener)">
+          <div class="sail-stat-label">
+            <span>1. To Check</span>
+            <span class="sail-pill std" style="padding:1px 6px;font-size:10.5px">Step 1</span>
+          </div>
+          <div class="sail-stat-val">${toCheckCnt}</div>
+          <div class="sail-stat-meta">Needs email or 1-line hook</div>
+        </div>
+
+        <div class="sail-stat-cell clickable ${stageFilter === 'ready' ? 'active-filter' : ''}" data-stage-filter="ready" title="Filter: 2. Ready to Email">
+          <div class="sail-stat-label">
+            <span>2. Ready &amp; Queued</span>
+            <span class="sail-pill info" style="padding:1px 6px;font-size:10.5px">${scheduledTouches} scheduled</span>
+          </div>
+          <div class="sail-stat-val">${readyCnt}</div>
+          <div class="sail-stat-meta">Mon–Fri · 08:30–14:30 local</div>
+        </div>
+
+        <div class="sail-stat-cell clickable ${stageFilter === 'cadence' ? 'active-filter' : ''}" data-stage-filter="cadence" title="Filter: 3. Emailed (In Sequence)">
+          <div class="sail-stat-label">
+            <span>3. Emailed (E1–E3)</span>
+            <span class="sail-pill lux" style="padding:1px 6px;font-size:10.5px">${totalSentTouches} sent</span>
+          </div>
+          <div class="sail-stat-val">${emailedCnt}</div>
+          <div class="sail-stat-meta">Active 3-step email cadence</div>
+        </div>
+
+        <div class="sail-stat-cell clickable ${stageFilter === 'engaged' ? 'active-filter' : ''}" data-stage-filter="engaged" title="Filter: 4. Replied & Talking">
+          <div class="sail-stat-label">
+            <span>4. Replied &amp; Engaged</span>
+            <span class="sail-pill ok" style="padding:1px 6px;font-size:10.5px">Warm</span>
+          </div>
+          <div class="sail-stat-val">${engagedCnt} <span style="font-size:13px;font-weight:500;color:var(--sail-muted)">· ${wonCnt} won</span></div>
+          <div class="sail-stat-meta">Replies, rate cards &amp; quotes</div>
+        </div>
+
+        <div class="sail-stat-cell clickable ${stageFilter === 'manual' ? 'active-filter' : ''}" data-stage-filter="manual" title="Filter: Manual IG / WhatsApp Outreach">
+          <div class="sail-stat-label">
+            <span>Manual (IG / WA)</span>
+            <span class="sail-pill warn" style="padding:1px 6px;font-size:10.5px">Social</span>
+          </div>
+          <div class="sail-stat-val">${manualCnt}</div>
+          <div class="sail-stat-meta">Bounced or missing email</div>
         </div>
       </div>
-      <div class="journey-steps">
-        ${JOURNEY_STEPS.map((st, idx) => {
-          const cnt = list.filter((p) => st.match(p)).length;
-          const active = stageFilter === st.key;
-          return `${idx > 0 && idx < 5 ? '<span class="journey-arrow" aria-hidden="true">→</span>' : idx === 5 ? '<span class="journey-arrow" style="opacity:0.35" aria-hidden="true">│</span>' : ''}
-          <button class="journey-step tone-${st.tone} ${active ? 'on' : ''}" data-stage-filter="${st.key}" data-drop-stage="${st.dropStage}" aria-pressed="${active}" title="${esc(st.label)} (${cnt}): ${esc(st.sub)}">
-            <div class="j-top">
-              <span class="j-badge">${st.num}</span>
-              <span class="j-name">${esc(st.label)}</span>
-              <span class="j-count">${cnt}</span>
-            </div>
-            <div class="j-sub">${esc(st.sub)}</div>
-          </button>`;
-        }).join('')}
-      </div>
-    </div>`;
+    `;
   }
 
   function paint() {
@@ -584,63 +609,145 @@ export function render(el) {
     syncSession();
     const data = activeData();
     const locations = [...new Set(data.prospects.map((p) => p.location).filter(Boolean))].sort();
-    const tags = [...new Set(data.prospects.flatMap((p) => p.tags || []))].sort();
     const hidden = f.hideClosed ? ['lost', 'do_not_contact'] : [];
     const list = data.prospects.filter((p) => matchesFilters(p, hidden));
     const touchesByP = core.groupTouches(data.touches);
+    const missingInfoCount = data.prospects.filter((p) =>
+      ['researching', 't1_sent'].includes(p.status) && (!p.email || !p.personalization_hook) && !isManualLead(p)
+    ).length;
+
+    const tabCounts = {
+      all: list.length,
+      engaged: list.filter((p) => JOURNEY_STEPS[3].match(p)).length,
+      won: list.filter((p) => JOURNEY_STEPS[4].match(p)).length,
+      cadence: list.filter((p) => JOURNEY_STEPS[2].match(p)).length,
+      ready: list.filter((p) => JOURNEY_STEPS[1].match(p)).length,
+      manual: list.filter((p) => JOURNEY_STEPS[5].match(p)).length,
+      researching: list.filter((p) => JOURNEY_STEPS[0].match(p)).length,
+    };
 
     el.innerHTML = `
-    <div class="page-head">
-      <div>
-        <div class="label eyebrow">${list.length} of ${data.prospects.length} partners & leads${data.isSample ? ' · interactive sample preview' : ''} · Target Fit ≥ ${MIN_FIT_SCORE}/100</div>
-        <h1>Partner Pipeline</h1>
-      </div>
-      <div class="row">
-        <div class="seg" role="group" aria-label="View mode">
-          <button data-view="board" class="${f.view === 'board' ? 'on' : ''}" title="5-column board view">📋 5-Step Board</button>
-          <button data-view="flow" class="${f.view === 'flow' ? 'on' : ''}" title="Visual flow diagram">${icon('flow', 15)} Visual Flow</button>
-          <button data-view="list" class="${f.view === 'list' ? 'on' : ''}" title="Spreadsheet table view">📑 Table</button>
+    <div class="sail-page">
+      <!-- Stripe Top Header -->
+      <div class="sail-header">
+        <div>
+          <div class="sail-breadcrumb">
+            <a href="#today" style="color:inherit;text-decoration:none">Outreach Command</a>
+            <span style="color:#CBD5E1">/</span>
+            <span>Wedding Planner &amp; Villa Pipeline</span>
+          </div>
+          <h1 class="sail-title">Wedding Planner &amp; Villa Pipeline</h1>
+          <div class="sail-subtitle">
+            ${list.length} of ${data.prospects.length} luxury wedding planners, Lake Como villas &amp; 5★ hotel concierges · Target Fit Score ≥ ${MIN_FIT_SCORE}/100
+          </div>
         </div>
-        ${!data.isSample ? `<button class="btn" data-act="auto-discover-partners">🔍 Auto-Find New Partners</button>` : ''}
-        <a class="btn primary" href="#add">${icon('plus', 16)} Add Partner Lead</a>
+
+        <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
+          <div class="sail-seg" role="group" aria-label="View mode">
+            <button data-view="list" class="${f.view === 'list' ? 'on' : ''}">Directory Table</button>
+            <button data-view="board" class="${f.view === 'board' ? 'on' : ''}">5-Step Board</button>
+            <button data-view="flow" class="${f.view === 'flow' ? 'on' : ''}">Sankey Flow</button>
+          </div>
+          ${missingInfoCount > 0 ? `<button class="sail-btn" data-act="batch-ai-research" ${pathSession.batchRunning ? 'disabled' : ''}>
+            ${pathSession.batchRunning ? `⏳ ${esc(pathSession.batchStatus || 'Researching…')}` : `AI Research (${missingInfoCount})`}
+          </button>` : ''}
+          ${!data.isSample ? `<button class="sail-btn" data-act="auto-discover-partners">Auto-Find Partners</button>` : ''}
+          <a class="sail-btn primary" href="#add">+ Add Partner</a>
+        </div>
       </div>
-    </div>
 
-    ${S.prospects.length === 0 ? `<div class="banner demo">
-      ${icon('sparkle')}
-      <span>${previewSample
-        ? `<b>Sample pipeline preview (${data.prospects.length} demo leads).</b> Your live account (${esc(S.user?.email || 'signed in')}) has 0 leads right now, so we loaded an interactive example so you can test clicking, editing, and dragging.`
-        : `<b>0 leads in your pipeline yet.</b> Add your first wedding planner or preview the sample pipeline.`}</span>
-      <span class="grow"></span>
-      <button class="btn sm" data-act="toggle-preview">${previewSample ? 'Show empty pipeline' : 'Show sample preview'}</button>
-      <a class="btn sm primary" href="#add">${icon('plus', 14)} Add real leads</a>
-    </div>` : ''}
+      ${S.prospects.length === 0 ? `<div class="banner demo">
+        ${icon('sparkle')}
+        <span>${previewSample
+          ? `<b>Sample pipeline preview (${data.prospects.length} demo leads).</b> Your live account (${esc(S.user?.email || 'signed in')}) has 0 leads right now, so we loaded an interactive example.`
+          : `<b>0 leads in your pipeline yet.</b> Add your first wedding planner or preview the sample pipeline.`}</span>
+        <span class="grow"></span>
+        <button class="sail-btn xs" data-act="toggle-preview">${previewSample ? 'Show empty pipeline' : 'Show sample preview'}</button>
+        <a class="sail-btn xs primary" href="#add">+ Add real leads</a>
+      </div>` : ''}
 
-    ${renderJourneyBar(list, data)}
+      <!-- Stripe 6-Column Telemetry Strip -->
+      ${renderTelemetryStrip(list, data)}
 
-    <div class="filters">
-      <input type="search" id="f-q" placeholder="🔍 Search agency, person, email, villa, town…" value="${attr(f.q)}" aria-label="Search">
-      <select id="f-market" aria-label="Market / Country">
-        <option value="">🌍 All markets (50/50 Split)</option>
-        ${core.MARKETS.map((m) => `<option value="${m.key}" ${f.market === m.key ? 'selected' : ''}>${m.flag} ${esc(m.label)}</option>`).join('')}
-      </select>
-      <select id="f-location" aria-label="Location"><option value="">📍 All towns</option>${locations.map((l) => `<option ${f.location === l ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>
-      <select id="f-type" aria-label="Type"><option value="">All partner types</option>${Object.entries(TYPE).map(([k, v]) => `<option value="${k}" ${f.type === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
+      <!-- Stripe Main Directory Card -->
+      <div class="sail-card">
+        <!-- Stage Filter Tabs + Flow Toggle -->
+        <div class="sail-card-head" style="padding-bottom:0;border-bottom:1px solid var(--sail-line)">
+          <div class="sail-tabs" role="tablist">
+            <button class="sail-tab ${stageFilter === 'all' && !f.manualOnly ? 'active' : ''}" data-stage-filter="all">
+              All Partners <span class="sail-tab-count">${tabCounts.all}</span>
+            </button>
+            <button class="sail-tab ${stageFilter === 'engaged' ? 'active' : ''}" data-stage-filter="engaged">
+              Replied &amp; Engaged <span class="sail-tab-count">${tabCounts.engaged}</span>
+            </button>
+            <button class="sail-tab ${stageFilter === 'won' ? 'active' : ''}" data-stage-filter="won">
+              Partners Won <span class="sail-tab-count">${tabCounts.won}</span>
+            </button>
+            <button class="sail-tab ${stageFilter === 'cadence' ? 'active' : ''}" data-stage-filter="cadence">
+              Emailed (E1–E3) <span class="sail-tab-count">${tabCounts.cadence}</span>
+            </button>
+            <button class="sail-tab ${stageFilter === 'ready' ? 'active' : ''}" data-stage-filter="ready">
+              Ready to Email <span class="sail-tab-count">${tabCounts.ready}</span>
+            </button>
+            <button class="sail-tab ${stageFilter === 'manual' ? 'active' : ''}" data-stage-filter="manual">
+              Manual IG / WA <span class="sail-tab-count">${tabCounts.manual}</span>
+            </button>
+            <button class="sail-tab ${stageFilter === 'researching' ? 'active' : ''}" data-stage-filter="researching">
+              To Check <span class="sail-tab-count">${tabCounts.researching}</span>
+            </button>
+          </div>
 
-      <select id="f-segment" aria-label="Segment"><option value="">All agency sizes</option>${Object.entries(SEG).map(([k, v]) => `<option value="${k}" ${f.segment === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
-      <select id="f-language" aria-label="Language"><option value="">All languages</option>${['en', 'it', 'ru', 'de', 'fr'].map((l) => `<option value="${l}" ${f.language === l ? 'selected' : ''}>${l.toUpperCase()}</option>`).join('')}</select>
-      ${tags.length ? `<select id="f-tag" aria-label="Tag"><option value="">All tags</option>${tags.map((t) => `<option ${f.tag === t ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>` : ''}
-      <label class="check small" title="Hide leads scoring below 65/100"><input type="checkbox" id="f-highfit" ${f.onlyHighFit ? 'checked' : ''}> Only ≥ ${MIN_FIT_SCORE}/100 Fit</label>
-      <label class="check small"><input type="checkbox" id="f-closed" ${f.hideClosed ? 'checked' : ''}> Hide Declined</label>
-      <label class="check small" title="Show only bounced or missing-email leads that require manual IG/WhatsApp contact"><input type="checkbox" id="f-manual" ${f.manualOnly ? 'checked' : ''}> 📱 Manual Contact</label>
-      ${hasActiveFilters() || stageFilter !== 'all' ? `<button class="btn ghost sm" data-act="reset-filters">${icon('x', 14)} Reset filters</button>` : ''}
-    </div>
+          <div class="row" style="gap:8px;padding-bottom:8px;align-items:center">
+            <button class="sail-btn xs ${f.showFlow || f.view === 'flow' ? 'primary' : ''}" data-act="toggle-flow-panel">
+              ${f.showFlow || f.view === 'flow' ? 'Hide Pipeline Flow' : 'Pipeline Flow'}
+            </button>
+            <button class="sail-btn xs" data-act="export-csv" title="Download CSV">Export CSV</button>
+          </div>
+        </div>
 
-    ${f.view === 'flow'
-      ? flowView(list, data, touchesByP, hidden)
-      : f.view === 'board'
-        ? boardView(list, data, touchesByP, hidden)
-        : listView(list, data, touchesByP)}`;
+        <!-- Compact Stripe Filter Bar -->
+        <div class="sail-filter-bar">
+          <input type="search" class="sail-input" id="f-q" placeholder="Filter agency, contact, email, villa, town…" value="${attr(f.q)}" style="width:240px" aria-label="Search">
+          <select class="sail-select" id="f-market" aria-label="Market / Country">
+            <option value="">All markets</option>
+            ${core.MARKETS.map((m) => `<option value="${m.key}" ${f.market === m.key ? 'selected' : ''}>${m.flag} ${esc(m.label)}</option>`).join('')}
+          </select>
+          <select class="sail-select" id="f-location" aria-label="Location">
+            <option value="">All towns</option>
+            ${locations.map((l) => `<option ${f.location === l ? 'selected' : ''}>${esc(l)}</option>`).join('')}
+          </select>
+          <select class="sail-select" id="f-type" aria-label="Type">
+            <option value="">All partner types</option>
+            ${Object.entries(TYPE).map(([k, v]) => `<option value="${k}" ${f.type === k ? 'selected' : ''}>${v}</option>`).join('')}
+          </select>
+          <select class="sail-select" id="f-segment" aria-label="Segment">
+            <option value="">All segments</option>
+            ${Object.entries(SEG).map(([k, v]) => `<option value="${k}" ${f.segment === k ? 'selected' : ''}>${v}</option>`).join('')}
+          </select>
+          <select class="sail-select" id="f-sort" aria-label="Sort prospects">
+            <option value="score" ${f.sort === 'score' ? 'selected' : ''}>Sort: Best Fit (/100)</option>
+            <option value="last" ${f.sort === 'last' ? 'selected' : ''}>Sort: Recent Activity</option>
+            <option value="stage" ${f.sort === 'stage' ? 'selected' : ''}>Sort: Pipeline Stage</option>
+            <option value="name" ${f.sort === 'name' ? 'selected' : ''}>Sort: Name (A–Z)</option>
+          </select>
+          <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--sail-body);cursor:pointer">
+            <input type="checkbox" id="f-highfit" ${f.onlyHighFit ? 'checked' : ''}> ≥ ${MIN_FIT_SCORE}/100
+          </label>
+          <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--sail-body);cursor:pointer">
+            <input type="checkbox" id="f-closed" ${f.hideClosed ? 'checked' : ''}> Hide Closed
+          </label>
+          ${hasActiveFilters() || stageFilter !== 'all' ? `<button class="sail-btn xs" data-act="reset-filters">Reset Filters</button>` : ''}
+        </div>
+
+        ${f.showFlow && f.view !== 'flow' ? `<div style="padding:14px 18px;border-bottom:1px solid var(--sail-line);background:#F8FAFC">${flowDiagramOnly(list, data)}</div>` : ''}
+
+        ${f.view === 'flow'
+          ? `<div style="padding:14px 18px">${flowView(list, data, touchesByP, hidden)}</div>`
+          : f.view === 'board'
+            ? `<div style="padding:14px 18px">${boardView(list, data, touchesByP, hidden)}</div>`
+            : listView(list, data, touchesByP)}
+      </div>
+    </div>`;
   }
 
   function flowView(list, data, touchesByP) {
@@ -873,9 +980,100 @@ export function render(el) {
     </div>`;
   }
 
+  function flowDiagramOnly(list, data) {
+    const flow = core.buildPathExploration(list, data.touches, data.opps, {
+      steps: f.steps,
+      selectedPath,
+      expandedCols,
+      maxNodesPerCol: 6,
+    });
+    lastFlow = flow;
+    selectedPath = { ...flow.selectedPath };
+    syncSession();
+    const hasSel = flow.breadcrumbs.length > 0;
+    return `
+      <div class="row between" style="margin-bottom:10px;flex-wrap:wrap;gap:8px">
+        <div class="row" style="gap:6px;flex-wrap:wrap">
+          ${core.PATH_PRESETS.map((pr) => {
+            const info = PRESET_HELP[pr.key] || { label: pr.label, desc: '' };
+            return `<button class="sail-btn xs ${f.preset === pr.key ? 'primary' : ''}" data-preset="${attr(pr.key)}" title="${attr(info.desc)}">${esc(info.label)}</button>`;
+          }).join('')}
+        </div>
+        <div class="row" style="gap:6px">
+          ${hasSel ? `<button class="sail-btn xs" data-act="path-reset">Reset Flow Filter</button>` : ''}
+        </div>
+      </div>
+      <div class="path-scroll" style="background:#FFF;border:1px solid var(--sail-line);border-radius:6px;padding:12px">
+        <div class="path-inner" style="width:${flow.svgWidth}px">
+          <svg class="path-svg" width="${flow.svgWidth}" height="${flow.svgHeight}" viewBox="0 0 ${flow.svgWidth} ${flow.svgHeight}" role="img" aria-label="Interactive pipeline flow">
+            <g class="path-links">
+              ${flow.links.map((l) => {
+                const stateCls = hasSel ? (l.highlighted ? 'hi' : 'dim') : '';
+                return `<path class="path-link tone-${attr(l.tone)} ${stateCls}" d="${l.d}" data-col="${l.col}" data-src="${attr(l.sourceKey)}" data-dst="${attr(l.targetKey)}"/>`;
+              }).join('')}
+            </g>
+            <g class="path-nodes">
+              ${flow.columns.map((col) => col.nodes.map((n) => {
+                const hitW = col.index < flow.columns.length - 1 ? Math.min(186, flow.colStride - 24) : 190;
+                const labelX = n.x + flow.barWidth + 10;
+                const labelY = n.y + 13;
+                const countY = n.y + 30;
+                const niceLabel = friendlyNodeLabel(n.label);
+                const shortLabel = niceLabel.length > 23 ? `${niceLabel.slice(0, 22)}…` : niceLabel;
+                const stateCls = `${n.selected ? 'selected' : ''} ${hasSel && !n.highlighted ? 'dim' : ''}`;
+                return `<g class="path-node tone-${attr(n.tone)} ${stateCls}" data-col="${col.index}" data-node="${attr(n.key)}" tabindex="0" role="button">
+                  <rect class="node-hit" x="${n.x - 4}" y="${n.y - 3}" width="${hitW}" height="${n.slotHeight + 4}"/>
+                  <rect class="node-bar" x="${n.x}" y="${n.y}" width="${flow.barWidth}" height="${n.barHeight}" rx="2"/>
+                  <text class="node-label" x="${labelX}" y="${labelY}">${esc(shortLabel)}</text>
+                  <text class="node-count" x="${labelX}" y="${countY}">${n.count} <tspan class="node-pct">${pct(n.shareOfCol)}</tspan></text>
+                </g>`;
+              }).join('')).join('')}
+            </g>
+          </svg>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderSequenceBadge(p, pTouches) {
+    const sentSteps = new Set(
+      pTouches.filter((t) => t.direction === 'out' && t.state === 'sent').map((t) => t.step_name)
+    );
+    const schedSteps = new Set(
+      pTouches.filter((t) => t.direction === 'out' && t.state === 'approved').map((t) => t.step_name)
+    );
+    const e1Done = sentSteps.has('T1_intro') || ['t1_sent', 't2_sent', 't3_sent', 't4_sent', 'replied', 'rate_card_sent', 'in_conversation', 'quote_requested', 'fam_offered', 'partner_won'].includes(p.status);
+    const e2Done = sentSteps.has('T3_followup') || ['t3_sent', 't4_sent'].includes(p.status);
+    const e3Done = sentSteps.has('T4_breakup') || p.status === 't4_sent';
+
+    const e1Cls = e1Done ? 'done' : schedSteps.has('T1_intro') ? 'sched' : '';
+    const e2Cls = e2Done ? 'done' : schedSteps.has('T3_followup') ? 'sched' : '';
+    const e3Cls = e3Done ? 'done' : schedSteps.has('T4_breakup') ? 'sched' : '';
+
+    return `<div class="sail-seq-steps" title="3-Step Email Sequence Progress">
+      <span class="sail-seq-step ${e1Cls}">E1${e1Done ? ' ✓' : schedSteps.has('T1_intro') ? ' ⏱' : ''}</span>
+      <span class="sail-seq-step ${e2Cls}">E2${e2Done ? ' ✓' : schedSteps.has('T3_followup') ? ' ⏱' : ''}</span>
+      <span class="sail-seq-step ${e3Cls}">E3${e3Done ? ' ✓' : schedSteps.has('T4_breakup') ? ' ⏱' : ''}</span>
+    </div>`;
+  }
+
   function listView(list, data, touchesByP) {
+    let baseList = list;
+    if (f.showFlow && Object.keys(selectedPath).length > 0) {
+      const flow = core.buildPathExploration(list, data.touches, data.opps, {
+        steps: f.steps,
+        selectedPath,
+        expandedCols,
+        maxNodesPerCol: 6,
+      });
+      lastFlow = flow;
+      baseList = flow.matchedProspects;
+    } else {
+      lastFlow = { matchedProspects: list };
+    }
+
     const sgObj = STAGE_GROUPS.find((g) => g.key === stageFilter) || STAGE_GROUPS[0];
-    const filteredList = stageFilter === 'all' ? list : list.filter((p) => sgObj.match(p));
+    const filteredList = stageFilter === 'all' ? baseList : baseList.filter((p) => sgObj.match(p));
     const sorters = {
       score: (a, b) => core.priorityScore(b).score - core.priorityScore(a).score,
       name: (a, b) => a.agency_name.localeCompare(b.agency_name),
@@ -883,30 +1081,141 @@ export function render(el) {
       last: (a, b) => new Date(b.last_touch_at || 0) - new Date(a.last_touch_at || 0),
     };
     const rows = [...filteredList].sort(sorters[f.sort] || sorters.score);
-    const th = (k, label, cls = '') => `<th class="${cls}"><button class="btn ghost sm" data-sort="${k}" style="padding:0;text-transform:inherit;letter-spacing:inherit;font-size:inherit;color:${f.sort === k ? 'var(--ink)' : 'inherit'}">${label}</button></th>`;
-    return `<div class="card flush table-wrap"><table><thead><tr>${th('score', 'Fit Score')}${th('name', 'Agency')}<th>Contact Person</th><th>Email</th><th>Town</th><th>Email 1 Opener (Hook)</th>${th('stage', 'Current Step')}${th('last', 'Last Activity')}<th>Next Step</th><th>Actions</th></tr></thead><tbody>
-      ${rows.map((p) => {
-        const na = nextAction(p, touchesByP.get(p.id) || [], data.settings);
-        const sc = core.priorityScore(p).score;
-        return `<tr class="clickable" data-open="${attr(p.id)}" tabindex="0" role="button" aria-label="${attr(p.agency_name)}">
-          <td><span class="score ${sc >= MIN_FIT_SCORE ? 'hi' : 'low'}">${sc}/100</span></td>
-          <td><b>${esc(p.agency_name)}</b><div class="small muted">${esc(TYPE[p.type] || p.type || 'Planner')}</div></td>
-          <td>${esc(p.contact_name || '—')}</td>
-          <td class="small">${p.email ? esc(p.email) : '<span class="chip warn">Missing email</span>'}</td>
-          <td>${esc(p.location || '—')}</td>
-          <td class="small" style="max-width:220px">${p.personalization_hook ? `“${esc(p.personalization_hook)}”` : '<span class="chip warn">Missing note</span>'}</td>
-          <td><span class="chip">${esc(plainStage(p.status))}</span></td>
-          <td class="small">${esc(ago(p.last_touch_at))}</td>
-          <td class="small muted">${esc(na.text)}</td>
-          <td>
-            <div class="row" style="gap:4px">
-              ${!p.email || !p.personalization_hook ? `<button class="btn sm primary" data-ai-research="${attr(p.id)}">🤖 AI</button>` : ''}
-              <button class="btn ghost sm" data-quick-edit="${attr(p.id)}">${icon('edit', 13)} Edit</button>
-            </div>
-          </td>
-        </tr>`;
-      }).join('')}
-      </tbody></table></div>`;
+
+    if (!rows.length) {
+      return `<div style="padding:36px 20px;text-align:center;color:var(--sail-muted)">
+        <div style="font-size:14px;font-weight:600;color:var(--sail-ink)">No wedding planner partners match the active filter</div>
+        <div style="margin-top:10px;display:flex;justify-content:center;gap:8px">
+          <button class="sail-btn xs primary" data-act="reset-filters">Reset Filters</button>
+          <a class="sail-btn xs" href="#add">+ Add Partner</a>
+        </div>
+      </div>`;
+    }
+
+    return `
+      <div class="sail-table-wrap">
+        <table class="sail-table" style="table-layout:fixed;width:100%">
+          <thead>
+            <tr>
+              <th style="width:9%">Fit &amp; Market</th>
+              <th style="width:19%">Agency &amp; Territory</th>
+              <th style="width:20%">Contact &amp; Direct Channels</th>
+              <th style="width:22%">Email 1 Opener &amp; Villas</th>
+              <th style="width:15%">Sequence &amp; Timing</th>
+              <th style="width:15%">Stage &amp; Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((p) => {
+              const pTouches = touchesByP.get(p.id) || [];
+              const na = nextAction(p, pTouches, data.settings);
+              const pr = core.priorityScore(p);
+              const sc = pr.score;
+              const scoreCls = sc >= 80 ? 'ok' : sc >= MIN_FIT_SCORE ? 'lux' : 'warn';
+              const scoreTip = pr.parts?.length
+                ? `Fit Score ${sc}/100: ${pr.parts.map((x) => `${x.label || x.why} (${x.pts > 0 ? '+' : ''}${x.pts})`).join(', ')}`
+                : `Fit Score ${sc}/100`;
+              const mkt = p.market || core.inferMarket(p);
+              const webHref = p.website ? (/^https?:\/\//i.test(p.website) ? p.website : `https://${p.website}`) : '';
+              const hasEmail = !!(p.email && String(p.email).trim());
+              const isManual = isManualLead(p);
+              const isBounced = p.email_status === 'bounced';
+              const cleanPhone = (p.whatsapp || p.phone || '').replace(/[^0-9+]/g, '');
+              const igHandle = p.instagram ? p.instagram.replace(/^@/, '') : '';
+              const isResearchingNow = pathSession.researchingIds.has(p.id);
+              const venues = Array.isArray(p.key_venues) ? p.key_venues.slice(0, 2) : [];
+
+              let emailBadge = '';
+              if (isBounced) emailBadge = '<span class="sail-pill warn" style="font-size:10px;padding:1px 5px">Bounced</span>';
+              else if (p.enrichment?.verification?.resultcode === 1 || ['mx_ok', 'valid'].includes(p.email_status)) {
+                emailBadge = '<span class="sail-pill ok" style="font-size:10px;padding:1px 5px">MX OK</span>';
+              } else if (!hasEmail) {
+                emailBadge = '<span class="sail-pill missing" style="font-size:10px;padding:1px 5px">No Email</span>';
+              }
+
+              return `<tr class="clickable" data-open="${attr(p.id)}" tabindex="0" role="button" aria-label="${attr(p.agency_name)}">
+                <td>
+                  <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">
+                    <span class="sail-pill ${scoreCls}" data-tip="${attr(scoreTip)}" style="font-variant-numeric:tabular-nums">
+                      <span class="sail-pill-dot"></span>${sc}/100
+                    </span>
+                    <span class="sail-pill std" style="font-size:10.5px;padding:1px 6px" title="${attr(core.marketLabel(mkt))}">
+                      ${core.marketFlag(mkt)} ${esc(mkt.toUpperCase())}
+                    </span>
+                  </div>
+                </td>
+
+                <td>
+                  <div style="font-weight:600;color:var(--sail-ink);font-size:13px;line-height:1.3">
+                    ${webHref
+                      ? `<a href="${attr(webHref)}" target="_blank" rel="noopener" data-stop-card style="color:inherit;text-decoration:none;border-bottom:1px dotted #94A3B8" title="Open ${attr(p.website)}">${esc(p.agency_name)} ↗</a>`
+                      : esc(p.agency_name)}
+                  </div>
+                  <div style="font-size:11.5px;color:var(--sail-muted);margin-top:3px">
+                    ${esc(p.location || 'Lake Como')} · ${esc(TYPE[p.type] || p.type || 'Wedding planner')}
+                  </div>
+                </td>
+
+                <td>
+                  <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+                    <span style="font-weight:600;color:var(--sail-ink);font-size:12.5px">${esc(p.contact_name || 'Planning Team')}</span>
+                    ${emailBadge}
+                  </div>
+                  <div style="font-size:11.5px;color:var(--sail-body);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(p.email || '')}">
+                    ${hasEmail ? `<a href="mailto:${attr(p.email)}" data-stop-card style="color:var(--sail-body);text-decoration:none">${esc(p.email)}</a>` : '<span style="color:var(--sail-muted)">Manual social outreach</span>'}
+                  </div>
+                  <div class="row" style="gap:6px;margin-top:4px;font-size:11px;flex-wrap:wrap">
+                    ${cleanPhone ? `<a href="https://wa.me/${cleanPhone.replace(/^\+/, '')}" target="_blank" rel="noopener" data-stop-card style="color:var(--sail-accent);font-weight:600">WhatsApp ↗</a>` : ''}
+                    ${igHandle ? `<a href="https://instagram.com/${attr(igHandle)}" target="_blank" rel="noopener" data-stop-card style="color:var(--sail-body)">@${esc(igHandle)} ↗</a>` : ''}
+                  </div>
+                </td>
+
+                <td>
+                  ${p.personalization_hook
+                    ? `<div class="sail-hook-clamp" data-quick-edit="${attr(p.id)}" data-stop-card title="Click to edit Email 1 opener: ${attr(p.personalization_hook)}">“${esc(p.personalization_hook)}”</div>`
+                    : `<button class="sail-btn xs" data-quick-edit="${attr(p.id)}" data-stop-card>+ Add 1-line opener</button>`}
+                  ${venues.length ? `<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">
+                    ${venues.map((v) => `<span class="sail-pill std" style="font-size:10px;padding:0 5px">${esc(v)}</span>`).join('')}
+                  </div>` : ''}
+                </td>
+
+                <td>
+                  ${renderSequenceBadge(p, pTouches)}
+                  <div style="font-size:11.5px;color:var(--sail-body);margin-top:4px;line-height:1.3">
+                    ${esc(na.text || plainStage(p.status))}
+                  </div>
+                  ${p.last_touch_at ? `<div style="font-size:10.5px;color:var(--sail-muted);margin-top:2px">Last touch ${esc(ago(p.last_touch_at))}</div>` : ''}
+                </td>
+
+                <td data-stop-card>
+                  <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start">
+                    <select class="sail-tier-select ${['replied', 'rate_card_sent', 'in_conversation', 'quote_requested', 'partner_won'].includes(p.status) ? 'lux' : 'std'}" data-stage-select="${attr(p.id)}" style="max-width:100%" aria-label="Change stage for ${attr(p.agency_name)}">
+                      <option value="manual" ${isManual ? 'selected' : ''}>Manual (IG / WA)</option>
+                      ${core.STAGES.map((s) => `<option value="${s.key}" ${!isManual && p.status === s.key ? 'selected' : ''}>${esc(plainStage(s.key))}</option>`).join('')}
+                    </select>
+                    <div class="row" style="gap:4px;flex-wrap:wrap">
+                      ${isManual ? `
+                        <button class="sail-btn xs primary" data-copy-pitch="${attr(p.id)}" title="Copy personalized WA/IG pitch">Copy Pitch</button>
+                        <button class="sail-btn xs" data-log-touch-card="${attr(p.id)}">Log Touch</button>
+                      ` : isResearchingNow ? `
+                        <button class="sail-btn xs" disabled>⏳ Researching…</button>
+                      ` : (!hasEmail || !p.personalization_hook) ? `
+                        <button class="sail-btn xs primary" data-ai-research="${attr(p.id)}">AI Research</button>
+                      ` : na.canMarkReady ? `
+                        <button class="sail-btn xs primary" data-mark-ready="${attr(p.id)}">Approve &amp; Draft</button>
+                      ` : na.canDraft ? `
+                        <button class="sail-btn xs primary" data-draft-next="${attr(p.id)}">Draft Email</button>
+                      ` : ''}
+                      <button class="sail-btn xs" data-quick-edit="${attr(p.id)}">Edit</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
   }
 
   async function fetchJinaStorySignals(targetUrl) {
@@ -1777,6 +2086,10 @@ export function render(el) {
     if (act === 'purge-low-fit') {
       await purgeLowFitProspects();
       return;
+    }
+    if (act === 'toggle-flow-panel') {
+      f.showFlow = !f.showFlow;
+      return persist();
     }
     if (act === 'toggle-customize') {
       customizeCols = !customizeCols;

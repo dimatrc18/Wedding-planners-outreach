@@ -15,6 +15,7 @@ export const sentimentChip = (t) => `${t.reply_sentiment ? `<span class="chip ${
 
 let focusIdx = 0;
 let editing = null;
+let todayTab = 'queue'; // 'queue' | 'scheduled' | 'manual' | 'bus' | 'research'
 
 function lintHtml(l) {
   if (!l || (!l.errors?.length && !l.warnings?.length)) return '';
@@ -164,109 +165,404 @@ export function render(el) {
     return ts && core.localDateKey(new Date(ts), S.settings.timezone || 'Europe/Rome') === todayKey;
   }).length;
   const wpSentToday = S.touches.filter((t) => t.direction === 'out' && t.state === 'sent' && t.sent_at && core.localDateKey(new Date(t.sent_at), S.settings.timezone || 'Europe/Rome') === todayKey).length;
+  const manualLeads = (S.prospects || []).filter((p) => p.email_status === 'bounced' || !p.email || ['no_mx', 'invalid'].includes(p.email_status));
+  const busRepliedRows = busList.filter((b) => b.outreach_stage === 'replied' || b.replied_at);
+
+  const renderQueuePanel = () => `
+    <div style="padding:16px 18px;display:flex;flex-direction:column;gap:16px">
+      ${d.replies.length ? `
+        <div>
+          <div class="row between" style="margin-bottom:8px">
+            <span style="font-size:13.5px;font-weight:600;color:var(--sail-ink)">Inbound Replies Waiting (${d.replies.length})</span>
+            <span style="font-size:11.5px;color:var(--sail-muted)">Aim to answer positive replies within 15 minutes</span>
+          </div>
+          <div class="card flush list">${d.replies.map((t) => {
+            const p = A.prospectById(t.prospect_id);
+            const sugg = S.touches.find((x) => x.suggested_for === t.id && ['draft', 'approved'].includes(x.state));
+            const late = now - new Date(t.replied_at || t.created_at) > 86400000;
+            return `<div class="list-item" style="align-items:flex-start">
+              <div class="t stack" style="gap:6px">
+                <div class="row"><a href="#prospect/${attr(p.id)}"><b>${esc(p.agency_name)}</b></a>${sentimentChip(t)}${t.classification?.needs_human ? `<span class="chip bad" title="${attr(t.classification.escalation_reason || 'Needs human reply')}">Needs human</span>` : ''}<span class="chip ${late ? 'warn' : ''}">${esc(ago(t.replied_at || t.created_at))}</span><span class="chip outline">${esc(t.channel)}</span></div>
+                <div class="reply-quote">${esc(core.stripQuoted(t.body || '').slice(0, 420))}</div>
+                <div class="actions">${sugg ? `<button class="sail-btn xs primary" data-act="goto-draft" data-id="${attr(sugg.id)}">Review suggested reply</button>` : `<button class="sail-btn xs" data-act="draft-reply" data-id="${attr(t.id)}">Draft a reply</button>`}
+                  <button class="sail-btn xs" data-act="handled" data-id="${attr(t.id)}">Mark handled</button>
+                  ${p.phone ? `<a class="sail-btn xs" href="tel:${attr(p.phone)}">Call</a>` : ''}</div>
+              </div></div>`;
+          }).join('')}</div>
+        </div>
+      ` : ''}
+
+      <div id="queue">
+        <div class="row between" style="margin-bottom:10px;flex-wrap:wrap;gap:8px">
+          <div class="row" style="gap:8px;align-items:center">
+            <span style="font-size:13.5px;font-weight:600;color:var(--sail-ink)">Draft Approval Queue (${drafts.length})</span>
+            <span style="font-size:11.5px;color:var(--sail-muted)">J/K move · A approve · E edit · S skip</span>
+          </div>
+          <div class="row" style="gap:6px">
+            ${clean.length > 1 ? `<button class="sail-btn xs primary" data-act="approve-clean">Approve ${clean.length} clean drafts</button>` : ''}
+            ${drafts.length > 0 ? `<button class="sail-btn xs" data-act="refresh-all">Refresh All Drafts</button>` : ''}
+          </div>
+        </div>
+        ${drafts.length
+          ? `<div class="queue">${drafts.map(draftCard).join('')}</div>`
+          : `<div style="padding:20px;border:1px dashed var(--sail-line);border-radius:6px;background:#F8FAFC;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--sail-ink)">
+                  ${dueUndrafted ? `${plural(dueUndrafted, 'step is', 'steps are')} due to draft.` : 'Approval queue is clear — all approved drafts are in the Scheduled Outbox.'}
+                </div>
+                <div style="font-size:12px;color:var(--sail-muted);margin-top:2px">
+                  ${d.scheduled.length} approved wedding emails are queued to send automatically during recipient morning windows (08:30–14:30).
+                </div>
+              </div>
+              <div class="row" style="gap:8px">
+                ${dueUndrafted ? `<button class="sail-btn xs primary" data-act="gen">Draft ${plural(dueUndrafted, 'due step')}</button>` : ''}
+                <button class="sail-btn xs primary" data-today-tab="scheduled">View Scheduled Outbox (${d.scheduled.length}) →</button>
+                <button class="sail-btn xs" data-today-tab="manual">Manual IG / WA (${manualLeads.length}) →</button>
+              </div>
+            </div>`}
+      </div>
+
+      ${d.failed.length ? `
+        <div>
+          <div class="row between" style="margin-bottom:8px">
+            <span style="font-size:13.5px;font-weight:600;color:var(--sail-ink)">Failed Sends (${d.failed.length})</span>
+            <div class="row" style="gap:6px">
+              <button class="sail-btn xs primary" data-act="retry-all-failed">Retry all (${d.failed.length})</button>
+              <button class="sail-btn xs" data-act="unapprove-all-failed">Move all to drafts</button>
+            </div>
+          </div>
+          <div class="card flush list">${d.failed.map((t) => `<div class="list-item"><div class="t"><b>${esc(A.prospectById(t.prospect_id)?.agency_name)}</b><span class="small" style="color:var(--bad)">${esc(t.error || '')}</span></div>
+            <div class="row gap-xs">
+              <button class="sail-btn xs" data-act="retry-failed" data-id="${attr(t.id)}">Retry</button>
+              <button class="sail-btn xs" data-act="unapprove" data-id="${attr(t.id)}">Back to drafts</button>
+            </div></div>`).join('')}</div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+
+  const renderScheduledPanel = () => {
+    if (!d.scheduled.length) {
+      return `<div style="padding:32px 20px;text-align:center;color:var(--sail-muted)">No scheduled emails waiting in the outbox right now.</div>`;
+    }
+    return `
+      <div class="sail-table-wrap">
+        <table class="sail-table" style="table-layout:fixed;width:100%">
+          <thead>
+            <tr>
+              <th style="width:22%">Agency &amp; Market</th>
+              <th style="width:18%">Recipient Email</th>
+              <th style="width:28%">Step &amp; Subject Line</th>
+              <th style="width:16%">Scheduled Slot &amp; Gate</th>
+              <th style="width:16%">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${d.scheduled.map((t) => {
+              const p = A.prospectById(t.prospect_id) || {};
+              const mkt = p.market || core.inferMarket(p);
+              const gate = core.canSend(t, p, A.touchesOf(p.id), S.settings, { now, sentToday: 0, firstSendAt: core.firstColdSend(S.touches) });
+              return `
+                <tr>
+                  <td>
+                    <div style="font-weight:600;color:var(--sail-ink);font-size:13px">
+                      <a href="#prospect/${attr(p.id)}" style="color:inherit;text-decoration:none">${esc(p.agency_name || 'Agency')}</a>
+                    </div>
+                    <div style="margin-top:3px;display:flex;gap:5px;align-items:center">
+                      <span class="sail-pill std" style="font-size:10px;padding:0 5px">${core.marketFlag(mkt)} ${esc(mkt.toUpperCase())}</span>
+                      <span style="font-size:11px;color:var(--sail-muted)">${esc(p.location || '')}</span>
+                    </div>
+                  </td>
+                  <td style="font-size:12px;color:var(--sail-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(p.email || '')}">
+                    ${esc(p.email || '—')}
+                  </td>
+                  <td>
+                    <span class="sail-pill info" style="font-size:10.5px;padding:1px 6px">${esc(stepLabel(t.step_name))}</span>
+                    <div style="font-size:12px;color:var(--sail-ink);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(t.subject || '')}">
+                      ${esc(t.subject || '')}
+                    </div>
+                  </td>
+                  <td>
+                    <span class="sail-pill ${gate.ok ? 'ok' : 'std'}" style="font-size:10.5px;padding:1px 6px" title="${attr(gate.ok ? 'Inside local send window' : core.BLOCK_REASONS[gate.reason] || gate.reason)}">
+                      <span class="sail-pill-dot"></span>${gate.ok ? 'Window Open' : esc(gate.reason === 'outside_window' ? 'Waiting Local Window' : gate.reason)}
+                    </span>
+                    <div style="font-size:11px;color:var(--sail-muted);margin-top:3px;font-variant-numeric:tabular-nums">
+                      ${t.scheduled_at ? esc(fmtDateTime(t.scheduled_at)) : 'Next cron run'}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="row" style="gap:5px;flex-wrap:wrap">
+                      ${smtp || isDemo()
+                        ? `<button class="sail-btn xs primary" data-act="send-now" data-id="${attr(t.id)}">Send Now</button>`
+                        : `<a class="sail-btn xs primary" href="${attr(A.mailtoHref(t))}">Mail ↗</a><button class="sail-btn xs" data-act="mark-sent" data-id="${attr(t.id)}">Mark Sent</button>`}
+                      <button class="sail-btn xs" data-act="unapprove" data-id="${attr(t.id)}">To Drafts</button>
+                    </div>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  };
+
+  const renderManualPanel = () => {
+    if (!manualLeads.length) {
+      return `<div style="padding:32px 20px;text-align:center;color:var(--sail-muted)">No manual IG / WhatsApp leads right now.</div>`;
+    }
+    return `
+      <div class="sail-table-wrap">
+        <table class="sail-table" style="table-layout:fixed;width:100%">
+          <thead>
+            <tr>
+              <th style="width:22%">Agency &amp; Territory</th>
+              <th style="width:16%">Reason</th>
+              <th style="width:24%">Direct Social / Phone</th>
+              <th style="width:22%">Opening Hook</th>
+              <th style="width:16%">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${manualLeads.map((p) => {
+              const mkt = p.market || core.inferMarket(p);
+              const cleanPhone = (p.whatsapp || p.phone || '').replace(/[^0-9+]/g, '');
+              const igHandle = p.instagram ? p.instagram.replace(/^@/, '') : '';
+              return `
+                <tr>
+                  <td>
+                    <div style="font-weight:600;color:var(--sail-ink);font-size:13px">
+                      <a href="#prospect/${attr(p.id)}" style="color:inherit;text-decoration:none">${esc(p.agency_name)}</a>
+                    </div>
+                    <div style="font-size:11px;color:var(--sail-muted);margin-top:2px">
+                      ${core.marketFlag(mkt)} ${esc(p.location || 'Lake Como')}
+                    </div>
+                  </td>
+                  <td>
+                    <span class="sail-pill ${p.email_status === 'bounced' ? 'warn' : 'missing'}" style="font-size:10.5px;padding:1px 6px">
+                      ${p.email_status === 'bounced' ? 'Email Bounced' : 'Missing Email'}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="row" style="gap:6px;flex-wrap:wrap;font-size:12px">
+                      ${cleanPhone ? `<a class="sail-btn xs primary" href="https://wa.me/${cleanPhone.replace(/^\+/, '')}" target="_blank" rel="noopener">WhatsApp ↗</a>` : ''}
+                      ${igHandle ? `<a class="sail-btn xs" href="https://instagram.com/${attr(igHandle)}" target="_blank" rel="noopener">@${esc(igHandle)} ↗</a>` : `<a class="sail-btn xs" href="https://www.google.com/search?q=${encodeURIComponent(p.agency_name + ' Instagram wedding')}" target="_blank" rel="noopener">Find IG ↗</a>`}
+                    </div>
+                  </td>
+                  <td style="font-size:11.5px;color:var(--sail-body)">
+                    ${esc((p.personalization_hook || 'Bespoke Lake Como & Milan guest logistics').slice(0, 95))}
+                  </td>
+                  <td>
+                    <div class="row" style="gap:5px">
+                      <button class="sail-btn xs primary" data-act="copy-social-pitch" data-id="${attr(p.id)}">Copy Pitch</button>
+                      <a class="sail-btn xs" href="#prospect/${attr(p.id)}">Open →</a>
+                    </div>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  };
+
+  const renderBusPanel = () => `
+    <div class="sail-table-wrap">
+      <table class="sail-table" style="table-layout:fixed;width:100%">
+        <thead>
+          <tr>
+            <th style="width:22%">Bus Operator &amp; City</th>
+            <th style="width:18%">Direct Contact</th>
+            <th style="width:24%">Verified Fleet &amp; Capacity</th>
+            <th style="width:22%">Latest Reply / Rate Summary</th>
+            <th style="width:14%">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${busRepliedRows.map((b) => `
+            <tr>
+              <td>
+                <div style="font-weight:600;color:var(--sail-ink);font-size:13px">${esc(b.name)}</div>
+                <div style="font-size:11.5px;color:var(--sail-muted);margin-top:2px">${esc(b.base_city || 'Lombardy')}</div>
+              </td>
+              <td>
+                <div style="font-size:12px;font-weight:600;color:var(--sail-ink)">${esc(b.contact_person || 'Dispatch')}</div>
+                <div style="font-size:11.5px;color:var(--sail-body);margin-top:2px">${esc(b.phone || b.email || '')}</div>
+              </td>
+              <td>
+                <span class="sail-pill info" style="font-size:10.5px;padding:1px 6px">${esc(b.pax_capacity || 'Minibus / Coach')}</span>
+                <div style="font-size:11.5px;color:var(--sail-body);margin-top:3px">${esc(b.bus_models || '')}</div>
+              </td>
+              <td style="font-size:11.5px;color:var(--sail-body);line-height:1.35">
+                ${esc(b.rate_standby || b.rate_hourly || b.notes || 'Replied')}
+              </td>
+              <td>
+                <div class="row" style="gap:5px;flex-wrap:wrap">
+                  <a class="sail-btn xs primary" href="#fleet_showcase">Rate Ledger →</a>
+                  <a class="sail-btn xs" href="#bus_partners">Directory →</a>
+                </div>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  const renderResearchPanel = () => `
+    <div style="padding:16px 18px">
+      ${d.research.length ? `
+        <div class="sail-table-wrap">
+          <table class="sail-table" style="table-layout:fixed;width:100%">
+            <thead>
+              <tr>
+                <th style="width:12%">Fit Score</th>
+                <th style="width:28%">Agency</th>
+                <th style="width:20%">Town &amp; Market</th>
+                <th style="width:26%">Missing Info</th>
+                <th style="width:14%">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${d.research.slice(0, 15).map((p) => {
+                const sc = core.priorityScore(p).score;
+                return `
+                  <tr>
+                    <td><span class="sail-pill ${sc >= 65 ? 'ok' : 'warn'}">${sc}/100</span></td>
+                    <td style="font-weight:600;color:var(--sail-ink)">${esc(p.agency_name)}</td>
+                    <td style="font-size:12px;color:var(--sail-body)">${esc(p.location || 'Lake Como')}</td>
+                    <td style="font-size:12px;color:var(--sail-muted)">${esc(A.readinessProblems(p).join(' · ') || 'Ready to approve')}</td>
+                    <td><a class="sail-btn xs primary" href="#prospect/${attr(p.id)}">Research →</a></td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      ` : `<div style="padding:24px;text-align:center;color:var(--sail-muted)">All leads are researched! <a href="#add">Add prospects</a>.</div>`}
+    </div>
+  `;
 
   el.innerHTML = `
-  <div class="page-head">
-    <div>
-      <div class="label eyebrow" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <span>${esc(now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Rome' }))}</span>
-        ${live ? `<span class="chip ok" style="font-size:11px;padding:1px 7px" title="Auto-refreshes every 30s and via Supabase Realtime">● Live${S.lastSyncAt ? ` · synced ${esc(ago(S.lastSyncAt))}` : ''}</span>` : ''}
+  <div class="sail-page">
+    <!-- Stripe Header -->
+    <div class="sail-header">
+      <div>
+        <div class="sail-breadcrumb">
+          <span>OUTREACH COMMAND CENTER</span>
+          <span style="color:#CBD5E1">/</span>
+          <span>${esc(now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Rome' }).toUpperCase())}</span>
+          ${live ? `<span class="sail-pill ok" style="padding:1px 7px;font-size:10.5px;margin-left:4px" title="Auto-refreshes every 30s and via Supabase Realtime"><span class="sail-pill-dot"></span>Live${S.lastSyncAt ? ` · synced ${esc(ago(S.lastSyncAt))}` : ''}</span>` : ''}
+        </div>
+        <h1 class="sail-title">Today Command Center</h1>
+        <div class="sail-subtitle">
+          All-time wedding planner &amp; bus partner outreach telemetry, scheduled outbox, and inbound replies.
+        </div>
       </div>
-      <h1>Today</h1>
-    </div>
-    <div class="row">
-      ${peak && S.settings.season_mode === 'auto' ? '<span class="chip warn" title="May to September: planners are in execution mode. Daily cap is halved.">Peak season: half speed</span>' : ''}
-      ${S.settings.season_mode === 'paused' ? '<span class="chip bad">Campaign paused</span>' : ''}
-      ${live ? `<button class="btn ghost sm" data-act="sync-live" title="Pull latest live data from Supabase">↻ Sync now</button>` : ''}
-      ${dueUndrafted ? `<button class="btn primary" data-act="gen">${icon('sparkle', 16)} Draft ${plural(dueUndrafted, 'due step')}</button>` : ''}
-      <a class="btn" href="#add">${icon('plus', 16)} Add prospects</a>
-    </div>
-  </div>
-  <div class="stack lg">
-    <div class="kpis">
-      ${kpiTile('Positive reply rate', pct(m.positiveRate.p, m.positiveRate.p !== null && m.positiveRate.p < 0.1 ? 1 : 0), m.positiveRate.n ? `${m.positive} of ${m.contacted} · likely ${pct(m.positiveRate.lo)} to ${pct(m.positiveRate.hi)}` : 'No contacts yet', rateMeter(m.positiveRate, tg.positive_reply_rate))}
-      ${kpiTile('Replies waiting', `${d.replies.length}`, d.replies.length ? `oldest ${ago(d.replies.reduce((a, t) => (new Date(t.replied_at || t.created_at || Date.now()) < new Date(a) ? (t.replied_at || t.created_at) : a), d.replies[0]?.replied_at || d.replies[0]?.created_at || new Date().toISOString()))}` : 'Inbox clear', '')}
-      ${kpiTile('Partners won', `${m.won}`, `target ${tg.partners_won} to ${tg.partners_won_high} this season · ${m.contacted} contacted (${m.emailsSent} sent all-time${wpSentToday ? `, ${wpSentToday} today` : ''})`, rateMeter({ p: Math.min(m.won / tg.partners_won_high, 1), lo: Math.min(m.won / tg.partners_won_high, 1), hi: Math.min(m.won / tg.partners_won_high, 1) }, tg.partners_won / tg.partners_won_high, 1))}
-      ${kpiTile('Bounced emails', `${m.bounced}`, `${m.bounced} bounced (${pct(m.bounceRate.p || (m.emailsSent > 0 ? m.bounced / m.emailsSent : 0), 1)}) · ${m.emailsSent} sent all-time`, rateMeter(m.bounceRate, S.settings.bounce_pause_rate || 0.05, 0.2))}
-    </div>
-    <a class="card row nowrap" href="#analytics" style="text-decoration:none;color:inherit">${icon('chart')}<span class="grow"><b>${esc(v.headline)}</b> <span class="muted small">${esc(v.detail)}</span></span><span class="small">Analytics →</span></a>
 
-    <div class="card row" style="gap:12px;align-items:center;flex-wrap:wrap;background:#F8FAFC;border-color:#E2E8F0">
-      <span class="chip ok" style="font-weight:600">🚌 Bus Fleet Outreach</span>
-      <span class="grow" style="font-size:13px">
-        <b>${busContacted}</b> bus operators contacted · <b>${busReplied}</b> replied (Como Driver, Avantgarde, Landway, Como Limo Lux) · <b>${busTotalSent}</b> emails sent all-time${busSentToday ? ` (${busSentToday} today)` : ''}
-      </span>
-      <a class="btn sm primary" href="#fleet_showcase">Fleet &amp; Rate Ledger →</a>
-      <a class="btn sm" href="#bus_partners">All ${busList.length} Operators →</a>
+      <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
+        ${live ? `<button class="sail-btn" data-act="sync-live" title="Pull latest live data from Supabase">↻ Sync Now</button>` : ''}
+        ${dueUndrafted ? `<button class="sail-btn primary" data-act="gen">Draft ${plural(dueUndrafted, 'Due Step')}</button>` : ''}
+        <a class="sail-btn" href="#fleet_showcase">Fleet &amp; Rate Ledger →</a>
+        <a class="sail-btn" href="#bus_partners">Bus Partners (${busList.length}) →</a>
+        <a class="sail-btn primary" href="#add">+ Add Prospects</a>
+      </div>
     </div>
 
-    ${live && !smtp && S.health && !S.health.error ? `<div class="banner warn">${icon('mail')}<span><b>Mailbox not connected.</b> Approved emails wait under Scheduled. Send them from your mail app with “Open in mail”, then “Mark sent”. <a href="#settings">Connect it</a>.</span></div>` : ''}
+    <!-- Stripe 5-Column All-Time Telemetry Strip -->
+    <div class="sail-stat-strip">
+      <div class="sail-stat-cell clickable ${todayTab === 'scheduled' ? 'active-filter' : ''}" data-today-tab="scheduled" title="Click to inspect Scheduled Outbox">
+        <div class="sail-stat-label">
+          <span>Wedding Planners Contacted</span>
+          <span class="sail-pill ok" style="padding:1px 6px;font-size:10.5px">All-Time</span>
+        </div>
+        <div class="sail-stat-val">${m.contacted} <span style="font-size:13px;font-weight:500;color:var(--sail-muted)">/ ${(S.prospects || []).length} leads</span></div>
+        <div class="sail-stat-meta">${m.emailsSent} emails sent all-time${wpSentToday ? ` · ${wpSentToday} today` : ''}</div>
+      </div>
 
-    ${d.replies.length ? `<section class="section"><div class="section-head"><h2>Replies waiting <span class="count">${d.replies.length}</span></h2><span class="hint">Aim to answer positive replies within 15 minutes</span></div>
-      <div class="card flush list">${d.replies.map((t) => {
-        const p = A.prospectById(t.prospect_id);
-        const sugg = S.touches.find((x) => x.suggested_for === t.id && ['draft', 'approved'].includes(x.state));
-        const late = now - new Date(t.replied_at || t.created_at) > 86400000;
-        return `<div class="list-item" style="align-items:flex-start">
-          <div class="t stack" style="gap:6px">
-            <div class="row"><a href="#prospect/${attr(p.id)}"><b>${esc(p.agency_name)}</b></a>${sentimentChip(t)}${t.classification?.needs_human ? `<span class="chip bad" title="${attr(t.classification.escalation_reason || 'Needs human reply')}">Needs human</span>` : ''}<span class="chip ${late ? 'warn' : ''}">${esc(ago(t.replied_at || t.created_at))}</span><span class="chip outline">${esc(t.channel)}</span></div>
-            <div class="reply-quote">${esc(core.stripQuoted(t.body || '').slice(0, 420))}</div>
-            <div class="actions">${sugg ? `<button class="btn primary sm" data-act="goto-draft" data-id="${attr(sugg.id)}">${icon('reply', 15)} Review suggested reply</button>` : `<button class="btn sm" data-act="draft-reply" data-id="${attr(t.id)}">${icon('reply', 15)} Draft a reply</button>`}
-              <button class="btn ghost sm" data-act="handled" data-id="${attr(t.id)}">Mark handled</button>
-              ${p.phone ? `<a class="btn ghost sm" href="tel:${attr(p.phone)}">${icon('phone', 15)} Call</a>` : ''}</div>
-          </div></div>`;
-      }).join('')}</div></section>` : ''}
+      <div class="sail-stat-cell clickable ${todayTab === 'bus' ? 'active-filter' : ''}" data-today-tab="bus" title="Click to inspect Bus Fleet Replies">
+        <div class="sail-stat-label">
+          <span>Bus Operators Contacted</span>
+          <span class="sail-pill lux" style="padding:1px 6px;font-size:10.5px">${busReplied} Replied</span>
+        </div>
+        <div class="sail-stat-val">${busContacted} <span style="font-size:13px;font-weight:500;color:var(--sail-muted)">/ ${busList.length} fleet</span></div>
+        <div class="sail-stat-meta">${busTotalSent} emails sent all-time${busSentToday ? ` · ${busSentToday} today` : ''}</div>
+      </div>
 
-    ${(() => {
-      const manualLeads = (S.prospects || []).filter((p) => p.email_status === 'bounced' || !p.email || ['no_mx', 'invalid'].includes(p.email_status));
-      if (!manualLeads.length) return '';
-      const bCnt = manualLeads.filter((p) => p.email_status === 'bounced').length;
-      const mCnt = manualLeads.filter((p) => !p.email).length;
-      return `<div class="banner warn" style="margin-bottom:18px">
-        <span>📱 <b>${plural(manualLeads.length, 'partner')} need manual outreach</b> (${bCnt ? `${bCnt} email bounced` : ''}${bCnt && mCnt ? ', ' : ''}${mCnt ? `${mCnt} missing email` : ''}). Reach out directly via Instagram DM or WhatsApp.</span>
-        <span class="grow"></span>
-        <a class="btn sm" href="#pipeline">Open in Pipeline →</a>
-      </div>`;
-    })()}
+      <div class="sail-stat-cell clickable ${todayTab === 'queue' ? 'active-filter' : ''}" data-today-tab="queue" title="Click to view Replies & Approval Queue">
+        <div class="sail-stat-label">
+          <span>Positive Reply Rate</span>
+          <span class="sail-pill info" style="padding:1px 6px;font-size:10.5px">${d.replies.length} Waiting</span>
+        </div>
+        <div class="sail-stat-val">${m.contacted > 0 ? pct(m.positiveRate.p, m.positiveRate.p !== null && m.positiveRate.p < 0.1 ? 1 : 0) : '0%'} <span style="font-size:13px;font-weight:500;color:var(--sail-muted)">· ${m.won} won</span></div>
+        <div class="sail-stat-meta">${m.positive} of ${m.contacted} wedding + ${busReplied} bus replies</div>
+      </div>
 
-    <section class="section" id="queue">
-      <div class="section-head"><h2>Approval queue <span class="count">${drafts.length}</span></h2>
-        <div class="row">
-          ${clean.length > 1 ? `<button class="btn sm" data-act="approve-clean">Approve ${clean.length} with no warnings</button>` : ''}
-          ${drafts.length > 0 ? `<button class="btn ghost sm" data-act="refresh-all" title="Refresh all drafts with latest 2027 season templates and direct subjects">Refresh All Drafts</button>` : ''}
-          <span class="hint">J/K move · A approve · E edit · S skip</span>
-        </div></div>
-      ${drafts.length ? `<div class="queue">${drafts.map(draftCard).join('')}</div>` : `<div class="empty">${dueUndrafted ? `${plural(dueUndrafted, 'step is', 'steps are')} due. <button class="btn sm primary" data-act="gen">Draft them now</button>` : 'Nothing to approve. New drafts appear here when a step falls due.'}</div>`}
-    </section>
+      <div class="sail-stat-cell clickable ${todayTab === 'scheduled' ? 'active-filter' : ''}" data-today-tab="scheduled" title="Click to inspect all ${d.scheduled.length} scheduled emails">
+        <div class="sail-stat-label">
+          <span>Scheduled Outbox</span>
+          <span class="sail-pill info" style="padding:1px 6px;font-size:10.5px">Auto-Cron</span>
+        </div>
+        <div class="sail-stat-val">${d.scheduled.length} <span style="font-size:13px;font-weight:500;color:var(--sail-muted)">queued</span></div>
+        <div class="sail-stat-meta">Window ${esc(S.settings.window_start)}–${esc(S.settings.window_end)} local</div>
+      </div>
 
-    ${d.scheduled.length ? `<section class="section"><div class="section-head"><h2>Scheduled <span class="count">${d.scheduled.length}</span></h2><span class="hint">Send window ${esc(S.settings.window_start)} to ${esc(S.settings.window_end)}, ${esc(S.settings.send_days.map((x) => ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][x]).join(' '))}</span></div>
-      <div class="card flush list">${d.scheduled.map((t) => {
-        const p = A.prospectById(t.prospect_id);
-        const gate = core.canSend(t, p, A.touchesOf(p.id), S.settings, { now, sentToday: 0, firstSendAt: core.firstColdSend(S.touches) });
-        return `<div class="list-item"><div class="t"><b>${esc(p.agency_name)}</b><span class="small muted">${esc(stepLabel(t.step_name))} · ${esc(t.subject || '')}</span></div>
-          <span class="small num ${gate.ok ? '' : 'faint'}" title="${attr(gate.ok ? 'Ready to send' : core.BLOCK_REASONS[gate.reason] || gate.reason)}">${t.scheduled_at ? esc(fmtDateTime(t.scheduled_at)) : 'next run'}</span>
-          ${smtp || isDemo() ? `<button class="btn sm" data-act="send-now" data-id="${attr(t.id)}">${icon('send', 15)} Send now</button>` : `<a class="btn sm" href="${attr(A.mailtoHref(t))}">${icon('mail', 15)} Open in mail</a><button class="btn sm" data-act="mark-sent" data-id="${attr(t.id)}">Mark sent</button>`}
-          <button class="btn ghost sm" data-act="unapprove" data-id="${attr(t.id)}">Back to drafts</button></div>`;
-      }).join('')}</div></section>` : ''}
+      <div class="sail-stat-cell clickable ${todayTab === 'manual' ? 'active-filter' : ''}" data-today-tab="manual" title="Click to view Manual IG / WhatsApp leads">
+        <div class="sail-stat-label">
+          <span>Bounced &amp; Manual IG/WA</span>
+          <span class="sail-pill warn" style="padding:1px 6px;font-size:10.5px">${manualLeads.length} Manual</span>
+        </div>
+        <div class="sail-stat-val">${m.bounced} <span style="font-size:13px;font-weight:500;color:var(--sail-muted)">(${pct(m.bounceRate.p || (m.emailsSent > 0 ? m.bounced / m.emailsSent : 0), 1)})</span></div>
+        <div class="sail-stat-meta">${m.bounced} bounced of ${m.emailsSent} sent · ${manualLeads.length} social</div>
+      </div>
+    </div>
 
-    ${d.failed.length ? `<section class="section"><div class="section-head"><h2>Failed sends <span class="count">${d.failed.length}</span></h2>
-      <div class="row gap-xs">
-        <button class="btn sm" data-act="retry-all-failed">${icon('send', 14)} Retry all (${d.failed.length})</button>
-        <button class="btn ghost sm" data-act="unapprove-all-failed">${icon('undo', 14)} Move all to drafts</button>
-      </div></div>
-      <div class="card flush list">${d.failed.map((t) => `<div class="list-item"><div class="t"><b>${esc(A.prospectById(t.prospect_id)?.agency_name)}</b><span class="small" style="color:var(--bad)">${esc(t.error || '')}</span></div>
-        <div class="row gap-xs">
-          <button class="btn sm" data-act="retry-failed" data-id="${attr(t.id)}">Retry</button>
-          <button class="btn ghost sm" data-act="unapprove" data-id="${attr(t.id)}">Back to drafts</button>
-        </div></div>`).join('')}</div></section>` : ''}
+    <!-- Traction Verdict & Analytics Strip -->
+    <div class="sail-card" style="padding:11px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div class="row" style="gap:10px;align-items:center">
+        <span class="sail-pill info" style="font-size:11px">Campaign Verdict</span>
+        <span style="font-size:13px;font-weight:600;color:var(--sail-ink)">${esc(v.headline)}</span>
+        <span style="font-size:12.5px;color:var(--sail-muted)">${esc(v.detail)}</span>
+      </div>
+      <div class="row" style="gap:8px">
+        <a class="sail-btn xs" href="#pipeline">Open Partner Pipeline (${(S.prospects || []).length}) →</a>
+        <a class="sail-btn xs" href="#analytics">Full Analytics →</a>
+      </div>
+    </div>
 
-    ${d.reminders.length ? `<section class="section"><div class="section-head"><h2>Follow-ups & reminders <span class="count">${d.reminders.length}</span></h2></div>
-      <div class="card flush list">${d.reminders.map((r) => `<a class="list-item clickable" href="#prospect/${attr(r.p.id)}" style="color:inherit;text-decoration:none"><span class="dot ${r.kind === 'stale' || r.kind === 'quote' ? 'warn' : 'gold'}"></span><div class="t"><b>${esc(r.p.agency_name)}</b><span class="small muted">${esc(r.text)}</span></div><span class="chip">${esc(core.stageLabel(r.p.status))}</span></a>`).join('')}</div></section>` : ''}
+    <!-- Main Tabbed Workspace Card -->
+    <div class="sail-card">
+      <div class="sail-card-head" style="padding-bottom:0;border-bottom:1px solid var(--sail-line)">
+        <div class="sail-tabs" role="tablist">
+          <button class="sail-tab ${todayTab === 'queue' ? 'active' : ''}" data-today-tab="queue">
+            Approval &amp; Replies <span class="sail-tab-count">${drafts.length + d.replies.length}</span>
+          </button>
+          <button class="sail-tab ${todayTab === 'scheduled' ? 'active' : ''}" data-today-tab="scheduled">
+            Scheduled Outbox <span class="sail-tab-count">${d.scheduled.length}</span>
+          </button>
+          <button class="sail-tab ${todayTab === 'manual' ? 'active' : ''}" data-today-tab="manual">
+            Manual IG / WhatsApp <span class="sail-tab-count">${manualLeads.length}</span>
+          </button>
+          <button class="sail-tab ${todayTab === 'bus' ? 'active' : ''}" data-today-tab="bus">
+            Bus Partner Replies <span class="sail-tab-count">${busRepliedRows.length}</span>
+          </button>
+          <button class="sail-tab ${todayTab === 'research' ? 'active' : ''}" data-today-tab="research">
+            Research Queue <span class="sail-tab-count">${d.research.length}</span>
+          </button>
+        </div>
+      </div>
 
-    <section class="section"><div class="section-head"><h2>Research next <span class="count">${d.research.length}</span></h2><span class="hint">Highest Fit Score (/100) first · Target ≥ 65/100.</span></div>
-      ${d.research.length ? `<div class="card flush list">${d.research.slice(0, 6).map((p) => `<a class="list-item clickable" href="#prospect/${attr(p.id)}" style="color:inherit;text-decoration:none"><span class="score ${core.priorityScore(p).score >= 65 ? 'hi' : 'low'}">${core.priorityScore(p).score}/100</span><div class="t"><b>${esc(p.agency_name)}</b><span class="small muted">${esc(A.readinessProblems(p).join(' · ') || 'Ready to move to Ready to Contact')}</span></div><span class="small">Research →</span></a>`).join('')}</div>` : '<div class="empty">Research list is empty. <a href="#add">Add prospects</a>.</div>'}
-      ${d.readyNoDraft.length ? `<p class="small muted">${plural(d.readyNoDraft.length, 'Ready prospect has', 'Ready prospects have')} no draft yet: ${d.readyNoDraft.slice(0, 5).map((p) => `<a href="#prospect/${attr(p.id)}">${esc(p.agency_name)}</a>`).join(', ')}.</p>` : ''}
-    </section>
+      ${todayTab === 'scheduled'
+        ? renderScheduledPanel()
+        : todayTab === 'manual'
+          ? renderManualPanel()
+          : todayTab === 'bus'
+            ? renderBusPanel()
+            : todayTab === 'research'
+              ? renderResearchPanel()
+              : renderQueuePanel()}
+    </div>
   </div>`;
   }
 
@@ -393,6 +689,16 @@ export function render(el) {
           if (key) { await A.draftReply(p, key, t); toast('Reply drafted in the queue'); }
           break;
         }
+        case 'copy-social-pitch': {
+          const p = A.prospectById(id);
+          if (p) {
+            const channel = p.whatsapp || p.phone ? 'whatsapp' : 'instagram';
+            const msg = core.buildSocialOpener(p, channel);
+            await copyText(msg);
+            toast(`Copied ${channel === 'whatsapp' ? 'WhatsApp' : 'Instagram'} pitch for ${p.agency_name}`);
+          }
+          break;
+        }
       }
     } catch (e) {
       toast(e.message, 'error');
@@ -400,6 +706,13 @@ export function render(el) {
   }
 
   el.addEventListener('click', (e) => {
+    const tabBtn = e.target.closest('[data-today-tab]');
+    if (tabBtn) {
+      e.preventDefault();
+      todayTab = tabBtn.dataset.todayTab || 'queue';
+      paint();
+      return;
+    }
     const b = e.target.closest('[data-act]');
     if (b) { e.preventDefault(); act(b.dataset.act, b.dataset.id, b); return; }
     const card = e.target.closest('[data-card]');
