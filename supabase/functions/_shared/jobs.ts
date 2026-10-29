@@ -375,8 +375,9 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
       const fromName = prospectLang === 'ru' ? 'Дмитрий | DOROGO Transfers' : 'Dmitri | DOROGO Transfers';
       const html = core.renderDorogoLuxuryHtmlEmail(t.body, { lang: prospectLang, fromEmail, pixelUrl, footerStyle: settings.email_footer_style || 'wordmark' });
       const cleanText = core.stripSignOff ? core.stripSignOff(t.body) : t.body;
+      const targetCc = t.cc_address || t.classification?.cc || p.enrichment?.cc_email || p.enrichment?.cc || null;
       const sendResult = await sendMail({
-        fromName, fromEmail, replyTo: settings.sender?.reply_to || fromEmail, to: targetTo, subject: t.subject, text: cleanText, html,
+        fromName, fromEmail, replyTo: settings.sender?.reply_to || fromEmail, to: targetTo, cc: targetCc, subject: t.subject, text: cleanText, html,
         lang: prospectLang,
         inReplyTo, references: threaded ? thread.map((x: any) => x.message_id).slice(-10) : [], attachments, pixelUrl,
         footerStyle: settings.email_footer_style || 'wordmark',
@@ -394,7 +395,7 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
         sentProspectsThisRun.add(p.id);
       }
       sentTotal++; sent++;
-      await logEvent(db, 'email_sent', { touch_id: t.id, step: t.step_name, to: targetTo, message_id: sentMessageId }, p.id, actor);
+      await logEvent(db, 'email_sent', { touch_id: t.id, step: t.step_name, to: targetTo, cc: targetCc, message_id: sentMessageId }, p.id, actor);
       results.push({ id: t.id, sent: true });
     } catch (e) {
       if (sentMessageId) {

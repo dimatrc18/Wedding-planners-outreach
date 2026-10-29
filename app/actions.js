@@ -209,18 +209,25 @@ export async function saveProspect(id, patch) {
  * Updates the prospect's email, marks it verified, clears bounce flags,
  * and re-queues Step 1 (Intro) into the active sending loop / Scheduled Outbox.
  */
-export async function rescueManualLead(p, newEmail, { autoApprove = true } = {}) {
+export async function rescueManualLead(p, newEmail, { ccEmail = null, autoApprove = true } = {}) {
   const email = (newEmail || '').trim().toLowerCase();
   if (!email || !core.isValidEmailSyntax(email)) {
     throw new Error('Please enter a valid email address');
   }
 
+  const cleanCc = ccEmail ? String(ccEmail).trim().toLowerCase() : null;
+  if (cleanCc && !core.isValidEmailSyntax(cleanCc)) {
+    throw new Error('Please enter a valid CC email address');
+  }
+
   // Clean known bad emails in enrichment if present
   const existingBad = (p.enrichment?.known_bad_emails || []).filter(
-    (e) => String(e).toLowerCase().trim() !== email
+    (e) => String(e).toLowerCase().trim() !== email && String(e).toLowerCase().trim() !== cleanCc
   );
   const updatedEnrichment = {
     ...(p.enrichment || {}),
+    cc: cleanCc,
+    cc_email: cleanCc,
     known_bad_emails: existingBad,
     verification: {
       status: 'valid',
@@ -278,12 +285,14 @@ export async function rescueManualLead(p, newEmail, { autoApprove = true } = {})
     (t) => t.step_name === 'T1_intro' && t.direction === 'out' && ['skipped', 'failed'].includes(t.state) && !t.bounced
   );
 
+  const touchClassification = cleanCc ? { cc: cleanCc } : null;
+
   if (autoApprove) {
     if (draft) {
       targetTouch = draft;
       const at = core.scheduleApproved(draft, p, S.settings, taken, { now, firstSendAt });
       scheduledAt = at;
-      await update('touches', draft.id, {
+      const patchData = {
         state: 'approved',
         to_address: email,
         approved_by: me(),
@@ -292,12 +301,14 @@ export async function rescueManualLead(p, newEmail, { autoApprove = true } = {})
         error: null,
         send_attempts: 0,
         bounced: false,
-      });
+      };
+      if (touchClassification) patchData.classification = { ...(draft.classification || {}), ...touchClassification };
+      await update('touches', draft.id, patchData);
     } else if (skipped) {
       targetTouch = skipped;
       const at = core.scheduleApproved(skipped, p, S.settings, taken, { now, firstSendAt });
       scheduledAt = at;
-      await update('touches', skipped.id, {
+      const patchData = {
         state: 'approved',
         to_address: email,
         approved_by: me(),
@@ -306,7 +317,9 @@ export async function rescueManualLead(p, newEmail, { autoApprove = true } = {})
         error: null,
         send_attempts: 0,
         bounced: false,
-      });
+      };
+      if (touchClassification) patchData.classification = { ...(skipped.classification || {}), ...touchClassification };
+      await update('touches', skipped.id, patchData);
     } else {
       const stepCfg = (S.settings.steps || core.DEFAULT_STEPS).find((s) => s.key === 'T1_intro');
       const d = core.buildDraft({ prospect: p, key: 'T1_intro', templates: S.templates, step: stepCfg });
@@ -330,6 +343,7 @@ export async function rescueManualLead(p, newEmail, { autoApprove = true } = {})
           send_attempts: 0,
           bounced: false,
         };
+        if (touchClassification) row.classification = touchClassification;
         const at = core.scheduleApproved(row, p, S.settings, taken, { now, firstSendAt });
         scheduledAt = at;
         row.scheduled_at = at ? at.toISOString() : null;
@@ -340,15 +354,19 @@ export async function rescueManualLead(p, newEmail, { autoApprove = true } = {})
   } else {
     if (draft) {
       targetTouch = draft;
-      await update('touches', draft.id, { to_address: email, error: null });
+      const patchData = { to_address: email, error: null };
+      if (touchClassification) patchData.classification = { ...(draft.classification || {}), ...touchClassification };
+      await update('touches', draft.id, patchData);
     } else if (skipped) {
       targetTouch = skipped;
-      await update('touches', skipped.id, { state: 'draft', to_address: email, error: null });
+      const patchData = { state: 'draft', to_address: email, error: null };
+      if (touchClassification) patchData.classification = { ...(skipped.classification || {}), ...touchClassification };
+      await update('touches', skipped.id, patchData);
     } else {
       const stepCfg = (S.settings.steps || core.DEFAULT_STEPS).find((s) => s.key === 'T1_intro');
       const d = core.buildDraft({ prospect: p, key: 'T1_intro', templates: S.templates, step: stepCfg });
       if (d) {
-        const [ins] = await insert('touches', {
+        const row = {
           prospect_id: p.id,
           channel: 'email',
           direction: 'out',
@@ -361,13 +379,15 @@ export async function rescueManualLead(p, newEmail, { autoApprove = true } = {})
           variant: d.variant,
           lint: d.lint,
           attach_rate_card: d.attach_rate_card,
-        });
+        };
+        if (touchClassification) row.classification = touchClassification;
+        const [ins] = await insert('touches', row);
         targetTouch = ins;
       }
     }
   }
 
-  log('lead_rescued', { prospect_id: p.id, agency: p.agency_name, email, autoApprove, scheduledAt }, p.id);
+  log('lead_rescued', { prospect_id: p.id, agency: p.agency_name, email, cc: cleanCc, autoApprove, scheduledAt }, p.id);
   return { prospect: p, touch: targetTouch, scheduledAt };
 }
 

@@ -367,6 +367,15 @@ export function render(el) {
                       <div style="font-size:10px;color:var(--sail-muted);margin-top:3px;max-width:140px;overflow:hidden;text-overflow:ellipsis" title="${attr(p.bounced_email || p.email)}">
                         ${esc(p.bounced_email || p.email)}
                       </div>
+                    ` : (p.email ? `
+                      <div style="font-size:10px;color:var(--sail-muted);margin-top:3px;max-width:140px;overflow:hidden;text-overflow:ellipsis" title="${attr(p.email)}">
+                        ${esc(p.email)}
+                      </div>
+                    ` : '')}
+                    ${p.enrichment?.cc_email ? `
+                      <div style="font-size:9.5px;color:var(--sail-primary, #635bff);margin-top:2px;max-width:140px;overflow:hidden;text-overflow:ellipsis" title="CC: ${attr(p.enrichment.cc_email)}">
+                        CC: ${esc(p.enrichment.cc_email)}
+                      </div>
                     ` : ''}
                   </td>
                   <td>
@@ -821,7 +830,7 @@ export function openRescueLeadModal(p, onSaved) {
         </div>
 
         <label style="display:flex;flex-direction:column;gap:6px">
-          <span style="font-weight:600;font-size:13px;color:var(--sail-ink, #0f172a)">New Contact Email Address</span>
+          <span style="font-weight:600;font-size:13px;color:var(--sail-ink, #0f172a)">New Contact Email Address (To)</span>
           <input
             id="rescue-email-field"
             type="email"
@@ -832,6 +841,25 @@ export function openRescueLeadModal(p, onSaved) {
             style="width:100%;font-size:14px;padding:8px 12px;border:1px solid var(--sail-border, #cbd5e1);border-radius:6px;background:var(--sail-input-bg, #fff);color:var(--sail-ink, #0f172a)"
             autocomplete="email"
           />
+        </label>
+
+        <label style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-weight:600;font-size:13px;color:var(--sail-ink, #0f172a)">CC Email (Optional)</span>
+            <span style="font-size:11px;color:var(--sail-muted, #64748b)">Secondary Founder / Director</span>
+          </div>
+          <input
+            id="rescue-cc-field"
+            type="email"
+            class="input"
+            placeholder="e.g. cofounder@${webDomain || 'agency.com'}"
+            value="${esc(p.enrichment?.cc_email || p.enrichment?.cc || '')}"
+            style="width:100%;font-size:14px;padding:8px 12px;border:1px solid var(--sail-border, #cbd5e1);border-radius:6px;background:var(--sail-input-bg, #fff);color:var(--sail-ink, #0f172a)"
+            autocomplete="email"
+          />
+          <span style="font-size:11px;color:var(--sail-muted, #64748b)">
+            If you find 2 or more relevant emails for the agency, enter the second contact here to CC them automatically.
+          </span>
         </label>
 
         <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;user-select:none;background:var(--surface, #fff);border:1px solid var(--sail-border, #e2e8f0);padding:10px 12px;border-radius:6px">
@@ -855,6 +883,7 @@ export function openRescueLeadModal(p, onSaved) {
     onMount: (box, close) => {
       const form = box.querySelector('#rescue-form');
       const input = box.querySelector('#rescue-email-field');
+      const ccInput = box.querySelector('#rescue-cc-field');
       const check = box.querySelector('#rescue-requeue-check');
       const submitBtn = box.querySelector('#rescue-submit-btn');
 
@@ -863,9 +892,15 @@ export function openRescueLeadModal(p, onSaved) {
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const entered = (input.value || '').trim();
+        const enteredCc = (ccInput?.value || '').trim();
         if (!entered || !core.isValidEmailSyntax(entered)) {
-          toast('Please enter a valid email address', 'error');
+          toast('Please enter a valid primary email address', 'error');
           input.focus();
+          return;
+        }
+        if (enteredCc && !core.isValidEmailSyntax(enteredCc)) {
+          toast('Please enter a valid CC email address or leave blank', 'error');
+          ccInput?.focus();
           return;
         }
 
@@ -874,7 +909,7 @@ export function openRescueLeadModal(p, onSaved) {
 
         try {
           const autoQueue = check ? check.checked : true;
-          const res = await A.rescueManualLead(p, entered, { autoApprove: autoQueue });
+          const res = await A.rescueManualLead(p, entered, { ccEmail: enteredCc || null, autoApprove: autoQueue });
           close(res);
           if (onSaved) onSaved(res);
         } catch (err) {

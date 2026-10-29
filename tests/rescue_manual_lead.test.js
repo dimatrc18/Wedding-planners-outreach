@@ -153,3 +153,38 @@ test('rescueManualLead: supports autoApprove: false to place in review queue (dr
   const foundInDrafts = td.drafts.some((t) => t.prospect_id === p.id);
   assert.ok(foundInDrafts, 'Touch must be in drafts review queue');
 });
+
+test('rescueManualLead: validates and stores CC email for secondary founders/partners', async () => {
+  await startDemo();
+  const p = {
+    id: 'p-cc-test',
+    agency_name: 'Enjay Events Test',
+    email: 'info@bad-enjay.com',
+    email_status: 'invalid',
+    status: 'researching',
+    location: 'Mumbai',
+    market: 'in',
+    language: 'en',
+    personalization_hook: 'Saw your palace setups in Udaipur',
+  };
+  S.prospects.push(p);
+
+  // Reject invalid CC format
+  await assert.rejects(
+    async () => A.rescueManualLead(p, 'ns@enjayevents.com', { ccEmail: 'invalid-cc-email' }),
+    /Please enter a valid CC email address/
+  );
+
+  // Successfully rescue with valid primary and CC
+  const res = await A.rescueManualLead(p, 'ns@enjayevents.com', {
+    ccEmail: 'harsheen@enjayevents.com',
+    autoApprove: true,
+  });
+
+  assert.equal(p.email, 'ns@enjayevents.com');
+  assert.equal(p.enrichment?.cc, 'harsheen@enjayevents.com');
+  assert.equal(p.enrichment?.cc_email, 'harsheen@enjayevents.com');
+  assert.equal(res.touch.to_address, 'ns@enjayevents.com');
+  assert.equal(res.touch.classification?.cc, 'harsheen@enjayevents.com');
+  assert.equal(res.touch.state, 'approved');
+});

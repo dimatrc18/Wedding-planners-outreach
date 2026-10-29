@@ -32,14 +32,27 @@ export async function verifySmtp() {
 /**
  * Build and send one message using the DOROGO Executive Email template (Design 1 + plain-text fallback).
  * Returns { messageId, raw }.
- * opts: { fromName, fromEmail, replyTo, to, subject, text, inReplyTo, references[], attachments[], pixelUrl }
+ * opts: { fromName, fromEmail, replyTo, to, cc, subject, text, inReplyTo, references[], attachments[], pixelUrl }
  */
 export async function sendMail(opts: any) {
   const domain = (opts.fromEmail.split('@')[1] || 'dorogo.eu').trim();
   const messageId = `<${crypto.randomUUID()}@${domain}>`;
+
+  const toList = (Array.isArray(opts.to) ? opts.to : String(opts.to || '').split(','))
+    .map((s: string) => s.trim())
+    .filter(Boolean);
+
+  const ccList = opts.cc
+    ? (Array.isArray(opts.cc) ? opts.cc : String(opts.cc).split(','))
+        .map((s: string) => s.trim())
+        .filter(Boolean)
+    : [];
+
+  const envelopeRecipients = [...toList, ...ccList];
+
   const mail: any = {
     from: { name: opts.fromName, address: opts.fromEmail },
-    to: opts.to,
+    to: toList.join(', '),
     replyTo: opts.replyTo || opts.fromEmail,
     subject: opts.subject,
     text: opts.text,
@@ -48,12 +61,15 @@ export async function sendMail(opts: any) {
     headers: { 'List-Unsubscribe': `<mailto:${opts.fromEmail}?subject=unsubscribe>` },
     attachments: opts.attachments || [],
   };
+  if (ccList.length > 0) {
+    mail.cc = ccList.join(', ');
+  }
   if (opts.inReplyTo) mail.inReplyTo = opts.inReplyTo;
   if (opts.references?.length) mail.references = opts.references;
   const raw: Uint8Array = await new Promise((resolve, reject) =>
     new MailComposer(mail).compile().build((err: Error, msg: Uint8Array) => (err ? reject(err) : resolve(msg))));
   const t = nodemailer.createTransport(smtpConfig());
-  await t.sendMail({ envelope: { from: opts.fromEmail, to: [opts.to] }, raw });
+  await t.sendMail({ envelope: { from: opts.fromEmail, to: envelopeRecipients }, raw });
   return { messageId, raw };
 }
 
