@@ -92,7 +92,8 @@ test('Fleet Showcase Data: Separated Sprinter variants (Red, Black, Top VIP)', (
   const topVip = FLEET_LEDGER_ROWS.find((r) => r.id === 'avantgarde_sprinter_8_top_vip');
   assert.ok(topVip, 'Top VIP Sprinter must exist as separate vehicle');
   assert.equal(topVip.pax, 8);
-  assert.equal(topVip.standby.dispo_8h.net, 1200, 'Top VIP 8h must be €1,200 as quoted by driver');
+  assert.equal(topVip.standby.hourly.net, 140, 'Top VIP hourly must be €140/h as quoted by driver');
+  assert.equal(topVip.standby.dispo_8h.net, 1120, 'Top VIP 8h must be 8 x 140 = €1,120 as quoted by driver');
   assert.ok(topVip.photos.some((p) => p.src.endsWith('.mp4')), 'Top VIP must include video walkthrough');
 
   // Verify video file exists on disk

@@ -353,7 +353,7 @@ export const FLEET_LEDGER_ROWS = [
     categoryLabel: 'VIP Minivan (8 Pax Top)',
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: 'Top VIP allestimento speciale · Video walkthrough · 8h €1,200 (+IVA)',
+    tierSpec: 'Top VIP allestimento speciale · Video walkthrough · €140/h + IVA (8h €1,120 + IVA)',
     partnerName: 'Avantgarde Limousine Service (Milano Cab)',
     baseCity: 'Milano (Via Calatafimi 12)',
     contactPerson: 'Vincenzo Lombardi',
@@ -362,7 +362,7 @@ export const FLEET_LEDGER_ROWS = [
     website: 'https://www.avantgardelimousineservice.it/mezzi/',
     secondaryWebsite: 'https://www.milanocab.it',
     status: 'confirmed',
-    statusLabel: '8h €1,200 (+IVA) · Top VIP Allestimento Speciale',
+    statusLabel: '€140/h + IVA (8h €1,120 + IVA) · Top VIP Allestimento Speciale',
     repliedAt: '29 Oct 2026 · WA Confirmed',
     ratePdf: null,
     ratePdfName: null,
@@ -371,10 +371,12 @@ export const FLEET_LEDGER_ROWS = [
       mxp_como: { label: 'Malpensa (MXP) ⇄ Como', net: 380 }
     },
     standby: {
-      dispo_8h: { label: 'Disposizione 8h Top VIP (150 km inclusi)', net: 1200 },
-      dispo_8h_vip: { label: 'Disposizione 8h Top VIP (150 km inclusi)', net: 1200 },
-      extra_hour: null,
-      extra_wait: null
+      hourly: { label: 'Tariffa oraria a disposizione', net: 140 },
+      dispo_4h: { label: 'Disposizione 4h Top VIP', net: 560 },
+      dispo_8h: { label: 'Disposizione 8h Top VIP (150 km inclusi)', net: 1120 },
+      dispo_8h_vip: { label: 'Disposizione 8h Top VIP (150 km inclusi)', net: 1120 },
+      extra_hour: 140,
+      extra_wait: 140
     },
     terms: {
       payment: 'POS a bordo / Bonifico su fattura',
@@ -390,7 +392,7 @@ export const FLEET_LEDGER_ROWS = [
         src: 'assets/partner_fleet/avantgarde/top_8_pax.mp4',
         file: 'top 8 pax.mp4',
         title: 'Video Walkthrough — Sprinter Top 8 VIP (Allestimento Speciale)',
-        caption: 'Full HD video walkthrough of the Mercedes-Benz Sprinter Top 8 VIP trim (€1,200 / 8h + IVA).'
+        caption: 'Full HD video walkthrough of the Mercedes-Benz Sprinter Top 8 VIP trim (€140/h + IVA · €1,120 / 8h + IVA).'
       },
       {
         id: 'avantgarde_8p_bw_ext_1_top',
