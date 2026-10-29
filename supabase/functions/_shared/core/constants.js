@@ -82,6 +82,7 @@ export const DEFAULT_SETTINGS = {
   auto_approve_followups: true, // Follow-up messages (T3, T4, nudges) auto-approve and send without manual review
   notify_drafts_ready: false, // Do not spam telegram for background draft generation
   notify_draft_cards: false, // Do not send individual draft approval cards in Telegram; only alert on real partner replies
+  notify_outreach_sent: false, // Do not send Telegram notifications on outgoing emails; only alert when real people reply
   human_escalation_hours: 2,
   nurture_month_day: '10-01',
   targets: { open_rate: 0.5, positive_reply_rate: 0.10, positive_reply_rate_high: 0.15, ratecard_to_quote: 0.25, partners_won: 5, partners_won_high: 10 },

@@ -581,16 +581,6 @@ export async function sendDueBusPartners(db: any, settings: any, now = new Date(
         score: partner.relevance_score,
       }, null, actor);
 
-      await tgSend(
-        `🚌 <b>Bus Partner ${isFollowup ? 'Follow-Up (T2) Sent' : 'CEO Outreach Sent'}</b>\n\n` +
-        `Operator: <b>${tgEscape(partner.name)}</b> (${tgEscape(partner.base_city)})\n` +
-        `Email: <code>${tgEscape(partner.email)}</code>\n` +
-        `Step: <b>${stepKey}</b>\n` +
-        `Relevance Score: <b>${partner.relevance_score}/100</b>\n` +
-        `Verification: <b>${ver.provider} (${ver.result})</b>\n` +
-        `Sent at: ${sentAt.slice(0, 16)}`,
-      );
-
       sent++;
     } catch (sendErr) {
       console.error(`Failed to send bus outreach to ${partner.name}:`, (sendErr as Error).message);
