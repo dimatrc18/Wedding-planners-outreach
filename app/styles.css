@@ -731,34 +731,56 @@ tr.clickable { cursor: pointer; } tr.clickable:hover td { background: var(--surf
 
 .sail-table-wrap {
   width: 100%;
-  overflow-x: auto;
+  max-width: 100%;
+  overflow-x: hidden; /* Fits in one single screen without horizontal swipe */
 }
 .sail-table {
   width: 100%;
+  max-width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   text-align: left;
 }
 .sail-table th {
   background: #F8FAFC;
   border-bottom: 1px solid var(--sail-line);
-  padding: 9px 14px;
+  padding: 8px 10px;
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--sail-muted);
-  white-space: nowrap;
+  white-space: normal; /* Allows normal elegant wrapping to eliminate text collisions */
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.25;
+  vertical-align: bottom;
+}
+.sail-th-title {
+  color: var(--sail-muted);
+  font-weight: 600;
+}
+.sail-th-sub {
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--sail-accent);
+  margin-top: 2px;
+  line-height: 1.2;
 }
 .sail-table th.num, .sail-table td.num {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 .sail-table td {
-  padding: 12px 14px;
+  padding: 9px 10px;
   border-bottom: 1px solid var(--sail-line-soft);
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--sail-ink);
   vertical-align: top;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 .sail-table tbody tr:last-child td {
   border-bottom: none;
@@ -768,6 +790,15 @@ tr.clickable { cursor: pointer; } tr.clickable:hover td { background: var(--surf
 }
 .sail-table tbody tr:hover {
   background-color: #F8FAFC;
+}
+
+@media (max-width: 768px) {
+  .sail-table-wrap {
+    overflow-x: auto;
+  }
+  .sail-table {
+    min-width: 680px;
+  }
 }
 
 /* Semantic Stripe Pills */
@@ -836,15 +867,17 @@ tr.clickable { cursor: pointer; } tr.clickable:hover td { background: var(--surf
 .sail-rate-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 4px 10px;
-  font-size: 12.5px;
+  gap: 2.5px 6px;
+  font-size: 11.5px;
   align-items: baseline;
+  width: 100%;
 }
 .sail-rate-route {
   color: var(--sail-body);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0; /* Ensures proper text truncation in grid columns without expanding cell */
 }
 .sail-rate-amt {
   font-weight: 600;
@@ -854,19 +887,19 @@ tr.clickable { cursor: pointer; } tr.clickable:hover td { background: var(--surf
   white-space: nowrap;
 }
 .sail-rate-sub {
-  font-size: 11px;
+  font-size: 10.5px;
   color: var(--sail-muted);
   font-weight: 400;
   white-space: nowrap;
 }
 
 .sail-rate-bullets {
-  margin: 7px 0 0;
-  padding: 6px 0 0 15px;
+  margin: 6px 0 0;
+  padding: 5px 0 0 12px;
   border-top: 1px dashed var(--sail-line);
-  font-size: 11.5px;
+  font-size: 11px;
   color: var(--sail-body);
-  line-height: 1.45;
+  line-height: 1.4;
   font-variant-numeric: tabular-nums;
 }
 .sail-rate-bullets li {
@@ -887,15 +920,17 @@ tr.clickable { cursor: pointer; } tr.clickable:hover td { background: var(--surf
   -webkit-appearance: none;
   display: inline-flex;
   align-items: center;
-  padding: 3px 22px 3px 8px;
+  padding: 2.5px 18px 2.5px 6px;
   border-radius: 4px;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 600;
-  line-height: 1.35;
+  line-height: 1.3;
   cursor: pointer;
   background-repeat: no-repeat;
-  background-position: right 6px center;
-  background-size: 10px 10px;
+  background-position: right 5px center;
+  background-size: 9px 9px;
+  max-width: 100%;
+  box-sizing: border-box;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 16 16' fill='none' stroke='%23475569' stroke-width='2'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
 }
 .sail-tier-select.lux {
@@ -913,22 +948,34 @@ tr.clickable { cursor: pointer; } tr.clickable:hover td { background: var(--surf
 .sail-thumb-strip {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   flex-wrap: wrap;
+  max-width: 100%;
 }
 .sail-thumb {
-  width: 44px;
-  height: 32px;
-  border-radius: 4px;
+  width: 36px;
+  height: 26px;
+  border-radius: 3px;
   object-fit: cover;
   border: 1px solid var(--sail-line);
   cursor: pointer;
   transition: transform 0.12s ease, border-color 0.12s ease;
   background: #F1F5F9;
+  flex-shrink: 0;
 }
 .sail-thumb:hover {
-  transform: scale(1.06);
+  transform: scale(1.08);
   border-color: var(--sail-accent);
+}
+.sail-thumb-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #0A2540;
+  color: #FFFFFF;
+  font-size: 9px;
+  font-weight: 700;
+  border-color: #0A2540;
 }
 
 /* Inspection Gallery Cards */

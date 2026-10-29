@@ -556,7 +556,7 @@ function formatEur(amount) {
 
 function modeBadgeText(mode) {
   if (mode === 'vat') return 'Gross (+10% VAT)';
-  return 'Net B2B (Excl. 10% VAT)';
+  return 'Net B2B';
 }
 
 export async function render(el) {
@@ -681,17 +681,31 @@ export async function render(el) {
           </div>
         </div>
 
-        <!-- Primary Stripe Data Table -->
+        <!-- Primary Stripe Data Table (Single-screen fit, zero horizontal swipe) -->
         <div class="sail-table-wrap">
           <table class="sail-table" style="table-layout:fixed;width:100%">
             <thead>
               <tr>
-                <th style="width:15%">Vehicle &amp; Capacity</th>
-                <th style="width:11%">Class Tier</th>
-                <th style="width:16%">Partner &amp; Direct Contact</th>
-                <th style="width:23%">Transfer Rates (${esc(modeBadgeText(pricingMode))})</th>
-                <th style="width:20%">Standby / Disposizione</th>
-                <th style="width:15%">Inspection Photos &amp; Rate Sheet</th>
+                <th style="width:15%">
+                  <div class="sail-th-title">Vehicle &amp; Capacity</div>
+                </th>
+                <th style="width:11%">
+                  <div class="sail-th-title">Class Tier</div>
+                </th>
+                <th style="width:17%">
+                  <div class="sail-th-title">Partner &amp; Contact</div>
+                </th>
+                <th style="width:22%">
+                  <div class="sail-th-title">Transfer Rates</div>
+                  <div class="sail-th-sub">${esc(pricingMode === 'vat' ? 'Gross (+10% VAT)' : 'Net B2B')}</div>
+                </th>
+                <th style="width:19%">
+                  <div class="sail-th-title">Standby / Disposizione</div>
+                  <div class="sail-th-sub">Hourly &amp; Daily</div>
+                </th>
+                <th style="width:16%">
+                  <div class="sail-th-title">Photos &amp; Rate Sheet</div>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -730,7 +744,7 @@ function renderLedgerRow(row) {
         ${entries.map((t) => {
           const adj = calculateAdjustedPrice(t.net, pricingMode);
           return `
-            <span class="sail-rate-route">${esc(t.label)}</span>
+            <span class="sail-rate-route" title="${attr(t.label)}">${esc(t.label)}</span>
             <span class="sail-rate-amt">${formatEur(adj)}</span>
           `;
         }).join('')}
@@ -738,9 +752,9 @@ function renderLedgerRow(row) {
     `;
   } else {
     transferHtml = `
-      <div style="display:flex;flex-direction:column;gap:4px">
-        <span class="sail-pill missing" style="width:fit-content">Not provided</span>
-        <span style="font-size:11.5px;color:var(--sail-muted);line-height:1.35">${esc(row.transferNote || 'No transfer rate sheet submitted yet.')}</span>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <span class="sail-pill missing" style="width:fit-content;font-size:10.5px">Not provided</span>
+        <span style="font-size:11px;color:var(--sail-muted);line-height:1.3">${esc(row.transferNote || 'No transfer rate sheet submitted yet.')}</span>
       </div>
     `;
   }
@@ -754,18 +768,18 @@ function renderLedgerRow(row) {
     const exW = row.standby.extra_wait ? calculateAdjustedPrice(row.standby.extra_wait.net, pricingMode) : null;
     standbyHtml = `
       <div class="sail-rate-grid">
-        ${s4 !== null ? `<span class="sail-rate-route">${esc(row.standby.dispo_4h.label || '4h Standby')}</span><span class="sail-rate-amt">${formatEur(s4)}</span>` : ''}
-        ${s8 !== null ? `<span class="sail-rate-route">${esc(row.standby.dispo_8h.label || '8h Standby')}</span><span class="sail-rate-amt">${formatEur(s8)}</span>` : ''}
-        ${s8vip !== null ? `<span class="sail-rate-route">${esc(row.standby.dispo_8h_vip.label || '8h Top VIP')}</span><span class="sail-rate-amt">${formatEur(s8vip)}</span>` : ''}
-        ${exH !== null ? `<span class="sail-rate-route">${esc(row.standby.extra_hour.label || 'Ore Extra')}</span><span class="sail-rate-amt">${formatEur(exH)}/h</span>` : ''}
-        ${exW !== null ? `<span class="sail-rate-route">${esc(row.standby.extra_wait.label || 'Attesa extra')}</span><span class="sail-rate-amt">${formatEur(exW)}</span>` : ''}
+        ${s4 !== null ? `<span class="sail-rate-route" title="${attr(row.standby.dispo_4h.label || '4h Standby')}">${esc(row.standby.dispo_4h.label || '4h Standby')}</span><span class="sail-rate-amt">${formatEur(s4)}</span>` : ''}
+        ${s8 !== null ? `<span class="sail-rate-route" title="${attr(row.standby.dispo_8h.label || '8h Standby')}">${esc(row.standby.dispo_8h.label || '8h Standby')}</span><span class="sail-rate-amt">${formatEur(s8)}</span>` : ''}
+        ${s8vip !== null ? `<span class="sail-rate-route" title="${attr(row.standby.dispo_8h_vip.label || '8h Top VIP')}">${esc(row.standby.dispo_8h_vip.label || '8h Top VIP')}</span><span class="sail-rate-amt">${formatEur(s8vip)}</span>` : ''}
+        ${exH !== null ? `<span class="sail-rate-route" title="${attr(row.standby.extra_hour.label || 'Ore Extra')}">${esc(row.standby.extra_hour.label || 'Ore Extra')}</span><span class="sail-rate-amt">${formatEur(exH)}/h</span>` : ''}
+        ${exW !== null ? `<span class="sail-rate-route" title="${attr(row.standby.extra_wait.label || 'Attesa extra')}">${esc(row.standby.extra_wait.label || 'Attesa extra')}</span><span class="sail-rate-amt">${formatEur(exW)}</span>` : ''}
       </div>
     `;
   } else {
     standbyHtml = `
-      <div style="display:flex;flex-direction:column;gap:4px">
-        <span class="sail-pill missing" style="width:fit-content">Not provided</span>
-        <span style="font-size:11.5px;color:var(--sail-muted);line-height:1.35">${esc(row.standbyNote || 'No standby rates submitted yet.')}</span>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <span class="sail-pill missing" style="width:fit-content;font-size:10.5px">Not provided</span>
+        <span style="font-size:11px;color:var(--sail-muted);line-height:1.3">${esc(row.standbyNote || 'No standby rates submitted yet.')}</span>
       </div>
     `;
   }
@@ -773,38 +787,43 @@ function renderLedgerRow(row) {
   let mediaHtml = '';
   if (hasPhotos || row.ratePdf) {
     mediaHtml = `
-      <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;flex-direction:column;gap:5px">
         ${hasPhotos ? `
           <div class="sail-thumb-strip">
-            ${row.photos.map((ph, idx) => {
+            ${row.photos.slice(0, 3).map((ph, idx) => {
               const isVid = ph.src && ph.src.endsWith('.mp4');
               return isVid ? `
-                <div class="sail-thumb" data-open-gallery="${attr(row.id)}" data-photo-idx="${idx}" style="display:flex;align-items:center;justify-content:center;background:#0A2540;color:#FFF;font-size:9.5px;font-weight:700;cursor:pointer" title="${attr(ph.title)}">
-                  ▶ Video
+                <div class="sail-thumb" data-open-gallery="${attr(row.id)}" data-photo-idx="${idx}" style="display:flex;align-items:center;justify-content:center;background:#0A2540;color:#FFF;font-size:8.5px;font-weight:700;cursor:pointer" title="${attr(ph.title)}">
+                  ▶ Vid
                 </div>
               ` : `
                 <img class="sail-thumb" src="${attr(ph.src)}" alt="${attr(ph.title)}" title="${attr(ph.title)} — Click to view" data-open-gallery="${attr(row.id)}" data-photo-idx="${idx}" />
               `;
             }).join('')}
+            ${row.photos.length > 3 ? `
+              <div class="sail-thumb sail-thumb-more" data-open-gallery="${attr(row.id)}" data-photo-idx="3" title="View all ${row.photos.length} photos">
+                +${row.photos.length - 3}
+              </div>
+            ` : ''}
           </div>
-          <div class="row" style="gap:6px">
-            <button class="sail-btn xs primary" data-open-gallery="${attr(row.id)}" data-photo-idx="0">
+          <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
+            <button class="sail-btn xs primary" data-open-gallery="${attr(row.id)}" data-photo-idx="0" style="padding:0 6px;height:23px;font-size:11px">
               View ${row.photos.length} photos
             </button>
             ${row.ratePdf ? `
-              <a class="sail-btn xs" href="${attr(row.ratePdf)}" target="_blank" rel="noopener" title="Open original PDF rate sheet">
-                Rate PDF ↗
+              <a class="sail-btn xs" href="${attr(row.ratePdf)}" target="_blank" rel="noopener" style="padding:0 6px;height:23px;font-size:11px" title="Open original PDF rate sheet">
+                PDF ↗
               </a>
             ` : ''}
           </div>
-        ` : `<span class="sail-pill missing">No photos provided</span>`}
+        ` : `<span class="sail-pill missing" style="font-size:10px">No photos</span>`}
       </div>
     `;
   } else {
     mediaHtml = `
-      <div style="display:flex;flex-direction:column;gap:4px">
-        <span class="sail-pill missing" style="width:fit-content">No photos provided</span>
-        <span style="font-size:11.5px;color:var(--sail-muted)">Rate sheet PDF not provided</span>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <span class="sail-pill missing" style="width:fit-content;font-size:10px">No photos provided</span>
+        <span style="font-size:11px;color:var(--sail-muted)">Rate sheet PDF not provided</span>
       </div>
     `;
   }
@@ -812,12 +831,12 @@ function renderLedgerRow(row) {
   return `
     <tr>
       <td>
-        <div style="font-weight:600;color:var(--sail-ink);font-size:13px;line-height:1.3">${esc(row.vehicleModel)}</div>
-        <div style="margin-top:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <span class="sail-pill info" style="font-size:11px;padding:1px 7px;font-variant-numeric:tabular-nums"><strong>${esc(row.paxLabel || `${row.pax} pax`)}</strong></span>
+        <div style="font-weight:600;color:var(--sail-ink);font-size:12.5px;line-height:1.25">${esc(row.vehicleModel)}</div>
+        <div style="margin-top:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+          <span class="sail-pill info" style="font-size:10.5px;padding:1px 6px;font-variant-numeric:tabular-nums"><strong>${esc(row.paxLabel || `${row.pax} pax`)}</strong></span>
           <details style="font-size:11px;color:var(--sail-muted)">
             <summary style="cursor:pointer;user-select:none;font-weight:500;color:var(--sail-body)">Specs</summary>
-            <div style="margin-top:4px;line-height:1.35;color:var(--sail-muted)">
+            <div style="margin-top:4px;line-height:1.3;color:var(--sail-muted);font-size:10.5px">
               <div><strong>${esc(row.coachbuilder)}</strong></div>
               <div style="margin-top:2px">${esc(row.tierSpec)}</div>
             </div>
@@ -826,28 +845,28 @@ function renderLedgerRow(row) {
       </td>
 
       <td>
-        <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start">
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">
           <select class="sail-tier-select ${row.tier === 'luxury' ? 'lux' : 'std'}" data-tier-select="${attr(row.id)}" title="Switch between Luxury VIP and Standard Shuttle">
             <option value="luxury" ${row.tier === 'luxury' ? 'selected' : ''}>Luxury VIP</option>
             <option value="standard" ${row.tier === 'standard' ? 'selected' : ''}>Standard Shuttle</option>
           </select>
-          <span class="sail-pill ${row.status === 'confirmed' ? 'ok' : 'info'}" style="font-size:10.5px;padding:1px 6px">
+          <span class="sail-pill ${row.status === 'confirmed' ? 'ok' : 'info'}" style="font-size:10px;padding:1px 5px">
             ${esc(row.status === 'confirmed' ? 'Verified' : 'Pending')}
           </span>
         </div>
       </td>
 
       <td>
-        <div style="font-weight:600;color:var(--sail-ink);font-size:13px;line-height:1.3">
+        <div style="font-weight:600;color:var(--sail-ink);font-size:12.5px;line-height:1.25">
           ${row.website ? `<a href="${attr(row.website)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;border-bottom:1px dotted #94A3B8" title="Open partner fleet website">${esc(row.partnerName)} ↗</a>` : esc(row.partnerName)}
         </div>
         ${row.secondaryWebsite ? `
-          <div style="font-size:11px;color:var(--sail-muted);margin-top:2px">
-            Limo &amp; Email: <a href="${attr(row.secondaryWebsite)}" target="_blank" rel="noopener" style="color:var(--sail-muted);text-decoration:underline" title="Milano Cab website">milanocab.it ↗</a>
+          <div style="font-size:10.5px;color:var(--sail-muted);margin-top:2px">
+            Limo: <a href="${attr(row.secondaryWebsite)}" target="_blank" rel="noopener" style="color:var(--sail-muted);text-decoration:underline" title="Milano Cab website">milanocab.it ↗</a>
           </div>
         ` : ''}
-        <div style="font-size:11.5px;color:var(--sail-body);margin-top:2px">${esc(row.baseCity)} · ${esc(row.contactPerson)}</div>
-        <div class="row" style="gap:6px;margin-top:6px;font-size:11.5px;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--sail-body);margin-top:2px">${esc(row.baseCity)} · ${esc(row.contactPerson)}</div>
+        <div class="row" style="gap:4px;margin-top:4px;font-size:11px;flex-wrap:wrap">
           <a href="https://wa.me/${rawWa.replace(/^\+/, '')}" target="_blank" rel="noopener" style="color:var(--sail-accent);font-weight:600">WhatsApp</a>
           <span style="color:#CBD5E1">·</span>
           <a href="mailto:${attr(row.email)}" style="color:var(--sail-body)" title="${attr(row.email)}">Email</a>
