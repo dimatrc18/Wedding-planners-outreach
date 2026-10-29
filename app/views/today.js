@@ -1,6 +1,6 @@
 // Today: everything that needs Dmitri, in the order it matters. Built for 15 minutes a day, also on a phone.
 import * as core from '../../supabase/functions/_shared/core/index.js';
-import { S, api, isDemo } from '../store.js';
+import { S, api, isDemo, refreshLive } from '../store.js';
 import { esc, attr, icon, ago, fmtDateTime, pct, plural, toast, copyText, confirmDialog, dialog } from '../ui.js';
 import * as A from '../actions.js';
 
@@ -149,13 +149,29 @@ export function render(el) {
   const clean = drafts.filter((t) => { const l = A.lintOf(t); return !l.errors.length && !l.warnings.length; });
   const dueUndrafted = d.due.length;
   const now = new Date();
+  const busList = (S.busPartners || []).filter((b) => b.status !== 'NOT_RELEVANT');
+  const busContacted = busList.filter((b) => ['t1_sent', 't2_sent', 't3_sent', 'replied'].includes(b.outreach_stage)).length;
+  const busReplied = busList.filter((b) => b.outreach_stage === 'replied' || b.replied_at).length;
+  const todayKey = core.localDateKey(now, S.settings.timezone || 'Europe/Rome');
+  const busSentToday = busList.filter((b) => {
+    const ts = b.last_followup_at || b.sent_at;
+    return ts && core.localDateKey(new Date(ts), S.settings.timezone || 'Europe/Rome') === todayKey;
+  }).length;
+  const wpSentToday = S.touches.filter((t) => t.direction === 'out' && t.state === 'sent' && t.sent_at && core.localDateKey(new Date(t.sent_at), S.settings.timezone || 'Europe/Rome') === todayKey).length;
 
   el.innerHTML = `
   <div class="page-head">
-    <div><div class="label eyebrow">${esc(now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Rome' }))}</div><h1>Today</h1></div>
+    <div>
+      <div class="label eyebrow" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span>${esc(now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Rome' }))}</span>
+        ${live ? `<span class="chip ok" style="font-size:11px;padding:1px 7px" title="Auto-refreshes every 30s and via Supabase Realtime">● Live${S.lastSyncAt ? ` · synced ${esc(ago(S.lastSyncAt))}` : ''}</span>` : ''}
+      </div>
+      <h1>Today</h1>
+    </div>
     <div class="row">
       ${peak && S.settings.season_mode === 'auto' ? '<span class="chip warn" title="May to September: planners are in execution mode. Daily cap is halved.">Peak season: half speed</span>' : ''}
       ${S.settings.season_mode === 'paused' ? '<span class="chip bad">Campaign paused</span>' : ''}
+      ${live ? `<button class="btn ghost sm" data-act="sync-live" title="Pull latest live data from Supabase">↻ Sync now</button>` : ''}
       ${dueUndrafted ? `<button class="btn primary" data-act="gen">${icon('sparkle', 16)} Draft ${plural(dueUndrafted, 'due step')}</button>` : ''}
       <a class="btn" href="#add">${icon('plus', 16)} Add prospects</a>
     </div>
@@ -164,10 +180,19 @@ export function render(el) {
     <div class="kpis">
       ${kpiTile('Positive reply rate', pct(m.positiveRate.p, m.positiveRate.p !== null && m.positiveRate.p < 0.1 ? 1 : 0), m.positiveRate.n ? `${m.positive} of ${m.contacted} · likely ${pct(m.positiveRate.lo)} to ${pct(m.positiveRate.hi)}` : 'No contacts yet', rateMeter(m.positiveRate, tg.positive_reply_rate))}
       ${kpiTile('Replies waiting', `${d.replies.length}`, d.replies.length ? `oldest ${ago(d.replies.reduce((a, t) => (new Date(t.replied_at || t.created_at || Date.now()) < new Date(a) ? (t.replied_at || t.created_at) : a), d.replies[0]?.replied_at || d.replies[0]?.created_at || new Date().toISOString()))}` : 'Inbox clear', '')}
-      ${kpiTile('Partners won', `${m.won}`, `target ${tg.partners_won} to ${tg.partners_won_high} this season · ${m.contacted} contacted`, rateMeter({ p: Math.min(m.won / tg.partners_won_high, 1), lo: Math.min(m.won / tg.partners_won_high, 1), hi: Math.min(m.won / tg.partners_won_high, 1) }, tg.partners_won / tg.partners_won_high, 1))}
+      ${kpiTile('Partners won', `${m.won}`, `target ${tg.partners_won} to ${tg.partners_won_high} this season · ${m.contacted} contacted (${wpSentToday} sent today)`, rateMeter({ p: Math.min(m.won / tg.partners_won_high, 1), lo: Math.min(m.won / tg.partners_won_high, 1), hi: Math.min(m.won / tg.partners_won_high, 1) }, tg.partners_won / tg.partners_won_high, 1))}
       ${kpiTile('Bounced emails', `${m.bounced}`, `${m.bounced} bounced (${pct(m.bounceRate.p || (m.emailsSent > 0 ? m.bounced / m.emailsSent : 0), 1)}) · ${m.emailsSent} sent`, rateMeter(m.bounceRate, S.settings.bounce_pause_rate || 0.05, 0.2))}
     </div>
     <a class="card row nowrap" href="#analytics" style="text-decoration:none;color:inherit">${icon('chart')}<span class="grow"><b>${esc(v.headline)}</b> <span class="muted small">${esc(v.detail)}</span></span><span class="small">Analytics →</span></a>
+
+    <div class="card row" style="gap:12px;align-items:center;flex-wrap:wrap;background:#F8FAFC;border-color:#E2E8F0">
+      <span class="chip ok" style="font-weight:600">🚌 Bus Fleet Outreach</span>
+      <span class="grow" style="font-size:13px">
+        <b>${busContacted}</b> bus operators contacted · <b>${busReplied}</b> replied (Como Driver, Avantgarde, Landway, Como Limo Lux) · <b>${busSentToday}</b> emails sent today
+      </span>
+      <a class="btn sm primary" href="#fleet_showcase">Fleet &amp; Rate Ledger →</a>
+      <a class="btn sm" href="#bus_partners">All ${busList.length} Operators →</a>
+    </div>
 
     ${live && !smtp && S.health && !S.health.error ? `<div class="banner warn">${icon('mail')}<span><b>Mailbox not connected.</b> Approved emails wait under Scheduled. Send them from your mail app with “Open in mail”, then “Mark sent”. <a href="#settings">Connect it</a>.</span></div>` : ''}
 
@@ -254,6 +279,12 @@ export function render(el) {
     try {
       if (btn) btn.disabled = true;
       switch (name) {
+        case 'sync-live': {
+          await refreshLive(false);
+          paint();
+          toast('Synced with live database');
+          break;
+        }
         case 'gen': { const n = await A.generateDueDrafts(); toast(n ? `${plural(n, 'draft')} ready` : 'Nothing new to draft'); break; }
         case 'approve': {
           const at = await A.approve(t);

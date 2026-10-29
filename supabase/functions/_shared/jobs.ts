@@ -270,7 +270,9 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
   const sentRecipientsThisRun = new Set<string>();
   const sentProspectsThisRun = new Set<string>();
   let sent = 0;
-  for (const t of due.slice(0, 25)) {
+  let attempts = 0;
+  for (const t of due) {
+    if (attempts >= 15) break;
     const p: any = pmap.get(t.prospect_id);
     if (!p) continue;
     const list = touches.filter((x: any) => x.prospect_id === p.id);
@@ -283,6 +285,7 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
       }
       continue;
     }
+    attempts++;
     const thread = list.filter((x: any) => x.message_id && x.id !== t.id)
       .sort((a: any, b: any) => new Date(a.sent_at || a.replied_at || a.created_at).getTime() - new Date(b.sent_at || b.replied_at || b.created_at).getTime());
     const stepCfg = (settings.steps || core.DEFAULT_STEPS).find((s: any) => s.key === t.step_name);

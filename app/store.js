@@ -26,6 +26,7 @@ export const S = {
   excludedBusPartners: [],
   settings: withDefaults(DEFAULT_SETTINGS),
   health: null,
+  lastSyncAt: null,
 };
 
 let sb = null;
@@ -103,18 +104,28 @@ function liveBackend() {
       return path;
     },
     subscribe() {
-      const apply = (name) => (payload) => {
+      const apply = (name, transform = (x) => x) => (payload) => {
         const list = S[name];
-        const row = payload.new && payload.new.id ? payload.new : null;
+        const rawRow = payload.new && payload.new.id ? payload.new : null;
+        const row = rawRow ? transform(rawRow) : null;
         const id = row ? row.id : payload.old?.id;
         const i = list.findIndex((x) => x.id === id);
         if (payload.eventType === 'DELETE') { if (i >= 0) list.splice(i, 1); }
-        else if (i >= 0) list[i] = row; else list.push(row);
+        else if (i >= 0) list[i] = row; else if (row) list.push(row);
+        S.lastSyncAt = nowIso();
         emit(`realtime:${name}:${payload.eventType}`);
       };
       sb.channel('outreach-live')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'touches' }, apply('touches'))
         .on('postgres_changes', { event: '*', schema: 'public', table: 'prospects' }, apply('prospects'))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'bus_partners' }, apply('busPartners', hydratePartnerCard))
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'events_log' }, (payload) => {
+          if (payload.new) {
+            S.events.unshift(payload.new);
+            S.lastSyncAt = nowIso();
+            emit('realtime:events:INSERT');
+          }
+        })
         .subscribe();
     },
   };
@@ -162,14 +173,49 @@ export async function init() {
 function sessionStorageGet(k) { try { return sessionStorage.getItem(k); } catch { return null; } }
 function sessionStorageSet(k, v) { try { v === null ? sessionStorage.removeItem(k) : sessionStorage.setItem(k, v); } catch { /* private mode */ } }
 
+let livePollTimer = null;
+let refreshingLive = false;
+
+export async function refreshLive(silent = true) {
+  if (S.mode !== 'live' || !backend || refreshingLive) return false;
+  refreshingLive = true;
+  try {
+    const fresh = await backend.load();
+    setData(fresh);
+    S.lastSyncAt = nowIso();
+    emit(silent ? 'poll:live' : 'manual:refresh');
+    return true;
+  } catch (_) {
+    return false;
+  } finally {
+    refreshingLive = false;
+  }
+}
+
 async function startLive(user) {
   S.user = user; S.mode = 'live'; backend = liveBackend();
   try {
     setData(await backend.load());
+    S.lastSyncAt = nowIso();
   } catch (e) {
     S.loadError = e.message;
   }
   backend.subscribe();
+  if (!livePollTimer) {
+    livePollTimer = setInterval(() => {
+      if (typeof document === 'undefined' || document.visibilityState === 'visible') {
+        refreshLive(true);
+      }
+    }, 30000);
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') refreshLive(true);
+      });
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', () => refreshLive(true));
+    }
+  }
   emit('loaded');
   backend.api('health').then((h) => { S.health = h; emit('health'); }).catch((e) => { S.health = { error: e.message }; emit('health'); });
 }
