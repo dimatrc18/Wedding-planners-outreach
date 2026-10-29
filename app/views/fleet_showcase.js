@@ -172,12 +172,13 @@ export const FLEET_LEDGER_ROWS = [
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
     tierSpec: 'Club tables & ambient lighting ("allestimento speciale")',
-    partnerName: 'Avantgarde Limousine Service',
+    partnerName: 'Avantgarde Limousine Service (Milano Cab)',
     baseCity: 'Milano (Via Calatafimi 12)',
     contactPerson: 'Vincenzo Lombardi',
     phone: '+39 333 269 7376',
     email: 'info@milanocab.it',
     website: 'https://www.avantgardelimousineservice.it/mezzi/',
+    secondaryWebsite: 'https://www.milanocab.it',
     status: 'confirmed',
     statusLabel: 'MXP–MI €250 · MXP–Como €380 · 8h €800 / Top €1,200 (+IVA)',
     repliedAt: '29 Oct 2026 · WA Confirmed',
@@ -277,12 +278,13 @@ export const FLEET_LEDGER_ROWS = [
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
     tierSpec: 'Leather reclining seats · Panoramic glass · Overhead luggage racks',
-    partnerName: 'Avantgarde Limousine Service',
+    partnerName: 'Avantgarde Limousine Service (Milano Cab)',
     baseCity: 'Milano (Via Calatafimi 12)',
     contactPerson: 'Vincenzo Lombardi',
     phone: '+39 333 269 7376',
     email: 'info@milanocab.it',
-    website: 'https://www.milanocab.it/cars/',
+    website: 'https://www.avantgardelimousineservice.it/mezzi/',
+    secondaryWebsite: 'https://www.milanocab.it',
     status: 'confirmed',
     statusLabel: 'MXP €330 · 4h €550 · 8h €950 (+IVA)',
     repliedAt: '28–29 Oct 2026 · WA Confirmed',
@@ -339,12 +341,13 @@ export const FLEET_LEDGER_ROWS = [
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
     tierSpec: 'Panoramic touring glass · High-back reclining seats · Reversing camera & AC',
-    partnerName: 'Avantgarde Limousine Service',
+    partnerName: 'Avantgarde Limousine Service (Milano Cab)',
     baseCity: 'Milano (Via Calatafimi 12)',
     contactPerson: 'Vincenzo Lombardi',
     phone: '+39 333 269 7376',
     email: 'info@milanocab.it',
     website: 'https://www.avantgardelimousineservice.it/mezzi/',
+    secondaryWebsite: 'https://www.milanocab.it',
     status: 'confirmed',
     statusLabel: 'MXP–MI €400 · MXP–Como €500 · 4h €600 · 8h €1,200 (+IVA)',
     repliedAt: '29 Oct 2026 · WA Confirmed',
@@ -840,8 +843,13 @@ function renderLedgerRow(row) {
 
       <td>
         <div style="font-weight:600;color:var(--sail-ink);font-size:13px;line-height:1.3">
-          ${row.website ? `<a href="${attr(row.website)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;border-bottom:1px dotted #94A3B8" title="Open partner website">${esc(row.partnerName)} ↗</a>` : esc(row.partnerName)}
+          ${row.website ? `<a href="${attr(row.website)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;border-bottom:1px dotted #94A3B8" title="Open partner fleet website">${esc(row.partnerName)} ↗</a>` : esc(row.partnerName)}
         </div>
+        ${row.secondaryWebsite ? `
+          <div style="font-size:11px;color:var(--sail-muted);margin-top:2px">
+            Limo &amp; Email: <a href="${attr(row.secondaryWebsite)}" target="_blank" rel="noopener" style="color:var(--sail-muted);text-decoration:underline" title="Milano Cab website">milanocab.it ↗</a>
+          </div>
+        ` : ''}
         <div style="font-size:11.5px;color:var(--sail-body);margin-top:2px">${esc(row.baseCity)} · ${esc(row.contactPerson)}</div>
         <div class="row" style="gap:6px;margin-top:6px;font-size:11.5px;flex-wrap:wrap">
           <a href="https://wa.me/${rawWa.replace(/^\+/, '')}" target="_blank" rel="noopener" style="color:var(--sail-accent);font-weight:600">WhatsApp</a>
@@ -903,9 +911,9 @@ function renderPriceCalculatorCard() {
             <select id="calc-vehicle" style="width:100%;height:34px;padding:0 10px;border:1px solid var(--sail-line);border-radius:6px;font-size:13px;background:#FFF">
               <option value="como_sprinter_12" ${calcState.vehicleId === 'como_sprinter_12' ? 'selected' : ''}>Como Driver · Mercedes Sprinter (12 pax · Luxury VIP)</option>
               <option value="como_transit_16" ${calcState.vehicleId === 'como_transit_16' ? 'selected' : ''}>Como Driver · Ford Transit (16 pax · Standard Shuttle)</option>
-              <option value="avantgarde_sprinter_8" ${calcState.vehicleId === 'avantgarde_sprinter_8' ? 'selected' : ''}>Avantgarde · Mercedes Sprinter (7 &amp; 8 pax · Milano)</option>
-              <option value="avantgarde_minibus_18" ${calcState.vehicleId === 'avantgarde_minibus_18' ? 'selected' : ''}>Avantgarde · Mercedes Minibus (20 pax · Milano)</option>
-              <option value="avantgarde_coach_30" ${calcState.vehicleId === 'avantgarde_coach_30' ? 'selected' : ''}>Avantgarde · Executive Midibus (30 pax · Milano)</option>
+              <option value="avantgarde_sprinter_8" ${calcState.vehicleId === 'avantgarde_sprinter_8' ? 'selected' : ''}>Avantgarde (Milano Cab) · Mercedes Sprinter (7 &amp; 8 pax · Milano)</option>
+              <option value="avantgarde_minibus_18" ${calcState.vehicleId === 'avantgarde_minibus_18' ? 'selected' : ''}>Avantgarde (Milano Cab) · Mercedes Minibus (20 pax · Milano)</option>
+              <option value="avantgarde_coach_30" ${calcState.vehicleId === 'avantgarde_coach_30' ? 'selected' : ''}>Avantgarde (Milano Cab) · Executive Midibus (30 pax · Milano)</option>
             </select>
           </div>
 

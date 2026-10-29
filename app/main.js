@@ -2,18 +2,18 @@
 import { S, init, onChange, signIn, signOut, startDemo, leaveDemo, syncScores, isDemo } from './store.js';
 import { esc, icon, toast, debounce } from './ui.js';
 import { todayData } from './actions.js';
-import * as today from './views/today.js?v=8.2';
-import * as pipeline from './views/pipeline.js?v=8.2';
-import * as prospect from './views/prospect.js?v=8.2';
-import * as add from './views/add.js?v=8.2';
-import * as templates from './views/templates.js?v=8.2';
-import * as analytics from './views/analytics.js?v=8.2';
-import * as partners from './views/partners.js?v=8.2';
-import * as tools from './views/tools.js?v=8.2';
-import * as visibility from './views/visibility.js?v=8.2';
-import * as settings from './views/settings.js?v=8.2';
-import * as busPartners from './views/bus_partners.js?v=8.2';
-import * as fleetShowcase from './views/fleet_showcase.js?v=8.2';
+import * as today from './views/today.js?v=8.3';
+import * as pipeline from './views/pipeline.js?v=8.3';
+import * as prospect from './views/prospect.js?v=8.3';
+import * as add from './views/add.js?v=8.3';
+import * as templates from './views/templates.js?v=8.3';
+import * as analytics from './views/analytics.js?v=8.3';
+import * as partners from './views/partners.js?v=8.3';
+import * as tools from './views/tools.js?v=8.3';
+import * as visibility from './views/visibility.js?v=8.3';
+import * as settings from './views/settings.js?v=8.3';
+import * as busPartners from './views/bus_partners.js?v=8.3';
+import * as fleetShowcase from './views/fleet_showcase.js?v=8.3';
 
 const ROUTES = {
   today: { view: today, label: 'Today', icon: 'today' },
