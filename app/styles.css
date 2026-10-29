@@ -1055,5 +1055,110 @@ tr.clickable { cursor: pointer; } tr.clickable:hover td { background: var(--surf
   color: var(--sail-accent);
 }
 
+/* Enhanced Customizable Trip & Quote Calculator Styles */
+.sail-calc-veh-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+  margin-top: 6px;
+}
+.sail-veh-pick {
+  border: 1px solid var(--sail-line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  position: relative;
+  text-align: left;
+}
+.sail-veh-pick:hover {
+  border-color: #CBD5E1;
+  background: #F8FAFC;
+}
+.sail-veh-pick.active {
+  border-color: var(--sail-accent);
+  background: var(--sail-accent-soft);
+  box-shadow: 0 0 0 1px var(--sail-accent);
+}
+.sail-veh-pick-radio {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 2px solid #CBD5E1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+.sail-veh-pick.active .sail-veh-pick-radio {
+  border-color: var(--sail-accent);
+  background: var(--sail-accent);
+}
+.sail-veh-pick.active .sail-veh-pick-radio::after {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #FFFFFF;
+}
+.sail-calc-input {
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--sail-line);
+  border-radius: 6px;
+  font-size: 13px;
+  background: #FFFFFF;
+  color: var(--sail-ink);
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
+}
+.sail-calc-input:focus {
+  outline: none;
+  border-color: var(--sail-accent);
+}
+.sail-calc-label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--sail-body);
+  margin-bottom: 4px;
+}
+.sail-preset-btn {
+  border: 1px solid var(--sail-line);
+  background: #FFFFFF;
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sail-muted);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.sail-preset-btn:hover {
+  border-color: var(--sail-accent);
+  color: var(--sail-accent);
+}
+.sail-preset-btn.active {
+  background: var(--sail-accent);
+  color: #FFFFFF;
+  border-color: var(--sail-accent);
+}
+.sail-calc-summary-card {
+  background: #F8FAFC;
+  border: 1px solid var(--sail-line);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+
 
 

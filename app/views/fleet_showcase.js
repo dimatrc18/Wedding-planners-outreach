@@ -9,12 +9,44 @@ let pricingMode = 'net'; // 'net' | 'vat' (+10% Italian VAT)
 let activeTab = 'all'; // 'all' | 'confirmed' | 'luxury' | 'standard' | 'pending'
 let searchQuery = '';
 
-// Calc state for the interactive Stripe Quote Calculator
+// Service, Route & Vehicle Taxonomy for Multi-Tier Trip Calculator
+export const ROUTE_CATALOG = {
+  transfers: [
+    { key: 'mxp_como', label: 'Malpensa (MXP) ⇄ Como', region: 'Lake Como ⇄ Airports' },
+    { key: 'lin_como', label: 'Linate (LIN) ⇄ Como', region: 'Lake Como ⇄ Airports' },
+    { key: 'bgy_como', label: 'Bergamo (BGY) ⇄ Como', region: 'Lake Como ⇄ Airports' },
+    { key: 'mxp_milano', label: 'Malpensa (MXP) ⇄ Milano', region: 'Milan ⇄ Airports' },
+    { key: 'milano_como', label: 'Milano Centro / FS ⇄ Como', region: 'Lake Como Excursions & City' },
+    { key: 'tremezzo', label: 'Como ⇄ Tremezzo', region: 'Lake Como Excursions & City' },
+    { key: 'bellagio', label: 'Como ⇄ Bellagio', region: 'Lake Como Excursions & City' }
+  ],
+  standby: [
+    { key: 'dispo_4h', label: 'Disposizione 4h (Half Day)', desc: '75–100 km included · Standby & local touring' },
+    { key: 'dispo_8h', label: 'Disposizione 8h (Full Day)', desc: '150–200 km included · Full-day disposal' },
+    { key: 'dispo_8h_vip', label: 'Disposizione 8h Top VIP', desc: '150 km included · Club tables & mood lighting' }
+  ]
+};
+
+export const TRANSPORT_CATEGORIES = [
+  { key: 'all', label: 'All Transport Types (7–30 pax)', paxRange: '7–30 pax' },
+  { key: 'minivan_7_8', label: 'VIP Minivan (7–8 Pax)', paxRange: '7–8 pax', desc: 'Mercedes Sprinter VIP (Avantgarde)' },
+  { key: 'minibus_12_16', label: 'Executive Minibus (12–16 Pax)', paxRange: '12–16 pax', desc: 'Mercedes Sprinter & Ford Transit (Como Driver)' },
+  { key: 'minibus_20', label: 'Touring Minibus (20 Pax)', paxRange: '20 pax', desc: 'Mercedes Minibus 20 Pax (Avantgarde)' },
+  { key: 'coach_30', label: 'Touring Midibus / Coach (30 Pax)', paxRange: '30 pax', desc: 'Executive Midibus 30 Pax (Avantgarde)' }
+];
+
+// Expanded State for the Customizable Multi-Tier Trip Calculator
 let calcState = {
+  serviceType: 'transfer', // 'transfer' | 'standby'
+  routeKey: 'mxp_como',
+  transportCategory: 'all', // 'all' | 'minivan_7_8' | 'minibus_12_16' | 'minibus_20' | 'coach_30'
+  tierFilter: 'all', // 'all' | 'luxury' | 'standard'
+  passengerCount: 8,
   vehicleId: 'como_sprinter_12',
-  serviceKey: 'dispo_8h',
+  tripDirection: 'one_way', // 'one_way' | 'round_trip' (2x)
   extraHours: 0,
   extraWaitHours: 0,
+  includeZtl: false,
   nightWindow: false,
   includeVat: false,
   clientMarkupPct: 25
@@ -30,6 +62,8 @@ export const FLEET_LEDGER_ROWS = [
     paxLabel: '12 pax',
     coachbuilder: 'Tomassini Style · Executive Conversion',
     pax: 12,
+    category: 'minibus_12_16',
+    categoryLabel: 'Executive Minibus (12–16 Pax)',
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
     tierSpec: 'Total Black · Unbranded · Two-tone leather · Privacy curtains',
@@ -103,6 +137,8 @@ export const FLEET_LEDGER_ROWS = [
     paxLabel: '16 pax',
     coachbuilder: 'Carind · High-Roof Shuttle',
     pax: 16,
+    category: 'minibus_12_16',
+    categoryLabel: 'Executive Minibus (12–16 Pax)',
     tier: 'standard',
     tierLabel: 'Standard Shuttle',
     tierSpec: 'White exterior · High-back cloth/leatherette seats · Wood floor',
@@ -169,6 +205,8 @@ export const FLEET_LEDGER_ROWS = [
     paxLabel: '7–8 pax',
     coachbuilder: '3 Variants: Red (7p) · Standard (8p) · Top VIP (8p)',
     pax: 8,
+    category: 'minivan_7_8',
+    categoryLabel: 'VIP Minivan (7–8 Pax)',
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
     tierSpec: 'Club tables & ambient lighting ("allestimento speciale")',
@@ -275,6 +313,8 @@ export const FLEET_LEDGER_ROWS = [
     paxLabel: '20 pax',
     coachbuilder: 'Executive Coach Conversion (2x Units · WA Verified)',
     pax: 20,
+    category: 'minibus_20',
+    categoryLabel: 'Touring Minibus (20 Pax)',
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
     tierSpec: 'Leather reclining seats · Panoramic glass · Overhead luggage racks',
@@ -338,6 +378,8 @@ export const FLEET_LEDGER_ROWS = [
     paxLabel: '30 pax',
     coachbuilder: 'Touring Coach (WA Ext + Int Verified)',
     pax: 30,
+    category: 'coach_30',
+    categoryLabel: 'Touring Midibus / Coach (30 Pax)',
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
     tierSpec: 'Panoramic touring glass · High-back reclining seats · Reversing camera & AC',
@@ -709,9 +751,13 @@ export async function render(el) {
         `).join('')}
       </div>
 
-      <!-- Bottom Split: Interactive Stripe Price & Margin Calculator + PDF Contract Terms -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(420px, 1fr));gap:16px">
+      <!-- Bottom Section: Customizable Multi-Tier Trip Calculator -->
+      <div style="margin-bottom:16px">
         ${renderPriceCalculatorCard()}
+      </div>
+
+      <!-- PDF Contract Terms -->
+      <div>
         ${renderTermsAndSlaCard()}
       </div>
     </div>
@@ -865,115 +911,475 @@ function renderLedgerRow(row) {
   `;
 }
 
-function renderPriceCalculatorCard() {
-  const veh = FLEET_LEDGER_ROWS.find((r) => r.id === calcState.vehicleId) || FLEET_LEDGER_ROWS[0];
-  const transferOptions = Object.entries(veh.transfers || {}).map(([key, val]) => ({
-    key,
-    label: `Transfer: ${val.label}`,
-    net: val.net
-  }));
-  const standbyOptions = [];
-  if (veh.standby?.dispo_4h) standbyOptions.push({ key: 'dispo_4h', label: `Standby: ${veh.standby.dispo_4h.label}`, net: veh.standby.dispo_4h.net });
-  if (veh.standby?.dispo_8h) standbyOptions.push({ key: 'dispo_8h', label: `Standby: ${veh.standby.dispo_8h.label}`, net: veh.standby.dispo_8h.net });
-  if (veh.standby?.dispo_8h_vip) standbyOptions.push({ key: 'dispo_8h_vip', label: `Standby: ${veh.standby.dispo_8h_vip.label}`, net: veh.standby.dispo_8h_vip.net });
-  const allServices = [...transferOptions, ...standbyOptions];
-  const selService = allServices.find((s) => s.key === calcState.serviceKey) || allServices[allServices.length - 1] || { key: 'dispo_8h', label: '8h Standby', net: 900 };
+export function getMatchingVehicles(state) {
+  return FLEET_LEDGER_ROWS.filter((v) => {
+    if (v.status !== 'confirmed') return false;
+    if (state.transportCategory !== 'all' && v.category !== state.transportCategory) return false;
+    if (state.tierFilter !== 'all' && v.tier !== state.tierFilter) return false;
 
-  const baseNet = selService.net;
-  const extraHoursCost = (Number(calcState.extraHours) || 0) * 100;
-  const extraWaitCost = (Number(calcState.extraWaitHours) || 0) * 80;
-  const subtotalBeforeNight = baseNet + extraHoursCost + extraWaitCost;
+    if (state.serviceType === 'transfer') {
+      return Boolean(v.transfers && v.transfers[state.routeKey]);
+    } else {
+      return Boolean(v.standby && v.standby[state.routeKey]);
+    }
+  });
+}
+
+function calculateTripQuote(state) {
+  const matching = getMatchingVehicles(state);
+  let veh = FLEET_LEDGER_ROWS.find((r) => r.id === state.vehicleId);
+  if (!veh || !matching.some((m) => m.id === veh.id)) {
+    veh = matching[0] || null;
+    if (veh) state.vehicleId = veh.id;
+  }
+
+  if (!veh) {
+    return {
+      veh: null,
+      matching,
+      baseNet: 0,
+      serviceLabel: 'No matching vehicles for current filters',
+      unitNet: 0,
+      extraHoursCost: 0,
+      extraWaitCost: 0,
+      ztlCost: 0,
+      nightSurcharge: 0,
+      totalNetB2B: 0,
+      vatAmount: 0,
+      totalPartnerCost: 0,
+      clientQuote: 0,
+      netMargin: 0,
+      perGuestQuote: '0.00',
+      perGuestCost: '0.00',
+      guests: state.passengerCount || 1,
+      isComoDriver: false
+    };
+  }
+
+  let unitNet = 0;
+  let serviceLabel = '';
+  if (state.serviceType === 'transfer') {
+    const t = veh.transfers?.[state.routeKey];
+    unitNet = t ? t.net : 0;
+    const routeObj = ROUTE_CATALOG.transfers.find((r) => r.key === state.routeKey);
+    serviceLabel = routeObj ? routeObj.label : (t ? t.label : state.routeKey);
+    if (state.tripDirection === 'round_trip') {
+      serviceLabel += ' (Round Trip 2×)';
+    } else {
+      serviceLabel += ' (One-Way 1×)';
+    }
+  } else {
+    const s = veh.standby?.[state.routeKey];
+    unitNet = s ? s.net : 0;
+    const routeObj = ROUTE_CATALOG.standby.find((r) => r.key === state.routeKey);
+    serviceLabel = routeObj ? routeObj.label : (s ? s.label : state.routeKey);
+  }
+
+  const baseNet = (state.serviceType === 'transfer' && state.tripDirection === 'round_trip') ? unitNet * 2 : unitNet;
+
   const isComoDriver = veh.partnerId === 'partner_1792765279097_26hr';
-  const nightSurcharge = (calcState.nightWindow && isComoDriver) ? Math.round(subtotalBeforeNight * 0.20) : 0;
+  const extraHoursCost = (Number(state.extraHours) || 0) * 100;
+  const extraWaitCost = (Number(state.extraWaitHours) || 0) * 80;
+  const ztlCost = (state.includeZtl && (veh.id === 'avantgarde_coach_30' || state.routeKey === 'mxp_milano')) ? 97.50 : 0;
+
+  const subtotalBeforeNight = baseNet + extraHoursCost + extraWaitCost + ztlCost;
+  const nightSurcharge = state.nightWindow ? Math.round(subtotalBeforeNight * 0.20) : 0;
   const totalNetB2B = subtotalBeforeNight + nightSurcharge;
-  const vatAmount = calcState.includeVat ? Math.round(totalNetB2B * 0.10) : 0;
+  const vatAmount = state.includeVat ? Math.round(totalNetB2B * 0.10) : 0;
   const totalPartnerCost = totalNetB2B + vatAmount;
-  const perPaxCost = (totalPartnerCost / veh.pax).toFixed(2);
-  const clientQuote = Math.round(totalPartnerCost * (1 + (Number(calcState.clientMarkupPct) || 0) / 100));
+
+  const guests = Math.max(1, Number(state.passengerCount) || veh.pax || 1);
+  const clientQuote = Math.round(totalPartnerCost * (1 + (Number(state.clientMarkupPct) || 0) / 100));
   const netMargin = clientQuote - totalPartnerCost;
+  const perGuestQuote = (clientQuote / guests).toFixed(2);
+  const perGuestCost = (totalPartnerCost / guests).toFixed(2);
+
+  return {
+    veh,
+    matching,
+    unitNet,
+    baseNet,
+    serviceLabel,
+    extraHoursCost,
+    extraWaitCost,
+    ztlCost,
+    nightSurcharge,
+    totalNetB2B,
+    vatAmount,
+    totalPartnerCost,
+    clientQuote,
+    netMargin,
+    perGuestQuote,
+    perGuestCost,
+    guests,
+    isComoDriver
+  };
+}
+
+function generateProposalText(quote, state) {
+  if (!quote.veh) return '';
+  const v = quote.veh;
+  const lines = [
+    `DOROGO Private Transportation — Trip Quotation`,
+    `──────────────────────────────────────────────`,
+    `Service Type: ${state.serviceType === 'transfer' ? 'Airport & City Transfer' : 'Hourly Disposal (Standby)'}`,
+    `Route / Tariff: ${quote.serviceLabel}`,
+    `Vehicle: ${v.vehicleModel} (${v.pax} Seats · ${v.tierLabel})`,
+    `Category: ${v.categoryLabel || 'Executive Transport'}`,
+    `Specs: ${v.tierSpec || 'Total Black VIP'}`,
+    `Fleet Partner: ${v.partnerName}`,
+    `Party Size: ${state.passengerCount} Guests`,
+    state.serviceType === 'transfer' ? `Direction: ${state.tripDirection === 'round_trip' ? 'Round Trip (2× transfers included)' : 'One-Way Transfer'}` : null,
+    state.extraHours > 0 ? `Additional Standby: +${state.extraHours} hour(s) (€100/h)` : null,
+    state.extraWaitHours > 0 ? `Extra Airport Waiting: +${state.extraWaitHours} hour(s) (€80/h)` : null,
+    state.includeZtl ? `Milan Area C ZTL Permit: Included (€97.50)` : null,
+    state.nightWindow ? `Night Window Surcharge (22:00–06:00): +20% included` : null,
+    `Standard Inclusions: Chauffeur, fuel, highway tolls, parking, 60m airport meet & greet`,
+    `──────────────────────────────────────────────`,
+    `Total Client Price: €${quote.clientQuote.toLocaleString('en-IE')} (approx. €${quote.perGuestQuote}/guest)`,
+    state.includeVat ? `* Price includes 10% Italian passenger transport VAT` : `* Net B2B rate excluding 10% VAT`,
+    `Terms: Advance payment upon invoice · Strict luxury discretion`,
+    `──────────────────────────────────────────────`,
+    `DOROGO Luxury Private Transportation · Lake Como & Milan · dorogo.eu`
+  ].filter(Boolean);
+  return lines.join('\n');
+}
+
+function renderPriceCalculatorCard() {
+  const quote = calculateTripQuote(calcState);
+  const v = quote.veh;
+  const matching = quote.matching;
+  const proposalRaw = generateProposalText(quote, calcState);
 
   return `
-    <div class="sail-card">
+    <div class="sail-card" id="trip-calculator">
+      <!-- Card Head with Service Mode Tabs -->
       <div class="sail-card-head">
         <div>
-          <div class="sail-card-title">B2B Trip &amp; Client Quote Calculator</div>
+          <div class="row" style="gap:8px;align-items:center">
+            <span class="sail-card-title">Customizable B2B Trip &amp; Client Quote Calculator</span>
+            <span class="sail-pill ok" style="padding:1px 7px;font-size:11px"><span class="sail-pill-dot"></span>Real Partner Rates</span>
+          </div>
           <div style="font-size:12px;color:var(--sail-muted);margin-top:2px">
-            Calculates net B2B tariff, +10% VAT, night surcharge, and client markup
+            Select route/location, group vehicles by transport category (7–30 pax) &amp; class tier, and customize guest count, round trips, night surcharge, and DOROGO margin.
           </div>
         </div>
-        <span class="sail-pill info">Instant Calculation</span>
+
+        <div class="sail-seg" role="tablist" aria-label="Service Type Switcher">
+          <button class="${calcState.serviceType === 'transfer' ? 'on' : ''}" data-calc-type="transfer">✈️ Airport &amp; City Transfers</button>
+          <button class="${calcState.serviceType === 'standby' ? 'on' : ''}" data-calc-type="standby">⏱️ Hourly Standby (Disposizione)</button>
+        </div>
       </div>
 
-      <div style="padding:16px 18px;display:flex;flex-direction:column;gap:14px">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div>
-            <label style="display:block;font-size:11.5px;font-weight:600;color:var(--sail-body);margin-bottom:4px">Vehicle</label>
-            <select id="calc-vehicle" style="width:100%;height:34px;padding:0 10px;border:1px solid var(--sail-line);border-radius:6px;font-size:13px;background:#FFF">
-              <option value="como_sprinter_12" ${calcState.vehicleId === 'como_sprinter_12' ? 'selected' : ''}>Como Driver · Mercedes Sprinter (12 pax · Luxury VIP)</option>
-              <option value="como_transit_16" ${calcState.vehicleId === 'como_transit_16' ? 'selected' : ''}>Como Driver · Ford Transit (16 pax · Standard Shuttle)</option>
-              <option value="avantgarde_sprinter_8" ${calcState.vehicleId === 'avantgarde_sprinter_8' ? 'selected' : ''}>Avantgarde (Milano Cab) · Mercedes Sprinter (7 &amp; 8 pax · Milano)</option>
-              <option value="avantgarde_minibus_18" ${calcState.vehicleId === 'avantgarde_minibus_18' ? 'selected' : ''}>Avantgarde (Milano Cab) · Mercedes Minibus (20 pax · Milano)</option>
-              <option value="avantgarde_coach_30" ${calcState.vehicleId === 'avantgarde_coach_30' ? 'selected' : ''}>Avantgarde (Milano Cab) · Executive Midibus (30 pax · Milano)</option>
-            </select>
+      <!-- Main 2-Column Responsive Calculator Body -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(360px, 1fr));gap:20px;padding:20px;background:#FFF">
+        
+        <!-- Left Column: Inputs, Category Grouping & Matched Vehicles -->
+        <div style="display:flex;flex-direction:column;gap:16px">
+          
+          <!-- Row 1: Location/Route & Transport Category -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <label class="sail-calc-label">1. Choose Location / Route</label>
+              <select id="calc-route" class="sail-calc-input">
+                ${calcState.serviceType === 'transfer' ? `
+                  <optgroup label="Lake Como ⇄ Airports">
+                    <option value="mxp_como" ${calcState.routeKey === 'mxp_como' ? 'selected' : ''}>Malpensa (MXP) ⇄ Como</option>
+                    <option value="lin_como" ${calcState.routeKey === 'lin_como' ? 'selected' : ''}>Linate (LIN) ⇄ Como</option>
+                    <option value="bgy_como" ${calcState.routeKey === 'bgy_como' ? 'selected' : ''}>Bergamo (BGY) ⇄ Como</option>
+                  </optgroup>
+                  <optgroup label="Milan ⇄ Airports">
+                    <option value="mxp_milano" ${calcState.routeKey === 'mxp_milano' ? 'selected' : ''}>Malpensa (MXP) ⇄ Milano</option>
+                  </optgroup>
+                  <optgroup label="Lake Como Excursions & City">
+                    <option value="milano_como" ${calcState.routeKey === 'milano_como' ? 'selected' : ''}>Milano Centro / FS ⇄ Como</option>
+                    <option value="tremezzo" ${calcState.routeKey === 'tremezzo' ? 'selected' : ''}>Como ⇄ Tremezzo</option>
+                    <option value="bellagio" ${calcState.routeKey === 'bellagio' ? 'selected' : ''}>Como ⇄ Bellagio</option>
+                  </optgroup>
+                ` : `
+                  <option value="dispo_4h" ${calcState.routeKey === 'dispo_4h' ? 'selected' : ''}>Disposizione 4h (Half Day · 75–100 km)</option>
+                  <option value="dispo_8h" ${calcState.routeKey === 'dispo_8h' ? 'selected' : ''}>Disposizione 8h (Full Day · 150–200 km)</option>
+                  <option value="dispo_8h_vip" ${calcState.routeKey === 'dispo_8h_vip' ? 'selected' : ''}>Disposizione 8h Top VIP (Full Day VIP · 150 km)</option>
+                `}
+              </select>
+            </div>
+
+            <div>
+              <label class="sail-calc-label">2. Transport Type / Category</label>
+              <select id="calc-category" class="sail-calc-input">
+                ${TRANSPORT_CATEGORIES.map((cat) => `
+                  <option value="${attr(cat.key)}" ${calcState.transportCategory === cat.key ? 'selected' : ''}>${esc(cat.label)}</option>
+                `).join('')}
+              </select>
+            </div>
           </div>
 
+          <!-- Row 2: Class Tier & Passenger Count -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <label class="sail-calc-label">3. Class Tier</label>
+              <select id="calc-tier" class="sail-calc-input">
+                <option value="all" ${calcState.tierFilter === 'all' ? 'selected' : ''}>All Classes (Luxury &amp; Standard)</option>
+                <option value="luxury" ${calcState.tierFilter === 'luxury' ? 'selected' : ''}>Luxury VIP Only</option>
+                <option value="standard" ${calcState.tierFilter === 'standard' ? 'selected' : ''}>Standard Shuttle</option>
+              </select>
+            </div>
+
+            <div>
+              <div class="row between" style="margin-bottom:4px">
+                <label class="sail-calc-label" style="margin-bottom:0">4. Guest / Passenger Count</label>
+                <span style="font-size:11px;color:var(--sail-muted)">Party size</span>
+              </div>
+              <input type="number" id="calc-passengers" min="1" max="50" value="${calcState.passengerCount}" class="sail-calc-input" placeholder="e.g. 8">
+            </div>
+          </div>
+
+          <!-- Step 3: Available Matching Vehicles in Selected Category & Route -->
           <div>
-            <label style="display:block;font-size:11.5px;font-weight:600;color:var(--sail-body);margin-bottom:4px">Route or Standby Package</label>
-            <select id="calc-service" style="width:100%;height:34px;padding:0 10px;border:1px solid var(--sail-line);border-radius:6px;font-size:13px;background:#FFF">
-              ${allServices.map((s) => `
-                <option value="${attr(s.key)}" ${calcState.serviceKey === s.key ? 'selected' : ''}>${esc(s.label)} — €${s.net}</option>
-              `).join('')}
-            </select>
+            <div class="row between" style="align-items:center;margin-bottom:4px">
+              <span class="sail-calc-label" style="margin-bottom:0">5. Matching Vehicles (${matching.length} Available)</span>
+              <span style="font-size:11px;color:var(--sail-muted)">Click card to select</span>
+            </div>
+
+            ${matching.length > 0 ? `
+              <div class="sail-calc-veh-grid">
+                ${matching.map((vehItem) => {
+                  const isSelected = v && v.id === vehItem.id;
+                  let itemPrice = 0;
+                  if (calcState.serviceType === 'transfer') {
+                    itemPrice = vehItem.transfers?.[calcState.routeKey]?.net || 0;
+                    if (calcState.tripDirection === 'round_trip') itemPrice *= 2;
+                  } else {
+                    itemPrice = vehItem.standby?.[calcState.routeKey]?.net || 0;
+                  }
+                  const exceedsPax = calcState.passengerCount > vehItem.pax;
+                  return `
+                    <div class="sail-veh-pick ${isSelected ? 'active' : ''}" data-calc-pick-veh="${attr(vehItem.id)}">
+                      <div class="row between" style="align-items:flex-start">
+                        <div class="row" style="gap:7px;align-items:center">
+                          <span class="sail-veh-pick-radio"></span>
+                          <span style="font-weight:600;font-size:12.5px;color:var(--sail-ink)">${esc(vehItem.vehicleModel)}</span>
+                        </div>
+                        <span class="sail-pill ${vehItem.tier === 'luxury' ? 'lux' : 'std'}" style="font-size:10px;padding:1px 5px">
+                          ${esc(vehItem.tierLabel)}
+                        </span>
+                      </div>
+
+                      <div style="font-size:11.5px;color:var(--sail-body)">
+                        <strong>${vehItem.pax} seats</strong> · ${esc(vehItem.partnerName)}
+                      </div>
+
+                      <div class="row between" style="align-items:baseline;margin-top:4px">
+                        <span style="font-size:11px;color:var(--sail-muted)">${esc(vehItem.baseCity)}</span>
+                        <span style="font-size:13.5px;font-weight:700;color:var(--sail-ink);font-variant-numeric:tabular-nums">
+                          €${itemPrice} <span style="font-size:10.5px;font-weight:500;color:var(--sail-muted)">net</span>
+                        </span>
+                      </div>
+
+                      ${exceedsPax ? `
+                        <div style="font-size:10.5px;color:#B91C1C;font-weight:500;margin-top:2px">
+                          ⚠️ ${calcState.passengerCount} guests exceeds ${vehItem.pax}-seat max
+                        </div>
+                      ` : ''}
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            ` : `
+              <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;padding:12px;font-size:12px;color:#92400E">
+                No vehicles in the <strong>${esc(calcState.transportCategory !== 'all' ? TRANSPORT_CATEGORIES.find(c => c.key === calcState.transportCategory)?.label : 'selected')}</strong> category operate this exact service/route.
+                <button class="sail-preset-btn" style="margin-left:8px" id="calc-clear-cat">Show All Categories</button>
+              </div>
+            `}
+          </div>
+
+          <!-- Step 4: Trip Options & Add-on Customizations -->
+          <div style="border-top:1px solid var(--sail-line-soft);padding-top:14px;display:flex;flex-direction:column;gap:12px">
+            <span class="sail-calc-label" style="margin-bottom:0">6. Trip Customization &amp; Add-ons</span>
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+              ${calcState.serviceType === 'transfer' ? `
+                <div>
+                  <label class="sail-calc-label">Trip Direction</label>
+                  <select id="calc-direction" class="sail-calc-input">
+                    <option value="one_way" ${calcState.tripDirection === 'one_way' ? 'selected' : ''}>One-Way (1×)</option>
+                    <option value="round_trip" ${calcState.tripDirection === 'round_trip' ? 'selected' : ''}>Round Trip (2×)</option>
+                  </select>
+                </div>
+              ` : `
+                <div>
+                  <label class="sail-calc-label">Disposal Mode</label>
+                  <input type="text" class="sail-calc-input" value="Standard Disposal" disabled style="background:#F1F5F9;color:var(--sail-muted)">
+                </div>
+              `}
+
+              <div>
+                <label class="sail-calc-label">Extra Hours (€100/h)</label>
+                <input type="number" id="calc-extra-hours" min="0" max="12" value="${calcState.extraHours}" class="sail-calc-input">
+              </div>
+
+              <div>
+                <label class="sail-calc-label">Extra Wait (€80/h)</label>
+                <input type="number" id="calc-extra-wait" min="0" max="6" value="${calcState.extraWaitHours}" class="sail-calc-input">
+              </div>
+            </div>
+
+            <!-- Toggles for ZTL, Night & VAT -->
+            <div class="row" style="gap:16px;flex-wrap:wrap;padding:4px 0">
+              <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--sail-ink);cursor:pointer">
+                <input type="checkbox" id="calc-ztl" ${calcState.includeZtl ? 'checked' : ''}>
+                Milan Area C ZTL (€97.50 entry permit)
+              </label>
+
+              <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--sail-ink);cursor:pointer">
+                <input type="checkbox" id="calc-night" ${calcState.nightWindow ? 'checked' : ''}>
+                Night window 22:00–06:00 (+20% surcharge)
+              </label>
+
+              <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--sail-ink);cursor:pointer">
+                <input type="checkbox" id="calc-vat" ${calcState.includeVat ? 'checked' : ''}>
+                Include 10% Italian VAT
+              </label>
+            </div>
+
+            <!-- Markup Customizer -->
+            <div style="background:#F8FAFC;border:1px solid var(--sail-line);border-radius:6px;padding:10px 12px">
+              <div class="row between" style="align-items:center">
+                <label class="sail-calc-label" style="margin-bottom:0">DOROGO Commercial Markup</label>
+                <div class="row" style="gap:4px">
+                  <button class="sail-preset-btn ${calcState.clientMarkupPct === 15 ? 'active' : ''}" data-markup-preset="15">+15%</button>
+                  <button class="sail-preset-btn ${calcState.clientMarkupPct === 25 ? 'active' : ''}" data-markup-preset="25">+25%</button>
+                  <button class="sail-preset-btn ${calcState.clientMarkupPct === 35 ? 'active' : ''}" data-markup-preset="35">+35%</button>
+                  <button class="sail-preset-btn ${calcState.clientMarkupPct === 50 ? 'active' : ''}" data-markup-preset="50">+50%</button>
+                </div>
+              </div>
+              <div class="row" style="gap:8px;align-items:center;margin-top:6px">
+                <input type="range" id="calc-markup-range" min="0" max="60" step="5" value="${calcState.clientMarkupPct}" style="flex:1">
+                <div style="display:flex;align-items:center;gap:2px">
+                  <input type="number" id="calc-markup-num" min="0" max="100" value="${calcState.clientMarkupPct}" class="sail-calc-input" style="width:65px;height:28px;text-align:right">
+                  <span style="font-size:12px;color:var(--sail-body);font-weight:600">%</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-          <div>
-            <label style="display:block;font-size:11.5px;font-weight:600;color:var(--sail-body);margin-bottom:4px">Extra Hours (€100/h)</label>
-            <input type="number" id="calc-extra-hours" min="0" max="12" value="${calcState.extraHours}" style="width:100%;height:32px;padding:0 10px;border:1px solid var(--sail-line);border-radius:6px;font-size:13px">
-          </div>
-          <div>
-            <label style="display:block;font-size:11.5px;font-weight:600;color:var(--sail-body);margin-bottom:4px">Extra Wait (€80/h)</label>
-            <input type="number" id="calc-extra-wait" min="0" max="6" value="${calcState.extraWaitHours}" style="width:100%;height:32px;padding:0 10px;border:1px solid var(--sail-line);border-radius:6px;font-size:13px">
-          </div>
-          <div>
-            <label style="display:block;font-size:11.5px;font-weight:600;color:var(--sail-body);margin-bottom:4px">DOROGO Markup (%)</label>
-            <input type="number" id="calc-markup" min="0" max="100" step="5" value="${calcState.clientMarkupPct}" style="width:100%;height:32px;padding:0 10px;border:1px solid var(--sail-line);border-radius:6px;font-size:13px">
+        <!-- Right Column: Real-Time B2B Ledger, Margin, Client Quote & Copy Proposal -->
+        <div style="display:flex;flex-direction:column;gap:14px">
+          
+          <div class="sail-calc-summary-card">
+            <!-- Active Selection Overview -->
+            <div>
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--sail-muted)">
+                Trip Quotation Overview
+              </div>
+              <div style="font-size:15px;font-weight:700;color:var(--sail-ink);margin-top:2px">
+                ${esc(quote.serviceLabel)}
+              </div>
+              ${v ? `
+                <div style="font-size:12px;color:var(--sail-body);margin-top:2px">
+                  ${esc(v.vehicleModel)} · <strong>${v.pax} pax</strong> · <span class="sail-pill ${v.tier === 'luxury' ? 'lux' : 'std'}" style="font-size:10px;padding:1px 5px">${esc(v.tierLabel)}</span>
+                </div>
+                <div style="font-size:11.5px;color:var(--sail-muted);margin-top:1px">
+                  Operator: <strong>${esc(v.partnerName)}</strong> (${esc(v.baseCity)})
+                </div>
+              ` : `
+                <div style="font-size:12px;color:#B91C1C;margin-top:2px">No matching vehicle available</div>
+              `}
+            </div>
+
+            <!-- Itemized Financial Breakdown -->
+            <div style="border-top:1px solid var(--sail-line);padding-top:10px;display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--sail-body);font-variant-numeric:tabular-nums">
+              <div class="row between">
+                <span>Base Partner Tariff</span>
+                <span style="font-weight:600">€${quote.baseNet}</span>
+              </div>
+
+              ${quote.extraHoursCost > 0 ? `
+                <div class="row between">
+                  <span>Extra hours (${calcState.extraHours}h × €100)</span>
+                  <span>+€${quote.extraHoursCost}</span>
+                </div>
+              ` : ''}
+
+              ${quote.extraWaitCost > 0 ? `
+                <div class="row between">
+                  <span>Extra airport wait (${calcState.extraWaitHours}h × €80)</span>
+                  <span>+€${quote.extraWaitCost}</span>
+                </div>
+              ` : ''}
+
+              ${quote.ztlCost > 0 ? `
+                <div class="row between">
+                  <span>Milan Area C ZTL Entry</span>
+                  <span>+€${quote.ztlCost.toFixed(2)}</span>
+                </div>
+              ` : ''}
+
+              ${quote.nightSurcharge > 0 ? `
+                <div class="row between">
+                  <span>Night window surcharge (+20%)</span>
+                  <span>+€${quote.nightSurcharge}</span>
+                </div>
+              ` : ''}
+
+              <div class="row between" style="border-top:1px dashed var(--sail-line);padding-top:4px;color:var(--sail-ink)">
+                <span>Net B2B Subtotal</span>
+                <span style="font-weight:600">€${quote.totalNetB2B}</span>
+              </div>
+
+              ${quote.vatAmount > 0 ? `
+                <div class="row between">
+                  <span>Italian VAT (+10%)</span>
+                  <span>+€${quote.vatAmount}</span>
+                </div>
+              ` : ''}
+
+              <div class="row between" style="border-top:1px solid var(--sail-line);padding-top:6px;font-size:13px;font-weight:700;color:var(--sail-ink)">
+                <span>Total Partner Cost</span>
+                <span>€${quote.totalPartnerCost}</span>
+              </div>
+            </div>
+
+            <!-- DOROGO Commercial Margin Strip -->
+            <div style="background:#FFFFFF;border:1px solid var(--sail-line);border-radius:6px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;font-variant-numeric:tabular-nums">
+              <div>
+                <div style="font-size:11px;font-weight:600;color:var(--sail-accent)">DOROGO Gross Margin</div>
+                <div style="font-size:11px;color:var(--sail-muted)">+${calcState.clientMarkupPct}% client markup</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:13px;font-weight:700;color:var(--sail-accent)">+€${quote.netMargin}</div>
+                <div style="font-size:10.5px;color:var(--sail-muted)">profit</div>
+              </div>
+            </div>
+
+            <!-- Big Final Client Quote -->
+            <div style="background:#0A2540;color:#FFFFFF;border-radius:6px;padding:14px;text-align:center">
+              <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:#94A3B8">
+                Recommended Client Quote
+              </div>
+              <div style="font-size:28px;font-weight:800;letter-spacing:-0.02em;margin:4px 0;font-variant-numeric:tabular-nums;color:#FFFFFF">
+                €${quote.clientQuote.toLocaleString('en-IE')}
+              </div>
+              <div style="font-size:12px;color:#CBD5E1">
+                approx. <strong>€${quote.perGuestQuote}</strong> per guest (${quote.guests} guests)
+              </div>
+            </div>
+
+            <!-- Actions: Copy Proposal & Reset -->
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <button class="sail-btn primary" id="calc-copy-proposal" data-proposal-text="${attr(proposalRaw)}" style="width:100%;justify-content:center;height:36px;font-weight:600">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="5" width="8" height="8" rx="1.5"/><path d="M3 11V3.5A1.5 1.5 0 0 1 4.5 2H11"/></svg>
+                Copy Client Proposal
+              </button>
+              <div class="row between" style="align-items:center">
+                <span style="font-size:11px;color:var(--sail-muted)">Ready for WhatsApp or Email</span>
+                <button class="sail-btn xs" id="calc-reset" style="color:var(--sail-muted)">Reset Defaults</button>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="row" style="gap:18px;padding:4px 0">
-          ${isComoDriver ? `
-            <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--sail-ink);cursor:pointer">
-              <input type="checkbox" id="calc-night" ${calcState.nightWindow ? 'checked' : ''}>
-              Night service 22:00–06:00 (+20% Como Driver rate sheet)
-            </label>
-          ` : ''}
-          <label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--sail-ink);cursor:pointer">
-            <input type="checkbox" id="calc-vat" ${calcState.includeVat ? 'checked' : ''}>
-            Include 10% Italian VAT
-          </label>
-        </div>
-
-        <!-- Ledger Breakdown Output -->
-        <div style="background:#F8FAFC;border:1px solid var(--sail-line);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;font-variant-numeric:tabular-nums">
-          <div class="row between" style="font-size:12.5px;color:var(--sail-body)">
-            <span>Base rate (${esc(selService.label)})</span>
-            <span>€${baseNet}</span>
-          </div>
-          ${extraHoursCost > 0 ? `<div class="row between" style="font-size:12.5px;color:var(--sail-body)"><span>Extra hours (${calcState.extraHours}h × €100)</span><span>+€${extraHoursCost}</span></div>` : ''}
-          ${extraWaitCost > 0 ? `<div class="row between" style="font-size:12.5px;color:var(--sail-body)"><span>Extra waiting (${calcState.extraWaitHours}h × €80)</span><span>+€${extraWaitCost}</span></div>` : ''}
-          ${nightSurcharge > 0 ? `<div class="row between" style="font-size:12.5px;color:var(--sail-body)"><span>Night surcharge (+20%)</span><span>+€${nightSurcharge}</span></div>` : ''}
-          ${vatAmount > 0 ? `<div class="row between" style="font-size:12.5px;color:var(--sail-body)"><span>Italian passenger transport VAT (10%)</span><span>+€${vatAmount}</span></div>` : ''}
-          <div class="row between" style="border-top:1px solid var(--sail-line);padding-top:8px;margin-top:2px;font-size:14px;font-weight:700;color:var(--sail-ink)">
-            <span>Partner B2B Cost (${veh.pax} seats · €${perPaxCost}/pax)</span>
-            <span>€${totalPartnerCost}</span>
-          </div>
-          <div class="row between" style="font-size:13.5px;font-weight:600;color:var(--sail-accent)">
-            <span>Suggested Client Price (+${calcState.clientMarkupPct}% · €${netMargin} margin)</span>
-            <span>€${clientQuote}</span>
-          </div>
-        </div>
       </div>
     </div>
   `;
@@ -1069,23 +1475,233 @@ function attachLedgerListeners(el) {
     });
   }
 
-  // Calculator inputs
-  const bindCalc = (sel, fn) => {
-    const node = el.querySelector(sel);
-    if (node) {
-      node.addEventListener('change', (e) => {
-        fn(e.target);
-        render(el);
-      });
-    }
-  };
-  bindCalc('#calc-vehicle', (t) => { calcState.vehicleId = t.value; });
-  bindCalc('#calc-service', (t) => { calcState.serviceKey = t.value; });
-  bindCalc('#calc-extra-hours', (t) => { calcState.extraHours = Math.max(0, Number(t.value) || 0); });
-  bindCalc('#calc-extra-wait', (t) => { calcState.extraWaitHours = Math.max(0, Number(t.value) || 0); });
-  bindCalc('#calc-markup', (t) => { calcState.clientMarkupPct = Math.max(0, Number(t.value) || 0); });
-  bindCalc('#calc-night', (t) => { calcState.nightWindow = Boolean(t.checked); });
-  bindCalc('#calc-vat', (t) => { calcState.includeVat = Boolean(t.checked); });
+  // Calculator Service Type Switcher (Transfers vs Standby)
+  el.querySelectorAll('[data-calc-type]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const prevY = window.scrollY;
+      const newType = btn.dataset.calcType;
+      calcState.serviceType = newType;
+      if (newType === 'transfer') {
+        calcState.routeKey = 'mxp_como';
+      } else {
+        calcState.routeKey = 'dispo_8h';
+      }
+      render(el);
+      window.scrollTo(0, prevY);
+    });
+  });
+
+  // Calculator Route select
+  const routeSelect = el.querySelector('#calc-route');
+  if (routeSelect) {
+    routeSelect.addEventListener('change', (e) => {
+      const prevY = window.scrollY;
+      calcState.routeKey = e.target.value;
+      render(el);
+      window.scrollTo(0, prevY);
+    });
+  }
+
+  // Calculator Category select (VIP Minivan, Executive Minibus, etc.)
+  const catSelect = el.querySelector('#calc-category');
+  if (catSelect) {
+    catSelect.addEventListener('change', (e) => {
+      const prevY = window.scrollY;
+      calcState.transportCategory = e.target.value;
+      render(el);
+      window.scrollTo(0, prevY);
+    });
+  }
+
+  // Calculator Class Tier filter
+  const calcTier = el.querySelector('#calc-tier');
+  if (calcTier) {
+    calcTier.addEventListener('change', (e) => {
+      const prevY = window.scrollY;
+      calcState.tierFilter = e.target.value;
+      render(el);
+      window.scrollTo(0, prevY);
+    });
+  }
+
+  // Calculator Passenger Count
+  const paxInput = el.querySelector('#calc-passengers');
+  if (paxInput) {
+    paxInput.addEventListener('input', (e) => {
+      const prevY = window.scrollY;
+      calcState.passengerCount = Math.max(1, Number(e.target.value) || 1);
+      render(el);
+      window.scrollTo(0, prevY);
+    });
+  }
+
+  // Vehicle Pick Card selection
+  el.querySelectorAll('[data-calc-pick-veh]').forEach((card) => {
+    card.addEventListener('click', () => {
+      const prevY = window.scrollY;
+      calcState.vehicleId = card.dataset.calcPickVeh;
+      render(el);
+      window.scrollTo(0, prevY);
+    });
+  });
+
+  // Clear Category Button fallback
+  const clearCatBtn = el.querySelector('#calc-clear-cat');
+  if (clearCatBtn) {
+    clearCatBtn.addEventListener('click', () => {
+      const prevY = window.scrollY;
+      calcState.transportCategory = 'all';
+      render(el);
+      window.scrollTo(0, prevY);
+    });
+  }
+
+  // Trip Direction select (One-Way vs Round Trip)
+  const dirSelect = el.querySelector('#calc-direction');
+  if (dirSelect) {
+    dirSelect.addEventListener('change', (e) => {
+      const prevY = window.scrollY;
+      calcState.tripDirection = e.target.value;
+      render(el);
+      window.scrollTo(0, prevY);
+    });
+  }
+
+  // Extra Hours
+  const extraHoursInput = el.querySelector('#calc-extra-hours');
+  if (extraHoursInput) {
+    extraHoursInput.addEventListener('input', (e) => {
+      const prevY = window.scrollY;
+      calcState.extraHours = Math.max(0, Number(e.target.value) || 0);
+      render(el);
+      window.scrollTo(0, prevY);
+    });
+  }
+
+  // Extra Airport Wait
+  const extraWaitInput = el.querySelector('#calc-extra-wait');
+  if (extraWaitInput) {
+    extraWaitInput.addEventListener('input', (e) => {
+      const prevY = window.scrollY;
+      calcState.extraWaitHours = Math.max(0, Number(e.target.value) || 0);
+      render(el);
+      window.scrollTo(0, prevY);
+    });
+  }
+
+  // Milan Area C ZTL Permit toggle
+  const ztlToggle = el.querySelector('#calc-ztl');
+  if (ztlToggle) {
+    ztlToggle.addEventListener('change', (e) => {
+      const prevY = window.scrollY;
+      calcState.includeZtl = Boolean(e.target.checked);
+      render(el);
+      window.scrollTo(0, prevY);
+    });
+  }
+
+  // Night window toggle
+  const nightToggle = el.querySelector('#calc-night');
+  if (nightToggle) {
+    nightToggle.addEventListener('change', (e) => {
+      const prevY = window.scrollY;
+      calcState.nightWindow = Boolean(e.target.checked);
+      render(el);
+      window.scrollTo(0, prevY);
+    });
+  }
+
+  // Italian VAT toggle
+  const vatToggle = el.querySelector('#calc-vat');
+  if (vatToggle) {
+    vatToggle.addEventListener('change', (e) => {
+      const prevY = window.scrollY;
+      calcState.includeVat = Boolean(e.target.checked);
+      render(el);
+      window.scrollTo(0, prevY);
+    });
+  }
+
+  // Markup slider & numeric inputs
+  const markupRange = el.querySelector('#calc-markup-range');
+  const markupNum = el.querySelector('#calc-markup-num');
+  if (markupRange) {
+    markupRange.addEventListener('input', (e) => {
+      const prevY = window.scrollY;
+      calcState.clientMarkupPct = Number(e.target.value) || 0;
+      render(el);
+      window.scrollTo(0, prevY);
+    });
+  }
+  if (markupNum) {
+    markupNum.addEventListener('input', (e) => {
+      const prevY = window.scrollY;
+      calcState.clientMarkupPct = Math.max(0, Number(e.target.value) || 0);
+      render(el);
+      window.scrollTo(0, prevY);
+    });
+  }
+
+  // Markup presets (+15%, +25%, +35%, +50%)
+  el.querySelectorAll('[data-markup-preset]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const prevY = window.scrollY;
+      calcState.clientMarkupPct = Number(btn.dataset.markupPreset) || 25;
+      render(el);
+      window.scrollTo(0, prevY);
+    });
+  });
+
+  // Copy Client Proposal Button
+  const copyProposalBtn = el.querySelector('#calc-copy-proposal');
+  if (copyProposalBtn) {
+    copyProposalBtn.addEventListener('click', async () => {
+      const text = copyProposalBtn.dataset.proposalText || '';
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }
+        toast('Client proposal copied to clipboard!');
+      } catch (err) {
+        toast('Failed to copy quote: ' + err.message);
+      }
+    });
+  }
+
+  // Reset Defaults Button
+  const resetBtn = el.querySelector('#calc-reset');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      const prevY = window.scrollY;
+      calcState = {
+        serviceType: 'transfer',
+        routeKey: 'mxp_como',
+        transportCategory: 'all',
+        tierFilter: 'all',
+        passengerCount: 8,
+        vehicleId: 'como_sprinter_12',
+        tripDirection: 'one_way',
+        extraHours: 0,
+        extraWaitHours: 0,
+        includeZtl: false,
+        nightWindow: false,
+        includeVat: false,
+        clientMarkupPct: 25
+      };
+      render(el);
+      window.scrollTo(0, prevY);
+      toast('Calculator reset to defaults');
+    });
+  }
 
   // Photo Gallery Lightbox Modal
   el.querySelectorAll('[data-open-gallery]').forEach((trigger) => {
