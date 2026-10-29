@@ -839,8 +839,15 @@ export function calculateAdjustedPrice(netAmount, mode = 'net') {
   return n;
 }
 
-function formatEur(amount) {
-  return `€${Number(amount).toLocaleString('en-IE', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+export function formatPriceWithUnit(amt, unit = '') {
+  if (amt === null || amt === undefined || amt === 0 || amt === '0' || isNaN(Number(amt))) {
+    return '?';
+  }
+  return `€${Number(amt).toLocaleString('en-IE', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}${unit}`;
+}
+
+export function formatEur(amount) {
+  return formatPriceWithUnit(amount, '');
 }
 
 function modeBadgeText(mode) {
@@ -1066,11 +1073,11 @@ function renderLedgerRow(row) {
     const exW = row.standby.extra_wait ? calculateAdjustedPrice(row.standby.extra_wait.net, pricingMode) : null;
     standbyHtml = `
       <div class="sail-rate-grid">
-        ${s4 !== null ? `<span class="sail-rate-route" title="${attr(row.standby.dispo_4h.label || '4h Standby')}">${esc(row.standby.dispo_4h.label || '4h Standby')}</span><span class="sail-rate-amt">${formatEur(s4)}</span>` : ''}
-        ${s8 !== null ? `<span class="sail-rate-route" title="${attr(row.standby.dispo_8h.label || '8h Standby')}">${esc(row.standby.dispo_8h.label || '8h Standby')}</span><span class="sail-rate-amt">${formatEur(s8)}</span>` : ''}
-        ${s8vip !== null ? `<span class="sail-rate-route" title="${attr(row.standby.dispo_8h_vip.label || '8h Top VIP')}">${esc(row.standby.dispo_8h_vip.label || '8h Top VIP')}</span><span class="sail-rate-amt">${formatEur(s8vip)}</span>` : ''}
-        ${exH !== null ? `<span class="sail-rate-route" title="${attr(row.standby.extra_hour.label || 'Ore Extra')}">${esc(row.standby.extra_hour.label || 'Ore Extra')}</span><span class="sail-rate-amt">${formatEur(exH)}/h</span>` : ''}
-        ${exW !== null ? `<span class="sail-rate-route" title="${attr(row.standby.extra_wait.label || 'Attesa extra')}">${esc(row.standby.extra_wait.label || 'Attesa extra')}</span><span class="sail-rate-amt">${formatEur(exW)}</span>` : ''}
+        ${s4 !== null ? `<span class="sail-rate-route" title="${attr(row.standby.dispo_4h.label || '4h Standby')}">${esc(row.standby.dispo_4h.label || '4h Standby')}</span><span class="sail-rate-amt">${formatPriceWithUnit(s4)}</span>` : ''}
+        ${s8 !== null ? `<span class="sail-rate-route" title="${attr(row.standby.dispo_8h.label || '8h Standby')}">${esc(row.standby.dispo_8h.label || '8h Standby')}</span><span class="sail-rate-amt">${formatPriceWithUnit(s8)}</span>` : ''}
+        ${s8vip !== null ? `<span class="sail-rate-route" title="${attr(row.standby.dispo_8h_vip.label || '8h Top VIP')}">${esc(row.standby.dispo_8h_vip.label || '8h Top VIP')}</span><span class="sail-rate-amt">${formatPriceWithUnit(s8vip)}</span>` : ''}
+        ${exH !== null ? `<span class="sail-rate-route" title="${attr(row.standby.extra_hour.label || 'Ore Extra')}">${esc(row.standby.extra_hour.label || 'Ore Extra')}</span><span class="sail-rate-amt">${formatPriceWithUnit(exH, '/h')}</span>` : ''}
+        ${exW !== null ? `<span class="sail-rate-route" title="${attr(row.standby.extra_wait.label || 'Attesa extra')}">${esc(row.standby.extra_wait.label || 'Attesa extra')}</span><span class="sail-rate-amt">${formatPriceWithUnit(exW)}</span>` : ''}
       </div>
     `;
   } else {

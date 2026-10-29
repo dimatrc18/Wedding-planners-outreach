@@ -12,7 +12,9 @@ import {
   getTransportCategories,
   getAllTransferRoutes,
   addVehicleToFleet,
-  deleteCustomVehicle
+  deleteCustomVehicle,
+  formatEur,
+  formatPriceWithUnit
 } from '../app/views/fleet_showcase.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -233,5 +235,16 @@ test('Fleet Showcase Calculator: Dynamic route discovery pools routes across all
   assert.ok(routes.length >= 7);
   assert.ok(routes.some((r) => r.key === 'mxp_como'));
   assert.ok(routes.some((r) => r.key === 'tremezzo'));
+});
+
+test('formatPriceWithUnit & formatEur: Renders "?" when price is 0, null, or undefined (never "€0" or "€0/h")', () => {
+  assert.equal(formatEur(0), '?');
+  assert.equal(formatEur(null), '?');
+  assert.equal(formatEur(undefined), '?');
+  assert.equal(formatEur(100), '€100');
+  assert.equal(formatPriceWithUnit(0, '/h'), '?');
+  assert.equal(formatPriceWithUnit(null, '/h'), '?');
+  assert.equal(formatPriceWithUnit(140, '/h'), '€140/h');
+  assert.equal(formatPriceWithUnit(140), '€140');
 });
 
