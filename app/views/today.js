@@ -150,8 +150,14 @@ export function render(el) {
   const dueUndrafted = d.due.length;
   const now = new Date();
   const busList = (S.busPartners || []).filter((b) => b.status !== 'NOT_RELEVANT');
-  const busContacted = busList.filter((b) => ['t1_sent', 't2_sent', 't3_sent', 'replied'].includes(b.outreach_stage)).length;
+  const busContacted = busList.filter((b) => ['t1_sent', 't2_sent', 't3_sent', 'replied'].includes(b.outreach_stage) || b.sent_at).length;
   const busReplied = busList.filter((b) => b.outreach_stage === 'replied' || b.replied_at).length;
+  const busTotalSent = busList.reduce((sum, b) => {
+    if (b.outreach_stage === 't3_sent') return sum + 3;
+    if (b.outreach_stage === 't2_sent') return sum + 2;
+    if (b.outreach_stage === 't1_sent' || b.outreach_stage === 'replied' || b.sent_at) return sum + (b.last_followup_at ? 2 : 1);
+    return sum;
+  }, 0);
   const todayKey = core.localDateKey(now, S.settings.timezone || 'Europe/Rome');
   const busSentToday = busList.filter((b) => {
     const ts = b.last_followup_at || b.sent_at;
@@ -180,15 +186,15 @@ export function render(el) {
     <div class="kpis">
       ${kpiTile('Positive reply rate', pct(m.positiveRate.p, m.positiveRate.p !== null && m.positiveRate.p < 0.1 ? 1 : 0), m.positiveRate.n ? `${m.positive} of ${m.contacted} · likely ${pct(m.positiveRate.lo)} to ${pct(m.positiveRate.hi)}` : 'No contacts yet', rateMeter(m.positiveRate, tg.positive_reply_rate))}
       ${kpiTile('Replies waiting', `${d.replies.length}`, d.replies.length ? `oldest ${ago(d.replies.reduce((a, t) => (new Date(t.replied_at || t.created_at || Date.now()) < new Date(a) ? (t.replied_at || t.created_at) : a), d.replies[0]?.replied_at || d.replies[0]?.created_at || new Date().toISOString()))}` : 'Inbox clear', '')}
-      ${kpiTile('Partners won', `${m.won}`, `target ${tg.partners_won} to ${tg.partners_won_high} this season · ${m.contacted} contacted (${wpSentToday} sent today)`, rateMeter({ p: Math.min(m.won / tg.partners_won_high, 1), lo: Math.min(m.won / tg.partners_won_high, 1), hi: Math.min(m.won / tg.partners_won_high, 1) }, tg.partners_won / tg.partners_won_high, 1))}
-      ${kpiTile('Bounced emails', `${m.bounced}`, `${m.bounced} bounced (${pct(m.bounceRate.p || (m.emailsSent > 0 ? m.bounced / m.emailsSent : 0), 1)}) · ${m.emailsSent} sent`, rateMeter(m.bounceRate, S.settings.bounce_pause_rate || 0.05, 0.2))}
+      ${kpiTile('Partners won', `${m.won}`, `target ${tg.partners_won} to ${tg.partners_won_high} this season · ${m.contacted} contacted (${m.emailsSent} sent all-time${wpSentToday ? `, ${wpSentToday} today` : ''})`, rateMeter({ p: Math.min(m.won / tg.partners_won_high, 1), lo: Math.min(m.won / tg.partners_won_high, 1), hi: Math.min(m.won / tg.partners_won_high, 1) }, tg.partners_won / tg.partners_won_high, 1))}
+      ${kpiTile('Bounced emails', `${m.bounced}`, `${m.bounced} bounced (${pct(m.bounceRate.p || (m.emailsSent > 0 ? m.bounced / m.emailsSent : 0), 1)}) · ${m.emailsSent} sent all-time`, rateMeter(m.bounceRate, S.settings.bounce_pause_rate || 0.05, 0.2))}
     </div>
     <a class="card row nowrap" href="#analytics" style="text-decoration:none;color:inherit">${icon('chart')}<span class="grow"><b>${esc(v.headline)}</b> <span class="muted small">${esc(v.detail)}</span></span><span class="small">Analytics →</span></a>
 
     <div class="card row" style="gap:12px;align-items:center;flex-wrap:wrap;background:#F8FAFC;border-color:#E2E8F0">
       <span class="chip ok" style="font-weight:600">🚌 Bus Fleet Outreach</span>
       <span class="grow" style="font-size:13px">
-        <b>${busContacted}</b> bus operators contacted · <b>${busReplied}</b> replied (Como Driver, Avantgarde, Landway, Como Limo Lux) · <b>${busSentToday}</b> emails sent today
+        <b>${busContacted}</b> bus operators contacted · <b>${busReplied}</b> replied (Como Driver, Avantgarde, Landway, Como Limo Lux) · <b>${busTotalSent}</b> emails sent all-time${busSentToday ? ` (${busSentToday} today)` : ''}
       </span>
       <a class="btn sm primary" href="#fleet_showcase">Fleet &amp; Rate Ledger →</a>
       <a class="btn sm" href="#bus_partners">All ${busList.length} Operators →</a>

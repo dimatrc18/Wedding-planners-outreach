@@ -18,16 +18,17 @@ import {
   normalizeDomain
 } from './bus_partners_data.js';
 
-export const S = {
+export const S = (typeof globalThis !== 'undefined' && globalThis.__DOROGO_STORE_S__) || {
   mode: 'loading', // loading | signed_out | live | demo
   user: null,
   prospects: [], touches: [], opps: [], templates: [], events: [],
-  busPartners: [],
-  excludedBusPartners: [],
+  busPartners: loadStoredBusPartners(),
+  excludedBusPartners: loadExcludedBusPartners(),
   settings: withDefaults(DEFAULT_SETTINGS),
   health: null,
   lastSyncAt: null,
 };
+if (typeof globalThis !== 'undefined') globalThis.__DOROGO_STORE_S__ = S;
 
 let sb = null;
 let backend = null;
