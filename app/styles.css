@@ -860,6 +860,27 @@ tr.clickable { cursor: pointer; } tr.clickable:hover td { background: var(--surf
   white-space: nowrap;
 }
 
+.sail-rate-bullets {
+  margin: 7px 0 0;
+  padding: 6px 0 0 15px;
+  border-top: 1px dashed var(--sail-line);
+  font-size: 11.5px;
+  color: var(--sail-body);
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+.sail-rate-bullets li {
+  margin-bottom: 2px;
+  white-space: normal;
+}
+.sail-rate-bullets li:last-child {
+  margin-bottom: 0;
+}
+.sail-rate-bullets strong {
+  color: var(--sail-ink);
+  font-weight: 600;
+}
+
 /* Interactive Tier Dropdown Pill */
 .sail-tier-select {
   appearance: none;

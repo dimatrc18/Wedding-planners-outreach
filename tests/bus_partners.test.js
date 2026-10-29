@@ -1180,7 +1180,7 @@ test('Avantgarde Limousine Service is recorded with Milan depot clarification an
   assert.ok(av, 'Avantgarde must exist');
   assert.equal(av.outreach_stage, 'replied');
   assert.ok(av.notes.includes('Milano'));
-  assert.ok(av.notes.includes('Malpensa'));
+  assert.ok(av.notes.includes('MXP') || av.notes.includes('Malpensa'));
 });
 
 

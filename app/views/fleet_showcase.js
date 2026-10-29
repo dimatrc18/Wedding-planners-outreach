@@ -26,7 +26,8 @@ export const FLEET_LEDGER_ROWS = [
   {
     id: 'como_sprinter_12',
     partnerId: 'partner_1792765279097_26hr',
-    vehicleModel: 'Mercedes-Benz Sprinter 12',
+    vehicleModel: 'Mercedes-Benz Sprinter',
+    paxLabel: '12 pax',
     coachbuilder: 'Tomassini Style · Executive Conversion',
     pax: 12,
     tier: 'luxury',
@@ -49,9 +50,16 @@ export const FLEET_LEDGER_ROWS = [
       lin_como: { label: 'LIN ⇄ Como', net: 400, km: 62, garageKm: 115 },
       bgy_como: { label: 'BGY ⇄ Como', net: 450, km: 92, garageKm: 175 },
       tremezzo: { label: 'Como ⇄ Tremezzo', net: 300, km: 30, garageKm: 68 },
-      bellagio: { label: 'Como ⇄ Bellagio', net: 300, km: 32, garageKm: 72 }
+      bellagio: { label: 'Como ⇄ Bellagio', net: 350 - 50, km: 32, garageKm: 72 }
     },
-    kmFormulaNote: 'Formula: €210 base + ~€2.80/km (Standby: €4.50–€5.00/km)',
+    rateSummary: {
+      marginalPerKmNet: 2.42,
+      baseCalloutNet: 225,
+      rtPerKmNet: 3.48,
+      standby1hExtraNet: 100,
+      standby1hRangeNet: [113, 125],
+      standby1hNote: '8h–4h pkg'
+    },
     standby: {
       dispo_4h: { label: '4h (incl. 100 km)', net: 500, hourlyEq: 125 },
       dispo_8h: { label: '8h (incl. 200 km)', net: 900, hourlyEq: 112.5 },
@@ -99,7 +107,8 @@ export const FLEET_LEDGER_ROWS = [
   {
     id: 'como_transit_16',
     partnerId: 'partner_1792765279097_26hr',
-    vehicleModel: 'Ford Transit Minibus 16',
+    vehicleModel: 'Ford Transit Minibus',
+    paxLabel: '16 pax',
     coachbuilder: 'Carind · High-Roof Shuttle',
     pax: 16,
     tier: 'standard',
@@ -124,7 +133,14 @@ export const FLEET_LEDGER_ROWS = [
       tremezzo: { label: 'Como ⇄ Tremezzo', net: 350, km: 30, garageKm: 68 },
       bellagio: { label: 'Como ⇄ Bellagio', net: 350, km: 32, garageKm: 72 }
     },
-    kmFormulaNote: 'Formula: €260 base + ~€2.80/km (Standby: €4.50–€5.00/km)',
+    rateSummary: {
+      marginalPerKmNet: 2.42,
+      baseCalloutNet: 275,
+      rtPerKmNet: 3.95,
+      standby1hExtraNet: 100,
+      standby1hRangeNet: [113, 125],
+      standby1hNote: '8h–4h pkg'
+    },
     standby: {
       dispo_4h: { label: '4h (incl. 100 km)', net: 500, hourlyEq: 125 },
       dispo_8h: { label: '8h (incl. 200 km)', net: 900, hourlyEq: 112.5 },
@@ -165,15 +181,16 @@ export const FLEET_LEDGER_ROWS = [
   {
     id: 'avantgarde_sprinter_8',
     partnerId: 'partner_1792765279535_l9ei',
-    vehicleModel: 'Mercedes Sprinter 7 & 8 Pax (+ Driver)',
-    coachbuilder: 'Red 7 Pax · Standard 8 Pax · Top 8 Pax VIP',
+    vehicleModel: 'Mercedes-Benz Sprinter',
+    paxLabel: '7–8 pax',
+    coachbuilder: '3 Variants: Red (7p) · Standard (8p) · Top VIP (8p)',
     pax: 8,
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: 'WA-verified fleet: Red 7-pax + driver, Standard 8-pax + driver, and Top 8-pax ("allestimento speciale")',
-    partnerName: 'Avantgarde Limousine Service (Milanocab)',
+    tierSpec: 'Club tables & ambient lighting ("allestimento speciale")',
+    partnerName: 'Avantgarde Limousine Service',
     baseCity: 'Milano (Via Calatafimi 12)',
-    contactPerson: 'Vincenzo (Vincent) Lombardi',
+    contactPerson: 'Vincenzo Lombardi',
     phone: '+39 333 269 7376',
     email: 'info@milanocab.it',
     website: 'https://www.avantgardelimousineservice.it/mezzi/',
@@ -185,15 +202,18 @@ export const FLEET_LEDGER_ROWS = [
     transfers: {
       mxp_milano: { label: 'MXP ⇄ Milano', net: 250, km: 50, garageKm: 100 }
     },
-    kmFormulaNote: 'Round-trip from Milan depot (100 km): €2.50/km net',
-    transferNote: 'Quoted €250 net (+10% IVA = €275 gross). Confirming if Red 7-pax / Standard 8-pax / Top 8-pax share €250 MXP rate.',
+    rateSummary: {
+      rtPerKmNet: 2.50,
+      oneWayPerKmNet: 5.00,
+      standby1hRangeNet: [90, 140],
+      standby1hNote: 'Std–VIP'
+    },
     standby: {
-      dispo_4h: { label: '4h Std (€90/h)', net: 360, hourlyEq: 90 },
-      dispo_8h: { label: '8h Std (€90/h)', net: 720, hourlyEq: 90 },
+      dispo_4h: { label: '4h Standard', net: 360, hourlyEq: 90 },
+      dispo_8h: { label: '8h Standard', net: 720, hourlyEq: 90 },
       extra_hour: { label: 'Hourly (Std–VIP)', net: 90 },
       extra_wait: null
     },
-    standbyNote: 'Quoted "da €90 a €140/ora + IVA" by configuration (Red 7p, Std 8p, Top 8p). Outside-Milan (Como) standby not confirmed yet.',
     terms: {
       payment: 'POS on board / Invoice',
       vat: '10% VAT excluded ("più IVA") + eventual Area C ZTL',
@@ -221,15 +241,16 @@ export const FLEET_LEDGER_ROWS = [
   {
     id: 'avantgarde_minibus_18',
     partnerId: 'partner_1792765279535_l9ei',
-    vehicleModel: 'Mercedes Minibus 20 Pax',
-    coachbuilder: '20-Passenger Minibus (WA Ext + Int Confirmed)',
+    vehicleModel: 'Mercedes-Benz Minibus',
+    paxLabel: '20 pax',
+    coachbuilder: 'Executive Coach Conversion (WA Ext + Int Verified)',
     pax: 20,
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: 'WA-verified: 20-pax minibus exterior (08:36) + interior (11:19)',
-    partnerName: 'Avantgarde Limousine Service (Milanocab)',
+    tierSpec: 'Leather reclining seats · Panoramic glass · Overhead luggage racks',
+    partnerName: 'Avantgarde Limousine Service',
     baseCity: 'Milano (Via Calatafimi 12)',
-    contactPerson: 'Vincenzo (Vincent) Lombardi',
+    contactPerson: 'Vincenzo Lombardi',
     phone: '+39 333 269 7376',
     email: 'info@milanocab.it',
     website: 'https://www.milanocab.it/cars/',
@@ -239,17 +260,20 @@ export const FLEET_LEDGER_ROWS = [
     ratePdf: null,
     ratePdfName: null,
     transfers: {
-      mxp_milano: { label: 'MXP ⇄ Milano (+ZTL)', net: 330, km: 50, garageKm: 100 }
+      mxp_milano: { label: 'MXP ⇄ Milano', net: 330, km: 50, garageKm: 100 }
     },
-    kmFormulaNote: 'Round-trip from Milan depot (100 km): €3.30/km net',
-    transferNote: 'Quoted €330 net (+10% VAT = €363 + eventual Area C ZTL).',
+    rateSummary: {
+      rtPerKmNet: 3.30,
+      oneWayPerKmNet: 6.60,
+      standby1hRangeNet: [119, 138],
+      standby1hNote: '8h–4h pkg'
+    },
     standby: {
       dispo_4h: { label: '4h (+Area C ZTL)', net: 550, hourlyEq: 137.5 },
       dispo_8h: { label: '8h (+Area C ZTL)', net: 950, hourlyEq: 118.75 },
       extra_hour: null,
       extra_wait: null
     },
-    standbyNote: 'VAT (10%) & ZTL Area C excluded ("più IVA ed eventuale ZTL"). Outside-Milan (Lake Como) standby not confirmed yet.',
     terms: {
       payment: 'POS on board / Invoice',
       vat: '10% VAT excluded ("più IVA") + eventual Area C ZTL',
@@ -270,15 +294,16 @@ export const FLEET_LEDGER_ROWS = [
   {
     id: 'avantgarde_coach_30',
     partnerId: 'partner_1792765279535_l9ei',
-    vehicleModel: 'Executive Midibus / Coach 30 Pax',
-    coachbuilder: '30-Passenger Coach (WA Ext + Int Confirmed)',
+    vehicleModel: 'Executive Midibus',
+    paxLabel: '30 pax',
+    coachbuilder: 'Touring Coach (WA Ext + Int Verified)',
     pax: 30,
     tier: 'standard',
-    tierLabel: 'Executive Midibus',
-    tierSpec: 'WA-verified: "30 Pax" (08:34) + "Interni 30 posti" (11:18) — awaiting price list',
-    partnerName: 'Avantgarde Limousine Service (Milanocab)',
+    tierLabel: 'Standard Shuttle',
+    tierSpec: 'WA photos verified (08:34 & 11:18) — awaiting rate sheet',
+    partnerName: 'Avantgarde Limousine Service',
     baseCity: 'Milano (Via Calatafimi 12)',
-    contactPerson: 'Vincenzo (Vincent) Lombardi',
+    contactPerson: 'Vincenzo Lombardi',
     phone: '+39 333 269 7376',
     email: 'info@milanocab.it',
     website: 'https://www.avantgardelimousineservice.it/mezzi/',
@@ -288,22 +313,23 @@ export const FLEET_LEDGER_ROWS = [
     ratePdf: null,
     ratePdfName: null,
     transfers: null,
-    transferNote: 'Not provided yet for the 30-seater (only 8-pax €250 and 20-pax €330 MXP–Milano quoted so far).',
+    transferNote: 'Awaiting 30-pax transfer tariff.',
     standby: null,
-    standbyNote: 'Not provided yet for the 30-seater — need 4h/8h standby & outside-Milan (Como) availability.',
+    standbyNote: 'Awaiting 4h/8h standby & Lake Como availability.',
     terms: null,
     photos: []
   },
   {
     id: 'landway_fleet',
     partnerId: 'partner_1792761170109_96nx',
-    vehicleModel: 'Mercedes Sprinter & GT Coach Fleet',
-    coachbuilder: '16–54 Seats · Executive & GT',
+    vehicleModel: 'Sprinter & GT Coach Fleet',
+    paxLabel: '16–54 pax',
+    coachbuilder: 'Executive Minibus & GT Coaches',
     pax: 50,
     tier: 'luxury',
-    tierLabel: 'Luxury + Standard',
+    tierLabel: 'Luxury VIP',
     tierSpec: 'Como & Milan depot (Via Gattamelata 34) · Royal Garden Group',
-    partnerName: 'Landway Tourism (Land Way S.r.l.)',
+    partnerName: 'Landway Tourism',
     baseCity: 'Como / Milano',
     contactPerson: 'Melissa',
     phone: '+39 02 3929 7050',
@@ -315,21 +341,22 @@ export const FLEET_LEDGER_ROWS = [
     ratePdf: null,
     ratePdfName: null,
     transfers: null,
-    transferNote: 'Not provided yet — Melissa forwarded request to fleet pricing department on 28 Oct.',
+    transferNote: 'Forwarded to pricing dept (28 Oct).',
     standby: null,
-    standbyNote: 'Not provided yet — awaiting B2B rate sheet',
+    standbyNote: 'Awaiting B2B rate sheet.',
     terms: null,
     photos: []
   },
   {
     id: 'comolimolux_vclass',
     partnerId: 'partner_1792765279410_2zml',
-    vehicleModel: 'Mercedes-Benz V-Class (Overflow Only)',
-    coachbuilder: '7 Seats · No Minibus / Coach',
+    vehicleModel: 'Mercedes-Benz V-Class',
+    paxLabel: '7 pax',
+    coachbuilder: 'Executive Minivan (Overflow Only)',
     pax: 7,
     tier: 'luxury',
-    tierLabel: 'Luxury Minivan',
-    tierSpec: 'Single V-Class operator · Saved for Lake Como V-Class overflow',
+    tierLabel: 'Luxury VIP',
+    tierSpec: 'Single V-Class operator · Lake Como overflow & referrals',
     partnerName: 'Como Limo Lux',
     baseCity: 'Como',
     contactPerson: 'Stefano Carnevale',
@@ -342,9 +369,9 @@ export const FLEET_LEDGER_ROWS = [
     ratePdf: null,
     ratePdfName: null,
     transfers: null,
-    transferNote: 'Not provided — operates only 1x V-Class (no 8–50 seat buses). Asked for Lake Como network referral.',
+    transferNote: 'Operates 1× V-Class only (asked for bus partner referral).',
     standby: null,
-    standbyNote: 'Not provided',
+    standbyNote: 'Not applicable.',
     terms: null,
     photos: []
   }
@@ -592,18 +619,44 @@ export async function render(el) {
   attachLedgerListeners(el);
 }
 
-function estimateVehiclePerKm(row, mode) {
-  if (!row.transfers) return null;
-  const entries = Object.values(row.transfers).filter((t) => t.km > 0);
-  if (!entries.length) return null;
-  const totalPrice = entries.reduce((sum, t) => sum + calculateAdjustedPrice(t.net, mode), 0);
-  const totalClientKm = entries.reduce((sum, t) => sum + t.km, 0);
-  const totalGarageKm = entries.reduce((sum, t) => sum + (t.garageKm || t.km * 1.8), 0);
-  return {
-    clientPerKm: (totalPrice / totalClientKm).toFixed(2),
-    garagePerKm: (totalPrice / totalGarageKm).toFixed(2),
-    formulaNote: row.kmFormulaNote || ''
-  };
+function adjustDecimalRate(netVal, mode = 'net') {
+  const n = Number(netVal) || 0;
+  if (mode === 'vat') return (n * 1.10).toFixed(2);
+  if (mode === 'night') return (n * 1.20).toFixed(2);
+  if (mode === 'night_vat') return (n * 1.20 * 1.10).toFixed(2);
+  return n.toFixed(2);
+}
+
+function renderRateSummaryBullets(row, mode) {
+  const s = row.rateSummary;
+  if (!s) return '';
+
+  let kmLine = '';
+  if (s.marginalPerKmNet && s.baseCalloutNet) {
+    const marg = adjustDecimalRate(s.marginalPerKmNet, mode);
+    const base = calculateAdjustedPrice(s.baseCalloutNet, mode);
+    const rt = adjustDecimalRate(s.rtPerKmNet, mode);
+    kmLine = `<li><strong>€/km:</strong> €${marg}/km + €${base} base (€${rt}/km RT)</li>`;
+  } else if (s.rtPerKmNet && s.oneWayPerKmNet) {
+    const rt = adjustDecimalRate(s.rtPerKmNet, mode);
+    const ow = adjustDecimalRate(s.oneWayPerKmNet, mode);
+    kmLine = `<li><strong>€/km:</strong> €${rt}/km RT (€${ow}/km 1-way)</li>`;
+  }
+
+  let standbyLine = '';
+  if (s.standby1hExtraNet && Array.isArray(s.standby1hRangeNet)) {
+    const ex = calculateAdjustedPrice(s.standby1hExtraNet, mode);
+    const lo = calculateAdjustedPrice(s.standby1hRangeNet[0], mode);
+    const hi = calculateAdjustedPrice(s.standby1hRangeNet[1], mode);
+    standbyLine = `<li><strong>Standby 1h:</strong> €${ex}/h extra (€${lo}–€${hi}/h ${esc(s.standby1hNote || 'pkg')})</li>`;
+  } else if (Array.isArray(s.standby1hRangeNet)) {
+    const lo = calculateAdjustedPrice(s.standby1hRangeNet[0], mode);
+    const hi = calculateAdjustedPrice(s.standby1hRangeNet[1], mode);
+    standbyLine = `<li><strong>Standby 1h:</strong> €${lo}–€${hi}/h (${esc(s.standby1hNote || 'pkg')})</li>`;
+  }
+
+  if (!kmLine && !standbyLine) return '';
+  return `<ul class="sail-rate-bullets">${kmLine}${standbyLine}</ul>`;
 }
 
 function renderLedgerRow(row) {
@@ -611,7 +664,6 @@ function renderLedgerRow(row) {
   const hasStandby = Boolean(row.standby);
   const hasPhotos = Array.isArray(row.photos) && row.photos.length > 0;
   const rawWa = (row.phone || '').replace(/[^\d+]/g, '');
-  const kmEst = estimateVehiclePerKm(row, pricingMode);
 
   let transferHtml = '';
   if (hasTransfers) {
@@ -627,13 +679,7 @@ function renderLedgerRow(row) {
           `;
         }).join('')}
       </div>
-      ${kmEst ? `
-        <div style="margin-top:7px;padding-top:6px;border-top:1px dashed var(--sail-line);display:flex;flex-wrap:wrap;gap:6px;align-items:center">
-          <span class="sail-pill info" style="font-size:10.5px;padding:1px 7px">Est. €${kmEst.clientPerKm}/km (client route) · €${kmEst.garagePerKm}/km (incl. depot return)</span>
-          ${kmEst.formulaNote ? `<span style="font-size:10.5px;color:var(--sail-muted)">${esc(kmEst.formulaNote)}</span>` : ''}
-        </div>
-      ` : ''}
-      ${row.transferNote ? `<div style="margin-top:5px;font-size:11px;color:var(--sail-muted);line-height:1.35">${esc(row.transferNote)}</div>` : ''}
+      ${renderRateSummaryBullets(row, pricingMode)}
     `;
   } else {
     transferHtml = `
@@ -659,7 +705,6 @@ function renderLedgerRow(row) {
         ${exH !== null ? `<span class="sail-rate-route">Extra Hour</span><span class="sail-rate-amt">${formatEur(exH)}/h</span>` : ''}
         ${exW !== null ? `<span class="sail-rate-route">Wait &gt;60m Airport</span><span class="sail-rate-amt">${formatEur(exW)}/h</span>` : ''}
       </div>
-      ${row.standbyNote ? `<div style="margin-top:6px;font-size:11px;color:var(--sail-muted);line-height:1.35">${esc(row.standbyNote)}</div>` : ''}
     `;
   } else {
     standbyHtml = `
@@ -707,7 +752,7 @@ function renderLedgerRow(row) {
       <td>
         <div style="font-weight:600;color:var(--sail-ink);font-size:13px;line-height:1.3">${esc(row.vehicleModel)}</div>
         <div style="margin-top:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <span class="sail-pill info" style="font-size:11px;padding:1px 7px;font-variant-numeric:tabular-nums"><strong>${row.pax} pax</strong></span>
+          <span class="sail-pill info" style="font-size:11px;padding:1px 7px;font-variant-numeric:tabular-nums"><strong>${esc(row.paxLabel || `${row.pax} pax`)}</strong></span>
           <details style="font-size:11px;color:var(--sail-muted)">
             <summary style="cursor:pointer;user-select:none;font-weight:500;color:var(--sail-body)">Specs</summary>
             <div style="margin-top:4px;line-height:1.35;color:var(--sail-muted)">
@@ -739,10 +784,6 @@ function renderLedgerRow(row) {
           <a href="https://wa.me/${rawWa.replace(/^\+/, '')}" target="_blank" rel="noopener" style="color:var(--sail-accent);font-weight:600">WhatsApp</a>
           <span style="color:#CBD5E1">·</span>
           <a href="mailto:${attr(row.email)}" style="color:var(--sail-body)" title="${attr(row.email)}">Email</a>
-          ${row.website ? `
-            <span style="color:#CBD5E1">·</span>
-            <a href="${attr(row.website)}" target="_blank" rel="noopener" style="color:var(--sail-accent);font-weight:600" title="${attr(row.website)}">Website ↗</a>
-          ` : ''}
         </div>
       </td>
 
