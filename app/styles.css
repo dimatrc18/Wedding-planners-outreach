@@ -75,6 +75,18 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .rail-mode-btn.active { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgba(0, 0, 0, .07); }
 .rail-mode-btn.active .ico { color: var(--gold); }
 
+.rail-section-label {
+  font-size: .67rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 700;
+  padding: 8px 8px 3px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 @media (max-width: 860px) {
   .app { grid-template-columns: minmax(0, 1fr); }
   .rail { display: none; }

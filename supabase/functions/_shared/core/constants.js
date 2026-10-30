@@ -188,3 +188,13 @@ export const prospectTimezone = (marketOrProspect, defaultTz = 'Europe/Rome') =>
   return (m && MARKET_TIMEZONES[m]) || defaultTz;
 };
 
+// Isolated Event & Corporate Outreach Statuses
+export const EVENT_STATUSES = [
+  { key: 'TO_REVIEW', label: 'To Review' },
+  { key: 'WANT_TO_CONTACT', label: 'Ready to Contact' },
+  { key: 'CONTACTED', label: 'Contacted' },
+  { key: 'APPROVED_PARTNER', label: 'Partner Won' },
+  { key: 'NOT_RELEVANT', label: 'Not Relevant' },
+];
+
+

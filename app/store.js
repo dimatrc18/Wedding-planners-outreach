@@ -17,6 +17,12 @@ import {
   normalizeName,
   normalizeDomain
 } from './bus_partners_data.js';
+import {
+  INITIAL_EVENT_PARTNERS,
+  loadStoredEventPartners,
+  saveStoredEventPartners,
+  mergeEventRecords
+} from './event_planners_data.js';
 
 export const S = (typeof globalThis !== 'undefined' && globalThis.__DOROGO_STORE_S__) || {
   mode: 'loading', // loading | signed_out | live | demo
@@ -24,6 +30,7 @@ export const S = (typeof globalThis !== 'undefined' && globalThis.__DOROGO_STORE
   prospects: [], touches: [], opps: [], templates: [], events: [],
   busPartners: loadStoredBusPartners(),
   excludedBusPartners: loadExcludedBusPartners(),
+  eventPartners: loadStoredEventPartners(),
   settings: withDefaults(DEFAULT_SETTINGS),
   health: null,
   lastSyncAt: null,
@@ -51,6 +58,7 @@ function setData(d) {
   S.events = d.events || [];
   S.busPartners = (d.busPartners && d.busPartners.length) ? d.busPartners : loadStoredBusPartners();
   S.excludedBusPartners = loadExcludedBusPartners();
+  S.eventPartners = (d.eventPartners && d.eventPartners.length) ? d.eventPartners : loadStoredEventPartners();
   S.settings = withDefaults(d.settings || {});
 }
 
@@ -76,7 +84,18 @@ function liveBackend() {
         }
       } catch (_) {}
       if (!busPartners.length) busPartners = loadStoredBusPartners();
-      return { prospects: check(p), touches: check(t), opps: check(o), templates: check(tpl), settings: check(s)?.data || {}, events: check(ev), busPartners };
+
+      let eventPartners = [];
+      try {
+        const { data, error } = await sb.from('event_planners').select('*').order('relevance_score', { ascending: false });
+        if (!error && data && data.length) {
+          eventPartners = data;
+          saveStoredEventPartners(eventPartners);
+        }
+      } catch (_) {}
+      if (!eventPartners.length) eventPartners = loadStoredEventPartners();
+
+      return { prospects: check(p), touches: check(t), opps: check(o), templates: check(tpl), settings: check(s)?.data || {}, events: check(ev), busPartners, eventPartners };
     },
     async insert(name, rows) { return check(await T(name).insert(rows).select()); },
     async update(name, id, patch) { return check(await T(name).update(patch).eq('id', id).select().single()); },
@@ -135,7 +154,7 @@ function liveBackend() {
 // ---------------- Demo backend ----------------
 function demoBackend() {
   return {
-    async load() { return { ...buildDemoData(), busPartners: loadStoredBusPartners() }; },
+    async load() { return { ...buildDemoData(), busPartners: loadStoredBusPartners(), eventPartners: loadStoredEventPartners() }; },
     async insert(name, rows) { const arr = Array.isArray(rows) ? rows : [rows]; return arr.map((r) => ({ id: uuid(), created_at: nowIso(), updated_at: nowIso(), ...r })); },
     async update(name, id, patch) { const row = S[name].find((x) => x.id === id); return { ...row, ...patch, updated_at: nowIso() }; },
     async updateMany() {},
@@ -486,5 +505,82 @@ export async function unexcludeBusPartner(idOrDomain) {
   return restored;
 }
 
-export { loadExcludedBusPartners, saveExcludedBusPartners, isBusPartnerExcluded, addExcludedBusPartner, removeExcludedBusPartner };
+// ---------------- Event & Corporate Outreach Mutations (100% Isolated) ----------------
+export async function updateEventPartner(id, patch) {
+  const i = (S.eventPartners || []).findIndex((x) => x.id === id);
+  if (i >= 0) {
+    const existing = S.eventPartners[i];
+    const updated = { ...existing, ...patch, updated_at: nowIso() };
+    S.eventPartners[i] = updated;
+    saveStoredEventPartners(S.eventPartners);
+    if (S.mode === 'live' && sb) {
+      try {
+        await sb.from('event_planners').update(updated).eq('id', id);
+      } catch (_) {}
+    }
+    emit('event_partners:updated');
+    return updated;
+  }
+}
+
+export async function addEventPartner(partner) {
+  const newRow = {
+    id: partner.id || `event_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    name: partner.name || 'Untitled Event Agency',
+    agency_type: partner.agency_type || 'corporate_mice',
+    agency_type_label: partner.agency_type_label || '🏢 Corporate & MICE',
+    contact_person: partner.contact_person || '',
+    email: partner.email || '',
+    phone: partner.phone || '',
+    website: partner.website || '',
+    base_city: partner.base_city || 'Milano',
+    relevance_score: Number(partner.relevance_score) || 85,
+    status: partner.status || 'TO_REVIEW',
+    score_breakdown: partner.score_breakdown || { scale_score: 22, vip_clientele: 22, northern_italy_coverage: 22, mobility_demand: 20 },
+    notes: partner.notes || '',
+    created_at: partner.created_at || nowIso(),
+    updated_at: nowIso(),
+  };
+  S.eventPartners = [newRow, ...(S.eventPartners || [])];
+  saveStoredEventPartners(S.eventPartners);
+  if (S.mode === 'live' && sb) {
+    try {
+      await sb.from('event_planners').insert([newRow]);
+    } catch (_) {}
+  }
+  emit('event_partners:added');
+  return newRow;
+}
+
+export async function removeEventPartner(id) {
+  const i = (S.eventPartners || []).findIndex((x) => x.id === id);
+  if (i >= 0) {
+    const [removed] = S.eventPartners.splice(i, 1);
+    saveStoredEventPartners(S.eventPartners);
+    if (S.mode === 'live' && sb) {
+      try {
+        await sb.from('event_planners').delete().eq('id', id);
+      } catch (_) {}
+    }
+    emit('event_partners:deleted');
+    return removed;
+  }
+}
+
+export async function removeManyEventPartners(ids) {
+  if (!Array.isArray(ids) || !ids.length) return [];
+  const idSet = new Set(ids);
+  const toRemove = (S.eventPartners || []).filter((p) => idSet.has(p.id));
+  S.eventPartners = (S.eventPartners || []).filter((p) => !idSet.has(p.id));
+  saveStoredEventPartners(S.eventPartners);
+  if (S.mode === 'live' && sb) {
+    try {
+      await sb.from('event_planners').delete().in('id', ids);
+    } catch (_) {}
+  }
+  emit('event_partners:deleted');
+  return toRemove;
+}
+
+export { loadExcludedBusPartners, saveExcludedBusPartners, isBusPartnerExcluded, addExcludedBusPartner, removeExcludedBusPartner, loadStoredEventPartners, saveStoredEventPartners };
 

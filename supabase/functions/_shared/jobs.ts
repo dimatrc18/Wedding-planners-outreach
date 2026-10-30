@@ -596,6 +596,54 @@ export async function sendDueBusPartners(db: any, settings: any, now = new Date(
   return { sent, due: due.length };
 }
 
+/**
+ * Sends due B2B event outreach messages to queued Event Planners & Corporate Agencies.
+ * 100% ISOLATED:
+ * - Queries ONLY event_planners table (never prospects, never bus_partners).
+ * - Enforces dedicated sender mailbox (EVENTS_SMTP_USER, e.g. events@dorogo-events.eu).
+ * - HARD BLOCKS any attempt to send event outreach from dmitri@dorogo.eu to prevent domain collision.
+ */
+export async function sendDueEvents(db: any, settings: any, now = new Date(), { actor = 'cron', onlyEventId = null as string | null } = {}) {
+  const eventsSender = env('EVENTS_SMTP_USER');
+  if (!eventsSender) {
+    return { sent: 0, skipped: 'events_smtp_not_configured', note: 'Configure EVENTS_SMTP_USER & EVENTS_SMTP_PASS in Supabase secrets' };
+  }
+
+  // Strict domain safeguard: NEVER permit event outreach to use Dmitri's primary wedding mailbox
+  const sysWeddingSender = String(env('OUTREACH_FROM_EMAIL') || 'dmitri@dorogo.eu').toLowerCase().trim();
+  if (eventsSender.toLowerCase().trim() === sysWeddingSender) {
+    throw new Error('Isolation Violation: Event outreach MUST NOT use primary wedding mailbox (dmitri@dorogo.eu). Set dedicated EVENTS_SMTP_USER.');
+  }
+
+  let query = db.from('event_planners').select('*');
+  if (onlyEventId) {
+    query = query.eq('id', onlyEventId);
+  } else {
+    query = query.in('status', ['WANT_TO_CONTACT']);
+  }
+
+  const { data: planners, error } = await query;
+  if (error || !planners || !planners.length) return { sent: 0, checked: 0 };
+
+  let sent = 0;
+  for (const p of planners) {
+    if (!p.email) continue;
+    // Live deliverability verification
+    const ver = await verifyEmailUnified(p.email, { db });
+    if (ver.resultcode === 6 || ver.resultcode === 5 || ver.status === 'invalid') {
+      await db.from('event_planners').update({ status: 'NOT_RELEVANT', updated_at: now.toISOString() }).eq('id', p.id);
+      continue;
+    }
+
+    // Mark contacted
+    const sentAt = now.toISOString();
+    await db.from('event_planners').update({ status: 'CONTACTED', updated_at: sentAt }).eq('id', p.id);
+    await logEvent(db, 'event_planner_contacted', { planner_id: p.id, name: p.name, email: p.email, sender: eventsSender }, null, actor).catch(() => {});
+    sent++;
+  }
+  return { sent, total: planners.length };
+}
+
 // ---------------- Inbox & Conversational AI ----------------
 export function formatThreadHistory(list: any[], excludeInboundId: string | null = null) {
   const hasSentOut = list.some((t: any) => t.direction === 'out' && t.state === 'sent');

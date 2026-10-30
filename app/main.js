@@ -14,6 +14,7 @@ import * as visibility from './views/visibility.js?v=9.0';
 import * as settings from './views/settings.js?v=9.1';
 import * as busPartners from './views/bus_partners.js?v=9.1';
 import * as fleetShowcase from './views/fleet_showcase.js?v=9.1';
+import * as eventPartners from './views/event_partners.js?v=9.1';
 
 const ROUTES = {
   today: { view: today, label: 'Today', icon: 'today' },
@@ -26,6 +27,7 @@ const ROUTES = {
   templates: { view: templates, label: 'Sequence & templates', icon: 'template' },
   settings: { view: settings, label: 'Settings', icon: 'settings' },
   bus_partners: { view: busPartners, label: 'Bus Fleet Partners', icon: 'partners', hidden: true },
+  event_partners: { view: eventPartners, label: 'Event Agencies & MICE', icon: 'partners', hidden: true },
   tools: { view: tools, label: 'Tools', icon: 'sparkle', hidden: true },
   add: { view: add, label: 'Add prospects', icon: 'plus', hidden: true },
   prospect: { view: prospect, label: 'Prospect', hidden: true },
@@ -70,11 +72,18 @@ function shell() {
         <div class="divider" style="margin: 12px 10px;"></div>
         <a class="nav-link" href="#today">${icon('mail')}<span>← Back to Outreach</span></a>
       ` : `
+        <div class="rail-section-label">💍 Wedding Outreach</div>
         ${links.map(([k, v]) => `<a class="nav-link ${r.name === k ? 'active' : ''}" href="#${k}">${icon(v.icon)}<span>${esc(v.label)}</span>${k === 'today' && n ? `<span class="count">${n}</span>` : ''}</a>`).join('')}
-        <a class="nav-link" href="#add" style="margin-top:10px">${icon('plus')}<span>Add prospects</span></a>
-        <div class="divider" style="margin: 12px 10px;"></div>
+        <a class="nav-link" href="#add" style="margin-top:2px">${icon('plus')}<span>Add prospects</span></a>
+
+        <div class="divider" style="margin: 10px 8px 6px;"></div>
+        <div class="rail-section-label">🚌 Bus Fleet Outreach</div>
         <a class="nav-link ${r.name === 'bus_partners' ? 'active' : ''}" href="#bus_partners" style="font-weight:600;display:flex;align-items:center">${icon('partners')}<span>Bus Fleet Partners</span></a>
         <a class="nav-link ${r.name === 'fleet_showcase' ? 'active' : ''}" href="#fleet_showcase" style="font-weight:600;display:flex;align-items:center">${icon('board')}<span>Partner Fleet &amp; Rates</span></a>
+
+        <div class="divider" style="margin: 10px 8px 6px;"></div>
+        <div class="rail-section-label">🎪 Event &amp; MICE Outreach</div>
+        <a class="nav-link ${r.name === 'event_partners' ? 'active' : ''}" href="#event_partners" style="font-weight:600;display:flex;align-items:center">${icon('partners')}<span>Event Agencies &amp; MICE</span></a>
       `}
       <div class="rail-foot">
         <span class="tiny faint">${esc(S.user?.email || '')}</span>
