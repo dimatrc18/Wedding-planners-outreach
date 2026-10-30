@@ -5,6 +5,8 @@ Mini-CRM, outreach engine and traction dashboard for DOROGO's wedding-planner pa
 - **App:** https://dimatrc18.github.io/Wedding-planners-outreach/ (once GitHub Pages is on, see Setup step 1)
 - **Demo:** open the app and choose “Explore with demo data”, or add `#demo` to the URL. Fictional agencies; nothing is saved or sent.
 - **Data:** Dmitri's Supabase project `qjarhdrrbjeeqbhfgmnp` (Postgres, Row Level Security, edge functions). Nothing lives anywhere else.
+- **👥 Partner Onboarding Guide:** [`PARTNER_ONBOARDING.md`](./PARTNER_ONBOARDING.md) — How to set up on your machine, configure dedicated email domains, and collaborate.
+- **🤖 AI Agent & System Playbook:** [`AI_AGENT_PLAYBOOK.md`](./AI_AGENT_PLAYBOOK.md) — Full architecture blueprint, Stripe Sail design tokens, and Master AI Prompt for adding new outreach verticals (Events, Corporate, MICE) with zero blast radius.
 
 ## How it works
 
