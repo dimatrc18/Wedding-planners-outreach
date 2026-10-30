@@ -33,6 +33,53 @@ const ROUTES = {
   prospect: { view: prospect, label: 'Prospect', hidden: true },
 };
 
+const SECTIONS = [
+  {
+    id: 'wedding',
+    label: '💍 Wedding Outreach',
+    items: [
+      { key: 'today', label: 'Today', icon: 'today', hasBadge: true },
+      { key: 'pipeline', label: 'Pipeline', icon: 'board' },
+      { key: 'analytics', label: 'Analytics', icon: 'chart' },
+      { key: 'partners', label: 'Partners', icon: 'partners' },
+      { key: 'coverage', label: 'Coverage', icon: 'map' },
+      { key: 'templates', label: 'Sequence & templates', icon: 'template' },
+      { key: 'settings', label: 'Settings', icon: 'settings' },
+      { key: 'add', label: 'Add prospects', icon: 'plus' },
+    ],
+  },
+  {
+    id: 'bus',
+    label: '🚌 Bus Fleet Outreach',
+    items: [
+      { key: 'bus_partners', label: 'Bus Fleet Partners', icon: 'partners', bold: true },
+      { key: 'fleet_showcase', label: 'Partner Fleet & Rates', icon: 'board', bold: true },
+    ],
+  },
+  {
+    id: 'events',
+    label: '🎪 Event & MICE Outreach',
+    items: [
+      { key: 'event_partners', label: 'Event Agencies & MICE', icon: 'partners', bold: true },
+    ],
+  },
+];
+
+function getSectionState() {
+  try {
+    const raw = localStorage.getItem('dorogo_rail_sections');
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  // Initial state is strictly closed as requested by user
+  return { wedding: false, bus: false, events: false };
+}
+
+function setSectionState(state) {
+  try {
+    localStorage.setItem('dorogo_rail_sections', JSON.stringify(state));
+  } catch {}
+}
+
 let current = null;
 let cleanup = null;
 let pending = false;
@@ -54,7 +101,7 @@ function shell() {
   const n = badgeCount();
   const r = parseHash();
   const isTools = r.name === 'tools' || r.name === 'visibility';
-  const links = Object.entries(ROUTES).filter(([, v]) => !v.hidden);
+  const secState = getSectionState();
   root.innerHTML = `<div class="app">
     <nav class="rail" aria-label="Main">
       <div class="brand">
@@ -72,18 +119,30 @@ function shell() {
         <div class="divider" style="margin: 12px 10px;"></div>
         <a class="nav-link" href="#today">${icon('mail')}<span>← Back to Outreach</span></a>
       ` : `
-        <div class="rail-section-label">💍 Wedding Outreach</div>
-        ${links.map(([k, v]) => `<a class="nav-link ${r.name === k ? 'active' : ''}" href="#${k}">${icon(v.icon)}<span>${esc(v.label)}</span>${k === 'today' && n ? `<span class="count">${n}</span>` : ''}</a>`).join('')}
-        <a class="nav-link" href="#add" style="margin-top:2px">${icon('plus')}<span>Add prospects</span></a>
-
-        <div class="divider" style="margin: 10px 8px 6px;"></div>
-        <div class="rail-section-label">🚌 Bus Fleet Outreach</div>
-        <a class="nav-link ${r.name === 'bus_partners' ? 'active' : ''}" href="#bus_partners" style="font-weight:600;display:flex;align-items:center">${icon('partners')}<span>Bus Fleet Partners</span></a>
-        <a class="nav-link ${r.name === 'fleet_showcase' ? 'active' : ''}" href="#fleet_showcase" style="font-weight:600;display:flex;align-items:center">${icon('board')}<span>Partner Fleet &amp; Rates</span></a>
-
-        <div class="divider" style="margin: 10px 8px 6px;"></div>
-        <div class="rail-section-label">🎪 Event &amp; MICE Outreach</div>
-        <a class="nav-link ${r.name === 'event_partners' ? 'active' : ''}" href="#event_partners" style="font-weight:600;display:flex;align-items:center">${icon('partners')}<span>Event Agencies &amp; MICE</span></a>
+        ${SECTIONS.map((sec, idx) => {
+          const isOpen = Boolean(secState[sec.id]);
+          const hasActive = sec.items.some((it) => it.key === r.name);
+          return `
+            ${idx > 0 ? '<div class="divider" style="margin: 8px 6px;"></div>' : ''}
+            <div class="rail-section-group" data-group="${sec.id}">
+              <button type="button" class="rail-section-btn ${hasActive ? 'has-active' : ''}" data-rail-section="${sec.id}" aria-expanded="${isOpen}">
+                <span class="rail-section-title">${sec.label}</span>
+                <span class="rail-section-meta">
+                  ${sec.id === 'wedding' && n ? `<span class="count">${n}</span>` : ''}
+                  <span class="rail-section-chevron">${icon('chevron_right', 13)}</span>
+                </span>
+              </button>
+              <div class="rail-section-content ${isOpen ? 'is-open' : 'is-collapsed'}" id="rail-section-${sec.id}">
+                ${sec.items.map((it) => `
+                  <a class="nav-link ${r.name === it.key ? 'active' : ''}" href="#${it.key}" style="${it.bold ? 'font-weight:600;display:flex;align-items:center' : ''}">
+                    ${icon(it.icon)}<span>${esc(it.label)}</span>
+                    ${it.hasBadge && n ? `<span class="count">${n}</span>` : ''}
+                  </a>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }).join('')}
       `}
       <div class="rail-foot">
         <span class="tiny faint">${esc(S.user?.email || '')}</span>
@@ -101,6 +160,23 @@ function shell() {
       ].map((tab) => `<a href="#${tab.k}" class="${r.name === tab.k ? 'active' : ''}">${icon(tab.icon, 20)}<span>${esc(tab.label)}</span>${tab.dot ? `<span class="dot">${tab.dot}</span>` : ''}</a>`).join('')}
     </nav>
   </div>`;
+  root.querySelectorAll('.rail-section-btn').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const id = btn.dataset.railSection;
+      if (!id) return;
+      const state = getSectionState();
+      const willOpen = !state[id];
+      state[id] = willOpen;
+      setSectionState(state);
+      btn.setAttribute('aria-expanded', String(willOpen));
+      const content = root.querySelector(`#rail-section-${id}`);
+      if (content) {
+        content.classList.toggle('is-open', willOpen);
+        content.classList.toggle('is-collapsed', !willOpen);
+      }
+    });
+  });
   root.querySelector('[data-act="sign-out"]')?.addEventListener('click', () => signOut());
   root.querySelector('[data-act="leave-demo"]')?.addEventListener('click', () => leaveDemo());
 }
@@ -122,9 +198,10 @@ function renderView() {
   else {
     // keep nav badges fresh without rebuilding the shell
     const n = badgeCount();
-    document.querySelectorAll('.nav-link .count, .tabbar .dot').forEach((el) => el.remove());
+    document.querySelectorAll('.nav-link .count, .tabbar .dot, .rail-section-btn .count').forEach((el) => el.remove());
     if (n) {
       document.querySelector('.nav-link[href="#today"]')?.insertAdjacentHTML('beforeend', `<span class="count">${n}</span>`);
+      document.querySelector('.rail-section-btn[data-rail-section="wedding"] .rail-section-meta')?.insertAdjacentHTML('afterbegin', `<span class="count">${n}</span>`);
       document.querySelector('.tabbar a[href="#today"]')?.insertAdjacentHTML('beforeend', `<span class="dot">${n}</span>`);
     }
   }
@@ -134,6 +211,12 @@ function renderView() {
   current = r.name;
   document.querySelectorAll('.nav-link').forEach((a) => a.classList.toggle('active', a.getAttribute('href') === `#${r.name}`));
   document.querySelectorAll('.tabbar a').forEach((a) => a.classList.toggle('active', a.getAttribute('href') === `#${r.name}`));
+  document.querySelectorAll('.rail-section-btn').forEach((btn) => {
+    const id = btn.dataset.railSection;
+    const sec = SECTIONS.find((s) => s.id === id);
+    const hasActive = sec ? sec.items.some((it) => it.key === r.name) : false;
+    btn.classList.toggle('has-active', hasActive);
+  });
   
   el.innerHTML = banners() + '<div id="view-body"></div>';
   cleanup = route.view.render(el.querySelector('#view-body'), r.param, route.sub) || null;

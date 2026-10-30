@@ -110,6 +110,8 @@ const ICONS = {
   undo: '<path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
   redo: '<path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/>',
   arrowRight: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  chevron_right: '<path d="M9 18l6-6-6-6"/>',
+  chevron_down: '<path d="M6 9l6 6 6-6"/>',
   node: '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M8 9l4 3-4 3M13 15h3"/>',
 };
 
