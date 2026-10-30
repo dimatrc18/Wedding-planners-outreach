@@ -123,18 +123,33 @@ The core scaffolding for the **Events & MICE Outreach** pipeline has already bee
 
 ---
 
-## 🎙️ 5. Next Steps for AI Assistants: Run `/grill-me` First!
+## 🎙️ 5. Next Steps for AI Assistants: Mandatory 3-Step Intake (Run `/grill-me` First!)
 
 If you are an AI assistant helping Igor Traciuc expand this vertical:
 **DO NOT GUESS OR WRITE UNCHECKED CODE.**
 
-Before modifying or adding code, trigger a `/grill-me` session with Igor to understand his exact operational plan:
-1. **Target Event Niches**: Fashion Week VIPs, Corporate Galas, MICE Congresses, Luxury Brand Launches, Design Week Fuorisalone, Concierge agencies?
-2. **Target Decision-Makers**: Senior Event Producers, Corporate Travel Managers, Agency Logistics Directors, Concierge desks?
-3. **Vehicle Fleet & Service Offerings**: Mercedes V-Class (7–8 pax VIP), E-Class / S-Class sedans, luxury Sprinters (8–16 pax), or 30–54 pax executive coaches?
-4. **Rate Strategy & Quoting Structure**: Fixed transfers, standby/hourly packages, multi-day buyouts, or commission models?
-5. **Outreach Sequence & Tone**: Introduction hook, follow-up cadence, Italian vs English language preference?
-6. **Custom Data Fields**: What unique tags, notes, or contact fields are needed in `#event_partners`?
+Before modifying or adding code, execute this mandatory **3-Step Intake Protocol**:
+
+### Step 1: The 5-Sentence Deep Dive (Intake)
+Ask Igor to describe his project in **5 detailed sentences**:
+1. What exact event agency niches, production houses, or corporate brands is he targeting?
+2. What vehicle fleet classes will he promote (V-Class, Sprinters, large coaches, standby disposals)?
+3. What is his pricing/rate model (fixed route transfers, 4h/8h standby packages, wholesale B2B net rates)?
+4. What is his outreach angle, hook, and preferred language (Italian vs English)?
+5. What are his 30-to-60 day partner acquisition and volume goals?
+
+### Step 2: Infrastructure Leverage Assessment (How Much to Borrow?)
+Ask Igor how much of Dmitri's existing Wedding and Bus infrastructure he wants to leverage, and guide him:
+- **Option 1 (100% Isolated)**: Independent `#event_partners` pipeline. Only reuses core dispatch/verification engine.
+- **Option 2 (Event + Bus Fleet Leverage - RECOMMENDED)**: Connects his event agencies to our **41 Northern Italy bus/coach network** (`#bus-partners`) and live WhatsApp quote ledger (`#fleet-showcase` with Vincenzo's rates) so he can instantly quote 19–54 passenger luxury coaches for large event shuttles.
+- **Option 3 (Event + Wedding Cross-Over)**: Cross-references luxury wedding planners on Lake Como who also produce multi-day private corporate retreats and galas.
+
+### Step 3: Deep Architectural Interview (`/grill-me`)
+Walk down each branch of the design tree, resolving dependencies one by one. For each question, provide a recommended answer based on Northern Italy luxury mobility market standards:
+1. **Agency Specialization**: Configure tabs in `#event_partners` (Fashion/Luxury, Corporate MICE, DMC Incoming, Sports/Media).
+2. **Event Standby Calculator**: Whether to embed a custom 4h/8h Standby & Disposal Calculator with Milan ZTL Area C and VAT toggles.
+3. **Outreach Cadence**: Exact step delays (e.g. T1 Intro $\rightarrow$ T2 Follow-up 4 days later $\rightarrow$ T3 Call/WhatsApp), restricted to Tuesday–Thursday.
+4. **Table Columns & Metadata**: Custom fields (event budget tiers, direct WhatsApp contact, decision-maker LinkedIn).
 
 ---
 
@@ -171,12 +186,11 @@ You are an expert full-stack engineer and AI assistant working on the DOROGO Par
 TASK:
 Customize and scale the "Events & MICE Outreach" pipeline (#event_partners) according to Igor's business needs.
 
-FIRST STEP:
-Before writing code, run an interactive `/grill-me` interview with Igor to clarify:
-1. Exact target agency niches and client profiles.
-2. Specific vehicle classes and services offered (V-Class, Sprinters, coaches, standby disposals).
-3. Desired email copy angles, tone of voice, and follow-up sequence.
-4. Any custom fields or filters needed in `#event_partners`.
+FIRST STEP (MANDATORY INTAKE):
+Before writing any code or modifying files, conduct this 3-step intake with Igor:
+1. Ask Igor to describe his project in 5 detailed sentences (target niches, vehicle classes, pricing model, outreach angle, conversion targets).
+2. Ask Igor how much of Dmitri's existing Wedding and Bus infrastructure he wants to leverage. Recommend Option 2 (Event Outreach + Bus Fleet Network leverage for 19–54 pax coach quoting power).
+3. Run an interactive `/grill-me` session asking questions one by one with your recommended answers to finalize agency categories, calculator widgets, email templates, and table columns.
 
 STRICT CONSTRAINTS & ISOLATION PRINCIPLES:
 1. Zero Blast Radius: Do NOT modify or rename existing tables (`prospects`, `bus_partners`, `touches`).

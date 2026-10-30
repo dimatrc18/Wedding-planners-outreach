@@ -214,32 +214,49 @@ Once your domain or subdomain DNS is active:
 
 ---
 
-## 🎙️ 6. The Recommended AI Onboarding Step: Run `/grill-me`
+## 🎙️ 6. The Mandatory AI Intake Protocol (Run `/grill-me` First)
 
 When you open this repository in your AI coding tool (Cursor, Windsurf, Claude Code, or Antigravity), **do not start by writing code or guessing features**.
 
-Instead, instruct your AI agent:
-> *"I want to build out my Event & MICE Outreach vertical on top of this repository. Run a `/grill-me` interview with me to deeply understand my project requirements, target clients, fleet offerings, and copy strategy before making any code changes."*
+Instead, your AI agent must execute this **3-Step Intake & Interview Protocol**:
 
-### Why `/grill-me` is Crucial:
-Running an interactive interview forces the AI to extract your exact business requirements so it builds precisely what you need on the first attempt without trial-and-error.
+### Step A: The 5-Sentence Deep Dive (Mandatory Intake)
+Before touching any file, prompt your AI assistant:
+> *"I am starting my new Event & MICE Outreach vertical on DOROGO. Before we write any code, interview me so I describe my project in 5 sentences with as many details as possible."*
 
-### What the AI Will Grill You On:
-1. **Target Event Niches**:
-   - Are you targeting Milan Fashion Week producers, Salone del Mobile / Fuorisalone design brands, corporate medical congresses, luxury gala organizers, or incoming international DMCs?
-2. **Key Decision-Makers**:
-   - Are you reaching out to Senior Event Producers, Corporate Travel Managers, Agency Logistics Directors, or Executive Concierges?
-3. **Vehicle Fleet & Service Offerings**:
-   - What vehicles are you promoting? Mercedes V-Class (7–8 pax VIP), E-Class / S-Class sedans, luxury Sprinters (8–16 pax), or 30–54 pax executive coaches?
-   - What services? Airport meet-and-greet, hourly standby disposal, multi-vehicle motorcades, luggage vans?
-4. **Rate Strategy & Quoting Structure**:
-   - Will you offer fixed route pricing, hourly standby packages (e.g., 4h/8h disposal), net B2B wholesale rates, or agency commissions?
-5. **Outreach Tone & Angle**:
-   - What hook works best? Reliable backup partner for sold-out peak weeks? Direct fleet owner pricing? Dedicated 24/7 bilingual dispatch?
-6. **Custom Table Fields**:
-   - What specific metadata do you want to track in the table? (e.g., agency tier, past events handled, primary contact WhatsApp, estimated annual event volume)?
+You should answer covering:
+1. **Target Clients & Niches**: Exactly what event agencies, production houses, MICE planners, or luxury brands are you targeting?
+2. **Mobility Services & Vehicles**: What fleet classes will you promote (Mercedes V-Class 7–8 pax VIP, Sprinters 8–16 pax, luxury coaches 30–54 pax, standby disposals)?
+3. **Pricing & Commission Model**: Are you offering fixed route transfers (e.g. Malpensa–Milan), hourly standby packages (4h/8h), net B2B wholesale rates, or agency commissions?
+4. **Outreach Angle & Tone**: What is your hook? Emergency peak-week backup fleet? Direct bilingual 24/7 dispatch? What language (Italian vs English)?
+5. **30/60-Day Success Goals**: How many active agency relationships or monthly bookings are you aiming to secure?
 
-Once you answer these questions during the `/grill-me` session, your AI will have complete clarity to write custom templates, filters, and logic that match your exact business model.
+---
+
+### Step B: The Infrastructure Leverage Assessment (How Much to Borrow?)
+Your AI assistant must evaluate **how much of Dmitri's existing Wedding and Bus infrastructure you need to leverage**, and recommend the best setup:
+
+| Infrastructure Layer | What You Get | Recommended When |
+| :--- | :--- | :--- |
+| **Option 1: 100% Isolated Pipeline** (`#event_partners`) | Clean slate. Reuses only the core engine (ZeroBounce router, Deno cron scheduler, Stripe Sail UI, anti-flood protection). Zero risk to anything else. | **Best default** for corporate congresses, brand galas, fashion week, and incoming DMCs. |
+| **Option 2: Event + Bus Fleet Network Leverage** (`#bus-partners` & `#fleet-showcase`) | Connects your event agencies directly to our **41 verified Northern Italy coach operators** and live WhatsApp rate ledger (Vincenzo's rates: 19–54 pax coaches, top Sprinters, airport transfers, standby rates). | **Strongly recommended** if your events require group guest shuttles, multi-coach congress motorcades, or VIP Sprinter transfers. You get instant quoting power without having to scout bus operators yourself! |
+| **Option 3: Event + Wedding Cross-Over** (`#prospects`) | Cross-references high-end destination wedding planners on Lake Como who also produce multi-day private anniversary celebrations, luxury brand retreats, and VIP family buyouts. | Useful for dual-hat agencies producing both weddings and luxury private corporate galas. |
+
+> **AI Recommendation**: Start with **Option 2** (Isolated Event Pipeline + Bus Fleet Network Leverage). This gives you complete isolation for your outreach, but full access to our pre-negotiated Northern Italy coach network and live quote ledger when your event clients ask for 19–54 seat buses!
+
+---
+
+### Step C: Deep Architectural Interview (`/grill-me`)
+Once you provide your 5 sentences and select your leverage level, instruct your AI:
+> *"/grill-me on every detail of my Event Outreach vertical. Ask me questions one by one, walk down each branch of the design tree, and provide your recommended answer for each question based on the Northern Italy luxury mobility market."*
+
+#### Key Questions the AI Will Grill You On:
+1. **Agency Categorization**: Do you want specialization tabs in `#event_partners` for Fashion/Luxury, Corporate MICE, DMC Incoming, and Sports/Media, or custom tags?
+2. **Quote Calculator**: Do you need a dedicated Event Standby & Disposal Calculator embedded in your view (e.g. 4-hour and 8-hour disposal packages with ZTL and VAT toggles)?
+3. **Outreach Sequence Cadence**: What touch cadence do you want (T1 Intro $\rightarrow$ T2 Follow-up 4 days later $\rightarrow$ T3 Call/WhatsApp), and should it send Tuesday–Thursday?
+4. **Custom Table Columns**: What extra fields do you need in the table (e.g. annual event volume, key decision-maker LinkedIn, WhatsApp number)?
+
+Once the `/grill-me` session resolves these decisions, your AI assistant will implement your vertical with 100% precision on the very first attempt.
 
 ---
 
