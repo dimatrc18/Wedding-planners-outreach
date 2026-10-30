@@ -10,12 +10,14 @@
 ```
 /
 ├── app/                                 # 100% Vanilla JS Frontend (ES Modules, Zero Build Step)
-│   ├── main.js                          # Hash-based router (#prospects, #bus-partners, #fleet-showcase)
+│   ├── main.js                          # Hash-based router (#prospects, #bus-partners, #event_partners)
 │   ├── styles.css                       # Stripe Sail Design System (CSS variables, tables, badges)
-│   ├── bus_partners_data.js             # Offline fallback data & partner records
+│   ├── bus_partners_data.js             # Offline fallback data & partner records for bus fleet
+│   ├── event_planners_data.js           # Offline fallback data & partner records for event agencies
 │   └── views/                           # View controllers
 │       ├── prospects.js                 # Wedding Planners CRM view
 │       ├── bus_partners.js              # Bus & Fleet Partners CRM view
+│       ├── event_partners.js            # Event & MICE Outreach CRM view (#event_partners)
 │       ├── fleet_showcase.js            # Fleet Ledger & Interactive B2B Quote Calculator
 │       ├── visibility.js                # AI Search Visibility (GEO/LLMO) Tracker
 │       ├── today.js                     # Daily Action Queue & Review
@@ -26,7 +28,7 @@
 │       ├── outreach-cron/index.ts       # Cron runner (runs every 10 min): warm-up, sends, IMAP inbox sync
 │       ├── outreach-api/index.ts        # REST API endpoints for frontend actions
 │       └── _shared/                     # Shared Deno / TypeScript business logic
-│           ├── jobs.ts                  # Core orchestrator: sendDue, syncInbox, verifyEmail
+│           ├── jobs.ts                  # Core orchestrator: sendDue, sendDueEvents, syncInbox, verifyEmail
 │           ├── verify.ts                # Triple-Tier Router: ZeroBounce -> DeBounce -> MillionVerifier
 │           ├── mail.ts                  # SMTP sender (Hostinger TLS) + IMAP Sent folder synchronization
 │           ├── telegram.ts              # Real-time notifications (strictly for human replies)
@@ -37,10 +39,12 @@
 │
 ├── data/                                # Master Seed & Verified JSON Datasets
 │   ├── bus_partners.json                # Seed database of Northern Italy bus/coach operators
+│   ├── event_planners.json              # Seed database of verified Milan event agencies
 │   └── ground_truth_fleet_audit.json    # Verified fleet capacities, unbranded photos & websites
 │
 ├── tests/                               # Comprehensive Automated Test Suite (Native node:test)
 │   ├── bus_partners.test.js             # Bus scoring, schedule invariant, copy-lint tests
+│   ├── event_partners.test.js           # Event data integrity, CRUD isolation, and SMTP safety tests
 │   ├── fleet_ledger_ui.test.js          # Table geometry, calculator quotes, VAT tests
 │   ├── outreach_scenarios.test.js       # End-to-end inbound reply classification tests
 │   └── sequence.test.js                 # Anti-flood, cadence, market balancer tests
@@ -97,104 +101,73 @@ The frontend UI uses a custom **Stripe Sail Design System** written in pure CSS 
 
 ---
 
-## 🏗️ 4. Blueprint for Scaffolding the New "Events" Module
+## 🏗️ 4. Status of the "Events & MICE Outreach" Module
 
-To add the new **Events Outreach** pipeline without touching or risking Wedding Planners or Bus Partners, the AI agent must implement the following 6 steps:
+The core scaffolding for the **Events & MICE Outreach** pipeline has already been implemented with strict isolation (Zero Blast Radius):
 
-### Step 1: Create Database Table & Fallback Seed Data
-1. In Supabase Postgres, create `event_planners`:
-   ```sql
-   CREATE TABLE event_planners (
-     id TEXT PRIMARY KEY,
-     name TEXT NOT NULL,
-     agency_type TEXT, -- e.g. corporate, fashion, gala, mice
-     contact_person TEXT,
-     email TEXT,
-     phone TEXT,
-     website TEXT,
-     base_city TEXT,
-     relevance_score INT DEFAULT 70,
-     status TEXT DEFAULT 'TO_REVIEW', -- TO_REVIEW | WANT_TO_CONTACT | CONTACTED | APPROVED_PARTNER
-     score_breakdown JSONB DEFAULT '{}'::jsonb,
-     notes TEXT,
-     created_at TIMESTAMPTZ DEFAULT NOW(),
-     updated_at TIMESTAMPTZ DEFAULT NOW()
-   );
-   ```
-2. Create seed file: `data/event_planners.json` and fallback exporter: `app/event_planners_data.js`.
-
-### Step 2: Implement Isolated Core Scoring & Templates
-Create `supabase/functions/_shared/core/events_scoring.js`:
-- Scoring tailored to event planners (scale of events, VIP clientele, Milan/Como coverage).
-- Personalized B2B email templates (T1 Intro, T2 Follow-up) tailored to luxury corporate and event transportation.
-- Safe copy-linting (preventing placeholder tokens like `[Company Name]` or phone leaks).
-
-### Step 3: Implement the Frontend View Controller
-Create `app/views/events.js`:
-- Export `render(el)` function.
-- Render Stripe Sail metrics (Total Leads, Contacted, Replied, Conversion Rate).
-- Render `.sail-table` listing event planners, contact details, status pills, and action buttons (`Contact`, `Review`, `Archive`).
-- Support search filtering and status tabs (`All`, `To Review`, `Contacted`, `Replied`).
-
-### Step 4: Register Route in `app/main.js`
-In [`app/main.js`](file:///Users/User/Downloads/Wedding-planners-outreach/app/main.js):
-- Add `#events` to the navigation bar.
-- Add route handler in `loadRoute(hash)`:
-  ```javascript
-  if (hash === 'events') {
-    const { render } = await import('./views/events.js');
-    return render(document.getElementById('view-root'));
-  }
-  ```
-
-### Step 5: Implement Dedicated Edge Function Sending Routine
-In `supabase/functions/_shared/jobs.ts`:
-- Add `export async function sendDueEvents(db, settings, now = new Date())`.
-- Use **dedicated event credentials** (`EVENTS_SMTP_USER`, `EVENTS_SMTP_PASS`, `EVENTS_SMTP_HOST`).
-- Check email deliverability with `verifyEmailUnified(email, { db })`.
-- Transmit via `sendMail` and record audit log in `events_audit_logs`.
-- In `supabase/functions/outreach-cron/index.ts`, add scheduled execution:
-  ```typescript
-  if (job === 'all' || job === 'events_send') await run('events_send', () => sendDueEvents(db, settings, now));
-  ```
-
-### Step 6: Add Automated Tests
-Create `tests/event_partners.test.js`:
-- Test scoring calculation.
-- Test template copy-linting and token sanitization.
-- Test that sending to `event_planners` never reads or writes to `prospects` or `bus_partners`.
-- Run `npm test` to verify all 164 existing tests + new tests pass.
+### What is Already Built and Tested (168 Passing Tests):
+1. **Database & Seed Data**:
+   - `data/event_planners.json`: Pre-loaded with 7 verified Milan event & production agencies.
+   - `app/event_planners_data.js`: Caching, local storage fallbacks, specialization categories.
+2. **Frontend CRM View (`app/views/event_partners.js`)**:
+   - Live at route `#event_partners` (categorized in sidebar under "🎪 Event & MICE Outreach").
+   - 4 Stripe Sail KPI cards, agency specialization pills, search filtering, "Add Event Agency" modal, and CSV export.
+3. **Data Store Isolation (`app/store.js`)**:
+   - Dedicated store slice `S.eventPartners` with reactive helpers (`addEventPartner`, `updateEventPartner`, `removeEventPartner`).
+   - Strictly isolated from `S.prospects` (Weddings) and `S.busPartners` (Buses).
+4. **Backend Edge Function Scaffolding (`supabase/functions/_shared/jobs.ts`)**:
+   - `sendDueEvents()` reads strictly from `event_planners` and enforces dedicated `EVENTS_SMTP_USER`. Throws hard errors if `dmitri@dorogo.eu` is attempted.
+   - `outreach-cron` includes the isolated `events_send` job.
+5. **Automated Verification (`tests/event_partners.test.js`)**:
+   - Verified data schema, CRUD isolation, and backend SMTP safety checks.
 
 ---
 
-## 🔒 5. The 4 Golden Rules of Isolation (Strictly Enforced)
+## 🎙️ 5. Next Steps for AI Assistants: Run `/grill-me` First!
+
+If you are an AI assistant helping Igor Traciuc expand this vertical:
+**DO NOT GUESS OR WRITE UNCHECKED CODE.**
+
+Before modifying or adding code, trigger a `/grill-me` session with Igor to understand his exact operational plan:
+1. **Target Event Niches**: Fashion Week VIPs, Corporate Galas, MICE Congresses, Luxury Brand Launches, Design Week Fuorisalone, Concierge agencies?
+2. **Target Decision-Makers**: Senior Event Producers, Corporate Travel Managers, Agency Logistics Directors, Concierge desks?
+3. **Vehicle Fleet & Service Offerings**: Mercedes V-Class (7–8 pax VIP), E-Class / S-Class sedans, luxury Sprinters (8–16 pax), or 30–54 pax executive coaches?
+4. **Rate Strategy & Quoting Structure**: Fixed transfers, standby/hourly packages, multi-day buyouts, or commission models?
+5. **Outreach Sequence & Tone**: Introduction hook, follow-up cadence, Italian vs English language preference?
+6. **Custom Data Fields**: What unique tags, notes, or contact fields are needed in `#event_partners`?
+
+---
+
+## 🔒 6. The 4 Golden Rules of Isolation (Strictly Enforced)
 
 1. **NEVER modify or query the `prospects` table** for event leads. The `prospects` table is reserved 100% for Wedding Planners.
-2. **NEVER modify or query the `bus_partners` table** for event leads.
-3. **NEVER send emails from `dmitri@dorogo.eu`** for event campaigns. All event outreach must use the dedicated events domain/subdomain (`EVENTS_SMTP_USER`).
+2. **NEVER modify or query the `bus_partners` table** for event leads. The `bus_partners` table is reserved 100% for Northern Italy coach and bus operators.
+3. **NEVER send emails from `dmitri@dorogo.eu`** for event campaigns. All event outreach must use the dedicated events domain or subdomain (`EVENTS_SMTP_USER`).
 4. **NEVER bypass email verification**. Under our Zero-Bounce Policy, unverified mailboxes must never be emailed.
 
 ---
 
-## 📋 6. Master AI System Prompt (Copy & Paste for Your Agent)
+## 📋 7. Master AI System Prompt (Copy & Paste for Your Agent)
 
 *Copy the text below into your AI editor (Cursor, Windsurf, Claude Code, or Antigravity) to begin development:*
 
 ```markdown
-You are an expert full-stack engineer and AI assistant working on the DOROGO Partner Outreach repository.
+You are an expert full-stack engineer and AI assistant working on the DOROGO Partner Outreach repository for Igor Traciuc.
 
 TASK:
-Implement the new "Events Outreach" pipeline according to the specifications in `AI_AGENT_PLAYBOOK.md` and `PARTNER_ONBOARDING.md`.
+Customize and scale the "Events & MICE Outreach" pipeline (#event_partners) according to Igor's business needs.
+
+FIRST STEP:
+Before writing code, run an interactive `/grill-me` interview with Igor to clarify:
+1. Exact target agency niches and client profiles.
+2. Specific vehicle classes and services offered (V-Class, Sprinters, coaches, standby disposals).
+3. Desired email copy angles, tone of voice, and follow-up sequence.
+4. Any custom fields or filters needed in `#event_partners`.
 
 STRICT CONSTRAINTS & ISOLATION PRINCIPLES:
 1. Zero Blast Radius: Do NOT modify or rename existing tables (`prospects`, `bus_partners`, `touches`).
-2. Design Fidelity: All new UI in `app/views/events.js` MUST use the Stripe Sail design system defined in `app/styles.css` (`.sail-table`, `.sail-pill`, `.sail-btn`, `.sail-card`).
+2. Design Fidelity: All UI in `app/views/event_partners.js` MUST use the Stripe Sail design system defined in `app/styles.css` (`.sail-table`, `.sail-pill`, `.sail-btn`, `.sail-card`).
 3. Zero-Bounce Deliverability: Connect to `verifyEmailUnified` in `supabase/functions/_shared/verify.ts`.
-4. Dedicated Email Pipeline: Use `EVENTS_SMTP_USER` and `EVENTS_SMTP_PASS` from environment variables. Do NOT use `dmitri@dorogo.eu`.
-5. Testing: Create `tests/event_partners.test.js`. All existing 164 tests in `tests/` MUST pass (`npm test`).
-
-BEGIN BY:
-1. Reading `AI_AGENT_PLAYBOOK.md` and `PARTNER_ONBOARDING.md`.
-2. Inspecting `app/views/bus_partners.js` as the reference implementation.
-3. Scaffolding the Events module step-by-step.
+4. Dedicated Email Pipeline: Use `EVENTS_SMTP_USER` and `EVENTS_SMTP_PASS` from environment variables. NEVER use `dmitri@dorogo.eu`.
+5. Testing: All 168 tests in `tests/` MUST pass (`npm test`).
 ```
