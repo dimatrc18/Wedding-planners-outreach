@@ -60,11 +60,14 @@ You do **not** need complex container setups, Docker, or bundlers. The repositor
 - **Web Browser**: Chrome, Edge, Safari, or Firefox.
 - **AI Coding Editor (Strongly Recommended)**: Cursor, Windsurf, VS Code with Claude Code / Antigravity.
 
-### Step 1: Clone the Repository
-Once you accept the GitHub invite sent to `@Igrik04`, clone the repo:
+### Step 1: Clone the Repository & Create Your Feature Branch
+Once you accept the GitHub invite sent to `@Igrik04`, clone the repo and create your own dedicated branch:
 ```bash
 git clone https://github.com/dimatrc18/Wedding-planners-outreach.git
 cd Wedding-planners-outreach
+
+# IMPORTANT: Always work on your own branch to prevent git conflicts with Dmitri's work on main:
+git checkout -b feature/event-outreach
 ```
 
 ### Step 2: Verify the Test Suite
@@ -82,7 +85,9 @@ npm run serve
 # Or: python3 -m http.server 8080
 ```
 Open your browser at `http://localhost:8080` (or the URL printed in terminal).  
-Log in with `traciuc04@gmail.com` using the Supabase Magic Link / OTP.
+- **Live Mode**: Sign in with `traciuc04@gmail.com` using the Supabase Magic Link / OTP.
+- **Instant Demo Mode**: Or simply click **"Explore with demo data"** on the login screen to start inspecting and building the UI immediately without waiting for an email.
+- **Your Workspace**: Click the **🎪 Event & MICE Outreach** section in the left sidebar to reveal your `#event_partners` pipeline.
 
 ---
 
@@ -247,18 +252,43 @@ To ensure that both Dmitri's wedding outreach and your event outreach thrive wit
 3. **NEVER send emails from `dmitri@dorogo.eu`** for event campaigns. All event outreach must use your dedicated events domain or subdomain (`EVENTS_SMTP_USER`).
 4. **NEVER bypass email verification**. Under our Zero-Bounce Policy, unverified or risky email addresses must never receive cold outreach.
 
+### 🗺️ File Ownership & Conflict-Free Boundaries:
+| File / Directory | Status | Owner | Rules |
+| :--- | :--- | :--- | :--- |
+| `data/event_planners.json` | 🟢 **Safe Zone** | Igor | Your seed database of event agencies. Edit freely. |
+| `app/event_planners_data.js` | 🟢 **Safe Zone** | Igor | Your caching & helper logic. Edit freely. |
+| `app/views/event_partners.js` | 🟢 **Safe Zone** | Igor | Your UI view (#event_partners). Customize tables, modals, filters. |
+| `tests/event_partners.test.js` | 🟢 **Safe Zone** | Igor | Your automated test suite. Add new tests for your features. |
+| `supabase/functions/_shared/jobs.ts` (`sendDueEvents`) | 🟢 **Safe Zone** | Igor | Only modify the `sendDueEvents()` function. |
+| `supabase/migrations/20261030220000_event_planners.sql` | 🟢 **Safe Zone** | Igor | Your Supabase database table schema & seed migration. |
+| `app/views/prospects.js`, `today.js`, `pipeline.js` | 🔴 **Forbidden** | Dmitri | Active Wedding CRM. Never modify. |
+| `app/views/bus_partners.js`, `fleet_showcase.js` | 🔴 **Forbidden** | Dmitri | Bus Fleet & WhatsApp rate ledger. Never modify. |
+| `data/bus_partners.json` | 🔴 **Forbidden** | Dmitri | Verified coach operator data. Never modify. |
+| `jobs.ts` (`sendDue()`, `sendDueBuses()`, `syncInbox()`) | 🔴 **Forbidden** | Dmitri | Live wedding & bus sending cron. Never modify. |
+| `app/main.js`, `app/styles.css`, `app/store.js` | 🟡 **Shared** | Coordinate | App routing & global store. Inform Dmitri before altering core logic. |
+
 ---
 
-## 🧪 8. Safety & Verification Commands
+## 🗄️ 8. Database & Cloud Sync (Supabase)
 
-Whenever you or your AI agent makes a change, run the test suite to verify everything remains green:
+- **Offline / Local Development Works Out-of-the-Box**: `app/event_planners_data.js` automatically uses `data/event_planners.json` and local storage cache, so you can test and build immediately without connecting to Supabase.
+- **Production Supabase Migration**: When you want live cloud database syncing, run the migration file [`supabase/migrations/20261030220000_event_planners.sql`](file:///Users/User/Downloads/Wedding-planners-outreach/supabase/migrations/20261030220000_event_planners.sql) in the Supabase SQL Editor. It creates the `event_planners` table, Row-Level Security policies for `allowed_users`, triggers, and seed records.
+
+---
+
+## 🧪 9. Pre-Flight Checklist Before Committing or Merging
+
+Before you commit your changes or merge into `main`:
 
 ```bash
-# Run the complete test suite (must pass 168/168 tests):
+# 1. Verify all 168 tests pass:
 npm test
 
-# Check git status:
+# 2. Check git status to ensure you did not accidentally touch Wedding/Bus files:
 git status
+
+# 3. Push your feature branch:
+git push origin feature/event-outreach
 ```
 
 ### Emergency Kill Switch

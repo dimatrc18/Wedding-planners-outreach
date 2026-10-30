@@ -145,6 +145,20 @@ Before modifying or adding code, trigger a `/grill-me` session with Igor to unde
 3. **NEVER send emails from `dmitri@dorogo.eu`** for event campaigns. All event outreach must use the dedicated events domain or subdomain (`EVENTS_SMTP_USER`).
 4. **NEVER bypass email verification**. Under our Zero-Bounce Policy, unverified mailboxes must never be emailed.
 
+### 🗺️ AI File Ownership Matrix:
+| File / Directory | Status | Permission |
+| :--- | :--- | :--- |
+| `data/event_planners.json` | 🟢 Safe Zone | Edit and expand freely |
+| `app/event_planners_data.js` | 🟢 Safe Zone | Edit and expand freely |
+| `app/views/event_partners.js` | 🟢 Safe Zone | Edit and customize UI |
+| `tests/event_partners.test.js` | 🟢 Safe Zone | Add new tests for event features |
+| `supabase/functions/_shared/jobs.ts` (`sendDueEvents`) | 🟢 Safe Zone | Customize sending logic for events |
+| `supabase/migrations/20261030220000_event_planners.sql` | 🟢 Safe Zone | Database schema for event partners |
+| `app/views/prospects.js`, `today.js`, `pipeline.js` | 🔴 Forbidden | DO NOT TOUCH (Wedding CRM) |
+| `app/views/bus_partners.js`, `fleet_showcase.js` | 🔴 Forbidden | DO NOT TOUCH (Bus Fleet CRM) |
+| `data/bus_partners.json` | 🔴 Forbidden | DO NOT TOUCH (Bus data) |
+| `jobs.ts` (`sendDue()`, `sendDueBuses()`, `syncInbox()`) | 🔴 Forbidden | DO NOT TOUCH (Core dispatch engine) |
+
 ---
 
 ## 📋 7. Master AI System Prompt (Copy & Paste for Your Agent)
@@ -169,5 +183,6 @@ STRICT CONSTRAINTS & ISOLATION PRINCIPLES:
 2. Design Fidelity: All UI in `app/views/event_partners.js` MUST use the Stripe Sail design system defined in `app/styles.css` (`.sail-table`, `.sail-pill`, `.sail-btn`, `.sail-card`).
 3. Zero-Bounce Deliverability: Connect to `verifyEmailUnified` in `supabase/functions/_shared/verify.ts`.
 4. Dedicated Email Pipeline: Use `EVENTS_SMTP_USER` and `EVENTS_SMTP_PASS` from environment variables. NEVER use `dmitri@dorogo.eu`.
-5. Testing: All 168 tests in `tests/` MUST pass (`npm test`).
+5. Git Branching: Work exclusively on `feature/event-outreach`, never commit directly to `main`.
+6. Testing: All 168 tests in `tests/` MUST pass (`npm test`) before creating any commit.
 ```
