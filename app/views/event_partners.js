@@ -19,6 +19,53 @@ const STATUS_CONFIG = {
   NOT_RELEVANT: { label: 'Not Relevant', pillClass: 'missing', desc: 'Archived / not a fit' }
 };
 
+function getEventStatusBadgeStyle(status) {
+  switch (status) {
+    case 'TO_REVIEW':
+      return 'background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;font-weight:600;';
+    case 'WANT_TO_CONTACT':
+      return 'background:#EEF2FF;color:#4338CA;border:1px solid #C7D2FE;font-weight:600;';
+    case 'CONTACTED':
+      return 'background:#E0F2FE;color:#075985;border:1px solid #BAE6FD;font-weight:600;';
+    case 'APPROVED_PARTNER':
+      return 'background:#DCFCE7;color:#166534;border:1px solid #BBF7D0;font-weight:600;';
+    case 'NOT_RELEVANT':
+      return 'background:#F1F5F9;color:#475569;border:1px solid #E2E8F0;font-weight:600;';
+    default:
+      return 'background:#FFFFFF;color:#0A2540;border:1px solid #E3E8EE;font-weight:500;';
+  }
+}
+
+function getConciseSpecialization(p) {
+  const raw = p.agency_type_label || p.agency_type || '';
+  if (/mega shows/i.test(raw) || /luxury brand galas/i.test(raw)) {
+    return { icon: '✨', short: 'Luxury Galas & Shows' };
+  }
+  if (/fashion/i.test(raw)) {
+    return { icon: '👠', short: 'Fashion & Luxury' };
+  }
+  if (/summits/i.test(raw) || /conventions/i.test(raw) || /roadshows/i.test(raw) || /mice/i.test(raw) || p.agency_type === 'corporate_mice') {
+    return { icon: '🏢', short: 'Corporate & MICE' };
+  }
+  if (/activation/i.test(raw) || /pr/i.test(raw) || p.agency_type === 'brand_activation') {
+    return { icon: '🎯', short: 'Brand & PR Galas' };
+  }
+  return { icon: '🎪', short: 'Event Production' };
+}
+
+function renderSpecializationPill(p) {
+  const spec = getConciseSpecialization(p);
+  const fullLabel = p.agency_type_label || p.agency_type || spec.short;
+  return `
+    <div style="max-width:100%;overflow:hidden">
+      <span class="sail-pill info" style="font-size:11px;padding:3px 7px;max-width:100%;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(fullLabel)}">
+        <span>${spec.icon}</span>
+        <span style="overflow:hidden;text-overflow:ellipsis">${esc(spec.short)}</span>
+      </span>
+    </div>
+  `;
+}
+
 export async function render(el) {
   currentEl = el;
   const partners = S.eventPartners || [];
@@ -42,57 +89,57 @@ export async function render(el) {
   el.innerHTML = `
     <div style="display:flex;flex-direction:column;gap:18px">
       <!-- Header Banner & Isolated Identity Indicator -->
-      <div class="sail-card" style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
-        <div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <h1 style="font-size:21px;font-weight:700;color:var(--sail-ink);margin:0;letter-spacing:-0.02em">
+      <div class="sail-card" style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+        <div style="min-width:280px;flex:1">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <h1 style="font-size:19px;font-weight:700;color:var(--sail-ink);margin:0;letter-spacing:-0.02em;white-space:nowrap">
               🎪 Event &amp; Corporate Outreach
             </h1>
-            <span class="sail-pill ok" style="font-size:11px;font-weight:700">events.dorogo-events.eu</span>
+            <span class="sail-pill ok" style="font-size:10.5px;font-weight:700">events.dorogo-events.eu</span>
             <span class="sail-pill info" style="font-size:10.5px">100% Isolated Pipeline</span>
           </div>
-          <div style="font-size:12.5px;color:var(--sail-muted);margin-top:4px">
+          <div style="font-size:12px;color:var(--sail-muted);margin-top:4px">
             Dedicated B2B outreach for Milan Fashion Week, MICE conventions, brand activations, and corporate retreats.
           </div>
         </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button class="sail-btn default" id="btn-export-events-csv" style="font-size:12px">
+        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;margin-left:auto">
+          <button class="sail-btn default" id="btn-export-events-csv" style="font-size:11.5px;padding:6px 12px;white-space:nowrap">
             📥 Export CSV
           </button>
-          <button class="sail-btn primary" id="btn-add-event-agency" style="font-size:12px">
+          <button class="sail-btn primary" id="btn-add-event-agency" style="font-size:11.5px;padding:6px 12px;white-space:nowrap">
             + Add Event Agency
           </button>
         </div>
       </div>
 
       <!-- KPI Stat Cards -->
-      <div class="sail-stat-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px">
-        <div class="sail-card">
-          <div class="sail-stat-label">Total Event Agencies</div>
-          <div class="sail-stat-val" style="color:var(--sail-ink)">${totalCount}</div>
-          <div class="sail-stat-meta">Verified in pipeline</div>
+      <div class="sail-stat-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));gap:12px">
+        <div class="sail-card" style="padding:12px 14px">
+          <div class="sail-stat-label" style="font-size:11px;color:var(--sail-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:600">Total Event Agencies</div>
+          <div class="sail-stat-val" style="font-size:22px;font-weight:700;color:var(--sail-ink);margin:4px 0 2px 0">${totalCount}</div>
+          <div class="sail-stat-meta" style="font-size:11px;color:var(--sail-muted)">Verified in pipeline</div>
         </div>
-        <div class="sail-card">
-          <div class="sail-stat-label">To Review</div>
-          <div class="sail-stat-val" style="color:#D97706">${toReviewCount}</div>
-          <div class="sail-stat-meta">Awaiting intake audit</div>
+        <div class="sail-card" style="padding:12px 14px">
+          <div class="sail-stat-label" style="font-size:11px;color:var(--sail-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:600">To Review</div>
+          <div class="sail-stat-val" style="font-size:22px;font-weight:700;color:#D97706;margin:4px 0 2px 0">${toReviewCount}</div>
+          <div class="sail-stat-meta" style="font-size:11px;color:var(--sail-muted)">Awaiting intake audit</div>
         </div>
-        <div class="sail-card">
-          <div class="sail-stat-label">Ready to Contact</div>
-          <div class="sail-stat-val" style="color:#2563EB">${readyCount}</div>
-          <div class="sail-stat-meta">Verified emails queued</div>
+        <div class="sail-card" style="padding:12px 14px">
+          <div class="sail-stat-label" style="font-size:11px;color:var(--sail-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:600">Ready to Contact</div>
+          <div class="sail-stat-val" style="font-size:22px;font-weight:700;color:#2563EB;margin:4px 0 2px 0">${readyCount}</div>
+          <div class="sail-stat-meta" style="font-size:11px;color:var(--sail-muted)">Verified emails queued</div>
         </div>
-        <div class="sail-card">
-          <div class="sail-stat-label">Contacted &amp; Won</div>
-          <div class="sail-stat-val" style="color:#059669">${contactedCount}</div>
-          <div class="sail-stat-meta">In conversation / active</div>
+        <div class="sail-card" style="padding:12px 14px">
+          <div class="sail-stat-label" style="font-size:11px;color:var(--sail-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:600">Contacted &amp; Won</div>
+          <div class="sail-stat-val" style="font-size:22px;font-weight:700;color:#059669;margin:4px 0 2px 0">${contactedCount}</div>
+          <div class="sail-stat-meta" style="font-size:11px;color:var(--sail-muted)">In conversation / active</div>
         </div>
       </div>
 
       <!-- Filters & Search Toolbar -->
-      <div class="sail-card" style="padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div class="sail-card" style="padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
         <!-- Vertical Specialization Tabs -->
-        <div class="sail-tabs" style="display:flex;gap:4px;flex-wrap:wrap">
+        <div class="sail-tabs" style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
           ${EVENT_AGENCY_TYPES.map((t) => `
             <button class="sail-tab ${activeTypeFilter === t.key ? 'active' : ''}" data-type-tab="${attr(t.key)}" style="height:28px;padding:0 10px;font-size:12px">
               ${esc(t.label)}
@@ -101,8 +148,8 @@ export async function render(el) {
         </div>
 
         <!-- Status Filter & Search -->
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <select id="event-status-filter" style="height:30px;padding:0 8px;border:1px solid var(--sail-line);border-radius:6px;font-size:12px;background:#FFF">
+        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;margin-left:auto">
+          <select id="event-status-filter" style="height:30px;padding:0 8px;border:1px solid var(--sail-line);border-radius:6px;font-size:12px;background:#FFF;color:var(--sail-ink);cursor:pointer">
             <option value="all" ${activeStatusFilter === 'all' ? 'selected' : ''}>All Statuses (${totalCount})</option>
             <option value="TO_REVIEW" ${activeStatusFilter === 'TO_REVIEW' ? 'selected' : ''}>To Review (${toReviewCount})</option>
             <option value="WANT_TO_CONTACT" ${activeStatusFilter === 'WANT_TO_CONTACT' ? 'selected' : ''}>Ready to Contact (${readyCount})</option>
@@ -110,39 +157,42 @@ export async function render(el) {
             <option value="APPROVED_PARTNER" ${activeStatusFilter === 'APPROVED_PARTNER' ? 'selected' : ''}>Partner Won</option>
           </select>
 
-          <input 
-            type="text" 
-            id="event-search-input" 
-            placeholder="Search agency, contact, city..." 
-            value="${attr(searchQuery)}" 
-            style="height:30px;padding:0 10px;border:1px solid var(--sail-line);border-radius:6px;font-size:12px;width:210px;background:#F8FAFC"
-          >
+          <div style="position:relative;display:inline-flex;align-items:center">
+            <input 
+              type="text" 
+              id="event-search-input" 
+              placeholder="Search agency, contact, city..." 
+              value="${attr(searchQuery)}" 
+              style="height:30px;padding:0 10px 0 26px;border:1px solid var(--sail-line);border-radius:6px;font-size:12px;width:190px;background:#F8FAFC"
+            >
+            <span style="position:absolute;left:8px;font-size:11px;color:var(--sail-muted);pointer-events:none">🔍</span>
+          </div>
         </div>
       </div>
 
       <!-- Main Data Table (Stripe Sail) -->
       <div class="sail-card" style="padding:0;overflow:hidden">
-        <div class="sail-table-wrap">
-          <table class="sail-table" style="table-layout:fixed;width:100%">
+        <div class="sail-table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+          <table class="sail-table" style="table-layout:fixed;width:100%;min-width:760px">
             <thead>
               <tr>
-                <th style="width:26%">
+                <th style="width:23%;min-width:155px">
                   <div class="sail-th-title">Agency &amp; Website</div>
                 </th>
-                <th style="width:19%">
+                <th style="width:19%;min-width:140px">
                   <div class="sail-th-title">Event Specialization</div>
                 </th>
-                <th style="width:22%">
+                <th style="width:22%;min-width:150px">
                   <div class="sail-th-title">Contact Person &amp; Email</div>
                 </th>
-                <th style="width:12%">
+                <th style="width:9%;min-width:75px">
                   <div class="sail-th-title">Base HQ</div>
                 </th>
-                <th style="width:11%">
-                  <div class="sail-th-title">Status</div>
+                <th style="width:16%;min-width:135px">
+                  <div class="sail-th-title">Outreach Status</div>
                 </th>
-                <th style="width:10%;text-align:right">
-                  <div class="sail-th-title">Score / Actions</div>
+                <th style="width:11%;min-width:85px;text-align:right">
+                  <div class="sail-th-title">Score / Action</div>
                 </th>
               </tr>
             </thead>
@@ -177,12 +227,12 @@ function renderAgencyRow(p) {
   return `
     <tr>
       <td>
-        <div style="font-weight:600;font-size:13px;color:var(--sail-ink)">
+        <div style="font-weight:600;font-size:13px;color:var(--sail-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(p.name)}">
           ${esc(p.name)}
         </div>
         ${p.website ? `
-          <div style="margin-top:2px">
-            <a href="${attr(p.website)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--sail-primary);text-decoration:none">
+          <div style="margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            <a href="${attr(p.website)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--sail-primary);text-decoration:none;display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis" title="Visit ${attr(p.website)}">
               🌐 ${esc(webClean)} ↗
             </a>
           </div>
@@ -190,18 +240,16 @@ function renderAgencyRow(p) {
       </td>
 
       <td>
-        <span class="sail-pill info" style="font-size:10.5px">
-          ${esc(p.agency_type_label || p.agency_type || 'Event Production')}
-        </span>
+        ${renderSpecializationPill(p)}
       </td>
 
       <td>
-        <div style="font-size:12px;font-weight:500;color:var(--sail-body)">
+        <div style="font-size:12px;font-weight:500;color:var(--sail-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(p.contact_person || 'Logistics Desk')}">
           ${esc(p.contact_person || 'Logistics Desk')}
         </div>
         ${p.email ? `
-          <div style="margin-top:2px">
-            <a href="mailto:${attr(p.email)}" style="font-size:11.5px;color:var(--sail-muted);text-decoration:none">
+          <div style="margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            <a href="mailto:${attr(p.email)}" style="font-size:11.5px;color:var(--sail-muted);text-decoration:none;display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis" title="Email: ${attr(p.email)}">
               ✉️ ${esc(p.email)}
             </a>
           </div>
@@ -209,27 +257,27 @@ function renderAgencyRow(p) {
       </td>
 
       <td>
-        <div style="font-size:12px;color:var(--sail-body)">
+        <div style="font-size:12px;color:var(--sail-body);white-space:nowrap">
           📍 ${esc(p.base_city || 'Milano')}
         </div>
       </td>
 
       <td>
-        <select class="sail-status-select" data-id="${attr(p.id)}" style="font-size:11px;height:24px;border:1px solid var(--sail-line);border-radius:4px;background:#FFF">
-          <option value="TO_REVIEW" ${p.status === 'TO_REVIEW' ? 'selected' : ''}>To Review</option>
-          <option value="WANT_TO_CONTACT" ${p.status === 'WANT_TO_CONTACT' ? 'selected' : ''}>Ready to Contact</option>
-          <option value="CONTACTED" ${p.status === 'CONTACTED' ? 'selected' : ''}>Contacted</option>
-          <option value="APPROVED_PARTNER" ${p.status === 'APPROVED_PARTNER' ? 'selected' : ''}>Partner Won</option>
-          <option value="NOT_RELEVANT" ${p.status === 'NOT_RELEVANT' ? 'selected' : ''}>Archive / Dismiss</option>
+        <select class="sail-status-select" data-id="${attr(p.id)}" style="height:28px;line-height:26px;padding:2px 6px;border-radius:6px;font-size:11.5px;width:100%;max-width:138px;box-sizing:border-box;cursor:pointer;outline:none;${getEventStatusBadgeStyle(p.status)}">
+          <option value="TO_REVIEW" ${p.status === 'TO_REVIEW' ? 'selected' : ''} style="background:#FFF;color:#0A2540;font-weight:normal">To Review</option>
+          <option value="WANT_TO_CONTACT" ${p.status === 'WANT_TO_CONTACT' ? 'selected' : ''} style="background:#FFF;color:#0A2540;font-weight:normal">Ready to Contact</option>
+          <option value="CONTACTED" ${p.status === 'CONTACTED' ? 'selected' : ''} style="background:#FFF;color:#0A2540;font-weight:normal">Contacted</option>
+          <option value="APPROVED_PARTNER" ${p.status === 'APPROVED_PARTNER' ? 'selected' : ''} style="background:#FFF;color:#0A2540;font-weight:normal">Partner Won</option>
+          <option value="NOT_RELEVANT" ${p.status === 'NOT_RELEVANT' ? 'selected' : ''} style="background:#FFF;color:#0A2540;font-weight:normal">Archive / Dismiss</option>
         </select>
       </td>
 
       <td style="text-align:right">
-        <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px">
-          <span class="sail-pill ok" style="font-size:11px;font-weight:700">
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;white-space:nowrap">
+          <span class="sail-pill ok" style="font-size:11px;font-weight:700;padding:2px 6px" title="Relevance Score: ${p.relevance_score || 85}/100">
             ${p.relevance_score || 85}
           </span>
-          <button class="sail-btn xs" data-edit-agency="${attr(p.id)}" title="Edit Agency">
+          <button class="sail-btn xs" data-edit-agency="${attr(p.id)}" title="Edit Agency" style="font-size:11px;padding:3px 8px">
             Edit
           </button>
         </div>
