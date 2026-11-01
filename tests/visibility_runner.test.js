@@ -311,4 +311,60 @@ test('computeGraderHistoricalSeries returns chronological series with progress m
   assert.equal(series[1].gapToLeader, 16.2); // 26.0 - 9.8
 });
 
+test('runFullLiveAudit callback contract: passes record and pct, handles fallback without throwing is_top_recommendation', async () => {
+  const { runFullLiveAudit } = await import('../app/services/live_audit.js');
+
+  const completedCallbacks = [];
+  const progressCallbacks = [];
+
+  const abortCtrl = new AbortController();
+  // Abort after 2 iterations to keep unit test blazing fast
+  let count = 0;
+
+  const mockPrevious = {
+    details: [
+      {
+        id: "hi_st_moritz",
+        dorogo_present: true,
+        dorogo_rank: 1,
+        is_top_recommendation: true,
+        competitors: ["ncc milano"],
+        snippet: "Dorogo is the top recommended private van service.",
+        full_content: "Top Pick: Dorogo Chauffeur Service."
+      }
+    ]
+  };
+
+  try {
+    await runFullLiveAudit({
+      previousRun: mockPrevious,
+      signal: abortCtrl.signal,
+      onProgress: (p) => {
+        progressCallbacks.push(p);
+        assert.ok(typeof p.pct === 'number', 'onProgress must provide pct number');
+        assert.ok(typeof p.top1Count === 'number', 'onProgress must provide top1Count');
+      },
+      onQueryStart: () => {},
+      onQueryComplete: ({ index, record, result }) => {
+        completedCallbacks.push({ index, record, result });
+        // Specifically verify record is defined and has is_top_recommendation
+        assert.ok(record, 'onQueryComplete must pass record');
+        assert.ok(typeof record.is_top_recommendation === 'boolean', 'record.is_top_recommendation must be boolean');
+        count++;
+        if (count >= 1) {
+          abortCtrl.abort();
+        }
+      }
+    });
+  } catch (err) {
+    if (err.message !== "Audit cancelled by user") {
+      throw err;
+    }
+  }
+
+  assert.ok(completedCallbacks.length >= 1, 'Must have received at least 1 completed callback');
+  assert.equal(completedCallbacks[0].record.is_top_recommendation, true, 'Cached benchmark preserves is_top_recommendation');
+});
+
+
 

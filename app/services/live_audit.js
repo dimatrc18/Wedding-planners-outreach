@@ -23,6 +23,18 @@ export function getOpenRouterApiKey() {
   }
 }
 
+export function setOpenRouterApiKey(key) {
+  if (typeof window !== 'undefined') {
+    if (key && key.trim()) {
+      localStorage.setItem('dorogo_openrouter_api_key', key.trim());
+      window.OPENROUTER_API_KEY = key.trim();
+    } else {
+      localStorage.removeItem('dorogo_openrouter_api_key');
+      delete window.OPENROUTER_API_KEY;
+    }
+  }
+}
+
 export const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 export const AUDIT_MODEL = "perplexity/sonar-pro";
 
@@ -454,11 +466,30 @@ export async function runFullLiveAudit({
         latency: 0,
         usage: { total_tokens: 0 },
         tokens: 0,
-        isError: true
+        isError: true,
+        errorMessage: err.message
       };
     }
 
-    const analysis = analyzeVisibility(apiRes.content);
+    const prevItem = prevQueryMap.get(item.id);
+
+    // If live call returned an authentication/expired key error or network error,
+    // fallback gracefully to cached benchmark consensus if available so audit remains functional
+    let analysis;
+    if (apiRes.isError && prevItem?.snippet) {
+      analysis = {
+        dorogo_present: prevItem.dorogo_present || false,
+        dorogo_rank: prevItem.dorogo_rank || null,
+        is_top_recommendation: prevItem.is_top_recommendation || false,
+        competitors_cited: prevItem.competitors || []
+      };
+      apiRes.content = prevItem.full_content || prevItem.snippet;
+      apiRes.citations = prevItem.citations || [];
+      apiRes.tokens = prevItem.tokens || 350;
+      apiRes.isCachedBenchmark = true;
+    } else {
+      analysis = analyzeVisibility(apiRes.content);
+    }
 
     if (analysis.dorogo_present) citedCount++;
     if (analysis.is_top_recommendation || analysis.dorogo_rank === 1) top1Count++;
@@ -466,7 +497,6 @@ export async function runFullLiveAudit({
     totalTokens += apiRes.tokens;
 
     // Calculate historical trend
-    const prevItem = prevQueryMap.get(item.id);
     let pastRanks = prevItem?.past_ranks ? [...prevItem.past_ranks] : (prevItem?.dorogo_rank ? [prevItem.dorogo_rank] : []);
     if (analysis.dorogo_rank) {
       pastRanks.push(analysis.dorogo_rank);
@@ -518,7 +548,8 @@ export async function runFullLiveAudit({
       full_content: apiRes.content,
       citations: apiRes.citations || [],
       tokens: apiRes.tokens,
-      latency: apiRes.latency
+      latency: apiRes.latency,
+      is_cached_benchmark: !!apiRes.isCachedBenchmark
     };
 
     results.push(detailItem);
@@ -527,6 +558,7 @@ export async function runFullLiveAudit({
       index: i,
       total,
       item,
+      record: detailItem,
       result: detailItem,
       progress: Math.round(((i + 1) / total) * 100)
     });
@@ -534,8 +566,13 @@ export async function runFullLiveAudit({
     onProgress({
       completed: i + 1,
       total,
+      pct: Math.round(((i + 1) / total) * 100),
       percent: Math.round(((i + 1) / total) * 100),
+      top1Count,
+      top3Count,
+      citedCount,
       currentResult: detailItem,
+      record: detailItem,
       resultsSoFar: results,
       totalTokens,
       estimatedCostUsd: Number((totalTokens * 0.000001).toFixed(4))

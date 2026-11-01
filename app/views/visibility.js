@@ -1335,7 +1335,10 @@ function startLiveAudit(el, currentRun) {
         <div class="card" style="background:var(--surface-2);padding:14px 18px;border-radius:var(--r-sm)">
           <div class="row between" style="align-items:baseline;margin-bottom:8px">
             <span style="font-weight:600;font-size:.9rem" id="crm-hud-progress-label">Initiating probe across 12 high-intent queries... (0%)</span>
-            <span class="small muted" id="crm-hud-timer">Elapsed: 00:00</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <button type="button" class="btn ghost xs" id="btn-set-openrouter-key" style="font-size:.72rem;padding:2px 8px;cursor:pointer" title="Configure OpenRouter API Key for live Perplexity Sonar search">🔑 OpenRouter Key</button>
+              <span class="small muted" id="crm-hud-timer">Elapsed: 00:00</span>
+            </div>
           </div>
           <div style="height:10px;background:var(--line);border-radius:6px;overflow:hidden">
             <div id="crm-hud-progress-bar" style="width:0%;height:100%;background:linear-gradient(90deg, #0E100F 0%, #10B981 100%);transition:width .3s ease"></div>
@@ -1379,6 +1382,23 @@ function startLiveAudit(el, currentRun) {
         if (timerEl) timerEl.textContent = `Elapsed: ${m}:${s}`;
       }, 1000);
 
+      box.querySelector('#btn-set-openrouter-key')?.addEventListener('click', () => {
+        const currentKey = localStorage.getItem('dorogo_openrouter_api_key') || '';
+        const newKey = prompt('Enter OpenRouter API Key for live Perplexity Sonar search (sk-or-v1-...):', currentKey);
+        if (newKey !== null) {
+          const trimmed = newKey.trim();
+          if (trimmed) {
+            localStorage.setItem('dorogo_openrouter_api_key', trimmed);
+            window.OPENROUTER_API_KEY = trimmed;
+            toast('OpenRouter API key saved!', 'ok');
+          } else {
+            localStorage.removeItem('dorogo_openrouter_api_key');
+            delete window.OPENROUTER_API_KEY;
+            toast('OpenRouter API key removed', 'info');
+          }
+        }
+      });
+
       box.querySelector('[data-close]')?.addEventListener('click', () => {
         abortCtrl.abort();
         clearInterval(timerInterval);
@@ -1401,26 +1421,28 @@ function startLiveAudit(el, currentRun) {
               const top3El = box.querySelector('#crm-hud-top3');
               const costEl = box.querySelector('#crm-hud-cost');
 
-              if (bar) bar.style.width = `${p.pct}%`;
-              if (label) label.textContent = `Auditing queries across live AI models... (${p.pct}%)`;
-              if (countEl) countEl.textContent = p.completed;
-              if (top1El) top1El.textContent = p.top1Count;
-              if (top3El) top3El.textContent = p.top3Count;
-              if (costEl) costEl.textContent = `$${p.estimatedCostUsd} USD`;
+              const pct = p.pct ?? p.percent ?? 0;
+              if (bar) bar.style.width = `${pct}%`;
+              if (label) label.textContent = `Auditing queries across live AI models... (${pct}%)`;
+              if (countEl) countEl.textContent = p.completed ?? 0;
+              if (top1El) top1El.textContent = p.top1Count ?? 0;
+              if (top3El) top3El.textContent = p.top3Count ?? 0;
+              if (costEl) costEl.textContent = `$${p.estimatedCostUsd ?? '0.00'} USD`;
             },
             onQueryStart: ({ index }) => {
               const badge = box.querySelector(`#crm-step-badge-${index}`);
               if (badge) badge.innerHTML = `<span class="chip gold" style="font-size:.7rem"><span class="spin">⟳</span> Probing</span>`;
             },
-            onQueryComplete: ({ index, record }) => {
+            onQueryComplete: ({ index, record, result }) => {
+              const itemRecord = record || result || {};
               const badge = box.querySelector(`#crm-step-badge-${index}`);
               if (badge) {
-                if (record.is_top_recommendation) {
+                if (itemRecord.is_top_recommendation) {
                   badge.innerHTML = `<span class="chip ok" style="font-size:.7rem;font-weight:700">🏆 #1 Top Pick</span>`;
-                } else if (record.dorogo_rank && record.dorogo_rank <= 3) {
-                  badge.innerHTML = `<span class="chip ok" style="font-size:.7rem">🥈 #${record.dorogo_rank} Podium</span>`;
-                } else if (record.dorogo_present) {
-                  badge.innerHTML = `<span class="chip" style="font-size:.7rem">#${record.dorogo_rank} Cited</span>`;
+                } else if (itemRecord.dorogo_rank && itemRecord.dorogo_rank <= 3) {
+                  badge.innerHTML = `<span class="chip ok" style="font-size:.7rem">🥈 #${itemRecord.dorogo_rank} Podium</span>`;
+                } else if (itemRecord.dorogo_present) {
+                  badge.innerHTML = `<span class="chip" style="font-size:.7rem">#${itemRecord.dorogo_rank} Cited</span>`;
                 } else {
                   badge.innerHTML = `<span class="chip outline" style="font-size:.7rem">Unranked</span>`;
                 }
