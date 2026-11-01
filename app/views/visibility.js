@@ -19,7 +19,7 @@ import {
   computeGraderHistoricalSeries,
   loadGraderHistory,
   saveGraderSnapshot
-} from '../services/live_audit.js?v=9.6';
+} from '../services/live_audit.js?v=9.7';
 
 let cachedHistory = null;
 let cachedActions = null;
@@ -210,7 +210,7 @@ export async function render(el) {
       ? renderExecutiveBoard({ currentGrader, graderDelta, graderSeries, currentRun, citationRate, top3Rate, top1Rate, dorogoSov, dorogoRank })
       : activeViewMode === 'grader'
         ? renderGraderView({ currentGrader, graderDelta, graderSeries, graderHistory, gIdx, activePodiumEngine, podiumFirst, podiumSecond, podiumThird, dorogoRank, dorogoSov })
-        : renderRoutesView({ history, runIdx, currentRun, totalQueries, top1Rate, top3Rate, citationRate, deltaWeek, perpCited, gptCited, gemCited, rawNiches, top3Items, items, activeFilter, actionsData, actionFilter })}
+        : renderRoutesView({ history, runIdx, currentRun, totalQueries, top1Rate, top3Rate, citationRate, deltaWeek, perpCited, gptCited, gemCited, rawNiches, top3Items, items, activeFilter, actionsData, actionFilter, routeTrends })}
   `;
 
   // Attach all unified listeners
@@ -750,7 +750,7 @@ function renderGraderView({ currentGrader, graderDelta, graderSeries, graderHist
 // ==========================================
 // VIEW 3: TEST 2 · 12-ROUTE CONSENSUS RADAR
 // ==========================================
-function renderRoutesView({ history, runIdx, currentRun, totalQueries, top1Rate, top3Rate, citationRate, deltaWeek, perpCited, gptCited, gemCited, rawNiches, top3Items, items, activeFilter, actionsData, actionFilter }) {
+function renderRoutesView({ history, runIdx, currentRun, totalQueries, top1Rate, top3Rate, citationRate, deltaWeek, perpCited, gptCited, gemCited, rawNiches, top3Items, items, activeFilter, actionsData, actionFilter, routeTrends }) {
   return `
     <div class="stack lg">
       <!-- 1. The 3-Engine Consensus Radar -->

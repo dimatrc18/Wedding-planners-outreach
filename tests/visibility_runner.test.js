@@ -366,5 +366,14 @@ test('runFullLiveAudit callback contract: passes record and pct, handles fallbac
   assert.equal(completedCallbacks[0].record.is_top_recommendation, true, 'Cached benchmark preserves is_top_recommendation');
 });
 
+test('renderRoutesView handles routeTrends map gracefully without throwing ReferenceError', async () => {
+  // Read visibility.js to verify routeTrends is in renderRoutesView parameter signature
+  const fs = await import('node:fs');
+  const code = fs.readFileSync('app/views/visibility.js', 'utf-8');
+  assert.ok(code.includes('function renderRoutesView({ history, runIdx, currentRun, totalQueries, top1Rate, top3Rate, citationRate, deltaWeek, perpCited, gptCited, gemCited, rawNiches, top3Items, items, activeFilter, actionsData, actionFilter, routeTrends })'), 'renderRoutesView parameter list must include routeTrends');
+  assert.ok(code.includes('renderRoutesView({ history, runIdx, currentRun, totalQueries, top1Rate, top3Rate, citationRate, deltaWeek, perpCited, gptCited, gemCited, rawNiches, top3Items, items, activeFilter, actionsData, actionFilter, routeTrends })'), 'call site must pass routeTrends into renderRoutesView');
+});
+
+
 
 
