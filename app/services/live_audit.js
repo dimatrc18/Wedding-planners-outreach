@@ -859,11 +859,13 @@ export function persistLiveAuditRun(newRun) {
   // Persist to Supabase in background
   const sb = getSupabaseClient();
   if (sb) {
-    sb.from('outreach_state').upsert({
-      key: 'ai_visibility_history',
-      value: history,
-      updated_at: new Date().toISOString()
-    }).catch((e) => {
+    Promise.resolve(
+      sb.from('outreach_state').upsert({
+        key: 'ai_visibility_history',
+        value: history,
+        updated_at: new Date().toISOString()
+      })
+    ).catch((e) => {
       console.warn("Unable to persist visibility run to Supabase:", e);
     });
   }
@@ -972,11 +974,13 @@ export function saveVisibilityAction(action, currentList = null) {
   // Persist to Supabase in background
   const sb = getSupabaseClient();
   if (sb) {
-    sb.from('outreach_state').upsert({
-      key: 'ai_visibility_actions',
-      value: list,
-      updated_at: new Date().toISOString()
-    }).catch((e) => {
+    Promise.resolve(
+      sb.from('outreach_state').upsert({
+        key: 'ai_visibility_actions',
+        value: list,
+        updated_at: new Date().toISOString()
+      })
+    ).catch((e) => {
       console.warn("Failed to save action to Supabase:", e);
     });
   }
@@ -1012,11 +1016,13 @@ export function deleteVisibilityAction(id, currentList = null) {
 
   const sb = getSupabaseClient();
   if (sb) {
-    sb.from('outreach_state').upsert({
-      key: 'ai_visibility_actions',
-      value: updated,
-      updated_at: new Date().toISOString()
-    }).catch(() => {});
+    Promise.resolve(
+      sb.from('outreach_state').upsert({
+        key: 'ai_visibility_actions',
+        value: updated,
+        updated_at: new Date().toISOString()
+      })
+    ).catch(() => {});
   }
 
   return updated;
@@ -1324,11 +1330,13 @@ export async function saveGraderSnapshot(snapshot) {
 
   const sb = getSupabaseClient();
   if (sb) {
-    sb.from('outreach_state').upsert({
-      key: 'ai_visibility_grader_history',
-      value: history,
-      updated_at: new Date().toISOString()
-    }).catch(() => {});
+    Promise.resolve(
+      sb.from('outreach_state').upsert({
+        key: 'ai_visibility_grader_history',
+        value: history,
+        updated_at: new Date().toISOString()
+      })
+    ).catch(() => {});
   }
 
   return history;

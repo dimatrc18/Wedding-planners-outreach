@@ -19,7 +19,7 @@ import {
   computeGraderHistoricalSeries,
   loadGraderHistory,
   saveGraderSnapshot
-} from '../services/live_audit.js?v=9.5';
+} from '../services/live_audit.js?v=9.6';
 
 let cachedHistory = null;
 let cachedActions = null;
@@ -1151,10 +1151,52 @@ function openGraderImportModal() {
         }
       });
 
+      async function extractTextFromPdf(file) {
+        if (!window.pdfjsLib) {
+          await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+            script.onload = () => {
+              if (window.pdfjsLib) {
+                window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+              }
+              resolve();
+            };
+            script.onerror = () => reject(new Error('Failed to load pdf.js from CDN'));
+            document.head.appendChild(script);
+          });
+        }
+
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullText = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map((item) => item.str).join(' ');
+          fullText += pageText + '\n';
+        }
+        return fullText;
+      }
+
       async function handleFile(file) {
-        box.querySelector('#grader-dropzone-label').textContent = `Reading ${file.name}...`;
-        const text = await file.text().catch(() => '');
+        const dropLabel = box.querySelector('#grader-dropzone-label');
+        if (dropLabel) dropLabel.textContent = `Extracting text from ${file.name}...`;
+
+        let text = '';
+        if (file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf') {
+          try {
+            text = await extractTextFromPdf(file);
+          } catch (err) {
+            console.warn('PDF text extraction via pdf.js failed:', err);
+            text = await file.text().catch(() => '');
+          }
+        } else {
+          text = await file.text().catch(() => '');
+        }
+
         pasteInput.value = text;
+        if (dropLabel) dropLabel.textContent = `✓ Processed ${file.name}`;
         submitBtn.click();
       }
 
@@ -1162,6 +1204,11 @@ function openGraderImportModal() {
         const rawText = pasteInput.value.trim();
         if (!rawText) {
           toast('Please paste text or drop a file first', 'warn');
+          return;
+        }
+
+        if (rawText.startsWith('%PDF-') && !rawText.includes('AI Search Grader')) {
+          toast('Raw unparsed PDF bytes detected. Please re-drop the PDF file to auto-extract text.', 'warn');
           return;
         }
 
