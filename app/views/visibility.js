@@ -19,7 +19,7 @@ import {
   computeGraderHistoricalSeries,
   loadGraderHistory,
   saveGraderSnapshot
-} from '../services/live_audit.js';
+} from '../services/live_audit.js?v=9.5';
 
 let cachedHistory = null;
 let cachedActions = null;
