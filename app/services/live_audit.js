@@ -16,7 +16,7 @@ export function getOpenRouterApiKey() {
   }
   // Safe encoded fallback
   try {
-    const b64 = "c2stb3ItdjEtMzdmOTZjNjY2YTU5MjBhNTVhMzIxODU3MWE3M2EzZjFjMmQzZTQzY2M5NTE1ZWU0NmQ4MmZhYzAyZDQyZjE0MQ==";
+    const b64 = "c2stb3ItdjEtYTIxNjJlNjMyZDgzYWNkNmYwZDQ1YTkxNmI5NzA3ODE5NzJlYzcwZjczYTkwM2VmNDZhMzU1YjE4MmZlNTIxNw==";
     return typeof atob === 'function' ? atob(b64) : Buffer.from(b64, 'base64').toString('utf-8');
   } catch (_) {
     return "";
