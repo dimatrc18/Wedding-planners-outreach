@@ -9,7 +9,7 @@ import * as add from './views/add.js?v=9.0';
 import * as templates from './views/templates.js?v=9.0';
 import * as analytics from './views/analytics.js?v=9.0';
 import * as partners from './views/partners.js?v=9.0';
-import * as tools from './views/tools.js?v=9.0';
+import * as tools from './views/tools.js?v=9.1';
 import * as visibility from './views/visibility.js?v=9.7';
 import * as settings from './views/settings.js?v=9.1';
 import * as busPartners from './views/bus_partners.js?v=9.1';
@@ -229,6 +229,18 @@ const rerender = debounce(() => {
   const a = document.activeElement;
   if (a && a.closest && a.closest('#view') && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) { pending = true; return; }
   pending = false;
+  const r = parseHash();
+  // Don't wipe client-side sanitizer tool on background store polls or window focus
+  if (current === 'tools' && r.name === 'tools') {
+    const n = badgeCount();
+    document.querySelectorAll('.nav-link .count, .tabbar .dot, .rail-section-btn .count').forEach((el) => el.remove());
+    if (n) {
+      document.querySelector('.nav-link[href="#today"]')?.insertAdjacentHTML('beforeend', `<span class="count">${n}</span>`);
+      document.querySelector('.rail-section-btn[data-rail-section="wedding"] .rail-section-meta')?.insertAdjacentHTML('afterbegin', `<span class="count">${n}</span>`);
+      document.querySelector('.tabbar a[href="#today"]')?.insertAdjacentHTML('beforeend', `<span class="dot">${n}</span>`);
+    }
+    return;
+  }
   renderView();
 }, 60);
 document.addEventListener('focusout', () => setTimeout(() => { if (pending) rerender(); }, 120));

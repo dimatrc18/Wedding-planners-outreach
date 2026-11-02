@@ -3,19 +3,35 @@
 import * as core from '../../supabase/functions/_shared/core/index.js';
 import { esc, icon, toast } from '../ui.js';
 
+// Persistent module-scoped state to survive background store polls and window focus events
+let currentEl = null;
+let file = null;
+let originalUrl = null;
+let cleanedUrl = null;
+let originalSize = 0;
+let cleanedSize = 0;
+let fileName = '';
+let auditSignals = [];
+let imageDimensions = { width: 0, height: 0 };
+let deepPixelPass = true; // Enabled by default for full SynthID / latent frequency disruption
+let isProcessing = false;
+
+function getCleanFileName() {
+  const base = (fileName || 'image').replace(/\.[^.]+$/, '');
+  let ext = '.png';
+  if (file && (file.type === 'image/jpeg' || /\.jpe?g$/i.test(fileName))) ext = '.jpg';
+  else if (file && (file.type === 'image/webp' || /\.webp$/i.test(fileName))) ext = '.webp';
+  return `clean_${base}${ext}`;
+}
+
 export function render(el) {
-  let file = null;
-  let originalUrl = null;
-  let cleanedUrl = null;
-  let originalSize = 0;
-  let cleanedSize = 0;
-  let fileName = '';
-  let auditSignals = [];
-  let imageDimensions = { width: 0, height: 0 };
-  let deepPixelPass = true; // Enabled by default for full SynthID / latent frequency disruption
+  currentEl = el;
 
   function paint() {
-    el.innerHTML = `
+    if (!currentEl) return;
+    const cleanFileName = getCleanFileName();
+
+    currentEl.innerHTML = `
       <div style="max-width: 880px; margin: 0 auto 60px;">
         <!-- Tools Sub-Navigation -->
         <div class="seg" style="display:inline-flex;gap:4px;margin-bottom:20px;background:var(--surface-2);padding:3px;border-radius:var(--r-sm)">
@@ -56,6 +72,18 @@ export function render(el) {
             <button class="btn primary" id="btn-choose" type="button" style="padding: 9px 24px; font-weight: 600;">
               ${icon('upload', 14)} Choose an image
             </button>
+          </div>
+        ` : isProcessing ? `
+          <div class="card stack" style="margin-bottom: 24px; border: 1px solid var(--line-strong); text-align: center; padding: 56px 24px;">
+            <div style="width: 48px; height: 48px; margin: 0 auto 16px; border-radius: var(--r-sm); background: var(--surface-2); display: grid; place-items: center; color: var(--ink);">
+              ${icon('sparkle', 24)}
+            </div>
+            <div style="font-weight: 600; font-size: 1.15rem; color: var(--ink); margin-bottom: 6px;">
+              Sanitizing ${esc(fileName)}...
+            </div>
+            <div class="small muted" style="max-width: 460px; margin: 0 auto;">
+              Stripping C2PA credentials, EXIF headers, GPS coordinates, and applying spatial micro-dither to disrupt latent watermarks.
+            </div>
           </div>
         ` : `
           <div class="card stack" style="margin-bottom: 24px; border: 1px solid var(--line-strong);">
@@ -131,7 +159,7 @@ export function render(el) {
                 ← Choose another file
               </button>
               <div style="text-align: right;">
-                <a class="btn primary" id="btn-download" href="${cleanedUrl}" download="clean_${esc(fileName)}" style="padding: 10px 28px; font-weight: 600;">
+                <a class="btn primary" id="btn-download" href="${cleanedUrl || '#'}" download="${esc(cleanFileName)}" style="padding: 10px 28px; font-weight: 600;">
                   ${icon('download', 15)} Download Clean Image
                 </a>
                 <div class="tiny faint" style="margin-top: 4px;">
@@ -152,9 +180,9 @@ export function render(el) {
     `;
 
     // Dropzone event listeners
-    const dropzone = el.querySelector('#dropzone');
-    const fileInput = el.querySelector('#file-input');
-    const btnChoose = el.querySelector('#btn-choose');
+    const dropzone = currentEl.querySelector('#dropzone');
+    const fileInput = currentEl.querySelector('#file-input');
+    const btnChoose = currentEl.querySelector('#btn-choose');
 
     if (dropzone && fileInput) {
       dropzone.addEventListener('click', (e) => {
@@ -184,31 +212,42 @@ export function render(el) {
         e.preventDefault();
         dropzone.style.borderColor = 'var(--line-strong)';
         dropzone.style.background = 'var(--surface)';
-        if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+          handleFile(e.dataTransfer.files[0]);
+        }
       });
 
       fileInput.addEventListener('change', () => {
-        if (fileInput.files.length) handleFile(fileInput.files[0]);
+        if (fileInput.files && fileInput.files.length) {
+          handleFile(fileInput.files[0]);
+        }
       });
     }
 
-    el.querySelector('#chk-deep-pass')?.addEventListener('change', (e) => {
+    currentEl.querySelector('#chk-deep-pass')?.addEventListener('change', (e) => {
       deepPixelPass = e.target.checked;
       if (file) reprocessImage();
     });
 
-    el.querySelector('#btn-reset')?.addEventListener('click', (e) => {
+    currentEl.querySelector('#btn-reset')?.addEventListener('click', (e) => {
       e.stopPropagation();
+      if (originalUrl) { try { URL.revokeObjectURL(originalUrl); } catch {} }
+      if (cleanedUrl && cleanedUrl !== originalUrl) { try { URL.revokeObjectURL(cleanedUrl); } catch {} }
       file = null;
       originalUrl = null;
       cleanedUrl = null;
+      fileName = '';
       auditSignals = [];
+      isProcessing = false;
       paint();
     });
   }
 
   function reprocessImage() {
     if (!originalUrl) return;
+    isProcessing = true;
+    paint();
+
     const img = new Image();
     img.onload = () => {
       imageDimensions = { width: img.naturalWidth || img.width, height: img.naturalHeight || img.height };
@@ -224,12 +263,20 @@ export function render(el) {
         ctx.putImageData(imgData, 0, 0);
       }
 
-      const mime = file && file.type === 'image/jpeg' ? 'image/jpeg' : 'image/png';
+      let mime = 'image/png';
+      if (file && (file.type === 'image/jpeg' || /\.jpe?g$/i.test(fileName))) {
+        mime = 'image/jpeg';
+      } else if (file && (file.type === 'image/webp' || /\.webp$/i.test(fileName))) {
+        mime = 'image/webp';
+      }
+
       canvas.toBlob((blob) => {
+        isProcessing = false;
         if (!blob) {
           cleanedUrl = originalUrl;
           cleanedSize = originalSize;
         } else {
+          if (cleanedUrl && cleanedUrl !== originalUrl) { try { URL.revokeObjectURL(cleanedUrl); } catch {} }
           cleanedUrl = URL.createObjectURL(blob);
           cleanedSize = blob.size;
         }
@@ -237,18 +284,28 @@ export function render(el) {
         paint();
       }, mime, 0.95);
     };
+    img.onerror = () => {
+      isProcessing = false;
+      toast('Failed to load image for processing', 'error');
+      paint();
+    };
     img.src = originalUrl;
   }
 
   function handleFile(f) {
-    if (!f.type.startsWith('image/')) {
+    if (!f || !f.type || !f.type.startsWith('image/')) {
       toast('Please upload an image file (PNG, JPG, WebP, etc.)', 'error');
       return;
     }
     file = f;
     fileName = f.name;
     originalSize = f.size;
+    if (originalUrl) { try { URL.revokeObjectURL(originalUrl); } catch {} }
+    if (cleanedUrl && cleanedUrl !== originalUrl) { try { URL.revokeObjectURL(cleanedUrl); } catch {} }
     originalUrl = URL.createObjectURL(f);
+    cleanedUrl = null;
+    isProcessing = true;
+    paint();
 
     // Read buffer for client-side signal inspection audit
     const reader = new FileReader();
@@ -257,8 +314,14 @@ export function render(el) {
       auditSignals = core.inspectImageBuffer(buffer);
       reprocessImage();
     };
+    reader.onerror = () => {
+      isProcessing = false;
+      toast('Failed to read image buffer', 'error');
+      paint();
+    };
     reader.readAsArrayBuffer(f);
   }
 
   paint();
+  return () => { currentEl = null; };
 }
