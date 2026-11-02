@@ -16,6 +16,10 @@ export const ROUTE_CATALOG = {
     { key: 'lin_como', label: 'Linate (LIN) ⇄ Como', region: 'Lake Como ⇄ Airports' },
     { key: 'bgy_como', label: 'Bergamo (BGY) ⇄ Como', region: 'Lake Como ⇄ Airports' },
     { key: 'mxp_milano', label: 'Malpensa (MXP) ⇄ Milano', region: 'Milan ⇄ Airports' },
+    { key: 'lin_milano', label: 'Linate (LIN) ⇄ Milano', region: 'Milan ⇄ Airports' },
+    { key: 'bgy_milano', label: 'Bergamo (BGY) ⇄ Milano', region: 'Milan ⇄ Airports' },
+    { key: 'stazione_milano', label: 'Stazione Centrale ⇄ Milano Hotel', region: 'Milan City Transfers' },
+    { key: 'mxp_stazione', label: 'Malpensa (MXP) ⇄ Stazione Centrale', region: 'Milan ⇄ Airports' },
     { key: 'milano_como', label: 'Milano Centro / FS ⇄ Como', region: 'Lake Como Excursions & City' },
     { key: 'tremezzo', label: 'Como ⇄ Tremezzo', region: 'Lake Como Excursions & City' },
     { key: 'bellagio', label: 'Como ⇄ Bellagio', region: 'Lake Como Excursions & City' }
@@ -167,6 +171,7 @@ export function selectSpecificVehicle(vehicleId, rows = FLEET_LEDGER_ROWS) {
 }
 
 const PDF_COMO_DRIVER = 'assets/partner_fleet/como_driver/como_driver_rates_2027.pdf';
+const PDF_LANDWAY = 'assets/partner_fleet/landway/landway_rates_2027.pdf';
 
 export const FLEET_LEDGER_ROWS = [
   {
@@ -683,25 +688,53 @@ export const FLEET_LEDGER_ROWS = [
     status: 'confirmed',
     statusLabel: '2027 Rate Card on file',
     repliedAt: '02 Nov 2026 · 17:41',
-    ratePdf: 'Listino Prezzi Dorogo 2027.pdf',
-    ratePdfName: 'Listino Prezzi 2027 (Attached in email)',
-    transfers: null,
-    transferNote: '2027 rate card received. Awaiting PDF intake into table.',
-    standby: null,
-    standbyNote: 'Refer to 2027 PDF rate sheet.',
+    ratePdf: PDF_LANDWAY,
+    ratePdfName: 'Listino Prezzi 2027 X DOROGO (PDF)',
+    transfers: {
+      mxp_milano: { label: 'Milano Centro ⇄ Malpensa MXP', net: 350 },
+      bgy_milano: { label: 'Milano Centro ⇄ Bergamo BGY', net: 350 },
+      lin_milano: { label: 'Milano Centro ⇄ Linate LIN', net: 300 },
+      stazione_milano: { label: 'Stazione Centrale ⇄ Milano Hotel', net: 300 },
+      mxp_stazione: { label: 'Malpensa MXP ⇄ Stazione Centrale', net: 350 },
+      milano_como: { label: 'Milano Hotel ⇄ Como', net: 450 },
+      mxp_como: { label: 'Malpensa (MXP) ⇄ Como', net: null },
+      tremezzo: { label: 'Como ⇄ Tremezzo', net: null },
+      bellagio: { label: 'Como ⇄ Bellagio', net: null }
+    },
+    standby: {
+      dispo_4h: { label: 'Disposizione 4h (Half Day)', net: 400 },
+      dispo_8h: { label: 'Disposizione 8h (Full Day)', net: 700 },
+      extra_hour: { label: 'Ore extra / attesa', net: 80 }
+    },
     terms: {
       vat: 'Prezzi IVA 10% esclusa',
       cancellation: '30% >36h · 50% 24–36h · 100% <24h',
-      included: 'Carburante e pedaggi inclusi; ztl/parcheggi da aggiungere se applicabili'
+      included: 'Ore extra/attesa €80/h · Ore notturne €100/h (22:00-05:00) · ZTL Milano €60 esente IVA · Parcheggio MXP €30/h (solo pick-up) · Parcheggio BGY €15/h (pick-up e drop-off)',
+      luggage: 'Bagagliaio ridotto: max 1 valigia media (cm 115 / ~45L) a persona'
     },
-    photos: []
+    photos: [
+      {
+        id: 'landway_rates_sheet',
+        src: 'assets/partner_fleet/landway/landway_rates_2027_page1.png',
+        file: 'Listino Prezzi 2027 X DOROGO.pdf',
+        title: 'Official 2027 B2B Rate Sheet',
+        caption: 'Confirmed 2027 price card for DOROGO: airport transfers, Milan city & 4h/8h standby.'
+      },
+      {
+        id: 'landway_logo_emblem',
+        src: 'assets/partner_fleet/landway/landway_logo.png',
+        file: 'landwayto...go.png',
+        title: 'Landway Tourism Emblem',
+        caption: 'Official brand emblem on vehicle rear.'
+      }
+    ]
   },
   {
     id: 'landway_midibus_29',
     partnerId: 'partner_1792761170109_96nx',
     vehicleModel: 'Iveco Midibus GT',
     paxLabel: '27–29 pax',
-    coachbuilder: 'Executive Midibus · Luxury VIP',
+    coachbuilder: 'Executive Midibus · Luxury VIP (27/29+1+1)',
     pax: 29,
     category: 'coach_30',
     categoryLabel: 'Executive Midibus / Coach (30 Pax)',
@@ -715,26 +748,55 @@ export const FLEET_LEDGER_ROWS = [
     email: 'info@landwaytourism.com',
     website: 'https://www.landwaytourism.com',
     status: 'confirmed',
-    statusLabel: '2027 Rate Card on file',
+    statusLabel: 'Rates & PDF verified',
     repliedAt: '02 Nov 2026 · 17:41',
-    ratePdf: 'Listino Prezzi Dorogo 2027.pdf',
-    ratePdfName: 'Listino Prezzi 2027 (Attached in email)',
-    transfers: null,
-    transferNote: '2027 rate card received. Awaiting PDF intake into table.',
-    standby: null,
-    standbyNote: 'Refer to 2027 PDF rate sheet.',
+    ratePdf: PDF_LANDWAY,
+    ratePdfName: 'Listino Prezzi 2027 X DOROGO (PDF)',
+    transfers: {
+      mxp_milano: { label: 'Milano Centro ⇄ Malpensa MXP', net: 400 },
+      bgy_milano: { label: 'Milano Centro ⇄ Bergamo BGY', net: 400 },
+      lin_milano: { label: 'Milano Centro ⇄ Linate LIN', net: 350 },
+      stazione_milano: { label: 'Stazione Centrale ⇄ Milano Hotel', net: 350 },
+      mxp_stazione: { label: 'Malpensa MXP ⇄ Stazione Centrale', net: 400 },
+      milano_como: { label: 'Milano Hotel ⇄ Como', net: 500 },
+      mxp_como: { label: 'Malpensa (MXP) ⇄ Como', net: null },
+      tremezzo: { label: 'Como ⇄ Tremezzo', net: null },
+      bellagio: { label: 'Como ⇄ Bellagio', net: null }
+    },
+    standby: {
+      dispo_4h: { label: 'Disposizione 4h (Half Day)', net: 500 },
+      dispo_8h: { label: 'Disposizione 8h (Full Day)', net: 800 },
+      extra_hour: { label: 'Ore extra / attesa', net: 80 }
+    },
     terms: {
       vat: 'Prezzi IVA 10% esclusa',
-      cancellation: '30% >36h · 50% 24–36h · 100% <24h'
+      cancellation: '30% >36h · 50% 24–36h · 100% <24h',
+      included: 'Ore extra/attesa €80/h · Ore notturne €100/h (22:00-05:00) · ZTL Milano €100 esente IVA · Parcheggio MXP €30/h (solo pick-up) · Parcheggio BGY €15/h (pick-up e drop-off)',
+      luggage: 'Bagagliaio ridotto: max 1 valigia media (cm 115 / ~45L) a persona'
     },
-    photos: []
+    photos: [
+      {
+        id: 'landway_rates_sheet',
+        src: 'assets/partner_fleet/landway/landway_rates_2027_page1.png',
+        file: 'Listino Prezzi 2027 X DOROGO.pdf',
+        title: 'Official 2027 B2B Rate Sheet',
+        caption: 'Confirmed 2027 price card for DOROGO: airport transfers, Milan city & 4h/8h standby.'
+      },
+      {
+        id: 'landway_logo_emblem',
+        src: 'assets/partner_fleet/landway/landway_logo.png',
+        file: 'landwayto...go.png',
+        title: 'Landway Tourism Emblem',
+        caption: 'Official brand emblem on vehicle rear.'
+      }
+    ]
   },
   {
     id: 'landway_coach_50',
     partnerId: 'partner_1792761170109_96nx',
     vehicleModel: 'Mercedes Tourismo & Setra GT Coach',
     paxLabel: '50 pax',
-    coachbuilder: 'Gran Turismo Coach',
+    coachbuilder: 'Gran Turismo Coach (49/51/53/55+1+1)',
     pax: 50,
     category: 'coach_50',
     categoryLabel: 'Full-Size GT Coach (50+ Pax)',
@@ -748,19 +810,47 @@ export const FLEET_LEDGER_ROWS = [
     email: 'info@landwaytourism.com',
     website: 'https://www.landwaytourism.com',
     status: 'confirmed',
-    statusLabel: '2027 Rate Card on file',
+    statusLabel: 'Rates & PDF verified',
     repliedAt: '02 Nov 2026 · 17:41',
-    ratePdf: 'Listino Prezzi Dorogo 2027.pdf',
-    ratePdfName: 'Listino Prezzi 2027 (Attached in email)',
-    transfers: null,
-    transferNote: '2027 rate card received. Awaiting PDF intake into table.',
-    standby: null,
-    standbyNote: 'Refer to 2027 PDF rate sheet.',
+    ratePdf: PDF_LANDWAY,
+    ratePdfName: 'Listino Prezzi 2027 X DOROGO (PDF)',
+    transfers: {
+      mxp_milano: { label: 'Milano Centro ⇄ Malpensa MXP', net: 450 },
+      bgy_milano: { label: 'Milano Centro ⇄ Bergamo BGY', net: 450 },
+      lin_milano: { label: 'Milano Centro ⇄ Linate LIN', net: 400 },
+      stazione_milano: { label: 'Stazione Centrale ⇄ Milano Hotel', net: 400 },
+      mxp_stazione: { label: 'Malpensa MXP ⇄ Stazione Centrale', net: 450 },
+      milano_como: { label: 'Milano Hotel ⇄ Como', net: 550 },
+      mxp_como: { label: 'Malpensa (MXP) ⇄ Como', net: null },
+      tremezzo: { label: 'Como ⇄ Tremezzo', net: null },
+      bellagio: { label: 'Como ⇄ Bellagio', net: null }
+    },
+    standby: {
+      dispo_4h: { label: 'Disposizione 4h (Half Day)', net: 600 },
+      dispo_8h: { label: 'Disposizione 8h (Full Day)', net: 900 },
+      extra_hour: { label: 'Ore extra / attesa', net: 80 }
+    },
     terms: {
       vat: 'Prezzi IVA 10% esclusa',
-      cancellation: '30% >36h · 50% 24–36h · 100% <24h'
+      cancellation: '30% >36h · 50% 24–36h · 100% <24h',
+      included: 'Ore extra/attesa €80/h · Ore notturne €100/h (22:00-05:00) · ZTL Milano €150 esente IVA · Parcheggio MXP €30/h (solo pick-up) · Parcheggio BGY €15/h (pick-up e drop-off)'
     },
-    photos: []
+    photos: [
+      {
+        id: 'landway_rates_sheet',
+        src: 'assets/partner_fleet/landway/landway_rates_2027_page1.png',
+        file: 'Listino Prezzi 2027 X DOROGO.pdf',
+        title: 'Official 2027 B2B Rate Sheet',
+        caption: 'Confirmed 2027 price card for DOROGO: airport transfers, Milan city & 4h/8h standby.'
+      },
+      {
+        id: 'landway_logo_emblem',
+        src: 'assets/partner_fleet/landway/landway_logo.png',
+        file: 'landwayto...go.png',
+        title: 'Landway Tourism Emblem',
+        caption: 'Official brand emblem on vehicle sides and rear.'
+      }
+    ]
   },
 
   // --- PERLETTI AUTOSERVIZI (TOP CLASS LINE) ---
