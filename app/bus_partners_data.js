@@ -331,14 +331,14 @@ export const INITIAL_BUS_PARTNERS = [
     "score_breakdown": {
       "fleet_luxury": 23,
       "partner_card": {
-        "whatsapp": "+39 031 513 189",
+        "whatsapp": "+39 345 689 8609",
         "bus_models": "Minibus GT (20 pax), Iveco Midibus (30 pax), Mercedes Tourismo & Setra GT (50 pax)",
-        "replied_at": "2026-10-28T10:14:07.000Z",
-        "rate_hourly": "",
+        "replied_at": "2026-11-02T17:00:00.000Z",
+        "rate_hourly": "Refer to 2027 rate sheet attached",
         "client_notes": "",
-        "email_status": "mx_ok",
-        "pax_capacity": "20, 30, 50 pax",
-        "rate_standby": "",
+        "email_status": "replied",
+        "pax_capacity": "19, 27–29, 50 pax",
+        "rate_standby": "Refer to 2027 rate sheet attached",
         "scheduled_at": "2026-10-28T09:00:00.000Z",
         "fleet_segment": "both",
         "outreach_stage": "replied",
@@ -347,14 +347,14 @@ export const INITIAL_BUS_PARTNERS = [
         "last_outreach_at": null,
         "user_set_segment": true,
         "fleet_audit_verified_at": "2026-10-26T18:25:11.587Z",
-        "contact_person": "Melissa"
+        "contact_person": "Melissa (Emergency: Massimo Rossi +39 331 528 1982)"
       },
       "corporate_sla": 15,
       "territory_permits": 20,
       "discretion_unbranded": 35
     },
     "status": "CONTACTED",
-    "unbranded_status": "100% Guaranteed Unbranded / Total Black",
+    "unbranded_status": "19p & 27/29p: Clean sides (small rear logo only); 50p has side logos",
     "fleet_categories": [
       "Minibus GT (20 seats)",
       "Iveco Midibus (30 seats)",
@@ -362,7 +362,7 @@ export const INITIAL_BUS_PARTNERS = [
     ],
     "phone": "+39 031 513 189",
     "email": "info@landwaytourism.com",
-    "notes": "28 Oct: Melissa replied that our B2B partnership request was forwarded to their fleet pricing department and they will send rates shortly.",
+    "notes": "28 Oct: Melissa forwarded to pricing. 2 Nov: Sent 2027 rate card. All vehicles confirmed Luxury. Livery: 19p & 27/29p have clean sides with small rear logo only; 50p has side logos. Cancellation: 30% >36h, 50% 24-36h, 100% <24h. WhatsApp: +39 345 689 8609, Emergency: Massimo Rossi +39 331 528 1982. Awaiting PAX clarification (pure pax vs +1 driver/hostess) and luggage capacity.",
     "source": "crawler",
     "created_at": "2026-10-23T13:12:50.109+00:00",
     "updated_at": "2026-10-26T16:45:27.755066+00:00",
