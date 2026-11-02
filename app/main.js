@@ -13,7 +13,7 @@ import * as tools from './views/tools.js?v=9.1';
 import * as visibility from './views/visibility.js?v=9.7';
 import * as settings from './views/settings.js?v=9.1';
 import * as busPartners from './views/bus_partners.js?v=9.1';
-import * as fleetShowcase from './views/fleet_showcase.js?v=9.4';
+import * as fleetShowcase from './views/fleet_showcase.js?v=9.5';
 import * as eventPartners from './views/event_partners.js?v=9.6';
 
 const ROUTES = {

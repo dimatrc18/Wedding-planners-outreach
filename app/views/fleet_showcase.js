@@ -714,18 +714,11 @@ export const FLEET_LEDGER_ROWS = [
     },
     photos: [
       {
-        id: 'landway_rates_sheet',
-        src: 'assets/partner_fleet/landway/landway_rates_2027_page1.png',
-        file: 'Listino Prezzi 2027 X DOROGO.pdf',
-        title: 'Official 2027 B2B Rate Sheet',
-        caption: 'Confirmed 2027 price card for DOROGO: airport transfers, Milan city & 4h/8h standby.'
-      },
-      {
-        id: 'landway_logo_emblem',
-        src: 'assets/partner_fleet/landway/landway_logo.png',
-        file: 'landwayto...go.png',
-        title: 'Landway Tourism Emblem',
-        caption: 'Official brand emblem on vehicle rear.'
+        id: 'landway_minibus_19_ext',
+        src: 'assets/partner_fleet/landway/19_posti_villa_erba.jpeg',
+        file: '19 posti villa erba 2.jpeg',
+        title: 'Exterior — Mercedes-Benz Minibus 19 Pax at Villa Erba',
+        caption: 'Total black Mercedes-Benz Sprinter luxury minibus on Lake Como at Villa Erba.'
       }
     ]
   },
@@ -776,18 +769,11 @@ export const FLEET_LEDGER_ROWS = [
     },
     photos: [
       {
-        id: 'landway_rates_sheet',
-        src: 'assets/partner_fleet/landway/landway_rates_2027_page1.png',
-        file: 'Listino Prezzi 2027 X DOROGO.pdf',
-        title: 'Official 2027 B2B Rate Sheet',
-        caption: 'Confirmed 2027 price card for DOROGO: airport transfers, Milan city & 4h/8h standby.'
-      },
-      {
-        id: 'landway_logo_emblem',
-        src: 'assets/partner_fleet/landway/landway_logo.png',
-        file: 'landwayto...go.png',
-        title: 'Landway Tourism Emblem',
-        caption: 'Official brand emblem on vehicle rear.'
+        id: 'landway_midibus_29_ext',
+        src: 'assets/partner_fleet/landway/29_posti.jpeg',
+        file: '29 posti 2.jpeg',
+        title: 'Exterior & Cabin Entrance — Iveco Midibus 29 Pax',
+        caption: 'Total black 29-seater touring midibus with open entry showing luxury grey leather seating.'
       }
     ]
   },
@@ -837,18 +823,11 @@ export const FLEET_LEDGER_ROWS = [
     },
     photos: [
       {
-        id: 'landway_rates_sheet',
-        src: 'assets/partner_fleet/landway/landway_rates_2027_page1.png',
-        file: 'Listino Prezzi 2027 X DOROGO.pdf',
-        title: 'Official 2027 B2B Rate Sheet',
-        caption: 'Confirmed 2027 price card for DOROGO: airport transfers, Milan city & 4h/8h standby.'
-      },
-      {
-        id: 'landway_logo_emblem',
-        src: 'assets/partner_fleet/landway/landway_logo.png',
-        file: 'landwayto...go.png',
-        title: 'Landway Tourism Emblem',
-        caption: 'Official brand emblem on vehicle sides and rear.'
+        id: 'landway_coach_50_ext',
+        src: 'assets/partner_fleet/landway/3_bus_50_posti.jpeg',
+        file: '3 BUS 50 POSTI .jpeg',
+        title: 'Exterior Fleet — 3x Mercedes Tourismo GT Coaches (50 Pax)',
+        caption: 'Convoy of 3 Mercedes-Benz Tourismo 50-seater Gran Turismo coaches showing side livery.'
       }
     ]
   },
@@ -1321,6 +1300,7 @@ export async function render(el) {
   const totalVideos = FLEET_LEDGER_ROWS.reduce((acc, r) => acc + (r.photos ? r.photos.filter((p) => p.src.endsWith('.mp4')).length : 0), 0);
   const comoPhotos = FLEET_LEDGER_ROWS.filter(r => r.partnerId === 'partner_1792765279097_26hr').reduce((acc, r) => acc + (r.photos?.length || 0), 0);
   const avantgardePhotos = FLEET_LEDGER_ROWS.filter(r => r.partnerId === 'partner_1792765279535_l9ei').reduce((acc, r) => acc + (r.photos ? r.photos.filter(p => !p.src.endsWith('.mp4')).length : 0), 0);
+  const landwayPhotos = FLEET_LEDGER_ROWS.filter(r => r.partnerId === 'partner_1792761170109_96nx').reduce((acc, r) => acc + (r.photos?.length || 0), 0);
 
   const sprinterMxp = calculateAdjustedPrice(350, pricingMode);
   const transitMxp = calculateAdjustedPrice(400, pricingMode);
@@ -1397,7 +1377,7 @@ export async function render(el) {
             <span class="sail-pill info" style="padding:1px 6px;font-size:10.5px">OEM &amp; WhatsApp</span>
           </div>
           <div class="sail-stat-val">${totalPhotos + totalVideos} files <span style="font-size:14px;font-weight:500;color:var(--sail-muted)">· ${totalPhotos} photos + ${totalVideos} video</span></div>
-          <div class="sail-stat-meta">Como Driver (${comoPhotos} photos) · Avantgarde (${avantgardePhotos} photos + ${totalVideos} video)</div>
+          <div class="sail-stat-meta">Como Driver (${comoPhotos}) · Avantgarde (${avantgardePhotos} + ${totalVideos} video) · Landway (${landwayPhotos} photos)</div>
         </div>
       </div>
 
