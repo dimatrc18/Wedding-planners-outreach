@@ -2,9 +2,9 @@
 // 100% Isolated from Wedding Planners (prospects) and Bus Operators (bus_partners).
 // Stripe Sail Design System: responsive data table, KPI stats, zero horizontal scroll.
 
-import { S, updateEventPartner, addEventPartner, removeEventPartner } from '../store.js';
+import { S, updateEventPartner, addEventPartner, removeEventPartner } from '../store.js?v=20261102_v25';
 import { esc, attr, icon, toast, dialog, confirmDialog } from '../ui.js';
-import { EVENT_AGENCY_TYPES } from '../event_planners_data.js';
+import { EVENT_AGENCY_TYPES, loadStoredEventPartners } from '../event_planners_data.js?v=20261102_v25';
 
 let activeTypeFilter = 'all'; // all | corporate_mice | fashion_luxury | brand_activation
 let activeStatusFilter = 'all'; // all | TO_REVIEW | WANT_TO_CONTACT | CONTACTED | APPROVED_PARTNER
@@ -68,7 +68,8 @@ function renderSpecializationPill(p) {
 
 export async function render(el) {
   currentEl = el;
-  const partners = S.eventPartners || [];
+  const stored = loadStoredEventPartners();
+  const partners = (S.eventPartners && S.eventPartners.length >= stored.length) ? S.eventPartners : stored;
 
   const totalCount = partners.length;
   const toReviewCount = partners.filter((p) => p.status === 'TO_REVIEW').length;

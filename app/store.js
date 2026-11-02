@@ -22,7 +22,7 @@ import {
   loadStoredEventPartners,
   saveStoredEventPartners,
   mergeEventRecords
-} from './event_planners_data.js';
+} from './event_planners_data.js?v=20261102_v25';
 
 export const S = (typeof globalThis !== 'undefined' && globalThis.__DOROGO_STORE_S__) || {
   mode: 'loading', // loading | signed_out | live | demo
@@ -58,7 +58,13 @@ function setData(d) {
   S.events = d.events || [];
   S.busPartners = (d.busPartners && d.busPartners.length) ? d.busPartners : loadStoredBusPartners();
   S.excludedBusPartners = loadExcludedBusPartners();
-  S.eventPartners = (d.eventPartners && d.eventPartners.length) ? d.eventPartners : loadStoredEventPartners();
+  const rawIncomingEvents = d.eventPartners || [];
+  const storedEvents = loadStoredEventPartners();
+  const eventMap = new Map();
+  for (const p of storedEvents) eventMap.set(p.id, p);
+  for (const p of rawIncomingEvents) eventMap.set(p.id, { ...(eventMap.get(p.id) || {}), ...p });
+  S.eventPartners = Array.from(eventMap.values()).sort((a, b) => (b.relevance_score || 0) - (a.relevance_score || 0));
+  saveStoredEventPartners(S.eventPartners);
   S.settings = withDefaults(d.settings || {});
 }
 
