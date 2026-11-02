@@ -26,7 +26,7 @@ test('Fleet Showcase UI: Column widths in fleet_showcase.js sum exactly to 100%'
   
   // Extract all <th style="width:XX%"> from the primary table
   const widthMatches = [...showcaseFile.matchAll(/<th style="width:(\d+)%"/g)];
-  assert.equal(widthMatches.length, 6, 'Must have exactly 6 table header columns');
+  assert.equal(widthMatches.length, 7, 'Must have exactly 7 table header columns including row index #');
   
   const totalWidth = widthMatches.reduce((sum, m) => sum + parseInt(m[1], 10), 0);
   assert.equal(totalWidth, 100, `Header column widths must sum exactly to 100%, got ${totalWidth}%`);
@@ -43,6 +43,14 @@ test('Fleet Showcase UI: Headers have separate title and sub elements to prevent
     'Header must have dedicated title element');
   assert.ok(showcaseFile.includes('class="sail-th-sub">'),
     'Header must have dedicated sub-title element for pricing mode');
+});
+
+test('Fleet Showcase UI: Row index column (#) is rendered with sequence numbers', () => {
+  const showcaseFile = fs.readFileSync(path.join(rootDir, 'app/views/fleet_showcase.js'), 'utf8');
+  assert.ok(showcaseFile.includes('<div class="sail-th-title" style="text-align:center">#</div>'),
+    'Header must contain # column');
+  assert.ok(showcaseFile.includes('${idx + 1}'),
+    'Row renderer must display row sequence index');
 });
 
 test('Fleet Showcase CSS: Eliminates text overlays and horizontal scroll on desktop', () => {

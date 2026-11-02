@@ -1413,16 +1413,19 @@ export async function render(el) {
           <table class="sail-table" style="table-layout:fixed;width:100%">
             <thead>
               <tr>
-                <th style="width:15%">
+                <th style="width:4%">
+                  <div class="sail-th-title" style="text-align:center">#</div>
+                </th>
+                <th style="width:14%">
                   <div class="sail-th-title">Vehicle &amp; Capacity</div>
                 </th>
-                <th style="width:11%">
+                <th style="width:10%">
                   <div class="sail-th-title">Class Tier</div>
                 </th>
                 <th style="width:17%">
                   <div class="sail-th-title">Partner &amp; Contact</div>
                 </th>
-                <th style="width:22%">
+                <th style="width:21%">
                   <div class="sail-th-title">Transfer Rates</div>
                   <div class="sail-th-sub">${esc(pricingMode === 'vat' ? 'Gross (+10% VAT)' : 'Net B2B')}</div>
                 </th>
@@ -1430,13 +1433,13 @@ export async function render(el) {
                   <div class="sail-th-title">Standby / Disposizione</div>
                   <div class="sail-th-sub">Hourly &amp; Daily</div>
                 </th>
-                <th style="width:16%">
+                <th style="width:15%">
                   <div class="sail-th-title">Photos &amp; Rate Sheet</div>
                 </th>
               </tr>
             </thead>
             <tbody>
-              ${filteredRows.map((row) => renderLedgerRow(row)).join('')}
+              ${filteredRows.map((row, idx) => renderLedgerRow(row, idx)).join('')}
             </tbody>
           </table>
         </div>
@@ -1457,7 +1460,7 @@ export async function render(el) {
   attachLedgerListeners(el);
 }
 
-function renderLedgerRow(row) {
+function renderLedgerRow(row, idx = 0) {
   const hasTransfers = Boolean(row.transfers);
   const hasStandby = Boolean(row.standby);
   const hasPhotos = Array.isArray(row.photos) && row.photos.length > 0;
@@ -1571,6 +1574,9 @@ function renderLedgerRow(row) {
 
   return `
     <tr class="${isActiveInCalc ? 'sail-table-row-active' : ''}">
+      <td style="text-align:center;font-weight:600;color:var(--sail-muted);font-size:12px;vertical-align:top;padding-top:14px;font-variant-numeric:tabular-nums">
+        ${idx + 1}
+      </td>
       <td>
         <div style="font-weight:600;color:var(--sail-ink);font-size:12.5px;line-height:1.25">${esc(row.vehicleModel)}</div>
         <div style="margin-top:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
