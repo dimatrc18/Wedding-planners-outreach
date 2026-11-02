@@ -1981,16 +1981,16 @@ export const INITIAL_BUS_PARTNERS = [
       "partner_card": {
         "whatsapp": "+39 035 901 118",
         "bus_models": "Iveco Daily / Indcar Wing (19–28 pax), Setra 515 HD & Irizar i6 (53–54 pax), Setra 415 GT-HD (55 pax), Setra 416/417 HDH (59–64 pax)",
-        "replied_at": null,
+        "replied_at": "2026-10-31T17:49:00.000Z",
         "rate_hourly": "",
-        "email_status": "unknown",
+        "email_status": "replied",
         "pax_capacity": "19–28, 53–55, 59–64 pax",
         "rate_standby": "",
         "scheduled_at": "2026-10-30T12:00:00.000Z",
         "fleet_segment": "both",
-        "outreach_stage": "ready",
+        "outreach_stage": "replied",
         "user_set_status": true,
-        "last_outreach_at": null,
+        "last_outreach_at": "2026-10-30T12:00:00.000Z",
         "user_set_segment": false,
         "fleet_audit_verified_at": "2026-10-26T18:25:11.587Z"
       },
@@ -1998,7 +1998,7 @@ export const INITIAL_BUS_PARTNERS = [
       "territory_permits": 20,
       "discretion_unbranded": 20
     },
-    "status": "WANT_TO_CONTACT",
+    "status": "CONTACTED",
     "unbranded_status": "Unbranded on Request",
     "fleet_categories": [
       "Iveco Daily Tourist / Indcar Wing (19–28 seats)",
@@ -2008,7 +2008,7 @@ export const INITIAL_BUS_PARTNERS = [
     ],
     "phone": "+39 035 901 118",
     "email": "info@autoserviziguizzetti.com",
-    "notes": "i am interested in  1) Setra 417 HDH, 2) Setra 515 HD, 3) Mercedes-Benz Travego, 4) Van Hool TX-Astronef",
+    "notes": "i am interested in  1) Setra 417 HDH, 2) Setra 515 HD, 3) Mercedes-Benz Travego, 4) Van Hool TX-Astronef | Replied 31 Oct with 4 exterior photos only (site undergoing update). Awaiting interior photos and B2B transfer/standby rates.",
     "source": "crawler",
     "created_at": "2026-10-26T16:09:56.221+00:00",
     "updated_at": "2026-10-26T16:45:24.165014+00:00",
