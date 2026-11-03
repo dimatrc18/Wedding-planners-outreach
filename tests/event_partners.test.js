@@ -9,7 +9,10 @@ import {
   loadStoredEventPartners, 
   saveStoredEventPartners, 
   mergeEventRecords,
-  EVENT_AGENCY_TYPES 
+  EVENT_AGENCY_TYPES,
+  EVENT_FAIRS,
+  DEFAULT_EVENT_TEMPLATES,
+  renderEventTemplate
 } from '../app/event_planners_data.js';
 import { EVENT_STATUSES } from '../supabase/functions/_shared/core/constants.js';
 import { S, addEventPartner, updateEventPartner, removeEventPartner } from '../app/store.js';
@@ -109,4 +112,32 @@ test('Event Outreach Categories & Status Constants: Cover required verticals', (
   assert.ok(EVENT_STATUSES.some((s) => s.key === 'WANT_TO_CONTACT'));
   assert.ok(EVENT_STATUSES.some((s) => s.key === 'CONTACTED'));
   assert.ok(EVENT_STATUSES.some((s) => s.key === 'APPROVED_PARTNER'));
+});
+
+test('Event Template Engine: renderEventTemplate accurately interpolates international exhibitors with zero unrendered tokens', () => {
+  assert.ok(Array.isArray(EVENT_FAIRS) && EVENT_FAIRS.length >= 4);
+  assert.equal(EVENT_FAIRS[0].id, 'milano_home_2027');
+
+  assert.ok(Array.isArray(DEFAULT_EVENT_TEMPLATES) && DEFAULT_EVENT_TEMPLATES.length >= 3);
+  const t1 = DEFAULT_EVENT_TEMPLATES.find((t) => t.key === 'T1_exhibitor_intro');
+  assert.ok(t1, 'T1_exhibitor_intro must exist');
+
+  // Test with Addison Ross Ltd (UK)
+  const addison = INITIAL_EVENT_PARTNERS.find((p) => p.name.includes('ADDISON ROSS'));
+  assert.ok(addison, 'Addison Ross Ltd must exist in seed partners');
+
+  const rendered = renderEventTemplate(t1, addison);
+  assert.ok(rendered.subject.includes('ADDISON ROSS LTD'));
+  assert.ok(rendered.subject.includes('Milano Home 2027'));
+  assert.ok(!rendered.subject.includes('{{'));
+  assert.ok(!rendered.body.includes('{{'), 'Rendered body must contain zero unresolved {{token}} placeholders');
+  assert.ok(rendered.body.includes('Fiera Milano Rho'));
+  assert.ok(rendered.body.includes('David Ross'));
+
+  // Test with Serax NV (Belgium)
+  const serax = INITIAL_EVENT_PARTNERS.find((p) => p.name.includes('SERAX'));
+  assert.ok(serax, 'Serax NV must exist');
+  const renderedSerax = renderEventTemplate(t1, serax);
+  assert.ok(renderedSerax.subject.includes('SERAX NV'));
+  assert.ok(!renderedSerax.body.includes('{{'));
 });

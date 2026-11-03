@@ -2165,3 +2165,184 @@ export function mergeEventRecords(existing, incoming) {
     updated_at: new Date().toISOString()
   };
 }
+
+export const EVENT_TEMPLATES_STORAGE_KEY = 'dorogo_event_templates_v2';
+
+export const EVENT_FAIRS = [
+  {
+    id: 'milano_home_2027',
+    name: 'Milano Home 2027',
+    dates: '21–24 January 2027',
+    venue: 'Fiera Milano Rho',
+    active: true,
+    total_leads: 78
+  },
+  {
+    id: 'mido_2027',
+    name: 'MIDO Eyewear 2027',
+    dates: 'February 2027',
+    venue: 'Fiera Milano Rho',
+    active: false,
+    total_leads: 0
+  },
+  {
+    id: 'mfw_2027',
+    name: 'Milan Fashion Week 2027',
+    dates: 'Jan / Feb 2027',
+    venue: 'Milano City & Showrooms',
+    active: false,
+    total_leads: 0
+  },
+  {
+    id: 'salone_del_mobile_2027',
+    name: 'Salone del Mobile 2027',
+    dates: 'April 2027',
+    venue: 'Fiera Milano Rho',
+    active: false,
+    total_leads: 0
+  }
+];
+
+export const DEFAULT_EVENT_TEMPLATES = [
+  {
+    key: 'T1_exhibitor_intro',
+    name: 'Touch 1: Airport Arrival & Booth Transfers',
+    step_num: 1,
+    offset_days: 0,
+    subject: 'Executive ground logistics for {{company_name}} at {{fair_event}}',
+    body: `Good morning {{contact_person}},
+
+We noticed {{company_name}} is exhibiting at {{fair_event}} this coming January.
+
+Trade fair mornings between Milan hotels and Fiera Milano Rho often experience severe traffic bottlenecks, and evening taxi queues at the Rho pavilions routinely exceed 45 minutes.
+
+Dorogo provides unbranded Mercedes-Benz V-Class and E-Class transfers tailored for international exhibiting teams:
+
+• Flight Meet & Greet: Dedicated driver at MXP or LIN terminal with luggage assistance for display samples.
+• Daily Pavilion Transfers: Punctual morning hotel pick-up and direct evening return from Rho Fiera.
+• Evening Client Dinners: Hourly standby in central Milan (Brera, Quadrilatero, Navigli) on corporate account.
+
+Would you like our 1-page corporate rate card and vehicle allocation for your delegation?
+
+Best regards,
+Dmitri Traciuc
+Executive Mobility Desk · DOROGO
+events@dorogo-events.eu | +39 378 094 0554
+Via Monte Napoleone 8, Milano`
+  },
+  {
+    key: 'T2_exhibitor_followup',
+    name: 'Touch 2: Corporate Rate Sheet & Vehicle Availability',
+    step_num: 2,
+    offset_days: 4,
+    subject: 'Re: Executive ground logistics for {{company_name}} at {{fair_event}}',
+    body: `Good morning {{contact_person}},
+
+Following up briefly on ground transportation for the {{company_name}} team during {{fair_event}} (21–24 January 2027).
+
+We have reserved a limited allocation of Mercedes-Benz V-Class Extra-Long vehicles (up to 7 guests with luggage/stand equipment) and executive E-Class sedans for international exhibitors arriving from {{country}}.
+
+Our corporate rates are fixed with all tolls, Milan ZTL access, and pavilion entry permits included—with zero surge pricing during peak exhibition hours.
+
+If you have confirmed your team's flight details into Milan Malpensa or Linate, let us know your schedule and we will prepare a single-invoice itinerary.
+
+Best regards,
+Dmitri Traciuc
+Executive Mobility Desk · DOROGO
+events@dorogo-events.eu | +39 378 094 0554`
+  },
+  {
+    key: 'reply_rate_card',
+    name: 'Inbound Reply: Quote & Standby Pricing',
+    step_num: 3,
+    offset_days: 0,
+    subject: 'DOROGO Corporate Rates & Vehicle Confirmation · {{fair_event}}',
+    body: `Good morning {{contact_person}},
+
+Thank you for your inquiry. Below are our fixed corporate tariffs for {{fair_event}}:
+
+Airport Transfers (All-Inclusive Meet & Greet, Flight Tracking, 60m Wait, Tolls):
+• Milan Malpensa (MXP) ➔ Central Milan / Fiera Milano Rho:
+  - Mercedes-Benz E-Class (up to 3 pax): €140
+  - Mercedes-Benz V-Class Extra-Long (up to 7 pax): €170
+• Milan Linate (LIN) ➔ Central Milan / Fiera Milano Rho:
+  - Mercedes-Benz E-Class: €95
+  - Mercedes-Benz V-Class Extra-Long: €130
+
+Daily Exhibition Standby & Hotel Shuttles:
+• Morning Hotel ➔ Rho Fiera Pavilion Drop-off: €95 / transfer
+• Dedicated Hourly Disposal (Standby for evening galas/dinners, min 4h):
+  - Mercedes-Benz E-Class: €85 / hour
+  - Mercedes-Benz V-Class: €95 / hour
+
+All vehicles are unbranded, latest-generation Mercedes-Benz with English-speaking professional chauffeurs.
+
+Please share your flight arrival times and hotel location, and we will secure your vehicle allocations immediately.
+
+Best regards,
+Dmitri Traciuc
+DOROGO Executive Transport
+events@dorogo-events.eu | +39 378 094 0554`
+  }
+];
+
+export function renderEventTemplate(template, exhibitor) {
+  if (!template || !exhibitor) return { subject: '', body: '' };
+
+  let contact = (exhibitor.contact_person || '').trim();
+  if (contact.includes('/')) {
+    const parts = contact.split('/');
+    if (parts[0].trim() && !/desk|team|delegation/i.test(parts[0])) {
+      contact = parts[0].trim();
+    } else if (parts[1] && parts[1].trim() && !/desk|team|delegation/i.test(parts[1])) {
+      contact = parts[1].trim();
+    }
+  }
+  if (!contact || /desk|team|delegation/i.test(contact)) {
+    contact = exhibitor.name;
+  }
+
+  const vars = {
+    company_name: exhibitor.name || 'your company',
+    contact_person: contact || 'Team',
+    country: exhibitor.country || 'abroad',
+    origin_hub: exhibitor.origin_hub || 'your home airport',
+    base_city: exhibitor.base_city || 'your headquarters',
+    fair_event: exhibitor.fair_event || 'Milano Home 2027',
+    recommended_vehicle: exhibitor.recommended_vehicle || 'Mercedes-Benz V-Class'
+  };
+
+  let subject = template.subject || '';
+  let body = template.body || '';
+
+  for (const [k, v] of Object.entries(vars)) {
+    const rx = new RegExp(`\\{\\{${k}\\}\\}`, 'g');
+    subject = subject.replace(rx, v);
+    body = body.replace(rx, v);
+  }
+
+  // Clean any remaining unreplaced template tokens
+  subject = subject.replace(/\{\{[a-z0-9_]+\}\}/gi, '');
+  body = body.replace(/\{\{[a-z0-9_]+\}\}/gi, '');
+
+  return { subject, body };
+}
+
+export function loadStoredEventTemplates() {
+  if (typeof localStorage === 'undefined') return DEFAULT_EVENT_TEMPLATES;
+  try {
+    const raw = localStorage.getItem(EVENT_TEMPLATES_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length) return parsed;
+    }
+  } catch (_) {}
+  return DEFAULT_EVENT_TEMPLATES;
+}
+
+export function saveStoredEventTemplates(templates) {
+  if (typeof localStorage === 'undefined' || !Array.isArray(templates)) return;
+  try {
+    localStorage.setItem(EVENT_TEMPLATES_STORAGE_KEY, JSON.stringify(templates));
+  } catch (_) {}
+}

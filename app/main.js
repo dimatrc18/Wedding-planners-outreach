@@ -14,7 +14,9 @@ import * as visibility from './views/visibility.js?v=9.7';
 import * as settings from './views/settings.js?v=9.1';
 import * as busPartners from './views/bus_partners.js?v=9.1';
 import * as fleetShowcase from './views/fleet_showcase.js?v=9.7';
-import * as eventPartners from './views/event_partners.js?v=20261103_v4';
+import * as eventPartners from './views/event_partners.js?v=20261103_v5';
+import * as eventTemplates from './views/event_templates.js?v=20261103_v5';
+import * as eventOutbox from './views/event_outbox.js?v=20261103_v5';
 
 const ROUTES = {
   today: { view: today, label: 'Today', icon: 'today' },
@@ -27,7 +29,9 @@ const ROUTES = {
   templates: { view: templates, label: 'Sequence & templates', icon: 'template' },
   settings: { view: settings, label: 'Settings', icon: 'settings' },
   bus_partners: { view: busPartners, label: 'Bus Fleet Partners', icon: 'partners', hidden: true },
-  event_partners: { view: eventPartners, label: 'Milano Home Exhibitors', icon: 'partners', hidden: true },
+  event_partners: { view: eventPartners, label: 'Foreign Exhibiting Teams', icon: 'partners', hidden: true },
+  event_templates: { view: eventTemplates, label: 'Fair Sequences & Rates', icon: 'template', hidden: true },
+  event_outbox: { view: eventOutbox, label: 'Event Outbox & Replies', icon: 'send', hidden: true },
   tools: { view: tools, label: 'Tools', icon: 'sparkle', hidden: true },
   add: { view: add, label: 'Add prospects', icon: 'plus', hidden: true },
   prospect: { view: prospect, label: 'Prospect', hidden: true },
@@ -70,7 +74,11 @@ function getSectionState() {
     const raw = localStorage.getItem('dorogo_rail_sections');
     if (raw) return JSON.parse(raw);
   } catch {}
-  const isEvents = (typeof location !== 'undefined') && location.hash.includes('event_partners');
+  const isEvents = (typeof location !== 'undefined') && (
+    location.hash.includes('event_partners') ||
+    location.hash.includes('event_templates') ||
+    location.hash.includes('event_outbox')
+  );
   return { wedding: false, bus: false, events: isEvents ? true : false };
 }
 
@@ -99,6 +107,11 @@ function badgeCount() {
 function busBadgeCount() {
   if (!['live', 'demo'].includes(S.mode)) return 0;
   return (S.busPartners || []).filter((b) => b.outreach_stage === 'replied' || b.replied_at).length;
+}
+
+function eventBadgeCount() {
+  if (!['live', 'demo'].includes(S.mode)) return 0;
+  return (S.eventPartners || []).filter((b) => b.status === 'WANT_TO_CONTACT').length;
 }
 
 function shell() {
@@ -135,6 +148,7 @@ function shell() {
                 <span class="rail-section-meta">
                   ${sec.id === 'wedding' && n ? `<span class="count">${n}</span>` : ''}
                   ${sec.id === 'bus' && busBadgeCount() ? `<span class="count ok" style="background:#0F766E">${busBadgeCount()}</span>` : ''}
+                  ${sec.id === 'events' && eventBadgeCount() ? `<span class="count ok" style="background:#2563EB">${eventBadgeCount()}</span>` : ''}
                   <span class="rail-section-chevron">${icon('chevron_right', 13)}</span>
                 </span>
               </button>

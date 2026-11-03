@@ -83,6 +83,12 @@ export async function render(el) {
             <h1 style="font-size:19px;font-weight:700;color:var(--sail-ink);margin:0;letter-spacing:-0.02em;white-space:nowrap">
               🏛️ Milano Home 2027 · Foreign Exhibiting Teams
             </h1>
+            <select id="event-fair-select" style="height:24px;line-height:22px;padding:0 6px;border:1px solid #BBF7D0;background:#DCFCE7;color:#166534;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">
+              <option value="milano_home_2027" selected>🏛️ Milano Home 2027 (21–24 Jan)</option>
+              <option value="mido_2027" disabled>👓 MIDO Eyewear 2027 (Feb 2027)</option>
+              <option value="mfw_2027" disabled>👠 Milan Fashion Week 2027 (Feb 2027)</option>
+              <option value="salone_2027" disabled>🛋️ Salone del Mobile 2027 (Apr 2027)</option>
+            </select>
             <span class="sail-pill ok" style="font-size:10.5px;font-weight:700">events@dorogo-events.eu</span>
             <span class="sail-pill info" style="font-size:10.5px">Direct Client Outreach</span>
           </div>
