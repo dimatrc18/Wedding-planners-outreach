@@ -359,6 +359,26 @@
     letter-spacing: 0.5px;
   }
 
+  /* Operational Boundaries Strip */
+  .operational-strip {
+    background: #fafafa;
+    border: 1px solid #e4e4e7;
+    border-left: 2.5px solid #09090b;
+    padding: 7px 10px;
+    border-radius: 2px;
+    margin-top: 14px;
+    margin-bottom: 4px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    font-size: 7.6px;
+    line-height: 1.35;
+    color: #3f3f46;
+  }
+  .operational-strip strong {
+    color: #09090b;
+  }
+
 </style>
 </head>
 <body>
@@ -384,19 +404,19 @@
     <div class="collab-card">
       <div class="collab-head">
         <span class="collab-title">01. White-Label (Under Your Brand)</span>
-        <span class="collab-tag">Your markup</span>
+        <span class="collab-tag">15% – 25%+ Studio Markup</span>
       </div>
       <div class="collab-desc">
-        Quote your client the final price with your agency markup — we provide wholesale net partner rates and manage 100% of guest dispatching, flight tracking, and luggage coordination under your brand (White-label). 100% client protection.
+        Quote your client the final price with your studio markup — we provide confidential wholesale net partner rates and manage 100% of guest dispatching, flight tracking, and luggage coordination under your brand (White-label). 100% client protection.
       </div>
     </div>
     <div class="collab-card">
       <div class="collab-head">
         <span class="collab-title">02. Client Referral</span>
-        <span class="collab-tag">Commission % TBD</span>
+        <span class="collab-tag">5% Agency Commission</span>
       </div>
       <div class="collab-desc">
-        Pass us the client contact and itinerary details — we handle 100% of quoting, billing, and on-ground logistics. Your agency receives an agreed partner commission <strong>(% TBD)</strong> on the total confirmed order value.
+        Pass us the client contact and itinerary details — we handle 100% of quoting, billing, and on-ground logistics. Your agency receives a guaranteed <strong>5% partner commission</strong> upon contract settlement.
       </div>
     </div>
   </div>
@@ -480,28 +500,28 @@
         <td><strong>Bridal Flagship:</strong> generous room for bridal wedding gown with long train, ceremonial exit, and luxury photo shoot.</td>
       </tr>
       <tr>
-        <td><span class="car-name">Mercedes Sprinter Executive</span><span class="car-sub">Minibus 16–20 seats</span></td>
-        <td>16–20 Seats<br><span style="color:#71717a;">16 Luggage</span></td>
-        <td class="num"><span class="price-bold">€115 / hr</span><span class="price-note">Min 6 hours</span></td>
+        <td><span class="car-name">Executive Minibus 16–20p</span><span class="car-sub">Mercedes Sprinter / Indcar / Transit equiv.</span></td>
+        <td>16–20 Seats<br><span style="color:#71717a;">Compact Trunk (1 bag/pax)</span></td>
+        <td class="num"><span class="price-bold">€115 / hr</span><span class="price-note">Min 4 hours</span></td>
         <td class="num"><span class="price-bold">€1,150 / day</span><span class="price-note">10 hours (8h: €1,050)</span></td>
         <td class="num"><span class="price-bold">€540.00</span><span class="price-note">+ MXP parking €30 / hr</span></td>
         <td><strong>Tight Serpentine Roads:</strong> compact wheelbase (&lt;7.5m) navigates mountain lanes and hotel entries closed to 50-passenger coaches.</td>
       </tr>
       <tr>
-        <td><span class="car-name">Mercedes Sprinter XL</span><span class="car-sub">Minibus 24 seats</span></td>
-        <td>24 Seats<br><span style="color:#71717a;">20 Luggage</span></td>
-        <td class="num"><span class="price-bold">€120 / hr</span><span class="price-note">Min 6 hours</span></td>
-        <td class="num"><span class="price-bold">€1,200 / day</span><span class="price-note">10 hours (8h: €1,100)</span></td>
+        <td><span class="car-name">Executive Midibus 28–30p</span><span class="car-sub">Iveco Wing / Mercedes or equivalent</span></td>
+        <td>28–30 Seats<br><span style="color:#71717a;">20–25 Luggage</span></td>
+        <td class="num"><span class="price-bold">€130 / hr</span><span class="price-note">Min 4 hours</span></td>
+        <td class="num"><span class="price-bold">€1,180 / day</span><span class="price-note">10 hours / 200 km</span></td>
         <td class="num"><span class="price-bold">€560.00</span><span class="price-note">+ MXP parking €30 / hr</span></td>
-        <td><strong>Airports & Welcome Dinner:</strong> extended cargo bay holds 20+ large bags from MXP without splitting the party.</td>
+        <td><strong>Medium Group Express:</strong> bridges the gap between 19p minibus and 50p coach for lakeside hotels &amp; welcome dinners.</td>
       </tr>
       <tr>
-        <td><span class="car-name">Grand Turismo Coach</span><span class="car-sub">Coach 50–54 seats</span></td>
-        <td>50–54 Seats<br><span style="color:#71717a;">50 Luggage</span></td>
-        <td class="num"><span class="price-bold">€170 / hr</span><span class="price-note">Min 4h service (€880)</span></td>
-        <td class="num"><span class="price-bold">€1,705 / day</span><span class="price-note">10 hours (12h: €1,980)</span></td>
-        <td class="num"><span class="price-bold">€880.00</span><span class="price-note">+ MXP parking €30 / hr</span></td>
-        <td><strong>Highway Express:</strong> centralized transfer for all guests from Milan center to Como hotels and private boat docks.</td>
+        <td><span class="car-name">Grand Turismo Coach 50–55p</span><span class="car-sub">Setra / Tourismo or equivalent GT</span></td>
+        <td>50–55 Seats<br><span style="color:#71717a;">50 Large Suitcases</span></td>
+        <td class="num"><span class="price-bold">€150 / hr</span><span class="price-note">Min 4 hours (€600)</span></td>
+        <td class="num"><span class="price-bold">€1,390 / day</span><span class="price-note">10 hours (12h: €1,650)</span></td>
+        <td class="num"><span class="price-bold">€690.00</span><span class="price-note">+ MXP parking €30 / hr</span></td>
+        <td><strong>Highway Trunk Line:</strong> centralized mass transfer from Milan/MXP to Como boat piers &amp; central hotels.</td>
       </tr>
     </tbody>
   </table>
@@ -511,35 +531,46 @@
     <div class="panel">
       <div class="panel-header"><span class="panel-title">Milan Access (Area C)</span></div>
       <div class="kv-list">
-        <div class="kv-row"><span class="kv-key">Sedans & Vans (up to 8 seats)</span><span class="kv-val">Free</span></div>
+        <div class="kv-row"><span class="kv-key">Sedans &amp; Vans (up to 8 seats)</span><span class="kv-val">Free</span></div>
         <div class="kv-row"><span class="kv-key">Minibuses ≤8m (Mon–Fri)</span><span class="kv-val">€60.00 / day</span></div>
-        <div class="kv-row"><span class="kv-key">Midibuses 8–10.5m (Mon–Fri)</span><span class="kv-val">€97.50 / day</span></div>
+        <div class="kv-row"><span class="kv-key">Midibuses 8–10.5m (Mon–Fri)</span><span class="kv-val">€100.00 / day</span></div>
         <div class="kv-row"><span class="kv-key">GT Coaches &gt;10.5m (Mon–Fri)</span><span class="kv-val">€150.00 / day</span></div>
-        <div class="kv-row"><span class="kv-key">Weekends & Holidays (All vehicles)</span><span class="kv-val">Free</span></div>
+        <div class="kv-row"><span class="kv-key">Weekends &amp; Holidays (All vehicles)</span><span class="kv-val">Free</span></div>
       </div>
     </div>
 
     <div class="panel">
-      <div class="panel-header"><span class="panel-title">Payment & Cancellation</span></div>
+      <div class="panel-header"><span class="panel-title">Payment &amp; Cancellation</span></div>
       <div class="kv-list">
-        <div class="kv-row"><span class="kv-key">Advance deposit</span><span class="kv-val">40%</span></div>
-        <div class="kv-row"><span class="kv-key">Final balance</span><span class="kv-val">60% at 14 days</span></div>
+        <div class="kv-row"><span class="kv-key">Booking Deposit</span><span class="kv-val">25% (Secures fleet)</span></div>
+        <div class="kv-row"><span class="kv-key">Final Balance</span><span class="kv-val">7 days prior</span></div>
         <div class="kv-row"><span class="kv-key">Cancellation &gt;30 days</span><span class="kv-val">100% refund</span></div>
         <div class="kv-row"><span class="kv-key">Cancellation 15–29 days</span><span class="kv-val">50% refund</span></div>
         <div class="kv-row"><span class="kv-key">Cancellation &lt;14 days</span><span class="kv-val">0% (retained)</span></div>
-        <div class="kv-row"><span class="kv-key">MXP waiting & flight radar</span><span class="kv-val">60 min free</span></div>
+        <div class="kv-row"><span class="kv-key">Flight Radar Tracking</span><span class="kv-val">60 min free wait</span></div>
       </div>
     </div>
 
     <div class="panel">
-      <div class="panel-header"><span class="panel-title">Allowances & Extras</span></div>
+      <div class="panel-header"><span class="panel-title">Allowances &amp; MECE Night Rules</span></div>
       <div class="kv-list">
-        <div class="kv-row"><span class="kv-key">Included mileage (full day)</span><span class="kv-val">200 km (25 km/h)</span></div>
-        <div class="kv-row"><span class="kv-key">Overtime (per hour)</span><span class="kv-val">€95 – €120 / hr</span></div>
-        <div class="kv-row"><span class="kv-key">Extra mileage (per km)</span><span class="kv-val">€1.60 – €2.50 / km</span></div>
-        <div class="kv-row"><span class="kv-key">VAT Rate (NCC)</span><span class="kv-val">10% (Included in all rates)</span></div>
-        <div class="kv-row"><span class="kv-key">Peak dates (MFW, F1, Salone)</span><span class="kv-val">+10% – 20%</span></div>
+        <div class="kv-row"><span class="kv-key">Night Transfer (22:00–06:00)</span><span class="kv-val">+20% flat on base</span></div>
+        <div class="kv-row"><span class="kv-key">Night Loop (23:00–03:00)</span><span class="kv-val">V: €450 · Bus: €650 flat</span></div>
+        <div class="kv-row"><span class="kv-key">Standby Overtime &gt;22:00</span><span class="kv-val">V €110/h · Bus €140/h · Coach €180/h</span></div>
+        <div class="kv-row"><span class="kv-key">Baggage Support Van (Cargo)</span><span class="kv-val">€240.00 / wave</span></div>
+        <div class="kv-row"><span class="kv-key">MXP Bus Terminal Parking</span><span class="kv-val">€30.00 / hr (pass-through)</span></div>
+        <div class="kv-row"><span class="kv-key">VAT Rate (NCC)</span><span class="kv-val">10% included in all rates</span></div>
       </div>
+    </div>
+  </div>
+
+  <!-- Section 5: Operational Advisory Strip -->
+  <div class="operational-strip">
+    <div>
+      <strong>Luggage Capacity Advisory:</strong> 16–20p minibuses feature compact trunks (~45L luggage space per seat). For overseas wedding parties traveling with large suitcases, book our <strong>Dedicated Baggage Support Van (Mercedes Vito Cargo)</strong> at <strong>€240 net flat</strong> per airport wave to preserve passenger comfort and ensure all bags travel together.
+    </div>
+    <div>
+      <strong>Villa Accessibility &amp; Highway Logistics:</strong> 50–55 passenger Grand Turismo Coaches cannot access narrow Lake Como lakeside lanes or private villa entry gates (e.g. Balbiano, Pizzo, Cassinella). DOROGO coordinates seamless highway trunk transfers to central docks/hotels, synchronized with 16–20p Minibuses or V-Class shuttles for final-mile villa arrival.
     </div>
   </div>
 
