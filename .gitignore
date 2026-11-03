@@ -13,7 +13,13 @@ supabase/.temp/
 *.pem
 
 # Generated HTML vouchers and invoices
-DOROGO_*.html
+DOROGO_ProForma_*.html
+DOROGO_Transfer_*.html
+# Allow tracked rate cards
+!dorogo_*.html
+# Generated client billing docs
+DOROGO_ProForma_*
+DOROGO_Transfer_*
 
 # ub-mode / crapper / dryer metrics
 .metrics/

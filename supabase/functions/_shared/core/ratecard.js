@@ -42,24 +42,27 @@ export function quoteNet(items = []) {
 
 export const commissionFor = (revenue, model) => (model === 'referral_12' ? Math.round((+revenue || 0) * RATE_CARD.referral_commission * 100) / 100 : 0);
 
-export function getRateCardInfo(settings = {}, lang = 'en') {
+export function getRateCardInfo(settings = {}, lang = 'en', audience = 'partner') {
   const cleanLang = (lang || '').toLowerCase().trim();
-  let defaultFilename = 'DOROGO_Tariffs_Logistics_EN.pdf';
-  let defaultPath = 'rate-card/DOROGO_Tariffs_Logistics_EN.pdf';
+  const isClient = (audience || '').toLowerCase().trim() === 'client';
+
+  let defaultFilename = isClient ? 'DOROGO_Tariffs_Client_EN.pdf' : 'DOROGO_Tariffs_Logistics_EN.pdf';
+  let defaultPath = isClient ? 'rate-card/DOROGO_Tariffs_Client_EN.pdf' : 'rate-card/DOROGO_Tariffs_Logistics_EN.pdf';
 
   if (cleanLang.startsWith('ru')) {
-    defaultFilename = 'DOROGO_Tariffs_Logistics_RU.pdf';
-    defaultPath = 'rate-card/DOROGO_Tariffs_Logistics_RU.pdf';
+    defaultFilename = isClient ? 'DOROGO_Tariffs_Client_RU.pdf' : 'DOROGO_Tariffs_Logistics_RU.pdf';
+    defaultPath = isClient ? 'rate-card/DOROGO_Tariffs_Client_RU.pdf' : 'rate-card/DOROGO_Tariffs_Logistics_RU.pdf';
   } else if (cleanLang.startsWith('it')) {
-    defaultFilename = 'DOROGO_Tariffs_Logistics_IT.pdf';
-    defaultPath = 'rate-card/DOROGO_Tariffs_Logistics_IT.pdf';
+    defaultFilename = isClient ? 'DOROGO_Tariffs_Client_IT.pdf' : 'DOROGO_Tariffs_Logistics_IT.pdf';
+    defaultPath = isClient ? 'rate-card/DOROGO_Tariffs_Client_IT.pdf' : 'rate-card/DOROGO_Tariffs_Logistics_IT.pdf';
   }
 
-  const langPathKey = cleanLang.startsWith('ru') ? 'rate_card_path_ru' : cleanLang.startsWith('it') ? 'rate_card_path_it' : 'rate_card_path_en';
-  const langNameKey = cleanLang.startsWith('ru') ? 'rate_card_filename_ru' : cleanLang.startsWith('it') ? 'rate_card_filename_it' : 'rate_card_filename_en';
+  const prefix = isClient ? 'client_rate_card' : 'rate_card';
+  const langPathKey = cleanLang.startsWith('ru') ? `${prefix}_path_ru` : cleanLang.startsWith('it') ? `${prefix}_path_it` : `${prefix}_path_en`;
+  const langNameKey = cleanLang.startsWith('ru') ? `${prefix}_filename_ru` : cleanLang.startsWith('it') ? `${prefix}_filename_it` : `${prefix}_filename_en`;
 
-  const path = settings[langPathKey] || (cleanLang.startsWith('en') ? settings.rate_card_path : null) || defaultPath;
-  const filename = settings[langNameKey] || (cleanLang.startsWith('en') ? settings.rate_card_filename : null) || defaultFilename;
+  const path = settings[langPathKey] || (!isClient && cleanLang.startsWith('en') ? settings.rate_card_path : null) || defaultPath;
+  const filename = settings[langNameKey] || (!isClient && cleanLang.startsWith('en') ? settings.rate_card_filename : null) || defaultFilename;
 
-  return { path, filename, lang: cleanLang.slice(0, 2) || 'en' };
+  return { path, filename, lang: cleanLang.slice(0, 2) || 'en', audience: isClient ? 'client' : 'partner' };
 }

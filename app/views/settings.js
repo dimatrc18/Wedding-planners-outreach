@@ -78,30 +78,55 @@ export function render(el) {
       </section>
 
       <section class="card stack">
-        <div class="section-head"><h2>Rate card PDFs (Multi-Language)</h2></div>
-        <p class="small muted">The system automatically attaches the matching rate card edition based on the prospect's communication language (EN, IT, RU).</p>
-        <div class="list" style="margin:4px 0 8px;">
-          <div class="row between" style="padding:6px 0; border-bottom:1px solid var(--border);">
-            <span><b>English (EN)</b>: ${esc(s.rate_card_filename_en || s.rate_card_filename || 'DOROGO_Group_Mobility_Audit_EN.pdf')}</span>
-            <span class="chip ${s.rate_card_path_en || s.rate_card_path ? 'ok' : 'muted'}">${s.rate_card_path_en || s.rate_card_path ? 'Custom' : 'Default'}</span>
+        <div class="section-head"><h2>Rate card PDFs (B2B Partner &amp; Direct Client Editions)</h2></div>
+        <p class="small muted">The system automatically attaches the matching rate card edition based on communication language (EN, IT, RU) and recipient profile (B2B Partner with confidential net margins vs Direct Client with turnkey concierge fares).</p>
+        
+        <div style="margin-top:8px;">
+          <h4 style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-muted); margin-bottom:4px;">1. B2B Partner Edition (Confidential Net Rates &amp; Studio Margins)</h4>
+          <div class="list" style="margin:4px 0 12px;">
+            <div class="row between" style="padding:5px 0; border-bottom:1px solid var(--border);">
+              <span><b>English (EN)</b>: ${esc(s.rate_card_filename_en || s.rate_card_filename || 'DOROGO_Tariffs_Logistics_EN.pdf')}</span>
+              <span class="chip ${s.rate_card_path_en || s.rate_card_path ? 'ok' : 'muted'}">${s.rate_card_path_en || s.rate_card_path ? 'Custom' : 'Default'}</span>
+            </div>
+            <div class="row between" style="padding:5px 0; border-bottom:1px solid var(--border);">
+              <span><b>Italian (IT)</b>: ${esc(s.rate_card_filename_it || 'DOROGO_Tariffs_Logistics_IT.pdf')}</span>
+              <span class="chip ${s.rate_card_path_it ? 'ok' : 'muted'}">${s.rate_card_path_it ? 'Custom' : 'Default'}</span>
+            </div>
+            <div class="row between" style="padding:5px 0;">
+              <span><b>Russian (RU)</b>: ${esc(s.rate_card_filename_ru || 'DOROGO_Tariffs_Logistics_RU.pdf')}</span>
+              <span class="chip ${s.rate_card_path_ru ? 'ok' : 'muted'}">${s.rate_card_path_ru ? 'Custom' : 'Default'}</span>
+            </div>
           </div>
-          <div class="row between" style="padding:6px 0; border-bottom:1px solid var(--border);">
-            <span><b>Italian (IT)</b>: ${esc(s.rate_card_filename_it || 'DOROGO_Group_Mobility_Audit_IT.pdf')}</span>
-            <span class="chip ${s.rate_card_path_it ? 'ok' : 'muted'}">${s.rate_card_path_it ? 'Custom' : 'Default'}</span>
-          </div>
-          <div class="row between" style="padding:6px 0;">
-            <span><b>Russian (RU)</b>: ${esc(s.rate_card_filename_ru || 'DOROGO_Group_Mobility_Audit_RU.pdf')}</span>
-            <span class="chip ${s.rate_card_path_ru ? 'ok' : 'muted'}">${s.rate_card_path_ru ? 'Custom' : 'Default'}</span>
+
+          <h4 style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-muted); margin-bottom:4px;">2. Direct Client Edition (Transparent Concierge Fares &amp; Turnkey Service)</h4>
+          <div class="list" style="margin:4px 0 12px;">
+            <div class="row between" style="padding:5px 0; border-bottom:1px solid var(--border);">
+              <span><b>English (EN)</b>: ${esc(s.client_rate_card_filename_en || 'DOROGO_Tariffs_Client_EN.pdf')}</span>
+              <span class="chip ${s.client_rate_card_path_en ? 'ok' : 'muted'}">${s.client_rate_card_path_en ? 'Custom' : 'Default'}</span>
+            </div>
+            <div class="row between" style="padding:5px 0; border-bottom:1px solid var(--border);">
+              <span><b>Italian (IT)</b>: ${esc(s.client_rate_card_filename_it || 'DOROGO_Tariffs_Client_IT.pdf')}</span>
+              <span class="chip ${s.client_rate_card_path_it ? 'ok' : 'muted'}">${s.client_rate_card_path_it ? 'Custom' : 'Default'}</span>
+            </div>
+            <div class="row between" style="padding:5px 0;">
+              <span><b>Russian (RU)</b>: ${esc(s.client_rate_card_filename_ru || 'DOROGO_Tariffs_Client_RU.pdf')}</span>
+              <span class="chip ${s.client_rate_card_path_ru ? 'ok' : 'muted'}">${s.client_rate_card_path_ru ? 'Custom' : 'Default'}</span>
+            </div>
           </div>
         </div>
-        <div class="row" style="gap:8px;">
-          <select id="pdf-lang" style="max-width:130px;">
+
+        <div class="row" style="gap:8px; flex-wrap:wrap; align-items:center;">
+          <select id="pdf-audience" style="max-width:160px;" aria-label="Rate card audience">
+            <option value="partner">B2B Partner Edition</option>
+            <option value="client">Direct Client Edition</option>
+          </select>
+          <select id="pdf-lang" style="max-width:130px;" aria-label="Rate card language">
             <option value="auto">Auto-detect</option>
             <option value="en">English (EN)</option>
             <option value="it">Italian (IT)</option>
             <option value="ru">Russian (RU)</option>
           </select>
-          <input type="file" id="pdf" accept="application/pdf" aria-label="Rate card PDF" style="max-width:280px">
+          <input type="file" id="pdf" accept="application/pdf" aria-label="Rate card PDF" style="max-width:260px">
           <button class="btn sm" data-act="upload">${icon('upload', 15)} Upload</button>
         </div>
       </section>
@@ -223,6 +248,8 @@ export function render(el) {
         case 'upload': {
           const f = v('pdf').files[0]; if (!f) { toast('Choose the PDF first', 'error'); break; }
           if (f.type !== 'application/pdf') { toast('That is not a PDF', 'error'); break; }
+          const audienceChoice = v('pdf-audience')?.value || (f.name.toLowerCase().includes('client') ? 'client' : 'partner');
+          const isClient = audienceChoice === 'client';
           let langChoice = v('pdf-lang')?.value || 'auto';
           if (langChoice === 'auto') {
             const lower = f.name.toLowerCase();
@@ -234,20 +261,23 @@ export function render(el) {
           const cleanName = f.name.replace(/[^\w.-]+/g, '_');
           const path = await upload(`rate-card/${Date.now()}-${cleanName}`, f);
           const patch = {};
+          const pfx = isClient ? 'client_rate_card' : 'rate_card';
           if (langChoice === 'ru') {
-            patch.rate_card_path_ru = path;
-            patch.rate_card_filename_ru = f.name;
+            patch[`${pfx}_path_ru`] = path;
+            patch[`${pfx}_filename_ru`] = f.name;
           } else if (langChoice === 'it') {
-            patch.rate_card_path_it = path;
-            patch.rate_card_filename_it = f.name;
+            patch[`${pfx}_path_it`] = path;
+            patch[`${pfx}_filename_it`] = f.name;
           } else {
-            patch.rate_card_path_en = path;
-            patch.rate_card_filename_en = f.name;
-            patch.rate_card_path = path;
-            patch.rate_card_filename = f.name;
+            patch[`${pfx}_path_en`] = path;
+            patch[`${pfx}_filename_en`] = f.name;
+            if (!isClient) {
+              patch.rate_card_path = path;
+              patch.rate_card_filename = f.name;
+            }
           }
           await saveSettings(patch);
-          toast(`Rate card (${langChoice.toUpperCase()}) uploaded`); paint(); break;
+          toast(`${isClient ? 'Client' : 'Partner'} rate card (${langChoice.toUpperCase()}) uploaded`); paint(); break;
         }
         case 'job': {
           const r = await api(b.dataset.job);

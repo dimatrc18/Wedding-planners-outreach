@@ -196,8 +196,8 @@ export async function draftDueSteps(db: any, settings: any, now = new Date()) {
 }
 
 // ---------------- Sending ----------------
-export async function rateCardAttachment(db: any, settings: any, lang: string = 'en') {
-  const { path, filename } = core.getRateCardInfo(settings, lang);
+export async function rateCardAttachment(db: any, settings: any, lang: string = 'en', audience: string = 'partner') {
+  const { path, filename } = core.getRateCardInfo(settings, lang, audience);
   let { data, error } = await db.storage.from('outreach').download(path);
 
   // Fallback to generic rate_card_path if specific path download failed
@@ -369,7 +369,8 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
     let sentRaw: string | null = null;
     try {
       const prospectLang = p.language || t.language || 'en';
-      const rcAtt = t.attach_rate_card ? await rateCardAttachment(db, settings, prospectLang) : null;
+      const audience = t.rate_card_audience || (p.commercial_model === 'referral_5' || p.referral_mode === 'direct' ? 'client' : 'partner');
+      const rcAtt = t.attach_rate_card ? await rateCardAttachment(db, settings, prospectLang, audience) : null;
       const attachments = rcAtt ? [rcAtt] : [];
       const pixelUrl = settings.track_opens ? `${env('SUPABASE_URL')}/functions/v1/outreach-api?open=${t.id}` : null;
       const fromName = prospectLang === 'ru' ? 'Дмитрий | DOROGO Transfers' : 'Dmitri | DOROGO Transfers';

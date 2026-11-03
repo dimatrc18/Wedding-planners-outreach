@@ -262,6 +262,30 @@ test('multi-language rate card routing matches communication language (EN, IT, R
   }, 'it');
   assert.equal(custom.path, 'custom/italian_card.pdf');
   assert.equal(custom.filename, 'Custom_Italian_Card.pdf');
+
+  // Direct Client Edition routing (audience = 'client')
+  const clientEn = getRateCardInfo({}, 'en', 'client');
+  assert.equal(clientEn.filename, 'DOROGO_Tariffs_Client_EN.pdf');
+  assert.equal(clientEn.path, 'rate-card/DOROGO_Tariffs_Client_EN.pdf');
+  assert.equal(clientEn.audience, 'client');
+
+  const clientIt = getRateCardInfo({}, 'it', 'client');
+  assert.equal(clientIt.filename, 'DOROGO_Tariffs_Client_IT.pdf');
+  assert.equal(clientIt.path, 'rate-card/DOROGO_Tariffs_Client_IT.pdf');
+  assert.equal(clientIt.audience, 'client');
+
+  const clientRu = getRateCardInfo({}, 'ru', 'client');
+  assert.equal(clientRu.filename, 'DOROGO_Tariffs_Client_RU.pdf');
+  assert.equal(clientRu.path, 'rate-card/DOROGO_Tariffs_Client_RU.pdf');
+  assert.equal(clientRu.audience, 'client');
+
+  // Custom client overrides
+  const customClient = getRateCardInfo({
+    client_rate_card_path_en: 'custom/client_card_en.pdf',
+    client_rate_card_filename_en: 'Custom_Client_Card_EN.pdf',
+  }, 'en', 'client');
+  assert.equal(customClient.path, 'custom/client_card_en.pdf');
+  assert.equal(customClient.filename, 'Custom_Client_Card_EN.pdf');
 });
 
 test('resolveProspectResearchSeed never hallucinates or guesses unverified domains', () => {
