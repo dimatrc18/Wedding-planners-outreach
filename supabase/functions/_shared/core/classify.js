@@ -24,7 +24,8 @@ export const SYSTEM_OR_VENDOR_DOMAINS = new Set([
   'telegram.org', 'apple.com', 'cloudflare.com', 'resend.com', 'mailgun.net',
   'sendgrid.net', 'postmarkapp.com', 'brevo.com', 'mailerlite.com', 'mailchimp.com',
   'hubspot.com', 'intercom.io', 'zendesk.com', 'wordpress.com', 'squarespace.com',
-  'wix.com', 'automattic.com',
+  'wix.com', 'automattic.com', 'theknotww.com', 'theknot.com', 'matrimonio.com',
+  'weddingwire.com', 'zola.com',
 ]);
 
 export function isSystemOrBotSender(from = '', name = '', subject = '', autoSub = '') {
@@ -32,8 +33,9 @@ export function isSystemOrBotSender(from = '', name = '', subject = '', autoSub 
   const domain = emailLower.split('@')[1] || '';
   if (SYSTEM_OR_VENDOR_DOMAINS.has(domain)) return true;
   if (/^(no-?reply|donotreply|notifications?|billing|support|mailer-daemon|postmaster|alerts?|security|news|updates?|marketing|newsletter)@/i.test(emailLower)) return true;
+  if (/calendar-.*@google\.com/i.test(emailLower)) return true;
   if (/auto-(replied|generated)/i.test(autoSub || '')) return true;
-  if (/(verify your email|welcome to|confirm your|password reset|invoice #|receipt for|payment confirmation|security alert|login alert|statement for|subscription)/i.test(subject || '')) return true;
+  if (/(verify your email|welcome to|confirm your|password reset|invoice #|receipt for|payment confirmation|security alert|login alert|statement for|subscription|appointment (booked|scheduled|confirmed|cancelled)|calendar-notification|invitation:)/i.test(subject || '')) return true;
   return false;
 }
 
@@ -254,10 +256,24 @@ export function classifyReply(msg = {}, now = new Date()) {
   const negative = !!any(NEGATIVE, text);
   if (negative) matched.push('negative');
 
+  // Explicit "no events / no weddings" declaration by the planner
+  const hasNoEvents = /\b(non ho (eventi|matrimoni|date|richieste)|non abbiamo (eventi|matrimoni|date|richieste)|nessun evento|nessun matrimonio|al momento non ho|no (events?|weddings?|bookings?|dates?)|(don'?t|do not) have (any )?(events?|weddings?|bookings?|dates?)|not planning any (events?|weddings?)|нет (свадеб|мероприятий|запросов))\b/i.test(text);
+  if (hasNoEvents) {
+    matched.push('no_events');
+    hits.not_now = true;
+  }
+
   // "We already have a supplier" outranks a stray "send" unless they still ask for the card explicitly.
   let intent = INTENT_ORDER.find((k) => hits[k]) || null;
   if (hits.has_supplier && !hits.meeting_request && !/rate card|rates|tariff|send (it|over)|happy to (see|have a look)|keep (you|it) on file/i.test(text)) intent = 'has_supplier';
-  if (hits.not_now && intent === 'asks_pricing' && !/\?/.test(text)) intent = 'not_now';
+  
+  // If planner explicitly has no events or says not now, it is NEVER an active quote request (asks_pricing)
+  if ((hits.not_now || hasNoEvents) && intent === 'asks_pricing') {
+    intent = hits.wants_rate_card || /tariffe|tariff|rates?|rate card|scheda/i.test(text) ? 'wants_rate_card' : 'not_now';
+  } else if (hits.not_now && intent === 'asks_pricing' && !/\?/.test(text)) {
+    intent = 'not_now';
+  }
+
   if (negative && (intent === 'wants_rate_card') && !/\byes\b|\bplease\b/i.test(text)) intent = hits.not_now ? 'not_now' : null;
   if (!intent && /\?/.test(text)) {
     intent = 'specific_question';
@@ -266,11 +282,16 @@ export function classifyReply(msg = {}, now = new Date()) {
 
   const warmKeepOnFile = /\b(keep (you|your (contact )?(details|info(rmation)?|card|brochure)) (in mind|on (our )?(records?|file))|save(d)? your (brochure|details|contact|rate card)|teniamo in considerazione|salvato la vostra brochure)\b/i.test(text);
   let sentiment = 'neutral';
-  if (['meeting_request', 'wants_rate_card', 'asks_pricing'].includes(intent) || (warmKeepOnFile && !negative && intent !== 'has_supplier')) sentiment = 'positive';
-  else if (intent === 'has_supplier' || (negative && !intent)) sentiment = 'negative';
+  // NEVER classify sentiment as positive if planner explicitly stated they have no events/weddings currently
+  if (!hasNoEvents && (['meeting_request', 'wants_rate_card', 'asks_pricing'].includes(intent) || (warmKeepOnFile && !negative && intent !== 'has_supplier'))) {
+    sentiment = 'positive';
+  } else if (intent === 'has_supplier' || (negative && !intent)) {
+    sentiment = 'negative';
+  }
 
   const out = { sentiment, intent, confidence: intent ? (intent === 'specific_question' || matched.length > 2 ? 'medium' : 'high') : (negative ? 'medium' : 'low'), matched };
-  if (intent === 'not_now') {
+  if (hasNoEvents) out.has_no_events = true;
+  if (intent === 'not_now' || hasNoEvents) {
     const named = monthMention(text, now);
     if (named) out.nurture_until = named.toISOString();
   }

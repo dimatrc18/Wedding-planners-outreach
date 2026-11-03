@@ -165,5 +165,33 @@ test('isSystemOrBotSender blocks vendor and transactional emails from becoming C
   // Legitimate wedding planner inbound inquiry
   assert.equal(isSystemOrBotSender('federica@lakecomoweddings.it', 'Federica', 'Guest shuttle inquiry for Villa Balbiano'), false);
   assert.equal(isSystemOrBotSender('contact@elizabeth-events.com', 'Elizabeth', 'Van and minibus rates 2027'), false);
+
+  // Platform vendor & automated appointment emails (The Knot Worldwide / Matrimonio.com)
+  assert.equal(isSystemOrBotSender('saiazzi@theknotww.com', 'Silvia Aiazzi', 'Appointment booked: Appuntamento matrimonio.com (Dmitri Traciuc) @ Wed Nov 4, 2026 11am - 11:30am (CET) (dmitri@dorogo.eu)'), true);
+  assert.equal(isSystemOrBotSender('referente@matrimonio.com', 'Matrimonio.com', 'Promemoria appuntamento'), true);
+});
+
+test('replies stating no current events/weddings classify with neutral sentiment and never trigger false positive quote requests', () => {
+  const federicaBeniReply = `Buon giorno Dimitri e grazie per avermi contattata!
+
+Al momento non ho eventi sul lago per la prossima stagione, ma mi piacerebbe molto avere le vostre tariffe e capire come operate per la gestione delle navette.
+
+Avete un coordinatore interno?
+
+Avete anche un sito web?
+
+Cordialmente
+Federica`;
+
+  const r1 = c(federicaBeniReply, { subject: 'R: breve domanda sulla gestione transfer' });
+  assert.equal(r1.sentiment, 'neutral', 'Federica Beni reply should have neutral sentiment (NOT positive)');
+  assert.equal(r1.intent, 'wants_rate_card', 'Intent should be wants_rate_card, not an active job asks_pricing');
+  assert.equal(r1.has_no_events, true, 'has_no_events flag must be true');
+
+  const enNoEvents = "We don't have any weddings on Lake Como for next season, but could you send your rates to keep on file?";
+  const r2 = c(enNoEvents, { subject: 'Re: Lake Como transfers' });
+  assert.equal(r2.sentiment, 'neutral');
+  assert.equal(r2.has_no_events, true);
+  assert.notEqual(r2.intent, 'asks_pricing');
 });
 

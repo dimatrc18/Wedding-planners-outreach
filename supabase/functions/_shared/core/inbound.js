@@ -44,14 +44,16 @@ export function inboundEffects({ prospect, touches = [], cls, templates, setting
   out.skipIds = pendingOut.filter((t) => COLD_STEPS.includes(t.step_name)).map((t) => t.id);
   const rank = FUNNEL_RANK[prospect.status] ?? 0;
   if (rank < FUNNEL_RANK.replied) patch.status = 'replied';
+  
+  const isNegativeOrNoEvents = Boolean(cls.has_no_events || cls.sentiment === 'negative' || cls.intent === 'not_now');
   if (cls.intent === 'not_now') {
     patch.status = 'nurture';
     patch.nurture_until = iso(cls.nurture_until || nurtureDate(now, s));
   }
-  if (cls.intent === 'asks_pricing' && rank < FUNNEL_RANK.quote_requested) patch.status = 'quote_requested';
-  if (cls.intent === 'meeting_request' && rank < FUNNEL_RANK.in_conversation) patch.status = 'in_conversation';
+  if (!isNegativeOrNoEvents && cls.intent === 'asks_pricing' && rank < FUNNEL_RANK.quote_requested) patch.status = 'quote_requested';
+  if (!isNegativeOrNoEvents && cls.intent === 'meeting_request' && rank < FUNNEL_RANK.in_conversation) patch.status = 'in_conversation';
 
-  if (['asks_pricing', 'meeting_request'].includes(cls.intent) || cls.wedding_date) {
+  if (!isNegativeOrNoEvents && (['asks_pricing', 'meeting_request'].includes(cls.intent) || cls.wedding_date)) {
     out.opportunity = {
       prospect_id: prospect.id, stage: 'open', model: prospect.partner_model || null,
       wedding_date: cls.wedding_date || null,
@@ -59,7 +61,7 @@ export function inboundEffects({ prospect, touches = [], cls, templates, setting
       notes: `Created from a reply (${cls.intent || 'wedding date'}).`,
     };
   }
-  out.alert = cls.sentiment === 'positive';
+  out.alert = !isNegativeOrNoEvents && cls.sentiment === 'positive';
 
   if (!(cls.sentiment === 'negative' && !cls.intent)) {
     const key = replyTemplateFor(cls.intent);

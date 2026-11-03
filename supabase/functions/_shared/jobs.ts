@@ -776,9 +776,10 @@ export async function applyInbound(
       cls.confidence = 'high';
 
       const rank = core.FUNNEL_RANK[p.status] ?? 0;
-      if (cls.intent === 'asks_pricing' && rank < core.FUNNEL_RANK.quote_requested) fx.patch.status = 'quote_requested';
-      if (cls.intent === 'meeting_request' && rank < core.FUNNEL_RANK.in_conversation) fx.patch.status = 'in_conversation';
-      if ((['asks_pricing', 'meeting_request'].includes(cls.intent) || cls.wedding_date) && !fx.opportunity) {
+      const isNegativeOrNoEvents = Boolean(cls.has_no_events || cls.sentiment === 'negative' || cls.intent === 'not_now');
+      if (!isNegativeOrNoEvents && cls.intent === 'asks_pricing' && rank < core.FUNNEL_RANK.quote_requested) fx.patch.status = 'quote_requested';
+      if (!isNegativeOrNoEvents && cls.intent === 'meeting_request' && rank < core.FUNNEL_RANK.in_conversation) fx.patch.status = 'in_conversation';
+      if (!isNegativeOrNoEvents && (['asks_pricing', 'meeting_request'].includes(cls.intent) || cls.wedding_date) && !fx.opportunity) {
         fx.opportunity = {
           prospect_id: p.id,
           stage: 'open',
