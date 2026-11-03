@@ -2,9 +2,9 @@
 // 100% Isolated from Wedding Planners (prospects) and Bus Operators (bus_partners).
 // Stripe Sail Design System: responsive data table, KPI stats, zero horizontal scroll.
 
-import { S, updateEventPartner, addEventPartner, removeEventPartner } from '../store.js?v=20261103_v1';
+import { S, updateEventPartner, addEventPartner, removeEventPartner } from '../store.js?v=20261103_v7';
 import { esc, attr, icon, toast, dialog, confirmDialog } from '../ui.js';
-import { EVENT_AGENCY_TYPES, loadStoredEventPartners } from '../event_planners_data.js?v=20261103_v4';
+import { EVENT_AGENCY_TYPES, loadStoredEventPartners } from '../event_planners_data.js?v=20261103_v7';
 
 let activeTypeFilter = 'all'; // all | tier1 | uk_north | dach_benelux | france_spain
 let activeStatusFilter = 'all'; // all | TO_REVIEW | WANT_TO_CONTACT | CONTACTED | APPROVED_PARTNER

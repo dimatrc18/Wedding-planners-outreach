@@ -2,13 +2,13 @@
 // 100% Isolated from Wedding Planners and Bus Fleets.
 // Stripe Sail Design System: safety gates, zero-accidental-send invariants, manual draft approval.
 
-import { S, updateEventPartner } from '../store.js?v=20261103_v5';
+import { S, updateEventPartner } from '../store.js?v=20261103_v7';
 import { esc, attr, icon, toast } from '../ui.js';
 import { 
   loadStoredEventPartners, 
   loadStoredEventTemplates, 
   renderEventTemplate 
-} from '../event_planners_data.js?v=20261103_v5';
+} from '../event_planners_data.js?v=20261103_v7';
 
 let currentEl = null;
 

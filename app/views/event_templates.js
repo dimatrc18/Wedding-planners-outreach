@@ -9,7 +9,7 @@ import {
   saveStoredEventTemplates, 
   renderEventTemplate,
   loadStoredEventPartners 
-} from '../event_planners_data.js?v=20261103_v5';
+} from '../event_planners_data.js?v=20261103_v7';
 
 let currentStepKey = 'T1_exhibitor_intro';
 let selectedExhibitorId = '';
