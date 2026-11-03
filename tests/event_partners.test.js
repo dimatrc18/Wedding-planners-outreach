@@ -141,3 +141,25 @@ test('Event Template Engine: renderEventTemplate accurately interpolates interna
   assert.ok(renderedSerax.subject.includes('SERAX NV'));
   assert.ok(!renderedSerax.body.includes('{{'));
 });
+
+test('Igor Sender Identity & Verified Authentic Fiera Data: templates use Igor <igor@b2b-dorogo.eu> and exhibitors have genuine scraped links', () => {
+  // 1. Verify template signatures
+  for (const tmpl of DEFAULT_EVENT_TEMPLATES) {
+    assert.ok(tmpl.body.includes('Igor'), `Template ${tmpl.key} must be signed by Igor`);
+    assert.ok(tmpl.body.includes('igor@b2b-dorogo.eu'), `Template ${tmpl.key} must use igor@b2b-dorogo.eu`);
+    assert.ok(!tmpl.body.includes('dmitri@dorogo.eu'), 'Must NEVER contain wedding sender email');
+    assert.ok(!tmpl.body.includes('Dmitri Traciuc'), 'Must NEVER contain Dmitri Traciuc for events');
+  }
+
+  // 2. Verify Van Der Gucht has real domain and genuine email
+  const vdg = INITIAL_EVENT_PARTNERS.find((p) => p.name.includes('VAN DER GUCHT'));
+  assert.ok(vdg, 'Van Der Gucht must exist in international exhibitors list');
+  assert.equal(vdg.website, 'https://www.vdg.be/', 'Van Der Gucht website must be https://www.vdg.be/');
+  assert.equal(vdg.email, 'christmas@vdg.be', 'Van Der Gucht email must be authentic christmas@vdg.be');
+  assert.equal(vdg.country, 'Belgium');
+
+  // 3. Verify zero synthetic placeholder domains
+  for (const p of INITIAL_EVENT_PARTNERS) {
+    assert.ok(!p.website.includes('vanderguchtsince1870.com'), 'Must not contain guessed vanderguchtsince1870 domain');
+  }
+});

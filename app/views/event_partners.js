@@ -192,7 +192,7 @@ export async function render(el) {
                   <div class="sail-th-title">Trade Contact &amp; Email</div>
                 </th>
                 <th style="width:10%;min-width:80px">
-                  <div class="sail-th-title">Arrival Hub</div>
+                  <div class="sail-th-title">Stand / Pavilion</div>
                 </th>
                 <th style="width:15%;min-width:130px">
                   <div class="sail-th-title">Outreach Status</div>
@@ -218,7 +218,7 @@ export async function render(el) {
       <!-- Safety Footer -->
       <div style="font-size:11px;color:var(--sail-muted);display:flex;align-items:center;justify-content:space-between;padding:0 4px">
         <span>🔒 <strong>Zero-Send Guarantee:</strong> Outreach is strictly locked in TO_REVIEW until rate cards are approved.</span>
-        <span>Dedicated Sender: <code>events@dorogo-events.eu</code></span>
+        <span>Dedicated Sender: <strong>Igor</strong> (<code>igor@b2b-dorogo.eu</code>)</span>
       </div>
     </div>
   `;
@@ -263,8 +263,11 @@ function renderAgencyRow(p) {
       </td>
 
       <td>
-        <div style="font-size:12px;color:var(--sail-body);white-space:nowrap" title="${attr(p.origin_hub || 'International Airport')}">
-          ✈️ ${esc((p.origin_hub || 'MXP').split(' ')[0])}
+        <div style="font-size:12px;font-weight:600;color:var(--sail-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(p.hall_booth || 'Fiera Milano Rho')}">
+          📍 ${esc(p.hall_booth || 'Pavilion Assigned')}
+        </div>
+        <div style="font-size:10.5px;color:var(--sail-muted);margin-top:2px">
+          Fiera Milano Rho
         </div>
       </td>
 
@@ -418,8 +421,8 @@ function openEventAgencyModal(p, el) {
           <input type="url" id="m-website" value="${attr(p?.website || '')}" placeholder="https://example.com" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--sail-line);border-radius:6px">
         </div>
         <div>
-          <label style="font-weight:600;display:block;margin-bottom:4px">Home Origin Airport</label>
-          <input type="text" id="m-origin" value="${attr(p?.origin_hub || 'London Heathrow (LHR)')}" placeholder="e.g. LHR, CDG, FRA" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--sail-line);border-radius:6px">
+          <label style="font-weight:600;display:block;margin-bottom:4px">Stand / Pavilion Location</label>
+          <input type="text" id="m-origin" value="${attr(p?.hall_booth || 'Fiera Milano Rho')}" placeholder="e.g. Hall 1 - Stand A12" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--sail-line);border-radius:6px">
         </div>
       </div>
 

@@ -45,7 +45,7 @@ export async function render(el) {
             <h1 style="font-size:19px;font-weight:700;color:var(--sail-ink);margin:0;letter-spacing:-0.02em">
               📤 Event Outbox &amp; Replies
             </h1>
-            <span class="sail-pill ok" style="font-size:10.5px;font-weight:700">events@dorogo-events.eu</span>
+            <span class="sail-pill ok" style="font-size:10.5px;font-weight:700">igor@b2b-dorogo.eu</span>
             <span class="sail-pill warn" style="font-size:10.5px">Safe Mode Active</span>
           </div>
           <div style="font-size:12px;color:var(--sail-muted);margin-top:4px">

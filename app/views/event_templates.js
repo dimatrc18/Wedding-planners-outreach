@@ -163,7 +163,7 @@ export async function render(el) {
             <div style="background:#F8FAFC;border:1px solid var(--sail-line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px">
               <div style="display:flex;flex-direction:column;gap:4px;border-bottom:1px solid var(--sail-line);padding-bottom:10px">
                 <div style="font-size:11.5px;color:var(--sail-muted)">
-                  <strong>From:</strong> Dmitri Traciuc &lt;events@dorogo-events.eu&gt;
+                  <strong>From:</strong> Igor &lt;igor@b2b-dorogo.eu&gt;
                 </div>
                 <div style="font-size:11.5px;color:var(--sail-muted)">
                   <strong>To:</strong> ${esc(selectedExhibitor?.contact_person || 'Trade Sales Desk')} &lt;${esc(selectedExhibitor?.email || 'sales@company.com')}&gt;
