@@ -99,9 +99,11 @@ test('Event Outreach Sending Safeguards: jobs.ts strictly enforces EVENTS_SMTP_U
 });
 
 test('Event Outreach Categories & Status Constants: Cover required verticals', () => {
-  assert.ok(EVENT_AGENCY_TYPES.some((t) => t.key === 'corporate_mice'));
-  assert.ok(EVENT_AGENCY_TYPES.some((t) => t.key === 'fashion_luxury'));
-  assert.ok(EVENT_AGENCY_TYPES.some((t) => t.key === 'brand_activation'));
+  assert.ok(EVENT_AGENCY_TYPES.some((t) => t.key === 'tier1'));
+  assert.ok(EVENT_AGENCY_TYPES.some((t) => t.key === 'uk_north'));
+  assert.ok(EVENT_AGENCY_TYPES.some((t) => t.key === 'dach_benelux'));
+  assert.ok(EVENT_AGENCY_TYPES.some((t) => t.key === 'france_spain'));
+  assert.ok(EVENT_AGENCY_TYPES.some((t) => t.key === 'rest_world'));
 
   assert.ok(EVENT_STATUSES.some((s) => s.key === 'TO_REVIEW'));
   assert.ok(EVENT_STATUSES.some((s) => s.key === 'WANT_TO_CONTACT'));

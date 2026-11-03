@@ -14,7 +14,7 @@ import * as visibility from './views/visibility.js?v=9.7';
 import * as settings from './views/settings.js?v=9.1';
 import * as busPartners from './views/bus_partners.js?v=9.1';
 import * as fleetShowcase from './views/fleet_showcase.js?v=9.7';
-import * as eventPartners from './views/event_partners.js?v=20261103_v3';
+import * as eventPartners from './views/event_partners.js?v=20261103_v4';
 
 const ROUTES = {
   today: { view: today, label: 'Today', icon: 'today' },

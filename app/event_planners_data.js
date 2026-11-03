@@ -8,12 +8,10 @@ export const EVENT_STORAGE_KEY = 'dorogo_foreign_exhibitors_v2';
 export const EVENT_AGENCY_TYPES = [
   { key: 'all', label: 'All Exhibiting Teams (78)' },
   { key: 'tier1', label: '🌟 Tier-1 Enriched (12)' },
-  { key: 'uk_north', label: '🇬🇧 UK & Nordics (13)' },
+  { key: 'uk_north', label: '🇬🇧 UK & Nordics (14)' },
   { key: 'dach_benelux', label: '🇩🇪 DACH & Benelux (25)' },
-  { key: 'france_spain', label: '🇫🇷 France & Iberia (27)' },
-  { key: 'corporate_mice', label: '🏢 Corporate Delegations' },
-  { key: 'fashion_luxury', label: '👠 Luxury Décor & Design' },
-  { key: 'brand_activation', label: '🎯 Brand Activations' }
+  { key: 'france_spain', label: '🇫🇷 France & Iberia (29)' },
+  { key: 'rest_world', label: '🌍 Other EU & Global (10)' }
 ];
 
 export const INITIAL_EVENT_PARTNERS = [
