@@ -176,7 +176,21 @@ Walk down each branch of the design tree, resolving dependencies one by one. For
 
 ---
 
-## 📋 7. Master AI System Prompt (Copy & Paste for Your Agent)
+## 📁 7. Rate Card Dual-File Delivery Standard
+
+Whenever responding to wedding planners, agencies, or inbound leads asking for pricing or rate cards:
+1. **Always Attach Both PDF Files**:
+   - `Dorogo_Wedding_Partner_Rate_Card_2026.pdf` (or `_IT.pdf` / `_RU.pdf` based on recipient language)
+   - `Dorogo_Wedding_Client_Tariffs_2026.pdf` (or `_IT.pdf` / `_RU.pdf` based on recipient language)
+2. **Mandatory Explanation Copy**:
+   Every rate card delivery email or message must explicitly clarify why two files are provided:
+   - **EN**: *"I have attached two versions for your files: (1) Our confidential B2B Partner Rate Card with net agency rates and commission structures for your internal budgeting, and (2) Our Direct Client Tariffs which you can forward directly to the couple without markup confusion."*
+   - **RU**: *"Во вложении направляю два варианта тарифов: (1) Одностраничный партнерский лист тарифов с конфиденциальными нетто-ставками и форматами комиссии для вашей внутренней сметы, и (2) Клиентские тарифы — документ под ключ, который вы можете напрямую пересылать молодоженам без путаницы с наценками."*
+   - **IT**: *"In allegato trovate due versioni del nostro listino: (1) Listino partner di 1 pagina con tariffe nette riservate e modelli commissionali per il vostro budget interno, e (2) Tariffe clienti finali — documento pronto da inoltrare direttamente agli sposi."*
+
+---
+
+## 📋 8. Master AI System Prompt (Copy & Paste for Your Agent)
 
 *Copy the text below into your AI editor (Cursor, Windsurf, Claude Code, or Antigravity) to begin development:*
 

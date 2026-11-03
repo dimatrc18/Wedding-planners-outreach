@@ -123,7 +123,9 @@ Buona stagione.
     key: 'rate_card_delivery', language: 'ru', kind: 'reply', name: 'Отправка тарифов (PDF)', subject_a: '', subject_b: '', attach_rate_card: true,
     body: `{{greeting}}
 
-Во вложении направляю наш одностраничный партнерский лист тарифов и автопарк. Мы работаем как по конфиденциальным нетто-тарифам для вашей сметы, так и с 10% партнерской комиссией.
+Во вложении направляю два варианта тарифов:
+1. Одностраничный партнерский лист тарифов — с конфиденциальными нетто-ставками и форматами комиссии для вашей внутренней сметы.
+2. Клиентские тарифы — документ под ключ, который вы можете напрямую пересылать молодоженам без путаницы с наценками.
 
 Если у вас запланирована дата и локация, пришлите ориентировочное число гостей, и я рассчитаю точный бюджет.`,
   },
@@ -132,7 +134,9 @@ Buona stagione.
     key: 'rate_card_delivery', language: 'en', kind: 'reply', name: 'Rate card delivery (attach PDF)', subject_a: '', subject_b: '', attach_rate_card: true,
     body: `{{greeting}}
 
-Attached is our 1-page partner rate card and vehicle list. We work either on confidential net rates that you can include in your client offer, or on a 10% partner commission.
+Attached is our 1-page partner rate card alongside our direct client tariffs. I have attached two versions for your files:
+1. Confidential B2B Partner Rate Card — with net agency rates and commission structures for your internal budgeting.
+2. Direct Client Tariffs — which you can forward directly to the couple without markup confusion.
 
 If you have an upcoming date and venue, send the guest count and I will put together a quote.`,
   },
@@ -140,7 +144,9 @@ If you have an upcoming date and venue, send the guest count and I will put toge
     key: 'rate_card_delivery', language: 'it', kind: 'reply', name: 'Invio tariffa (PDF allegato)', subject_a: '', subject_b: '', attach_rate_card: true,
     body: `{{greeting}}
 
-In allegato trovate il nostro listino partner di 1 pagina e la lista veicoli. Lavoriamo sia con tariffe nette riservate da includere nella vostra offerta, sia con una commissione partner del 10%.
+In allegato trovate due versioni del nostro listino:
+1. Listino partner di 1 pagina — con tariffe nette riservate e modelli commissionali per il vostro budget interno.
+2. Tariffe clienti finali — documento pronto da inoltrare direttamente agli sposi.
 
 Se avete una data e una location in programma, scrivetemi il numero di ospiti e preparo il preventivo.`,
   },
