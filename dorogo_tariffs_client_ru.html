@@ -95,14 +95,19 @@
     margin-bottom: 7px;
   }
   .brand-logo {
-    font-family: 'Amelaryas', 'Cormorant Garamond', Georgia, serif;
-    font-size: 26px;
-    letter-spacing: 0.16em;
+    font-family: 'Amelaryas', serif;
+    font-size: 20px;
+    letter-spacing: 0.12em;
     color: #1a1918;
     line-height: 1.0;
     text-transform: uppercase;
     margin: 0;
-    font-weight: 400;
+    font-weight: 400 !important;
+    font-synthesis: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    white-space: nowrap;
+    overflow: visible;
   }
   .brand-sub {
     font-family: 'Cormorant Garamond', Georgia, serif;
@@ -527,7 +532,8 @@
       padding-bottom: 12px;
     }
     .brand-logo {
-      font-size: 30px;
+      font-size: 20px;
+      letter-spacing: 0.10em;
     }
     .brand-sub {
       font-size: 13px;
@@ -739,7 +745,7 @@
     <!-- Header: Lake Como Wedding Atelier -->
     <div class="header">
       <div>
-        <h1 class="brand-logo">DOROGO</h1>
+        <div class="brand-logo">DOROGO</div>
         <div class="brand-sub">Персональные Трансферы &amp; Групповая Мобильность • Милан, Озеро Комо &amp; Северная Италия</div>
       </div>
       <div class="header-meta">
