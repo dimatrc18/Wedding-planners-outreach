@@ -2,7 +2,7 @@
 import { S, init, onChange, signIn, signOut, startDemo, leaveDemo, syncScores, isDemo } from './store.js';
 import { esc, icon, toast, debounce } from './ui.js';
 import { todayData } from './actions.js';
-import * as today from './views/today.js?v=9.0';
+import * as today from './views/today.js?v=9.1';
 import * as pipeline from './views/pipeline.js?v=9.0';
 import * as prospect from './views/prospect.js?v=9.0';
 import * as add from './views/add.js?v=9.0';
@@ -35,6 +35,14 @@ const ROUTES = {
 
 const SECTIONS = [
   {
+    id: 'bus',
+    label: '🚌 Bus Fleet Outreach',
+    items: [
+      { key: 'bus_partners', label: 'Bus Fleet Partners', icon: 'partners', bold: true },
+      { key: 'fleet_showcase', label: 'Partner Fleet & Rates', icon: 'board', bold: true },
+    ],
+  },
+  {
     id: 'wedding',
     label: '💍 Wedding Outreach',
     items: [
@@ -46,14 +54,6 @@ const SECTIONS = [
       { key: 'templates', label: 'Sequence & templates', icon: 'template' },
       { key: 'settings', label: 'Settings', icon: 'settings' },
       { key: 'add', label: 'Add prospects', icon: 'plus' },
-    ],
-  },
-  {
-    id: 'bus',
-    label: '🚌 Bus Fleet Outreach',
-    items: [
-      { key: 'bus_partners', label: 'Bus Fleet Partners', icon: 'partners', bold: true },
-      { key: 'fleet_showcase', label: 'Partner Fleet & Rates', icon: 'board', bold: true },
     ],
   },
   {
@@ -96,6 +96,11 @@ function badgeCount() {
   return d.drafts.length + d.replies.length;
 }
 
+function busBadgeCount() {
+  if (!['live', 'demo'].includes(S.mode)) return 0;
+  return (S.busPartners || []).filter((b) => b.outreach_stage === 'replied' || b.replied_at).length;
+}
+
 function shell() {
   const root = document.getElementById('root');
   const n = badgeCount();
@@ -129,6 +134,7 @@ function shell() {
                 <span class="rail-section-title">${sec.label}</span>
                 <span class="rail-section-meta">
                   ${sec.id === 'wedding' && n ? `<span class="count">${n}</span>` : ''}
+                  ${sec.id === 'bus' && busBadgeCount() ? `<span class="count ok" style="background:#0F766E">${busBadgeCount()}</span>` : ''}
                   <span class="rail-section-chevron">${icon('chevron_right', 13)}</span>
                 </span>
               </button>
@@ -198,11 +204,15 @@ function renderView() {
   else {
     // keep nav badges fresh without rebuilding the shell
     const n = badgeCount();
+    const busN = busBadgeCount();
     document.querySelectorAll('.nav-link .count, .tabbar .dot, .rail-section-btn .count').forEach((el) => el.remove());
     if (n) {
       document.querySelector('.nav-link[href="#today"]')?.insertAdjacentHTML('beforeend', `<span class="count">${n}</span>`);
       document.querySelector('.rail-section-btn[data-rail-section="wedding"] .rail-section-meta')?.insertAdjacentHTML('afterbegin', `<span class="count">${n}</span>`);
       document.querySelector('.tabbar a[href="#today"]')?.insertAdjacentHTML('beforeend', `<span class="dot">${n}</span>`);
+    }
+    if (busN) {
+      document.querySelector('.rail-section-btn[data-rail-section="bus"] .rail-section-meta')?.insertAdjacentHTML('afterbegin', `<span class="count ok" style="background:#0F766E">${busN}</span>`);
     }
   }
   const el = document.getElementById('view');
@@ -233,11 +243,15 @@ const rerender = debounce(() => {
   // Don't wipe client-side sanitizer tool on background store polls or window focus
   if (current === 'tools' && r.name === 'tools') {
     const n = badgeCount();
+    const busN = busBadgeCount();
     document.querySelectorAll('.nav-link .count, .tabbar .dot, .rail-section-btn .count').forEach((el) => el.remove());
     if (n) {
       document.querySelector('.nav-link[href="#today"]')?.insertAdjacentHTML('beforeend', `<span class="count">${n}</span>`);
       document.querySelector('.rail-section-btn[data-rail-section="wedding"] .rail-section-meta')?.insertAdjacentHTML('afterbegin', `<span class="count">${n}</span>`);
       document.querySelector('.tabbar a[href="#today"]')?.insertAdjacentHTML('beforeend', `<span class="dot">${n}</span>`);
+    }
+    if (busN) {
+      document.querySelector('.rail-section-btn[data-rail-section="bus"] .rail-section-meta')?.insertAdjacentHTML('afterbegin', `<span class="count ok" style="background:#0F766E">${busN}</span>`);
     }
     return;
   }

@@ -15,7 +15,7 @@ export const sentimentChip = (t) => `${t.reply_sentiment ? `<span class="chip ${
 
 let focusIdx = 0;
 let editing = null;
-let todayTab = 'queue'; // 'queue' | 'scheduled' | 'manual' | 'bus' | 'research'
+let todayTab = 'queue'; // 'queue' | 'scheduled' | 'manual' | 'research'
 
 const cleanWebUrl = (url) => {
   if (!url) return '';
@@ -160,27 +160,13 @@ export function render(el) {
   const clean = drafts.filter((t) => { const l = A.lintOf(t); return !l.errors.length && !l.warnings.length; });
   const dueUndrafted = d.due.length;
   const now = new Date();
-  const busList = (S.busPartners || []).filter((b) => b.status !== 'NOT_RELEVANT');
-  const busContacted = busList.filter((b) => ['t1_sent', 't2_sent', 't3_sent', 'replied'].includes(b.outreach_stage) || b.sent_at).length;
-  const busReplied = busList.filter((b) => b.outreach_stage === 'replied' || b.replied_at).length;
-  const busTotalSent = busList.reduce((sum, b) => {
-    if (b.outreach_stage === 't3_sent') return sum + 3;
-    if (b.outreach_stage === 't2_sent') return sum + 2;
-    if (b.outreach_stage === 't1_sent' || b.outreach_stage === 'replied' || b.sent_at) return sum + (b.last_followup_at ? 2 : 1);
-    return sum;
-  }, 0);
   const todayKey = core.localDateKey(now, S.settings.timezone || 'Europe/Rome');
-  const busSentToday = busList.filter((b) => {
-    const ts = b.last_followup_at || b.sent_at;
-    return ts && core.localDateKey(new Date(ts), S.settings.timezone || 'Europe/Rome') === todayKey;
-  }).length;
   const wpSentToday = S.touches.filter((t) => t.direction === 'out' && t.state === 'sent' && t.sent_at && core.localDateKey(new Date(t.sent_at), S.settings.timezone || 'Europe/Rome') === todayKey).length;
   const manualLeads = (S.prospects || []).filter((p) =>
     !p.do_not_contact &&
     p.status !== 'do_not_contact' &&
     (p.email_status === 'bounced' || !p.email || ['no_mx', 'invalid'].includes(p.email_status))
   );
-  const busRepliedRows = busList.filter((b) => b.outreach_stage === 'replied' || b.replied_at);
 
   const renderQueuePanel = () => `
     <div style="padding:16px 18px;display:flex;flex-direction:column;gap:16px">
@@ -408,49 +394,6 @@ export function render(el) {
     `;
   };
 
-  const renderBusPanel = () => `
-    <div class="sail-table-wrap">
-      <table class="sail-table" style="table-layout:fixed;width:100%">
-        <thead>
-          <tr>
-            <th style="width:22%">Bus Operator &amp; City</th>
-            <th style="width:18%">Direct Contact</th>
-            <th style="width:24%">Verified Fleet &amp; Capacity</th>
-            <th style="width:22%">Latest Reply / Rate Summary</th>
-            <th style="width:14%">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${busRepliedRows.map((b) => `
-            <tr>
-              <td>
-                <div style="font-weight:600;color:var(--sail-ink);font-size:13px">${esc(b.name)}</div>
-                <div style="font-size:11.5px;color:var(--sail-muted);margin-top:2px">${esc(b.base_city || 'Lombardy')}</div>
-              </td>
-              <td>
-                <div style="font-size:12px;font-weight:600;color:var(--sail-ink)">${esc(b.contact_person || 'Dispatch')}</div>
-                <div style="font-size:11.5px;color:var(--sail-body);margin-top:2px">${esc(b.phone || b.email || '')}</div>
-              </td>
-              <td>
-                <span class="sail-pill info" style="font-size:10.5px;padding:1px 6px">${esc(b.pax_capacity || 'Minibus / Coach')}</span>
-                <div style="font-size:11.5px;color:var(--sail-body);margin-top:3px">${esc(b.bus_models || '')}</div>
-              </td>
-              <td style="font-size:11.5px;color:var(--sail-body);line-height:1.35">
-                ${esc(b.rate_standby || b.rate_hourly || b.notes || 'Replied')}
-              </td>
-              <td>
-                <div class="row" style="gap:5px;flex-wrap:wrap">
-                  <a class="sail-btn xs primary" href="#fleet_showcase">Rate Ledger →</a>
-                  <a class="sail-btn xs" href="#bus_partners">Directory →</a>
-                </div>
-              </td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    </div>
-  `;
-
   const renderResearchPanel = () => `
     <div style="padding:16px 18px">
       ${d.research.length ? `
@@ -491,22 +434,21 @@ export function render(el) {
     <div class="sail-header">
       <div>
         <div class="sail-breadcrumb">
-          <span>OUTREACH COMMAND CENTER</span>
+          <span>WEDDING OUTREACH</span>
           <span style="color:#CBD5E1">/</span>
           <span>${esc(now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Rome' }).toUpperCase())}</span>
           ${live ? `<span class="sail-pill ok" style="padding:1px 7px;font-size:10.5px;margin-left:4px" title="Auto-refreshes every 30s and via Supabase Realtime"><span class="sail-pill-dot"></span>Live${S.lastSyncAt ? ` · synced ${esc(ago(S.lastSyncAt))}` : ''}</span>` : ''}
         </div>
         <h1 class="sail-title">Today Command Center</h1>
         <div class="sail-subtitle">
-          All-time wedding planner &amp; bus partner outreach telemetry, scheduled outbox, and inbound replies.
+          All-time wedding planner outreach telemetry, scheduled outbox, and inbound replies.
         </div>
       </div>
 
       <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
         ${live ? `<button class="sail-btn" data-act="sync-live" title="Pull latest live data from Supabase">↻ Sync Now</button>` : ''}
         ${dueUndrafted ? `<button class="sail-btn primary" data-act="gen">Draft ${plural(dueUndrafted, 'Due Step')}</button>` : ''}
-        <a class="sail-btn" href="#fleet_showcase">Fleet &amp; Rate Ledger →</a>
-        <a class="sail-btn" href="#bus_partners">Bus Partners (${busList.length}) →</a>
+        <a class="sail-btn" href="#pipeline">Partner Pipeline (${(S.prospects || []).length}) →</a>
         <a class="sail-btn primary" href="#add">+ Add Prospects</a>
       </div>
     </div>
@@ -522,22 +464,22 @@ export function render(el) {
         <div class="sail-stat-meta">${m.emailsSent} emails sent all-time${wpSentToday ? ` · ${wpSentToday} today` : ''}</div>
       </div>
 
-      <div class="sail-stat-cell clickable ${todayTab === 'bus' ? 'active-filter' : ''}" data-today-tab="bus" title="Click to inspect Bus Fleet Replies">
+      <div class="sail-stat-cell clickable ${todayTab === 'queue' ? 'active-filter' : ''}" data-today-tab="queue" title="Click to inspect Inbound Replies & Approval Queue">
         <div class="sail-stat-label">
-          <span>Bus Operators Contacted</span>
-          <span class="sail-pill lux" style="padding:1px 6px;font-size:10.5px">${busReplied} Replied</span>
+          <span>Inbound Replies</span>
+          <span class="sail-pill ${d.replies.length ? 'info' : 'ok'}" style="padding:1px 6px;font-size:10.5px">${d.replies.length} Waiting</span>
         </div>
-        <div class="sail-stat-val">${busContacted} <span style="font-size:13px;font-weight:500;color:var(--sail-muted)">/ ${busList.length} fleet</span></div>
-        <div class="sail-stat-meta">${busTotalSent} emails sent all-time${busSentToday ? ` · ${busSentToday} today` : ''}</div>
+        <div class="sail-stat-val">${m.replied} <span style="font-size:13px;font-weight:500;color:var(--sail-muted)">/ ${m.contacted} contacted</span></div>
+        <div class="sail-stat-meta">${d.replies.length ? `${d.replies.length} waiting for response` : 'All replies answered'} · ${m.positive} positive</div>
       </div>
 
       <div class="sail-stat-cell clickable ${todayTab === 'queue' ? 'active-filter' : ''}" data-today-tab="queue" title="Click to view Replies & Approval Queue">
         <div class="sail-stat-label">
           <span>Positive Reply Rate</span>
-          <span class="sail-pill info" style="padding:1px 6px;font-size:10.5px">${d.replies.length} Waiting</span>
+          <span class="sail-pill ${m.won > 0 ? 'ok' : 'info'}" style="padding:1px 6px;font-size:10.5px">${m.won} Won</span>
         </div>
         <div class="sail-stat-val">${m.contacted > 0 ? pct(m.positiveRate.p, m.positiveRate.p !== null && m.positiveRate.p < 0.1 ? 1 : 0) : '0%'} <span style="font-size:13px;font-weight:500;color:var(--sail-muted)">· ${m.won} won</span></div>
-        <div class="sail-stat-meta">${m.positive} of ${m.contacted} wedding + ${busReplied} bus replies</div>
+        <div class="sail-stat-meta">${m.positive} of ${m.contacted} wedding planners</div>
       </div>
 
       <div class="sail-stat-cell clickable ${todayTab === 'scheduled' ? 'active-filter' : ''}" data-today-tab="scheduled" title="Click to inspect all ${d.scheduled.length} scheduled emails">
@@ -585,9 +527,6 @@ export function render(el) {
           <button class="sail-tab ${todayTab === 'manual' ? 'active' : ''}" data-today-tab="manual">
             Manual IG / WhatsApp <span class="sail-tab-count">${manualLeads.length}</span>
           </button>
-          <button class="sail-tab ${todayTab === 'bus' ? 'active' : ''}" data-today-tab="bus">
-            Bus Partner Replies <span class="sail-tab-count">${busRepliedRows.length}</span>
-          </button>
           <button class="sail-tab ${todayTab === 'research' ? 'active' : ''}" data-today-tab="research">
             Research Queue <span class="sail-tab-count">${d.research.length}</span>
           </button>
@@ -598,11 +537,9 @@ export function render(el) {
         ? renderScheduledPanel()
         : todayTab === 'manual'
           ? renderManualPanel()
-          : todayTab === 'bus'
-            ? renderBusPanel()
-            : todayTab === 'research'
-              ? renderResearchPanel()
-              : renderQueuePanel()}
+          : todayTab === 'research'
+            ? renderResearchPanel()
+            : renderQueuePanel()}
     </div>
   </div>`;
   }
