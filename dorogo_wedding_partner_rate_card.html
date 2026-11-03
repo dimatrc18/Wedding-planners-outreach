@@ -128,7 +128,7 @@
   .header-sub {
     font-size: 7.3px;
     font-weight: 600;
-    color: #9B7D50;
+    color: #71717a;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     margin-top: 2px;
@@ -159,12 +159,12 @@
     margin-bottom: 2px;
   }
   table.master-table th {
-    background: #f4f4f5;
-    color: #27272a;
+    background: #f8f8f9;
+    color: #18181b;
     font-weight: 700;
     text-align: left;
     padding: 3.5px 5px;
-    border-top: 1px solid #e4e4e7;
+    border-top: 1.5px solid #18181b;
     border-bottom: 1px solid #18181b;
     text-transform: uppercase;
     font-size: 6.9px;
@@ -176,24 +176,24 @@
     font-size: 7.2px;
     font-weight: 700;
     letter-spacing: 0.06em;
-    padding: 3px 4px;
+    padding: 3.5px 4px;
     border-top: 1.5px solid #18181b;
     border-bottom: 1px solid #d4d4d8;
   }
   table.master-table th.group-transfer {
-    background: #f1f5f9;
-    color: #0f172a;
-    border-right: 1.5px solid #cbd5e1;
+    background: #f4f4f5;
+    color: #18181b;
+    border-right: 1.5px solid #d4d4d8;
   }
   table.master-table th.group-disposal {
-    background: #fefce8;
-    color: #854d0e;
-    border-right: 1.5px solid #e2e8f0;
+    background: #f4f4f5;
+    color: #18181b;
+    border-right: 1.5px solid #d4d4d8;
   }
   table.master-table tr.sub-header th {
     font-size: 6.8px;
     padding: 3px 5px;
-    background: #f8fafc;
+    background: #f8f8f9;
     border-bottom: 1.5px solid #18181b;
   }
   table.master-table th.num, table.master-table td.num {
@@ -248,32 +248,33 @@
     color: #18181b;
   }
 
-  /* Standby & Night Logistics (3 MECE Boxes) */
+  /* Standby & Night Logistics (Boxless 3-Column Editorial) */
   .standby-grid {
     display: grid;
-    grid-template-columns: 1.1fr 1.15fr 0.95fr;
-    gap: 8px;
-    margin-bottom: 4px;
+    grid-template-columns: 1.05fr 1.18fr 1fr;
+    gap: 14px;
+    margin-bottom: 5px;
   }
   .standby-box {
-    border: 1px solid #e4e4e7;
-    background: #fafafa;
-    padding: 7px 9px;
-    border-radius: 3px;
+    border: none;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
   }
-  .standby-box.gold {
-    border-color: #9B7D50;
-    background: #fffcf8;
+  .standby-box.col-divider {
+    border-left: 1px solid #e4e4e7;
+    border-right: 1px solid #e4e4e7;
+    padding: 0 12px;
   }
   .standby-tag {
     font-size: 6.9px;
     font-weight: 700;
     text-transform: uppercase;
-    color: #9B7D50;
-    letter-spacing: 0.05em;
+    color: #71717a;
+    letter-spacing: 0.06em;
     margin-bottom: 2px;
   }
   .standby-title {
@@ -293,17 +294,17 @@
     color: #18181b;
   }
 
-  /* Operational Boundaries Strip */
+  /* Operational Boundaries Strip (Boxless Editorial) */
   .operational-strip {
-    background: #fafafa;
-    border: 1px solid #e4e4e7;
-    border-left: 3px solid #18181b;
-    padding: 6px 10px;
-    border-radius: 2px;
-    margin-bottom: 4px;
+    background: transparent;
+    border: none;
+    border-top: 1px solid #e4e4e7;
+    border-bottom: 1px solid #e4e4e7;
+    padding: 5px 0;
+    margin-bottom: 5px;
     display: grid;
     grid-template-columns: 1.1fr 0.9fr;
-    gap: 10px;
+    gap: 16px;
     font-size: 7.4px;
     line-height: 1.34;
     color: #3f3f46;
@@ -312,39 +313,41 @@
     color: #000000;
   }
 
-  /* Partner Commercial Formats (2 Columns) */
+  /* Partner Commercial Formats (Boxless 2-Column Editorial) */
   .collab-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 4px;
+    gap: 20px;
+    margin-bottom: 5px;
   }
   .collab-card {
-    background: #fafafa;
-    border: 1px solid #e4e4e7;
-    border-radius: 3px;
-    padding: 6px 9px;
-  }
-  .collab-card.featured {
-    border-color: #9B7D50;
-    background: #fffcf8;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
   }
   .collab-head {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    margin-bottom: 2px;
+    margin-bottom: 3px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid #e4e4e7;
   }
   .collab-title {
-    font-size: 8.3px;
+    font-size: 8.4px;
     font-weight: 700;
     color: #18181b;
     text-transform: uppercase;
   }
   .collab-payout {
-    font-size: 7.9px;
+    font-size: 7.8px;
     font-weight: 700;
-    color: #9B7D50;
+    color: #18181b;
+    background: #f4f4f5;
+    padding: 1.5px 6px;
+    border-radius: 2px;
+    letter-spacing: 0.03em;
   }
   .collab-desc {
     font-size: 7.5px;
@@ -352,22 +355,25 @@
     line-height: 1.32;
   }
 
-  /* 4 Guarantees Strip */
+  /* 4 Guarantees Strip (Boxless Pillars) */
   .guarantees-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-    margin-bottom: 4px;
+    gap: 12px;
+    margin-bottom: 5px;
+    padding: 1px 0;
   }
   .guarantee-item {
-    background: #fafafa;
-    border: 1px solid #e4e4e7;
-    border-radius: 2px;
-    padding: 4.5px 6px;
-    text-align: center;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    text-align: left;
+    border-left: 1.5px solid #d4d4d8;
+    padding-left: 8px;
   }
   .guarantee-title {
-    font-size: 7.4px;
+    font-size: 7.6px;
     font-weight: 700;
     text-transform: uppercase;
     color: #18181b;
@@ -379,26 +385,26 @@
     margin-top: 1px;
   }
 
-  /* Verified Wedding Reviews (Minimalist 2-Col) */
+  /* Verified Wedding Reviews (Boxless Editorial Quotes) */
   .reviews-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 4px;
+    gap: 20px;
+    margin-bottom: 5px;
   }
   .review-card {
-    border: 1px solid #e4e4e7;
-    border-left: 2px solid #9B7D50;
-    border-radius: 2px;
-    padding: 5px 9px;
-    background: #fcfcfb;
+    background: transparent;
+    border: none;
+    border-left: 2px solid #18181b;
+    border-radius: 0;
+    padding: 2px 0 2px 10px;
   }
   .review-quote {
     font-size: 7.4px;
     color: #27272a;
-    line-height: 1.33;
+    line-height: 1.34;
     font-style: italic;
-    margin-bottom: 2px;
+    margin-bottom: 3px;
   }
   .review-meta {
     display: flex;
@@ -409,7 +415,7 @@
     font-weight: 600;
   }
   .review-stars {
-    color: #9B7D50;
+    color: #18181b;
     letter-spacing: 0.5px;
     font-size: 7.3px;
   }
@@ -460,12 +466,12 @@
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    border-bottom: 1px dotted #9B7D50;
+    border-bottom: 1px dotted #18181b;
     padding-bottom: 0.5px;
     transition: color 0.15s ease;
   }
   .wa-link:hover {
-    color: #9B7D50;
+    color: #52525b;
   }
   .wa-icon {
     display: inline-block;
@@ -621,7 +627,7 @@
           &bull; <strong>Full-Day (10h):</strong> Includes 200 km allowance. Chauffeur on dedicated standby at venue.
         </div>
       </div>
-      <div class="standby-box gold">
+      <div class="standby-box col-divider">
         <div class="standby-tag">Party Return (23:00–03:00)</div>
         <div class="standby-title">Dedicated Night Return Loops</div>
         <div class="standby-desc">
@@ -648,7 +654,7 @@
     </div>
 
     <div class="collab-grid">
-      <div class="collab-card featured">
+      <div class="collab-card">
         <div class="collab-head">
           <span class="collab-title">Option A: White-Label Studio Markup</span>
           <span class="collab-payout">15% – 25%+ Studio Margin</span>
