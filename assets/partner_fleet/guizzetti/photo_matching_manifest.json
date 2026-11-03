@@ -1,0 +1,75 @@
+{
+  "operator": "Autoservizi Guizzetti Srl",
+  "baseCity": "Sovere (Bergamo / Brescia)",
+  "contactPerson": "Cristian",
+  "phone": "+39 335 747 1244",
+  "officePhone": "+39 035 982277",
+  "email": "info@autoserviziguizzetti.com",
+  "matchingRule": "Cristian confirmed: 'le mando le foto degli interni dei veicoli che le ho mandato nello stesso ordine' (1-to-1 order match + identical fleet ID numbers 103, 104, 115, 121)",
+  "vehicles": [
+    {
+      "order": 1,
+      "fleetNumber": "103",
+      "exteriorFilename": "103 – laterale.jpeg",
+      "interiorFilename": "interno 103.jpg",
+      "assignedCategory": "minibus_19",
+      "vehicleModel": "Spica / Indcar Wing Minibus (19 pax)"
+    },
+    {
+      "order": 2,
+      "fleetNumber": "104",
+      "exteriorFilename": "104 – Esterno 3.jpg",
+      "interiorFilename": "104 – Interno 2.jpg",
+      "assignedCategory": "midibus_30",
+      "vehicleModel": "Iveco Midibus GT (30 pax)"
+    },
+    {
+      "order": 3,
+      "fleetNumber": null,
+      "exteriorFilename": "esterno.jpg",
+      "interiorFilename": "interno.jpg",
+      "assignedCategory": "coach_50",
+      "vehicleModel": "Gran Turismo Coach (50–55 pax)"
+    },
+    {
+      "order": 4,
+      "fleetNumber": null,
+      "exteriorFilename": "laterale dx.jpeg",
+      "interiorFilename": "interno.jpeg",
+      "assignedCategory": "coach_50",
+      "vehicleModel": "Gran Turismo Coach"
+    },
+    {
+      "order": 5,
+      "fleetNumber": "115",
+      "exteriorFilename": "esterno_115",
+      "interiorFilename": "115– INTERNO.jpg",
+      "assignedCategory": "coach_50",
+      "vehicleModel": "Setra 515 HD / Travego Coach (Fleet #115)"
+    },
+    {
+      "order": 6,
+      "fleetNumber": "121",
+      "exteriorFilename": "esterno_121",
+      "interiorFilename": "121 interno.jpeg",
+      "assignedCategory": "coach_50",
+      "vehicleModel": "Touring Coach (Fleet #121)"
+    },
+    {
+      "order": 7,
+      "fleetNumber": null,
+      "exteriorFilename": "esterno_7",
+      "interiorFilename": "interno.jpeg",
+      "assignedCategory": "coach_50",
+      "vehicleModel": "Touring Coach"
+    }
+  ],
+  "sprinterNote": {
+    "model": "Mercedes-Benz Sprinter Luxury",
+    "capacity": "8+1 posti (8 pax luxury + 1 driver)",
+    "expectedArrival": "January / February 2027",
+    "ratesStatus": "Pending delivery, Cristian will formulate rates upon arrival",
+    "followUpDate": "2027-01-15",
+    "calendarIcs": "Autoservizi_Guizzetti_Sprinter_Arrival_FollowUp.ics"
+  }
+}

@@ -2008,9 +2008,10 @@ export const INITIAL_BUS_PARTNERS = [
       "Setra 415 GT-HD (55 seats)",
       "Setra 416 GT & 417 HDH (59–64 seats)"
     ],
-    "phone": "+39 035 901 118",
+    "phone": "+39 335 747 1244",
+    "office_phone": "+39 035 982277",
     "email": "info@autoserviziguizzetti.com",
-    "notes": "i am interested in  1) Setra 417 HDH, 2) Setra 515 HD, 3) Mercedes-Benz Travego, 4) Van Hool TX-Astronef | B2B Rates: MXP Transfer 50p €420, 30p €380, 19p €350 (+€30 park). 4h Standby: 50p €550, 30p €500, 19p €450. 8h Standby: 50p €800, 30p €720, 19p €650 + IVA. Cristian direct 24/7: +39 335 747 1244. Livrea unbranded confirmed. Awaiting interior photos.",
+    "notes": "i am interested in  1) Setra 417 HDH, 2) Setra 515 HD, 3) Mercedes-Benz Travego, 4) Van Hool TX-Astronef | B2B Rates: MXP Transfer 50p €420, 30p €380, 19p €350 (+€30 park). 4h Standby: 50p €550, 30p €500, 19p €450. 8h Standby: 50p €800, 30p €720, 19p €650 + IVA. Contatti: Cristian cell h24/365 +39 335 747 1244, tel ufficio 035982277 (con WhatsApp). Livrea unbranded confermata. 8+1 Sprinter Luxury in arrivo gen/feb 2027 (tariffe da definire all'arrivo). Ricevute 7 foto interni il 03/11/2026 nello stesso ordine delle foto esterni.",
     "source": "crawler",
     "created_at": "2026-10-26T16:09:56.221+00:00",
     "updated_at": "2026-10-26T16:45:24.165014+00:00",

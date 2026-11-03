@@ -1013,7 +1013,8 @@ export const SCOUT_CANDIDATE_POOL = [
     "base_city": "Brescia",
     "website": "https://www.autoserviziguizzetti.com",
     "fleet_url": "https://www.autoserviziguizzetti.com/",
-    "phone": "+39 035 901 118",
+    "phone": "+39 335 747 1244",
+    "office_phone": "+39 035 982277",
     "email": "info@autoserviziguizzetti.com",
     "relevance_score": 82,
     "score_breakdown": {

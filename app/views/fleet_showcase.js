@@ -957,33 +957,34 @@ export const FLEET_LEDGER_ROWS = [
   {
     id: 'guizzetti_sprinter_8',
     partnerId: 'partner_1793030996221_7t9y',
-    vehicleModel: 'Mercedes-Benz Sprinter Luxury',
+    vehicleModel: 'Mercedes-Benz Sprinter Luxury (8+1 posti)',
     paxLabel: '8 pax',
-    coachbuilder: 'Executive Minivan · 8+1 Luxury',
+    coachbuilder: 'Executive Minivan · 8+1 Luxury (Arrival Jan/Feb 2027)',
     pax: 8,
     category: 'minivan_7_8',
     categoryLabel: 'VIP Minivan (7–8 Pax)',
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: 'Sobria livrea priva di scritte · 100% unbranded · 2027 fleet arrival',
+    tierSpec: 'Sobria livrea priva di scritte · 100% unbranded · Arrivo flotta gen/feb 2027',
     partnerName: 'Autoservizi Guizzetti',
     baseCity: 'Sovere (Bergamo / Brescia)',
-    contactPerson: 'Cristian',
+    contactPerson: 'Cristian (Cell: 335 747 1244 · Ufficio: 035 982277)',
     phone: '+39 335 747 1244',
+    secondaryPhone: '+39 035 982277',
     email: 'info@autoserviziguizzetti.com',
     website: 'https://www.autoserviziguizzetti.com',
     status: 'pending',
-    statusLabel: 'Quote pending · Asked 02 Nov',
-    repliedAt: '31 Oct 2026 · 17:49',
+    statusLabel: 'Arriving Jan/Feb 2027 · Rates & photos pending',
+    repliedAt: '03 Nov 2026 · 06:37',
     ratePdf: null,
     ratePdfName: null,
     transfers: null,
-    transferNote: 'Tariffa 8+1 Sprinter Luxury richiesta a Cristian.',
+    transferNote: 'Nuovo mezzo 8+1 in arrivo gen/feb 2027. Cristian invierà tariffe e foto all\'arrivo.',
     standby: null,
-    standbyNote: 'In attesa di quotazione da Cristian.',
+    standbyNote: 'In attesa delle tariffe da Cristian (follow-up fissato a metà gennaio 2027).',
     terms: {
       vat: 'Prezzi IVA 10% esclusa',
-      cancellation: 'In attesa di quotazione e policy'
+      cancellation: 'In attesa di quotazione e policy all\'arrivo del mezzo'
     },
     photos: []
   },
@@ -1001,8 +1002,9 @@ export const FLEET_LEDGER_ROWS = [
     tierSpec: 'Sobria livrea priva di scritte sulle fiancate · 100% unbranded',
     partnerName: 'Autoservizi Guizzetti',
     baseCity: 'Sovere (Bergamo / Brescia)',
-    contactPerson: 'Cristian',
+    contactPerson: 'Cristian (Cell: 335 747 1244 · Ufficio: 035 982277)',
     phone: '+39 335 747 1244',
+    secondaryPhone: '+39 035 982277',
     email: 'info@autoserviziguizzetti.com',
     website: 'https://www.autoserviziguizzetti.com',
     status: 'confirmed',
@@ -1042,8 +1044,9 @@ export const FLEET_LEDGER_ROWS = [
     tierSpec: 'Sobria livrea priva di scritte sulle fiancate · 100% unbranded',
     partnerName: 'Autoservizi Guizzetti',
     baseCity: 'Sovere (Bergamo / Brescia)',
-    contactPerson: 'Cristian',
+    contactPerson: 'Cristian (Cell: 335 747 1244 · Ufficio: 035 982277)',
     phone: '+39 335 747 1244',
+    secondaryPhone: '+39 035 982277',
     email: 'info@autoserviziguizzetti.com',
     website: 'https://www.autoserviziguizzetti.com',
     status: 'confirmed',
@@ -1083,8 +1086,9 @@ export const FLEET_LEDGER_ROWS = [
     tierSpec: 'Sobria livrea priva di scritte sulle fiancate · 100% unbranded',
     partnerName: 'Autoservizi Guizzetti',
     baseCity: 'Sovere (Bergamo / Brescia)',
-    contactPerson: 'Cristian',
+    contactPerson: 'Cristian (Cell: 335 747 1244 · Ufficio: 035 982277)',
     phone: '+39 335 747 1244',
+    secondaryPhone: '+39 035 982277',
     email: 'info@autoserviziguizzetti.com',
     website: 'https://www.autoserviziguizzetti.com',
     status: 'confirmed',
@@ -1628,6 +1632,10 @@ function renderLedgerRow(row, idx = 0) {
           <a href="https://wa.me/${rawWa.replace(/^\+/, '')}" target="_blank" rel="noopener" style="color:var(--sail-accent);font-weight:600">WhatsApp</a>
           <span style="color:#CBD5E1">·</span>
           <a href="mailto:${attr(row.email)}" style="color:var(--sail-body)" title="${attr(row.email)}">Email</a>
+          ${row.secondaryPhone ? `
+            <span style="color:#CBD5E1">·</span>
+            <a href="tel:${attr(row.secondaryPhone)}" style="color:var(--sail-muted)" title="Ufficio: ${attr(row.secondaryPhone)}">Ufficio</a>
+          ` : ''}
         </div>
       </td>
 
