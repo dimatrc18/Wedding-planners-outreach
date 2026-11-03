@@ -10,12 +10,12 @@ BRAIN_DIR = '/Users/User/.gemini/antigravity/brain/fd114c0c-04b2-4991-9b4c-0a357
 
 tasks = [
     # HTML file, Target PDF in Downloads, Target PDF alias (optional)
-    ('dorogo_wedding_partner_rate_card.html', 'Dorogo_Wedding_Partner_Rate_Card_2026.pdf', 'Dorogo_Wedding_Partner_Rate_Card_2026_EN.pdf'),
-    ('dorogo_wedding_partner_rate_card_it.html', 'Dorogo_Wedding_Partner_Rate_Card_2026_IT.pdf', None),
-    ('dorogo_wedding_partner_rate_card_ru.html', 'Dorogo_Wedding_Partner_Rate_Card_2026_RU.pdf', None),
-    ('dorogo_wedding_client_rate_card_en.html', 'Dorogo_Wedding_Client_Tariffs_2026.pdf', 'Dorogo_Wedding_Client_Tariffs_2026_EN.pdf'),
-    ('dorogo_wedding_client_rate_card_it.html', 'Dorogo_Wedding_Client_Tariffs_2026_IT.pdf', None),
-    ('dorogo_wedding_client_rate_card_ru.html', 'Dorogo_Wedding_Client_Tariffs_2026_RU.pdf', None),
+    ('dorogo_wedding_partner_rate_card.html', 'Dorogo_Wedding_Partner_Rate_Card_2026.pdf', ['Dorogo_Wedding_Partner_Rate_Card_2026_EN.pdf', 'Dorogo_Wedding_Partner_Rate_Card.pdf', 'DOROGO_Tariffs_Logistics_EN.pdf']),
+    ('dorogo_wedding_partner_rate_card_it.html', 'Dorogo_Wedding_Partner_Rate_Card_2026_IT.pdf', ['DOROGO_Tariffs_Logistics_IT.pdf']),
+    ('dorogo_wedding_partner_rate_card_ru.html', 'Dorogo_Wedding_Partner_Rate_Card_2026_RU.pdf', ['DOROGO_Tariffs_Logistics_RU.pdf']),
+    ('dorogo_wedding_client_rate_card_en.html', 'Dorogo_Wedding_Client_Tariffs_2026.pdf', ['Dorogo_Wedding_Client_Tariffs_2026_EN.pdf', 'DOROGO_Tariffs_Client_EN.pdf']),
+    ('dorogo_wedding_client_rate_card_it.html', 'Dorogo_Wedding_Client_Tariffs_2026_IT.pdf', ['DOROGO_Tariffs_Client_IT.pdf']),
+    ('dorogo_wedding_client_rate_card_ru.html', 'Dorogo_Wedding_Client_Tariffs_2026_RU.pdf', ['DOROGO_Tariffs_Client_RU.pdf']),
 ]
 
 for html_file, pdf_name, alias_name in tasks:
@@ -34,8 +34,9 @@ for html_file, pdf_name, alias_name in tasks:
     subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     
     if alias_name:
-        alias_out = os.path.join(DOWNLOADS_DIR, alias_name)
-        shutil.copyfile(pdf_out, alias_out)
+        aliases = alias_name if isinstance(alias_name, list) else [alias_name]
+        for a in aliases:
+            shutil.copyfile(pdf_out, os.path.join(DOWNLOADS_DIR, a))
         
     doc = pymupdf.open(pdf_out)
     pages = len(doc)
