@@ -301,7 +301,7 @@ test('findAndVerifyPartnerEmail strictly preserves manual user comments on both 
   // Scenario 1: Failure / dead domain -> Must mark email_status as invalid, but NEVER OVERWRITE user notes!
   const failOp = {
     id: 'test_perico_fail',
-    name: 'Autoservizi Fake',
+    name: 'Nonexistent Bus Operator ZZZ999XYZ',
     website: 'https://www.completely-nonexistent-domain-12345.it',
     email: 'bad@completely-nonexistent-domain-12345.it',
     notes: '- Interested in a) Mercedes-Benz Travego, b) Volvo 9700 Superior\n- Do they have stickers?',
