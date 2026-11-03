@@ -1008,7 +1008,7 @@ export const FLEET_LEDGER_ROWS = [
     email: 'info@autoserviziguizzetti.com',
     website: 'https://www.autoserviziguizzetti.com',
     status: 'confirmed',
-    statusLabel: 'Rates verified · Interior photos pending',
+    statusLabel: 'Rates & 2 photos verified · Fleet #103',
     repliedAt: '31 Oct 2026 · 17:49',
     ratePdf: null,
     ratePdfName: null,
@@ -1028,7 +1028,20 @@ export const FLEET_LEDGER_ROWS = [
       included: '+ €30 parcheggio Malpensa; eventuale Area C Milano da aggiungere',
       cancellation: 'In attesa di policy formale da Cristian'
     },
-    photos: []
+    photos: [
+      {
+        src: 'assets/partner_fleet/guizzetti/103_laterale.jpeg',
+        file: '103 – laterale.jpeg',
+        title: 'Fleet #103 — Spica / Indcar Wing Minibus (19 pax) · Exterior',
+        caption: 'Verified exterior shot from Guizzetti. Unbranded discreet livery without decals.'
+      },
+      {
+        src: 'assets/partner_fleet/guizzetti/interno_103.jpg',
+        file: 'interno 103.jpg',
+        title: 'Fleet #103 — Spica / Indcar Wing Minibus (19 pax) · Interior',
+        caption: 'Verified interior shot received 03 Nov 2026. Leather upholstery and executive aisle.'
+      }
+    ]
   },
   {
     id: 'guizzetti_midibus_30',
@@ -1050,7 +1063,7 @@ export const FLEET_LEDGER_ROWS = [
     email: 'info@autoserviziguizzetti.com',
     website: 'https://www.autoserviziguizzetti.com',
     status: 'confirmed',
-    statusLabel: 'Rates verified · Interior photos pending',
+    statusLabel: 'Rates & 2 photos verified · Fleet #104',
     repliedAt: '31 Oct 2026 · 17:49',
     ratePdf: null,
     ratePdfName: null,
@@ -1070,7 +1083,20 @@ export const FLEET_LEDGER_ROWS = [
       included: '+ €30 parcheggio Malpensa; eventuale Area C Milano da aggiungere',
       cancellation: 'In attesa di policy formale da Cristian'
     },
-    photos: []
+    photos: [
+      {
+        src: 'assets/partner_fleet/guizzetti/104_esterno_3.jpg',
+        file: '104 – Esterno 3.jpg',
+        title: 'Fleet #104 — Iveco Midibus GT (30 pax) · Exterior',
+        caption: 'Verified exterior shot from Guizzetti. 30 passenger midibus with unbranded livery.'
+      },
+      {
+        src: 'assets/partner_fleet/guizzetti/104_interno_2.jpg',
+        file: '104 – Interno 2.jpg',
+        title: 'Fleet #104 — Iveco Midibus GT (30 pax) · Interior',
+        caption: 'Verified interior shot received 03 Nov 2026. Executive passenger seating.'
+      }
+    ]
   },
   {
     id: 'guizzetti_coach_50',
@@ -1092,7 +1118,7 @@ export const FLEET_LEDGER_ROWS = [
     email: 'info@autoserviziguizzetti.com',
     website: 'https://www.autoserviziguizzetti.com',
     status: 'confirmed',
-    statusLabel: 'Rates verified · Interior photos pending',
+    statusLabel: 'Rates & 6 photos verified · Fleet #115, #121, etc.',
     repliedAt: '31 Oct 2026 · 17:49',
     ratePdf: null,
     ratePdfName: null,
@@ -1112,7 +1138,44 @@ export const FLEET_LEDGER_ROWS = [
       included: '+ €30 parcheggio Malpensa; eventuale Area C Milano da aggiungere',
       cancellation: 'In attesa di policy formale da Cristian'
     },
-    photos: []
+    photos: [
+      {
+        src: 'assets/partner_fleet/guizzetti/coach_50_ext.jpg',
+        file: 'esterno.jpg',
+        title: 'GT Coach (50–55 pax) · Exterior',
+        caption: 'Verified exterior shot from Guizzetti. Gran Turismo full-size coach.'
+      },
+      {
+        src: 'assets/partner_fleet/guizzetti/coach_50_int.jpg',
+        file: 'interno.jpg',
+        title: 'GT Coach (50–55 pax) · Interior',
+        caption: 'Verified interior shot received 03 Nov 2026. Full-cabin passenger view.'
+      },
+      {
+        src: 'assets/partner_fleet/guizzetti/coach_50_laterale_dx.jpeg',
+        file: 'laterale dx.jpeg',
+        title: 'GT Coach (50–55 pax) · Right Side Exterior',
+        caption: 'Verified side profile exterior shot from Guizzetti.'
+      },
+      {
+        src: 'assets/partner_fleet/guizzetti/coach_50_interno.jpeg',
+        file: 'interno.jpeg',
+        title: 'GT Coach (50–55 pax) · Interior View 2',
+        caption: 'Verified interior cabin view received 03 Nov 2026.'
+      },
+      {
+        src: 'assets/partner_fleet/guizzetti/115_interno.jpg',
+        file: '115– INTERNO.jpg',
+        title: 'Fleet #115 Setra 515 HD / Travego · Interior',
+        caption: 'Verified interior shot of Fleet #115 received 03 Nov 2026.'
+      },
+      {
+        src: 'assets/partner_fleet/guizzetti/121_interno.jpeg',
+        file: '121 interno.jpeg',
+        title: 'Fleet #121 Touring Coach · Interior',
+        caption: 'Verified interior shot of Fleet #121 received 03 Nov 2026.'
+      }
+    ]
   },
   {
     id: 'comolimolux_vclass',
@@ -1305,6 +1368,7 @@ export async function render(el) {
   const comoPhotos = FLEET_LEDGER_ROWS.filter(r => r.partnerId === 'partner_1792765279097_26hr').reduce((acc, r) => acc + (r.photos?.length || 0), 0);
   const avantgardePhotos = FLEET_LEDGER_ROWS.filter(r => r.partnerId === 'partner_1792765279535_l9ei').reduce((acc, r) => acc + (r.photos ? r.photos.filter(p => !p.src.endsWith('.mp4')).length : 0), 0);
   const landwayPhotos = FLEET_LEDGER_ROWS.filter(r => r.partnerId === 'partner_1792761170109_96nx').reduce((acc, r) => acc + (r.photos?.length || 0), 0);
+  const guizzettiPhotos = FLEET_LEDGER_ROWS.filter(r => r.partnerId === 'partner_1793030996221_7t9y').reduce((acc, r) => acc + (r.photos?.length || 0), 0);
 
   const sprinterMxp = calculateAdjustedPrice(350, pricingMode);
   const transitMxp = calculateAdjustedPrice(400, pricingMode);
@@ -1381,7 +1445,7 @@ export async function render(el) {
             <span class="sail-pill info" style="padding:1px 6px;font-size:10.5px">OEM &amp; WhatsApp</span>
           </div>
           <div class="sail-stat-val">${totalPhotos + totalVideos} files <span style="font-size:14px;font-weight:500;color:var(--sail-muted)">· ${totalPhotos} photos + ${totalVideos} video</span></div>
-          <div class="sail-stat-meta">Como Driver (${comoPhotos}) · Avantgarde (${avantgardePhotos} + ${totalVideos} video) · Landway (${landwayPhotos} photos)</div>
+          <div class="sail-stat-meta">Como Driver (${comoPhotos}) · Avantgarde (${avantgardePhotos} + ${totalVideos} vid) · Landway (${landwayPhotos}) · Guizzetti (${guizzettiPhotos})</div>
         </div>
       </div>
 

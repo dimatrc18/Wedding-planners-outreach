@@ -1978,47 +1978,146 @@ export const INITIAL_BUS_PARTNERS = [
     "fleet_url": "https://www.autoserviziguizzetti.com/",
     "relevance_score": 82,
     "score_breakdown": {
-      "fleet_luxury": 23,
-      "partner_card": {
-        "whatsapp": "+39 335 747 1244",
-        "bus_models": "Fleet 36 buses: Minibus 19p, Midibus 30p, GT Coach 50–55p, Setra, Scania, Irizar i8, Sprinter Luxury 8+1p",
-        "replied_at": "2026-10-31T17:49:00.000Z",
-        "rate_hourly": "50p: €550/4h, €800/8h; 30p: €500/4h, €720/8h; 19p: €450/4h, €650/8h + IVA",
-        "email_status": "replied",
-        "pax_capacity": "8, 19, 30, 50, 51, 55, 65, 83 pax",
-        "rate_standby": "50p: €800/8h; 30p: €720/8h; 19p: €650/8h + IVA (+ Area C)",
-        "scheduled_at": "2026-10-30T12:00:00.000Z",
-        "fleet_segment": "both",
-        "outreach_stage": "replied",
-        "user_set_status": true,
-        "last_outreach_at": "2026-10-30T12:00:00.000Z",
-        "user_set_segment": false,
-        "fleet_audit_verified_at": "2026-10-26T18:25:11.587Z",
-        "contact_person": "Cristian"
-      },
-      "corporate_sla": 19,
-      "territory_permits": 20,
-      "discretion_unbranded": 20
+        "fleet_luxury": 23,
+        "partner_card": {
+            "whatsapp": "+39 335 747 1244",
+            "bus_models": "Fleet 36 buses: Minibus 19p, Midibus 30p, GT Coach 50–55p, Setra, Scania, Irizar i8, Sprinter Luxury 8+1p",
+            "replied_at": "2026-11-03T06:37:00.000Z",
+            "rate_hourly": "50p: €550/4h, €800/8h; 30p: €500/4h, €720/8h; 19p: €450/4h, €650/8h + IVA",
+            "email_status": "replied",
+            "pax_capacity": "8, 19, 30, 50, 51, 55, 65, 83 pax",
+            "rate_standby": "50p: €800/8h; 30p: €720/8h; 19p: €650/8h + IVA (+ Area C)",
+            "scheduled_at": "2026-10-30T12:00:00.000Z",
+            "fleet_segment": "both",
+            "outreach_stage": "replied",
+            "user_set_status": true,
+            "last_outreach_at": "2026-10-30T12:00:00.000Z",
+            "user_set_segment": false,
+            "fleet_audit_verified_at": "2026-10-26T18:25:11.587Z",
+            "contact_person": "Cristian",
+            "office_whatsapp": "+39 035 982277",
+            "verified_fleet_pairs": [
+                {
+                    "id": 1,
+                    "fleet_no": "103",
+                    "model": "Spica / Indcar Wing Minibus (19 pax)",
+                    "category": "minibus_19",
+                    "exterior_filename": "103 – laterale.jpeg",
+                    "interior_filename": "interno 103.jpg",
+                    "status": "VERIFIED_PAIR",
+                    "transfers": {
+                        "mxp_milano": 350
+                    },
+                    "standby": {
+                        "dispo_4h": 450,
+                        "dispo_8h": 650
+                    }
+                },
+                {
+                    "id": 2,
+                    "fleet_no": "104",
+                    "model": "Iveco Midibus GT (30 pax)",
+                    "category": "midibus_30",
+                    "exterior_filename": "104 – Esterno 3.jpg",
+                    "interior_filename": "104 – Interno 2.jpg",
+                    "status": "VERIFIED_PAIR",
+                    "transfers": {
+                        "mxp_milano": 380
+                    },
+                    "standby": {
+                        "dispo_4h": 500,
+                        "dispo_8h": 720
+                    }
+                },
+                {
+                    "id": 3,
+                    "fleet_no": null,
+                    "model": "Gran Turismo Coach (50–55 pax)",
+                    "category": "coach_50",
+                    "exterior_filename": "esterno.jpg",
+                    "interior_filename": "interno.jpg",
+                    "status": "VERIFIED_PAIR",
+                    "transfers": {
+                        "mxp_milano": 420
+                    },
+                    "standby": {
+                        "dispo_4h": 550,
+                        "dispo_8h": 800
+                    }
+                },
+                {
+                    "id": 4,
+                    "fleet_no": null,
+                    "model": "Gran Turismo Coach (50–55 pax)",
+                    "category": "coach_50",
+                    "exterior_filename": "laterale dx.jpeg",
+                    "interior_filename": "interno.jpeg",
+                    "status": "VERIFIED_PAIR"
+                },
+                {
+                    "id": 5,
+                    "fleet_no": "115",
+                    "model": "Setra 515 HD / Travego Coach (50–55 pax)",
+                    "category": "coach_50",
+                    "exterior_filename": "Exterior #5",
+                    "interior_filename": "115– INTERNO.jpg",
+                    "status": "VERIFIED_PAIR"
+                },
+                {
+                    "id": 6,
+                    "fleet_no": "121",
+                    "model": "Touring Coach (50–55 pax)",
+                    "category": "coach_50",
+                    "exterior_filename": "Exterior #6",
+                    "interior_filename": "121 interno.jpeg",
+                    "status": "VERIFIED_PAIR"
+                },
+                {
+                    "id": 7,
+                    "fleet_no": null,
+                    "model": "Grand Tourismo Coach (50–55 pax)",
+                    "category": "coach_50",
+                    "exterior_filename": "Exterior #7",
+                    "interior_filename": "interno.jpeg",
+                    "status": "VERIFIED_PAIR"
+                },
+                {
+                    "id": 8,
+                    "fleet_no": null,
+                    "model": "Mercedes-Benz Sprinter Luxury (8+1 posti)",
+                    "category": "minivan_7_8",
+                    "exterior_filename": null,
+                    "interior_filename": null,
+                    "status": "ARRIVING_JAN_FEB_2027",
+                    "follow_up": "2027-01-15",
+                    "calendar_ics": "Autoservizi_Guizzetti_Sprinter_Arrival_FollowUp.ics"
+                }
+            ]
+        },
+        "corporate_sla": 19,
+        "territory_permits": 20,
+        "discretion_unbranded": 20
     },
-    "status": "CONTACTED",
+    "status": "APPROVED_PARTNER",
     "unbranded_status": "100% Unbranded / Sobria Livrea (Confirmed)",
     "fleet_categories": [
-      "Iveco Daily Tourist / Indcar Wing (19–28 seats)",
-      "Setra 515 HD & Irizar i6 (53–54 seats)",
-      "Setra 415 GT-HD (55 seats)",
-      "Setra 416 GT & 417 HDH (59–64 seats)"
+        "Iveco Daily Tourist / Indcar Wing (19–28 seats)",
+        "Setra 515 HD & Irizar i6 (53–54 seats)",
+        "Setra 415 GT-HD (55 seats)",
+        "Setra 416 GT & 417 HDH (59–64 seats)"
     ],
     "phone": "+39 335 747 1244",
-    "office_phone": "+39 035 982277",
     "email": "info@autoserviziguizzetti.com",
-    "notes": "i am interested in  1) Setra 417 HDH, 2) Setra 515 HD, 3) Mercedes-Benz Travego, 4) Van Hool TX-Astronef | B2B Rates: MXP Transfer 50p €420, 30p €380, 19p €350 (+€30 park). 4h Standby: 50p €550, 30p €500, 19p €450. 8h Standby: 50p €800, 30p €720, 19p €650 + IVA. Contatti: Cristian cell h24/365 +39 335 747 1244, tel ufficio 035982277 (con WhatsApp). Livrea unbranded confermata. 8+1 Sprinter Luxury in arrivo gen/feb 2027 (tariffe da definire all'arrivo). Ricevute 7 foto interni il 03/11/2026 nello stesso ordine delle foto esterni.",
+    "notes": "i am interested in  1) Setra 417 HDH, 2) Setra 515 HD, 3) Mercedes-Benz Travego, 4) Van Hool TX-Astronef | B2B Rates: MXP Transfer 50p €420, 30p €380, 19p €350 (+€30 park). 4h Standby: 50p €550, 30p €500, 19p €450. 8h Standby: 50p €800, 30p €720, 19p €650 + IVA. Contatti: Cristian cell h24/365 +39 335 747 1244, tel ufficio 035982277 (con WhatsApp). Livrea unbranded confermata. 7 Veicoli verificati con foto interni/esterni nello stesso ordine (Flotta #103, #104, #115, #121, etc.). Nuovo Sprinter Luxury 8+1 in arrivo gen/feb 2027 (tariffe e foto in arrivo).",
     "source": "crawler",
     "created_at": "2026-10-26T16:09:56.221+00:00",
     "updated_at": "2026-10-26T16:45:24.165014+00:00",
     "bus_models": "Iveco Daily / Indcar Wing (19–28 pax), Setra 515 HD & Irizar i6 (53–54 pax), Setra 415 GT-HD (55 pax), Setra 416/417 HDH (59–64 pax)",
     "pax_capacity": "19–28, 53–55, 59–64 pax",
-    "fleet_segment": "both"
-  },
+    "fleet_segment": "both",
+    "office_phone": "+39 035 982277",
+    "contact_person": "Cristian (Direct: +39 335 747 1244 · Ufficio: +39 035 982277)"
+},
   {
     "id": "partner_1793030997210_o8w4",
     "name": "Ugolini Viaggi",
