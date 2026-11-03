@@ -30,6 +30,18 @@ export async function render(el) {
 
   el.innerHTML = `
     <div style="display:flex;flex-direction:column;gap:18px">
+      <!-- Top Tab Navigation -->
+      <div class="sail-tabs" style="display:flex;gap:6px;border-bottom:2px solid var(--sail-line);padding-bottom:10px;margin-bottom:2px;flex-wrap:wrap">
+        <a href="#event_partners" class="sail-tab " style="height:32px;display:inline-flex;align-items:center;gap:6px;padding:0 14px;font-size:12.5px;font-weight:700;text-decoration:none">
+          🏛️ Foreign Exhibiting Teams (78)
+        </a>
+        <a href="#event_templates" class="sail-tab active" style="height:32px;display:inline-flex;align-items:center;gap:6px;padding:0 14px;font-size:12.5px;font-weight:700;text-decoration:none">
+          ✉️ Fair Sequences &amp; Corporate Rates
+        </a>
+        <a href="#event_outbox" class="sail-tab " style="height:32px;display:inline-flex;align-items:center;gap:6px;padding:0 14px;font-size:12.5px;font-weight:700;text-decoration:none">
+          📤 Event Outbox &amp; Replies
+        </a>
+      </div>
       <!-- Header Banner -->
       <div class="sail-card" style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
         <div>
