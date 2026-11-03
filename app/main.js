@@ -1,5 +1,5 @@
 // App shell: sign-in, navigation, hash router, re-render on data changes.
-import { S, init, onChange, signIn, signOut, startDemo, leaveDemo, syncScores, isDemo } from './store.js';
+import { S, init, onChange, signIn, signOut, startDemo, leaveDemo, syncScores, isDemo, ALLOWED_EMAILS, isUserAuthorized } from './store.js';
 import { esc, icon, toast, debounce } from './ui.js';
 import { todayData } from './actions.js';
 import * as today from './views/today.js?v=9.1';
@@ -262,29 +262,41 @@ document.addEventListener('focusout', () => setTimeout(() => { if (pending) rere
 function renderSignIn() {
   const root = document.getElementById('root');
   root.innerHTML = `<div class="signin"><div class="box">
-    <div><div class="mark">DOROGO</div><div class="sub" style="margin-top:8px">Partner outreach</div></div>
+    <div><div class="mark">DOROGO</div><div class="sub" style="margin-top:8px">Partner Outreach &amp; Dispatch Desk</div></div>
     <form class="card stack" id="login">
-      <label class="field"><span>Email</span><input id="email" type="email" autocomplete="email" required placeholder="you@dorogo.eu"></label>
+      <label class="field"><span>Authorized Email</span><input id="email" type="email" autocomplete="email" required placeholder="dmitri.traciuc@gmail.com"></label>
       <button class="btn primary" type="submit">Email me a sign-in link</button>
-      <p class="small muted" id="login-msg">Only addresses on the team's allowed list can see data.</p>
+      <p class="small muted" id="login-msg">Access strictly restricted to team leads (@dmitri.traciuc &amp; @traciuc04).</p>
     </form>
-    <button class="btn ghost" id="demo">Explore with demo data</button>
   </div></div>`;
   root.querySelector('#login').addEventListener('submit', async (e) => {
     e.preventDefault();
     const msg = root.querySelector('#login-msg');
-    try { await signIn(root.querySelector('#email').value.trim()); msg.textContent = 'Check your inbox for the sign-in link.'; }
-    catch (err) { msg.textContent = err.message; }
+    const emailVal = root.querySelector('#email').value.trim().toLowerCase();
+    if (!ALLOWED_EMAILS.includes(emailVal)) {
+      msg.textContent = 'Access restricted: this address is not on the authorized allowlist.';
+      msg.style.color = '#ef4444';
+      return;
+    }
+    msg.style.color = '#10b981';
+    msg.textContent = 'Sending secure sign-in link...';
+    try {
+      await signIn(emailVal);
+      msg.textContent = 'Check your inbox for the sign-in link.';
+    } catch (err) {
+      msg.textContent = err.message;
+      msg.style.color = '#ef4444';
+    }
   });
-  root.querySelector('#demo').addEventListener('click', () => { location.hash = 'today'; startDemo(); });
 }
 
 onChange((why) => {
-  if (why === 'auth' && S.mode === 'signed_out') return renderSignIn();
+  if (why === 'auth' && (S.mode === 'signed_out' || !isUserAuthorized(S.user))) return renderSignIn();
+  if (S.mode !== 'live' || !isUserAuthorized(S.user)) return renderSignIn();
   if (why === 'loaded') { syncScores(); current = null; return renderView(); }
   rerender();
 });
-window.addEventListener('hashchange', () => { if (['live', 'demo'].includes(S.mode)) renderView(); });
+window.addEventListener('hashchange', () => { if (S.mode === 'live' && isUserAuthorized(S.user)) renderView(); });
 window.addEventListener('error', (e) => toast(`Something broke: ${e.message}`, 'error'));
 window.addEventListener('unhandledrejection', (e) => toast(e.reason?.message || String(e.reason), 'error'));
 

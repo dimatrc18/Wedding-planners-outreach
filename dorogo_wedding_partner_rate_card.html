@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DOROGO - Lake Como Wedding Partner Rate Card 2026/2027</title>
+<title>DOROGO · B2B Wedding Partner Tariffs 2026/2027</title>
 <style>
   @font-face {
     font-family: 'Amelaryas';
@@ -17,7 +17,7 @@
 
   @page {
     size: A4 portrait;
-    margin: 8mm 10mm 7mm 10mm;
+    margin: 9mm 11mm 8mm 11mm;
   }
 
   * {
@@ -32,8 +32,8 @@
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: #18181b;
     background: #f4f4f5;
-    font-size: 9px;
-    line-height: 1.35;
+    font-size: 8.4px;
+    line-height: 1.34;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -70,334 +70,314 @@
     background: #27272a;
   }
 
-  /* Main A4 Document Sheet (BCG Executive Standard) */
+  /* Main A4 Document Sheet - Strictly Balanced Single Page */
   .sheet {
     background: #ffffff;
     width: 100%;
     max-width: 820px;
-    padding: 20px 28px 18px 28px;
+    min-height: 280mm;
+    padding: 18px 24px 16px 24px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     border: 1px solid #e4e4e7;
     border-radius: 3px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
   }
 
-  /* Header */
+  /* Header - ONE Clean Title */
   .header {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
     padding-bottom: 8px;
     border-bottom: 2px solid #18181b;
-    margin-bottom: 9px;
+    margin-bottom: 7px;
   }
   .brand-logo {
-    font-family: 'Amelaryas', serif;
-    font-size: 23px;
-    letter-spacing: 0.16em;
+    font-family: 'Amelaryas', Georgia, serif;
+    font-size: 25px;
+    letter-spacing: 0.14em;
     color: #000000;
-    line-height: 1.1;
+    line-height: 1.0;
     text-transform: uppercase;
     margin: 0;
+    font-weight: 400;
   }
   .brand-sub {
-    font-size: 7.5px;
+    font-size: 7.6px;
     font-weight: 600;
-    letter-spacing: 1.4px;
+    letter-spacing: 0.12em;
     color: #71717a;
     text-transform: uppercase;
-    margin-top: 2px;
+    margin-top: 3px;
   }
   .header-meta {
     text-align: right;
   }
-  .guide-badge {
-    display: inline-block;
-    background: #faf5ee;
-    border: 1px solid #9B7D50;
-    color: #7A5C29;
-    font-size: 7.5px;
-    font-weight: 700;
-    letter-spacing: 0.9px;
-    text-transform: uppercase;
-    padding: 2px 6px;
-    border-radius: 2px;
-    margin-bottom: 2px;
-  }
   .header-title {
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 700;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: #18181b;
     margin: 0;
+    line-height: 1.1;
   }
-  .header-validity {
-    font-size: 8px;
-    color: #71717a;
+  .header-sub {
+    font-size: 7.5px;
+    font-weight: 600;
+    color: #9B7D50;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 2px;
   }
 
-  /* Section Title */
+  /* Section Title - Single Line Invariant */
   .section-heading {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     justify-content: space-between;
     font-size: 8.8px;
     font-weight: 700;
-    letter-spacing: 0.8px;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: #18181b;
-    border-bottom: 1px solid #e4e4e7;
-    padding-bottom: 2px;
-    margin-top: 8px;
-    margin-bottom: 5px;
+    border-bottom: 1.5px solid #18181b;
+    padding-bottom: 3px;
+    margin-top: 10px;
+    margin-bottom: 6px;
+  }
+  .section-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .section-tag {
     font-size: 7.3px;
     font-weight: 600;
     color: #9B7D50;
-    letter-spacing: 0.4px;
-  }
-
-  /* Fleet Grid - MECE 4-Pillar Taxonomy */
-  .fleet-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 7px;
-    margin-bottom: 4px;
-  }
-  .fleet-card {
-    border: 1px solid #e4e4e7;
-    border-radius: 3px;
-    padding: 6px 7px;
-    background: #fafafa;
-  }
-  .fleet-card.primary {
-    border-color: #9B7D50;
-    background: #fffcf8;
-  }
-  .fleet-name {
-    font-size: 9px;
-    font-weight: 700;
-    color: #000000;
-    margin-bottom: 1px;
+    letter-spacing: 0.04em;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .fleet-badge {
-    display: inline-block;
-    font-size: 6.8px;
-    font-weight: 700;
-    text-transform: uppercase;
-    background: #18181b;
-    color: #ffffff;
-    padding: 1px 4px;
-    border-radius: 2px;
-    margin-bottom: 3px;
-    letter-spacing: 0.3px;
-  }
-  .fleet-badge.gold {
-    background: #9B7D50;
-  }
-  .fleet-badge.blue {
-    background: #0A2540;
-  }
-  .fleet-specs {
-    font-size: 7.8px;
-    color: #52525b;
-    line-height: 1.3;
-  }
-  .fleet-specs strong {
-    color: #18181b;
   }
 
-  /* Rates Table - Comprehensive 5-Category Matrix */
-  table.rates-table {
+  /* Master Fleet & Tariffs Matrix */
+  table.master-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 8.2px;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
-  table.rates-table th {
+  table.master-table th {
     background: #f4f4f5;
     color: #27272a;
     font-weight: 700;
     text-align: left;
-    padding: 3.5px 6px;
+    padding: 4.5px 6px;
     border-top: 1px solid #e4e4e7;
-    border-bottom: 1px solid #d4d4d8;
+    border-bottom: 1.5px solid #18181b;
     text-transform: uppercase;
     font-size: 7.2px;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.04em;
   }
-  table.rates-table th.num, table.rates-table td.num {
+  table.master-table th.num, table.master-table td.num {
     text-align: right;
   }
-  table.rates-table td {
-    padding: 3.5px 6px;
+  table.master-table td {
+    padding: 6px 6px;
     border-bottom: 1px solid #f4f4f5;
+    vertical-align: middle;
     color: #27272a;
   }
-  .zone-title {
-    font-weight: 600;
-    color: #000000;
-  }
-  .rate-val {
-    font-weight: 600;
-    color: #18181b;
-  }
-  .rate-highlight {
-    color: #7A5C29;
-    font-weight: 700;
-  }
-
-  /* MECE 3-Box Standby & Night Structure (BCG Style) */
-  .mece-night-grid {
-    display: grid;
-    grid-template-columns: 1.15fr 1.05fr 1fr;
-    gap: 7px;
-    margin-bottom: 5px;
-  }
-  .mece-box {
-    border: 1px solid #e4e4e7;
-    background: #ffffff;
-    padding: 6px 8px;
-    border-radius: 3px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-  .mece-box.gold-accent {
-    border-color: #9B7D50;
-    background: #fffdfa;
-  }
-  .mece-tag {
-    font-size: 6.8px;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: #9B7D50;
-    letter-spacing: 0.5px;
-    margin-bottom: 2px;
-  }
-  .mece-title {
-    font-size: 8.5px;
-    font-weight: 700;
-    color: #18181b;
-    margin-bottom: 3px;
-  }
-  .mece-desc {
-    font-size: 7.7px;
-    color: #52525b;
-    line-height: 1.33;
-  }
-  .mece-desc strong {
-    color: #18181b;
-  }
-
-  /* Commercial Models (2 Columns) */
-  .models-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 7px;
-    margin-bottom: 5px;
-  }
-  .model-card {
-    border: 1px solid #e4e4e7;
-    border-radius: 3px;
-    padding: 5px 8px;
+  table.master-table tr:hover {
     background: #fafafa;
   }
-  .model-card.featured {
-    border-color: #9B7D50;
-    background: #fffdfa;
+  .car-title {
+    font-size: 9.4px;
+    font-weight: 700;
+    color: #000000;
+    display: block;
+    line-height: 1.2;
   }
-  .model-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2px;
+  .car-sub {
+    font-size: 7.2px;
+    color: #71717a;
+    display: block;
+    margin-top: 1px;
   }
-  .model-name {
-    font-size: 8.6px;
+  .rate-val {
+    font-size: 10px;
     font-weight: 700;
     color: #18181b;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
-  .model-payout {
-    font-size: 8.2px;
-    font-weight: 700;
-    color: #9B7D50;
+  .rate-sub {
+    font-size: 7px;
+    color: #71717a;
+    display: block;
+    font-weight: 500;
   }
-  .model-body {
-    font-size: 7.8px;
+  .role-text {
+    font-size: 7.5px;
     color: #52525b;
     line-height: 1.3;
   }
+  .role-text strong {
+    color: #18181b;
+  }
 
-  /* Standards & Pass-Through Guarantees (4 Pills) */
+  /* Standby & Night Logistics (3 MECE Boxes) */
+  .standby-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1.15fr 0.95fr;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .standby-box {
+    border: 1px solid #e4e4e7;
+    background: #fafafa;
+    padding: 7px 9px;
+    border-radius: 3px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+  .standby-box.gold {
+    border-color: #9B7D50;
+    background: #fffcf8;
+  }
+  .standby-tag {
+    font-size: 6.9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #9B7D50;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+  }
+  .standby-title {
+    font-size: 8.6px;
+    font-weight: 700;
+    color: #18181b;
+    margin-bottom: 3px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid #e4e4e7;
+  }
+  .standby-desc {
+    font-size: 7.6px;
+    color: #52525b;
+    line-height: 1.34;
+  }
+  .standby-desc strong {
+    color: #18181b;
+  }
+
+  /* Operational Boundaries Strip */
+  .operational-strip {
+    background: #fafafa;
+    border: 1px solid #e4e4e7;
+    border-left: 3px solid #18181b;
+    padding: 6px 10px;
+    border-radius: 2px;
+    margin-bottom: 4px;
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 10px;
+    font-size: 7.4px;
+    line-height: 1.34;
+    color: #3f3f46;
+  }
+  .operational-strip strong {
+    color: #000000;
+  }
+
+  /* Partner Commercial Formats (2 Columns) */
+  .collab-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .collab-card {
+    background: #fafafa;
+    border: 1px solid #e4e4e7;
+    border-radius: 3px;
+    padding: 6px 9px;
+  }
+  .collab-card.featured {
+    border-color: #9B7D50;
+    background: #fffcf8;
+  }
+  .collab-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 2px;
+  }
+  .collab-title {
+    font-size: 8.3px;
+    font-weight: 700;
+    color: #18181b;
+    text-transform: uppercase;
+  }
+  .collab-payout {
+    font-size: 7.9px;
+    font-weight: 700;
+    color: #9B7D50;
+  }
+  .collab-desc {
+    font-size: 7.5px;
+    color: #52525b;
+    line-height: 1.32;
+  }
+
+  /* 4 Guarantees Strip */
   .guarantees-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 5px;
-    margin-bottom: 5px;
+    gap: 6px;
+    margin-bottom: 4px;
   }
   .guarantee-item {
     background: #fafafa;
     border: 1px solid #e4e4e7;
     border-radius: 2px;
-    padding: 3.5px 5px;
+    padding: 4.5px 6px;
     text-align: center;
   }
   .guarantee-title {
-    font-size: 7.3px;
+    font-size: 7.4px;
     font-weight: 700;
     text-transform: uppercase;
     color: #18181b;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.04em;
   }
   .guarantee-sub {
-    font-size: 6.8px;
+    font-size: 6.9px;
     color: #71717a;
+    margin-top: 1px;
   }
 
-  /* Operational Boundaries Advisory Strip (Luggage & Pass-Throughs) */
-  .operational-strip {
-    background: #fcfcfb;
-    border: 1px solid #e4e4e7;
-    border-left: 2.5px solid #18181b;
-    padding: 4px 7px;
-    border-radius: 2px;
-    margin-bottom: 6px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    font-size: 7.4px;
-    line-height: 1.3;
-    color: #3f3f46;
-  }
-  .op-col strong {
-    color: #000000;
-  }
-
-  /* Minimalistic Verified Wedding Reviews */
+  /* Verified Wedding Reviews (Minimalist 2-Col) */
   .reviews-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 7px;
-    margin-bottom: 6px;
+    gap: 8px;
+    margin-bottom: 4px;
   }
   .review-card {
     border: 1px solid #e4e4e7;
     border-left: 2px solid #9B7D50;
     border-radius: 2px;
-    padding: 4.5px 7px;
+    padding: 5px 9px;
     background: #fcfcfb;
   }
   .review-quote {
-    font-size: 7.5px;
+    font-size: 7.4px;
     color: #27272a;
-    line-height: 1.32;
+    line-height: 1.33;
     font-style: italic;
-    margin-bottom: 3px;
+    margin-bottom: 2px;
   }
   .review-meta {
     display: flex;
@@ -410,29 +390,31 @@
   .review-stars {
     color: #9B7D50;
     letter-spacing: 0.5px;
-    font-size: 7.5px;
+    font-size: 7.3px;
   }
 
-  /* Footer Terms & Direct Dispatch */
+  /* Footer Strip - Balanced Baseline */
   .footer-strip {
-    border-top: 1px solid #18181b;
-    padding-top: 6px;
+    border-top: 1.5px solid #18181b;
+    padding-top: 8px;
+    margin-top: 4px;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
   }
   .terms-col {
-    max-width: 62%;
+    max-width: 63%;
   }
   .terms-title {
-    font-size: 7.8px;
+    font-size: 7.6px;
     font-weight: 700;
     text-transform: uppercase;
     color: #18181b;
     margin-bottom: 1px;
+    letter-spacing: 0.04em;
   }
   .terms-text {
-    font-size: 7.3px;
+    font-size: 7.2px;
     color: #52525b;
     line-height: 1.3;
   }
@@ -440,18 +422,15 @@
     text-align: right;
   }
   .dispatch-lead {
-    font-size: 8.6px;
+    font-size: 8.4px;
     font-weight: 700;
     color: #000000;
     margin-bottom: 1px;
   }
   .dispatch-contact {
-    font-size: 7.7px;
+    font-size: 7.5px;
     color: #27272a;
     line-height: 1.35;
-  }
-  .dispatch-contact strong {
-    color: #000000;
   }
 
   @media print {
@@ -467,6 +446,7 @@
       box-shadow: none;
       padding: 0;
       max-width: 100%;
+      min-height: 280mm;
     }
   }
 </style>
@@ -482,218 +462,188 @@
   <!-- A4 Document Sheet -->
   <div class="sheet">
 
-    <!-- Header -->
+    <!-- Header: ONE Clean, Authoritative Title -->
     <div class="header">
       <div>
         <h1 class="brand-logo">DOROGO</h1>
-        <div class="brand-sub">Private Transportation • Milan, Lake Como &amp; Northern Italy</div>
+        <div class="brand-sub">Private Chauffeur &amp; Group Mobility • Milan, Lake Como &amp; Northern Italy</div>
       </div>
       <div class="header-meta">
-        <div class="guide-badge">Confidential B2B Partner Rate Card · 2026 / 2027</div>
-        <div class="header-title">Wedding &amp; Event Logistics Architecture</div>
-        <div class="header-validity">MECE Operational Standards • Guest Transfer Portal • 24/7 Dispatch Desk</div>
+        <div class="header-title">B2B Wedding Partner Tariffs</div>
+        <div class="header-sub">Season 2026 / 2027 • Confidential Net Rates • 24/7 Dispatch Desk</div>
       </div>
     </div>
 
-    <!-- Section 1: Fleet Specifications (MECE Tiering & Brand Equivalence) -->
+    <!-- Section 1: Master Fleet & Tariffs Matrix -->
     <div class="section-heading">
-      <span>1. Fleet Architecture &amp; Villa Accessibility Tiers</span>
-      <span class="section-tag">Total Black Unbranded • Dark-Suited English-Speaking Chauffeurs</span>
-    </div>
-    <div class="fleet-grid">
-      <div class="fleet-card primary">
-        <div class="fleet-name">Mercedes-Benz V-Class</div>
-        <div class="fleet-badge gold">Primary Villa Shuttle</div>
-        <div class="fleet-specs">
-          <strong>Capacity:</strong> Up to 7 Pax • 7 Bags<br>
-          <strong>Tactical Access:</strong> Clears historic gates (Villa Balbiano, Pizzo). Continuous night loops.
-        </div>
-      </div>
-      <div class="fleet-card">
-        <div class="fleet-name">Mercedes-Benz S-Class</div>
-        <div class="fleet-badge">Flagship Bridal Sedan</div>
-        <div class="fleet-specs">
-          <strong>Capacity:</strong> Up to 3 Pax • 2 Bags<br>
-          <strong>Tactical Access:</strong> Bride &amp; Groom, parents, photo exits, unrestricted Milan/Como ZTL.
-        </div>
-      </div>
-      <div class="fleet-card">
-        <div class="fleet-name">16–20 Pax Luxury Minibus</div>
-        <div class="fleet-badge gold">VIP Villa Shuttle</div>
-        <div class="fleet-specs">
-          <strong>Equivalence:</strong> Sprinter / Indcar / Transit equiv.<br>
-          <strong>Tactical Access:</strong> Wheelbase &lt;7.5m clears tight serpentine mountain lanes &amp; villa approaches.
-        </div>
-      </div>
-      <div class="fleet-card">
-        <div class="fleet-name">28–55 Pax Midibus &amp; Coach</div>
-        <div class="fleet-badge blue">Regional Trunk Line</div>
-        <div class="fleet-specs">
-          <strong>Equivalence:</strong> Iveco Wing / Setra / Tourismo<br>
-          <strong>Tactical Access:</strong> Express highway transfers from Milan hotels to Lake Como lakeside piers.
-        </div>
-      </div>
+      <span class="section-title">1. Master Fleet Tariffs &amp; Logistics Matrix</span>
+      <span class="section-tag">All-Black NCC Fleet • Tolls &amp; 60-Min Flight Radar Included (Excl. 10% VAT)</span>
     </div>
 
-    <!-- Section 2: Fixed Route Net Rates (Comprehensive Matrix) -->
-    <div class="section-heading">
-      <span>2. Fixed Route Partner Net Rates (Airport &amp; Intercity)</span>
-      <span class="section-tag">Confidential Net B2B • Tolls &amp; 60-Min Airport Flight Radar Wait Included (Excl. 10% VAT)</span>
-    </div>
-    <table class="rates-table">
+    <table class="master-table">
       <thead>
         <tr>
-          <th style="width:28%">Transfer Route (Point-to-Point)</th>
-          <th style="width:12%">Est. Time</th>
-          <th class="num" style="width:12%">E-Class (1-3p)</th>
-          <th class="num" style="width:12%">V-Class (1-7p)</th>
-          <th class="num" style="width:12%">S-Class (1-3p)</th>
-          <th class="num" style="width:12%">Minibus (16-20p)</th>
-          <th class="num" style="width:12%">GT Coach (50-55p)</th>
+          <th style="width: 22%;">Vehicle Class &amp; Specs</th>
+          <th style="width: 12%;">Rate / KM</th>
+          <th style="width: 15%;" class="num">Transfer MXP ↔ Como</th>
+          <th style="width: 14%;" class="num">Standby (Min 4h)</th>
+          <th style="width: 13%;" class="num">Full Day (10h)</th>
+          <th style="width: 24%;">Operational Role &amp; Villa Access</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td><span class="zone-title">Milan Malpensa (MXP)</span> &harr; Como / Cernobbio</td>
-          <td>~45 min</td>
-          <td class="num rate-val">&euro;180</td>
-          <td class="num rate-highlight">&euro;230</td>
-          <td class="num rate-val">&euro;290</td>
-          <td class="num rate-highlight">&euro;490</td>
-          <td class="num rate-val">&euro;690</td>
+          <td>
+            <span class="car-title">Mercedes-Benz E-Class</span>
+            <span class="car-sub">Executive Sedan • 2–3 Pax • 2 Bags</span>
+          </td>
+          <td><strong>&euro;1.45 / km</strong><span class="rate-sub">Min. &euro;120</span></td>
+          <td class="num"><span class="rate-val">&euro;180.00</span><span class="rate-sub">~45 min route</span></td>
+          <td class="num"><span class="rate-val">&euro;90 / hr</span><span class="rate-sub">4h min: &euro;360</span></td>
+          <td class="num"><span class="rate-val">&euro;900.00</span><span class="rate-sub">200 km incl.</span></td>
+          <td class="role-text"><strong>Tactical VIP:</strong> stylists, celebrant, photo scouting. Milan Area C &amp; Como ZTL unrestricted.</td>
         </tr>
         <tr>
-          <td><span class="zone-title">Milan Malpensa (MXP)</span> &harr; Tremezzina / Menaggio</td>
-          <td>~1h 15m</td>
-          <td class="num rate-val">&euro;230</td>
-          <td class="num rate-highlight">&euro;290</td>
-          <td class="num rate-val">&euro;360</td>
-          <td class="num rate-highlight">&euro;550</td>
-          <td class="num rate-val">&euro;760</td>
+          <td>
+            <span class="car-title">Mercedes-Benz V-Class</span>
+            <span class="car-sub">Primary Villa Shuttle • 6–7 Pax • 7 Bags</span>
+          </td>
+          <td><strong>&euro;1.60 / km</strong><span class="rate-sub">Min. &euro;120</span></td>
+          <td class="num"><span class="rate-val">&euro;230.00</span><span class="rate-sub">~45 min route</span></td>
+          <td class="num"><span class="rate-val">&euro;95 / hr</span><span class="rate-sub">4h min: &euro;380</span></td>
+          <td class="num"><span class="rate-val">&euro;950.00</span><span class="rate-sub">200 km incl.</span></td>
+          <td class="role-text"><strong>Key Villa Shuttle:</strong> clears historic gates (Villa Balbiano, Pizzo). Continuous night party loops.</td>
         </tr>
         <tr>
-          <td><span class="zone-title">Milan Malpensa (MXP)</span> &harr; Bellagio / Varenna</td>
-          <td>~1h 30m</td>
-          <td class="num rate-val">&euro;250</td>
-          <td class="num rate-highlight">&euro;320</td>
-          <td class="num rate-val">&euro;390</td>
-          <td class="num rate-highlight">&euro;580</td>
-          <td class="num rate-val">&euro;790</td>
+          <td>
+            <span class="car-title">Mercedes-Benz S-Class</span>
+            <span class="car-sub">Flagship Bridal Sedan • 2–3 Pax • 2 Bags</span>
+          </td>
+          <td><strong>&euro;2.70 / km</strong><span class="rate-sub">Min. &euro;180</span></td>
+          <td class="num"><span class="rate-val">&euro;290.00</span><span class="rate-sub">~45 min route</span></td>
+          <td class="num"><span class="rate-val">&euro;110 / hr</span><span class="rate-sub">4h min: &euro;440</span></td>
+          <td class="num"><span class="rate-val">&euro;1,100.00</span><span class="rate-sub">200 km incl.</span></td>
+          <td class="role-text"><strong>Bridal Flagship:</strong> generous room for long-train gowns, ceremonial exits, and parents.</td>
         </tr>
         <tr>
-          <td><span class="zone-title">Milan Linate (LIN)</span> &harr; Como / Cernobbio</td>
-          <td>~55 min</td>
-          <td class="num rate-val">&euro;190</td>
-          <td class="num rate-highlight">&euro;240</td>
-          <td class="num rate-val">&euro;300</td>
-          <td class="num rate-highlight">&euro;500</td>
-          <td class="num rate-val">&euro;710</td>
+          <td>
+            <span class="car-title">Executive Minibus 16–20p</span>
+            <span class="car-sub">Mercedes Sprinter / Indcar equiv.</span>
+          </td>
+          <td><strong>&euro;3.50 / km</strong><span class="rate-sub">Min. &euro;350</span></td>
+          <td class="num"><span class="rate-val">&euro;490.00</span><span class="rate-sub">+ &euro;30/h parking</span></td>
+          <td class="num"><span class="rate-val">&euro;115 / hr</span><span class="rate-sub">4h min: &euro;460</span></td>
+          <td class="num"><span class="rate-val">&euro;1,150.00</span><span class="rate-sub">200 km incl.</span></td>
+          <td class="role-text"><strong>Tight Mountain Roads:</strong> compact wheelbase (&lt;7.5m) navigates lakeside lanes closed to 50p coaches.</td>
         </tr>
         <tr>
-          <td><span class="zone-title">Milan City Center</span> &harr; Lake Como (Any Villa)</td>
-          <td>~1h 00m</td>
-          <td class="num rate-val">&euro;180</td>
-          <td class="num rate-highlight">&euro;230</td>
-          <td class="num rate-val">&euro;290</td>
-          <td class="num rate-highlight">&euro;490</td>
-          <td class="num rate-val">&euro;690</td>
+          <td>
+            <span class="car-title">Executive Midibus 28–30p</span>
+            <span class="car-sub">Iveco Wing / Mercedes or equiv.</span>
+          </td>
+          <td><strong>&euro;4.20 / km</strong><span class="rate-sub">Min. &euro;420</span></td>
+          <td class="num"><span class="rate-val">&euro;560.00</span><span class="rate-sub">+ &euro;30/h parking</span></td>
+          <td class="num"><span class="rate-val">&euro;130 / hr</span><span class="rate-sub">4h min: &euro;520</span></td>
+          <td class="num"><span class="rate-val">&euro;1,180.00</span><span class="rate-sub">200 km incl.</span></td>
+          <td class="role-text"><strong>Medium Group Express:</strong> bridges 19p minibus and 50p coach for lakeside hotels &amp; welcome dinners.</td>
         </tr>
         <tr>
-          <td><span class="zone-title">Lugano Airport (LUG) / City</span> &harr; Lake Como</td>
-          <td>~40 min</td>
-          <td class="num rate-val">&euro;170</td>
-          <td class="num rate-highlight">&euro;210</td>
-          <td class="num rate-val">&euro;280</td>
-          <td class="num rate-highlight">&euro;460</td>
-          <td class="num rate-val">&euro;650</td>
+          <td>
+            <span class="car-title">Grand Turismo Coach 50–55p</span>
+            <span class="car-sub">Setra / Tourismo or equiv. GT</span>
+          </td>
+          <td><strong>&euro;5.20 / km</strong><span class="rate-sub">Min. &euro;500</span></td>
+          <td class="num"><span class="rate-val">&euro;690.00</span><span class="rate-sub">+ &euro;30/h parking</span></td>
+          <td class="num"><span class="rate-val">&euro;150 / hr</span><span class="rate-sub">4h min: &euro;600</span></td>
+          <td class="num"><span class="rate-val">&euro;1,390.00</span><span class="rate-sub">200 km incl.</span></td>
+          <td class="role-text"><strong>Highway Trunk Line:</strong> mass airport transfer from Milan/MXP to central lakeside piers &amp; hub hotels.</td>
         </tr>
       </tbody>
     </table>
 
-    <!-- Section 3: MECE Standby & Night Logistics (BCG Style Clarity) -->
+    <!-- Section 2: Standby & Night Logistics -->
     <div class="section-heading">
-      <span>3. Event Standby &amp; MECE Night Logistics (Zero Surprise Surcharges)</span>
-      <span class="section-tag">Mutually Exclusive Billing Scenarios • Absolute Price Certainty</span>
+      <span class="section-title">2. Event Standby &amp; Night Logistics Framework</span>
+      <span class="section-tag">Fixed Packages • Zero Surprise Surcharges</span>
     </div>
-    <div class="mece-night-grid">
-      <div class="mece-box">
-        <div class="mece-tag">Scenario A · Pre-Wedding &amp; Day</div>
-        <div class="mece-title">Hourly Standby at Disposal</div>
-        <div class="mece-desc">
-          &bull; <strong>V-Class (7p):</strong> &euro;90/h (Min 3h) · 10h: &euro;900<br>
-          &bull; <strong>S-Class (3p):</strong> &euro;110/h (Min 3h) · 10h: &euro;1,100<br>
-          &bull; <strong>Minibus (19p):</strong> &euro;115/h (Min 4h: &euro;460) · 10h: &euro;1,150<br>
-          &bull; <strong>Midibus (30p):</strong> &euro;130/h (Min 4h: &euro;520) · 10h: &euro;1,180<br>
-          &bull; <strong>GT Coach (50p):</strong> &euro;150/h (Min 4h: &euro;600) · 10h: &euro;1,390
+
+    <div class="standby-grid">
+      <div class="standby-box">
+        <div class="standby-tag">Daytime Standby (07:00–22:00)</div>
+        <div class="standby-title">Hourly Disposal at Venue</div>
+        <div class="standby-desc">
+          &bull; <strong>Strict 4-Hour Minimum</strong> applies to all vehicles.<br>
+          &bull; <strong>Half-Day (4h):</strong> V-Class: &euro;380 &bull; S-Class: &euro;440 &bull; Minibus: &euro;460 &bull; Midibus: &euro;520 &bull; Coach: &euro;600.<br>
+          &bull; <strong>Full-Day (10h):</strong> Includes 200 km allowance. Chauffeur on dedicated standby at venue.
         </div>
       </div>
-      <div class="mece-box gold-accent">
-        <div class="mece-tag">Scenario B · Party Return (23:00–03:00)</div>
-        <div class="mece-title">Dedicated Night Return Loop</div>
-        <div class="mece-desc">
-          <strong>100% All-Inclusive Fixed Package:</strong><br>
-          &bull; <strong>Mercedes V-Class:</strong> <strong>&euro;450 net flat</strong><br>
+      <div class="standby-box gold">
+        <div class="standby-tag">Party Return (23:00–03:00)</div>
+        <div class="standby-title">Dedicated Night Return Loops</div>
+        <div class="standby-desc">
+          <strong>100% All-Inclusive Fixed Shuttles:</strong><br>
+          &bull; <strong>Mercedes V-Class (7p):</strong> <strong>&euro;450 net flat</strong><br>
           &bull; <strong>Executive Minibus (19p):</strong> <strong>&euro;650 net flat</strong><br>
-          &bull; <strong>Midibus (28–30p):</strong> <strong>&euro;850 net flat</strong><br>
-          Continuous loops between villa gates &amp; guest hotels. Chauffeur night shift &amp; fuel included. Zero surcharges on top.
+          &bull; <strong>Executive Midibus (30p):</strong> <strong>&euro;850 net flat</strong><br>
+          Continuous loops villa &harr; guest hotels. Chauffeur night shift &amp; fuel included.
         </div>
       </div>
-      <div class="mece-box">
-        <div class="mece-tag">Scenario C · Transparent Rules</div>
-        <div class="mece-title">Night &amp; Overtime Framework</div>
-        <div class="mece-desc">
-          &bull; <strong>Night Transfers (22:00–06:00):</strong> Flat <strong>+20%</strong> on base transfer tariff (quoted upfront on invoice).<br>
-          &bull; <strong>Overtime past 22:00:</strong> Only if daytime service extends past 22:00 on site:<br>
-          <strong>Base hourly rate + 25%</strong> (V-Class: <strong>&euro;115/h</strong> &bull; Minibus: <strong>&euro;145/h</strong> &bull; Coach: <strong>&euro;190/h</strong>).
+      <div class="standby-box">
+        <div class="standby-tag">Overtime &amp; Night Rules</div>
+        <div class="standby-title">Transparent Standardized Policy</div>
+        <div class="standby-desc">
+          &bull; <strong>Night Transfers (22:00–06:00):</strong> Flat <strong>+20%</strong> on base route tariff (quoted upfront on invoice).<br>
+          &bull; <strong>Overtime past 22:00:</strong> Only if daytime service extends into the night: <strong>Base Rate + 25%</strong> (V: <strong>&euro;115/h</strong> &bull; Minibus: <strong>&euro;145/h</strong> &bull; Coach: <strong>&euro;190/h</strong>).
         </div>
       </div>
     </div>
 
-    <!-- Section 4: Operational Boundaries & Pass-Through Guardrails -->
+    <!-- Section 3: Operational Guardrails & Luggage Strip -->
     <div class="operational-strip">
-      <div class="op-col">
-        <strong>Luggage Capacity Advisory:</strong> 19p and 30p minibuses feature compact trunks (max 1 medium ~45L bag/seat). For overseas guests with formal luggage: <strong>Dedicated Baggage Support Van (Mercedes Vito Cargo)</strong> available at <strong>&euro;240 net flat</strong> per airport wave.
+      <div>
+        <strong>Luggage Advisory:</strong> 16–20p minibuses have compact trunks (~45L per seat, ~1 medium suitcase). For overseas wedding parties with formal luggage, book our <strong>Dedicated Baggage Support Van (Mercedes Vito Cargo)</strong> at <strong>&euro;240 net flat</strong> per airport wave.
       </div>
-      <div class="op-col">
-        <strong>Terminal Parking &amp; Area C Pass-Throughs:</strong> MXP Bus Terminal parking: &euro;30/h (SEA pass-through). Milan Area C ZTL (Mon–Fri 07:30–19:30): &euro;60 (19p), &euro;100 (28–30p), &euro;150 (50p). Sedans, Vans, weekends, and holidays are 100% free.
+      <div>
+        <strong>Villa Gate Access &amp; Pass-Throughs:</strong> 50-seat coaches cannot enter narrow villa driveways (Balbiano, Pizzo). DOROGO coordinates highway coach transit synchronized with 19p Minibuses or V-Class shuttles for the final mile. MXP parking: &euro;30/h. Area C ZTL: free for vans/weekends.
       </div>
     </div>
 
-    <!-- Section 5: Partner Commercial Models -->
+    <!-- Section 4: Collaboration Models -->
     <div class="section-heading">
-      <span>4. Partner Commercial Models (Choose Per Wedding)</span>
-      <span class="section-tag">Flexible Alignment</span>
+      <span class="section-title">3. B2B Collaboration Formats &amp; Verified Feedback</span>
+      <span class="section-tag">Flexible Agency Partnership • Trustpilot 5.0 / 5.0</span>
     </div>
-    <div class="models-grid">
-      <div class="model-card featured">
-        <div class="model-header">
-          <div class="model-name">Option A: Include Net Rates in Your Client Proposal</div>
-          <div class="model-payout">15% &ndash; 25%+ Studio Markup</div>
+
+    <div class="collab-grid">
+      <div class="collab-card featured">
+        <div class="collab-head">
+          <span class="collab-title">Option A: White-Label Studio Markup</span>
+          <span class="collab-payout">15% – 25%+ Studio Margin</span>
         </div>
-        <div class="model-body">
-          Bundle the confidential net rates above directly into your wedding budget with your own studio margin. DOROGO operates as your discreet, white-label transport department.
+        <div class="collab-desc">
+          Include confidential net partner rates directly into your wedding budget with your agency margin. DOROGO operates as your discreet, white-label transport department with 100% client protection.
         </div>
       </div>
-      <div class="model-card">
-        <div class="model-header">
-          <div class="model-name">Option B: 5% Referral Commission</div>
-          <div class="model-payout">5% Studio Payout</div>
+      <div class="collab-card">
+        <div class="collab-head">
+          <span class="collab-title">Option B: 5% Referral Commission</span>
+          <span class="collab-payout">5% Studio Payout</span>
         </div>
-        <div class="model-body">
-          DOROGO bills the couple or guests directly (via invoice or self-service Guest Transfer Portal) and remits a <strong>5% commission</strong> to your agency upon contract settlement.
+        <div class="collab-desc">
+          Pass us the client contact and itinerary — DOROGO handles 100% of quoting, billing, and on-ground logistics. Your studio receives a guaranteed <strong>5% partner commission</strong> upon contract settlement.
         </div>
       </div>
     </div>
 
-    <!-- Section 6: Operational Guarantees -->
+    <!-- 4 Operational Guarantees -->
     <div class="guarantees-grid">
       <div class="guarantee-item">
         <div class="guarantee-title">Guest Transfer Portal</div>
-        <div class="guarantee-sub">Guests log their own flights</div>
+        <div class="guarantee-sub">Guests log own flights</div>
       </div>
       <div class="guarantee-item">
         <div class="guarantee-title">1 WhatsApp Dispatcher</div>
-        <div class="guarantee-sub">Zero guest calls to your phone</div>
+        <div class="guarantee-sub">Zero calls to planner</div>
       </div>
       <div class="guarantee-item">
         <div class="guarantee-title">Live Flight Tracking</div>
@@ -701,19 +651,19 @@
       </div>
       <div class="guarantee-item">
         <div class="guarantee-title">Villa &amp; Pier Access</div>
-        <div class="guarantee-sub">ZTL permits &amp; boat-dock sync</div>
+        <div class="guarantee-sub">ZTL permits &amp; boat dock sync</div>
       </div>
     </div>
 
-    <!-- Section 7: Verified Wedding Feedback -->
+    <!-- Verified Wedding Reviews -->
     <div class="reviews-grid">
       <div class="review-card">
         <div class="review-quote">
-          &ldquo;DOROGO managed our guest transport across all three days of our wedding. I didn&rsquo;t receive a single message from a guest saying they couldn&rsquo;t find their car or didn&rsquo;t know how to get back. When my mother&rsquo;s flight was cancelled, the team reorganized her transfer without needing to call us.&rdquo;
+          &ldquo;DOROGO managed our guest transport across all 3 days of our wedding. I didn&rsquo;t receive a single message from a guest saying they couldn&rsquo;t find their car or didn&rsquo;t know how to get back. When my mother&rsquo;s flight was cancelled, the team reorganized her transfer without needing to call us.&rdquo;
         </div>
         <div class="review-meta">
-          <a href="https://www.trustpilot.com/reviews/6ac1548653ae680f1c3c7bc5" target="_blank" style="color:inherit;text-decoration:none;">Cocrzt &bull; 3-Day Wedding (French Couple) &bull; Trustpilot &#8599;</a>
-          <span class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+          <span>Cocrzt &bull; 3-Day Wedding (French Couple) &bull; Trustpilot &#8599;</span>
+          <span class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733; 5.0</span>
         </div>
       </div>
       <div class="review-card">
@@ -721,8 +671,8 @@
           &ldquo;Huge thanks to DOROGO&rsquo;s chauffeurs and transport coordinators during our Lake Como wedding. We had 70 guests flying in from abroad and they provided 12 Mercedes V-Class vans across 2 days at our guests&rsquo; disposal. 5/5 for organization, chauffeur professionalism, and flexibility.&rdquo;
         </div>
         <div class="review-meta">
-          <a href="https://www.trustpilot.com/reviews/6ac373b7faaeb9345ceb68f2" target="_blank" style="color:inherit;text-decoration:none;">Claudia C. &bull; Lake Como Wedding (70 Guests) &bull; Trustpilot &#8599;</a>
-          <span class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+          <span>Claudia C. &bull; Lake Como Wedding (70 Guests) &bull; Trustpilot &#8599;</span>
+          <span class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733; 5.0</span>
         </div>
       </div>
     </div>
@@ -733,15 +683,15 @@
         <div class="terms-title">Reservation &amp; Dispatch Terms</div>
         <div class="terms-text">
           &bull; <strong>Booking Deposit:</strong> 25% deposit secures fleet on dispatch schedule; balance due 7 days prior.<br>
-          &bull; <strong>Full-Fleet Execution:</strong> Coordinated multi-day fleets for 20 to 200+ guests (S-Class, V-Class, 19p Minibuses &amp; Coaches).<br>
-          &bull; <strong>Dedicated Dispatch Desk:</strong> Includes live flight radar, Guest Transfer Portal, and 1 English-speaking WhatsApp coordinator.
+          &bull; <strong>Fleet Integrity:</strong> All-black, unbranded NCC fleet with dark-suited English-speaking chauffeurs.<br>
+          &bull; <strong>Included Services:</strong> Dedicated WhatsApp dispatch desk, live flight tracking, and Guest Transfer Portal included free.
         </div>
       </div>
       <div class="dispatch-col">
         <div class="dispatch-lead">Dmitri &bull; DOROGO Private Transportation</div>
         <div class="dispatch-contact">
-          Direct / WhatsApp: <strong>+32 456 14 14 97</strong><br>
-          Partner Desk: <strong>dmitri@dorogo.eu</strong> &bull; <strong>booking@dorogo.eu</strong><br>
+          Direct &amp; WhatsApp: <strong>+32 456 14 14 97</strong><br>
+          Dispatch Desk: <strong>dmitri@dorogo.eu</strong> &bull; <strong>booking@dorogo.eu</strong><br>
           Milan &bull; Lake Como &bull; Italian Alps &bull; <strong>dorogo.eu/weddings</strong>
         </div>
       </div>

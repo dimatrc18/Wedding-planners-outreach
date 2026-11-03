@@ -179,21 +179,43 @@ function demoBackend() {
 }
 
 // ---------------- Public API ----------------
+export const ALLOWED_EMAILS = ['dmitri.traciuc@gmail.com', 'traciuc04@gmail.com'];
+
+export function isUserAuthorized(user) {
+  if (!user || !user.email) return false;
+  return ALLOWED_EMAILS.includes(user.email.toLowerCase().trim());
+}
+
 export async function init() {
   const cfg = window.APP_CONFIG || {};
-  const wantsDemo = cfg.MODE === 'demo' || /(^|[#&])demo\b/.test(location.hash) || sessionStorageGet('dorogo-demo') === '1';
-  if (!wantsDemo && window.supabase && cfg.SUPABASE_URL) {
+  if (window.supabase && cfg.SUPABASE_URL) {
     sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_KEY);
     const { data } = await sb.auth.getSession();
     sb.auth.onAuthStateChange((evt, session) => {
-      if (evt === 'SIGNED_IN' && S.mode !== 'live') startLive(session.user);
+      if (evt === 'SIGNED_IN' && session?.user) {
+        if (isUserAuthorized(session.user)) {
+          if (S.mode !== 'live') startLive(session.user);
+        } else {
+          sb.auth.signOut();
+          S.mode = 'signed_out';
+          S.user = null;
+          emit('auth');
+        }
+      }
       if (evt === 'SIGNED_OUT') { S.mode = 'signed_out'; S.user = null; emit('auth'); }
     });
-    if (data.session) return startLive(data.session.user);
+    if (data?.session?.user) {
+      if (isUserAuthorized(data.session.user)) {
+        return startLive(data.session.user);
+      } else {
+        await sb.auth.signOut();
+      }
+    }
     S.mode = 'signed_out';
     return emit('auth');
   }
-  return startDemo();
+  S.mode = 'signed_out';
+  return emit('auth');
 }
 
 function sessionStorageGet(k) { try { return sessionStorage.getItem(k); } catch { return null; } }
@@ -219,6 +241,12 @@ export async function refreshLive(silent = true) {
 }
 
 async function startLive(user) {
+  if (!isUserAuthorized(user)) {
+    if (sb) await sb.auth.signOut();
+    S.mode = 'signed_out'; S.user = null;
+    emit('auth');
+    return;
+  }
   S.user = user; S.mode = 'live'; backend = liveBackend();
   try {
     setData(await backend.load());
