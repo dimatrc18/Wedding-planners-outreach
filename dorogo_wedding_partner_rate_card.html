@@ -229,7 +229,7 @@
   }
   .car-title {
     font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 11.5px;
+    font-size: 11.8px;
     font-weight: 600;
     color: #1a1918;
     display: block;
@@ -238,28 +238,28 @@
     white-space: nowrap;
   }
   .car-sub {
-    font-size: 6.9px;
+    font-size: 7.0px;
     color: #767069;
     display: block;
     margin-top: 1px;
   }
   .rate-val {
-    font-size: 9.6px;
+    font-size: 10.2px;
     font-weight: 700;
     color: #1a1918;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
   .rate-sub {
-    font-size: 6.7px;
+    font-size: 6.8px;
     color: #8c847d;
     display: block;
     font-weight: 500;
   }
   .role-text {
-    font-size: 7.2px;
+    font-size: 7.4px;
     color: #57514a;
-    line-height: 1.28;
+    line-height: 1.30;
   }
   .role-text strong {
     color: #1a1918;
@@ -498,6 +498,213 @@
     height: 9px;
     fill: #1a1918;
     vertical-align: middle;
+  }
+
+  /* Mobile Screen Responsive Rules (Phones & Tablets) - Does not affect Print/PDF */
+  @media screen and (max-width: 768px) {
+    body {
+      padding: 12px 10px;
+      font-size: 14px;
+      line-height: 1.5;
+      background: #fdfbf8;
+    }
+    .top-bar {
+      margin-bottom: 12px;
+    }
+    .top-label {
+      font-size: 12px;
+    }
+    .sheet {
+      padding: 20px 16px;
+      min-height: auto;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+    }
+    .header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+      padding-bottom: 12px;
+    }
+    .brand-logo {
+      font-size: 30px;
+    }
+    .brand-sub {
+      font-size: 13px;
+      white-space: normal;
+    }
+    .header-meta {
+      text-align: left;
+    }
+    .header-title {
+      font-size: 20px;
+    }
+    .header-sub {
+      font-size: 11px;
+      white-space: normal;
+    }
+    .section-heading {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      margin-top: 20px;
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+    }
+    .section-title {
+      font-size: 17px;
+    }
+    .section-sub {
+      font-size: 11px;
+    }
+    .table-container {
+      overflow-x: auto;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      -webkit-overflow-scrolling: touch;
+    }
+    table.master-table {
+      min-width: 620px;
+      font-size: 12px;
+    }
+    table.master-table th {
+      font-size: 11px;
+      padding: 8px 8px;
+    }
+    table.master-table td {
+      padding: 10px 8px;
+    }
+    .car-title {
+      font-size: 16px;
+    }
+    .car-sub {
+      font-size: 11px;
+    }
+    .rate-val {
+      font-size: 15px;
+    }
+    .rate-sub {
+      font-size: 11px;
+    }
+    .role-text {
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .standby-grid {
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .standby-card {
+      padding: 14px 14px;
+      border-radius: 10px;
+    }
+    .standby-tag {
+      font-size: 11px;
+      padding: 3px 10px;
+    }
+    .standby-title {
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+    .standby-desc {
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .collab-grid {
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .collab-card {
+      padding: 14px 14px;
+      border-radius: 10px;
+    }
+    .collab-title {
+      font-size: 16px;
+    }
+    .collab-payout {
+      font-size: 12px;
+      padding: 3px 10px;
+    }
+    .collab-desc {
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .operational-strip {
+      grid-template-columns: 1fr;
+      gap: 12px;
+      padding: 14px 14px;
+      font-size: 13px;
+      line-height: 1.5;
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+    .guarantees-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .guarantee-item {
+      padding: 10px 8px;
+      border-radius: 8px;
+    }
+    .guarantee-title {
+      font-size: 14px;
+    }
+    .guarantee-sub {
+      font-size: 11px;
+    }
+    .reviews-grid {
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .review-card {
+      padding: 14px 14px;
+      border-radius: 10px;
+    }
+    .review-quote {
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .review-meta {
+      font-size: 12px;
+      margin-top: 6px;
+    }
+    .footer-strip {
+      flex-direction: column;
+      gap: 16px;
+      padding-top: 16px;
+    }
+    .terms-col {
+      max-width: 100%;
+    }
+    .terms-title {
+      font-size: 15px;
+    }
+    .terms-text {
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .dispatch-col {
+      text-align: left;
+    }
+    .dispatch-lead {
+      font-size: 16px;
+    }
+    .dispatch-contact {
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .wa-link {
+      font-size: 14px;
+      padding: 4px 0;
+    }
+    .wa-icon {
+      width: 14px;
+      height: 14px;
+    }
   }
 
   @media print {
