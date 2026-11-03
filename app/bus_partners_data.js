@@ -327,19 +327,18 @@ export const INITIAL_BUS_PARTNERS = [
     "base_city": "Como",
     "website": "https://www.landwaytourism.com",
     "fleet_url": "https://www.landwaytourism.com/flotta/",
-    "relevance_score": 93,
+    "relevance_score": 95,
     "score_breakdown": {
-      "fleet_luxury": 23,
+      "fleet_luxury": 25,
       "partner_card": {
         "whatsapp": "+39 345 689 8609",
-        "bus_models": "Minibus GT (20 pax), Iveco Midibus (30 pax), Mercedes Tourismo & Setra GT (50 pax)",
-        "replied_at": "2026-11-02T17:00:00.000Z",
+        "bus_models": "Mercedes Minibus GT (19 pax), Iveco Midibus (27–29 pax), Mercedes Tourismo & Setra GT Coach (50 pax)",
+        "replied_at": "2026-11-03T15:07:00.000Z",
         "rate_hourly": "19p: €400/4h, €700/8h; 29p: €500/4h, €800/8h; 50p: €600/4h, €900/8h + IVA",
-        "client_notes": "",
+        "client_notes": "3 Nov 15:07: Melissa sent complete interior & exterior photos (12 photos total across 19p, 27–29p, 50p). Verified luggage: 19p = 12 hold / 14–15 med / 19 trolley; 29p = 10–13 hold / 20–25 med / 27–29 trolley. 19p & 29p 100% unbranded sides (small rear logo only). Listino Prezzi 2027 X DOROGO on file.",
         "email_status": "replied",
-        "pax_capacity": "19, 27–29, 50 pax",
+        "pax_capacity": "19, 27–29, 50 pax (+ guida + autista)",
         "rate_standby": "19p: €700/8h; 29p: €800/8h; 50p: €900/8h (+ ZTL: €60 / €100 / €150)",
-        "rate_document": "assets/partner_fleet/landway/landway_rates_2027.pdf",
         "scheduled_at": "2026-10-28T09:00:00.000Z",
         "fleet_segment": "both",
         "outreach_stage": "replied",
@@ -347,32 +346,245 @@ export const INITIAL_BUS_PARTNERS = [
         "user_set_status": true,
         "last_outreach_at": null,
         "user_set_segment": true,
-        "fleet_audit_verified_at": "2026-10-26T18:25:11.587Z",
-        "contact_person": "Melissa (Emergency: Massimo Rossi +39 331 528 1982)"
+        "fleet_audit_verified_at": "2026-11-03T15:07:00.000Z",
+        "contact_person": "Melissa (Emergency: Massimo Rossi +39 331 528 1982)",
+        "rate_document": "assets/partner_fleet/landway/landway_rates_2027.pdf",
+        "verified_fleet_pairs": [
+          {
+            "id": 1,
+            "fleet_no": "HD150SX",
+            "model": "Mercedes-Benz Minibus GT (19 pax)",
+            "category": "minibus_19",
+            "pax": 19,
+            "tier": "Luxury VIP",
+            "unbranded": true,
+            "luggage": "12 hold bags · 14–15 medium (~45–60L) · 19 cabin trolleys. Pax: 19 + guida + autista",
+            "exterior_filename": "19_posti_villa_erba_1.jpeg",
+            "interior_filename": "19_posti_1_HD150SX.jpeg",
+            "status": "VERIFIED_PAIR",
+            "transfers": {
+              "mxp_milano": 350,
+              "milano_como": 450
+            },
+            "standby": {
+              "dispo_4h": 400,
+              "dispo_8h": 700
+            }
+          },
+          {
+            "id": 2,
+            "fleet_no": null,
+            "model": "Iveco Midibus GT (27–29 pax)",
+            "category": "midibus_29",
+            "pax": 29,
+            "tier": "Luxury VIP",
+            "unbranded": true,
+            "luggage": "10–13 hold bags · 20–25 medium (~45–60L) · 27–29 cabin trolleys. Pax: 27–29 + guida + autista",
+            "exterior_filename": "29_posti_2.jpeg",
+            "interior_filename": "29_posti_3.jpeg",
+            "status": "VERIFIED_PAIR",
+            "transfers": {
+              "mxp_milano": 400,
+              "milano_como": 500
+            },
+            "standby": {
+              "dispo_4h": 500,
+              "dispo_8h": 800
+            }
+          },
+          {
+            "id": 3,
+            "fleet_no": "HA526 / GN150",
+            "model": "Mercedes Tourismo & Setra GT Coach (50 pax)",
+            "category": "coach_50",
+            "pax": 50,
+            "tier": "Standard GT",
+            "unbranded": false,
+            "luggage": "50 large hold suitcases + interior racks. Pax: 50 + guida + autista",
+            "exterior_filename": "3_BUS_50_POSTI_.jpeg",
+            "interior_filename": "50_posti_interni_HA526.jpeg",
+            "status": "VERIFIED_PAIR",
+            "transfers": {
+              "mxp_milano": 450,
+              "milano_como": 550
+            },
+            "standby": {
+              "dispo_4h": 600,
+              "dispo_8h": 900
+            }
+          }
+        ],
+        "fleet_photos": [
+          {
+            "id": "landway_minibus_19_ext_1",
+            "src": "assets/partner_fleet/landway/19_posti_villa_erba_1.jpeg",
+            "file": "19 posti villa erba 1.jpeg",
+            "vehicle": "Mercedes-Benz Minibus GT (19 Seats)",
+            "category": "minibus_19",
+            "type": "exterior",
+            "pax": 19,
+            "tier": "Luxury VIP",
+            "title": "Exterior Front 3/4 — Mercedes-Benz Minibus 19 Pax at Villa Erba",
+            "caption": "Total black unbranded Mercedes-Benz Sprinter luxury minibus parked at Villa Erba on Lake Como."
+          },
+          {
+            "id": "landway_minibus_19_ext_2",
+            "src": "assets/partner_fleet/landway/19_posti_villa_erba_2.jpeg",
+            "file": "19 posti villa erba 2.jpeg",
+            "vehicle": "Mercedes-Benz Minibus GT (19 Seats)",
+            "category": "minibus_19",
+            "type": "exterior",
+            "pax": 19,
+            "tier": "Luxury VIP",
+            "title": "Exterior Side Profile — Mercedes-Benz Minibus 19 Pax at Villa Erba",
+            "caption": "Full side profile showing tinted privacy glass and clean unbranded bodywork with lake backdrop."
+          },
+          {
+            "id": "landway_minibus_19_ext_3",
+            "src": "assets/partner_fleet/landway/19_posti_villa_erba_3.jpeg",
+            "file": "19 posti villa erba 3.jpeg",
+            "vehicle": "Mercedes-Benz Minibus GT (19 Seats)",
+            "category": "minibus_19",
+            "type": "exterior",
+            "pax": 19,
+            "tier": "Luxury VIP",
+            "title": "Exterior Rear 3/4 — Mercedes-Benz Minibus 19 Pax at Villa Erba",
+            "caption": "Rear view confirming unbranded clean coachwork with discreet small rear logo only."
+          },
+          {
+            "id": "landway_minibus_19_int_1",
+            "src": "assets/partner_fleet/landway/19_posti_1_HD150SX.jpeg",
+            "file": "19 posti 1 HD150SX.jpeg",
+            "vehicle": "Mercedes-Benz Minibus GT (19 Seats)",
+            "category": "minibus_19",
+            "type": "interior",
+            "pax": 19,
+            "tier": "Luxury VIP",
+            "title": "Interior VIP Cabin — Executive Leather Seating (19 Pax)",
+            "caption": "Luxury contoured dark leather seating with individual headrests, ambient lighting, and executive aisle."
+          },
+          {
+            "id": "landway_minibus_19_int_2",
+            "src": "assets/partner_fleet/landway/19_posti_2_HD150SX.jpeg",
+            "file": "19 posti 2 HD150SX.jpeg",
+            "vehicle": "Mercedes-Benz Minibus GT (19 Seats)",
+            "category": "minibus_19",
+            "type": "interior",
+            "pax": 19,
+            "tier": "Luxury VIP",
+            "title": "Interior Forward View — Chauffeur Cockpit & Passenger Cabin",
+            "caption": "Forward cabin perspective showing panoramic front windscreen, clean cockpit, and passenger rows."
+          },
+          {
+            "id": "landway_midibus_29_ext_1",
+            "src": "assets/partner_fleet/landway/29_posti_2.jpeg",
+            "file": "29 posti 2.jpeg",
+            "vehicle": "Iveco Midibus GT (27–29 Seats)",
+            "category": "midibus_29",
+            "type": "exterior",
+            "pax": 29,
+            "tier": "Luxury VIP",
+            "title": "Exterior & Cabin Entrance — Iveco Midibus 29 Pax",
+            "caption": "Total black 29-seater touring midibus with open entry showing luxury grey leather seating."
+          },
+          {
+            "id": "landway_midibus_29_int_1",
+            "src": "assets/partner_fleet/landway/29_posti_3.jpeg",
+            "file": "29 posti 3.jpeg",
+            "vehicle": "Iveco Midibus GT (27–29 Seats)",
+            "category": "midibus_29",
+            "type": "interior",
+            "pax": 29,
+            "tier": "Luxury VIP",
+            "title": "Interior VIP Cabin — Executive Leather Passenger Seats",
+            "caption": "Contoured luxury leather seating with dual-tone grey/black upholstery, 3-point seatbelts, and armrests."
+          },
+          {
+            "id": "landway_midibus_29_int_2",
+            "src": "assets/partner_fleet/landway/29_posti_5.jpeg",
+            "file": "29 posti 5.jpeg",
+            "vehicle": "Iveco Midibus GT (27–29 Seats)",
+            "category": "midibus_29",
+            "type": "interior",
+            "pax": 29,
+            "tier": "Luxury VIP",
+            "title": "Interior Cabin Aisle — High Panoramic Ceiling",
+            "caption": "Aisle perspective toward rear showing full passenger cabin, overhead parcel racks, and AC vents."
+          },
+          {
+            "id": "landway_coach_50_ext_1",
+            "src": "assets/partner_fleet/landway/3_BUS_50_POSTI_.jpeg",
+            "file": "3 BUS 50 POSTI .jpeg",
+            "vehicle": "Mercedes Tourismo & Setra GT Coach (50 Seats)",
+            "category": "coach_50",
+            "type": "exterior",
+            "pax": 50,
+            "tier": "Standard GT",
+            "title": "Exterior Fleet Convoy — 3x Mercedes Tourismo GT Coaches (50 Pax)",
+            "caption": "Convoy of 3 Mercedes-Benz Tourismo 50-seater Gran Turismo coaches showing side livery."
+          },
+          {
+            "id": "landway_coach_50_ext_2",
+            "src": "assets/partner_fleet/landway/50_SEAT_BUS_.png",
+            "file": "50 SEAT BUS .png",
+            "vehicle": "Mercedes Tourismo & Setra GT Coach (50 Seats)",
+            "category": "coach_50",
+            "type": "exterior",
+            "pax": 50,
+            "tier": "Standard GT",
+            "title": "Exterior Profile — Gran Turismo Coach (50 Pax)",
+            "caption": "Full side exterior profile of Landway 50-seat touring coach."
+          },
+          {
+            "id": "landway_coach_50_int_1",
+            "src": "assets/partner_fleet/landway/50_posti_interni_HA526.jpeg",
+            "file": "50 posti interni HA526.jpeg",
+            "vehicle": "Mercedes Tourismo & Setra GT Coach (50 Seats)",
+            "category": "coach_50",
+            "type": "interior",
+            "pax": 50,
+            "tier": "Standard GT",
+            "title": "Interior VIP Cabin — Executive Touring Recliners",
+            "caption": "Long-distance executive cabin with wide reclining touring seats, aisle grab handles, and high ceiling."
+          },
+          {
+            "id": "landway_coach_50_int_2",
+            "src": "assets/partner_fleet/landway/50_posti_interni_GN150.jpeg",
+            "file": "50 posti interni GN150.jpeg",
+            "vehicle": "Mercedes Tourismo & Setra GT Coach (50 Seats)",
+            "category": "coach_50",
+            "type": "interior",
+            "pax": 50,
+            "tier": "Standard GT",
+            "title": "Interior Passenger Cabin — Overhead Parcel Racks & Lighting",
+            "caption": "Forward passenger cabin perspective showing climate control nozzles, reading lights, and premium upholstery."
+          }
+        ]
       },
       "corporate_sla": 15,
       "territory_permits": 20,
       "discretion_unbranded": 35
     },
-    "status": "CONTACTED",
-    "unbranded_status": "19p & 27/29p: Clean sides (small rear logo only); 50p has side logos",
+    "status": "APPROVED_PARTNER",
+    "unbranded_status": "19p & 27/29p: 100% Clean unbranded sides (small rear logo only); 50p has company side logos",
     "fleet_categories": [
-      "Minibus GT (20 seats)",
-      "Iveco Midibus (30 seats)",
+      "Mercedes-Benz Sprinter Minibus (19 seats)",
+      "Iveco Executive Midibus (27–29 seats)",
       "Mercedes Tourismo & Setra GT Coach (50 seats)"
     ],
     "phone": "+39 031 513 189",
     "email": "info@landwaytourism.com",
-    "notes": "28 Oct: Melissa forwarded to pricing. 2 Nov: Sent Listino Prezzi 2027 X DOROGO (PDF). Rates: 19p MXP €350 / Como €450 / 8h €700; 29p MXP €400 / Como €500 / 8h €800; 50p MXP €450 / Como €550 / 8h €900. All Luxury fitted. Livery: 19p & 27/29p clean sides (rear logo only); 50p has side logos. Cancellation: 30% >36h, 50% 24-36h, 100% <24h. Massimo Rossi +39 331 528 1982.",
+    "notes": "28 Oct: Melissa forwarded to pricing. 2 Nov: Sent Listino Prezzi 2027 X DOROGO (PDF). Rates: 19p MXP €350 / Como €450 / 8h €700; 29p MXP €400 / Como €500 / 8h €800; 50p MXP €450 / Como €550 / 8h €900. All Luxury fitted. 3 Nov 15:07: Melissa sent complete interior & exterior photo set (12 photos). Luggage specs confirmed: 19p (12 hold / 14–15 med / 19 trolley); 29p (10–13 hold / 20–25 med / 27–29 trolley). Massimo Rossi +39 331 528 1982.",
     "source": "crawler",
     "created_at": "2026-10-23T13:12:50.109+00:00",
     "updated_at": "2026-10-26T16:45:27.755066+00:00",
-    "bus_models": "Minibus GT (20 pax), Iveco Midibus (30 pax), Mercedes Tourismo & Setra GT (50 pax)",
-    "pax_capacity": "20, 30, 50 pax",
+    "bus_models": "Mercedes Minibus GT (19 pax), Iveco Midibus (27–29 pax), Mercedes Tourismo & Setra GT Coach (50 pax)",
+    "pax_capacity": "19, 27–29, 50 pax (+ guida + autista)",
     "fleet_segment": "both",
     "outreach_stage": "replied",
-    "replied_at": "2026-10-28T10:14:07.000Z",
-    "contact_person": "Melissa"
+    "replied_at": "2026-11-03T15:07:00.000Z",
+    "contact_person": "Melissa",
+    "client_notes": "3 Nov 15:07: Melissa sent complete interior & exterior photos (12 photos total across 19p, 27–29p, 50p). Verified luggage: 19p = 12 hold / 14–15 med / 19 trolley; 29p = 10–13 hold / 20–25 med / 27–29 trolley. 19p & 29p 100% unbranded sides (small rear logo only). Listino Prezzi 2027 X DOROGO on file."
   },
   {
     "id": "partner_1792765278630_r4vp",
@@ -627,7 +839,7 @@ export const INITIAL_BUS_PARTNERS = [
       "partner_card": {
         "whatsapp": "+39 333 2697376",
         "bus_models": "Mercedes Sprinter 7 pax + driver (Red interior), Mercedes Sprinter 8 pax + driver (2x Standard & Top 8 VIP), Mercedes Minibus (2x 20 pax), Executive Coach (30 pax)",
-        "replied_at": "2026-10-29T10:19:06.000Z",
+        "replied_at": "2026-10-29T12:57:44.000Z",
         "rate_hourly": "Sprinter 7/8p: €100/h (8h €800), Top 8p: €140/h + IVA (8h €1,200) | Minibus 20p: €119–€138/h | Coach 30p: €150/h (4h €600, 8h €1,200)",
         "client_notes": "Replied 28–29 Oct (Email + WhatsApp +39 333 2697376 · Vincenzo): Base a Milano (Via Calatafimi 12). WA-confirmed fleet & rates: (1) 30 Pax Coach: MXP–Milano €400 + IVA (+ ZTL €97.50), MXP–Como €500 + IVA, 4h standby €600 (75km incl), 8h standby €1200 (150km incl). (2) Sprinter 7 & 8 Pax: MXP–Milano €250 + IVA, MXP–Como €380 + IVA, 8h standby €800 (150km incl). (3) Sprinter Top 8 VIP (Allestimento Speciale, video confirmed): confirmed rate €140/h + IVA, 8h standby €1200 + IVA. (4) Minibus 20 Pax (2 units): MXP–Milano €330 + IVA, 4h standby €550, 8h standby €950 + IVA. All WA photos & video saved in assets.",
         "email_status": "mx_ok",
@@ -647,7 +859,7 @@ export const INITIAL_BUS_PARTNERS = [
       "territory_permits": 19,
       "discretion_unbranded": 35
     },
-    "status": "CONTACTED",
+    "status": "APPROVED_PARTNER",
     "unbranded_status": "100% Guaranteed Unbranded / Total Black",
     "fleet_categories": [
       "Mercedes Sprinter VIP (7 seats + driver · Red interior)",
@@ -661,16 +873,16 @@ export const INITIAL_BUS_PARTNERS = [
     "notes": "Replied 28–29 Oct (Email + WhatsApp +39 333 2697376 · Vincenzo): Base a Milano (Via Calatafimi 12). WA-confirmed fleet & rates: (1) 30 Pax Coach: MXP–Milano €400 + IVA (+ ZTL €97.50), MXP–Como €500 + IVA, 4h standby €600 (75km incl), 8h standby €1200 (150km incl). (2) Sprinter 7 & 8 Pax: MXP–Milano €250 + IVA, MXP–Como €380 + IVA, 8h standby €800 (150km incl). (3) Sprinter Top 8 VIP (Allestimento Speciale, video confirmed): confirmed rate €140/h + IVA, 8h standby €1200 + IVA. (4) Minibus 20 Pax (2 units): MXP–Milano €330 + IVA, 4h standby €550, 8h standby €950 + IVA. All WA photos & video saved in assets.",
     "source": "crawler",
     "created_at": "2026-10-23T14:21:19.535+00:00",
-    "updated_at": "2026-10-29T11:19:40.807Z",
+    "updated_at": "2026-10-29T12:57:44.000Z",
     "bus_models": "Mercedes Sprinter 7 pax + driver (Red interior), Mercedes Sprinter 8 pax + driver (2x Standard & Top 8 VIP), Mercedes Minibus (2x 20 pax), Executive Coach (30 pax)",
     "pax_capacity": "7, 8, 20, 30 pax",
     "fleet_segment": "luxury",
     "outreach_stage": "replied",
-    "replied_at": "2026-10-29T10:19:06.000Z",
+    "replied_at": "2026-10-29T12:57:44.000Z",
     "last_outreach_at": "2026-10-28T12:00:00.000Z",
     "contact_person": "Vincent Lombardi (Avantgarde Service)",
-    "rate_hourly": "Sprinter 8p: €90–€140/h + IVA | Minibus 20p: €119–€138/h + IVA",
-    "rate_standby": "Sprinter 8p: MXP–MI €250, €90–140/h | Minibus 20p: MXP–MI €330, 4h €550, 8h €950 | 30p: TBC (+IVA+ZTL)"
+    "rate_hourly": "Sprinter 7/8p: €100/h (8h €800), Top 8p: €140/h + IVA (8h €1120) | Minibus 20p: €119–€138/h | Coach 30p: €150/h (4h €600, 8h €1200)",
+    "rate_standby": "Sprinter: MXP–MI €250, MXP–Como €380, 8h €800 (Top VIP €140/h, 8h €1120) | 20p: MXP–MI €330, 4h €550, 8h €950 | 30p: MXP–MI €400, MXP–Como €500, 4h €600, 8h €1200 (+IVA+ZTL)"
   },
   {
     "id": "partner_1793031479651_1_wjsp",
@@ -1978,133 +2190,133 @@ export const INITIAL_BUS_PARTNERS = [
     "fleet_url": "https://www.autoserviziguizzetti.com/",
     "relevance_score": 82,
     "score_breakdown": {
-        "fleet_luxury": 23,
-        "partner_card": {
-            "whatsapp": "+39 335 747 1244",
-            "bus_models": "Fleet 36 buses: Minibus 19p, Midibus 30p, GT Coach 50–55p, Setra, Scania, Irizar i8, Sprinter Luxury 8+1p",
-            "replied_at": "2026-11-03T06:37:00.000Z",
-            "rate_hourly": "50p: €550/4h, €800/8h; 30p: €500/4h, €720/8h; 19p: €450/4h, €650/8h + IVA",
-            "email_status": "replied",
-            "pax_capacity": "8, 19, 30, 50, 51, 55, 65, 83 pax",
-            "rate_standby": "50p: €800/8h; 30p: €720/8h; 19p: €650/8h + IVA (+ Area C)",
-            "scheduled_at": "2026-10-30T12:00:00.000Z",
-            "fleet_segment": "both",
-            "outreach_stage": "replied",
-            "user_set_status": true,
-            "last_outreach_at": "2026-10-30T12:00:00.000Z",
-            "user_set_segment": false,
-            "fleet_audit_verified_at": "2026-10-26T18:25:11.587Z",
-            "contact_person": "Cristian",
-            "office_whatsapp": "+39 035 982277",
-            "verified_fleet_pairs": [
-                {
-                    "id": 1,
-                    "fleet_no": "103",
-                    "model": "Spica / Indcar Wing Minibus (19 pax)",
-                    "category": "minibus_19",
-                    "exterior_filename": "103 – laterale.jpeg",
-                    "interior_filename": "interno 103.jpg",
-                    "status": "VERIFIED_PAIR",
-                    "transfers": {
-                        "mxp_milano": 350
-                    },
-                    "standby": {
-                        "dispo_4h": 450,
-                        "dispo_8h": 650
-                    }
-                },
-                {
-                    "id": 2,
-                    "fleet_no": "104",
-                    "model": "Iveco Midibus GT (30 pax)",
-                    "category": "midibus_30",
-                    "exterior_filename": "104 – Esterno 3.jpg",
-                    "interior_filename": "104 – Interno 2.jpg",
-                    "status": "VERIFIED_PAIR",
-                    "transfers": {
-                        "mxp_milano": 380
-                    },
-                    "standby": {
-                        "dispo_4h": 500,
-                        "dispo_8h": 720
-                    }
-                },
-                {
-                    "id": 3,
-                    "fleet_no": null,
-                    "model": "Gran Turismo Coach (50–55 pax)",
-                    "category": "coach_50",
-                    "exterior_filename": "esterno.jpg",
-                    "interior_filename": "interno.jpg",
-                    "status": "VERIFIED_PAIR",
-                    "transfers": {
-                        "mxp_milano": 420
-                    },
-                    "standby": {
-                        "dispo_4h": 550,
-                        "dispo_8h": 800
-                    }
-                },
-                {
-                    "id": 4,
-                    "fleet_no": null,
-                    "model": "Gran Turismo Coach (50–55 pax)",
-                    "category": "coach_50",
-                    "exterior_filename": "laterale dx.jpeg",
-                    "interior_filename": "interno.jpeg",
-                    "status": "VERIFIED_PAIR"
-                },
-                {
-                    "id": 5,
-                    "fleet_no": "115",
-                    "model": "Setra 515 HD / Travego Coach (50–55 pax)",
-                    "category": "coach_50",
-                    "exterior_filename": "Exterior #5",
-                    "interior_filename": "115– INTERNO.jpg",
-                    "status": "VERIFIED_PAIR"
-                },
-                {
-                    "id": 6,
-                    "fleet_no": "121",
-                    "model": "Touring Coach (50–55 pax)",
-                    "category": "coach_50",
-                    "exterior_filename": "Exterior #6",
-                    "interior_filename": "121 interno.jpeg",
-                    "status": "VERIFIED_PAIR"
-                },
-                {
-                    "id": 7,
-                    "fleet_no": null,
-                    "model": "Grand Tourismo Coach (50–55 pax)",
-                    "category": "coach_50",
-                    "exterior_filename": "Exterior #7",
-                    "interior_filename": "interno.jpeg",
-                    "status": "VERIFIED_PAIR"
-                },
-                {
-                    "id": 8,
-                    "fleet_no": null,
-                    "model": "Mercedes-Benz Sprinter Luxury (8+1 posti)",
-                    "category": "minivan_7_8",
-                    "exterior_filename": null,
-                    "interior_filename": null,
-                    "status": "ARRIVING_JAN_FEB_2027",
-                    "follow_up": "2027-01-15",
-                    "calendar_ics": "Autoservizi_Guizzetti_Sprinter_Arrival_FollowUp.ics"
-                }
-            ]
-        },
-        "corporate_sla": 19,
-        "territory_permits": 20,
-        "discretion_unbranded": 20
+      "fleet_luxury": 23,
+      "partner_card": {
+        "whatsapp": "+39 335 747 1244",
+        "bus_models": "Fleet 36 buses: Minibus 19p, Midibus 30p, GT Coach 50–55p, Setra, Scania, Irizar i8, Sprinter Luxury 8+1p",
+        "replied_at": "2026-11-03T06:37:00.000Z",
+        "rate_hourly": "50p: €550/4h, €800/8h; 30p: €500/4h, €720/8h; 19p: €450/4h, €650/8h + IVA",
+        "email_status": "replied",
+        "pax_capacity": "8, 19, 30, 50, 51, 55, 65, 83 pax",
+        "rate_standby": "50p: €800/8h; 30p: €720/8h; 19p: €650/8h + IVA (+ Area C)",
+        "scheduled_at": "2026-10-30T12:00:00.000Z",
+        "fleet_segment": "both",
+        "outreach_stage": "replied",
+        "user_set_status": true,
+        "last_outreach_at": "2026-10-30T12:00:00.000Z",
+        "user_set_segment": false,
+        "fleet_audit_verified_at": "2026-10-26T18:25:11.587Z",
+        "contact_person": "Cristian",
+        "office_whatsapp": "+39 035 982277",
+        "verified_fleet_pairs": [
+          {
+            "id": 1,
+            "fleet_no": "103",
+            "model": "Spica / Indcar Wing Minibus (19 pax)",
+            "category": "minibus_19",
+            "exterior_filename": "103 – laterale.jpeg",
+            "interior_filename": "interno 103.jpg",
+            "status": "VERIFIED_PAIR",
+            "transfers": {
+              "mxp_milano": 350
+            },
+            "standby": {
+              "dispo_4h": 450,
+              "dispo_8h": 650
+            }
+          },
+          {
+            "id": 2,
+            "fleet_no": "104",
+            "model": "Iveco Midibus GT (30 pax)",
+            "category": "midibus_30",
+            "exterior_filename": "104 – Esterno 3.jpg",
+            "interior_filename": "104 – Interno 2.jpg",
+            "status": "VERIFIED_PAIR",
+            "transfers": {
+              "mxp_milano": 380
+            },
+            "standby": {
+              "dispo_4h": 500,
+              "dispo_8h": 720
+            }
+          },
+          {
+            "id": 3,
+            "fleet_no": null,
+            "model": "Gran Turismo Coach (50–55 pax)",
+            "category": "coach_50",
+            "exterior_filename": "esterno.jpg",
+            "interior_filename": "interno.jpg",
+            "status": "VERIFIED_PAIR",
+            "transfers": {
+              "mxp_milano": 420
+            },
+            "standby": {
+              "dispo_4h": 550,
+              "dispo_8h": 800
+            }
+          },
+          {
+            "id": 4,
+            "fleet_no": null,
+            "model": "Gran Turismo Coach (50–55 pax)",
+            "category": "coach_50",
+            "exterior_filename": "laterale dx.jpeg",
+            "interior_filename": "interno.jpeg",
+            "status": "VERIFIED_PAIR"
+          },
+          {
+            "id": 5,
+            "fleet_no": "115",
+            "model": "Setra 515 HD / Travego Coach (50–55 pax)",
+            "category": "coach_50",
+            "exterior_filename": "Exterior #5",
+            "interior_filename": "115– INTERNO.jpg",
+            "status": "VERIFIED_PAIR"
+          },
+          {
+            "id": 6,
+            "fleet_no": "121",
+            "model": "Touring Coach (50–55 pax)",
+            "category": "coach_50",
+            "exterior_filename": "Exterior #6",
+            "interior_filename": "121 interno.jpeg",
+            "status": "VERIFIED_PAIR"
+          },
+          {
+            "id": 7,
+            "fleet_no": null,
+            "model": "Grand Tourismo Coach (50–55 pax)",
+            "category": "coach_50",
+            "exterior_filename": "Exterior #7",
+            "interior_filename": "interno.jpeg",
+            "status": "VERIFIED_PAIR"
+          },
+          {
+            "id": 8,
+            "fleet_no": null,
+            "model": "Mercedes-Benz Sprinter Luxury (8+1 posti)",
+            "category": "minivan_7_8",
+            "exterior_filename": null,
+            "interior_filename": null,
+            "status": "ARRIVING_JAN_FEB_2027",
+            "follow_up": "2027-01-15",
+            "calendar_ics": "Autoservizi_Guizzetti_Sprinter_Arrival_FollowUp.ics"
+          }
+        ]
+      },
+      "corporate_sla": 19,
+      "territory_permits": 20,
+      "discretion_unbranded": 20
     },
     "status": "APPROVED_PARTNER",
     "unbranded_status": "100% Unbranded / Sobria Livrea (Confirmed)",
     "fleet_categories": [
-        "Iveco Daily Tourist / Indcar Wing (19–28 seats)",
-        "Setra 515 HD & Irizar i6 (53–54 seats)",
-        "Setra 415 GT-HD (55 seats)",
-        "Setra 416 GT & 417 HDH (59–64 seats)"
+      "Iveco Daily Tourist / Indcar Wing (19–28 seats)",
+      "Setra 515 HD & Irizar i6 (53–54 seats)",
+      "Setra 415 GT-HD (55 seats)",
+      "Setra 416 GT & 417 HDH (59–64 seats)"
     ],
     "phone": "+39 335 747 1244",
     "email": "info@autoserviziguizzetti.com",
@@ -2117,7 +2329,7 @@ export const INITIAL_BUS_PARTNERS = [
     "fleet_segment": "both",
     "office_phone": "+39 035 982277",
     "contact_person": "Cristian (Direct: +39 335 747 1244 · Ufficio: +39 035 982277)"
-},
+  },
   {
     "id": "partner_1793030997210_o8w4",
     "name": "Ugolini Viaggi",

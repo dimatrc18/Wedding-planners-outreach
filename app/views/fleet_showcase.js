@@ -671,8 +671,8 @@ export const FLEET_LEDGER_ROWS = [
     id: 'landway_minibus_19',
     partnerId: 'partner_1792761170109_96nx',
     vehicleModel: 'Mercedes-Benz Minibus GT',
-    paxLabel: '19 pax',
-    coachbuilder: 'Executive Minibus · Luxury VIP',
+    paxLabel: '19 pax (+ guida + autista)',
+    coachbuilder: 'Executive Minibus · Luxury VIP (19+1+1)',
     pax: 19,
     category: 'minibus_20',
     categoryLabel: 'Touring Minibus (18–22 Pax)',
@@ -686,8 +686,8 @@ export const FLEET_LEDGER_ROWS = [
     email: 'info@landwaytourism.com',
     website: 'https://www.landwaytourism.com',
     status: 'confirmed',
-    statusLabel: '2027 Rate Card on file',
-    repliedAt: '02 Nov 2026 · 17:41',
+    statusLabel: 'Rates & 5 photos verified (Interior + Exterior)',
+    repliedAt: '03 Nov 2026 · 15:07',
     ratePdf: PDF_LANDWAY,
     ratePdfName: 'Listino Prezzi 2027 X DOROGO (PDF)',
     transfers: {
@@ -710,15 +710,43 @@ export const FLEET_LEDGER_ROWS = [
       vat: 'Prezzi IVA 10% esclusa',
       cancellation: '30% >36h · 50% 24–36h · 100% <24h',
       included: 'Ore extra/attesa €80/h · Ore notturne €100/h (22:00-05:00) · ZTL Milano €60 esente IVA · Parcheggio MXP €30/h (solo pick-up) · Parcheggio BGY €15/h (pick-up e drop-off)',
-      luggage: 'Bagagliaio ridotto: max 1 valigia media (cm 115 / ~45L) a persona'
+      luggage: '12 valigie da stiva (hold bags) · 14–15 valigie medie (~45–60L) · 19 valigie piccole (cabin trolleys). Capacità: 19 pax + guida + autista'
     },
     photos: [
       {
-        id: 'landway_minibus_19_ext',
-        src: 'assets/partner_fleet/landway/19_posti_villa_erba.jpeg',
+        id: 'landway_minibus_19_ext_1',
+        src: 'assets/partner_fleet/landway/19_posti_villa_erba_1.jpeg',
+        file: '19 posti villa erba 1.jpeg',
+        title: 'Exterior Front 3/4 — Mercedes-Benz Minibus 19 Pax at Villa Erba',
+        caption: 'Total black unbranded Mercedes-Benz Sprinter luxury minibus parked at Villa Erba on Lake Como.'
+      },
+      {
+        id: 'landway_minibus_19_ext_2',
+        src: 'assets/partner_fleet/landway/19_posti_villa_erba_2.jpeg',
         file: '19 posti villa erba 2.jpeg',
-        title: 'Exterior — Mercedes-Benz Minibus 19 Pax at Villa Erba',
-        caption: 'Total black Mercedes-Benz Sprinter luxury minibus on Lake Como at Villa Erba.'
+        title: 'Exterior Side Profile — Mercedes-Benz Minibus 19 Pax at Villa Erba',
+        caption: 'Full side profile showing tinted privacy glass and clean unbranded bodywork with lake backdrop.'
+      },
+      {
+        id: 'landway_minibus_19_ext_3',
+        src: 'assets/partner_fleet/landway/19_posti_villa_erba_3.jpeg',
+        file: '19 posti villa erba 3.jpeg',
+        title: 'Exterior Rear 3/4 — Mercedes-Benz Minibus 19 Pax at Villa Erba',
+        caption: 'Rear view confirming unbranded clean coachwork with discreet small rear logo only.'
+      },
+      {
+        id: 'landway_minibus_19_int_1',
+        src: 'assets/partner_fleet/landway/19_posti_1_HD150SX.jpeg',
+        file: '19 posti 1 HD150SX.jpeg',
+        title: 'Interior VIP Cabin — Executive Leather Seating (19 Pax)',
+        caption: 'Luxury contoured dark leather seating with individual headrests, ambient lighting, and executive aisle.'
+      },
+      {
+        id: 'landway_minibus_19_int_2',
+        src: 'assets/partner_fleet/landway/19_posti_2_HD150SX.jpeg',
+        file: '19 posti 2 HD150SX.jpeg',
+        title: 'Interior Forward View — Chauffeur Cockpit & Passenger Cabin',
+        caption: 'Forward cabin perspective showing panoramic front windscreen, clean cockpit, and passenger rows.'
       }
     ]
   },
@@ -726,7 +754,7 @@ export const FLEET_LEDGER_ROWS = [
     id: 'landway_midibus_29',
     partnerId: 'partner_1792761170109_96nx',
     vehicleModel: 'Iveco Midibus GT',
-    paxLabel: '27–29 pax',
+    paxLabel: '27–29 pax (+ guida + autista)',
     coachbuilder: 'Executive Midibus · Luxury VIP (27/29+1+1)',
     pax: 29,
     category: 'coach_30',
@@ -741,8 +769,8 @@ export const FLEET_LEDGER_ROWS = [
     email: 'info@landwaytourism.com',
     website: 'https://www.landwaytourism.com',
     status: 'confirmed',
-    statusLabel: 'Rates & PDF verified',
-    repliedAt: '02 Nov 2026 · 17:41',
+    statusLabel: 'Rates & 3 photos verified (Interior + Exterior)',
+    repliedAt: '03 Nov 2026 · 15:07',
     ratePdf: PDF_LANDWAY,
     ratePdfName: 'Listino Prezzi 2027 X DOROGO (PDF)',
     transfers: {
@@ -765,15 +793,29 @@ export const FLEET_LEDGER_ROWS = [
       vat: 'Prezzi IVA 10% esclusa',
       cancellation: '30% >36h · 50% 24–36h · 100% <24h',
       included: 'Ore extra/attesa €80/h · Ore notturne €100/h (22:00-05:00) · ZTL Milano €100 esente IVA · Parcheggio MXP €30/h (solo pick-up) · Parcheggio BGY €15/h (pick-up e drop-off)',
-      luggage: 'Bagagliaio ridotto: max 1 valigia media (cm 115 / ~45L) a persona'
+      luggage: '10–13 valigie da stiva (hold bags) · 20–25 valigie medie (~45–60L) · 27–29 valigie piccole (cabin trolleys). Capacità: 27–29 pax + guida + autista'
     },
     photos: [
       {
-        id: 'landway_midibus_29_ext',
-        src: 'assets/partner_fleet/landway/29_posti.jpeg',
+        id: 'landway_midibus_29_ext_1',
+        src: 'assets/partner_fleet/landway/29_posti_2.jpeg',
         file: '29 posti 2.jpeg',
         title: 'Exterior & Cabin Entrance — Iveco Midibus 29 Pax',
         caption: 'Total black 29-seater touring midibus with open entry showing luxury grey leather seating.'
+      },
+      {
+        id: 'landway_midibus_29_int_1',
+        src: 'assets/partner_fleet/landway/29_posti_3.jpeg',
+        file: '29 posti 3.jpeg',
+        title: 'Interior VIP Cabin — Executive Leather Passenger Seats',
+        caption: 'Contoured luxury leather seating with dual-tone grey/black upholstery, 3-point seatbelts, and armrests.'
+      },
+      {
+        id: 'landway_midibus_29_int_2',
+        src: 'assets/partner_fleet/landway/29_posti_5.jpeg',
+        file: '29 posti 5.jpeg',
+        title: 'Interior Cabin Aisle — High Panoramic Ceiling',
+        caption: 'Aisle perspective toward rear showing full passenger cabin, overhead parcel racks, and AC vents.'
       }
     ]
   },
@@ -781,7 +823,7 @@ export const FLEET_LEDGER_ROWS = [
     id: 'landway_coach_50',
     partnerId: 'partner_1792761170109_96nx',
     vehicleModel: 'Mercedes Tourismo & Setra GT Coach',
-    paxLabel: '50 pax',
+    paxLabel: '50 pax (+ guida + autista)',
     coachbuilder: 'Gran Turismo Coach (49/51/53/55+1+1)',
     pax: 50,
     category: 'coach_50',
@@ -796,8 +838,8 @@ export const FLEET_LEDGER_ROWS = [
     email: 'info@landwaytourism.com',
     website: 'https://www.landwaytourism.com',
     status: 'confirmed',
-    statusLabel: 'Rates & PDF verified',
-    repliedAt: '02 Nov 2026 · 17:41',
+    statusLabel: 'Rates & 4 photos verified (Interior + Exterior)',
+    repliedAt: '03 Nov 2026 · 15:07',
     ratePdf: PDF_LANDWAY,
     ratePdfName: 'Listino Prezzi 2027 X DOROGO (PDF)',
     transfers: {
@@ -819,15 +861,37 @@ export const FLEET_LEDGER_ROWS = [
     terms: {
       vat: 'Prezzi IVA 10% esclusa',
       cancellation: '30% >36h · 50% 24–36h · 100% <24h',
-      included: 'Ore extra/attesa €80/h · Ore notturne €100/h (22:00-05:00) · ZTL Milano €150 esente IVA · Parcheggio MXP €30/h (solo pick-up) · Parcheggio BGY €15/h (pick-up e drop-off)'
+      included: 'Ore extra/attesa €80/h · Ore notturne €100/h (22:00-05:00) · ZTL Milano €150 esente IVA · Parcheggio MXP €30/h (solo pick-up) · Parcheggio BGY €15/h (pick-up e drop-off)',
+      luggage: 'Ampio bagagliaio passante per 50 valigie grandi da stiva + cappelliere interne. Capacità: 50–55 pax + guida + autista'
     },
     photos: [
       {
-        id: 'landway_coach_50_ext',
-        src: 'assets/partner_fleet/landway/3_bus_50_posti.jpeg',
+        id: 'landway_coach_50_ext_1',
+        src: 'assets/partner_fleet/landway/3_BUS_50_POSTI_.jpeg',
         file: '3 BUS 50 POSTI .jpeg',
-        title: 'Exterior Fleet — 3x Mercedes Tourismo GT Coaches (50 Pax)',
+        title: 'Exterior Fleet Convoy — 3x Mercedes Tourismo GT Coaches (50 Pax)',
         caption: 'Convoy of 3 Mercedes-Benz Tourismo 50-seater Gran Turismo coaches showing side livery.'
+      },
+      {
+        id: 'landway_coach_50_ext_2',
+        src: 'assets/partner_fleet/landway/50_SEAT_BUS_.png',
+        file: '50 SEAT BUS .png',
+        title: 'Exterior Profile — Gran Turismo Coach (50 Pax)',
+        caption: 'Full side exterior profile of Landway 50-seat touring coach.'
+      },
+      {
+        id: 'landway_coach_50_int_1',
+        src: 'assets/partner_fleet/landway/50_posti_interni_HA526.jpeg',
+        file: '50 posti interni HA526.jpeg',
+        title: 'Interior VIP Cabin — Executive Touring Recliners',
+        caption: 'Long-distance executive cabin with wide reclining touring seats, aisle grab handles, and high ceiling.'
+      },
+      {
+        id: 'landway_coach_50_int_2',
+        src: 'assets/partner_fleet/landway/50_posti_interni_GN150.jpeg',
+        file: '50 posti interni GN150.jpeg',
+        title: 'Interior Passenger Cabin — Overhead Parcel Racks & Lighting',
+        caption: 'Forward passenger cabin perspective showing climate control nozzles, reading lights, and premium upholstery.'
       }
     ]
   },
