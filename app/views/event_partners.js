@@ -1,18 +1,18 @@
-// Event & Corporate Outreach Pipeline View
+// Event & Foreign Exhibitor Outreach Pipeline View
 // 100% Isolated from Wedding Planners (prospects) and Bus Operators (bus_partners).
 // Stripe Sail Design System: responsive data table, KPI stats, zero horizontal scroll.
 
-import { S, updateEventPartner, addEventPartner, removeEventPartner } from '../store.js?v=20261102_v25';
+import { S, updateEventPartner, addEventPartner, removeEventPartner } from '../store.js?v=20261103_v1';
 import { esc, attr, icon, toast, dialog, confirmDialog } from '../ui.js';
-import { EVENT_AGENCY_TYPES, loadStoredEventPartners } from '../event_planners_data.js?v=20261102_v25';
+import { EVENT_AGENCY_TYPES, loadStoredEventPartners } from '../event_planners_data.js?v=20261103_v1';
 
-let activeTypeFilter = 'all'; // all | corporate_mice | fashion_luxury | brand_activation
+let activeTypeFilter = 'all'; // all | tier1 | uk_north | dach_benelux | france_spain
 let activeStatusFilter = 'all'; // all | TO_REVIEW | WANT_TO_CONTACT | CONTACTED | APPROVED_PARTNER
 let searchQuery = '';
 let currentEl = null;
 
 const STATUS_CONFIG = {
-  TO_REVIEW: { label: 'To Review', pillClass: 'warn', desc: 'Newly scouted event agency' },
+  TO_REVIEW: { label: 'To Review', pillClass: 'warn', desc: 'Newly scouted foreign exhibitor' },
   WANT_TO_CONTACT: { label: 'Ready to Contact', pillClass: 'info', desc: 'Queued for outreach' },
   CONTACTED: { label: 'Contacted', pillClass: 'ok', desc: 'Outreach email sent' },
   APPROVED_PARTNER: { label: 'Partner Won', pillClass: 'ok', desc: 'Active mobility partner' },
@@ -36,32 +36,17 @@ function getEventStatusBadgeStyle(status) {
   }
 }
 
-function getConciseSpecialization(p) {
-  const raw = p.agency_type_label || p.agency_type || '';
-  if (/mega shows/i.test(raw) || /luxury brand galas/i.test(raw)) {
-    return { icon: '✨', short: 'Luxury Galas & Shows' };
-  }
-  if (/fashion/i.test(raw)) {
-    return { icon: '👠', short: 'Fashion & Luxury' };
-  }
-  if (/summits/i.test(raw) || /conventions/i.test(raw) || /roadshows/i.test(raw) || /mice/i.test(raw) || p.agency_type === 'corporate_mice') {
-    return { icon: '🏢', short: 'Corporate & MICE' };
-  }
-  if (/activation/i.test(raw) || /pr/i.test(raw) || p.agency_type === 'brand_activation') {
-    return { icon: '🎯', short: 'Brand & PR Galas' };
-  }
-  return { icon: '🎪', short: 'Event Production' };
-}
-
-function renderSpecializationPill(p) {
-  const spec = getConciseSpecialization(p);
-  const fullLabel = p.agency_type_label || p.agency_type || spec.short;
+function renderCountryPill(p) {
+  const isTier1 = p.agency_type === 'tier1_luxury' || p.is_enriched;
   return `
-    <div style="max-width:100%;overflow:hidden">
-      <span class="sail-pill info" style="font-size:11px;padding:3px 7px;max-width:100%;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(fullLabel)}">
-        <span>${spec.icon}</span>
-        <span style="overflow:hidden;text-overflow:ellipsis">${esc(spec.short)}</span>
-      </span>
+    <div style="display:flex;flex-direction:column;gap:3px;max-width:100%;overflow:hidden">
+      <div style="font-size:12px;font-weight:600;color:var(--sail-ink);display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+        <span>${esc(p.flag || '🌍')}</span>
+        <span style="overflow:hidden;text-overflow:ellipsis">${esc(p.country || 'International')}</span>
+      </div>
+      <div style="font-size:11px;color:var(--sail-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+        ${isTier1 ? `<span class="sail-pill warn" style="font-size:10px;padding:1px 5px">🌟 Tier-1 Luxury</span>` : `<span style="color:var(--sail-muted)">Pavilion 1-4</span>`}
+      </div>
     </div>
   `;
 }
@@ -72,16 +57,18 @@ export async function render(el) {
   const partners = (S.eventPartners && S.eventPartners.length >= stored.length) ? S.eventPartners : stored;
 
   const totalCount = partners.length;
+  const enrichedCount = partners.filter((p) => p.is_enriched || (p.email && p.email.length > 0)).length;
   const toReviewCount = partners.filter((p) => p.status === 'TO_REVIEW').length;
   const readyCount = partners.filter((p) => p.status === 'WANT_TO_CONTACT').length;
   const contactedCount = partners.filter((p) => p.status === 'CONTACTED' || p.status === 'APPROVED_PARTNER').length;
 
   const filtered = partners.filter((p) => {
-    if (activeTypeFilter !== 'all' && p.agency_type !== activeTypeFilter) return false;
+    if (activeTypeFilter === 'tier1' && !p.is_enriched && p.agency_type !== 'tier1_luxury') return false;
+    if (['uk_north', 'dach_benelux', 'france_spain', 'rest_world'].includes(activeTypeFilter) && p.region_group !== activeTypeFilter) return false;
     if (activeStatusFilter !== 'all' && p.status !== activeStatusFilter) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
-      const hay = `${p.name} ${p.contact_person} ${p.email} ${p.base_city} ${p.notes || ''}`.toLowerCase();
+      const hay = `${p.name} ${p.country || ''} ${p.contact_person || ''} ${p.email || ''} ${p.origin_hub || ''} ${p.notes || ''}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -94,21 +81,21 @@ export async function render(el) {
         <div style="min-width:280px;flex:1">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <h1 style="font-size:19px;font-weight:700;color:var(--sail-ink);margin:0;letter-spacing:-0.02em;white-space:nowrap">
-              🎪 Event &amp; Corporate Outreach
+              🏛️ Milano Home 2027 · Foreign Exhibiting Teams
             </h1>
-            <span class="sail-pill ok" style="font-size:10.5px;font-weight:700">events.dorogo-events.eu</span>
-            <span class="sail-pill info" style="font-size:10.5px">100% Isolated Pipeline</span>
+            <span class="sail-pill ok" style="font-size:10.5px;font-weight:700">events@dorogo-events.eu</span>
+            <span class="sail-pill info" style="font-size:10.5px">Direct Client Outreach</span>
           </div>
           <div style="font-size:12px;color:var(--sail-muted);margin-top:4px">
-            Dedicated B2B outreach for Milan Fashion Week, MICE conventions, brand activations, and corporate retreats.
+            Direct executive B2B outreach to international teams exhibiting at Fiera Milano Rho (MXP/LIN airport arrivals &amp; daily stand transfers).
           </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;margin-left:auto">
           <button class="sail-btn default" id="btn-export-events-csv" style="font-size:11.5px;padding:6px 12px;white-space:nowrap">
-            📥 Export CSV
+            📥 Export CSV (${totalCount})
           </button>
           <button class="sail-btn primary" id="btn-add-event-agency" style="font-size:11.5px;padding:6px 12px;white-space:nowrap">
-            + Add Event Agency
+            + Add Exhibiting Team
           </button>
         </div>
       </div>
@@ -116,30 +103,30 @@ export async function render(el) {
       <!-- KPI Stat Cards -->
       <div class="sail-stat-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));gap:12px">
         <div class="sail-card" style="padding:12px 14px">
-          <div class="sail-stat-label" style="font-size:11px;color:var(--sail-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:600">Total Event Agencies</div>
+          <div class="sail-stat-label" style="font-size:11px;color:var(--sail-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:600">Foreign Exhibiting Teams</div>
           <div class="sail-stat-val" style="font-size:22px;font-weight:700;color:var(--sail-ink);margin:4px 0 2px 0">${totalCount}</div>
-          <div class="sail-stat-meta" style="font-size:11px;color:var(--sail-muted)">Verified in pipeline</div>
+          <div class="sail-stat-meta" style="font-size:11px;color:var(--sail-muted)">Arriving from 14+ countries</div>
         </div>
         <div class="sail-card" style="padding:12px 14px">
-          <div class="sail-stat-label" style="font-size:11px;color:var(--sail-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:600">To Review</div>
+          <div class="sail-stat-label" style="font-size:11px;color:var(--sail-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:600">Tier-1 Enriched Leads</div>
+          <div class="sail-stat-val" style="font-size:22px;font-weight:700;color:#059669;margin:4px 0 2px 0">${enrichedCount}</div>
+          <div class="sail-stat-meta" style="font-size:11px;color:var(--sail-muted)">Verified emails &amp; trade heads</div>
+        </div>
+        <div class="sail-card" style="padding:12px 14px">
+          <div class="sail-stat-label" style="font-size:11px;color:var(--sail-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:600">Status: To Review (Safe)</div>
           <div class="sail-stat-val" style="font-size:22px;font-weight:700;color:#D97706;margin:4px 0 2px 0">${toReviewCount}</div>
-          <div class="sail-stat-meta" style="font-size:11px;color:var(--sail-muted)">Awaiting intake audit</div>
+          <div class="sail-stat-meta" style="font-size:11px;color:var(--sail-muted)">Zero sends until prices confirmed</div>
         </div>
         <div class="sail-card" style="padding:12px 14px">
-          <div class="sail-stat-label" style="font-size:11px;color:var(--sail-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:600">Ready to Contact</div>
-          <div class="sail-stat-val" style="font-size:22px;font-weight:700;color:#2563EB;margin:4px 0 2px 0">${readyCount}</div>
-          <div class="sail-stat-meta" style="font-size:11px;color:var(--sail-muted)">Verified emails queued</div>
-        </div>
-        <div class="sail-card" style="padding:12px 14px">
-          <div class="sail-stat-label" style="font-size:11px;color:var(--sail-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:600">Contacted &amp; Won</div>
-          <div class="sail-stat-val" style="font-size:22px;font-weight:700;color:#059669;margin:4px 0 2px 0">${contactedCount}</div>
-          <div class="sail-stat-meta" style="font-size:11px;color:var(--sail-muted)">In conversation / active</div>
+          <div class="sail-stat-label" style="font-size:11px;color:var(--sail-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:600">Contacted &amp; Booked</div>
+          <div class="sail-stat-val" style="font-size:22px;font-weight:700;color:#2563EB;margin:4px 0 2px 0">${contactedCount}</div>
+          <div class="sail-stat-meta" style="font-size:11px;color:var(--sail-muted)">Confirmed bookings</div>
         </div>
       </div>
 
       <!-- Filters & Search Toolbar -->
       <div class="sail-card" style="padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-        <!-- Vertical Specialization Tabs -->
+        <!-- Region & Tier Tabs -->
         <div class="sail-tabs" style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
           ${EVENT_AGENCY_TYPES.map((t) => `
             <button class="sail-tab ${activeTypeFilter === t.key ? 'active' : ''}" data-type-tab="${attr(t.key)}" style="height:28px;padding:0 10px;font-size:12px">
@@ -162,9 +149,9 @@ export async function render(el) {
             <input 
               type="text" 
               id="event-search-input" 
-              placeholder="Search agency, contact, city..." 
+              placeholder="Search exhibitor, country, contact..." 
               value="${attr(searchQuery)}" 
-              style="height:30px;padding:0 10px 0 26px;border:1px solid var(--sail-line);border-radius:6px;font-size:12px;width:190px;background:#F8FAFC"
+              style="height:30px;padding:0 10px 0 26px;border:1px solid var(--sail-line);border-radius:6px;font-size:12px;width:210px;background:#F8FAFC"
             >
             <span style="position:absolute;left:8px;font-size:11px;color:var(--sail-muted);pointer-events:none">🔍</span>
           </div>
@@ -177,22 +164,22 @@ export async function render(el) {
           <table class="sail-table" style="table-layout:fixed;width:100%;min-width:760px">
             <thead>
               <tr>
-                <th style="width:23%;min-width:155px">
-                  <div class="sail-th-title">Agency &amp; Website</div>
+                <th style="width:24%;min-width:160px">
+                  <div class="sail-th-title">Exhibitor &amp; Website</div>
                 </th>
-                <th style="width:19%;min-width:140px">
-                  <div class="sail-th-title">Event Specialization</div>
+                <th style="width:18%;min-width:130px">
+                  <div class="sail-th-title">Origin &amp; Country</div>
                 </th>
-                <th style="width:22%;min-width:150px">
-                  <div class="sail-th-title">Contact Person &amp; Email</div>
+                <th style="width:23%;min-width:160px">
+                  <div class="sail-th-title">Trade Contact &amp; Email</div>
                 </th>
-                <th style="width:9%;min-width:75px">
-                  <div class="sail-th-title">Base HQ</div>
+                <th style="width:10%;min-width:80px">
+                  <div class="sail-th-title">Arrival Hub</div>
                 </th>
-                <th style="width:16%;min-width:135px">
+                <th style="width:15%;min-width:130px">
                   <div class="sail-th-title">Outreach Status</div>
                 </th>
-                <th style="width:11%;min-width:85px;text-align:right">
+                <th style="width:10%;min-width:80px;text-align:right">
                   <div class="sail-th-title">Score / Action</div>
                 </th>
               </tr>
@@ -201,7 +188,7 @@ export async function render(el) {
               ${filtered.length === 0 ? `
                 <tr>
                   <td colspan="6" style="padding:48px 16px;text-align:center;color:var(--sail-muted)">
-                    No event agencies match your active filters. Click <strong>+ Add Event Agency</strong> to create one.
+                    No exhibiting teams match your active filters. Click <strong>+ Add Exhibiting Team</strong> to create one.
                   </td>
                 </tr>
               ` : filtered.map((p) => renderAgencyRow(p)).join('')}
@@ -212,8 +199,8 @@ export async function render(el) {
 
       <!-- Safety Footer -->
       <div style="font-size:11px;color:var(--sail-muted);display:flex;align-items:center;justify-content:space-between;padding:0 4px">
-        <span>🔒 <strong>Isolation Guarantee:</strong> Event records and queues never modify wedding planners or bus fleets.</span>
-        <span>Sender Mailbox: <code>events@dorogo-events.eu</code></span>
+        <span>🔒 <strong>Zero-Send Guarantee:</strong> Outreach is strictly locked in TO_REVIEW until rate cards are approved.</span>
+        <span>Dedicated Sender: <code>events@dorogo-events.eu</code></span>
       </div>
     </div>
   `;
@@ -237,29 +224,29 @@ function renderAgencyRow(p) {
               🌐 ${esc(webClean)} ↗
             </a>
           </div>
-        ` : ''}
+        ` : '<div style="font-size:11px;color:var(--sail-muted);margin-top:2px">Milano Home Exhibitor</div>'}
       </td>
 
       <td>
-        ${renderSpecializationPill(p)}
+        ${renderCountryPill(p)}
       </td>
 
       <td>
-        <div style="font-size:12px;font-weight:500;color:var(--sail-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(p.contact_person || 'Logistics Desk')}">
-          ${esc(p.contact_person || 'Logistics Desk')}
+        <div style="font-size:12px;font-weight:500;color:var(--sail-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(p.contact_person || 'Trade Sales Desk')}">
+          ${esc(p.contact_person || 'Trade Sales Desk')}
         </div>
         ${p.email ? `
           <div style="margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-            <a href="mailto:${attr(p.email)}" style="font-size:11.5px;color:var(--sail-muted);text-decoration:none;display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis" title="Email: ${attr(p.email)}">
+            <a href="mailto:${attr(p.email)}" style="font-size:11.5px;color:var(--sail-primary);font-weight:500;text-decoration:none;display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis" title="Email: ${attr(p.email)}">
               ✉️ ${esc(p.email)}
             </a>
           </div>
-        ` : `<span class="sail-pill missing" style="font-size:10px">No email</span>`}
+        ` : `<span class="sail-pill missing" style="font-size:10px">Pending enrichment</span>`}
       </td>
 
       <td>
-        <div style="font-size:12px;color:var(--sail-body);white-space:nowrap">
-          📍 ${esc(p.base_city || 'Milano')}
+        <div style="font-size:12px;color:var(--sail-body);white-space:nowrap" title="${attr(p.origin_hub || 'International Airport')}">
+          ✈️ ${esc((p.origin_hub || 'MXP').split(' ')[0])}
         </div>
       </td>
 
@@ -278,7 +265,7 @@ function renderAgencyRow(p) {
           <span class="sail-pill ok" style="font-size:11px;font-weight:700;padding:2px 6px" title="Relevance Score: ${p.relevance_score || 85}/100">
             ${p.relevance_score || 85}
           </span>
-          <button class="sail-btn xs" data-edit-agency="${attr(p.id)}" title="Edit Agency" style="font-size:11px;padding:3px 8px">
+          <button class="sail-btn default btn-edit-event-agency" data-id="${attr(p.id)}" style="font-size:11px;padding:2px 6px;height:24px;line-height:1" title="Edit Exhibiting Team">
             Edit
           </button>
         </div>
@@ -288,10 +275,10 @@ function renderAgencyRow(p) {
 }
 
 function attachEventListeners(el) {
-  // Specialization filter tabs
-  el.querySelectorAll('[data-type-tab]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      activeTypeFilter = btn.dataset.typeTab;
+  // Region & Tier tabs
+  el.querySelectorAll('[data-type-tab]').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      activeTypeFilter = tab.dataset.typeTab;
       render(el);
     });
   });
@@ -303,263 +290,210 @@ function attachEventListeners(el) {
   });
 
   // Search input
+  let searchTimer;
   el.querySelector('#event-search-input')?.addEventListener('input', (e) => {
-    searchQuery = e.target.value;
-    render(el);
-  });
-
-  // Inline Status Change dropdowns
-  el.querySelectorAll('.sail-status-select').forEach((sel) => {
-    sel.addEventListener('change', async (e) => {
-      const id = sel.dataset.id;
-      const newStatus = e.target.value;
-      await updateEventPartner(id, { status: newStatus });
-      toast(`Status updated to ${newStatus}`, 'ok');
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      searchQuery = e.target.value;
       render(el);
-    });
-  });
-
-  // Add Agency modal trigger
-  el.querySelector('#btn-add-event-agency')?.addEventListener('click', () => {
-    openAddAgencyModal(el);
-  });
-
-  // Edit Agency modal trigger
-  el.querySelectorAll('[data-edit-agency]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const id = btn.dataset.editAgency;
-      const agency = (S.eventPartners || []).find((p) => p.id === id);
-      if (agency) openEditAgencyModal(agency, el);
-    });
+    }, 150);
   });
 
   // Export CSV
   el.querySelector('#btn-export-events-csv')?.addEventListener('click', () => {
     exportEventsCsv();
   });
-}
 
-function openAddAgencyModal(el) {
-  dialog({
-    wide: true,
-    title: 'Add Event Agency / Corporate Planner',
-    body: `
-      <form id="form-add-event-agency" style="display:flex;flex-direction:column;gap:14px;padding:4px 0">
-        <div style="font-size:12.5px;color:var(--sail-muted);line-height:1.4">
-          Add an event production agency or corporate MICE organizer to the isolated Event pipeline.
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div>
-            <label class="sail-calc-label">Agency Name *</label>
-            <input type="text" id="add-event-name" class="sail-calc-input" placeholder="e.g. Balich Wonder Studio" required>
-          </div>
-          <div>
-            <label class="sail-calc-label">Specialization *</label>
-            <select id="add-event-type" class="sail-calc-input">
-              <option value="corporate_mice">🏢 Corporate Summits &amp; MICE</option>
-              <option value="fashion_luxury">👠 Fashion Shows &amp; Luxury Galas</option>
-              <option value="brand_activation">✨ Brand Activations &amp; PR</option>
-            </select>
-          </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div>
-            <label class="sail-calc-label">Contact Person</label>
-            <input type="text" id="add-event-contact" class="sail-calc-input" placeholder="e.g. Daniela Esse">
-          </div>
-          <div>
-            <label class="sail-calc-label">Email Address *</label>
-            <input type="email" id="add-event-email" class="sail-calc-input" placeholder="events@agency.com" required>
-          </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-          <div>
-            <label class="sail-calc-label">Website</label>
-            <input type="url" id="add-event-web" class="sail-calc-input" placeholder="https://agency.com">
-          </div>
-          <div>
-            <label class="sail-calc-label">Phone / WhatsApp</label>
-            <input type="text" id="add-event-phone" class="sail-calc-input" placeholder="+39 02 ...">
-          </div>
-          <div>
-            <label class="sail-calc-label">Base City</label>
-            <input type="text" id="add-event-city" class="sail-calc-input" value="Milano">
-          </div>
-        </div>
-
-        <div>
-          <label class="sail-calc-label">Internal Logistics &amp; Mobility Notes</label>
-          <textarea id="add-event-notes" class="sail-calc-input" rows="3" placeholder="Key VIP routes, events handled, fleet requirements..."></textarea>
-        </div>
-
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px">
-          <button type="button" class="sail-btn default" data-close>Cancel</button>
-          <button type="submit" class="sail-btn primary">Save Event Agency</button>
-        </div>
-      </form>
-    `,
-    onMount: (box) => {
-      box.querySelector('#form-add-event-agency')?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const typeKey = box.querySelector('#add-event-type').value;
-        const typeObj = EVENT_AGENCY_TYPES.find((t) => t.key === typeKey) || EVENT_AGENCY_TYPES[1];
-
-        const newAgency = {
-          name: box.querySelector('#add-event-name').value.trim(),
-          agency_type: typeKey,
-          agency_type_label: typeObj.label,
-          contact_person: box.querySelector('#add-event-contact').value.trim(),
-          email: box.querySelector('#add-event-email').value.trim(),
-          website: box.querySelector('#add-event-web').value.trim(),
-          phone: box.querySelector('#add-event-phone').value.trim(),
-          base_city: box.querySelector('#add-event-city').value.trim() || 'Milano',
-          notes: box.querySelector('#add-event-notes').value.trim(),
-          status: 'TO_REVIEW',
-          relevance_score: 90
-        };
-
-        await addEventPartner(newAgency);
-        toast(`Added ${newAgency.name} to Event Outreach!`, 'ok');
-        box.querySelector('[data-close]')?.click();
-        render(el);
-      });
-    }
+  // Add Exhibiting Team
+  el.querySelector('#btn-add-event-agency')?.addEventListener('click', () => {
+    openEventAgencyModal(null, el);
   });
-}
 
-function openEditAgencyModal(agency, el) {
-  dialog({
-    wide: true,
-    title: `Edit: ${agency.name}`,
-    body: `
-      <form id="form-edit-event-agency" style="display:flex;flex-direction:column;gap:14px;padding:4px 0">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div>
-            <label class="sail-calc-label">Agency Name</label>
-            <input type="text" id="edit-event-name" class="sail-calc-input" value="${attr(agency.name)}" required>
-          </div>
-          <div>
-            <label class="sail-calc-label">Specialization</label>
-            <select id="edit-event-type" class="sail-calc-input">
-              <option value="corporate_mice" ${agency.agency_type === 'corporate_mice' ? 'selected' : ''}>🏢 Corporate Summits &amp; MICE</option>
-              <option value="fashion_luxury" ${agency.agency_type === 'fashion_luxury' ? 'selected' : ''}>👠 Fashion Shows &amp; Luxury Galas</option>
-              <option value="brand_activation" ${agency.agency_type === 'brand_activation' ? 'selected' : ''}>✨ Brand Activations &amp; PR</option>
-            </select>
-          </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div>
-            <label class="sail-calc-label">Contact Person</label>
-            <input type="text" id="edit-event-contact" class="sail-calc-input" value="${attr(agency.contact_person || '')}">
-          </div>
-          <div>
-            <label class="sail-calc-label">Email Address</label>
-            <input type="email" id="edit-event-email" class="sail-calc-input" value="${attr(agency.email || '')}" required>
-          </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-          <div>
-            <label class="sail-calc-label">Website</label>
-            <input type="url" id="edit-event-web" class="sail-calc-input" value="${attr(agency.website || '')}">
-          </div>
-          <div>
-            <label class="sail-calc-label">Phone / WhatsApp</label>
-            <input type="text" id="edit-event-phone" class="sail-calc-input" value="${attr(agency.phone || '')}">
-          </div>
-          <div>
-            <label class="sail-calc-label">Base City</label>
-            <input type="text" id="edit-event-city" class="sail-calc-input" value="${attr(agency.base_city || 'Milano')}">
-          </div>
-        </div>
-
-        <div>
-          <label class="sail-calc-label">Logistics Notes</label>
-          <textarea id="edit-event-notes" class="sail-calc-input" rows="3">${esc(agency.notes || '')}</textarea>
-        </div>
-
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-          <button type="button" class="sail-btn default" id="btn-delete-event-agency" style="color:#DC2626">
-            Delete Agency
-          </button>
-          <div style="display:flex;gap:8px">
-            <button type="button" class="sail-btn default" data-close>Cancel</button>
-            <button type="submit" class="sail-btn primary">Save Changes</button>
-          </div>
-        </div>
-      </form>
-    `,
-    onMount: (box) => {
-      box.querySelector('#form-edit-event-agency')?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const typeKey = box.querySelector('#edit-event-type').value;
-        const typeObj = EVENT_AGENCY_TYPES.find((t) => t.key === typeKey) || EVENT_AGENCY_TYPES[1];
-
-        const patch = {
-          name: box.querySelector('#edit-event-name').value.trim(),
-          agency_type: typeKey,
-          agency_type_label: typeObj.label,
-          contact_person: box.querySelector('#edit-event-contact').value.trim(),
-          email: box.querySelector('#edit-event-email').value.trim(),
-          website: box.querySelector('#edit-event-web').value.trim(),
-          phone: box.querySelector('#edit-event-phone').value.trim(),
-          base_city: box.querySelector('#edit-event-city').value.trim(),
-          notes: box.querySelector('#edit-event-notes').value.trim()
-        };
-
-        await updateEventPartner(agency.id, patch);
-        toast(`Updated ${patch.name}`, 'ok');
-        box.querySelector('[data-close]')?.click();
+  // Status dropdown changes on table rows
+  el.querySelectorAll('.sail-status-select').forEach((sel) => {
+    sel.addEventListener('change', async (e) => {
+      const id = sel.dataset.id;
+      const newStatus = sel.value;
+      const prevStyle = sel.getAttribute('style');
+      sel.setAttribute('style', `${prevStyle};opacity:0.6;pointer-events:none`);
+      try {
+        await updateEventPartner(id, { status: newStatus });
+        toast(`Exhibitor status set to ${STATUS_CONFIG[newStatus]?.label || newStatus}`);
         render(el);
-      });
+      } catch (err) {
+        toast(`Failed to update status: ${err.message}`, 'error');
+        sel.setAttribute('style', prevStyle);
+      }
+    });
+  });
 
-      box.querySelector('#btn-delete-event-agency')?.addEventListener('click', async () => {
-        if (confirm(`Are you sure you want to delete ${agency.name} from Event Outreach?`)) {
-          await removeEventPartner(agency.id);
-          toast(`Deleted ${agency.name}`, 'ok');
-          box.querySelector('[data-close]')?.click();
-          render(el);
-        }
-      });
-    }
+  // Edit exhibitor button
+  el.querySelectorAll('.btn-edit-event-agency').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const stored = loadStoredEventPartners();
+      const p = stored.find((item) => item.id === id);
+      if (p) openEventAgencyModal(p, el);
+    });
   });
 }
 
 function exportEventsCsv() {
-  const rows = S.eventPartners || [];
-  if (!rows.length) {
-    toast('No event agencies to export', 'warn');
-    return;
-  }
-  const headers = ['ID', 'Agency Name', 'Specialization', 'Contact Person', 'Email', 'Phone', 'City', 'Status', 'Score', 'Notes'];
-  const csvLines = [headers.join(',')];
+  const stored = loadStoredEventPartners();
+  const headers = ['ID', 'Exhibitor Name', 'Country', 'Contact Person', 'Email', 'Origin Airport', 'Fair Event', 'Outreach Status', 'Relevance Score', 'Website', 'Notes'];
+  const rows = stored.map((p) => [
+    p.id,
+    `"${(p.name || '').replace(/"/g, '""')}"`,
+    `"${(p.country || '').replace(/"/g, '""')}"`,
+    `"${(p.contact_person || '').replace(/"/g, '""')}"`,
+    p.email || '',
+    `"${(p.origin_hub || '').replace(/"/g, '""')}"`,
+    `"${(p.fair_event || 'Milano Home 2027').replace(/"/g, '""')}"`,
+    p.status || 'TO_REVIEW',
+    p.relevance_score || 85,
+    p.website || '',
+    `"${(p.notes || '').replace(/"/g, '""')}"`
+  ]);
 
-  for (const r of rows) {
-    const fields = [
-      r.id,
-      `"${(r.name || '').replace(/"/g, '""')}"`,
-      `"${(r.agency_type_label || r.agency_type || '').replace(/"/g, '""')}"`,
-      `"${(r.contact_person || '').replace(/"/g, '""')}"`,
-      r.email || '',
-      r.phone || '',
-      r.base_city || '',
-      r.status || '',
-      r.relevance_score || '',
-      `"${(r.notes || '').replace(/"/g, '""')}"`
-    ];
-    csvLines.push(fields.join(','));
-  }
+  const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement('a');
+  link.setAttribute('href', encodedUri);
+  link.setAttribute('download', `milano_home_foreign_exhibitors_${new Date().toISOString().slice(0, 10)}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  toast(`Exported ${stored.length} foreign exhibitors to CSV`);
+}
 
-  const blob = new Blob([csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `dorogo_event_outreach_${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-  toast('Exported Event Outreach CSV', 'ok');
+function openEventAgencyModal(p, el) {
+  const isEdit = Boolean(p);
+  const title = isEdit ? `Edit Exhibitor: ${p.name}` : 'Add Foreign Exhibiting Team';
+
+  const content = `
+    <form id="event-agency-form" style="display:flex;flex-direction:column;gap:12px;font-size:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label style="font-weight:600;display:block;margin-bottom:4px">Exhibitor Company Name *</label>
+          <input type="text" id="m-name" required value="${attr(p?.name || '')}" placeholder="e.g. Addison Ross Ltd" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--sail-line);border-radius:6px">
+        </div>
+        <div>
+          <label style="font-weight:600;display:block;margin-bottom:4px">Country &amp; Flag</label>
+          <input type="text" id="m-country" value="${attr(p?.country || '')}" placeholder="e.g. United Kingdom" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--sail-line);border-radius:6px">
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label style="font-weight:600;display:block;margin-bottom:4px">Trade Contact Person</label>
+          <input type="text" id="m-contact" value="${attr(p?.contact_person || '')}" placeholder="e.g. David Ross / Head of Trade" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--sail-line);border-radius:6px">
+        </div>
+        <div>
+          <label style="font-weight:600;display:block;margin-bottom:4px">Verified Email</label>
+          <input type="email" id="m-email" value="${attr(p?.email || '')}" placeholder="e.g. sales@addisonross.com" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--sail-line);border-radius:6px">
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label style="font-weight:600;display:block;margin-bottom:4px">Website URL</label>
+          <input type="url" id="m-website" value="${attr(p?.website || '')}" placeholder="https://example.com" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--sail-line);border-radius:6px">
+        </div>
+        <div>
+          <label style="font-weight:600;display:block;margin-bottom:4px">Home Origin Airport</label>
+          <input type="text" id="m-origin" value="${attr(p?.origin_hub || 'London Heathrow (LHR)')}" placeholder="e.g. LHR, CDG, FRA" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--sail-line);border-radius:6px">
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label style="font-weight:600;display:block;margin-bottom:4px">Outreach Status</label>
+          <select id="m-status" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--sail-line);border-radius:6px;background:#FFF">
+            <option value="TO_REVIEW" ${p?.status === 'TO_REVIEW' ? 'selected' : ''}>To Review (Safe)</option>
+            <option value="WANT_TO_CONTACT" ${p?.status === 'WANT_TO_CONTACT' ? 'selected' : ''}>Ready to Contact</option>
+            <option value="CONTACTED" ${p?.status === 'CONTACTED' ? 'selected' : ''}>Contacted</option>
+            <option value="APPROVED_PARTNER" ${p?.status === 'APPROVED_PARTNER' ? 'selected' : ''}>Partner Won</option>
+            <option value="NOT_RELEVANT" ${p?.status === 'NOT_RELEVANT' ? 'selected' : ''}>Archive / Dismiss</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-weight:600;display:block;margin-bottom:4px">Relevance Score (1-100)</label>
+          <input type="number" id="m-score" min="1" max="100" value="${attr(p?.relevance_score || 95)}" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--sail-line);border-radius:6px">
+        </div>
+      </div>
+
+      <div>
+        <label style="font-weight:600;display:block;margin-bottom:4px">Exhibitor Notes &amp; Itinerary Requirements</label>
+        <textarea id="m-notes" rows="2" style="width:100%;padding:6px 8px;border:1px solid var(--sail-line);border-radius:6px;font-family:inherit" placeholder="Airport meet & greet, booth setup dates, daily shuttle times...">${esc(p?.notes || '')}</textarea>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+        ${isEdit ? `
+          <button type="button" id="btn-delete-event-agency" class="sail-btn danger" style="font-size:11.5px;padding:6px 12px">
+            Delete Exhibitor
+          </button>
+        ` : '<div></div>'}
+        <div style="display:flex;gap:8px">
+          <button type="button" class="sail-btn default dialog-close" style="font-size:11.5px;padding:6px 12px">
+            Cancel
+          </button>
+          <button type="submit" class="sail-btn primary" style="font-size:11.5px;padding:6px 12px">
+            ${isEdit ? 'Save Changes' : 'Create Exhibitor'}
+          </button>
+        </div>
+      </div>
+    </form>
+  `;
+
+  const d = dialog({ title, content, width: '560px' });
+
+  d.el.querySelector('#event-agency-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+      name: d.el.querySelector('#m-name').value.trim(),
+      country: d.el.querySelector('#m-country').value.trim() || 'International',
+      contact_person: d.el.querySelector('#m-contact').value.trim(),
+      email: d.el.querySelector('#m-email').value.trim(),
+      website: d.el.querySelector('#m-website').value.trim(),
+      origin_hub: d.el.querySelector('#m-origin').value.trim(),
+      status: d.el.querySelector('#m-status').value,
+      relevance_score: parseInt(d.el.querySelector('#m-score').value, 10) || 85,
+      notes: d.el.querySelector('#m-notes').value.trim()
+    };
+
+    try {
+      if (isEdit) {
+        await updateEventPartner(p.id, data);
+        toast(`Updated ${data.name}`);
+      } else {
+        await addEventPartner(data);
+        toast(`Added ${data.name}`);
+      }
+      d.close();
+      render(el);
+    } catch (err) {
+      toast(`Failed to save: ${err.message}`, 'error');
+    }
+  });
+
+  if (isEdit) {
+    d.el.querySelector('#btn-delete-event-agency')?.addEventListener('click', async () => {
+      confirmDialog({
+        title: 'Delete Exhibitor',
+        message: `Are you sure you want to remove "${p.name}"?`,
+        confirmText: 'Delete',
+        danger: true,
+        onConfirm: async () => {
+          try {
+            await removeEventPartner(p.id);
+            toast(`Removed ${p.name}`);
+            d.close();
+            render(el);
+          } catch (err) {
+            toast(`Failed to delete: ${err.message}`, 'error');
+          }
+        }
+      });
+    });
+  }
 }
