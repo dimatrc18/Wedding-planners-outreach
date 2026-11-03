@@ -105,12 +105,13 @@
     font-weight: 400;
   }
   .brand-sub {
-    font-size: 7.6px;
+    font-size: 7.2px;
     font-weight: 600;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.08em;
     color: #71717a;
     text-transform: uppercase;
     margin-top: 3px;
+    white-space: nowrap;
   }
   .header-meta {
     text-align: right;
@@ -125,12 +126,13 @@
     line-height: 1.1;
   }
   .header-sub {
-    font-size: 7.5px;
+    font-size: 7.3px;
     font-weight: 600;
     color: #9B7D50;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     margin-top: 2px;
+    white-space: nowrap;
   }
 
   /* Section Title - Single Clean Line Invariant */
@@ -149,11 +151,11 @@
     text-overflow: ellipsis;
   }
 
-  /* Master Fleet & Tariffs Matrix */
+  /* Master Fleet & Tariffs Matrix - Grouped 2-Tier Hierarchy */
   table.master-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 8.2px;
+    font-size: 7.8px;
     margin-bottom: 2px;
   }
   table.master-table th {
@@ -161,18 +163,48 @@
     color: #27272a;
     font-weight: 700;
     text-align: left;
-    padding: 4.5px 6px;
+    padding: 3.5px 5px;
     border-top: 1px solid #e4e4e7;
-    border-bottom: 1.5px solid #18181b;
+    border-bottom: 1px solid #18181b;
     text-transform: uppercase;
-    font-size: 7.2px;
+    font-size: 6.9px;
     letter-spacing: 0.04em;
+    vertical-align: middle;
+  }
+  table.master-table th.group-header {
+    text-align: center;
+    font-size: 7.2px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 3px 4px;
+    border-top: 1.5px solid #18181b;
+    border-bottom: 1px solid #d4d4d8;
+  }
+  table.master-table th.group-transfer {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-right: 1.5px solid #cbd5e1;
+  }
+  table.master-table th.group-disposal {
+    background: #fefce8;
+    color: #854d0e;
+    border-right: 1.5px solid #e2e8f0;
+  }
+  table.master-table tr.sub-header th {
+    font-size: 6.8px;
+    padding: 3px 5px;
+    background: #f8fafc;
+    border-bottom: 1.5px solid #18181b;
   }
   table.master-table th.num, table.master-table td.num {
     text-align: right;
   }
+  table.master-table th.divider-col,
+  table.master-table td.divider-col {
+    border-right: 1.5px solid #d4d4d8;
+  }
   table.master-table td {
-    padding: 6px 6px;
+    padding: 4.5px 5px;
     border-bottom: 1px solid #f4f4f5;
     vertical-align: middle;
     color: #27272a;
@@ -181,35 +213,36 @@
     background: #fafafa;
   }
   .car-title {
-    font-size: 9.4px;
+    font-size: 9px;
     font-weight: 700;
     color: #000000;
     display: block;
     line-height: 1.2;
+    white-space: nowrap;
   }
   .car-sub {
-    font-size: 7.2px;
+    font-size: 6.9px;
     color: #71717a;
     display: block;
     margin-top: 1px;
   }
   .rate-val {
-    font-size: 10px;
+    font-size: 9.6px;
     font-weight: 700;
     color: #18181b;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
   .rate-sub {
-    font-size: 7px;
+    font-size: 6.7px;
     color: #71717a;
     display: block;
     font-weight: 500;
   }
   .role-text {
-    font-size: 7.5px;
+    font-size: 7.2px;
     color: #52525b;
-    line-height: 1.3;
+    line-height: 1.28;
   }
   .role-text strong {
     color: #18181b;
@@ -469,81 +502,85 @@
 
     <table class="master-table">
       <thead>
-        <tr>
-          <th style="width: 22%;">Vehicle Class &amp; Specs</th>
-          <th style="width: 12%;">Rate / KM</th>
-          <th style="width: 15%;" class="num">Transfer MXP ↔ Como</th>
-          <th style="width: 14%;" class="num">Standby (Min 4h)</th>
+        <tr class="super-header">
+          <th rowspan="2" style="width: 20%;">Vehicle &amp; Capacity</th>
+          <th colspan="2" class="group-header group-transfer" style="width: 25%;">1. Transfers (Point-to-Point A &rarr; B)</th>
+          <th colspan="2" class="group-header group-disposal" style="width: 26%;">2. Hourly Disposal (Chauffeur on Standby)</th>
+          <th rowspan="2" style="width: 29%;">When to Choose This Vehicle</th>
+        </tr>
+        <tr class="sub-header">
+          <th style="width: 11%;">Rate / KM</th>
+          <th style="width: 14%;" class="num divider-col">Example: MXP &harr; Como</th>
+          <th style="width: 13%;" class="num">Half-Day (4h Min)</th>
           <th style="width: 13%;" class="num">Full Day (10h)</th>
-          <th style="width: 24%;">Operational Role &amp; Villa Access</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td>
             <span class="car-title">Mercedes-Benz E-Class</span>
-            <span class="car-sub">Executive Sedan • 2–3 Pax • 2 Bags</span>
+            <span class="car-sub">Executive Sedan &bull; 2–3 Pax &bull; 2 Bags</span>
           </td>
           <td><strong>&euro;1.45 / km</strong><span class="rate-sub">Min. &euro;120</span></td>
-          <td class="num"><span class="rate-val">&euro;180.00</span><span class="rate-sub">~45 min route</span></td>
+          <td class="num divider-col"><span class="rate-val">&euro;180.00</span><span class="rate-sub">Example ~50 km route</span></td>
           <td class="num"><span class="rate-val">&euro;95 / hr</span><span class="rate-sub">4h min: &euro;380</span></td>
           <td class="num"><span class="rate-val">&euro;850.00</span><span class="rate-sub">200 km incl.</span></td>
-          <td class="role-text"><strong>Tactical VIP:</strong> stylists, celebrant, photo scouting. Milan Area C &amp; Como ZTL unrestricted.</td>
+          <td class="role-text"><strong>Solo VIPs &amp; Vendors:</strong> Best for 1–2 passengers (photographer, hair stylist, celebrant, or solo guest). Compact sedan with unrestricted access to tight Milan &amp; Como ZTL restricted zones.</td>
         </tr>
         <tr>
           <td>
             <span class="car-title">Mercedes-Benz V-Class</span>
-            <span class="car-sub">Primary Villa Shuttle • 6–7 Pax • 7 Bags</span>
+            <span class="car-sub">Primary Villa Shuttle &bull; 6–7 Pax &bull; 7 Bags</span>
           </td>
           <td><strong>&euro;1.60 / km</strong><span class="rate-sub">Min. &euro;120</span></td>
-          <td class="num"><span class="rate-val">&euro;230.00</span><span class="rate-sub">~45 min route</span></td>
+          <td class="num divider-col"><span class="rate-val">&euro;230.00</span><span class="rate-sub">Example ~50 km route</span></td>
           <td class="num"><span class="rate-val">&euro;105 / hr</span><span class="rate-sub">4h min: &euro;420</span></td>
           <td class="num"><span class="rate-val">&euro;880.00</span><span class="rate-sub">200 km incl.</span></td>
-          <td class="role-text"><strong>Key Villa Shuttle:</strong> clears historic gates (Villa Balbiano, Pizzo). Continuous night party loops.</td>
+          <td class="role-text"><strong>Core Wedding Shuttle:</strong> Transports wedding party, families, and guests. Fits narrow historic villa gates (Balbiano, Pizzo) and runs continuous night party return loops.</td>
         </tr>
         <tr>
           <td>
             <span class="car-title">Mercedes-Benz S-Class</span>
-            <span class="car-sub">Flagship Bridal Sedan • 2–3 Pax • 2 Bags</span>
+            <span class="car-sub">Bridal Flagship Sedan &bull; 2–3 Pax &bull; 2 Bags</span>
           </td>
-          <td><strong>&euro;2.70 / km</strong><span class="rate-sub">Min. &euro;180</span></td>
-          <td class="num"><span class="rate-val">&euro;290.00</span><span class="rate-sub">~45 min route</span></td>
-          <td class="num"><span class="rate-val">&euro;125 / hr</span><span class="rate-sub">4h min: &euro;500</span></td>
-          <td class="num"><span class="rate-val">&euro;1,050.00</span><span class="rate-sub">200 km incl.</span></td>
-          <td class="role-text"><strong>Bridal Flagship:</strong> generous room for long-train gowns, ceremonial exits, and parents.</td>
+          <td><strong>&euro;3.25 / km</strong><span class="rate-sub">Min. &euro;220</span></td>
+          <td class="num divider-col"><span class="rate-val">&euro;350.00</span><span class="rate-sub">Example ~50 km route</span></td>
+          <td class="num"><span class="rate-val">&euro;150 / hr</span><span class="rate-sub">4h min: &euro;600</span></td>
+          <td class="num"><span class="rate-val">&euro;1,250.00</span><span class="rate-sub">200 km incl.</span></td>
+          <td class="role-text"><strong>Bride &amp; Groom Flagship:</strong> Chosen for the couple’s grand ceremonial arrival, photo shoots, and long-train wedding gowns that require extra rear cabin legroom and privacy.</td>
         </tr>
         <tr>
           <td>
             <span class="car-title">Executive Minibus 16–20p</span>
-            <span class="car-sub">Mercedes Sprinter / Indcar equiv.</span>
+            <span class="car-sub">Mercedes Sprinter / Indcar &bull; 16–20 Pax</span>
           </td>
           <td><strong>&euro;3.50 / km</strong><span class="rate-sub">Min. &euro;350</span></td>
-          <td class="num"><span class="rate-val">&euro;490.00</span><span class="rate-sub">+ &euro;30/h parking</span></td>
+          <td class="num divider-col"><span class="rate-val">&euro;490.00</span><span class="rate-sub">+ &euro;30/h parking</span></td>
           <td class="num"><span class="rate-val">&euro;125 / hr</span><span class="rate-sub">4h min: &euro;500</span></td>
           <td class="num"><span class="rate-val">&euro;1,050.00</span><span class="rate-sub">200 km incl.</span></td>
-          <td class="role-text"><strong>Tight Mountain Roads:</strong> compact wheelbase (&lt;7.5m) navigates lakeside lanes closed to 50p coaches.</td>
+          <td class="role-text"><strong>Small Groups &amp; Mountain Roads:</strong> Best for 10–20 guests. Essential for tight, winding lakeside roads where 50-passenger coaches are physically unable or legally forbidden to enter.</td>
         </tr>
         <tr>
           <td>
             <span class="car-title">Executive Midibus 28–30p</span>
-            <span class="car-sub">Iveco Wing / Mercedes or equiv.</span>
+            <span class="car-sub">Iveco Wing / Mercedes &bull; 28–30 Pax</span>
           </td>
           <td><strong>&euro;4.20 / km</strong><span class="rate-sub">Min. &euro;420</span></td>
-          <td class="num"><span class="rate-val">&euro;560.00</span><span class="rate-sub">+ &euro;30/h parking</span></td>
+          <td class="num divider-col"><span class="rate-val">&euro;560.00</span><span class="rate-sub">+ &euro;30/h parking</span></td>
           <td class="num"><span class="rate-val">&euro;140 / hr</span><span class="rate-sub">4h min: &euro;560</span></td>
           <td class="num"><span class="rate-val">&euro;1,150.00</span><span class="rate-sub">200 km incl.</span></td>
-          <td class="role-text"><strong>Medium Group Express:</strong> bridges 19p minibus and 50p coach for lakeside hotels &amp; welcome dinners.</td>
+          <td class="role-text"><strong>Medium Groups &amp; Dinners:</strong> Perfect for 20–30 guests for rehearsal dinners and hotel transfers. Bridges the gap between a minivan and a large coach while keeping high maneuverability.</td>
         </tr>
         <tr>
           <td>
             <span class="car-title">Grand Turismo Coach 50–55p</span>
-            <span class="car-sub">Setra / Tourismo or equiv. GT</span>
+            <span class="car-sub">Setra / Tourismo GT &bull; 50–55 Pax &bull; 50 Bags</span>
           </td>
           <td><strong>&euro;5.20 / km</strong><span class="rate-sub">Min. &euro;500</span></td>
-          <td class="num"><span class="rate-val">&euro;690.00</span><span class="rate-sub">+ &euro;30/h parking</span></td>
+          <td class="num divider-col"><span class="rate-val">&euro;690.00</span><span class="rate-sub">+ &euro;30/h parking</span></td>
           <td class="num"><span class="rate-val">&euro;165 / hr</span><span class="rate-sub">4h min: &euro;660</span></td>
           <td class="num"><span class="rate-val">&euro;1,290.00</span><span class="rate-sub">200 km incl.</span></td>
-          <td class="role-text"><strong>Highway Trunk Line:</strong> mass airport transfer from Milan/MXP to central lakeside piers &amp; hub hotels.</td>
+          <td class="role-text"><strong>Mass Airport Trunk Line:</strong> Dedicated for 50+ guests arriving together from Milan Malpensa to central hotels and boat piers. (Transfers to narrow villa gates synchronize with V-Class vans).</td>
         </tr>
       </tbody>
     </table>
@@ -559,7 +596,7 @@
         <div class="standby-title">Hourly Disposal at Venue</div>
         <div class="standby-desc">
           &bull; <strong>Strict 4-Hour Minimum</strong> applies to all vehicles.<br>
-          &bull; <strong>Half-Day (4h):</strong> V-Class: &euro;420 &bull; S-Class: &euro;500 &bull; Minibus: &euro;500 &bull; Midibus: &euro;560 &bull; Coach: &euro;660.<br>
+          &bull; <strong>Half-Day (4h):</strong> V-Class: &euro;420 &bull; S-Class: &euro;600 &bull; Minibus: &euro;500 &bull; Midibus: &euro;560 &bull; Coach: &euro;660.<br>
           &bull; <strong>Full-Day (10h):</strong> Includes 200 km allowance. Chauffeur on dedicated standby at venue.
         </div>
       </div>
@@ -579,24 +616,14 @@
         <div class="standby-title">Transparent Standardized Policy</div>
         <div class="standby-desc">
           &bull; <strong>Night Transfers (22:00–06:00):</strong> Flat <strong>+20%</strong> on base route tariff (quoted upfront on invoice).<br>
-          &bull; <strong>Overtime past scheduled disposal:</strong> Base Rate + 25% (V-Class: <strong>&euro;130/h</strong> &bull; Minibus: <strong>&euro;155/h</strong> &bull; Coach: <strong>&euro;205/h</strong>).
+          &bull; <strong>Overtime past scheduled disposal:</strong> Base Rate + 25% (V-Class: <strong>&euro;130/h</strong> &bull; S-Class: <strong>&euro;190/h</strong> &bull; Minibus: <strong>&euro;155/h</strong> &bull; Coach: <strong>&euro;205/h</strong>).
         </div>
       </div>
     </div>
 
-    <!-- Section 3: Operational Guardrails & Luggage Strip -->
-    <div class="operational-strip">
-      <div>
-        <strong>Luggage Advisory:</strong> 16–20p minibuses have compact trunks (~45L per seat, ~1 medium suitcase). For overseas wedding parties with formal luggage, book our <strong>Dedicated Baggage Support Van (Mercedes Vito Cargo)</strong> at <strong>&euro;240 net flat</strong> per airport wave.
-      </div>
-      <div>
-        <strong>Villa Gate Access &amp; Pass-Throughs:</strong> 50-seat coaches cannot enter narrow villa driveways (Balbiano, Pizzo). DOROGO coordinates highway coach transit synchronized with 19p Minibuses or V-Class shuttles for the final mile. MXP parking: &euro;30/h. Area C ZTL: free for vans/weekends.
-      </div>
-    </div>
-
-    <!-- Section 3: Collaboration Models & Verified Reviews -->
+    <!-- Section 3: Collaboration Models & Partner Margins (CEO Priority) -->
     <div class="section-heading">
-      3. B2B Collaboration Formats &amp; Verified Reviews
+      3. B2B Collaboration Formats &amp; Partner Payouts
     </div>
 
     <div class="collab-grid">
@@ -615,8 +642,18 @@
           <span class="collab-payout">5% Studio Payout</span>
         </div>
         <div class="collab-desc">
-          Pass us the client contact and itinerary — DOROGO handles 100% of quoting, billing, and on-ground logistics. Your studio receives a guaranteed <strong>5% partner commission</strong> upon contract settlement.
+          Pass us the client contact and itinerary &mdash; DOROGO handles 100% of quoting, billing, and on-ground logistics. Your studio receives a guaranteed <strong>5% partner commission</strong> upon contract settlement.
         </div>
+      </div>
+    </div>
+
+    <!-- Section 4: Operational Guardrails & Luggage Advisory -->
+    <div class="operational-strip">
+      <div>
+        <strong>Luggage Advisory:</strong> 16–20p minibuses have compact trunks (~45L per seat, ~1 medium suitcase). For overseas wedding parties with formal luggage, book our <strong>Dedicated Baggage Support Van (Mercedes Vito Cargo)</strong> at <strong>&euro;240 net flat</strong> per airport wave.
+      </div>
+      <div>
+        <strong>Villa Gate Access &amp; Pass-Throughs:</strong> 50-seat coaches cannot enter narrow villa driveways (Balbiano, Pizzo). DOROGO coordinates highway coach transit synchronized with 19p Minibuses or V-Class shuttles for the final mile. MXP parking: &euro;30/h. Area C ZTL: free for vans/weekends.
       </div>
     </div>
 
