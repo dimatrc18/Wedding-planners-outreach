@@ -14,9 +14,9 @@ import * as visibility from './views/visibility.js?v=9.7';
 import * as settings from './views/settings.js?v=9.1';
 import * as busPartners from './views/bus_partners.js?v=9.1';
 import * as fleetShowcase from './views/fleet_showcase.js?v=9.7';
-import * as eventPartners from './views/event_partners.js?v=20261103_v7';
-import * as eventTemplates from './views/event_templates.js?v=20261103_v7';
-import * as eventOutbox from './views/event_outbox.js?v=20261103_v7';
+import * as eventPartners from './views/event_partners.js?v=20261103_v8';
+import * as eventTemplates from './views/event_templates.js?v=20261103_v8';
+import * as eventOutbox from './views/event_outbox.js?v=20261103_v8';
 
 const ROUTES = {
   today: { view: today, label: 'Today', icon: 'today' },
@@ -72,16 +72,11 @@ const SECTIONS = [
 ];
 
 function getSectionState() {
-  let state = { wedding: false, bus: false, events: true };
   try {
     const raw = localStorage.getItem('dorogo_rail_sections');
-    if (raw) state = { ...state, ...JSON.parse(raw) };
+    if (raw) return JSON.parse(raw);
   } catch {}
-  const r = parseHash();
-  if (['event_partners', 'event_templates', 'event_outbox'].includes(r.name)) {
-    state.events = true;
-  }
-  return state;
+  return { wedding: false, bus: false, events: true };
 }
 
 function setSectionState(state) {
@@ -242,14 +237,6 @@ function renderView() {
     const sec = SECTIONS.find((s) => s.id === id);
     const hasActive = sec ? sec.items.some((it) => it.key === r.name) : false;
     btn.classList.toggle('has-active', hasActive);
-    if (hasActive) {
-      btn.setAttribute('aria-expanded', 'true');
-      const content = document.querySelector('#rail-section-' + id);
-      if (content) {
-        content.classList.remove('is-collapsed');
-        content.classList.add('is-open');
-      }
-    }
   });
   
   el.innerHTML = banners() + '<div id="view-body"></div>';
