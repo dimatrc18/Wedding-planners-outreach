@@ -170,6 +170,7 @@
     background: #ffffff;
   }
   table.master-table {
+    table-layout: fixed;
     width: 100%;
     border-collapse: collapse;
     font-size: 7.8px;
@@ -193,6 +194,7 @@
     padding: 3.5px 5px;
     border-bottom: 1px solid #eae5dc;
     background: #f4efe7;
+    white-space: nowrap;
   }
   table.master-table th.group-transfer {
     border-right: 1px solid #dfdad2;
@@ -244,7 +246,7 @@
     margin-top: 1px;
   }
   .rate-val {
-    font-size: 10.8px;
+    font-size: 10.2px;
     font-weight: 700;
     color: #1a1918;
     font-variant-numeric: tabular-nums;
@@ -564,6 +566,7 @@
       -webkit-overflow-scrolling: touch;
     }
     table.master-table {
+    table-layout: fixed;
       min-width: 620px;
       font-size: 12px;
     }
@@ -581,7 +584,7 @@
       font-size: 11px;
     }
     .rate-val {
-      font-size: 15px;
+      font-size: 10.2px;
     }
     .rate-sub {
       font-size: 11px;
@@ -757,8 +760,8 @@
         <thead>
           <tr class="super-header">
             <th rowspan="2" style="width: 24.5%;">Vehicle &amp; Capacity</th>
-            <th colspan="2" class="group-header group-transfer" style="width: 25.5%;">1. Transfers (Point-to-Point A &rarr; B)</th>
-            <th colspan="2" class="group-header group-disposal" style="width: 24.5%;">2. Hourly Disposal (Chauffeur on Standby)</th>
+            <th colspan="2" class="group-header group-transfer" style="width: 25.5%;">1. Transfers (Point-to-Point)</th>
+            <th colspan="2" class="group-header group-disposal" style="width: 24.5%;">2. Chauffeur on Standby</th>
             <th rowspan="2" style="width: 25.5%;">When to Choose This Vehicle</th>
           </tr>
           <tr class="sub-header">
@@ -774,9 +777,9 @@
               <span class="car-title">Mercedes-Benz E-Class&nbsp;(1–3&nbsp;Seats)</span>
               <span class="car-sub">Executive Sedan &bull; Luggage: 2 large bags</span>
             </td>
-            <td style="white-space:nowrap"><strong style="white-space:nowrap;">&euro;3.00&nbsp;/&nbsp;km</strong><span class="rate-sub" style="white-space:nowrap;">Min.&nbsp;&euro;100</span></td>
+            <td style="white-space:nowrap"><span class="rate-val">&euro;3.00&nbsp;/&nbsp;km</span><span class="rate-sub" style="white-space:nowrap;">Min.&nbsp;&euro;100</span></td>
             <td class="num divider-col"><span class="rate-val">&euro;150.00</span></td>
-            <td class="num"><span class="rate-val">&euro;100 / hr</span><span class="rate-sub">4h min: &euro;400</span></td>
+            <td class="num"><span class="rate-val">&euro;100&nbsp;/&nbsp;hr</span><span class="rate-sub">4h min: &euro;400</span></td>
             <td class="num divider-col"><span class="rate-val">&euro;900.00</span><span class="rate-sub">200 km incl.</span></td>
             <td class="role-text"><strong>Solo VIPs &amp; Vendors:</strong> 1–2 passengers (photographer, stylist, celebrant). Unrestricted ZTL access.</td>
           </tr>
@@ -785,9 +788,9 @@
               <span class="car-title">Mercedes-Benz V-Class&nbsp;(6–7&nbsp;Seats)</span>
               <span class="car-sub">Primary Villa Shuttle &bull; Luggage: 7 bags</span>
             </td>
-            <td style="white-space:nowrap"><strong style="white-space:nowrap;">&euro;3.60&nbsp;/&nbsp;km</strong><span class="rate-sub" style="white-space:nowrap;">Min.&nbsp;&euro;120</span></td>
+            <td style="white-space:nowrap"><span class="rate-val">&euro;3.60&nbsp;/&nbsp;km</span><span class="rate-sub" style="white-space:nowrap;">Min.&nbsp;&euro;120</span></td>
             <td class="num divider-col"><span class="rate-val">&euro;180.00</span></td>
-            <td class="num"><span class="rate-val">&euro;105 / hr</span><span class="rate-sub">4h min: &euro;420</span></td>
+            <td class="num"><span class="rate-val">&euro;105&nbsp;/&nbsp;hr</span><span class="rate-sub">4h min: &euro;420</span></td>
             <td class="num divider-col"><span class="rate-val">&euro;950.00</span><span class="rate-sub">200 km incl.</span></td>
             <td class="role-text"><strong>Core Wedding Shuttle:</strong> Wedding party, family, and guest villa loops. Fits narrow historic gates.</td>
           </tr>
@@ -796,9 +799,9 @@
               <span class="car-title">Mercedes-Benz S-Class&nbsp;(1–3&nbsp;Seats)</span>
               <span class="car-sub">Bridal Flagship Sedan &bull; Luggage: 2 bags</span>
             </td>
-            <td style="white-space:nowrap"><strong style="white-space:nowrap;">&euro;5.00&nbsp;/&nbsp;km</strong><span class="rate-sub" style="white-space:nowrap;">Min.&nbsp;&euro;180</span></td>
+            <td style="white-space:nowrap"><span class="rate-val">&euro;5.00&nbsp;/&nbsp;km</span><span class="rate-sub" style="white-space:nowrap;">Min.&nbsp;&euro;180</span></td>
             <td class="num divider-col"><span class="rate-val">&euro;250.00</span></td>
-            <td class="num"><span class="rate-val">&euro;200 / hr</span><span class="rate-sub">4h min: &euro;800</span></td>
+            <td class="num"><span class="rate-val">&euro;200&nbsp;/&nbsp;hr</span><span class="rate-sub">4h min: &euro;800</span></td>
             <td class="num divider-col"><span class="rate-val">&euro;1,800.00</span><span class="rate-sub">200 km incl.</span></td>
             <td class="role-text"><strong>Bride &amp; Groom Flagship:</strong> Grand ceremonial arrival and photo shoots. Extra rear cabin legroom for gowns.</td>
           </tr>
@@ -807,9 +810,9 @@
               <span class="car-title">Executive Minibus&nbsp;(16–20&nbsp;Seats)</span>
               <span class="car-sub">Executive Minibus GT &bull; Luggage: up to 20 bags</span>
             </td>
-            <td style="white-space:nowrap"><strong style="white-space:nowrap;">&euro;11.60&nbsp;/&nbsp;km</strong><span class="rate-sub" style="white-space:nowrap;">Min.&nbsp;&euro;420</span></td>
+            <td style="white-space:nowrap"><span class="rate-val">&euro;11.60&nbsp;/&nbsp;km</span><span class="rate-sub" style="white-space:nowrap;">Min.&nbsp;&euro;420</span></td>
             <td class="num divider-col"><span class="rate-val">&euro;580.00</span><span class="rate-sub">+ &euro;30/h parking</span></td>
-            <td class="num"><span class="rate-val">&euro;145 / hr</span><span class="rate-sub">4h min: &euro;580</span></td>
+            <td class="num"><span class="rate-val">&euro;145&nbsp;/&nbsp;hr</span><span class="rate-sub">4h min: &euro;580</span></td>
             <td class="num divider-col"><span class="rate-val">&euro;950.00</span><span class="rate-sub">150 km incl.</span></td>
             <td class="role-text"><strong>Tight Lakeside Roads:</strong> 10–20 guests. Navigates narrow lake roads where 50p coaches cannot go.</td>
           </tr>
@@ -818,9 +821,9 @@
               <span class="car-title">Executive Midibus&nbsp;(28–30&nbsp;Seats)</span>
               <span class="car-sub">Executive Midibus GT &bull; Underfloor luggage bays</span>
             </td>
-            <td style="white-space:nowrap"><strong style="white-space:nowrap;">&euro;13.80&nbsp;/&nbsp;km</strong><span class="rate-sub" style="white-space:nowrap;">Min.&nbsp;&euro;490</span></td>
+            <td style="white-space:nowrap"><span class="rate-val">&euro;13.80&nbsp;/&nbsp;km</span><span class="rate-sub" style="white-space:nowrap;">Min.&nbsp;&euro;490</span></td>
             <td class="num divider-col"><span class="rate-val">&euro;690.00</span><span class="rate-sub">+ &euro;30/h parking</span></td>
-            <td class="num"><span class="rate-val">&euro;172.50 / hr</span><span class="rate-sub">4h min: &euro;690</span></td>
+            <td class="num"><span class="rate-val">&euro;172.50&nbsp;/&nbsp;hr</span><span class="rate-sub">4h min: &euro;690</span></td>
             <td class="num divider-col"><span class="rate-val">&euro;1,080.00</span><span class="rate-sub">150 km incl.</span></td>
             <td class="role-text"><strong>Medium Groups:</strong> 20–30 guests for rehearsal dinners. Ideal balance of capacity and agility.</td>
           </tr>
@@ -829,9 +832,9 @@
               <span class="car-title">Grand Turismo Coach&nbsp;(50–55&nbsp;Seats)</span>
               <span class="car-sub">Grand Turismo Coach &bull; Full pass-through hold</span>
             </td>
-            <td style="white-space:nowrap"><strong style="white-space:nowrap;">&euro;15.60&nbsp;/&nbsp;km</strong><span class="rate-sub" style="white-space:nowrap;">Min.&nbsp;&euro;550</span></td>
+            <td style="white-space:nowrap"><span class="rate-val">&euro;15.60&nbsp;/&nbsp;km</span><span class="rate-sub" style="white-space:nowrap;">Min.&nbsp;&euro;550</span></td>
             <td class="num divider-col"><span class="rate-val">&euro;780.00</span><span class="rate-sub">+ &euro;30/h parking</span></td>
-            <td class="num"><span class="rate-val">&euro;205 / hr</span><span class="rate-sub">4h min: &euro;820</span></td>
+            <td class="num"><span class="rate-val">&euro;205&nbsp;/&nbsp;hr</span><span class="rate-sub">4h min: &euro;820</span></td>
             <td class="num divider-col"><span class="rate-val">&euro;1,200.00</span><span class="rate-sub">150 km incl.</span></td>
             <td class="role-text"><strong>Mass Airport Trunk Line:</strong> 50+ guests from Milan airports direct to central hotels and boat piers.</td>
           </tr>
@@ -850,7 +853,7 @@
         <div class="standby-desc">
           &bull; <strong>Night shift (22:00–06:00):</strong> +20% (compensates Italian mandatory driver night rate)<br>
           &bull; <strong>Extra hours:</strong> billed at the vehicle's standard hourly rate from the table<br>
-          &bull; <strong>Daily allowance (10h):</strong> 200 km included (excess mileage at &euro;2.50 / km)<br>
+          &bull; <strong>Daily allowance (10h):</strong> 200 km included (excess mileage at &euro;2.50&nbsp;/&nbsp;km)<br>
           &bull; <strong>Volume savings:</strong> bespoke package rates for multi-day weddings or multi-vehicle fleets
         </div>
       </div>
@@ -915,8 +918,8 @@
         <div class="guarantee-sub">60 min free wait from landing</div>
       </div>
       <div class="guarantee-item">
-        <div class="guarantee-title">Villa &amp; Pier Access</div>
-        <div class="guarantee-sub">ZTL permits &amp; boat dock sync</div>
+        <div class="guarantee-title">Villa Access Audit (&euro;350 Bonus Included)</div>
+        <div class="guarantee-sub">Gate clearance inspection &amp; minibus sync</div>
       </div>
     </div>
 

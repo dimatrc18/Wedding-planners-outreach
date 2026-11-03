@@ -31,7 +31,7 @@ for html_file, pdf_name, alias_name in tasks:
         f'--print-to-pdf={pdf_out}',
         html_path
     ]
-    subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=15)
     
     if alias_name:
         aliases = alias_name if isinstance(alias_name, list) else [alias_name]
