@@ -218,7 +218,7 @@ export async function render(el) {
       <!-- Safety Footer -->
       <div style="font-size:11px;color:var(--sail-muted);display:flex;align-items:center;justify-content:space-between;padding:0 4px">
         <span>🔒 <strong>Zero-Send Guarantee:</strong> Outreach is strictly locked in TO_REVIEW until rate cards are approved.</span>
-        <span>Dedicated Sender: <strong>Igor</strong> (<code>igor@b2b-dorogo.eu</code>)</span>
+        <span>Dedicated Sender: <strong>Igor</strong> (<code>igor@b2b-dorogo.it</code>)</span>
       </div>
     </div>
   `;

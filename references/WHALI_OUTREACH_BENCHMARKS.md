@@ -34,7 +34,7 @@ Would our 1-page corporate rate card and vehicle allocation be helpful for your 
 Best regards,
 Igor
 Executive Mobility Desk · DOROGO
-igor@b2b-dorogo.eu
+igor@b2b-dorogo.it
 ```
 
 ---
