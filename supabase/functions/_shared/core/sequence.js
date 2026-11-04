@@ -101,6 +101,15 @@ export function inSendWindow(date, settings, tz) {
   const s = withDefaults(settings);
   tz = tz || s.timezone;
   if (!isSendDay(date, s, tz)) return false;
+  if (Array.isArray(s.send_waves) && s.send_waves.length) {
+    const p = localParts(date, tz);
+    const minuteOfDay = p.hh * 60 + p.mm;
+    // Check if within target wave intervals (e.g. 12:00 -> 11:30 to 12:45, 15:00 -> 14:30 to 15:45, 17:00 -> 16:30 to 17:45)
+    return s.send_waves.some((waveHour) => {
+      const waveMin = waveHour * 60;
+      return minuteOfDay >= waveMin - 30 && minuteOfDay <= waveMin + 45;
+    });
+  }
   const [ws, we] = windowFor(localParts(date, tz), s, tz);
   return date >= ws && date <= we;
 }
@@ -114,15 +123,40 @@ export function nextSendSlot(after, settings, taken = [], { tz, rng = Math.rando
   tz = tz || s.timezone;
   const minutes = (n) => n * 60000;
   let cursor = new Date(after);
+  const waves = Array.isArray(s.send_waves) && s.send_waves.length ? [...s.send_waves].sort((a, b) => a - b) : null;
+
   for (let i = 0; i < maxDays; i++) {
     const p = localParts(cursor, tz);
-    const [ws, we] = windowFor(p, s, tz);
     const nextDay = () => zonedTimeToUtc(p.y, p.m, p.d + 1, 0, 0, tz);
-    if (!s.send_days.includes(p.dow) || isItalianHoliday(ymd(p)) || cursor > we) { cursor = nextDay(); continue; }
+    if (!s.send_days.includes(p.dow) || isItalianHoliday(ymd(p))) { cursor = nextDay(); continue; }
     const capKey = localDateKey(cursor, s.timezone);
     const cap = effectiveCap(s, cursor, firstSendAt);
     const sameDay = taken.map((t) => new Date(t)).filter((t) => localDateKey(t, s.timezone) === capKey);
     if (sameDay.length >= cap) { cursor = nextDay(); continue; }
+
+    if (waves) {
+      let chosenSlot = null;
+      for (const wHour of waves) {
+        const baseUtc = zonedTimeToUtc(p.y, p.m, p.d, wHour, 0, tz);
+        const jitter = minutes(s.jitter_min + rng() * Math.max(0, s.jitter_max - s.jitter_min));
+        let slotTime = new Date(baseUtc.getTime() + jitter);
+        const last = sameDay.length ? Math.max(...sameDay.map((d) => d.getTime())) : null;
+        if (last !== null && slotTime.getTime() < last + minutes(s.jitter_min)) {
+          slotTime = new Date(last + minutes(s.jitter_min));
+        }
+        const waveEnd = new Date(baseUtc.getTime() + 45 * 60000);
+        if (slotTime >= cursor && slotTime <= waveEnd) {
+          chosenSlot = slotTime;
+          break;
+        }
+      }
+      if (chosenSlot) return chosenSlot;
+      cursor = nextDay();
+      continue;
+    }
+
+    const [ws, we] = windowFor(p, s, tz);
+    if (cursor > we) { cursor = nextDay(); continue; }
     const jitter = minutes(s.jitter_min + rng() * (s.jitter_max - s.jitter_min));
     let t = new Date(Math.max(cursor.getTime(), ws.getTime()));
     const last = sameDay.length ? Math.max(...sameDay.map((d) => d.getTime())) : null;

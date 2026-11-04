@@ -115,6 +115,38 @@ test('nextSendSlot lands inside the Tue-Thu window, spaces sends, respects caps 
   assert.equal(localParts(s8, 'Europe/Rome').d, 9, '8 December is skipped');
 });
 
+test('Send waves: schedules around 12pm, 3pm, 5pm in each country local timezone', () => {
+  const rng = () => 0.1;
+  const waveSettings = { ...S, send_waves: [12, 15, 17] };
+  const tuesdayMorning = new Date('2026-10-06T08:00:00Z'); // 8am UTC
+
+  // 1. New York (EDT, UTC-4) -> 12pm NY is 16:00 UTC
+  const slotNYC = nextSendSlot(tuesdayMorning, waveSettings, [], { tz: 'America/New_York', rng });
+  const pNYC = localParts(slotNYC, 'America/New_York');
+  assert.equal(pNYC.hh, 12, 'NYC lands at 12pm local time');
+  assert.ok(inSendWindow(slotNYC, waveSettings, 'America/New_York'), 'In NYC send window');
+
+  // 2. London (BST, UTC+1) -> 12pm London is 11:00 UTC
+  const slotLDN = nextSendSlot(tuesdayMorning, waveSettings, [], { tz: 'Europe/London', rng });
+  const pLDN = localParts(slotLDN, 'Europe/London');
+  assert.equal(pLDN.hh, 12, 'London lands at 12pm local time');
+  assert.ok(inSendWindow(slotLDN, waveSettings, 'Europe/London'), 'In London send window');
+
+  // 3. Rome (CEST, UTC+2) -> when morning has passed 12pm (e.g. 13:00 Rome), moves to 3pm (15:00)
+  const romeAfternoon = new Date('2026-10-06T11:15:00Z'); // 13:15 Rome
+  const slotRome = nextSendSlot(romeAfternoon, waveSettings, [], { tz: 'Europe/Rome', rng });
+  const pRome = localParts(slotRome, 'Europe/Rome');
+  assert.equal(pRome.hh, 15, 'Rome afternoon lands at 3pm local time');
+  assert.ok(inSendWindow(slotRome, waveSettings, 'Europe/Rome'), 'In Rome send window');
+
+  // 4. Sydney (AEDT, UTC+11) -> 8am UTC is already 19:00 Sydney on Tuesday, so rolls to Wednesday 12pm Sydney
+  const slotSYD = nextSendSlot(tuesdayMorning, waveSettings, [], { tz: 'Australia/Sydney', rng });
+  const pSYD = localParts(slotSYD, 'Australia/Sydney');
+  assert.equal(pSYD.hh, 12, 'Sydney lands at 12pm Sydney local time');
+  assert.equal(pSYD.dow, 3, 'Wednesday in Sydney');
+  assert.ok(inSendWindow(slotSYD, waveSettings, 'Australia/Sydney'), 'In Sydney send window');
+});
+
 test('effectiveCap: warm-up grows weekly, season halves, paused is zero', () => {
   const first = rome(2026, 10, 6);
   assert.equal(effectiveCap(S, first, first), 6);

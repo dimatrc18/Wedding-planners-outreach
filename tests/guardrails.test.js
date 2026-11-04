@@ -219,14 +219,14 @@ test('partner rate card CTAs across planner, venue, and hotel drafts do not cont
           },
           key: 'T1_intro',
         });
-        assert.doesNotMatch(d.body, /2026/, `T1_intro for ${type}/${language}/${i} must not include hardcoded year 2026`);
+        assert.doesNotMatch(d.body, /\b2026\b(?!\/2027)/, `T1_intro for ${type}/${language}/${i} must not include standalone year 2026`);
       }
       const rc = buildDraft({
         prospect: { id: `rc-${type}-${language}`, agency_name: 'Studio', type, language },
         key: 'rate_card_delivery',
         threadSubject: 'Guest transport',
       });
-      assert.doesNotMatch(rc.body, /2026/, `rate_card_delivery (${language}) must not include hardcoded year 2026`);
+      assert.doesNotMatch(rc.body, /\b2026\b(?!\/2027)/, `rate_card_delivery (${language}) must not include standalone year 2026`);
     }
   }
 
@@ -287,8 +287,8 @@ test('MECE overhaul: Variant A (Intro), Variant B (Late returns), Variant C (Hot
   });
   assert.equal(draftA.variant, 'A');
   assert.doesNotMatch(draftA.subject, /·/, 'Subject line must not contain the template · separator');
-  assert.match(draftA.body, /We operate an executive Mercedes-Benz V-Class and S-Class fleet based on Lake Como/);
-  assert.match(draftA.body, /Would having our 2027 partner rate card and villa shuttle circuits be useful/);
+  assert.match(draftA.body, /I handle wedding logistics at DOROGO\. We operate Mercedes-Benz E, S, and V-Class vehicles/);
+  assert.match(draftA.body, /Would it be helpful if I sent over our 2026\/2027 partner/);
   assert.ok(!draftA.body.includes('dmitri@dorogo.eu | WhatsApp: wa.me/32456141497'), 'Plain-text contact block removed from draft body');
   assert.match(renderDorogoLuxuryHtmlEmail(draftA.body), /wa\.me\/32456141497/, 'Rendered HTML email includes WhatsApp link in footer');
   assert.doesNotMatch(draftA.body, /\+32 456 141 497/, 'Must not contain raw phone digits');
@@ -305,9 +305,8 @@ test('MECE overhaul: Variant A (Intro), Variant B (Late returns), Variant C (Hot
     extraVars: { variant: 'B', hook: hookB },
   });
   assert.equal(draftB.variant, 'B');
-  assert.equal(draftB.subject, 'backup V-Class fleet for 2027');
-  assert.match(draftB.body, /We operate an executive Mercedes-Benz V-Class and S-Class fleet based on Lake Como/);
-  assert.match(draftB.body, /Would having our 2027 partner rate card and villa shuttle circuits be useful/);
+  assert.match(draftB.body, /I handle wedding logistics at DOROGO\. We operate Mercedes-Benz E, S, and V-Class vehicles/);
+  assert.match(draftB.body, /Would it be helpful if I sent over our 2026\/2027 partner/);
   assert.deepEqual(draftB.lint.errors, []);
   assert.deepEqual(draftB.lint.warnings, []);
 

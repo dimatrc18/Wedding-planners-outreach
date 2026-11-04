@@ -133,86 +133,25 @@ export function generateBulletproofHook(prospect = {}) {
 
   // Italian planners
   if (lang === 'it') {
-    const isTuscany = /tuscany|toscana|florence|firenze|chianti|siena/.test(loc);
-    const isComo = /como|bellagio|cernobbio|tremezzo|lecco|varenna|laglio/.test(loc);
-    if (isTuscany) return pick([
-      "Ho visto le vostre celebrazioni in Toscana, allestimenti nei borghi e cura dei dettagli davvero splendidi.",
-      "Ho visto i vostri matrimoni in Toscana, splendida atmosfera tra le colline e cena a lume di candela meravigliose."
-    ]);
-    if (isComo) return pick([
-      "Ho visto le vostre produzioni sul Lago di Como, styling e atmosfera a lago davvero impeccabili.",
-      "Ho visto i vostri matrimoni sul Lago di Como, eleganza e allestimenti a lago splendidi."
-    ]);
-    return pick([
-      "Ho visto le vostre produzioni di eventi e matrimoni in Italia, complimenti per lo stile e la cura dei dettagli.",
-      "Ho visto le vostre recenti celebrazioni in Italia, eleganza e allestimenti impeccabili."
-    ]);
+    const isMilan = /milan|milano/.test(loc);
+    if (isMilan) return "Ho visto la vostra recente celebrazione a Milano, allestimento e styling splendidi.";
+    return "Seguo da tempo i vostri eventi e matrimoni sul Lago di Como e a Milano, splendida eleganza e cura dei dettagli.";
   }
 
   // Russian / Kazakhstan / CIS
   if (lang === 'ru') {
-    return pick([
-      "Обратил внимание на ваши масштабные свадебные проекты и высокий уровень организации выездных торжеств.",
-      "С большим интересом слежу за вашими проектами и красивейшей эстетикой выездных свадеб.",
-      "Когда ваши пары выбирают для свадебных проектов озеро Комо, Милан, Тоскану, Венецию или Лазурный берег..."
-    ]);
+    return "Обратил внимание на ваши свадебные проекты и высокий уровень организации выездных торжеств.";
   }
 
   // English by Market:
-  // India (Large-scale luxury destination)
-  if (market === 'in') return pick([
-    "Came across your large-scale destination celebrations and wedding curation in Europe.",
-    "Follow your high-profile multi-day celebrations and luxury destination productions across Europe.",
-    "When your clients bring multi-day celebrations to Lake Como, Milan, Tuscany, Venice, or the French Riviera..."
-  ]);
+  if (market === 'au') return `Your destination celebrations and styling from Australia caught my attention.`;
+  if (market === 'us') return `Your work across New York caught my attention.`;
+  if (market === 'uk') return `Your work across London caught my attention.`;
+  if (market === 'ca') return `Your destination celebrations across Canada caught my attention.`;
+  if (market === 'ae') return `Your work across Dubai caught my attention.`;
+  if (market === 'in') return `Your large-scale wedding productions and celebrations caught my attention.`;
 
-  // Australia (Design-led destination)
-  if (market === 'au') return pick([
-    "Follow your destination celebrations and design-led wedding productions from Australia.",
-    "Came across your luxury event styling and international celebration portfolio.",
-    "When your Australian couples plan multi-day destination weddings in Italy or the French Riviera..."
-  ]);
-
-  // United States
-  if (market === 'us') return pick([
-    "Follow your destination weddings and editorial celebrations with US couples.",
-    "Came across your portfolio and high-end destination celebrations in Europe.",
-    "When your couples choose Italy (Lake Como, Milan, Tuscany, Venice) or the French Riviera for multi-day celebrations..."
-  ]);
-
-  // United Kingdom
-  if (market === 'uk') return pick([
-    "Follow your bespoke destination celebrations and editorial wedding productions from the UK.",
-    "Came across your private estate and destination wedding curation across Europe.",
-    "When your UK couples plan celebrations on Lake Como, in Tuscany, Venice, or the French Riviera..."
-  ]);
-
-  // Canada
-  if (market === 'ca') return pick([
-    "Follow your destination weddings and editorial celebrations from Canada.",
-    "Came across your European destination portfolio and calm coordination for couples.",
-    "When your Canadian couples plan multi-day celebrations in Italy or the French Riviera..."
-  ]);
-
-  // Middle East / UAE / Lebanon
-  if (market === 'ae' || market === 'lb') return pick([
-    "Came across your architectural wedding curation and luxury destination productions in Europe.",
-    "Follow your large-scale international celebrations and high-profile destination weddings.",
-    "When your clients plan private celebrations across Lake Como, Tuscany, Venice, or the French Riviera..."
-  ]);
-
-  // DACH (Germany, Austria, Switzerland)
-  if (['de', 'at', 'ch'].includes(market)) return pick([
-    "Follow your destination weddings and bespoke celebrations across Europe.",
-    "Came across your European destination portfolio and calm event coordination.",
-    "When your couples choose Italy (Lake Como, Milan, Tuscany, Venice) or the French Riviera for destination weddings..."
-  ]);
-
-  // General fallback
-  return pick([
-    "Came across your luxury destination portfolio and international celebration curation.",
-    "Follow your high-end destination weddings and editorial celebrations across Europe."
-  ]);
+  return `Your destination celebrations and event styling caught my attention.`;
 }
 
 export function cleanPersonalizationHook(hook = '', prospect = {}) {
@@ -247,9 +186,10 @@ export function cleanPersonalizationHook(hook = '', prospect = {}) {
     (v) => lowerHook.includes(v) && isVenueVerified(prospect, v)
   );
   const isVerified = Boolean(getVerifiedVenue(prospect) || isHookVenueVerified || prospect.type === 'venue' || prospect.type === 'concierge_hotel');
-  const isAiYourFormula = /^your\s+/i.test(s) && (!isVerified || /clientele|heading to|expect absolute precision|vibrant glamour|lakeside villas?|bring.*to lake como|translated onto lake como/i.test(s));
+  const isApprovedYourWorkAcross = /^your work across [^—–-]+ caught my attention\.?$/i.test(s);
+  const isAiYourFormula = !isApprovedYourWorkAcross && /^your\s+/i.test(s) && (!isVerified || /clientele|heading to|expect absolute precision|vibrant glamour|lakeside villas?|bring.*to lake como|translated onto lake como/i.test(s));
   const isUngroundedComoClaim = !isVerified && /(?:lake como|lago di como|козеро комо|lakeside villas?)/i.test(s) && /(?:clientele|heading to|expect|villas?|buyout|weddings? on|celebrations? on|productions? on|itineraries|private estate|ultra-luxury|bespoke weddings|cinematic|opulent)/i.test(s);
-  const isAiItalianFormula = !isVerified && /^(?:la vostra|i vostri|il vostro)\s+/i.test(s);
+  const isAiItalianFormula = !isVerified && /^(?:la vostra|i vostri|il vostro)\s+/i.test(s) && /matrimoni sul lago di como|produzioni sul lago/i.test(s);
   const isAiRussianFormula = !isVerified && /^(?:ваши|создаваемые вами|масштаб ваших)\s+/i.test(s);
 
   if ((hasSeamless || hasUnverifiedVilla || isAiYourFormula || isUngroundedComoClaim || isAiItalianFormula || isAiRussianFormula) && prospect) {
@@ -337,76 +277,38 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
   const effectiveVariant = isHookVariantB ? 'B' : (variant === 'B' ? 'B' : (variant === 'C' ? 'C' : 'A'));
 
   if (lang === 'ru') {
-    if (type === 'venue' || type === 'concierge_hotel') {
-      const targetVenue = agencyShort || venueOrLoc;
-      return {
-        subject_line_a: `Трансферы гостей для ${targetVenue}`,
-        subject_line_b: 'Аэропортовые трансферы и шаттлы для отелей',
-        subject_line_c: 'Прямой контакт с автопарком: трансферы гостей',
-        service_pitch:
-          `Мы организуем трансферы из аэропортов (Мальпенса, Линате, Венеция, Флоренция, Ницца) и шаттлы для гостей отелей и вилл в ${targetVenue}. Работаем на представительском парке Mercedes-Benz E-Class, S-Class, V-Class и Maybach, организуем микроавтобусы и подбираем редкие автомобили для свадебных фотосессий с прямым координатором в WhatsApp на озере Комо, в Милане, Тоскане и Венеции.`,
-        cta_line:
-          'Если вашему консьерж-сервису полезно иметь прямой контакт с парком на сезон, напишите мне здесь или в WhatsApp, и я отправлю наш партнерский тариф.',
-      };
-    }
-
     const ruAgency = agencyShort || prospect.agency_name || 'Партнер';
-    const ruSubjects = {
-      a: `DOROGO x ${ruAgency}`,
-      b: 'резервный парк Mercedes V-Class / 2027',
-      c: `DOROGO x ${ruAgency}`,
-    };
-
     return {
-      subject_line_a: ruSubjects.a,
-      subject_line_b: ruSubjects.b,
-      subject_line_c: ruSubjects.c,
+      subject_line_a: `Комо: автопарк для ${ruAgency}`.slice(0, 30),
+      subject_line_b: `Lake Como fleet for ${ruAgency}`.slice(0, 30),
+      subject_line_c: `DOROGO x ${ruAgency}`.slice(0, 30),
       service_pitch:
-        'Я Дмитрий, представляю компанию DOROGO. Мы работаем на автомобилях Mercedes-Benz E-Class, S-Class, V-Class и Maybach на озере Комо, а также в Милане и Тоскане. Также организуем представительские микроавтобусы и подбираем редкие автомобили для свадебных фотосессий.',
+        'Я координирую свадебную логистику в DOROGO. Мы работаем на автомобилях Mercedes-Benz E, S и V-Class, а также микроавтобусах и автобусах до 60 мест на озере Комо, в Милане, на северных озерах, в Венеции и Тоскане с прямой координацией в WhatsApp.',
       cta_line:
-        'Когда ваши пары планируют свадьбы в Италии, у вас уже есть проверенные водители для гостей или вам пригодится наш тарифный план 2027 и маршруты шаттлов по виллам?',
+        'Будет ли полезно отправить вам наши партнерские тарифы 2026/2027 на предстоящий сезон?',
     };
   }
 
   if (lang === 'it') {
-    if (type === 'venue' || type === 'concierge_hotel') {
-      const targetVenue = agencyShort || venueOrLoc;
-      return {
-        subject_line_a: 'Transfer ospiti per il vostro team eventi',
-        subject_line_b: 'Transfer aeroportuali e navette di gruppo',
-        subject_line_c: 'Contatto diretto flotta: transfer per ospiti',
-        service_pitch:
-          `Gestiamo transfer aeroportuali e navette per gli ospiti degli hotel e delle ville a ${targetVenue}. Operiamo con Mercedes-Benz Classe E, Classe S, Classe V e Maybach con base tra Lago di Como, Milano e Toscana, affiancate da partner selezionati per minibus e auto speciali per shooting fotografici, con coordinamento diretto via WhatsApp.`,
-        cta_line:
-          'Se vi è utile avere una flotta di riferimento per la stagione, rispondetemi qui o su WhatsApp e vi condivido il listino riservato.',
-      };
-    }
-
     const itAgency = agencyShort || prospect.agency_name || 'Partner';
-    const itSubjects = {
-      a: `DOROGO x ${itAgency}`,
-      b: 'flotta Mercedes di supporto per il 2027',
-      c: `DOROGO x ${itAgency}`,
-    };
-
     return {
-      subject_line_a: itSubjects.a,
-      subject_line_b: itSubjects.b,
-      subject_line_c: itSubjects.c,
+      subject_line_a: `Flotta Como per ${itAgency}`.slice(0, 30),
+      subject_line_b: `Flotta Como e Milano per ${itAgency}`.slice(0, 30),
+      subject_line_c: `DOROGO x ${itAgency}`.slice(0, 30),
       service_pitch:
-        'Sono Dmitri e rappresento DOROGO. Operiamo con Mercedes-Benz Classe E, Classe S, Classe V e Maybach con base sul Lago di Como, attivi anche su Milano e in Toscana. Organizziamo anche minibus executive e disponiamo di una rete di auto speciali per i servizi fotografici degli sposi.',
+        'Mi occupo della logistica matrimoni per DOROGO. Operiamo sul Lago di Como, a Milano, nei laghi del nord, a Venezia e in Toscana con Mercedes-Benz Classe E, S e Classe V, oltre a minibus e bus gran turismo fino a 60 posti con coordinamento diretto via WhatsApp.',
       cta_line:
-        'Per i vostri eventi e matrimoni sul lago, avete già i transfer degli ospiti organizzati o vi farebbe comodo avere le nostre tariffe 2027 e i percorsi navetta per le ville?',
+        'Le farebbe comodo ricevere il nostro listino partner 2026/2027 per la prossima stagione?',
     };
   }
 
-  // English MECE Variant C: Hotels, Concierges & Venues
+  // Hotels, Concierges & Venues
   if (type === 'venue' || type === 'concierge_hotel') {
     const targetVenue = agencyShort || venueOrLoc;
     return {
       subject_line_a: 'Guest transfers for your events team',
       subject_line_b: 'Airport transfers and group shuttles',
-      subject_line_c: 'Direct fleet contact: event guest transfers',
+      subject_line_c: `DOROGO x ${targetVenue}`.slice(0, 28),
       service_pitch:
         `How does your team handle airport runs and group shuttles around ${targetVenue}? We operate executive Mercedes-Benz E-Class, S-Class, V-Class, and Maybach vehicles directly across Lake Como, Milan, and Tuscany, plus vetted partner minibuses and special cars for wedding photoshoots, with one dedicated lead on WhatsApp.`,
       cta_line:
@@ -414,21 +316,20 @@ function buildTailoredCopy(prospect = {}, agencyShort = '', venueOrLoc = '', lan
     };
   }
 
+  // English (both international destination planners and local agencies)
   const enAgency = agencyShort || prospect.agency_name || 'Partner';
-  const enSubjects = {
-    a: `DOROGO x ${enAgency}`,
-    b: 'backup V-Class fleet for 2027',
-    c: `DOROGO x ${enAgency}`,
-  };
+  const isLocalEn = prospect.market === 'it' || prospect.segment === 'boutique_local';
+  const ctaLineEn = isLocalEn
+    ? 'Would it be helpful if I sent over our 2026/2027 partner rate card for your upcoming season?'
+    : 'Would it be helpful if I sent over our 2026/2027 partner fleet sheet for your team to have on hand whenever a couple brings you to northern Italy?';
 
   return {
-    subject_line_a: enSubjects.a,
-    subject_line_b: enSubjects.b,
-    subject_line_c: enSubjects.c,
+    subject_line_a: `Como fleet for ${enAgency}`.slice(0, 28),
+    subject_line_b: `Lake Como fleet for ${enAgency}`.slice(0, 28),
+    subject_line_c: `DOROGO x ${enAgency}`.slice(0, 28),
     service_pitch:
-      'We operate an executive Mercedes-Benz V-Class and S-Class fleet based on Lake Como, also offering E-Class, Maybach, executive minibuses, and special cars for wedding photoshoots across Milan and Tuscany. We are not looking to replace your usual drivers, but on peak summer dates when villa schedules exceed capacity, we hold dedicated backup fleet slots on reserve for partner studios.',
-    cta_line:
-      'Would having our 2027 partner rate card and villa shuttle circuits be useful for your file, or do you already have fixed transfer partners in Italy?',
+      'I handle wedding logistics at DOROGO. We operate Mercedes-Benz E, S, and V-Class vehicles, plus executive minibuses and coaches up to 60 seats across Lake Como, Milan, the northern lakes, Venice, and Tuscany.',
+    cta_line: ctaLineEn,
   };
 }
 
@@ -634,7 +535,7 @@ export function renderDorogoLuxuryHtmlEmail(
     })
     .join('');
 
-  const signOff = isIt ? 'Un cordiale saluto,' : isRu ? 'С уважением,' : 'Warm regards,';
+  const signOff = isIt ? 'Un cordiale saluto,' : isRu ? 'С уважением,' : 'Best,';
   const regionLine = isIt ? 'Milano &bull; Lago di Como &bull; Alpi' : isRu ? 'Милан &bull; Озеро Комо &bull; Альпы' : 'Milan &bull; Lake Como &bull; Italian Alps';
   const displayEmail = fromEmail ? fromEmail.replace(/^booking@/i, 'Booking@') : 'dmitri@dorogo.eu';
   const safeFrom = htmlEsc(displayEmail);
@@ -708,7 +609,7 @@ export function renderDorogoLuxuryHtmlEmail(
             <td class="dm-text" style="padding: 0 0 14px 0; font-size: 15px; color: #18181b; line-height: 1.5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
               ${signOff}<br>
               <strong style="font-weight: 600;">${isRu ? 'Дмитрий' : 'Dmitri'}</strong><br>
-              <span style="font-size: 13px; color: #52525b;">${isRu ? 'Старший диспетчер' : 'Senior Dispatcher'}</span>
+              <span style="font-size: 13px; color: #52525b;">${isIt ? 'Logistica Matrimoni' : isRu ? 'Старший диспетчер' : 'Senior Dispatcher'}</span>
             </td>
           </tr>
           <tr>

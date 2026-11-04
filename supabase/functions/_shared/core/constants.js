@@ -43,17 +43,17 @@ export const DEFAULT_STEPS = [
   { key: 'T4_breakup', label: 'Step 3 (Follow-up 2 · disabled)', day: 9, channel: 'email', thread: false, require_approval: false, enabled: false },
 ];
 
-export const SIGNATURE = `Dmitri Traciuc
-Senior Dispatcher
-Lake Como · Milan | dmitri@dorogo.eu | WhatsApp: wa.me/32456141497`;
+export const SIGNATURE = `Best,
+Dmitri
+Wedding Logistics | DOROGO Private Transportation`;
 
-export const SIGNATURE_IT = `Dmitri Traciuc
-Senior Dispatcher
-Lago di Como · Milano | dmitri@dorogo.eu | WhatsApp: wa.me/32456141497`;
+export const SIGNATURE_IT = `Un cordiale saluto,
+Dmitri
+Logistica Matrimoni | DOROGO Private Transportation`;
 
-export const SIGNATURE_RU = `Дмитрий Трачук
-Старший диспетчер
-Озеро Комо · Милан | dmitri@dorogo.eu | WhatsApp: wa.me/32456141497`;
+export const SIGNATURE_RU = `С уважением,
+Дмитрий
+Свадебная логистика | DOROGO Private Transportation`;
 
 export const OPTOUT = {
   en: "If transport isn't something you handle, no problem at all, just let me know.",
