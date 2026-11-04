@@ -21,12 +21,13 @@ export const DEFAULT_TEMPLATES = [
 {{optout}}`,
   },
   {
-    key: 'T3_followup', language: 'en', kind: 'sequence', name: 'Step 2 (Follow-up 1: Genuine Partner Fit)', subject_a: '', subject_b: '',
+    key: 'T3_followup', language: 'en', kind: 'sequence', name: 'Step 2 (Follow-up 1: Quick Helpful Bump)', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
-I wanted to make sure you saw my previous note regarding guest transport for your {{venue}} weddings. We see your team as a genuine potential partner for our fleet, and we do not reach out like this to everyone.
+Quick follow-up on this note. Would it be helpful if I shared our 2026/2027 partner fleet sheet and direct WhatsApp contact so your team has it on file for northern Italy?
 
-Would it be helpful if I shared our confidential partner rate card and vehicle overview?
+Best,
+Dmitri
 
 {{optout}}`,
   },
@@ -36,9 +37,12 @@ Would it be helpful if I shared our confidential partner rate card and vehicle o
     subject_b: 'Executive guest transport in Italy',
     body: `{{greeting}}
 
-Last note from me so I do not crowd your inbox. Whenever you need guest transport for Lake Como, Milan, Tuscany, Venice, or Nice (French Riviera), feel free to message me on WhatsApp or reply here.
+Last note from me so I do not crowd your inbox. Whenever a couple brings you to northern Italy, our direct fleet WhatsApp is always open.
 
-Wishing you a calm, successful season.
+Wishing you a wonderful 2026/2027 season.
+
+Best,
+Dmitri
 
 {{optout}}`,
   },
@@ -59,12 +63,13 @@ Wishing you a calm, successful season.
 {{optout}}`,
   },
   {
-    key: 'T3_followup', language: 'it', kind: 'sequence', name: 'Step 2 (Follow-up 1: Partner Speciale)', subject_a: '', subject_b: '',
+    key: 'T3_followup', language: 'it', kind: 'sequence', name: 'Step 2 (Follow-up 1: Riscontro veloce)', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
-Volevo solo assicurarmi che vi sia arrivata la nostra mail precedente sui trasferimenti per i vostri matrimoni {{venue}}. Vediamo la vostra agenzia come un partner davvero speciale per la nostra flotta, e non scriviamo questo a tutti.
+Un breve riscontro alla mia nota precedente. Le farebbe comodo ricevere il nostro listino partner 2026/2027 da tenere a portata di mano per le date di alta stagione sul lago e a Milano?
 
-Vi farebbe piacere ricevere la nostra scheda tariffe partner riservata e la panoramica della flotta?
+Un cordiale saluto,
+Dmitri
 
 {{optout}}`,
   },
@@ -74,9 +79,12 @@ Vi farebbe piacere ricevere la nostra scheda tariffe partner riservata e la pano
     subject_b: 'Transfer ospiti in Italia',
     body: `{{greeting}}
 
-Chiudo qui per non affollare la vostra casella. Quando vi servirà supporto per i trasferimenti ospiti tra Lago di Como, Milano, Toscana, Venezia o Nizza (Costa Azzurra), scrivetemi pure su WhatsApp o rispondete qui.
+Chiudo qui per non disturbare la vostra casella. Se durante la stagione avrete bisogno di supporto con van Mercedes o bus sul lago e a Milano, il nostro contatto è sempre a disposizione.
 
-Buona stagione.
+Buona stagione 2026/2027.
+
+Un cordiale saluto,
+Dmitri
 
 {{optout}}`,
   },
@@ -97,12 +105,13 @@ Buona stagione.
 {{optout}}`,
   },
   {
-    key: 'T3_followup', language: 'ru', kind: 'sequence', name: 'Step 2 (Follow-up 1: Партнерский интерес)', subject_a: '', subject_b: '',
+    key: 'T3_followup', language: 'ru', kind: 'sequence', name: 'Step 2 (Follow-up 1: Быстрое напоминание)', subject_a: '', subject_b: '',
     body: `{{greeting}}
 
-Хотел убедиться, что вы получили мое предыдущее письмо по трансферам для ваших свадеб {{venue}}. Мы видим в вашем агентстве действительно сильного потенциального партнера для нашего автопарка, и мы точно не пишем такие слова всем подряд.
+Короткое напоминание к моему предыдущему письму. Будет ли полезно отправить наш партнерский тарифный план 2026/2027 и прямой контакт в WhatsApp для вашей команды?
 
-Будет ли вам удобно взглянуть на наш партнерский прайс-лист и презентацию автопарка?
+С уважением,
+Дмитрий
 
 {{optout}}`,
   },
@@ -112,9 +121,12 @@ Buona stagione.
     subject_b: 'Трансферы гостей в Италии',
     body: `{{greeting}}
 
-Пишу в последний раз, чтобы не перегружать вашу почту. Если для свадеб на озере Комо, в Милане, Тоскане, Венеции или в Ницце (Лазурный берег) понадобится надежный транспорт для гостей, напишите мне в WhatsApp или ответьте на это письмо.
+Пишу в последний раз, чтобы не перегружать вашу почту. Если во время сезона вам понадобится надежный транспорт с Mercedes V-Class или автобусами на Комо и в Милане, наш контакт всегда открыт.
 
-Успешного и спокойного сезона.
+Отличного сезона 2026/2027.
+
+С уважением,
+Дмитрий
 
 {{optout}}`,
   },

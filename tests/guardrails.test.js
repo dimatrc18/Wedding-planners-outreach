@@ -358,12 +358,13 @@ test('Zero-Hallucination Portfolio Guardrails: prevents phantom venue claims on 
   assert.deepEqual(draftAu.lint.errors, []);
   assert.doesNotMatch(draftAu.body, /Villa (Erba|Balbiano|del Balbianello|d'Este|Pizzo)|Passalacqua/i);
 
-  // Follow-up 1 (T3) must use "Italian destination" rather than phantom villa
+  // Follow-up 1 (T3) must not use phantom villa
   const draftAuT3 = buildDraft({
     prospect: { ...unverifiedAu, personalization_hook: hookAu },
     key: 'T3_followup',
   });
-  assert.match(draftAuT3.body, /regarding guest transport for your Italian destination weddings/i);
+  assert.match(draftAuT3.body, /Quick follow-up on this note/i);
+  assert.match(draftAuT3.body, /2026\/2027 partner fleet sheet/i);
   assert.doesNotMatch(draftAuT3.body, /Villa (Erba|Balbiano)/i);
 
   // 2. Verified agency with documented proof (e.g. WDC at Villa del Balbianello)
