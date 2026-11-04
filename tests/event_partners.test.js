@@ -132,8 +132,8 @@ test('Event Template Engine: renderEventTemplate accurately interpolates interna
   assert.ok(!rendered.subject.includes('{{'));
   assert.ok(!rendered.body.includes('{{'), 'Rendered body must contain zero unresolved {{token}} placeholders');
   assert.ok(rendered.body.includes('Fiera Milano Rho'));
-  assert.ok(rendered.body.includes('David'), 'Rendered body must address recipient by first name David');
-  assert.ok(rendered.body.includes('Hi David,'), 'Greeting must be Hi David,');
+  assert.ok(rendered.body.includes('Henry'), 'Rendered body must address recipient by first name Henry (h.holdsworth@addison-ross.com)');
+  assert.ok(rendered.body.includes('Hi Henry,'), 'Greeting must be Hi Henry,');
 
   // Test with Serax NV (Belgium)
   const serax = INITIAL_EVENT_PARTNERS.find((p) => p.name.includes('SERAX'));

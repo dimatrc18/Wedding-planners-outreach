@@ -2337,8 +2337,19 @@ igor@b2b-dorogo.eu`
   }
 ];
 
+const NON_HUMAN_TOKENS = new Set([
+  'bonjour', 'ventes', 'compta', 'commerciale', 'export', 'exports', 'marketing',
+  'office', 'service', 'services', 'dgrafico', 'milanohome', 'infofrance', 'trade',
+  'sales', 'admin', 'amministrazione', 'contact', 'contacts', 'hello', 'mail',
+  'info', 'team', 'desk', 'artecer', 'artefinomed', 'cereriamolla', 'llinares',
+  'lousatextil', 'rastelligiftsrl', 'shalls', 'widafouta', 'europe', 'atelier',
+  'christmas', 'digitalitalia', 'eservice', 'su', 'tmucchiani'
+]);
+
 export function extractFirstName(contactPerson = '', companyName = '') {
   let raw = String(contactPerson || '').trim();
+
+  // 1. If slash in contact, clean it
   if (raw.includes('/')) {
     const parts = raw.split('/');
     if (parts[0].trim() && !/desk|team|delegation|logistics|stand|fair|sales|admin|support|contact|director|manager/i.test(parts[0])) {
@@ -2348,8 +2359,32 @@ export function extractFirstName(contactPerson = '', companyName = '') {
     }
   }
 
-  // If it's a generic word, email prefix or company name
-  if (!raw || /desk|team|delegation|logistics|stand|fair|sales|admin|support|contact|director|manager|info|hello|office|bonjour/i.test(raw) || raw === companyName) {
+  // 2. Explicit verified overrides
+  if (companyName && companyName.includes('ADDISON ROSS')) return 'Henry';
+  if (companyName && companyName.includes('CORSTON')) return 'Brian';
+  if (companyName && companyName.includes('WERNER VOSS')) return 'David';
+  if (companyName && companyName.includes('CANDLE WAND')) return 'Fusako';
+  if (companyName && companyName.includes('FOIMPEX')) return 'Lourdes';
+  if (companyName && companyName.includes('GEA BARCELONA')) return 'Josep';
+  if (companyName && companyName.includes('JGS Home')) return 'Mariusz';
+
+  // 3. Reject department/role/company words
+  const cleanLower = raw.toLowerCase().trim();
+  if (!raw || NON_HUMAN_TOKENS.has(cleanLower) || cleanLower.includes('desk') || cleanLower.includes('team') || cleanLower === companyName.toLowerCase()) {
+    return 'Team';
+  }
+
+  // 4. Handle dots/underscores like "firstname.lastname"
+  if (cleanLower.includes('.') || cleanLower.includes('_')) {
+    const parts = cleanLower.split(/[._]/).filter(p => p.length > 2);
+    if (parts.length >= 1 && !NON_HUMAN_TOKENS.has(parts[0])) {
+      return parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+    }
+    return 'Team';
+  }
+
+  // 5. Handle initials (<3 chars or consonant clusters like "lsg", "mk", "sm")
+  if (cleanLower.length < 3 || /^[^aeiouy]+$/i.test(cleanLower)) {
     return 'Team';
   }
 
@@ -2358,7 +2393,9 @@ export function extractFirstName(contactPerson = '', companyName = '') {
   if (/^(mr|mrs|ms|dr|prof)\.?$/i.test(first) && parts[1]) {
     first = parts[1];
   }
-  if (!first || first.length < 2) return 'Team';
+
+  if (NON_HUMAN_TOKENS.has(first.toLowerCase())) return 'Team';
+
   return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
 }
 
