@@ -132,7 +132,8 @@ test('Event Template Engine: renderEventTemplate accurately interpolates interna
   assert.ok(!rendered.subject.includes('{{'));
   assert.ok(!rendered.body.includes('{{'), 'Rendered body must contain zero unresolved {{token}} placeholders');
   assert.ok(rendered.body.includes('Fiera Milano Rho'));
-  assert.ok(rendered.body.includes('David Ross'));
+  assert.ok(rendered.body.includes('David'), 'Rendered body must address recipient by first name David');
+  assert.ok(rendered.body.includes('Hi David,'), 'Greeting must be Hi David,');
 
   // Test with Serax NV (Belgium)
   const serax = INITIAL_EVENT_PARTNERS.find((p) => p.name.includes('SERAX'));
@@ -142,11 +143,9 @@ test('Event Template Engine: renderEventTemplate accurately interpolates interna
   assert.ok(!renderedSerax.body.includes('{{'));
 });
 
-test('Igor Sender Identity & Verified Authentic Fiera Data: templates use Igor <igor@b2b-dorogo.eu> and exhibitors have genuine scraped links', () => {
-  // 1. Verify template signatures
+test('Hostinger Signature Decoupling & Verified Authentic Fiera Data: templates are clean of duplicate signatures and use {{first_name}}', () => {
+  // 1. Verify templates never contain Dmitri
   for (const tmpl of DEFAULT_EVENT_TEMPLATES) {
-    assert.ok(tmpl.body.includes('Igor'), `Template ${tmpl.key} must be signed by Igor`);
-    assert.ok(tmpl.body.includes('igor@b2b-dorogo.eu'), `Template ${tmpl.key} must use igor@b2b-dorogo.eu`);
     assert.ok(!tmpl.body.includes('dmitri@dorogo.eu'), 'Must NEVER contain wedding sender email');
     assert.ok(!tmpl.body.includes('Dmitri Traciuc'), 'Must NEVER contain Dmitri Traciuc for events');
   }

@@ -2274,25 +2274,19 @@ export const EVENT_FAIRS = [
 ];
 
 export const DEFAULT_EVENT_TEMPLATES = [
-  {
+    {
     key: 'T1_exhibitor_intro',
     name: 'Touch 1: Airport Arrival & Booth Transfers (Whali <100w format)',
     step_num: 1,
     offset_days: 0,
     subject: '{{fair_event}} · {{company_name}}',
-    body: `Good morning {{contact_person}},
+    body: `Hi {{first_name}},
 
 Noticed {{company_name}} is exhibiting at {{fair_event}} this January.
 
-Dorogo provides unbranded Mercedes-Benz V-Class and E-Class transfers between Milan hotels and Fiera Milano Rho, including direct airport meet & greet (MXP/LIN).
+Dorogo provides unbranded Mercedes-Benz V-Class, S-Class, and E-Class transfers between Milan hotels and Fiera Milano Rho, including direct airport meet & greet (MXP/LIN).
 
-Would our 1-page corporate rate card and vehicle allocation be helpful for your team?
-
-Best regards,
-Igor
-Trade & Event Logistics · DOROGO
-igor@b2b-dorogo.eu
-Via Monte Napoleone 8, Milano`
+Would you like me to share our 1-page corporate rate card?`
   },
   {
     key: 'T2_exhibitor_followup',
@@ -2300,18 +2294,13 @@ Via Monte Napoleone 8, Milano`
     step_num: 2,
     offset_days: 4,
     subject: 'Re: {{fair_event}} · {{company_name}}',
-    body: `Good morning {{contact_person}},
+    body: `Hi {{first_name}},
 
 Following up briefly on ground transport for {{company_name}} during {{fair_event}}.
 
 We have reserved dedicated Mercedes-Benz V-Class vehicles for teams arriving from {{country}}, with fixed rates, ZTL access, and zero peak surge pricing.
 
-Would you like our rate sheet before vehicle allocations close?
-
-Best regards,
-Igor
-Trade & Event Logistics · DOROGO
-igor@b2b-dorogo.eu`
+Would you like our rate sheet before vehicle allocations close?`
   },
   {
     key: 'reply_rate_card',
@@ -2348,25 +2337,40 @@ igor@b2b-dorogo.eu`
   }
 ];
 
+export function extractFirstName(contactPerson = '', companyName = '') {
+  let raw = String(contactPerson || '').trim();
+  if (raw.includes('/')) {
+    const parts = raw.split('/');
+    if (parts[0].trim() && !/desk|team|delegation|logistics|stand|fair|sales|admin|support|contact|director|manager/i.test(parts[0])) {
+      raw = parts[0].trim();
+    } else if (parts[1] && parts[1].trim() && !/desk|team|delegation|logistics|stand|fair|sales|admin|support|contact|director|manager/i.test(parts[1])) {
+      raw = parts[1].trim();
+    }
+  }
+
+  // If it's a generic word, email prefix or company name
+  if (!raw || /desk|team|delegation|logistics|stand|fair|sales|admin|support|contact|director|manager|info|hello|office|bonjour/i.test(raw) || raw === companyName) {
+    return 'Team';
+  }
+
+  const parts = raw.split(/\s+/).filter(Boolean);
+  let first = parts[0] || '';
+  if (/^(mr|mrs|ms|dr|prof)\.?$/i.test(first) && parts[1]) {
+    first = parts[1];
+  }
+  if (!first || first.length < 2) return 'Team';
+  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+}
+
 export function renderEventTemplate(template, exhibitor) {
   if (!template || !exhibitor) return { subject: '', body: '' };
 
-  let contact = (exhibitor.contact_person || '').trim();
-  if (contact.includes('/')) {
-    const parts = contact.split('/');
-    if (parts[0].trim() && !/desk|team|delegation/i.test(parts[0])) {
-      contact = parts[0].trim();
-    } else if (parts[1] && parts[1].trim() && !/desk|team|delegation/i.test(parts[1])) {
-      contact = parts[1].trim();
-    }
-  }
-  if (!contact || /desk|team|delegation/i.test(contact)) {
-    contact = exhibitor.name;
-  }
+  const firstNameVal = extractFirstName(exhibitor.contact_person, exhibitor.name);
 
   const vars = {
     company_name: exhibitor.name || 'your company',
-    contact_person: contact || 'Team',
+    contact_person: firstNameVal,
+    first_name: firstNameVal,
     country: exhibitor.country || 'abroad',
     origin_hub: exhibitor.origin_hub || 'your home airport',
     base_city: exhibitor.base_city || 'your headquarters',
