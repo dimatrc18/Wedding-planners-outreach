@@ -1,16 +1,41 @@
 // Event Outreach Outbox & Reply Triage View
 // 100% Isolated from Wedding Planners and Bus Fleets.
-// Stripe Sail Design System: safety gates, zero-accidental-send invariants, manual draft approval.
+// Full Portal Control: batch size limit, throttling delay, live Hostinger SMTP dispatch, test sends, and delivery audit.
 
-import { S, updateEventPartner } from '../store.js?v=20261103_v7';
-import { esc, attr, icon, toast } from '../ui.js';
+import { S, updateEventPartner } from '../store.js?v=20261104_v1';
+import { esc, attr, icon, toast, fmtDateTime, dialog, confirmDialog } from '../ui.js';
 import { 
   loadStoredEventPartners, 
   loadStoredEventTemplates, 
   renderEventTemplate 
-} from '../event_planners_data.js?v=20261103_v7';
+} from '../event_planners_data.js?v=20261104_v1';
 
 let currentEl = null;
+let activeOutboxTab = 'queue'; // 'queue' | 'contacted'
+let selectedPartnerIds = new Set();
+let isDispatching = false;
+let stopRequested = false;
+
+// Saved password storage key
+const SMTP_PASS_KEY = 'dorogo_event_hostinger_pass';
+
+function getStoredPass() {
+  try {
+    return localStorage.getItem(SMTP_PASS_KEY) || sessionStorage.getItem(SMTP_PASS_KEY) || '';
+  } catch (_) {
+    return '';
+  }
+}
+
+function setStoredPass(pass) {
+  try {
+    if (pass) {
+      localStorage.setItem(SMTP_PASS_KEY, pass);
+    } else {
+      localStorage.removeItem(SMTP_PASS_KEY);
+    }
+  } catch (_) {}
+}
 
 export async function render(el) {
   currentEl = el;
@@ -24,55 +49,72 @@ export async function render(el) {
   const readyPartners = partners.filter((p) => p.status === 'WANT_TO_CONTACT');
   const contactedPartners = partners.filter((p) => p.status === 'CONTACTED' || p.status === 'APPROVED_PARTNER');
 
+  // Default selection: if none selected, select up to 5 by default
+  if (selectedPartnerIds.size === 0 && readyPartners.length > 0) {
+    readyPartners.slice(0, 5).forEach((p) => selectedPartnerIds.add(p.id));
+  } else {
+    // Clean up IDs that are no longer ready
+    const readyIds = new Set(readyPartners.map((p) => p.id));
+    for (const id of selectedPartnerIds) {
+      if (!readyIds.has(id)) selectedPartnerIds.delete(id);
+    }
+  }
+
+  const savedPass = getStoredPass();
+  const isSmtpConfigured = !!savedPass;
+
   el.innerHTML = `
     <div style="display:flex;flex-direction:column;gap:18px">
       <!-- Top Tab Navigation -->
       <div class="sail-tabs" style="display:flex;gap:6px;border-bottom:2px solid var(--sail-line);padding-bottom:10px;margin-bottom:2px;flex-wrap:wrap">
         <a href="#event_partners" class="sail-tab " style="height:32px;display:inline-flex;align-items:center;gap:6px;padding:0 14px;font-size:12.5px;font-weight:700;text-decoration:none">
-          🏛️ Foreign Exhibiting Teams (84)
+          🏛️ Foreign Exhibiting Teams (${totalCount})
         </a>
         <a href="#event_templates" class="sail-tab " style="height:32px;display:inline-flex;align-items:center;gap:6px;padding:0 14px;font-size:12.5px;font-weight:700;text-decoration:none">
           ✉️ Fair Sequences &amp; Corporate Rates
         </a>
         <a href="#event_outbox" class="sail-tab active" style="height:32px;display:inline-flex;align-items:center;gap:6px;padding:0 14px;font-size:12.5px;font-weight:700;text-decoration:none">
-          📤 Event Outbox &amp; Replies
+          📤 Event Outbox &amp; Dispatcher ${readyPartners.length > 0 ? `<span class="sail-pill info" style="font-size:10px;padding:0 5px">${readyPartners.length}</span>` : ''}
         </a>
       </div>
-      <!-- Header Banner -->
+
+      <!-- Header Banner & SMTP Connection Status -->
       <div class="sail-card" style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
         <div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <h1 style="font-size:19px;font-weight:700;color:var(--sail-ink);margin:0;letter-spacing:-0.02em">
-              📤 Event Outbox &amp; Replies
+              📤 Event Outreach Dispatcher &amp; Outbox
             </h1>
             <span class="sail-pill ok" style="font-size:10.5px;font-weight:700">igor@b2b-dorogo.it</span>
-            <span class="sail-pill warn" style="font-size:10.5px">Safe Mode Active</span>
+            <span id="smtp-status-pill" class="sail-pill ${isSmtpConfigured ? 'ok' : 'warn'}" style="font-size:10.5px;cursor:pointer" title="Click to configure Hostinger SMTP password">
+              ${isSmtpConfigured ? '🟢 Hostinger SMTP Ready' : '🟡 Hostinger Password Needed'}
+            </span>
           </div>
           <div style="font-size:12px;color:var(--sail-muted);margin-top:4px">
-            Manual review and dispatch gatekeeper for foreign exhibiting teams arriving for Milano Home 2027.
+            Direct executive dispatch engine for Milano Home 2027 foreign exhibitors. Review drafts, set send limits, and dispatch live emails through Hostinger.
           </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
-          <a href="#event_templates" class="sail-btn default" style="font-size:11.5px;padding:6px 12px;text-decoration:none">
-            Review Sequences &amp; Rates
-          </a>
+          <button id="btn-configure-smtp" class="sail-btn default" style="font-size:11.5px;padding:6px 12px">
+            ⚙️ Mailbox Settings
+          </button>
           <a href="#event_partners" class="sail-btn primary" style="font-size:11.5px;padding:6px 12px;text-decoration:none">
-            ← Exhibitor Directory
+            ← Exhibitor Directory (${totalCount})
           </a>
         </div>
       </div>
 
-      <!-- KPI Stat Cards -->
+      <!-- KPI Stat Grid -->
       <div class="sail-stat-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));gap:12px">
         <div class="sail-card" style="padding:12px 14px">
           <div class="sail-stat-label" style="font-size:11px;color:var(--sail-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:600">Total Foreign Exhibitors</div>
           <div class="sail-stat-val" style="font-size:22px;font-weight:700;color:var(--sail-ink);margin:4px 0 2px 0">${totalCount}</div>
-          <div class="sail-stat-meta" style="font-size:11px;color:var(--sail-muted)">Milano Home 2027 database</div>
+          <div class="sail-stat-meta" style="font-size:11px;color:var(--sail-muted)">Milano Home 2027</div>
         </div>
         <div class="sail-card" style="padding:12px 14px">
           <div class="sail-stat-label" style="font-size:11px;color:var(--sail-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:600">Locked in Review</div>
           <div class="sail-stat-val" style="font-size:22px;font-weight:700;color:#D97706;margin:4px 0 2px 0">${toReviewCount}</div>
-          <div class="sail-stat-meta" style="font-size:11px;color:var(--sail-muted)">Zero sends allowed (Safe)</div>
+          <div class="sail-stat-meta" style="font-size:11px;color:var(--sail-muted)">Safe / unqueued</div>
         </div>
         <div class="sail-card" style="padding:12px 14px">
           <div class="sail-stat-label" style="font-size:11px;color:var(--sail-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:600">Ready to Send (Outbox)</div>
@@ -80,182 +122,801 @@ export async function render(el) {
           <div class="sail-stat-meta" style="font-size:11px;color:var(--sail-muted)">Drafts reviewed &amp; queued</div>
         </div>
         <div class="sail-card" style="padding:12px 14px">
-          <div class="sail-stat-label" style="font-size:11px;color:var(--sail-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:600">Contacted &amp; Booked</div>
+          <div class="sail-stat-label" style="font-size:11px;color:var(--sail-muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:600">Delivered &amp; Contacted</div>
           <div class="sail-stat-val" style="font-size:22px;font-weight:700;color:#059669;margin:4px 0 2px 0">${contactedPartners.length}</div>
-          <div class="sail-stat-meta" style="font-size:11px;color:var(--sail-muted)">Dispatched emails</div>
+          <div class="sail-stat-meta" style="font-size:11px;color:var(--sail-muted)">Live emails dispatched</div>
         </div>
       </div>
 
-      <!-- Safety Gate Status Banner -->
-      <div class="sail-card" style="padding:14px 16px;background:#F8FAFC;border-left:4px solid #D97706;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-        <div>
-          <div style="font-weight:700;font-size:12.5px;color:var(--sail-ink)">
-            🔒 Zero-Accidental-Send Guardrail Active
-          </div>
-          <div style="font-size:11.5px;color:var(--sail-muted);margin-top:2px">
-            All 78 foreign exhibitors start in <code>TO_REVIEW</code>. An email draft is only generated when you move an exhibitor to <code>Ready to Contact</code> in the directory.
-          </div>
+      <!-- Outbox Section Tabs: Scheduled vs Contacted -->
+      <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--sail-line);padding-bottom:8px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;gap:6px">
+          <button id="tab-btn-queue" class="sail-tab ${activeOutboxTab === 'queue' ? 'active' : ''}" style="height:30px;padding:0 12px;font-size:12px;font-weight:700;cursor:pointer">
+            📬 Scheduled Outbox Queue (${readyPartners.length})
+          </button>
+          <button id="tab-btn-contacted" class="sail-tab ${activeOutboxTab === 'contacted' ? 'active' : ''}" style="height:30px;padding:0 12px;font-size:12px;font-weight:700;cursor:pointer">
+            💬 Contacted &amp; Sent (${contactedPartners.length})
+          </button>
         </div>
-        <span class="sail-pill info" style="font-size:11px">Send Window: Tue–Thu 08:30–11:30 CET</span>
       </div>
 
-      <!-- Section 1: Ready to Send Queue (WANT_TO_CONTACT) -->
-      <div class="sail-card" style="padding:16px;display:flex;flex-direction:column;gap:12px">
-        <div style="display:flex;align-items:center;justify-content:space-between">
-          <div>
-            <h2 style="font-size:14px;font-weight:700;color:var(--sail-ink);margin:0">
-              📬 Scheduled Outbox Queue (${readyPartners.length})
-            </h2>
-            <div style="font-size:11px;color:var(--sail-muted)">
-              Exhibitors queued for outreach. Inspect drafts and approve or copy to your mail client.
-            </div>
-          </div>
-        </div>
-
-        ${readyPartners.length === 0 ? `
-          <div style="padding:32px 16px;text-align:center;color:var(--sail-muted);border:1px dashed var(--sail-line);border-radius:8px">
-            <div style="font-size:13px;font-weight:600;color:var(--sail-ink);margin-bottom:4px">No drafts currently in outbox queue</div>
-            <div style="font-size:11.5px;max-width:440px;margin:0 auto">
-              All 78 exhibiting teams are currently safe in <code>TO_REVIEW</code>. To queue outreach for an exhibitor, open the 
-              <a href="#event_partners" style="color:var(--sail-primary);font-weight:600;text-decoration:none">Exhibitor Directory</a> 
-              and change their status dropdown to <strong>Ready to Contact</strong>.
-            </div>
-          </div>
-        ` : `
-          <div style="display:flex;flex-direction:column;gap:12px">
-            ${readyPartners.map((p) => {
-              const draft = renderEventTemplate(t1, p);
-              return `
-                <div style="border:1px solid var(--sail-line);border-radius:8px;padding:14px;background:#FFF;display:flex;flex-direction:column;gap:10px">
-                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
-                    <div>
-                      <span style="font-weight:700;font-size:13px;color:var(--sail-ink)">
-                        ${esc(p.flag || '🌍')} ${esc(p.name)}
-                      </span>
-                      <span style="font-size:11.5px;color:var(--sail-muted);margin-left:6px">
-                        (${esc(p.country)} · ✈️ ${esc((p.origin_hub || 'MXP').split(' ')[0])})
-                      </span>
-                    </div>
-                    <div style="display:flex;gap:6px">
-                      <button class="sail-btn default btn-copy-outbox" data-id="${attr(p.id)}" style="font-size:11px;padding:4px 8px">
-                        📋 Copy Email
-                      </button>
-                      <button class="sail-btn default btn-unqueue-outbox" data-id="${attr(p.id)}" style="font-size:11px;padding:4px 8px;color:#D97706">
-                        ↩ Back to Review
-                      </button>
-                      <button class="sail-btn primary btn-mark-sent" data-id="${attr(p.id)}" style="font-size:11px;padding:4px 10px">
-                        ✓ Mark as Sent
-                      </button>
-                    </div>
-                  </div>
-
-                  <div style="background:#F8FAFC;padding:10px;border-radius:6px;font-size:11.5px;display:flex;flex-direction:column;gap:4px">
-                    <div><strong>To:</strong> ${esc(p.contact_person)} &lt;${esc(p.email)}&gt;</div>
-                    <div><strong>Subject:</strong> ${esc(draft.subject)}</div>
-                  </div>
-
-                  <div style="font-size:11.5px;line-height:1.55;color:var(--sail-body);white-space:pre-wrap;background:#FAFAFA;padding:10px;border-radius:6px;max-height:160px;overflow-y:auto">
-${esc(draft.body)}
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        `}
-      </div>
-
-      <!-- Section 2: Contacted Exhibitors (CONTACTED / APPROVED_PARTNER) -->
-      <div class="sail-card" style="padding:16px;display:flex;flex-direction:column;gap:12px">
-        <h2 style="font-size:14px;font-weight:700;color:var(--sail-ink);margin:0">
-          💬 Contacted Exhibitors &amp; Conversations (${contactedPartners.length})
-        </h2>
-
-        ${contactedPartners.length === 0 ? `
-          <div style="padding:24px 16px;text-align:center;color:var(--sail-muted);font-size:11.5px">
-            No exhibitors have been contacted yet. Outreach will be tracked here once confirmed.
-          </div>
-        ` : `
-          <div style="overflow-x:auto">
-            <table class="sail-table" style="width:100%">
-              <thead>
-                <tr>
-                  <th>Exhibitor Name</th>
-                  <th>Country</th>
-                  <th>Contact Person &amp; Email</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${contactedPartners.map((p) => `
-                  <tr>
-                    <td><strong>${esc(p.name)}</strong></td>
-                    <td>${esc(p.flag || '🌍')} ${esc(p.country)}</td>
-                    <td>${esc(p.contact_person)} (${esc(p.email)})</td>
-                    <td><span class="sail-pill ok" style="font-size:10.5px">${esc(p.status)}</span></td>
-                    <td>
-                      <button class="sail-btn default btn-unqueue-outbox" data-id="${attr(p.id)}" style="font-size:10.5px;padding:2px 6px">
-                        Reset Status
-                      </button>
-                    </td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        `}
-      </div>
+      ${activeOutboxTab === 'queue' ? renderQueueView(readyPartners, t1, savedPass) : renderContactedView(contactedPartners)}
 
     </div>
   `;
 
-  attachEventListeners(el);
+  attachEventListeners(el, readyPartners, t1);
 }
 
-function attachEventListeners(el) {
-  // Mark as sent
-  el.querySelectorAll('.btn-mark-sent').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const id = btn.dataset.id;
-      try {
-        await updateEventPartner(id, { status: 'CONTACTED' });
-        toast('Exhibitor moved to Contacted');
-        render(el);
-      } catch (err) {
-        toast(`Error: ${err.message}`, 'error');
+function renderQueueView(readyPartners, t1, savedPass) {
+  const selectedCount = selectedPartnerIds.size;
+  const isAllSelected = readyPartners.length > 0 && selectedCount === readyPartners.length;
+
+  return `
+    <!-- Batch Control Panel -->
+    <div class="sail-card" style="padding:16px;background:#F8FAFC;border:1px solid #E2E8F0;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:13.5px;font-weight:700;color:var(--sail-ink)">
+            ⚡ Outreach Volume &amp; Batch Sending Controls
+          </div>
+          <div style="font-size:11.5px;color:var(--sail-muted);margin-top:2px">
+            Select the number of emails to dispatch in this batch. Anti-spam throttling spaces out deliveries.
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <button id="btn-test-send-modal" class="sail-btn default" style="font-size:11.5px;padding:6px 12px" title="Send a single test email to your address before bulk sending">
+            🧪 Send 1 Test Email
+          </button>
+          <button id="btn-batch-send" class="sail-btn primary" style="font-size:12px;padding:6px 16px;font-weight:700;background:#2563EB" ${selectedCount === 0 ? 'disabled' : ''}>
+            🚀 Send Selected (${selectedCount}) Through Portal
+          </button>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid #E2E8F0;padding-top:12px;flex-wrap:wrap;gap:10px">
+        <!-- Quick Volume Chips -->
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span style="font-size:11.5px;font-weight:600;color:var(--sail-ink)">Batch Volume:</span>
+          <button class="sail-btn default btn-select-qty" data-qty="5" style="font-size:11px;padding:3px 8px">Next 5</button>
+          <button class="sail-btn default btn-select-qty" data-qty="10" style="font-size:11px;padding:3px 8px">Next 10</button>
+          <button class="sail-btn default btn-select-qty" data-qty="20" style="font-size:11px;padding:3px 8px">Next 20</button>
+          <button class="sail-btn default btn-select-qty" data-qty="all" style="font-size:11px;padding:3px 8px">All Ready (${readyPartners.length})</button>
+        </div>
+
+        <!-- Throttling & Selection -->
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:11.5px;color:var(--sail-muted)">Cooldown Delay:</span>
+            <select id="select-throttle-delay" style="height:26px;font-size:11.5px;padding:0 6px;border:1px solid #CBD5E1;border-radius:4px;background:#FFF">
+              <option value="5000">5 seconds</option>
+              <option value="8000" selected>8 seconds (Recommended)</option>
+              <option value="12000">12 seconds</option>
+              <option value="15000">15 seconds</option>
+            </select>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:6px">
+            <label style="font-size:11.5px;color:var(--sail-ink);cursor:pointer;display:inline-flex;align-items:center;gap:4px">
+              <input type="checkbox" id="chk-select-all" ${isAllSelected ? 'checked' : ''} style="cursor:pointer">
+              <span>Select All (${readyPartners.length})</span>
+            </label>
+            ${selectedCount > 0 ? `
+              <button id="btn-unqueue-selected" class="sail-btn default" style="font-size:11px;padding:3px 8px;color:#D97706">
+                ↩ Return Selected to Review
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ready Draft Cards -->
+    ${readyPartners.length === 0 ? `
+      <div class="sail-card" style="padding:40px 16px;text-align:center;color:var(--sail-muted);border:1px dashed var(--sail-line)">
+        <div style="font-size:14px;font-weight:700;color:var(--sail-ink);margin-bottom:6px">No drafts currently in Scheduled Outbox</div>
+        <div style="font-size:12px;max-width:480px;margin:0 auto;line-height:1.5">
+          All foreign exhibiting teams are currently safe in <code>TO_REVIEW</code>. To queue outreach for an exhibitor, open the 
+          <a href="#event_partners" style="color:var(--sail-primary);font-weight:700;text-decoration:none">Exhibitor Directory</a> 
+          and set their status to <strong>Ready to Contact</strong>.
+        </div>
+      </div>
+    ` : `
+      <div style="display:flex;flex-direction:column;gap:14px">
+        ${readyPartners.map((p, idx) => {
+          const draft = renderEventTemplate(t1, p);
+          const isSelected = selectedPartnerIds.has(p.id);
+          return `
+            <div class="sail-card" style="padding:16px;display:flex;flex-direction:column;gap:12px;border:1px solid ${isSelected ? '#3B82F6' : 'var(--sail-line)'};background:#FFF;box-shadow:${isSelected ? '0 0 0 1px #3B82F6' : 'none'}">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <input type="checkbox" class="chk-partner-select" data-id="${attr(p.id)}" ${isSelected ? 'checked' : ''} style="width:16px;height:16px;cursor:pointer">
+                  <div>
+                    <span style="font-weight:700;font-size:14px;color:var(--sail-ink)">
+                      ${esc(p.flag || '🌍')} ${esc(p.name)}
+                    </span>
+                    <span style="font-size:11.5px;color:var(--sail-muted);margin-left:6px">
+                      (${esc(p.country)} · ✈️ ${esc((p.origin_hub || 'MXP').split(' ')[0])} · Pavilion ${esc(p.stand || '1-4')})
+                    </span>
+                  </div>
+                </div>
+
+                <div style="display:flex;gap:6px;align-items:center">
+                  <button class="sail-btn default btn-edit-draft" data-id="${attr(p.id)}" style="font-size:11px;padding:4px 8px">
+                    ✏️ Edit Draft
+                  </button>
+                  <button class="sail-btn default btn-single-test" data-id="${attr(p.id)}" style="font-size:11px;padding:4px 8px" title="Send a test copy to yourself">
+                    🧪 Test Send
+                  </button>
+                  <button class="sail-btn default btn-copy-draft" data-id="${attr(p.id)}" style="font-size:11px;padding:4px 8px">
+                    📋 Copy
+                  </button>
+                  <button class="sail-btn default btn-unqueue-single" data-id="${attr(p.id)}" style="font-size:11px;padding:4px 8px;color:#D97706">
+                    ↩ To Review
+                  </button>
+                  <button class="sail-btn primary btn-single-send" data-id="${attr(p.id)}" style="font-size:11.5px;padding:4px 12px;font-weight:700;background:#2563EB">
+                    ⚡ Send Now (Portal)
+                  </button>
+                </div>
+              </div>
+
+              <!-- Recipient & Subject Header -->
+              <div style="background:#F8FAFC;padding:10px 12px;border-radius:6px;font-size:11.5px;display:flex;flex-direction:column;gap:4px;border:1px solid #E2E8F0">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div><strong>To:</strong> ${esc(p.contact_person)} &lt;<span style="color:#2563EB;font-weight:600">${esc(p.email)}</span>&gt;</div>
+                  <span class="sail-pill ok" style="font-size:10px">Deliverable</span>
+                </div>
+                <div><strong>Subject:</strong> ${esc(draft.subject)}</div>
+              </div>
+
+              <!-- Email Body Preview -->
+              <div id="body-preview-${attr(p.id)}" style="font-size:12px;line-height:1.6;color:var(--sail-body);white-space:pre-wrap;background:#FAFAFA;padding:12px;border-radius:6px;border:1px solid #F1F5F9;max-height:170px;overflow-y:auto">
+${esc(draft.body)}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `}
+  `;
+}
+
+function renderContactedView(contactedPartners) {
+  return `
+    <div class="sail-card" style="padding:16px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div>
+          <h2 style="font-size:14px;font-weight:700;color:var(--sail-ink);margin:0">
+            💬 Contacted Foreign Exhibitors (${contactedPartners.length})
+          </h2>
+          <div style="font-size:11px;color:var(--sail-muted)">
+            Audit log of all outreach dispatched from <code>igor@b2b-dorogo.it</code> with timestamps and Hostinger delivery IDs.
+          </div>
+        </div>
+      </div>
+
+      ${contactedPartners.length === 0 ? `
+        <div style="padding:32px 16px;text-align:center;color:var(--sail-muted);font-size:12px">
+          No exhibitors have been contacted yet. Dispatched emails will appear here automatically.
+        </div>
+      ` : `
+        <div style="overflow-x:auto">
+          <table class="sail-table" style="width:100%">
+            <thead>
+              <tr>
+                <th>Exhibitor Name</th>
+                <th>Country</th>
+                <th>Contact &amp; Email</th>
+                <th>Dispatched At</th>
+                <th>Hostinger Delivery ID</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${contactedPartners.map((p) => `
+                <tr>
+                  <td><strong>${esc(p.name)}</strong></td>
+                  <td>${esc(p.flag || '🌍')} ${esc(p.country)}</td>
+                  <td>${esc(p.contact_person)} &lt;${esc(p.email)}&gt;</td>
+                  <td><span style="font-size:11px;color:var(--sail-muted)">${p.sent_at ? fmtDateTime(p.sent_at) : 'Recent'}</span></td>
+                  <td>
+                    ${p.queue_id ? `<code style="font-size:10.5px;background:#F1F5F9;padding:2px 6px;border-radius:4px">${esc(p.queue_id)}</code>` : '<span class="sail-pill ok" style="font-size:10px">Sent</span>'}
+                  </td>
+                  <td>
+                    <div style="display:flex;gap:4px">
+                      <button class="sail-btn default btn-unqueue-single" data-id="${attr(p.id)}" style="font-size:10.5px;padding:2px 6px">
+                        Reset Status
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+function attachEventListeners(el, readyPartners, t1) {
+  // Tab switching
+  const tabQueue = el.querySelector('#tab-btn-queue');
+  const tabContacted = el.querySelector('#tab-btn-contacted');
+  if (tabQueue) tabQueue.onclick = () => { activeOutboxTab = 'queue'; render(el); };
+  if (tabContacted) tabContacted.onclick = () => { activeOutboxTab = 'contacted'; render(el); };
+
+  // Mailbox settings dialog
+  const btnConfig = el.querySelector('#btn-configure-smtp');
+  const statusPill = el.querySelector('#smtp-status-pill');
+  const openConfig = () => showMailboxModal(el);
+  if (btnConfig) btnConfig.onclick = openConfig;
+  if (statusPill) statusPill.onclick = openConfig;
+
+  // Select all checkbox
+  const chkAll = el.querySelector('#chk-select-all');
+  if (chkAll) {
+    chkAll.onchange = (e) => {
+      if (e.target.checked) {
+        readyPartners.forEach((p) => selectedPartnerIds.add(p.id));
+      } else {
+        selectedPartnerIds.clear();
       }
-    });
+      render(el);
+    };
+  }
+
+  // Row selection checkboxes
+  el.querySelectorAll('.chk-partner-select').forEach((chk) => {
+    chk.onchange = (e) => {
+      const id = e.target.dataset.id;
+      if (e.target.checked) {
+        selectedPartnerIds.add(id);
+      } else {
+        selectedPartnerIds.delete(id);
+      }
+      render(el);
+    };
   });
 
-  // Unqueue / Back to review
-  el.querySelectorAll('.btn-unqueue-outbox').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const id = btn.dataset.id;
-      try {
+  // Batch Volume Quick Select Chips
+  el.querySelectorAll('.btn-select-qty').forEach((btn) => {
+    btn.onclick = () => {
+      const qty = btn.dataset.qty;
+      selectedPartnerIds.clear();
+      if (qty === 'all') {
+        readyPartners.forEach((p) => selectedPartnerIds.add(p.id));
+      } else {
+        const count = parseInt(qty, 10) || 5;
+        readyPartners.slice(0, count).forEach((p) => selectedPartnerIds.add(p.id));
+      }
+      render(el);
+    };
+  });
+
+  // Return selected to review
+  const btnUnqueueSelected = el.querySelector('#btn-unqueue-selected');
+  if (btnUnqueueSelected) {
+    btnUnqueueSelected.onclick = async () => {
+      const ids = [...selectedPartnerIds];
+      if (ids.length === 0) return;
+      const ok = await confirmDialog('Return to Review', `Move ${ids.length} exhibitors back to safe review mode?`);
+      if (!ok) return;
+      for (const id of ids) {
         await updateEventPartner(id, { status: 'TO_REVIEW' });
-        toast('Exhibitor moved back to To Review (Safe)');
-        render(el);
-      } catch (err) {
-        toast(`Error: ${err.message}`, 'error');
       }
-    });
+      selectedPartnerIds.clear();
+      toast(`${ids.length} exhibitors moved back to To Review`);
+      render(el);
+    };
+  }
+
+  // Single card: Unqueue
+  el.querySelectorAll('.btn-unqueue-single').forEach((btn) => {
+    btn.onclick = async () => {
+      const id = btn.dataset.id;
+      await updateEventPartner(id, { status: 'TO_REVIEW' });
+      selectedPartnerIds.delete(id);
+      toast('Exhibitor moved back to To Review');
+      render(el);
+    };
   });
 
-  // Copy email
-  el.querySelectorAll('.btn-copy-outbox').forEach((btn) => {
-    btn.addEventListener('click', () => {
+  // Single card: Copy
+  el.querySelectorAll('.btn-copy-draft').forEach((btn) => {
+    btn.onclick = () => {
       const id = btn.dataset.id;
-      const stored = loadStoredEventPartners();
-      const p = stored.find((item) => item.id === id);
-      const templates = loadStoredEventTemplates();
-      const t1 = templates.find((t) => t.key === 'T1_exhibitor_intro') || templates[0];
+      const p = readyPartners.find((x) => x.id === id);
       if (p) {
         const draft = renderEventTemplate(t1, p);
-        const full = `To: ${p.email}\nSubject: ${draft.subject}\n\n${draft.body}`;
-        navigator.clipboard?.writeText(full).then(() => {
+        const text = `To: ${p.email}\nSubject: ${draft.subject}\n\n${draft.body}`;
+        navigator.clipboard?.writeText(text).then(() => {
           toast(`Draft for ${p.name} copied to clipboard`);
         });
       }
+    };
+  });
+
+  // Single card: Test Send
+  el.querySelectorAll('.btn-single-test').forEach((btn) => {
+    btn.onclick = () => {
+      const id = btn.dataset.id;
+      const p = readyPartners.find((x) => x.id === id);
+      if (p) showTestSendModal(p, t1);
+    };
+  });
+
+  // Single card: Edit Draft
+  el.querySelectorAll('.btn-edit-draft').forEach((btn) => {
+    btn.onclick = () => {
+      const id = btn.dataset.id;
+      const p = readyPartners.find((x) => x.id === id);
+      if (p) showEditDraftModal(p, t1, el);
+    };
+  });
+
+  // Single card: Send Now (Portal)
+  el.querySelectorAll('.btn-single-send').forEach((btn) => {
+    btn.onclick = async () => {
+      const id = btn.dataset.id;
+      const p = readyPartners.find((x) => x.id === id);
+      if (!p) return;
+      await executeSingleSend(p, t1, btn, el);
+    };
+  });
+
+  // Batch Send Launch
+  const btnBatch = el.querySelector('#btn-batch-send');
+  if (btnBatch) {
+    btnBatch.onclick = () => {
+      const delayMs = parseInt(el.querySelector('#select-throttle-delay')?.value, 10) || 8000;
+      const targets = readyPartners.filter((p) => selectedPartnerIds.has(p.id));
+      if (targets.length === 0) {
+        toast('No exhibitors selected for batch', 'error');
+        return;
+      }
+      showBatchDispatchModal(targets, t1, delayMs, el);
+    };
+  }
+
+  // 1 Test Email Button
+  const btnTestModal = el.querySelector('#btn-test-send-modal');
+  if (btnTestModal) {
+    btnTestModal.onclick = () => {
+      const first = readyPartners[0] || { name: 'TEST.co', fair_event: 'Milano Home', contact_person: 'traciuc04' };
+      showTestSendModal(first, t1);
+    };
+  }
+}
+
+// ---------------- Modals & Execution Engine ----------------
+
+function showMailboxModal(rootEl) {
+  const currentPass = getStoredPass();
+  const dlg = dialog({
+    title: '⚙️ Hostinger SMTP Configuration',
+    body: `
+      <div style="display:flex;flex-direction:column;gap:12px;font-size:12.5px">
+        <div>
+          Configure the credentials for <strong>igor@b2b-dorogo.it</strong> to dispatch event outreach directly from the portal.
+        </div>
+        <div style="background:#F8FAFC;padding:12px;border-radius:6px;border:1px solid #E2E8F0;display:flex;flex-direction:column;gap:6px">
+          <div><strong>Sender Address:</strong> igor@b2b-dorogo.it</div>
+          <div><strong>SMTP Host:</strong> smtp.hostinger.com (Port 465 SSL)</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-weight:600;font-size:12px">Hostinger Mailbox Password:</label>
+          <input type="password" id="modal-smtp-pass" value="${attr(currentPass)}" placeholder="Enter mailbox password" style="height:32px;padding:0 8px;border:1px solid #CBD5E1;border-radius:6px;font-size:12px">
+        </div>
+        <div id="smtp-test-result" style="font-size:11.5px;padding:6px 8px;border-radius:4px;display:none"></div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+          <button id="modal-btn-test-smtp" class="sail-btn default" style="font-size:12px;padding:6px 12px">
+            Test Connection
+          </button>
+          <button id="modal-btn-save-smtp" class="sail-btn primary" style="font-size:12px;padding:6px 16px;background:#2563EB">
+            Save &amp; Connect
+          </button>
+        </div>
+      </div>
+    `,
+    onMount(el) {
+      const passInput = el.querySelector('#modal-smtp-pass');
+      const resBox = el.querySelector('#smtp-test-result');
+      const btnTest = el.querySelector('#modal-btn-test-smtp');
+      const btnSave = el.querySelector('#modal-btn-save-smtp');
+
+      btnTest.onclick = async () => {
+        const pass = passInput.value.trim();
+        if (!pass) {
+          toast('Please enter a password', 'error');
+          return;
+        }
+        btnTest.disabled = true;
+        btnTest.textContent = 'Testing...';
+        resBox.style.display = 'block';
+        resBox.style.background = '#EFF6FF';
+        resBox.style.color = '#1D4ED8';
+        resBox.textContent = 'Connecting to smtp.hostinger.com:465...';
+
+        try {
+          const r = await fetch('/api/test-smtp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ hostingerPass: pass, email: 'igor@b2b-dorogo.it' })
+          });
+          const j = await r.json();
+          if (j.ok) {
+            resBox.style.background = '#DCFCE7';
+            resBox.style.color = '#166534';
+            resBox.textContent = '🟢 Authentication Successful: 235 2.7.0 OK';
+            toast('SMTP connection verified!');
+          } else {
+            resBox.style.background = '#FEE2E2';
+            resBox.style.color = '#991B1B';
+            resBox.textContent = `❌ ${j.error || 'Authentication Failed'}`;
+          }
+        } catch (e) {
+          resBox.style.background = '#FEE2E2';
+          resBox.style.color = '#991B1B';
+          resBox.textContent = `❌ Network Error: ${e.message}`;
+        } finally {
+          btnTest.disabled = false;
+          btnTest.textContent = 'Test Connection';
+        }
+      };
+
+      btnSave.onclick = () => {
+        const pass = passInput.value.trim();
+        setStoredPass(pass);
+        toast('Hostinger credentials saved locally');
+        dlg.close();
+        render(rootEl);
+      };
+    }
+  });
+}
+
+function showTestSendModal(partner, template) {
+  const draft = renderEventTemplate(template, partner);
+  const dlg = dialog({
+    title: '🧪 Dispatch Test Email',
+    wide: true,
+    body: `
+      <div style="display:flex;flex-direction:column;gap:12px;font-size:12.5px">
+        <div>
+          Send a live test email through <code>igor@b2b-dorogo.it</code> to verify subject, body, and formatting in your actual email client.
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-weight:600;font-size:12px">Recipient Test Address:</label>
+          <input type="email" id="test-recipient-email" value="traciuc04@gmail.com" style="height:32px;padding:0 8px;border:1px solid #CBD5E1;border-radius:6px;font-size:12px">
+        </div>
+        <div style="background:#F8FAFC;padding:10px 12px;border-radius:6px;border:1px solid #E2E8F0;display:flex;flex-direction:column;gap:6px">
+          <div><strong>From:</strong> Igor &lt;igor@b2b-dorogo.it&gt;</div>
+          <div><strong>Subject:</strong> ${esc(draft.subject)}</div>
+        </div>
+        <div style="font-size:11.5px;line-height:1.5;white-space:pre-wrap;background:#FAFAFA;padding:10px;border-radius:6px;border:1px solid #F1F5F9;max-height:140px;overflow-y:auto">
+${esc(draft.body)}
+        </div>
+        <div id="test-dispatch-status" style="font-size:11.5px;display:none;padding:6px 8px;border-radius:4px"></div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px">
+          <button id="modal-btn-cancel-test" class="sail-btn default" style="font-size:12px;padding:6px 12px">Cancel</button>
+          <button id="modal-btn-send-test-now" class="sail-btn primary" style="font-size:12px;padding:6px 16px;background:#2563EB;font-weight:700">
+            🚀 Send Test Now
+          </button>
+        </div>
+      </div>
+    `,
+    onMount(el) {
+      const emailInput = el.querySelector('#test-recipient-email');
+      const statusBox = el.querySelector('#test-dispatch-status');
+      const btnSend = el.querySelector('#modal-btn-send-test-now');
+      const btnCancel = el.querySelector('#modal-btn-cancel-test');
+
+      btnCancel.onclick = () => dlg.close();
+
+      btnSend.onclick = async () => {
+        const toEmail = emailInput.value.trim();
+        if (!toEmail) {
+          toast('Please enter a recipient email', 'error');
+          return;
+        }
+        const pass = getStoredPass();
+        if (!pass) {
+          toast('Please enter Hostinger password in Mailbox Settings first', 'error');
+          showMailboxModal(currentEl);
+          return;
+        }
+
+        btnSend.disabled = true;
+        btnSend.textContent = 'Sending...';
+        statusBox.style.display = 'block';
+        statusBox.style.background = '#EFF6FF';
+        statusBox.style.color = '#1D4ED8';
+        statusBox.textContent = `Connecting to Hostinger SMTP and sending to ${toEmail}...`;
+
+        try {
+          const r = await fetch('/api/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: toEmail,
+              toName: 'Test Recipient',
+              subject: draft.subject,
+              body: draft.body,
+              hostingerPass: pass,
+              fromEmail: 'igor@b2b-dorogo.it',
+              fromName: 'Igor'
+            })
+          });
+          const j = await r.json();
+          if (j.ok) {
+            statusBox.style.background = '#DCFCE7';
+            statusBox.style.color = '#166534';
+            statusBox.textContent = `✅ Test Email Successfully Sent! Queue ID: ${j.queueId || 'OK'}`;
+            toast('Test email delivered!');
+            setTimeout(() => dlg.close(), 2500);
+          } else {
+            statusBox.style.background = '#FEE2E2';
+            statusBox.style.color = '#991B1B';
+            statusBox.textContent = `❌ Delivery Failed: ${j.error || 'Unknown error'}`;
+            btnSend.disabled = false;
+            btnSend.textContent = 'Retry Send';
+          }
+        } catch (e) {
+          statusBox.style.background = '#FEE2E2';
+          statusBox.style.color = '#991B1B';
+          statusBox.textContent = `❌ Error: ${e.message}`;
+          btnSend.disabled = false;
+          btnSend.textContent = 'Retry Send';
+        }
+      };
+    }
+  });
+}
+
+function showEditDraftModal(partner, template, rootEl) {
+  const draft = renderEventTemplate(template, partner);
+  const dlg = dialog({
+    title: `✏️ Edit Draft: ${partner.name}`,
+    wide: true,
+    body: `
+      <div style="display:flex;flex-direction:column;gap:12px;font-size:12.5px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-weight:600;font-size:12px">Subject Line:</label>
+          <input type="text" id="edit-draft-subject" value="${attr(draft.subject)}" style="height:32px;padding:0 8px;border:1px solid #CBD5E1;border-radius:6px;font-size:12px">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-weight:600;font-size:12px">Email Body (Whali &lt;100 words format):</label>
+          <textarea id="edit-draft-body" rows="8" style="padding:8px;border:1px solid #CBD5E1;border-radius:6px;font-size:12px;font-family:inherit;line-height:1.5">${esc(draft.body)}</textarea>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px">
+          <button id="modal-btn-cancel-edit" class="sail-btn default" style="font-size:12px;padding:6px 12px">Cancel</button>
+          <button id="modal-btn-save-draft" class="sail-btn primary" style="font-size:12px;padding:6px 16px;background:#2563EB">
+            Save Changes
+          </button>
+        </div>
+      </div>
+    `,
+    onMount(el) {
+      el.querySelector('#modal-btn-cancel-edit').onclick = () => dlg.close();
+      el.querySelector('#modal-btn-save-draft').onclick = async () => {
+        const sub = el.querySelector('#edit-draft-subject').value.trim();
+        const bdy = el.querySelector('#edit-draft-body').value.trim();
+        await updateEventPartner(partner.id, { custom_subject: sub, custom_body: bdy });
+        toast(`Draft updated for ${partner.name}`);
+        dlg.close();
+        render(rootEl);
+      };
+    }
+  });
+}
+
+async function executeSingleSend(partner, template, btn, rootEl) {
+  const pass = getStoredPass();
+  if (!pass) {
+    toast('Hostinger password needed. Please configure Mailbox Settings', 'error');
+    showMailboxModal(rootEl);
+    return;
+  }
+
+  const ok = await confirmDialog('Send Email Now?', `Send live email to ${partner.contact_person} at ${partner.email}?`);
+  if (!ok) return;
+
+  const draft = renderEventTemplate(template, partner);
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+
+  try {
+    const r = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: partner.email,
+        toName: partner.contact_person,
+        subject: partner.custom_subject || draft.subject,
+        body: partner.custom_body || draft.body,
+        hostingerPass: pass,
+        fromEmail: 'igor@b2b-dorogo.it',
+        fromName: 'Igor'
+      })
     });
+    const j = await r.json();
+    if (j.ok) {
+      await updateEventPartner(partner.id, {
+        status: 'CONTACTED',
+        sent_at: new Date().toISOString(),
+        queue_id: j.queueId || 'OK'
+      });
+      selectedPartnerIds.delete(partner.id);
+      toast(`Email successfully sent to ${partner.name}!`);
+      render(rootEl);
+    } else {
+      toast(`Delivery failed: ${j.error || 'Server error'}`, 'error');
+      btn.disabled = false;
+      btn.textContent = origText;
+    }
+  } catch (e) {
+    toast(`Network error: ${e.message}`, 'error');
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+}
+
+function showBatchDispatchModal(targets, template, delayMs, rootEl) {
+  const pass = getStoredPass();
+  if (!pass) {
+    toast('Please set Hostinger password in Mailbox Settings first', 'error');
+    showMailboxModal(rootEl);
+    return;
+  }
+
+  stopRequested = false;
+  isDispatching = true;
+
+  const dlg = dialog({
+    title: '🚀 Live Batch Sending Engine',
+    wide: true,
+    body: `
+      <div style="display:flex;flex-direction:column;gap:14px;font-size:12.5px">
+        <div>
+          Dispatching <strong>${targets.length} emails</strong> via Hostinger SMTP (<code>igor@b2b-dorogo.it</code>).
+          Anti-spam delay: <strong>${Math.round(delayMs / 1000)}s</strong> between deliveries.
+        </div>
+
+        <!-- Progress Bar -->
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:600">
+            <span id="batch-progress-label">Preparing dispatch...</span>
+            <span id="batch-progress-pct">0%</span>
+          </div>
+          <div style="background:#E2E8F0;height:10px;border-radius:5px;overflow:hidden">
+            <div id="batch-progress-bar" style="background:#2563EB;height:100%;width:0%;transition:width 0.3s ease"></div>
+          </div>
+        </div>
+
+        <!-- Real-time Console Log -->
+        <div id="batch-console-log" style="background:#0F172A;color:#E2E8F0;font-family:monospace;font-size:11px;padding:12px;border-radius:6px;height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:4px">
+          <div>[INFO] Initializing batch dispatch for ${targets.length} exhibitors...</div>
+        </div>
+
+        <!-- Modal Controls -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+          <span id="batch-status-sub" style="font-size:11.5px;color:var(--sail-muted)">Do not close this window during dispatch.</span>
+          <div style="display:flex;gap:8px">
+            <button id="modal-btn-stop-batch" class="sail-btn default" style="font-size:12px;padding:6px 12px;color:#DC2626">
+              ⏹️ Stop Batch
+            </button>
+            <button id="modal-btn-done-batch" class="sail-btn primary" style="font-size:12px;padding:6px 16px;display:none;background:#059669">
+              Done
+            </button>
+          </div>
+        </div>
+      </div>
+    `,
+    onMount(el) {
+      const pLabel = el.querySelector('#batch-progress-label');
+      const pPct = el.querySelector('#batch-progress-pct');
+      const pBar = el.querySelector('#batch-progress-bar');
+      const logBox = el.querySelector('#batch-console-log');
+      const btnStop = el.querySelector('#modal-btn-stop-batch');
+      const btnDone = el.querySelector('#modal-btn-done-batch');
+
+      function appendLog(msg, color = '#E2E8F0') {
+        const time = new Date().toLocaleTimeString();
+        const row = document.createElement('div');
+        row.style.color = color;
+        row.textContent = `[${time}] ${msg}`;
+        logBox.appendChild(row);
+        logBox.scrollTop = logBox.scrollHeight;
+      }
+
+      btnStop.onclick = () => {
+        stopRequested = true;
+        btnStop.disabled = true;
+        btnStop.textContent = 'Stopping...';
+        appendLog('Stopping requested by user. Waiting for current dispatch to finish...', '#F59E0B');
+      };
+
+      btnDone.onclick = () => {
+        dlg.close();
+        render(rootEl);
+      };
+
+      // Launch Async Dispatch Loop
+      (async () => {
+        let sentCount = 0;
+        let failCount = 0;
+
+        for (let i = 0; i < targets.length; i++) {
+          if (stopRequested) {
+            appendLog('Batch stopped by operator.', '#F59E0B');
+            break;
+          }
+
+          const partner = targets[i];
+          const draft = renderEventTemplate(template, partner);
+          const currentNum = i + 1;
+          const totalNum = targets.length;
+
+          pLabel.textContent = `Sending ${currentNum} of ${totalNum}: ${partner.name}...`;
+          pPct.textContent = `${Math.round(((currentNum - 1) / totalNum) * 100)}%`;
+          pBar.style.width = `${((currentNum - 1) / totalNum) * 100}%`;
+
+          appendLog(`🛫 [${currentNum}/${totalNum}] Dispatching to ${partner.contact_person} (${partner.name}) <${partner.email}>...`);
+
+          try {
+            const r = await fetch('/api/send-email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: partner.email,
+                toName: partner.contact_person,
+                subject: partner.custom_subject || draft.subject,
+                body: partner.custom_body || draft.body,
+                hostingerPass: pass,
+                fromEmail: 'igor@b2b-dorogo.it',
+                fromName: 'Igor'
+              })
+            });
+            const j = await r.json();
+
+            if (j.ok) {
+              sentCount++;
+              appendLog(`✅ Delivered to ${partner.name}! Queue: ${j.queueId || 'OK'}`, '#10B981');
+              await updateEventPartner(partner.id, {
+                status: 'CONTACTED',
+                sent_at: new Date().toISOString(),
+                queue_id: j.queueId || 'OK'
+              });
+              selectedPartnerIds.delete(partner.id);
+            } else {
+              failCount++;
+              appendLog(`❌ Failed for ${partner.name}: ${j.error || 'Server error'}`, '#EF4444');
+            }
+          } catch (e) {
+            failCount++;
+            appendLog(`❌ Network error for ${partner.name}: ${e.message}`, '#EF4444');
+          }
+
+          // Anti-spam throttling cooldown between sends
+          if (i < targets.length - 1 && !stopRequested) {
+            appendLog(`⏳ Anti-spam throttling: waiting ${Math.round(delayMs / 1000)}s before next send...`, '#94A3B8');
+            await new Promise((res) => setTimeout(res, delayMs));
+          }
+        }
+
+        pLabel.textContent = `Batch Complete! (${sentCount} sent, ${failCount} failed)`;
+        pPct.textContent = '100%';
+        pBar.style.width = '100%';
+        pBar.style.background = failCount > 0 ? '#F59E0B' : '#10B981';
+
+        btnStop.style.display = 'none';
+        btnDone.style.display = 'inline-block';
+        appendLog(`🎉 Batch run finished: ${sentCount} successfully delivered, ${failCount} errors.`, '#10B981');
+        toast(`Batch finished: ${sentCount} delivered!`);
+        isDispatching = false;
+      })();
+    }
   });
 }

@@ -64,9 +64,9 @@ const SECTIONS = [
     id: 'events',
     label: '🏛️ Milano Home & Fairs',
     items: [
-      { key: 'event_partners', label: 'Foreign Exhibiting Teams (78)', icon: 'partners', bold: true },
+      { key: 'event_partners', label: 'Foreign Exhibiting Teams (84)', icon: 'partners', bold: true },
       { key: 'event_templates', label: 'Fair Sequences & Rates', icon: 'template', bold: true },
-      { key: 'event_outbox', label: 'Event Outbox & Replies', icon: 'send', bold: true },
+      { key: 'event_outbox', label: 'Event Outbox & Dispatcher', icon: 'send', bold: true },
     ],
   },
 ];

@@ -10,6 +10,7 @@ let activeTypeFilter = 'all'; // all | tier1 | uk_north | dach_benelux | france_
 let activeStatusFilter = 'all'; // all | TO_REVIEW | WANT_TO_CONTACT | CONTACTED | APPROVED_PARTNER
 let searchQuery = '';
 let currentEl = null;
+let selectedPartnerIds = new Set();
 
 const STATUS_CONFIG = {
   TO_REVIEW: { label: 'To Review', pillClass: 'warn', desc: 'Newly scouted foreign exhibitor' },
@@ -101,7 +102,7 @@ export async function render(el) {
               <option value="mfw_2027" disabled>👠 Milan Fashion Week 2027 (Feb 2027)</option>
               <option value="salone_2027" disabled>🛋️ Salone del Mobile 2027 (Apr 2027)</option>
             </select>
-            <span class="sail-pill ok" style="font-size:10.5px;font-weight:700">events@dorogo-events.eu</span>
+            <span class="sail-pill ok" style="font-size:10.5px;font-weight:700">igor@b2b-dorogo.it</span>
             <span class="sail-pill info" style="font-size:10.5px">Direct Client Outreach</span>
           </div>
           <div style="font-size:12px;color:var(--sail-muted);margin-top:4px">
@@ -296,6 +297,47 @@ function renderAgencyRow(p) {
 }
 
 function attachEventListeners(el) {
+  // Bulk queue to outbox
+  const btnBulkQueue = el.querySelector('#btn-bulk-queue-outbox');
+  if (btnBulkQueue) {
+    btnBulkQueue.onclick = async () => {
+      const count = selectedPartnerIds.size;
+      for (const id of selectedPartnerIds) {
+        await updateEventPartner(id, { status: 'WANT_TO_CONTACT' });
+      }
+      selectedPartnerIds.clear();
+      toast(`${count} exhibitors moved to Scheduled Outbox!`);
+      location.hash = '#event_outbox';
+    };
+  }
+
+  // Header select all checkbox
+  const chkAll = el.querySelector('#chk-partners-all');
+  if (chkAll) {
+    chkAll.onchange = (e) => {
+      const stored = loadStoredEventPartners();
+      if (e.target.checked) {
+        stored.forEach((p) => selectedPartnerIds.add(p.id));
+      } else {
+        selectedPartnerIds.clear();
+      }
+      render(el);
+    };
+  }
+
+  // Row selection checkboxes
+  el.querySelectorAll('.chk-partner-row').forEach((chk) => {
+    chk.onchange = (e) => {
+      const id = e.target.dataset.id;
+      if (e.target.checked) {
+        selectedPartnerIds.add(id);
+      } else {
+        selectedPartnerIds.delete(id);
+      }
+      render(el);
+    };
+  });
+
   // Region & Tier tabs
   el.querySelectorAll('[data-type-tab]').forEach((tab) => {
     tab.addEventListener('click', () => {
