@@ -2279,14 +2279,14 @@ export const DEFAULT_EVENT_TEMPLATES = [
     name: 'Touch 1: Airport Arrival & Booth Transfers (Whali <100w format)',
     step_num: 1,
     offset_days: 0,
-    subject: '{{fair_event}} · {{company_name}}',
+        subject: '{{fair_event}} · {{company_name}}',
     body: `Hi {{first_name}},
 
 Noticed {{company_name}} is exhibiting at {{fair_event}} this January.
 
 Dorogo provides unbranded Mercedes-Benz V-Class, S-Class, and E-Class transfers between Milan hotels and Fiera Milano Rho, including direct airport meet & greet (MXP/LIN).
 
-Would you like me to share our 1-page corporate rate card?`
+Would our 1-page rate card be helpful for your team? Happy to send it over to whoever coordinates your travel.`
   },
   {
     key: 'T2_exhibitor_followup',
