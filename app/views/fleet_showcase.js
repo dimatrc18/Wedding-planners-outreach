@@ -936,7 +936,15 @@ export const FLEET_LEDGER_ROWS = [
       included: 'Quotazioni di riferimento; parcheggi e ZTL esclusi',
       cancellation: '30% fino a 48h · 50% nelle 48h · 100% nelle 24h'
     },
-    photos: []
+    photos: [
+      {
+        id: 'perletti_minibus_ext_1',
+        src: 'assets/partner_fleet/perletti/perletti_sprinter_minibus.png',
+        file: 'perletti_sprinter_minibus.png',
+        title: 'Exterior — Mercedes Sprinter Minibus (black)',
+        caption: 'Black Mercedes Sprinter minibus at the Perletti depot. Side has the Perletti name and a thin silver stripe. Source: perlettibus.it/parco-mezzi'
+      }
+    ]
   },
   {
     id: 'perletti_midibus_30',
@@ -998,13 +1006,13 @@ export const FLEET_LEDGER_ROWS = [
     email: 'info@perlettibus.it',
     website: 'https://www.perlettibus.it',
     status: 'confirmed',
-    statusLabel: 'Standby verified · Transfer quote pending',
-    repliedAt: '02 Nov 2026 · 17:10',
+    statusLabel: 'Rates & 2 photos verified',
+    repliedAt: '04 Nov 2026 · 11:00',
     ratePdf: null,
     ratePdfName: null,
     transfers: {
-      mxp_milano: { label: 'Milano Centro ⇄ Malpensa MXP', net: null },
-      milano_como: { label: 'Milano Centro ⇄ Como', net: null },
+      mxp_milano: { label: 'Milano Centro ⇄ Malpensa MXP', net: 600 },
+      milano_como: { label: 'Milano ⇄ Como', net: 700 },
       mxp_como: { label: 'Malpensa (MXP) ⇄ Como', net: null }
     },
     standby: {
@@ -1013,10 +1021,25 @@ export const FLEET_LEDGER_ROWS = [
     },
     terms: {
       vat: 'Prezzi IVA 10% esclusa',
-      included: 'Parcheggi e ZTL esclusi',
+      included: 'Parcheggio ed eventuale Area C Milano esclusi',
       cancellation: '30% fino a 48h · 50% nelle 48h · 100% nelle 24h'
     },
-    photos: []
+    photos: [
+      {
+        id: 'perletti_coach_52_ext_1',
+        src: 'assets/partner_fleet/perletti/perletti_tourismo_52.png',
+        file: 'perletti_tourismo_52.png',
+        title: 'Exterior — Mercedes Tourismo GT Coach (52 pax)',
+        caption: 'Black Mercedes Tourismo with the Perletti name and a large decorative swirl graphic on the side. Source: perlettibus.it/parco-mezzi'
+      },
+      {
+        id: 'perletti_coach_52_ext_2',
+        src: 'assets/partner_fleet/perletti/perletti_gt_fleet_lineup.jpg',
+        file: 'perletti_gt_fleet_lineup.jpg',
+        title: 'Exterior — GT Fleet Lineup (Setra + Irizar)',
+        caption: 'Three black GT coaches at the depot. Perletti branding on the front and sides, plus the website on the windscreen header. Source: perlettibus.it/parco-mezzi'
+      }
+    ]
   },
   {
     id: 'guizzetti_sprinter_8',
