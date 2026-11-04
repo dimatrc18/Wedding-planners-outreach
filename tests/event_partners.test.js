@@ -163,3 +163,21 @@ test('Igor Sender Identity & Verified Authentic Fiera Data: templates use Igor <
     assert.ok(!p.website.includes('vanderguchtsince1870.com'), 'Must not contain guessed vanderguchtsince1870 domain');
   }
 });
+
+test('Whali Cold Outreach Benchmarks: event templates strictly adhere to <100 words and ultra-lean format', () => {
+  const t1 = DEFAULT_EVENT_TEMPLATES.find((t) => t.key === 'T1_exhibitor_intro');
+  const t2 = DEFAULT_EVENT_TEMPLATES.find((t) => t.key === 'T2_exhibitor_followup');
+
+  assert.ok(t1, 'T1 must exist');
+  assert.ok(t2, 'T2 must exist');
+
+  const wordsT1 = t1.body.trim().split(/\s+/).length;
+  const wordsT2 = t2.body.trim().split(/\s+/).length;
+
+  assert.ok(wordsT1 < 100, `T1 body must be under 100 words for 6x reply rate; got ${wordsT1} words`);
+  assert.ok(wordsT2 < 100, `T2 body must be under 100 words for 6x reply rate; got ${wordsT2} words`);
+
+  // Max 2 cold touches (T1 + 1 follow-up)
+  const coldTouches = DEFAULT_EVENT_TEMPLATES.filter((t) => t.step_num <= 2);
+  assert.equal(coldTouches.length, 2, 'Must have exactly 2 cold touches (T1 + T2 follow-up) to avoid unsubscribe surge');
+});

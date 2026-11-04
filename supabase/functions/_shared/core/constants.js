@@ -61,10 +61,32 @@ export const OPTOUT = {
   ru: 'Если вы не занимаетесь трансферами для гостей, просто дайте знать, никаких вопросов.',
 };
 
+
+// Whali Cold Outreach Research Benchmarks (High-Performance Engine Constraints)
+// Based on real-world executive response study:
+// • Subject < 30 chars: 83.7% open rate vs 69.5% for >70 chars.
+// • Body < 100 words: 6x higher reply rate (reads as a peer question, not a pitch).
+// • Optimal Days: Tuesday (78.3%) & Wednesday (79.4%). Avoid Thursday/Friday (<70%).
+// • Optimal Send Times: 12:00 PM, 3:00 PM, 5:00 PM (natural inbox break intervals).
+// • Follow-up Cadence: 1 follow-up yields +60% reply lift; stops at max 2 cold touches.
+// • Persona Target: Directors & Logistics Managers over generic/HR (3x reply ratio).
+export const WHALI_BENCHMARKS = {
+  OPTIMAL_SEND_DAYS: [2, 3], // 2 = Tuesday, 3 = Wednesday
+  AVOID_SEND_DAYS: [4, 5, 6, 7, 1], // Thu/Fri <70% open rate; weekends strictly avoided
+  OPTIMAL_SEND_HOURS: ['12:00', '15:00', '17:00'], // Europe/Rome natural break windows
+  MAX_SUBJECT_LENGTH_RECOMMENDED: 30, // Chars
+  MAX_BODY_WORDS_RECOMMENDED: 100, // Words
+  FOLLOWUP_REPLY_LIFT_PCT: 60,
+  MAX_COLD_TOUCHES: 2,
+  TARGET_ROLES: ['Logistics Director', 'Trade Fair Manager', 'Operations Director', 'Head of Events', 'Senior Wedding Producer']
+};
+
 export const DEFAULT_SETTINGS = {
   kill_switch: false,
   timezone: 'Europe/Rome',
-  send_days: [2, 3, 4], // ISO weekday: 1 = Monday ... 7 = Sunday
+  send_days: [2, 3, 4], // ISO weekday: 1 = Monday ... 7 = Sunday (Tue & Wed are Whali top performers)
+  optimal_send_days: [2, 3],
+  optimal_send_slots: ['12:00', '15:00', '17:00'],
   window_start: '09:00',
   window_end: '11:30',
   daily_cap: 12,

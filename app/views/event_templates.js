@@ -33,7 +33,7 @@ export async function render(el) {
       <!-- Top Tab Navigation -->
       <div class="sail-tabs" style="display:flex;gap:6px;border-bottom:2px solid var(--sail-line);padding-bottom:10px;margin-bottom:2px;flex-wrap:wrap">
         <a href="#event_partners" class="sail-tab " style="height:32px;display:inline-flex;align-items:center;gap:6px;padding:0 14px;font-size:12.5px;font-weight:700;text-decoration:none">
-          🏛️ Foreign Exhibiting Teams (78)
+          🏛️ Foreign Exhibiting Teams (84)
         </a>
         <a href="#event_templates" class="sail-tab active" style="height:32px;display:inline-flex;align-items:center;gap:6px;padding:0 14px;font-size:12.5px;font-weight:700;text-decoration:none">
           ✉️ Fair Sequences &amp; Corporate Rates
@@ -42,6 +42,35 @@ export async function render(el) {
           📤 Event Outbox &amp; Replies
         </a>
       </div>
+      
+      <!-- Whali Executive Outreach Intelligence Card -->
+      <div class="sail-card" style="background:linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);border-left:4px solid #635BFF;padding:14px 18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+          <div style="font-weight:700;font-size:13px;color:#0A2540;display:flex;align-items:center;gap:6px">
+            📊 Whali Outreach Intelligence · Data-Backed Timing &amp; Messaging Rules
+          </div>
+          <span class="sail-pill ok" style="font-size:10.5px;font-weight:700">6x Reply Rate Multiplier</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(190px, 1fr));gap:10px;font-size:11.5px;color:#425466">
+          <div style="background:#FFF;padding:10px 12px;border-radius:6px;border:1px solid var(--sail-line)">
+            <div style="font-weight:700;color:#0A2540;margin-bottom:3px">🎯 Subject &lt; 30 Chars</div>
+            <div><strong>83.7% open rate</strong> vs 69.5% for &gt;70 chars. Short, specific, non-salesy.</div>
+          </div>
+          <div style="background:#FFF;padding:10px 12px;border-radius:6px;border:1px solid var(--sail-line)">
+            <div style="font-weight:700;color:#0A2540;margin-bottom:3px">⚡ Body &lt; 100 Words</div>
+            <div><strong>6x higher reply rate</strong> than 200-300 words. Reads as a peer question, not a pitch.</div>
+          </div>
+          <div style="background:#FFF;padding:10px 12px;border-radius:6px;border:1px solid var(--sail-line)">
+            <div style="font-weight:700;color:#0A2540;margin-bottom:3px">📅 Send: Tue &amp; Wed</div>
+            <div><strong>Wed 79.4% / Tue 78.3%</strong>. Thu &amp; Fri under 70%. Best slots: <strong>12pm, 3pm, 5pm</strong>.</div>
+          </div>
+          <div style="background:#FFF;padding:10px 12px;border-radius:6px;border:1px solid var(--sail-line)">
+            <div style="font-weight:700;color:#0A2540;margin-bottom:3px">🔁 1 Follow-Up (+60% Lift)</div>
+            <div>One follow-up lifts replies 60%+. Max 2 cold touches (stops unsubscribe surge).</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Header Banner -->
       <div class="sail-card" style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
         <div>

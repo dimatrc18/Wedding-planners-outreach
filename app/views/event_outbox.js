@@ -29,7 +29,7 @@ export async function render(el) {
       <!-- Top Tab Navigation -->
       <div class="sail-tabs" style="display:flex;gap:6px;border-bottom:2px solid var(--sail-line);padding-bottom:10px;margin-bottom:2px;flex-wrap:wrap">
         <a href="#event_partners" class="sail-tab " style="height:32px;display:inline-flex;align-items:center;gap:6px;padding:0 14px;font-size:12.5px;font-weight:700;text-decoration:none">
-          🏛️ Foreign Exhibiting Teams (78)
+          🏛️ Foreign Exhibiting Teams (84)
         </a>
         <a href="#event_templates" class="sail-tab " style="height:32px;display:inline-flex;align-items:center;gap:6px;padding:0 14px;font-size:12.5px;font-weight:700;text-decoration:none">
           ✉️ Fair Sequences &amp; Corporate Rates

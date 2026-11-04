@@ -2276,23 +2276,17 @@ export const EVENT_FAIRS = [
 export const DEFAULT_EVENT_TEMPLATES = [
   {
     key: 'T1_exhibitor_intro',
-    name: 'Touch 1: Airport Arrival & Booth Transfers',
+    name: 'Touch 1: Airport Arrival & Booth Transfers (Whali <100w format)',
     step_num: 1,
     offset_days: 0,
-    subject: 'Executive ground logistics for {{company_name}} at {{fair_event}}',
+    subject: '{{fair_event}} · {{company_name}}',
     body: `Good morning {{contact_person}},
 
-We noticed {{company_name}} is exhibiting at {{fair_event}} this coming January.
+Noticed {{company_name}} is exhibiting at {{fair_event}} this January.
 
-Trade fair mornings between Milan hotels and Fiera Milano Rho often experience severe traffic bottlenecks, and evening taxi queues at the Rho pavilions routinely exceed 45 minutes.
+Dorogo provides unbranded Mercedes-Benz V-Class and E-Class transfers between Milan hotels and Fiera Milano Rho, including direct airport meet & greet (MXP/LIN).
 
-Dorogo provides unbranded Mercedes-Benz V-Class and E-Class transfers tailored for international exhibiting teams:
-
-• Flight Meet & Greet: Dedicated driver at MXP or LIN terminal with luggage assistance for display samples.
-• Daily Pavilion Transfers: Punctual morning hotel pick-up and direct evening return from Rho Fiera.
-• Evening Client Dinners: Hourly standby in central Milan (Brera, Quadrilatero, Navigli) on corporate account.
-
-Would you like our 1-page corporate rate card and vehicle allocation for your delegation?
+Would our 1-page corporate rate card and vehicle allocation be helpful for your team?
 
 Best regards,
 Igor
@@ -2302,19 +2296,17 @@ Via Monte Napoleone 8, Milano`
   },
   {
     key: 'T2_exhibitor_followup',
-    name: 'Touch 2: Corporate Rate Sheet & Vehicle Availability',
+    name: 'Touch 2: Vehicle Allocation & Rate Sheet (Follow-up +60% lift)',
     step_num: 2,
     offset_days: 4,
-    subject: 'Re: Executive ground logistics for {{company_name}} at {{fair_event}}',
+    subject: 'Re: {{fair_event}} · {{company_name}}',
     body: `Good morning {{contact_person}},
 
-Following up briefly on ground transportation for the {{company_name}} team during {{fair_event}} (21–24 January 2027).
+Following up briefly on ground transport for {{company_name}} during {{fair_event}}.
 
-We have reserved a limited allocation of Mercedes-Benz V-Class Extra-Long vehicles (up to 7 guests with luggage/stand equipment) and executive E-Class sedans for international exhibitors arriving from {{country}}.
+We have reserved dedicated Mercedes-Benz V-Class vehicles for teams arriving from {{country}}, with fixed rates, ZTL access, and zero peak surge pricing.
 
-Our corporate rates are fixed with all tolls, Milan ZTL access, and pavilion entry permits included—with zero surge pricing during peak exhibition hours.
-
-If you have confirmed your team's flight details into Milan Malpensa or Linate, let us know your schedule and we will prepare a single-invoice itinerary.
+Would you like our rate sheet before vehicle allocations close?
 
 Best regards,
 Igor
@@ -2326,28 +2318,28 @@ igor@b2b-dorogo.eu`
     name: 'Inbound Reply: Quote & Standby Pricing',
     step_num: 3,
     offset_days: 0,
-    subject: 'DOROGO Corporate Rates & Vehicle Confirmation · {{fair_event}}',
+    subject: 'DOROGO Rates · {{fair_event}}',
     body: `Good morning {{contact_person}},
 
 Thank you for your inquiry. Below are our fixed corporate tariffs for {{fair_event}}:
 
-Airport Transfers (All-Inclusive Meet & Greet, Flight Tracking, 60m Wait, Tolls):
-• Milan Malpensa (MXP) ➔ Central Milan / Fiera Milano Rho:
-  - Mercedes-Benz E-Class (up to 3 pax): €140
-  - Mercedes-Benz V-Class Extra-Long (up to 7 pax): €170
-• Milan Linate (LIN) ➔ Central Milan / Fiera Milano Rho:
+Airport Transfers (All-Inclusive Meet & Greet, Tolls, Flight Tracking):
+• Milan Malpensa (MXP) ➔ Fiera Milano Rho / Hotel:
+  - Mercedes-Benz E-Class: €140
+  - Mercedes-Benz V-Class Extra-Long: €170
+• Milan Linate (LIN) ➔ Fiera Milano Rho / Hotel:
   - Mercedes-Benz E-Class: €95
   - Mercedes-Benz V-Class Extra-Long: €130
 
-Daily Exhibition Standby & Hotel Shuttles:
-• Morning Hotel ➔ Rho Fiera Pavilion Drop-off: €95 / transfer
-• Dedicated Hourly Disposal (Standby for evening galas/dinners, min 4h):
+Daily Standby & Shuttles:
+• Morning Hotel ➔ Rho Pavilion Drop-off: €95
+• Dedicated Hourly Disposal (Evening dinners, min 4h):
   - Mercedes-Benz E-Class: €85 / hour
   - Mercedes-Benz V-Class: €95 / hour
 
-All vehicles are unbranded, latest-generation Mercedes-Benz with English-speaking professional chauffeurs.
+All vehicles are unbranded, latest-generation Mercedes-Benz with professional chauffeurs.
 
-Please share your flight arrival times and hotel location, and we will secure your vehicle allocations immediately.
+Please share your flight arrival times or hotel, and we will secure your allocation.
 
 Best regards,
 Igor
