@@ -203,10 +203,10 @@
   }
   table.master-table th.group-header {
     text-align: center;
-    font-size: 7.1px;
+    font-size: 6.6px;
     font-weight: 700;
-    letter-spacing: 0.07em;
-    padding: 3.5px 5px;
+    letter-spacing: 0.025em;
+    padding: 3px 4px;
     border-bottom: 1px solid #eae5dc;
     background: #ece7de;
     white-space: nowrap;
@@ -218,13 +218,16 @@
     border-right: 1px solid #dfdad2;
   }
   table.master-table tr.sub-header th {
-    font-size: 6.0px;
-    padding: 2.5px 3.5px;
+    font-size: 5.9px;
+    padding: 2.5px 4.5px;
     background: #f9f7f2;
     border-bottom: 1px solid #ded8cc;
     letter-spacing: 0.02em;
     line-height: 1.25;
     vertical-align: bottom;
+  }
+  table.master-table tr.sub-header th.divider-col {
+    padding-right: 7px;
   }
   table.master-table th.num, table.master-table td.num {
     text-align: right;
@@ -861,19 +864,27 @@
     </div>
 
     <div class="table-container">
-      <table class="master-table">
+            <table class="master-table">
+        <colgroup>
+          <col style="width: 24.5%;">
+          <col style="width: 11.5%;">
+          <col style="width: 12.5%;">
+          <col style="width: 14.5%;">
+          <col style="width: 13.0%;">
+          <col style="width: 24.0%;">
+        </colgroup>
         <thead>
           <tr class="super-header">
-            <th rowspan="2" style="width: 25.0%;">Vehicle &amp; Capacity</th>
+            <th rowspan="2" style="width: 24.5%;">Vehicle &amp; Capacity</th>
             <th colspan="2" class="group-header group-transfer" style="width: 24.0%;">1. Transfers (Point-to-Point)</th>
-            <th colspan="2" class="group-header group-disposal" style="width: 27.0%;">2. Chauffeur on Standby</th>
+            <th colspan="2" class="group-header group-disposal" style="width: 27.5%;">2. Chauffeur on Standby</th>
             <th rowspan="2" style="width: 24.0%;">When to Choose This Vehicle</th>
           </tr>
           <tr class="sub-header">
             <th style="width: 11.5%;">Rate / KM</th>
             <th style="width: 12.5%;" class="num divider-col">Example:<br>MXP &harr; Como</th>
             <th style="width: 14.5%;" class="num">Hourly &amp; Extra Hours<br><span style="font-size:0.80em;font-weight:normal;">(4h min &bull; night +20%)</span></th>
-            <th style="width: 12.5%;" class="num divider-col">Full Day<br><span style="font-size:0.80em;font-weight:normal;">(10h)</span></th>
+            <th style="width: 13.0%;" class="num divider-col">Full Day<br><span style="font-size:0.80em;font-weight:normal;">(10h)</span></th>
           </tr>
         </thead>
         <tbody>
