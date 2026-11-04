@@ -229,6 +229,7 @@ export async function rescueManualLead(p, newEmail, { ccEmail = null, autoApprov
     cc: cleanCc,
     cc_email: cleanCc,
     known_bad_emails: existingBad,
+    bounced: false,
     verification: {
       status: 'valid',
       result: 'deliverable',
@@ -238,24 +239,26 @@ export async function rescueManualLead(p, newEmail, { ccEmail = null, autoApprov
     },
   };
 
-  const patch = {
+  // Only pass columns that exist on public.prospects table to prevent Supabase PostgREST schema cache rejection
+  const dbPatch = {
     email,
     email_status: 'mx_ok',
-    bounced: false,
-    bounced_email: null,
-    bounced_at: null,
     do_not_contact: false,
     status: 'ready',
-    outreach_stage: 'ready',
     tags: (p.tags || []).filter((t) => t !== 'bounced' && t !== 'manual_touch'),
     enrichment: updatedEnrichment,
   };
   if (!p.personalization_hook) {
-    patch.personalization_hook = core.buildVerifiedFallbackHook(p);
+    dbPatch.personalization_hook = core.buildVerifiedFallbackHook(p);
   }
 
-  await update('prospects', p.id, patch);
-  Object.assign(p, patch);
+  await update('prospects', p.id, dbPatch);
+  Object.assign(p, dbPatch, {
+    bounced: false,
+    bounced_email: null,
+    bounced_at: null,
+    outreach_stage: 'ready',
+  });
 
   let scheduledAt = null;
   let targetTouch = null;

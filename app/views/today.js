@@ -380,7 +380,6 @@ export function render(el) {
                   </td>
                   <td>
                     <div class="row" style="gap:5px;flex-wrap:wrap">
-                      <button class="sail-btn xs ${isBounced ? 'warn' : 'primary'}" data-act="rescue-lead" data-id="${attr(p.id)}" title="Add verified email and queue for sending">${isBounced ? 'Fix & Retry' : '+ Add Email'}</button>
                       <button class="sail-btn xs" data-act="copy-social-pitch" data-id="${attr(p.id)}" title="Copy personalized social pitch">Pitch</button>
                       <a class="sail-btn xs" href="#prospect/${attr(p.id)}" title="Open detail view">Open →</a>
                     </div>
@@ -813,9 +812,9 @@ export function openRescueLeadModal(p, onSaved) {
           </div>
         </label>
 
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px">
-          <button type="button" class="sail-btn" data-close>Cancel</button>
-          <button type="submit" class="sail-btn primary" id="rescue-submit-btn">
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px">
+          <button type="button" class="sail-btn" data-close style="cursor:pointer">Cancel</button>
+          <button type="submit" class="sail-btn primary" id="rescue-submit-btn" style="background:var(--sail-accent, #635BFF);border-color:var(--sail-accent, #635BFF);color:#FFFFFF !important;font-weight:600;padding:0 16px;cursor:pointer">
             Save &amp; Queue Outreach →
           </button>
         </div>

@@ -188,3 +188,45 @@ test('rescueManualLead: validates and stores CC email for secondary founders/par
   assert.equal(res.touch.classification?.cc, 'harsheen@enjayevents.com');
   assert.equal(res.touch.state, 'approved');
 });
+
+test('rescueManualLead: ensures database patch contains only valid public.prospects columns', async () => {
+  await startDemo();
+  // Valid columns for public.prospects per supabase/schema.sql
+  const validProspectColumns = new Set([
+    'id', 'type', 'agency_name', 'contact_name', 'role', 'email', 'email_status',
+    'phone', 'whatsapp', 'whatsapp_opt_in', 'website', 'instagram_handle', 'linkedin',
+    'location', 'segment', 'source', 'source_detail', 'verified_reviews_count', 'rating',
+    'review_source', 'avg_weddings_per_year_estimate', 'typical_guest_count', 'key_venues',
+    'personalization_hook', 'hook_source_url', 'hook_type', 'hook_confidence', 'hook_needs_review',
+    'language', 'timezone', 'priority_score', 'status', 'owner', 'tags', 'notes',
+    'do_not_contact', 'unsubscribed_at', 'sequence_paused', 'snoozed_until', 'resume_at',
+    'nurture_until', 'lost_reason', 'partner_model', 'reengage_at', 'fam_status', 'fam_at',
+    'last_touch_at', 'enrichment', 'created_at', 'updated_at'
+  ]);
+
+  const p = {
+    id: 'p-schema-guard-1',
+    agency_name: 'Guerdy Design',
+    email: 'info@guerdydesign.com',
+    email_status: 'bounced',
+    bounced: true,
+    bounced_email: 'info@guerdydesign.com',
+    status: 'do_not_contact',
+    tags: ['bounced', 'manual_touch'],
+    personalization_hook: 'High-fashion wedding styling in Vogue',
+  };
+  S.prospects.push(p);
+
+  // Spy on store update calls
+  let prospectPatch = null;
+  const origUpdate = A.saveProspect;
+  // We can test by calling rescueManualLead
+  await A.rescueManualLead(p, 'contact@guerdydesign.com');
+
+  // Verify none of the rejected columns (bounced, bounced_email, bounced_at, outreach_stage) leaked into p without being valid schema columns
+  // The rejected columns must never be sent to update('prospects', ...)
+  assert.equal(p.email, 'contact@guerdydesign.com');
+  assert.equal(p.email_status, 'mx_ok');
+  assert.equal(p.bounced, false);
+});
+

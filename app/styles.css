@@ -15,6 +15,19 @@
   --sans: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --mono: ui-monospace, 'SF Mono', Menlo, monospace;
   --r: 10px; --r-sm: 7px;
+  /* Stripe Sail Design Tokens (Global Scope) */
+  --sail-ink: #0A2540;
+  --sail-body: #425466;
+  --sail-muted: #697386;
+  --sail-faint: #8792A2;
+  --sail-bg: #F7F9FC;
+  --sail-surface: #FFFFFF;
+  --sail-subtle: #F8FAFC;
+  --sail-line: #E3E8EE;
+  --sail-line-soft: #EEF2F6;
+  --sail-accent: #635BFF;
+  --sail-accent-hover: #5249F5;
+  --sail-accent-soft: #EEF0FF;
   color-scheme: light;
 }
 
@@ -666,15 +679,15 @@ tr.clickable { cursor: pointer; } tr.clickable:hover td { background: var(--surf
   color: var(--sail-ink);
 }
 .sail-btn.primary {
-  background: var(--sail-accent);
-  border-color: var(--sail-accent);
-  color: #FFFFFF;
+  background: var(--sail-accent, #635BFF);
+  border-color: var(--sail-accent, #635BFF);
+  color: #FFFFFF !important;
   box-shadow: 0 1px 2px rgba(99, 91, 255, 0.25);
 }
 .sail-btn.primary:hover {
-  background: var(--sail-accent-hover);
-  border-color: var(--sail-accent-hover);
-  color: #FFFFFF;
+  background: var(--sail-accent-hover, #5249F5);
+  border-color: var(--sail-accent-hover, #5249F5);
+  color: #FFFFFF !important;
 }
 .sail-btn.dark {
   background: var(--sail-ink);
