@@ -939,6 +939,14 @@ tr.clickable { cursor: pointer; } tr.clickable:hover td { background: var(--surf
   background: #EEF2F6 !important;
 }
 
+/* Pending vehicle row: soft grey muted state */
+.sail-row-pending td {
+  background-color: #FAFAFA;
+}
+.sail-row-pending:hover td {
+  background-color: #F1F5F9;
+}
+
 @media (max-width: 768px) {
   .sail-table-wrap {
     overflow-x: auto;

@@ -1130,7 +1130,7 @@ export const FLEET_LEDGER_ROWS = [
     categoryLabel: 'VIP Minivan (7–8 Pax)',
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: 'Sobria livrea priva di scritte · 100% unbranded · Arrivo flotta gen/feb 2027',
+    tierSpec: 'Total Black unbranded livery · 100% discreet · Fleet arrival Jan/Feb 2027',
     partnerName: 'Autoservizi Guizzetti',
     baseCity: 'Sovere (Bergamo / Brescia)',
     contactPerson: 'Cristian (Cell: 335 747 1244 · Ufficio: 035 982277)',
@@ -1144,12 +1144,12 @@ export const FLEET_LEDGER_ROWS = [
     ratePdf: null,
     ratePdfName: null,
     transfers: null,
-    transferNote: 'Nuovo mezzo 8+1 in arrivo gen/feb 2027. Cristian invierà tariffe e foto all\'arrivo.',
+    transferNote: 'New 8+1 luxury minivan arriving Jan/Feb 2027. Cristian will send transfer rates and photos upon vehicle delivery.',
     standby: null,
-    standbyNote: 'In attesa delle tariffe da Cristian (follow-up fissato a metà gennaio 2027).',
+    standbyNote: 'Awaiting 4h & 8h standby rates from Cristian (follow-up scheduled for mid-January 2027).',
     terms: {
       vat: 'Prezzi IVA 10% esclusa',
-      cancellation: 'In attesa di quotazione e policy all\'arrivo del mezzo'
+      cancellation: 'Awaiting rate sheet and cancellation policy upon vehicle arrival'
     },
     photos: []
   },
@@ -1347,11 +1347,11 @@ export const FLEET_LEDGER_ROWS = [
     partnerId: 'partner_1792765279410_2zml',
     vehicleModel: 'Mercedes-Benz V-Class',
     paxLabel: '7 pax',
-    coachbuilder: 'Executive Minivan (Overflow Only)',
+    coachbuilder: 'Mercedes-Benz V-Class · 7 Pax Luxury Minivan',
     pax: 7,
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: 'Single V-Class operator · Lake Como overflow & referrals',
+    tierSpec: 'Total Black Mercedes V-Class · Chauffeur service for Lake Como transfers & standby',
     partnerName: 'Como Limo Lux',
     baseCity: 'Como',
     contactPerson: 'Stefano Carnevale',
@@ -1359,14 +1359,14 @@ export const FLEET_LEDGER_ROWS = [
     email: 'info@comolimolux.com',
     website: 'https://comolimolux.com',
     status: 'pending',
-    statusLabel: 'Replied · V-Class only',
+    statusLabel: 'Replied · Awaiting rates',
     repliedAt: '27 Oct 2026 · 16:17',
     ratePdf: null,
     ratePdfName: null,
     transfers: null,
-    transferNote: 'Operates 1× V-Class only (asked for bus partner referral).',
+    transferNote: 'Operates 1x Mercedes V-Class (7 pax). Rate request sent for airport transfers and Lake Como routes.',
     standby: null,
-    standbyNote: 'Not applicable.',
+    standbyNote: 'Awaiting 4h & 8h standby rates from Stefano Carnevale.',
     terms: null,
     photos: []
   }
@@ -1867,6 +1867,7 @@ function renderLedgerRow(row, idx = 0) {
   const hasStandby = Boolean(row.standby);
   const hasPhotos = Array.isArray(row.photos) && row.photos.length > 0;
   const rawWa = (row.phone || '').replace(/[^\d+]/g, '');
+  const isPending = row.status === 'pending';
 
   let transferHtml = '';
   if (hasTransfers) {
@@ -1886,7 +1887,7 @@ function renderLedgerRow(row, idx = 0) {
     transferHtml = `
       <div style="display:flex;flex-direction:column;gap:3px">
         <span class="sail-pill missing" style="width:fit-content;font-size:10.5px">Not provided</span>
-        <span style="font-size:11px;color:var(--sail-muted);line-height:1.3">${esc(row.transferNote || 'No transfer rate sheet submitted yet.')}</span>
+        <span style="font-size:11px;color:${isPending ? '#94A3B8' : 'var(--sail-muted)'};line-height:1.35">${esc(row.transferNote || 'No transfer rate sheet submitted yet.')}</span>
       </div>
     `;
   }
@@ -1911,7 +1912,7 @@ function renderLedgerRow(row, idx = 0) {
     standbyHtml = `
       <div style="display:flex;flex-direction:column;gap:3px">
         <span class="sail-pill missing" style="width:fit-content;font-size:10.5px">Not provided</span>
-        <span style="font-size:11px;color:var(--sail-muted);line-height:1.3">${esc(row.standbyNote || 'No standby rates submitted yet.')}</span>
+        <span style="font-size:11px;color:${isPending ? '#94A3B8' : 'var(--sail-muted)'};line-height:1.35">${esc(row.standbyNote || 'No standby rates submitted yet.')}</span>
       </div>
     `;
   }
@@ -1967,7 +1968,7 @@ function renderLedgerRow(row, idx = 0) {
     mediaHtml = `
       <div style="display:flex;flex-direction:column;gap:3px">
         <span class="sail-pill missing" style="width:fit-content;font-size:10px">No photos provided</span>
-        <span style="font-size:11px;color:var(--sail-muted)">Rate sheet PDF not provided</span>
+        <span style="font-size:11px;color:${isPending ? '#94A3B8' : 'var(--sail-muted)'}">Rate sheet PDF not provided</span>
       </div>
     `;
   }
@@ -1975,12 +1976,12 @@ function renderLedgerRow(row, idx = 0) {
   const isActiveInCalc = calcState.vehicleId === row.id;
 
   return `
-    <tr class="${isActiveInCalc ? 'sail-table-row-active' : ''}">
-      <td style="text-align:center;font-weight:600;color:var(--sail-muted);font-size:12px;vertical-align:top;padding-top:14px;font-variant-numeric:tabular-nums">
+    <tr class="${isActiveInCalc ? 'sail-table-row-active' : ''} ${isPending ? 'sail-row-pending' : ''}">
+      <td style="text-align:center;font-weight:600;color:${isPending ? '#94A3B8' : 'var(--sail-muted)'};font-size:12px;vertical-align:top;padding-top:14px;font-variant-numeric:tabular-nums">
         ${idx + 1}
       </td>
       <td>
-        <div style="font-weight:600;color:var(--sail-ink);font-size:12.5px;line-height:1.25">${esc(row.vehicleModel)}</div>
+        <div style="font-weight:600;color:${isPending ? '#64748B' : 'var(--sail-ink)'};font-size:12.5px;line-height:1.25">${esc(row.vehicleModel)}</div>
         <div style="margin-top:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
           <span class="sail-pill info" data-filter-exact-pax="${row.pax}" style="font-size:10.5px;padding:1px 6px;font-variant-numeric:tabular-nums;cursor:pointer" title="Click to filter by ${row.pax} seats"><strong>${esc(row.paxLabel || `${row.pax} pax`)}</strong></span>
           ${isActiveInCalc ? `<span class="sail-pill ok" style="font-size:10px;padding:1px 5px">Active in Calc</span>` : ''}
@@ -1993,8 +1994,8 @@ function renderLedgerRow(row, idx = 0) {
           </details>
         </div>
         <div style="margin-top:5px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-          <button class="sail-btn xs ${isActiveInCalc ? 'primary' : ''}" data-quote-veh="${attr(row.id)}" style="padding:0 7px;height:22px;font-size:11px;font-weight:600;white-space:nowrap" title="Calculate trip quote for this exact vehicle">
-            ${isActiveInCalc ? '✓ In Calculator' : '⚡ Quote'}
+          <button class="sail-btn xs ${isActiveInCalc ? 'primary' : ''}" data-quote-veh="${attr(row.id)}" style="padding:0 7px;height:22px;font-size:11px;font-weight:600;white-space:nowrap;${isPending ? 'color:#94A3B8;border-color:#E2E8F0;background:#F8FAFC' : ''}" title="${isPending ? 'Rates pending partner submission' : 'Calculate trip quote for this exact vehicle'}">
+            ${isPending ? '⏳ Rates Pending' : (isActiveInCalc ? '✓ In Calculator' : '⚡ Quote')}
           </button>
           ${row.isCustom ? `
             <button class="sail-btn xs" data-delete-custom-veh="${attr(row.id)}" style="padding:0 5px;height:22px;font-size:10px;color:#B91C1C;border-color:#FCA5A5" title="Remove custom vehicle from table">

@@ -342,3 +342,26 @@ test('Fleet Showcase UI Template: Contains vehicle size filter controls and grou
   assert.ok(showcaseFile.includes('id="th-sort-capacity"'), 'Must have sortable capacity column header');
 });
 
+test('Fleet Showcase Pending Rows: English explanations and grey muted styling for pending vehicles', () => {
+  const pendingVehicles = FLEET_LEDGER_ROWS.filter((r) => r.status === 'pending');
+  assert.equal(pendingVehicles.length, 2, 'Must have exactly 2 pending vehicles');
+
+  // Verify Guizzetti Sprinter 8+1 notes are in English
+  const guizzetti = pendingVehicles.find((r) => r.id === 'guizzetti_sprinter_8');
+  assert.ok(guizzetti, 'Guizzetti Sprinter 8+1 must be present');
+  assert.ok(guizzetti.transferNote.includes('New 8+1 luxury minivan arriving Jan/Feb 2027'));
+  assert.ok(guizzetti.standbyNote.includes('Awaiting 4h & 8h standby rates'));
+
+  // Verify Como Limo Lux V-Class notes are in English
+  const comoLimo = pendingVehicles.find((r) => r.id === 'comolimolux_vclass');
+  assert.ok(comoLimo, 'Como Limo Lux V-Class must be present');
+  assert.ok(comoLimo.transferNote.includes('Mercedes V-Class'));
+  assert.ok(comoLimo.standbyNote.includes('Awaiting 4h & 8h standby rates'));
+
+  // Verify showcase file has pending muted styling
+  const showcaseFile = fs.readFileSync(path.join(rootDir, 'app/views/fleet_showcase.js'), 'utf8');
+  assert.ok(showcaseFile.includes('sail-row-pending'), 'Must apply sail-row-pending class to pending table rows');
+  assert.ok(showcaseFile.includes('#94A3B8'), 'Must use muted grey color for pending explanation notes');
+  assert.ok(showcaseFile.includes('⏳ Rates Pending'), 'Must show Rates Pending button state for pending rows');
+});
+
