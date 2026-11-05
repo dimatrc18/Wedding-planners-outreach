@@ -124,6 +124,53 @@ function performSmtpAuth(user, pass) {
   });
 }
 
+function appendToImapSent({ user, pass, rawEmail }) {
+  return new Promise((resolve) => {
+    try {
+      const socket = tls.connect(993, 'imap.hostinger.com', { minVersion: 'TLSv1.2' });
+      socket.setEncoding('utf8');
+      let step = 0;
+      const rawBuffer = Buffer.from(rawEmail, 'utf8');
+      const rl = readline.createInterface({ input: socket });
+
+      rl.on('line', (line) => {
+        try {
+          if (step === 0 && line.startsWith('* OK')) {
+            step++;
+            socket.write(`A1 LOGIN "${user}" "${pass}"\r\n`);
+          } else if (step === 1 && line.startsWith('A1 OK')) {
+            step++;
+            socket.write(`A2 APPEND "INBOX.Sent" (\\Seen) {${rawBuffer.length}}\r\n`);
+          } else if (step === 2 && line.startsWith('+')) {
+            step++;
+            socket.write(rawBuffer);
+            socket.write('\r\n');
+          } else if (step === 3 && line.startsWith('A2 OK')) {
+            step++;
+            socket.write('A3 LOGOUT\r\n');
+            socket.end();
+            resolve(true);
+          } else if (line.startsWith('A1 NO') || line.startsWith('A1 BAD') || line.startsWith('A2 NO') || line.startsWith('A2 BAD')) {
+            socket.end();
+            resolve(false);
+          }
+        } catch (_) {
+          socket.end();
+          resolve(false);
+        }
+      });
+
+      socket.on('error', () => resolve(false));
+      socket.setTimeout(10000, () => {
+        socket.destroy();
+        resolve(false);
+      });
+    } catch (_) {
+      resolve(false);
+    }
+  });
+}
+
 function sendSmtpEmail({ to, toName, subject, body, hostingerPass, fromEmail = 'igor@b2b-dorogo.it', fromName = 'Igor' }) {
   return new Promise((resolve, reject) => {
     const socket = tls.connect(465, 'smtp.hostinger.com', { minVersion: 'TLSv1.2' });
@@ -131,6 +178,7 @@ function sendSmtpEmail({ to, toName, subject, body, hostingerPass, fromEmail = '
 
     let step = 0;
     let queueId = '';
+    let rawMimeToSave = '';
     const rl = readline.createInterface({ input: socket });
 
     rl.on('line', (line) => {
@@ -189,7 +237,7 @@ function sendSmtpEmail({ to, toName, subject, body, hostingerPass, fromEmail = '
 </body>
 </html>`;
 
-          const rawEmail = [
+          rawMimeToSave = [
             `From: ${fromName} <${fromEmail}>`,
             `To: ${toFormatted}`,
             `Subject: ${subject}`,
@@ -210,18 +258,20 @@ function sendSmtpEmail({ to, toName, subject, body, hostingerPass, fromEmail = '
             ``,
             htmlPart,
             ``,
-            `--${boundary}--`,
-            `.`
+            `--${boundary}--`
           ].join('\r\n');
 
-          socket.write(rawEmail + '\r\n');
+          socket.write(rawMimeToSave + '\r\n.\r\n');
         } else if (step === 8 && code === 250) {
           step++;
           queueId = line;
           socket.write('QUIT\r\n');
         } else if (step === 9 && code === 221) {
           socket.end();
-          resolve({ ok: true, queueId });
+          // Append to Hostinger INBOX.Sent folder via IMAP
+          appendToImapSent({ user: fromEmail, pass: hostingerPass, rawEmail: rawMimeToSave })
+            .then(() => resolve({ ok: true, queueId }))
+            .catch(() => resolve({ ok: true, queueId }));
         } else if (code >= 400) {
           socket.end();
           reject(new Error(`SMTP Dispatch Error [${code}]: ${line}`));
