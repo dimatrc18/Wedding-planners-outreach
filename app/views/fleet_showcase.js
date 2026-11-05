@@ -183,7 +183,7 @@ export function getAllTransferRoutes(rows = FLEET_LEDGER_ROWS) {
   (rows || []).forEach((v) => {
     if (v.transfers && typeof v.transfers === 'object') {
       Object.entries(v.transfers).forEach(([k, t]) => {
-        if (!keys.has(k)) {
+        if (!keys.has(k) && t && t.net !== null && t.net !== undefined && Number(t.net) > 0) {
           keys.add(k);
           routes.push({
             key: k,
@@ -227,10 +227,11 @@ export function selectSpecificVehicle(vehicleId, rows = FLEET_LEDGER_ROWS) {
 
   // Smart service & route adaptation
   if (calcState.serviceType === 'transfer') {
-    const hasCurrentRoute = Boolean(veh.transfers && veh.transfers[calcState.routeKey]);
+    const hasCurrentRoute = Boolean(veh.transfers && veh.transfers[calcState.routeKey] && Number(veh.transfers[calcState.routeKey].net) > 0);
     if (!hasCurrentRoute) {
-      if (veh.transfers && Object.keys(veh.transfers).length > 0) {
-        calcState.routeKey = Object.keys(veh.transfers)[0];
+      const validRoutes = veh.transfers ? Object.keys(veh.transfers).filter((k) => veh.transfers[k] && Number(veh.transfers[k].net) > 0) : [];
+      if (validRoutes.length > 0) {
+        calcState.routeKey = validRoutes[0];
       } else if (veh.standby) {
         calcState.serviceType = 'standby';
         calcState.routeKey = veh.standby.dispo_8h ? 'dispo_8h' : (veh.standby.hourly ? 'hourly' : 'dispo_4h');
@@ -774,10 +775,7 @@ export const FLEET_LEDGER_ROWS = [
       lin_milano: { label: 'Milano Centro ⇄ Linate LIN', net: 300 },
       stazione_milano: { label: 'Stazione Centrale ⇄ Milano Hotel', net: 300 },
       mxp_stazione: { label: 'Malpensa MXP ⇄ Stazione Centrale', net: 350 },
-      milano_como: { label: 'Milano Hotel ⇄ Como', net: 450 },
-      mxp_como: { label: 'Malpensa (MXP) ⇄ Como', net: null },
-      tremezzo: { label: 'Como ⇄ Tremezzo', net: null },
-      bellagio: { label: 'Como ⇄ Bellagio', net: null }
+      milano_como: { label: 'Milano Hotel ⇄ Como', net: 450 }
     },
     standby: {
       dispo_4h: { label: 'Disposizione 4h (Half Day)', net: 400 },
@@ -857,10 +855,7 @@ export const FLEET_LEDGER_ROWS = [
       lin_milano: { label: 'Milano Centro ⇄ Linate LIN', net: 350 },
       stazione_milano: { label: 'Stazione Centrale ⇄ Milano Hotel', net: 350 },
       mxp_stazione: { label: 'Malpensa MXP ⇄ Stazione Centrale', net: 400 },
-      milano_como: { label: 'Milano Hotel ⇄ Como', net: 500 },
-      mxp_como: { label: 'Malpensa (MXP) ⇄ Como', net: null },
-      tremezzo: { label: 'Como ⇄ Tremezzo', net: null },
-      bellagio: { label: 'Como ⇄ Bellagio', net: null }
+      milano_como: { label: 'Milano Hotel ⇄ Como', net: 500 }
     },
     standby: {
       dispo_4h: { label: 'Disposizione 4h (Half Day)', net: 500 },
@@ -926,10 +921,7 @@ export const FLEET_LEDGER_ROWS = [
       lin_milano: { label: 'Milano Centro ⇄ Linate LIN', net: 400 },
       stazione_milano: { label: 'Stazione Centrale ⇄ Milano Hotel', net: 400 },
       mxp_stazione: { label: 'Malpensa MXP ⇄ Stazione Centrale', net: 450 },
-      milano_como: { label: 'Milano Hotel ⇄ Como', net: 550 },
-      mxp_como: { label: 'Malpensa (MXP) ⇄ Como', net: null },
-      tremezzo: { label: 'Como ⇄ Tremezzo', net: null },
-      bellagio: { label: 'Como ⇄ Bellagio', net: null }
+      milano_como: { label: 'Milano Hotel ⇄ Como', net: 550 }
     },
     standby: {
       dispo_4h: { label: 'Disposizione 4h (Half Day)', net: 600 },
@@ -1000,10 +992,7 @@ export const FLEET_LEDGER_ROWS = [
     ratePdfName: null,
     transfers: {
       mxp_milano: { label: 'Milano Centro ⇄ Malpensa MXP', net: 500 },
-      milano_como: { label: 'Milano Centro ⇄ Como', net: 550 },
-      mxp_como: { label: 'Malpensa (MXP) ⇄ Como', net: null },
-      tremezzo: { label: 'Como ⇄ Tremezzo', net: null },
-      bellagio: { label: 'Como ⇄ Bellagio', net: null }
+      milano_como: { label: 'Milano Centro ⇄ Como', net: 550 }
     },
     standby: {
       dispo_4h: { label: 'Disposizione 4h', net: 700 },
@@ -1049,10 +1038,7 @@ export const FLEET_LEDGER_ROWS = [
     ratePdfName: null,
     transfers: {
       mxp_milano: { label: 'Milano Centro ⇄ Malpensa MXP', net: 550 },
-      milano_como: { label: 'Milano Centro ⇄ Como', net: 600 },
-      mxp_como: { label: 'Malpensa (MXP) ⇄ Como', net: null },
-      tremezzo: { label: 'Como ⇄ Tremezzo', net: null },
-      bellagio: { label: 'Como ⇄ Bellagio', net: null }
+      milano_como: { label: 'Milano Centro ⇄ Como', net: 600 }
     },
     standby: {
       dispo_4h: { label: 'Disposizione 4h', net: 700 },
@@ -1090,8 +1076,7 @@ export const FLEET_LEDGER_ROWS = [
     ratePdfName: null,
     transfers: {
       mxp_milano: { label: 'Milano Centro ⇄ Malpensa MXP', net: 600 },
-      milano_como: { label: 'Milano ⇄ Como', net: 700 },
-      mxp_como: { label: 'Malpensa (MXP) ⇄ Como', net: null }
+      milano_como: { label: 'Milano ⇄ Como', net: 700 }
     },
     standby: {
       dispo_4h: { label: 'Disposizione 4h', net: 700 },
@@ -1178,11 +1163,7 @@ export const FLEET_LEDGER_ROWS = [
     ratePdf: null,
     ratePdfName: null,
     transfers: {
-      mxp_milano: { label: 'Milano Centro ⇄ Malpensa MXP', net: 350 },
-      milano_como: { label: 'Milano Centro ⇄ Como', net: null },
-      mxp_como: { label: 'Malpensa (MXP) ⇄ Como', net: null },
-      tremezzo: { label: 'Como ⇄ Tremezzo', net: null },
-      bellagio: { label: 'Como ⇄ Bellagio', net: null }
+      mxp_milano: { label: 'Milano Centro ⇄ Malpensa MXP', net: 350 }
     },
     standby: {
       dispo_4h: { label: 'Disposizione 4h Milano', net: 450 },
@@ -1233,11 +1214,7 @@ export const FLEET_LEDGER_ROWS = [
     ratePdf: null,
     ratePdfName: null,
     transfers: {
-      mxp_milano: { label: 'Milano Centro ⇄ Malpensa MXP', net: 380 },
-      milano_como: { label: 'Milano Centro ⇄ Como', net: null },
-      mxp_como: { label: 'Malpensa (MXP) ⇄ Como', net: null },
-      tremezzo: { label: 'Como ⇄ Tremezzo', net: null },
-      bellagio: { label: 'Como ⇄ Bellagio', net: null }
+      mxp_milano: { label: 'Milano Centro ⇄ Malpensa MXP', net: 380 }
     },
     standby: {
       dispo_4h: { label: 'Disposizione 4h Milano', net: 500 },
@@ -1288,11 +1265,7 @@ export const FLEET_LEDGER_ROWS = [
     ratePdf: null,
     ratePdfName: null,
     transfers: {
-      mxp_milano: { label: 'Milano Centro ⇄ Malpensa MXP', net: 420 },
-      milano_como: { label: 'Milano Centro ⇄ Como', net: null },
-      mxp_como: { label: 'Malpensa (MXP) ⇄ Como', net: null },
-      tremezzo: { label: 'Como ⇄ Tremezzo', net: null },
-      bellagio: { label: 'Como ⇄ Bellagio', net: null }
+      mxp_milano: { label: 'Milano Centro ⇄ Malpensa MXP', net: 420 }
     },
     standby: {
       dispo_4h: { label: 'Disposizione 4h Milano', net: 550 },
@@ -1862,19 +1835,22 @@ export async function render(el) {
   attachLedgerListeners(el);
 }
 
-function renderLedgerRow(row, idx = 0) {
+export function renderLedgerRow(row, idx = 0) {
   const hasTransfers = Boolean(row.transfers);
   const hasStandby = Boolean(row.standby);
   const hasPhotos = Array.isArray(row.photos) && row.photos.length > 0;
   const rawWa = (row.phone || '').replace(/[^\d+]/g, '');
   const isPending = row.status === 'pending';
 
+  const pricedTransfers = hasTransfers
+    ? Object.values(row.transfers).filter((t) => t && t.net !== null && t.net !== undefined && Number(t.net) > 0)
+    : [];
+
   let transferHtml = '';
-  if (hasTransfers) {
-    const entries = Object.values(row.transfers);
+  if (pricedTransfers.length > 0) {
     transferHtml = `
       <div class="sail-rate-grid">
-        ${entries.map((t) => {
+        ${pricedTransfers.map((t) => {
           const adj = calculateAdjustedPrice(t.net, pricingMode);
           return `
             <span class="sail-rate-route" title="${attr(t.label)}">${esc(t.label)}</span>
@@ -1894,20 +1870,30 @@ function renderLedgerRow(row, idx = 0) {
 
   let standbyHtml = '';
   if (hasStandby) {
-    const s4 = row.standby.dispo_4h ? calculateAdjustedPrice(row.standby.dispo_4h.net, pricingMode) : null;
-    const s8 = row.standby.dispo_8h ? calculateAdjustedPrice(row.standby.dispo_8h.net, pricingMode) : null;
-    const s8vip = row.standby.dispo_8h_vip ? calculateAdjustedPrice(row.standby.dispo_8h_vip.net, pricingMode) : null;
-    const exH = row.standby.extra_hour ? calculateAdjustedPrice(row.standby.extra_hour.net, pricingMode) : null;
-    const exW = row.standby.extra_wait ? calculateAdjustedPrice(row.standby.extra_wait.net, pricingMode) : null;
-    standbyHtml = `
-      <div class="sail-rate-grid">
-        ${s4 !== null ? `<span class="sail-rate-route" title="${attr(row.standby.dispo_4h.label || '4h Standby')}">${esc(row.standby.dispo_4h.label || '4h Standby')}</span><span class="sail-rate-amt">${formatPriceWithUnit(s4)}</span>` : ''}
-        ${s8 !== null ? `<span class="sail-rate-route" title="${attr(row.standby.dispo_8h.label || '8h Standby')}">${esc(row.standby.dispo_8h.label || '8h Standby')}</span><span class="sail-rate-amt">${formatPriceWithUnit(s8)}</span>` : ''}
-        ${s8vip !== null ? `<span class="sail-rate-route" title="${attr(row.standby.dispo_8h_vip.label || '8h Top VIP')}">${esc(row.standby.dispo_8h_vip.label || '8h Top VIP')}</span><span class="sail-rate-amt">${formatPriceWithUnit(s8vip)}</span>` : ''}
-        ${exH !== null ? `<span class="sail-rate-route" title="${attr(row.standby.extra_hour.label || 'Ore Extra')}">${esc(row.standby.extra_hour.label || 'Ore Extra')}</span><span class="sail-rate-amt">${formatPriceWithUnit(exH, '/h')}</span>` : ''}
-        ${exW !== null ? `<span class="sail-rate-route" title="${attr(row.standby.extra_wait.label || 'Attesa extra')}">${esc(row.standby.extra_wait.label || 'Attesa extra')}</span><span class="sail-rate-amt">${formatPriceWithUnit(exW)}</span>` : ''}
-      </div>
-    `;
+    const s4 = row.standby.dispo_4h && Number(row.standby.dispo_4h.net) > 0 ? calculateAdjustedPrice(row.standby.dispo_4h.net, pricingMode) : null;
+    const s8 = row.standby.dispo_8h && Number(row.standby.dispo_8h.net) > 0 ? calculateAdjustedPrice(row.standby.dispo_8h.net, pricingMode) : null;
+    const s8vip = row.standby.dispo_8h_vip && Number(row.standby.dispo_8h_vip.net) > 0 ? calculateAdjustedPrice(row.standby.dispo_8h_vip.net, pricingMode) : null;
+    const exH = row.standby.extra_hour && Number(row.standby.extra_hour.net) > 0 ? calculateAdjustedPrice(row.standby.extra_hour.net, pricingMode) : null;
+    const exW = row.standby.extra_wait && Number(row.standby.extra_wait.net) > 0 ? calculateAdjustedPrice(row.standby.extra_wait.net, pricingMode) : null;
+    const hasAnyStandby = s4 !== null || s8 !== null || s8vip !== null || exH !== null || exW !== null;
+    if (hasAnyStandby) {
+      standbyHtml = `
+        <div class="sail-rate-grid">
+          ${s4 !== null ? `<span class="sail-rate-route" title="${attr(row.standby.dispo_4h.label || '4h Standby')}">${esc(row.standby.dispo_4h.label || '4h Standby')}</span><span class="sail-rate-amt">${formatPriceWithUnit(s4)}</span>` : ''}
+          ${s8 !== null ? `<span class="sail-rate-route" title="${attr(row.standby.dispo_8h.label || '8h Standby')}">${esc(row.standby.dispo_8h.label || '8h Standby')}</span><span class="sail-rate-amt">${formatPriceWithUnit(s8)}</span>` : ''}
+          ${s8vip !== null ? `<span class="sail-rate-route" title="${attr(row.standby.dispo_8h_vip.label || '8h Top VIP')}">${esc(row.standby.dispo_8h_vip.label || '8h Top VIP')}</span><span class="sail-rate-amt">${formatPriceWithUnit(s8vip)}</span>` : ''}
+          ${exH !== null ? `<span class="sail-rate-route" title="${attr(row.standby.extra_hour.label || 'Ore Extra')}">${esc(row.standby.extra_hour.label || 'Ore Extra')}</span><span class="sail-rate-amt">${formatPriceWithUnit(exH, '/h')}</span>` : ''}
+          ${exW !== null ? `<span class="sail-rate-route" title="${attr(row.standby.extra_wait.label || 'Attesa extra')}">${esc(row.standby.extra_wait.label || 'Attesa extra')}</span><span class="sail-rate-amt">${formatPriceWithUnit(exW)}</span>` : ''}
+        </div>
+      `;
+    } else {
+      standbyHtml = `
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <span class="sail-pill missing" style="width:fit-content;font-size:10.5px">Not provided</span>
+          <span style="font-size:11px;color:${isPending ? '#94A3B8' : 'var(--sail-muted)'};line-height:1.35">${esc(row.standbyNote || 'No standby rates submitted yet.')}</span>
+        </div>
+      `;
+    }
   } else {
     standbyHtml = `
       <div style="display:flex;flex-direction:column;gap:3px">
@@ -2060,12 +2046,12 @@ export function getMatchingVehicles(state, rows = FLEET_LEDGER_ROWS) {
 
     // Match service availability
     if (state.serviceType === 'transfer') {
-      return Boolean(v.transfers && v.transfers[state.routeKey]);
+      return Boolean(v.transfers && v.transfers[state.routeKey] && Number(v.transfers[state.routeKey].net) > 0);
     } else {
       if (state.routeKey === 'hourly') {
         return Boolean(v.standby?.hourly || v.standby?.extra_hour || v.standby?.dispo_8h);
       }
-      return Boolean(v.standby && v.standby[state.routeKey]);
+      return Boolean(v.standby && v.standby[state.routeKey] && Number(v.standby[state.routeKey].net) > 0);
     }
   });
 }
@@ -2110,7 +2096,7 @@ export function calculateTripQuote(state, rows = FLEET_LEDGER_ROWS) {
     const routeObj = allRoutes.find((r) => r.key === state.routeKey);
     const routeName = routeObj ? routeObj.label : state.routeKey;
 
-    if (t) {
+    if (t && Number(t.net) > 0) {
       unitNet = t.net;
       serviceLabel = `${routeName} (${state.tripDirection === 'round_trip' ? 'Round Trip 2×' : 'One-Way 1×'})`;
     } else {

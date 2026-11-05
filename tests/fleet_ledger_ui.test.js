@@ -17,7 +17,8 @@ import {
   formatPriceWithUnit,
   SIZE_GROUPS,
   getVehicleSizeGroup,
-  matchesSizeFilter
+  matchesSizeFilter,
+  renderLedgerRow
 } from '../app/views/fleet_showcase.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -363,5 +364,38 @@ test('Fleet Showcase Pending Rows: English explanations and grey muted styling f
   assert.ok(showcaseFile.includes('sail-row-pending'), 'Must apply sail-row-pending class to pending table rows');
   assert.ok(showcaseFile.includes('#94A3B8'), 'Must use muted grey color for pending explanation notes');
   assert.ok(showcaseFile.includes('⏳ Rates Pending'), 'Must show Rates Pending button state for pending rows');
+});
+
+test('Fleet Showcase Rates: Only existing routes with positive prices are displayed (zero question marks)', () => {
+  // 1. All transfer entries across FLEET_LEDGER_ROWS must have positive numeric net amounts
+  FLEET_LEDGER_ROWS.forEach((row) => {
+    if (row.transfers && typeof row.transfers === 'object') {
+      Object.entries(row.transfers).forEach(([routeKey, t]) => {
+        assert.ok(t, `Route ${routeKey} on vehicle ${row.id} must be an object`);
+        assert.ok(
+          typeof t.net === 'number' && !isNaN(t.net) && t.net > 0,
+          `Route ${routeKey} on vehicle ${row.id} must have a positive numeric net price, found: ${t.net}`
+        );
+      });
+    }
+  });
+
+  // 2. Render each vehicle row and assert no '?' appears in rate amounts
+  FLEET_LEDGER_ROWS.forEach((row, idx) => {
+    const html = renderLedgerRow(row, idx);
+
+    // Rate amount spans must NEVER contain '?'
+    const rateAmtMatches = [...html.matchAll(/<span class="sail-rate-amt">([^<]+)<\/span>/g)];
+    rateAmtMatches.forEach((match) => {
+      const amtText = match[1].trim();
+      assert.notEqual(amtText, '?', `Vehicle ${row.id} has unpriced route rendering '?' in row: ${amtText}`);
+      assert.match(amtText, /^€\d+/, `Rate amount must begin with € and positive digits, found: ${amtText}`);
+    });
+
+    // If vehicle has confirmed transfers, ensure at least one rate is rendered
+    if (row.status === 'confirmed' && row.transfers) {
+      assert.ok(rateAmtMatches.length > 0, `Confirmed vehicle ${row.id} must render valid rate amounts`);
+    }
+  });
 });
 
