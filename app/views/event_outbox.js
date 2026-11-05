@@ -148,6 +148,23 @@ export async function render(el) {
   attachEventListeners(el, readyPartners, t1);
 }
 
+
+function renderSignatureHtml() {
+  return `
+    <div style="margin-top:14px;padding-top:10px;border-top:1px solid #E2E8F0;font-size:11px;color:#71717A;font-family:-apple-system, BlinkMacSystemFont, sans-serif">
+      <div style="font-weight:600;color:#18181B;font-size:12.5px">Igor</div>
+      <div style="color:#71717A;font-size:11px;margin-top:1px">Trade &amp; Event Logistics</div>
+      <div style="font-family:Cinzel, Georgia, serif;font-size:13px;letter-spacing:2.5px;color:#18181B;margin-top:6px;font-weight:500">DOROGO</div>
+      <div style="font-size:9px;letter-spacing:1px;color:#71717A;text-transform:uppercase">PRIVATE TRANSPORTATION</div>
+      <div style="margin-top:6px;font-size:11px;display:flex;flex-direction:column;gap:2px">
+        <div><span style="color:#71717A">WhatsApp:</span> <a href="https://wa.me/393780940554" style="color:#18181B;text-decoration:none !important;font-weight:500">+39 378 094 0554</a></div>
+        <div><span style="color:#71717A">Email:</span> <a href="mailto:igor@b2b-dorogo.it" style="color:#18181B;text-decoration:none !important">igor@b2b-dorogo.it</a></div>
+        <div><span style="color:#71717A">Web:</span> <a href="https://dorogo.eu/" target="_blank" rel="noopener noreferrer" style="color:#18181B;text-decoration:none !important">dorogo.eu</a></div>
+      </div>
+    </div>
+  `;
+}
+
 function renderQueueView(readyPartners, t1, savedPass) {
   const selectedCount = selectedPartnerIds.size;
   const isAllSelected = readyPartners.length > 0 && selectedCount === readyPartners.length;
@@ -270,8 +287,9 @@ function renderQueueView(readyPartners, t1, savedPass) {
               </div>
 
               <!-- Email Body Preview -->
-              <div id="body-preview-${attr(p.id)}" style="font-size:12px;line-height:1.6;color:var(--sail-body);white-space:pre-wrap;background:#FAFAFA;padding:12px;border-radius:6px;border:1px solid #F1F5F9;max-height:170px;overflow-y:auto">
-${esc(draft.body)}
+              <div id="body-preview-${attr(p.id)}" style="font-size:12px;line-height:1.6;color:var(--sail-body);background:#FAFAFA;padding:12px;border-radius:6px;border:1px solid #F1F5F9;max-height:220px;overflow-y:auto">
+                <div style="white-space:pre-wrap">${esc(draft.body)}</div>
+                ${renderSignatureHtml()}
               </div>
             </div>
           `;
@@ -429,9 +447,10 @@ function attachEventListeners(el, readyPartners, t1) {
       const p = readyPartners.find((x) => x.id === id);
       if (p) {
         const draft = renderEventTemplate(t1, p);
-        const text = `To: ${p.email}\nSubject: ${draft.subject}\n\n${draft.body}`;
+        const sig = `\n\n―\nIgor\nTrade & Event Logistics\n\nDOROGO | PRIVATE TRANSPORTATION\nWhatsApp: +39 378 094 0554\nEmail: igor@b2b-dorogo.it\nWeb: dorogo.eu`;
+        const text = `To: ${p.email}\nSubject: ${draft.subject}\n\n${draft.body}${sig}`;
         navigator.clipboard?.writeText(text).then(() => {
-          toast(`Draft for ${p.name} copied to clipboard`);
+          toast(`Draft for ${p.name} copied to clipboard (with signature)`);
         });
       }
     };
@@ -594,8 +613,9 @@ function showTestSendModal(partner, template) {
           <div><strong>From:</strong> Igor &lt;igor@b2b-dorogo.it&gt;</div>
           <div><strong>Subject:</strong> ${esc(draft.subject)}</div>
         </div>
-        <div style="font-size:11.5px;line-height:1.5;white-space:pre-wrap;background:#FAFAFA;padding:10px;border-radius:6px;border:1px solid #F1F5F9;max-height:140px;overflow-y:auto">
-${esc(draft.body)}
+        <div style="font-size:11.5px;line-height:1.5;background:#FAFAFA;padding:10px;border-radius:6px;border:1px solid #F1F5F9;max-height:180px;overflow-y:auto">
+          <div style="white-space:pre-wrap">${esc(draft.body)}</div>
+          ${renderSignatureHtml()}
         </div>
         <div id="test-dispatch-status" style="font-size:11.5px;display:none;padding:6px 8px;border-radius:4px"></div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px">

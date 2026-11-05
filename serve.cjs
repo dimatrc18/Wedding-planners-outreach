@@ -20,6 +20,62 @@ const MIME_TYPES = {
   '.mp4': 'video/mp4'
 };
 
+const TEXT_SIGNATURE = `
+
+―
+Igor
+Trade & Event Logistics
+
+DOROGO | PRIVATE TRANSPORTATION
+WhatsApp: +39 378 094 0554
+Email: igor@b2b-dorogo.it
+Web: dorogo.eu`;
+
+const HTML_SIGNATURE = `
+<table border="0" cellpadding="0" cellspacing="0" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; line-height: 1.5; color: #18181B; max-width: 340px; margin-top: 24px;">
+  <tbody>
+    <tr>
+      <td style="padding-bottom: 12px;">
+        <div style="width: 20px; height: 1.5px; background-color: #D4D4D8;"></div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-bottom: 14px;">
+        <div style="font-size: 13.5px; font-weight: 600; color: #18181B; letter-spacing: -0.1px;">Igor</div>
+        <div style="font-size: 11px; font-weight: 400; color: #71717A; margin-top: 1px;">Trade &amp; Event Logistics</div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-bottom: 14px;">
+        <div>
+          <span style="font-family: Cinzel, Georgia, serif; font-size: 15px; font-weight: 400; letter-spacing: 3.5px; color: rgb(24, 24, 27); text-transform: uppercase;">
+            DOROGO
+          </span>
+        </div>
+        <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 9.5px; font-weight: 500; letter-spacing: 1.2px; text-transform: uppercase; color: rgb(113, 113, 122); margin-top: 2px;">
+          PRIVATE TRANSPORTATION
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="font-size: 11.5px; line-height: 1.8;">
+        <div>
+          <span style="color: #71717A; font-weight: 400; display: inline-block; width: 68px;">WhatsApp:</span>
+          <a href="https://wa.me/393780940554" style="color: #18181B; font-weight: 500; text-decoration: none !important;">+39 378 094 0554</a>
+        </div>
+        <div>
+          <span style="color: #71717A; font-weight: 400; display: inline-block; width: 68px;">Email:</span>
+          <a href="mailto:igor@b2b-dorogo.it" style="color: #18181B; font-weight: 400; text-decoration: none !important;">igor@b2b-dorogo.it</a>
+        </div>
+        <div>
+          <span style="color: #71717A; font-weight: 400; display: inline-block; width: 68px;">Web:</span>
+          <a href="https://dorogo.eu/" target="_blank" rel="noopener noreferrer" style="color: #18181B; font-weight: 400; text-decoration: none !important;">dorogo.eu</a>
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>`;
+
 function performSmtpAuth(user, pass) {
   return new Promise((resolve, reject) => {
     const socket = tls.connect(465, 'smtp.hostinger.com', { minVersion: 'TLSv1.2' });
@@ -107,6 +163,32 @@ function sendSmtpEmail({ to, toName, subject, body, hostingerPass, fromEmail = '
           step++;
           const messageId = `<${Date.now()}.${Math.random().toString(36).substring(2)}@b2b-dorogo.it>`;
           const toFormatted = toName ? `"${toName.replace(/"/g, '')}" <${to}>` : `<${to}>`;
+          
+          const boundary = `----=_Part_${Date.now()}_${Math.random().toString(36).substring(2)}`;
+          const hasSig = body.includes('Trade & Event Logistics') || body.includes('PRIVATE TRANSPORTATION');
+          const textPart = hasSig ? body : (body.trim() + TEXT_SIGNATURE);
+          
+          const bodyHtmlEscaped = body
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\n\n/g, '</p><p style="margin: 0 0 16px 0;">')
+            .replace(/\n/g, '<br>');
+
+          const htmlPart = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #18181B; background-color: #FFFFFF;">
+  <div style="padding: 4px 0 16px 0;">
+    <p style="margin: 0 0 16px 0;">${bodyHtmlEscaped}</p>
+  </div>
+  ${hasSig ? '' : HTML_SIGNATURE}
+</body>
+</html>`;
+
           const rawEmail = [
             `From: ${fromName} <${fromEmail}>`,
             `To: ${toFormatted}`,
@@ -114,12 +196,24 @@ function sendSmtpEmail({ to, toName, subject, body, hostingerPass, fromEmail = '
             `Date: ${new Date().toUTCString()}`,
             `Message-ID: ${messageId}`,
             `MIME-Version: 1.0`,
+            `Content-Type: multipart/alternative; boundary="${boundary}"`,
+            ``,
+            `--${boundary}`,
             `Content-Type: text/plain; charset=UTF-8`,
             `Content-Transfer-Encoding: 8bit`,
             ``,
-            body,
+            textPart,
+            ``,
+            `--${boundary}`,
+            `Content-Type: text/html; charset=UTF-8`,
+            `Content-Transfer-Encoding: 8bit`,
+            ``,
+            htmlPart,
+            ``,
+            `--${boundary}--`,
             `.`
           ].join('\r\n');
+
           socket.write(rawEmail + '\r\n');
         } else if (step === 8 && code === 250) {
           step++;
