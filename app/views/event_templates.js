@@ -3,6 +3,7 @@
 // Stripe Sail Design System: responsive, zero horizontal scroll, live exhibitor simulator.
 
 import { esc, attr, icon, toast } from '../ui.js';
+import { updateEventPartner } from '../store.js?v=20261104_v1';
 import { 
   DEFAULT_EVENT_TEMPLATES, 
   loadStoredEventTemplates, 
@@ -14,6 +15,23 @@ import {
 let currentStepKey = 'T1_exhibitor_intro';
 let selectedExhibitorId = '';
 let currentEl = null;
+
+
+function renderPreviewSignatureHtml() {
+  return `
+    <div style="margin-top:14px;padding-top:10px;border-top:1px solid #E2E8F0;font-size:11px;color:#71717A;font-family:-apple-system, BlinkMacSystemFont, sans-serif">
+      <div style="font-weight:600;color:#18181B;font-size:12.5px">Igor</div>
+      <div style="color:#71717A;font-size:11px;margin-top:1px">Trade &amp; Event Logistics</div>
+      <div style="font-family:Cinzel, Georgia, serif;font-size:13px;letter-spacing:2.5px;color:#18181B;margin-top:6px;font-weight:500">DOROGO</div>
+      <div style="font-size:9px;letter-spacing:1px;color:#71717A;text-transform:uppercase">PRIVATE TRANSPORTATION</div>
+      <div style="margin-top:6px;font-size:11px;display:flex;flex-direction:column;gap:2px">
+        <div><span style="color:#71717A">WhatsApp:</span> <a href="https://wa.me/393780940554" style="color:#18181B;text-decoration:none !important;font-weight:500">+39 378 094 0554</a></div>
+        <div><span style="color:#71717A">Email:</span> <a href="mailto:igor@b2b-dorogo.it" style="color:#18181B;text-decoration:none !important">igor@b2b-dorogo.it</a></div>
+        <div><span style="color:#71717A">Web:</span> <a href="https://dorogo.eu/" target="_blank" rel="noopener noreferrer" style="color:#18181B;text-decoration:none !important">dorogo.eu</a></div>
+      </div>
+    </div>
+  `;
+}
 
 export async function render(el) {
   currentEl = el;
