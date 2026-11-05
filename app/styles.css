@@ -920,6 +920,25 @@ tr.clickable { cursor: pointer; } tr.clickable:hover td { background: var(--surf
   background-color: #F8FAFC;
 }
 
+.sail-th-sortable {
+  cursor: pointer;
+  user-select: none;
+}
+.sail-th-sortable:hover .sail-th-title {
+  color: var(--sail-ink);
+}
+
+/* Group Header Row for Vehicle Capacity Brackets */
+.sail-group-header-row td {
+  background: #F1F5F9 !important;
+  border-top: 1px solid var(--sail-line);
+  border-bottom: 1px solid var(--sail-line);
+  padding: 6px 12px;
+}
+.sail-group-header-row:hover td {
+  background: #EEF2F6 !important;
+}
+
 @media (max-width: 768px) {
   .sail-table-wrap {
     overflow-x: auto;

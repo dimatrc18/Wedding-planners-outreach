@@ -14,7 +14,10 @@ import {
   addVehicleToFleet,
   deleteCustomVehicle,
   formatEur,
-  formatPriceWithUnit
+  formatPriceWithUnit,
+  SIZE_GROUPS,
+  getVehicleSizeGroup,
+  matchesSizeFilter
 } from '../app/views/fleet_showcase.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -254,5 +257,88 @@ test('formatPriceWithUnit & formatEur: Renders "?" when price is 0, null, or und
   assert.equal(formatPriceWithUnit(null, '/h'), '?');
   assert.equal(formatPriceWithUnit(140, '/h'), '€140/h');
   assert.equal(formatPriceWithUnit(140), '€140');
+});
+
+test('Fleet Showcase Size Filter: SIZE_GROUPS comprehensively and mutually exclusively groups all 18 vehicles', () => {
+  assert.equal(FLEET_LEDGER_ROWS.length, 18);
+  
+  // Verify each vehicle belongs to exactly one group
+  const groupCounts = {};
+  FLEET_LEDGER_ROWS.forEach((r) => {
+    const grp = getVehicleSizeGroup(r.pax);
+    assert.ok(grp, `Vehicle ${r.vehicleModel} (${r.pax} pax) must match a size group`);
+    groupCounts[grp.key] = (groupCounts[grp.key] || 0) + 1;
+  });
+
+  // Expected counts across the 18-vehicle fleet
+  assert.equal(groupCounts['group:7_8'], 5, 'Must have 5 vehicles in 7–8 seats (V-Class & Sprinters)');
+  assert.equal(groupCounts['group:12_16'], 2, 'Must have 2 vehicles in 12–16 seats (Sprinter 12 & Transit 16)');
+  assert.equal(groupCounts['group:19_20'], 4, 'Must have 4 vehicles in 19–20 seats (Minibus GT, Indcar, Gran Capri, MB 20)');
+  assert.equal(groupCounts['group:28_30'], 4, 'Must have 4 vehicles in 28–30 seats (Iveco Midibuses & Executive 30)');
+  assert.equal(groupCounts['group:50_plus'], 3, 'Must have 3 vehicles in 50+ seats (Tourismo & Setra)');
+
+  // Sum of all groups must be exactly 18
+  const totalMapped = Object.values(groupCounts).reduce((a, b) => a + b, 0);
+  assert.equal(totalMapped, 18);
+});
+
+test('Fleet Showcase Size Filter: matchesSizeFilter correctly filters groups, ranges, and exact seat counts', () => {
+  // 'all' matches everything
+  assert.equal(matchesSizeFilter(7, 'all'), true);
+  assert.equal(matchesSizeFilter(50, 'all'), true);
+
+  // Group 7-8 seats
+  assert.equal(matchesSizeFilter(7, 'group:7_8'), true);
+  assert.equal(matchesSizeFilter(8, 'group:7_8'), true);
+  assert.equal(matchesSizeFilter(12, 'group:7_8'), false);
+
+  // Group 12-16 seats
+  assert.equal(matchesSizeFilter(12, 'group:12_16'), true);
+  assert.equal(matchesSizeFilter(16, 'group:12_16'), true);
+  assert.equal(matchesSizeFilter(8, 'group:12_16'), false);
+  assert.equal(matchesSizeFilter(19, 'group:12_16'), false);
+
+  // Group 19-20 seats
+  assert.equal(matchesSizeFilter(19, 'group:19_20'), true);
+  assert.equal(matchesSizeFilter(20, 'group:19_20'), true);
+  assert.equal(matchesSizeFilter(16, 'group:19_20'), false);
+
+  // Group 12-20 seats (all minibuses combined)
+  assert.equal(matchesSizeFilter(12, 'group:12_20'), true);
+  assert.equal(matchesSizeFilter(16, 'group:12_20'), true);
+  assert.equal(matchesSizeFilter(19, 'group:12_20'), true);
+  assert.equal(matchesSizeFilter(20, 'group:12_20'), true);
+  assert.equal(matchesSizeFilter(8, 'group:12_20'), false);
+  assert.equal(matchesSizeFilter(29, 'group:12_20'), false);
+
+  // Group 28-30 seats
+  assert.equal(matchesSizeFilter(29, 'group:28_30'), true);
+  assert.equal(matchesSizeFilter(30, 'group:28_30'), true);
+  assert.equal(matchesSizeFilter(20, 'group:28_30'), false);
+
+  // Group 50+ seats
+  assert.equal(matchesSizeFilter(50, 'group:50_plus'), true);
+  assert.equal(matchesSizeFilter(52, 'group:50_plus'), true);
+  assert.equal(matchesSizeFilter(30, 'group:50_plus'), false);
+
+  // Exact seat counts
+  assert.equal(matchesSizeFilter(7, 'exact:7'), true);
+  assert.equal(matchesSizeFilter(8, 'exact:7'), false);
+  assert.equal(matchesSizeFilter(16, 'exact:16'), true);
+  assert.equal(matchesSizeFilter(12, 'exact:16'), false);
+});
+
+test('Fleet Showcase UI Template: Contains vehicle size filter controls and grouping markup', () => {
+  const showcaseFile = fs.readFileSync(path.join(rootDir, 'app/views/fleet_showcase.js'), 'utf8');
+
+  // Verify filter bar presence
+  assert.ok(showcaseFile.includes('class="sail-filter-bar"'), 'Must render dedicated sail-filter-bar');
+  assert.ok(showcaseFile.includes('Seat Size:'), 'Must render Seat Size label');
+  assert.ok(showcaseFile.includes('data-size-filter="all"'), 'Must have All Sizes button');
+  assert.ok(showcaseFile.includes('id="ledger-size-select"'), 'Must have detailed size dropdown');
+  assert.ok(showcaseFile.includes('id="btn-toggle-group-size"'), 'Must have Group by Size toggle button');
+  assert.ok(showcaseFile.includes('data-filter-exact-pax'), 'Must have clickable exact pax pill in table rows');
+  assert.ok(showcaseFile.includes('sail-group-header-row'), 'Must render group header row for categorized brackets');
+  assert.ok(showcaseFile.includes('id="th-sort-capacity"'), 'Must have sortable capacity column header');
 });
 

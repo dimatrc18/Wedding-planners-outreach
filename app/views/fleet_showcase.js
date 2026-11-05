@@ -8,6 +8,84 @@ import * as core from '../../supabase/functions/_shared/core/index.js';
 let pricingMode = 'net'; // 'net' | 'vat' (+10% Italian VAT)
 let activeTab = 'all'; // 'all' | 'confirmed' | 'luxury' | 'standard' | 'pending'
 let searchQuery = '';
+let sizeFilter = 'all'; // 'all' | 'group:7_8' | 'group:12_16' | 'group:19_20' | 'group:28_30' | 'group:50_plus' | 'group:12_20' | 'exact:<pax>'
+let groupBySize = true; // default true: visually organize vehicles by size bracket
+let sortOrder = 'seats_asc'; // 'seats_asc' | 'seats_desc' | 'default'
+
+// Logical Size Groups for Northern Italy & Lake Como Wedding Fleet
+export const SIZE_GROUPS = [
+  {
+    key: 'group:3_4',
+    label: 'Luxury Sedan',
+    shortLabel: '3–4 Seats',
+    paxRange: '3–4 seats',
+    desc: 'Mercedes S-Class & E-Class',
+    matcher: (p) => p >= 1 && p <= 4
+  },
+  {
+    key: 'group:7_8',
+    label: 'Minivan & VIP Van',
+    shortLabel: '7–8 Seats',
+    paxRange: '7–8 seats',
+    desc: 'Mercedes V-Class & Sprinter VIP',
+    matcher: (p) => p >= 5 && p <= 8
+  },
+  {
+    key: 'group:12_16',
+    label: 'Executive Minibus',
+    shortLabel: '12–16 Seats',
+    paxRange: '12–16 seats',
+    desc: 'Mercedes Sprinter & Ford Transit',
+    matcher: (p) => p >= 9 && p <= 16
+  },
+  {
+    key: 'group:19_20',
+    label: 'Touring Minibus',
+    shortLabel: '19–20 Seats',
+    paxRange: '19–20 seats',
+    desc: 'Mercedes Minibus GT & Indcar Wing',
+    matcher: (p) => p >= 17 && p <= 22
+  },
+  {
+    key: 'group:28_30',
+    label: 'Midibus / Small Coach',
+    shortLabel: '28–30 Seats',
+    paxRange: '28–30 seats',
+    desc: 'Iveco Midibus & Mago 2',
+    matcher: (p) => p >= 23 && p <= 35
+  },
+  {
+    key: 'group:50_plus',
+    label: 'Full-Size GT Coach',
+    shortLabel: '50+ Seats',
+    paxRange: '50+ seats',
+    desc: 'Mercedes Tourismo & Setra GT',
+    matcher: (p) => p >= 36
+  }
+];
+
+export function getVehicleSizeGroup(pax) {
+  const p = Number(pax) || 8;
+  for (const grp of SIZE_GROUPS) {
+    if (grp.matcher(p)) return grp;
+  }
+  return SIZE_GROUPS[1]; // fallback: 7-8 seats
+}
+
+export function matchesSizeFilter(pax, filter) {
+  if (!filter || filter === 'all') return true;
+  const p = Number(pax) || 8;
+  if (filter.startsWith('exact:')) {
+    const target = Number(filter.replace('exact:', ''));
+    return p === target;
+  }
+  if (filter === 'group:12_20') {
+    return p >= 9 && p <= 22;
+  }
+  const grp = SIZE_GROUPS.find((g) => g.key === filter);
+  if (grp) return grp.matcher(p);
+  return true;
+}
 
 // Service, Route & Vehicle Taxonomy for Multi-Tier Trip Calculator
 export const ROUTE_CATALOG = {
@@ -1325,18 +1403,18 @@ export function saveCustomVehicle(veh) {
 }
 
 export function deleteCustomVehicle(vehId) {
+  const idx = FLEET_LEDGER_ROWS.findIndex((r) => r.id === vehId);
+  if (idx >= 0) {
+    FLEET_LEDGER_ROWS.splice(idx, 1);
+  }
+  if (calcState.vehicleId === vehId) {
+    calcState.vehicleId = FLEET_LEDGER_ROWS[0]?.id || null;
+  }
   if (typeof localStorage === 'undefined') return;
   try {
     const existing = loadCustomVehicles();
     const filtered = existing.filter((v) => v.id !== vehId);
     localStorage.setItem(STORAGE_KEY_CUSTOM_VEHICLES, JSON.stringify(filtered));
-    const idx = FLEET_LEDGER_ROWS.findIndex((r) => r.id === vehId);
-    if (idx >= 0) {
-      FLEET_LEDGER_ROWS.splice(idx, 1);
-    }
-    if (calcState.vehicleId === vehId) {
-      calcState.vehicleId = FLEET_LEDGER_ROWS[0]?.id || null;
-    }
   } catch (_) {}
 }
 
@@ -1432,19 +1510,50 @@ function modeBadgeText(mode) {
 
 export async function render(el) {
   applySavedTierOverrides();
-  const filteredRows = FLEET_LEDGER_ROWS.filter((r) => {
+
+  // 1. Tab-eligible rows
+  const tabRows = FLEET_LEDGER_ROWS.filter((r) => {
     if (activeTab === 'confirmed' && r.status !== 'confirmed') return false;
     if (activeTab === 'luxury' && r.tier !== 'luxury') return false;
     if (activeTab === 'standard' && r.tier !== 'standard') return false;
     if (activeTab === 'pending' && r.status !== 'pending') return false;
+    return true;
+  });
+
+  // 2. Size counts for tab-eligible rows
+  const sizeCounts = {
+    all: tabRows.length,
+    'group:12_20': tabRows.filter((r) => r.pax >= 9 && r.pax <= 22).length
+  };
+  SIZE_GROUPS.forEach((grp) => {
+    sizeCounts[grp.key] = tabRows.filter((r) => grp.matcher(r.pax)).length;
+  });
+
+  const exactCounts = {};
+  tabRows.forEach((r) => {
+    exactCounts[r.pax] = (exactCounts[r.pax] || 0) + 1;
+  });
+
+  // Groups that exist in the overall fleet
+  const availableGroups = SIZE_GROUPS.filter((grp) => {
+    return FLEET_LEDGER_ROWS.some((r) => grp.matcher(r.pax));
+  });
+
+  // Distinct seat counts sorted ascending
+  const distinctPaxes = Array.from(new Set(FLEET_LEDGER_ROWS.map((r) => r.pax).filter(Boolean))).sort((a, b) => a - b);
+
+  // 3. Filtered rows by sizeFilter and searchQuery
+  const filteredRows = tabRows.filter((r) => {
+    if (!matchesSizeFilter(r.pax, sizeFilter)) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
-      const hay = `${r.vehicleModel} ${r.coachbuilder} ${r.partnerName} ${r.baseCity} ${r.contactPerson} ${r.tierLabel} ${r.tierSpec}`.toLowerCase();
+      const hay = `${r.vehicleModel} ${r.coachbuilder} ${r.partnerName} ${r.baseCity} ${r.contactPerson} ${r.tierLabel} ${r.tierSpec} ${r.pax} ${r.paxLabel || ''}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
   });
 
+  // 4. Counts for header telemetry stats
   const confirmedCount = FLEET_LEDGER_ROWS.filter((r) => r.status === 'confirmed').length;
   const luxCount = FLEET_LEDGER_ROWS.filter((r) => r.tier === 'luxury').length;
   const stdCount = FLEET_LEDGER_ROWS.filter((r) => r.tier === 'standard').length;
@@ -1461,6 +1570,81 @@ export async function render(el) {
   const transitMxp = calculateAdjustedPrice(400, pricingMode);
   const dispo4h = calculateAdjustedPrice(500, pricingMode);
   const dispo8h = calculateAdjustedPrice(900, pricingMode);
+
+  // 5. Table Rows generation (Grouped by size or Flat)
+  let tableBodyHtml = '';
+  if (filteredRows.length === 0) {
+    tableBodyHtml = `
+      <tr>
+        <td colspan="7" style="text-align:center;padding:36px 16px;color:var(--sail-muted);font-size:13px">
+          <div style="font-weight:600;color:var(--sail-ink);margin-bottom:4px">No vehicles match current criteria</div>
+          <div>Try selecting another size group or clearing the search filter.</div>
+          <div style="margin-top:10px">
+            <button class="sail-btn xs" id="btn-empty-reset-filter">Reset Filters</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  } else if (groupBySize) {
+    // Group rows by size category
+    const groupedMap = new Map();
+    SIZE_GROUPS.forEach((grp) => {
+      groupedMap.set(grp.key, { group: grp, rows: [] });
+    });
+
+    filteredRows.forEach((row) => {
+      const grp = getVehicleSizeGroup(row.pax);
+      if (!groupedMap.has(grp.key)) {
+        groupedMap.set(grp.key, { group: grp, rows: [] });
+      }
+      groupedMap.get(grp.key).rows.push(row);
+    });
+
+    let globalIdx = 0;
+    const sections = [];
+    for (const [key, data] of groupedMap.entries()) {
+      if (data.rows.length === 0) continue;
+      // Sort within group by pax (or sortOrder)
+      if (sortOrder === 'seats_desc') {
+        data.rows.sort((a, b) => b.pax - a.pax);
+      } else {
+        data.rows.sort((a, b) => a.pax - b.pax);
+      }
+
+      const headerHtml = `
+        <tr class="sail-group-header-row">
+          <td colspan="7">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:2px 0">
+              <div style="display:flex;align-items:center;gap:7px">
+                <span class="sail-pill info" style="font-size:10px;padding:1px 6px"><strong>${data.group.shortLabel}</strong></span>
+                <span style="font-weight:700;color:var(--sail-ink);font-size:12px">${esc(data.group.label)}</span>
+                <span style="font-weight:400;color:var(--sail-muted);font-size:11px">· ${esc(data.group.desc)}</span>
+              </div>
+              <span style="font-weight:600;color:var(--sail-muted);font-size:11px">${data.rows.length} vehicle${data.rows.length === 1 ? '' : 's'}</span>
+            </div>
+          </td>
+        </tr>
+      `;
+
+      const rowsHtml = data.rows.map((row) => {
+        const html = renderLedgerRow(row, globalIdx);
+        globalIdx++;
+        return html;
+      }).join('');
+
+      sections.push(headerHtml + rowsHtml);
+    }
+    tableBodyHtml = sections.join('');
+  } else {
+    // Flat rows
+    const sorted = [...filteredRows];
+    if (sortOrder === 'seats_asc') {
+      sorted.sort((a, b) => a.pax - b.pax);
+    } else if (sortOrder === 'seats_desc') {
+      sorted.sort((a, b) => b.pax - a.pax);
+    }
+    tableBodyHtml = sorted.map((row, idx) => renderLedgerRow(row, idx)).join('');
+  }
 
   el.innerHTML = `
     <div class="sail-page">
@@ -1563,6 +1747,66 @@ export async function render(el) {
           </div>
         </div>
 
+        <!-- Vehicle Size (Seats) Filter Bar with Grouping & Dynamic Counts -->
+        <div class="sail-filter-bar" style="background:#F8FAFC;border-bottom:1px solid var(--sail-line);padding:8px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <!-- Left: Label, Grouped Segmented Buttons & Detailed Size Dropdown -->
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div style="font-size:11px;font-weight:700;color:var(--sail-muted);text-transform:uppercase;letter-spacing:0.04em;display:flex;align-items:center;gap:5px">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C2.1 11.1 2 11.5 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
+              Seat Size:
+            </div>
+
+            <!-- Segmented Size Buttons (Grouped by capacity) -->
+            <div class="sail-seg" role="tablist" aria-label="Vehicle seat size filter">
+              <button class="${sizeFilter === 'all' ? 'on' : ''}" data-size-filter="all">
+                All Sizes <span style="font-size:10px;opacity:0.75;font-weight:700;margin-left:2px">${sizeCounts.all}</span>
+              </button>
+              ${availableGroups.map((grp) => `
+                <button class="${sizeFilter === grp.key ? 'on' : ''}" data-size-filter="${attr(grp.key)}" title="${attr(grp.label)} (${attr(grp.desc)})" ${sizeCounts[grp.key] === 0 ? 'style="opacity:0.45"' : ''}>
+                  ${esc(grp.shortLabel)} <span style="font-size:10px;opacity:0.75;font-weight:700;margin-left:2px">${sizeCounts[grp.key] || 0}</span>
+                </button>
+              `).join('')}
+            </div>
+
+            <!-- Dropdown for All Minibuses (12-20) or Exact Seat Counts -->
+            <select id="ledger-size-select" class="sail-select" style="height:27px;font-size:11.5px;padding:0 22px 0 8px;background-color:#FFFFFF;border-color:var(--sail-line)" aria-label="Exact seats or capacity bracket">
+              <option value="all" ${sizeFilter === 'all' ? 'selected' : ''}>All Sizes (${sizeCounts.all})</option>
+              <optgroup label="Grouped Capacities">
+                ${availableGroups.map((grp) => `
+                  <option value="${attr(grp.key)}" ${sizeFilter === grp.key ? 'selected' : ''}>
+                    ${esc(grp.label)} (${esc(grp.shortLabel)}) · ${sizeCounts[grp.key] || 0} veh
+                  </option>
+                `).join('')}
+                <option value="group:12_20" ${sizeFilter === 'group:12_20' ? 'selected' : ''}>
+                  All Minibuses (12–20 seats) · ${sizeCounts['group:12_20'] || 0} veh
+                </option>
+              </optgroup>
+              <optgroup label="Exact Seat Capacity">
+                ${distinctPaxes.map((p) => `
+                  <option value="exact:${p}" ${sizeFilter === `exact:${p}` ? 'selected' : ''}>
+                    ${p} Seats · ${exactCounts[p] || 0} vehicle${exactCounts[p] === 1 ? '' : 's'}
+                  </option>
+                `).join('')}
+              </optgroup>
+            </select>
+          </div>
+
+          <!-- Right: Group by Size Toggle + Counter + Reset -->
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <button class="sail-btn xs ${groupBySize ? 'primary' : ''}" id="btn-toggle-group-size" style="font-size:11px;padding:2px 8px;height:26px" title="Toggle grouping rows by seat capacity categories">
+              ${groupBySize ? '✓ Grouped by Size' : 'Group by Size'}
+            </button>
+            <span style="font-size:11.5px;color:var(--sail-muted);font-variant-numeric:tabular-nums">
+              Showing <strong>${filteredRows.length}</strong> of ${FLEET_LEDGER_ROWS.length}
+            </span>
+            ${(sizeFilter !== 'all' || searchQuery.trim() !== '') ? `
+              <button class="sail-btn xs" id="btn-reset-ledger-filter" style="font-size:11px;padding:2px 8px;height:24px;color:#B91C1C;border-color:#FCA5A5" title="Clear size and search filters">
+                Reset Filter
+              </button>
+            ` : ''}
+          </div>
+        </div>
+
         <!-- Primary Stripe Data Table (Single-screen fit, zero horizontal swipe) -->
         <div class="sail-table-wrap">
           <table class="sail-table" style="table-layout:fixed;width:100%">
@@ -1571,8 +1815,11 @@ export async function render(el) {
                 <th style="width:4%">
                   <div class="sail-th-title" style="text-align:center">#</div>
                 </th>
-                <th style="width:14%">
-                  <div class="sail-th-title">Vehicle &amp; Capacity</div>
+                <th style="width:14%" id="th-sort-capacity" class="sail-th-sortable" title="Click to sort by passenger capacity (${sortOrder === 'seats_asc' ? 'Current: Low to High' : sortOrder === 'seats_desc' ? 'Current: High to Low' : 'Default'})">
+                  <div class="sail-th-title" style="display:flex;align-items:center;justify-content:space-between">
+                    <span>Vehicle &amp; Capacity</span>
+                    <span style="font-size:11px;color:var(--sail-accent)">${sortOrder === 'seats_asc' ? '↑' : sortOrder === 'seats_desc' ? '↓' : '↕'}</span>
+                  </div>
                 </th>
                 <th style="width:10%">
                   <div class="sail-th-title">Class Tier</div>
@@ -1594,7 +1841,7 @@ export async function render(el) {
               </tr>
             </thead>
             <tbody>
-              ${filteredRows.map((row, idx) => renderLedgerRow(row, idx)).join('')}
+              ${tableBodyHtml}
             </tbody>
           </table>
         </div>
@@ -1735,7 +1982,7 @@ function renderLedgerRow(row, idx = 0) {
       <td>
         <div style="font-weight:600;color:var(--sail-ink);font-size:12.5px;line-height:1.25">${esc(row.vehicleModel)}</div>
         <div style="margin-top:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-          <span class="sail-pill info" style="font-size:10.5px;padding:1px 6px;font-variant-numeric:tabular-nums"><strong>${esc(row.paxLabel || `${row.pax} pax`)}</strong></span>
+          <span class="sail-pill info" data-filter-exact-pax="${row.pax}" style="font-size:10.5px;padding:1px 6px;font-variant-numeric:tabular-nums;cursor:pointer" title="Click to filter by ${row.pax} seats"><strong>${esc(row.paxLabel || `${row.pax} pax`)}</strong></span>
           ${isActiveInCalc ? `<span class="sail-pill ok" style="font-size:10px;padding:1px 5px">Active in Calc</span>` : ''}
           <details style="font-size:11px;color:var(--sail-muted)">
             <summary style="cursor:pointer;user-select:none;font-weight:500;color:var(--sail-body)">Specs</summary>
@@ -2454,6 +2701,71 @@ function attachLedgerListeners(el) {
         next.focus();
         next.setSelectionRange(searchQuery.length, searchQuery.length);
       }
+    });
+  }
+
+  // Size group filter buttons (Grouped by capacity)
+  el.querySelectorAll('[data-size-filter]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      sizeFilter = btn.dataset.sizeFilter || 'all';
+      render(el);
+    });
+  });
+
+  // Detailed size select dropdown
+  const sizeSelect = el.querySelector('#ledger-size-select');
+  if (sizeSelect) {
+    sizeSelect.addEventListener('change', (e) => {
+      sizeFilter = e.target.value || 'all';
+      render(el);
+    });
+  }
+
+  // Group by size toggle button
+  const toggleGroupBtn = el.querySelector('#btn-toggle-group-size');
+  if (toggleGroupBtn) {
+    toggleGroupBtn.addEventListener('click', () => {
+      groupBySize = !groupBySize;
+      render(el);
+    });
+  }
+
+  // Reset filters
+  const ledgerResetBtn = el.querySelector('#btn-reset-ledger-filter');
+  if (ledgerResetBtn) {
+    ledgerResetBtn.addEventListener('click', () => {
+      sizeFilter = 'all';
+      searchQuery = '';
+      render(el);
+    });
+  }
+  const emptyResetBtn = el.querySelector('#btn-empty-reset-filter');
+  if (emptyResetBtn) {
+    emptyResetBtn.addEventListener('click', () => {
+      sizeFilter = 'all';
+      searchQuery = '';
+      render(el);
+    });
+  }
+
+  // Exact pax badge in table row
+  el.querySelectorAll('[data-filter-exact-pax]').forEach((badge) => {
+    badge.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const pax = badge.dataset.filterExactPax;
+      if (pax) {
+        sizeFilter = `exact:${pax}`;
+        render(el);
+      }
+    });
+  });
+
+  // Table header sort by capacity
+  const thSort = el.querySelector('#th-sort-capacity');
+  if (thSort) {
+    thSort.addEventListener('click', () => {
+      sortOrder = sortOrder === 'seats_asc' ? 'seats_desc' : 'seats_asc';
+      render(el);
     });
   }
 
