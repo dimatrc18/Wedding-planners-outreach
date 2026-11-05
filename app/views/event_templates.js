@@ -188,16 +188,21 @@ export async function render(el) {
           <div class="sail-card" style="padding:16px;display:flex;flex-direction:column;gap:12px">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
               <div>
-                <h2 style="font-size:14px;font-weight:700;color:var(--sail-ink);margin:0">
-                  Live Exhibitor Preview
-                </h2>
-                <div style="font-size:11px;color:var(--sail-muted)">
-                  Simulate exact rendered email for any of the 78 teams
+                <div style="display:flex;align-items:center;gap:6px">
+                  <h2 style="font-size:14px;font-weight:700;color:var(--sail-ink);margin:0">
+                    Live Exhibitor Preview
+                  </h2>
+                  <span class="sail-pill ${selectedExhibitor?.status === 'WANT_TO_CONTACT' ? 'info' : (selectedExhibitor?.status === 'CONTACTED' ? 'ok' : 'warn')}" style="font-size:10px">
+                    ${selectedExhibitor?.status === 'WANT_TO_CONTACT' ? 'Ready to Send' : (selectedExhibitor?.status === 'CONTACTED' ? 'Contacted' : 'To Review')}
+                  </span>
+                </div>
+                <div style="font-size:11px;color:var(--sail-muted);margin-top:2px">
+                  Simulate exact rendered email for any of the ${exhibitors.length} teams
                 </div>
               </div>
 
               <!-- Exhibitor Selector -->
-              <select id="preview-exhibitor-select" style="height:30px;padding:0 8px;border:1px solid var(--sail-line);border-radius:6px;font-size:11.5px;background:#FFF;color:var(--sail-ink);cursor:pointer;max-width:210px">
+              <select id="preview-exhibitor-select" style="height:30px;padding:0 8px;border:1px solid var(--sail-line);border-radius:6px;font-size:11.5px;background:#FFF;color:var(--sail-ink);cursor:pointer;max-width:220px">
                 ${exhibitors.map((p) => `
                   <option value="${attr(p.id)}" ${p.id === selectedExhibitorId ? 'selected' : ''}>
                     ${esc(p.flag || '🌍')} ${esc(p.name)} (${esc(p.country)})
@@ -213,7 +218,7 @@ export async function render(el) {
                   <strong>From:</strong> Igor &lt;igor@b2b-dorogo.it&gt;
                 </div>
                 <div style="font-size:11.5px;color:var(--sail-muted)">
-                  <strong>To:</strong> ${esc(selectedExhibitor?.contact_person || 'Trade Sales Desk')} &lt;${esc(selectedExhibitor?.email || 'sales@company.com')}&gt;
+                  <strong>To:</strong> ${esc(selectedExhibitor?.contact_person || 'Trade Sales Desk')} &lt;<span style="color:#2563EB">${esc(selectedExhibitor?.email || 'sales@company.com')}</span>&gt;
                 </div>
                 <div style="font-size:12px;font-weight:700;color:var(--sail-ink);margin-top:2px">
                   ${esc(rendered.subject)}
@@ -221,16 +226,35 @@ export async function render(el) {
               </div>
 
               <!-- Body Render -->
-              <div style="font-size:12px;line-height:1.6;color:var(--sail-body);white-space:pre-wrap;font-family:inherit">
-${esc(rendered.body)}
+              <div style="font-size:12px;line-height:1.6;color:var(--sail-body);background:#FFF;padding:12px;border-radius:6px;border:1px solid #E2E8F0;max-height:240px;overflow-y:auto">
+                <div style="white-space:pre-wrap;font-family:inherit">${esc(rendered.body)}</div>
+                ${renderPreviewSignatureHtml()}
               </div>
             </div>
 
-            <!-- Copy Shortcut -->
-            <div style="display:flex;justify-content:flex-end">
-              <button class="sail-btn default" id="btn-copy-preview" style="font-size:11px;padding:4px 10px">
+            <!-- Actions Toolbar: Ready to Send Button & Copy -->
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding-top:4px">
+              <button class="sail-btn default" id="btn-copy-preview" style="font-size:11px;padding:5px 10px">
                 📋 Copy Rendered Draft
               </button>
+
+              <div style="display:flex;gap:6px;align-items:center">
+                ${selectedExhibitor?.status === 'WANT_TO_CONTACT' ? `
+                  <span class="sail-pill info" style="font-size:11px;font-weight:700;padding:4px 8px">
+                    ✓ In Outbox (Ready to Send)
+                  </span>
+                  <a href="#event_outbox" class="sail-btn primary" style="font-size:11px;padding:5px 12px;background:#2563EB;text-decoration:none">
+                    Open Outbox ➔
+                  </a>
+                  <button class="sail-btn default" id="btn-unqueue-preview" style="font-size:11px;padding:5px 8px;color:#D97706">
+                    ↩ Back to Review
+                  </button>
+                ` : `
+                  <button class="sail-btn primary" id="btn-mark-ready-preview" style="font-size:11.5px;padding:5px 14px;background:#2563EB;font-weight:700">
+                    🚀 Mark Ready to Send (Move to Outbox)
+                  </button>
+                `}
+              </div>
             </div>
           </div>
 
@@ -319,9 +343,38 @@ function attachEventListeners(el, templates) {
     const currentTemplate = templates.find((t) => t.key === currentStepKey) || templates[0];
     const selectedExhibitor = exhibitors.find((p) => p.id === selectedExhibitorId) || exhibitors[0];
     const rendered = renderEventTemplate(currentTemplate, selectedExhibitor);
-    const full = `Subject: ${rendered.subject}\n\n${rendered.body}`;
+    const sig = `\n\n―\nIgor\nTrade & Event Logistics\n\nDOROGO | PRIVATE TRANSPORTATION\nWhatsApp: +39 378 094 0554\nEmail: igor@b2b-dorogo.it\nWeb: dorogo.eu`;
+    const full = `Subject: ${rendered.subject}\n\n${rendered.body}${sig}`;
     navigator.clipboard?.writeText(full).then(() => {
-      toast('Rendered email copied to clipboard');
+      toast('Rendered email copied to clipboard (with signature)');
     });
   });
+
+  // Mark Ready to Send button
+  const btnMarkReady = el.querySelector('#btn-mark-ready-preview');
+  if (btnMarkReady) {
+    btnMarkReady.onclick = async () => {
+      const exhibitors = loadStoredEventPartners();
+      const p = exhibitors.find((x) => x.id === selectedExhibitorId) || exhibitors[0];
+      if (p) {
+        await updateEventPartner(p.id, { status: 'WANT_TO_CONTACT' });
+        toast(`✓ ${p.name} moved to Ready to Send (Outbox)!`);
+        render(el);
+      }
+    };
+  }
+
+  // Unqueue / Back to Review button
+  const btnUnqueue = el.querySelector('#btn-unqueue-preview');
+  if (btnUnqueue) {
+    btnUnqueue.onclick = async () => {
+      const exhibitors = loadStoredEventPartners();
+      const p = exhibitors.find((x) => x.id === selectedExhibitorId) || exhibitors[0];
+      if (p) {
+        await updateEventPartner(p.id, { status: 'TO_REVIEW' });
+        toast(`${p.name} moved back to To Review`);
+        render(el);
+      }
+    };
+  }
 }
