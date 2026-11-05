@@ -1229,6 +1229,34 @@ dmitri@dorogo.eu · dorogo.eu`;
     };
   }
 
+  if (stepKey === 'reply_vclass_rates' || stepKey === 'reply_vclass_pricing') {
+    const contactPerson = partner.contact_person || 'Stefano';
+    const body = `Buongiorno ${contactPerson}, grazie del rapido riscontro.
+
+Il Classe V ci interessa comunque molto, sia per i transfer che come supporto durante matrimoni ed eventi sul Lago di Como quando i nostri mezzi sono al completo.
+
+Potrebbe indicarmi le vostre tariffe B2B nette per:
+• Transfer (es. Malpensa MXP ⇄ Como e Milano ⇄ Como)
+• Disposizione 4 ore (mezza giornata)
+• Disposizione 8 ore (giornata intera)
+
+Se ha già un listino o una scheda in PDF può inviarmela direttamente qui o via WhatsApp.
+
+Salvo con piacere il Suo contatto diretto per collaborazioni e servizi.
+
+Un cordiale saluto,
+Dmitri Traciuc | DOROGO
+dmitri@dorogo.eu · dorogo.eu`;
+
+    return {
+      step_name: 'reply_vclass_rates',
+      language: 'it',
+      subject: `Re: Disponibilità transfer ed eventi Lago di Como - DOROGO Transfers`,
+      body,
+      word_count: body.trim().split(/\s+/).length,
+    };
+  }
+
   if (stepKey === 'reply_vclass_clarification' || stepKey === 'reply_bus_referral') {
     const contactPerson = partner.contact_person || 'Stefano';
     const body = `Buongiorno ${contactPerson}, grazie del rapido riscontro.

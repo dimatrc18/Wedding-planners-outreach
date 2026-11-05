@@ -1133,6 +1133,24 @@ test('Como Driver Services is verified as APPROVED_PARTNER with replied status, 
   assert.ok(como.score_breakdown?.partner_card?.fleet_photos?.length >= 2);
 });
 
+test('buildBusOutreachDraft with reply_vclass_rates asks for transfers, 4h and 8h standby rates', () => {
+  const partner = {
+    name: 'Como Limo Lux',
+    base_city: 'Como',
+    contact_person: 'Stefano Carnevale',
+    phone: '+39 346 7039569'
+  };
+  const draft = buildBusOutreachDraft(partner, 'reply_vclass_rates');
+  assert.ok(draft.subject.includes('Disponibilità'));
+  assert.ok(draft.body.includes('Stefano'));
+  assert.ok(draft.body.includes('Classe V'));
+  assert.ok(draft.body.includes('Transfer'));
+  assert.ok(draft.body.includes('Disposizione 4 ore'));
+  assert.ok(draft.body.includes('Disposizione 8 ore'));
+  assert.ok(draft.body.includes('Dmitri Traciuc'));
+  assert.ok(!draft.body.includes('—'), 'Must contain zero em dashes');
+});
+
 test('buildBusOutreachDraft with reply_vclass_clarification clarifies internal V-Class and asks for 8-50 seat bus network contacts', () => {
   const partner = {
     name: 'Como Limo Lux',

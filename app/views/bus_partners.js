@@ -3481,6 +3481,9 @@ export function render(el) {
           <select id="ceo-step-select" class="sm" style="padding:6px 10px">
             <option value="T1_intro" selected>1. Email 1: CEO Intro (Italian · Day 0)</option>
             <option value="T2_followup">2. Email 2: Quick Follow-up (Italian · Day +3)</option>
+            <option value="reply_vclass_rates">3. Reply: Ask V-Class Rates (Transfers, 4h &amp; 8h)</option>
+            <option value="reply_thanks">4. Reply: Thank You &amp; Bus Network Inquiry</option>
+            <option value="reply_milan_routes">5. Reply: Milan Routes Inquiry</option>
           </select>
         </label>
       </div>
