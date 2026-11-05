@@ -104,18 +104,18 @@ export const INITIAL_EVENT_PARTNERS = [
     "agency_type": "foreign_exhibitor",
     "region_group": "dach_benelux",
     "agency_type_label": "🇳🇱 Exhibiting Team · Netherlands",
-    "contact_person": "Trade Fair Desk",
-    "contact_role": "Trade Fair Logistics / Stand Director",
-    "email": "",
-    "phone": "",
+    "contact_person": "Jesse de Vries",
+    "contact_role": "Co-Founder & Head of Sales & Trade Fairs",
+    "email": "jesse@andnook.com",
+    "phone": "+31 575 743 000",
     "website": "https://andnook.com/",
-    "base_city": "ZONNEHORST 3, ZUTPHEN, Netherlands",
+    "base_city": "Zutphen, Netherlands",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000YqU1IAK",
     "status": "TO_REVIEW",
-    "relevance_score": 85,
-    "priority_tier": "Tier 2 (Standard)",
-    "is_enriched": false,
+    "relevance_score": 92,
+    "priority_tier": "Tier 1 (High Priority)",
+    "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "We are And Nook, a Dutch home & living brand with a mission to bring colour, joy and personality to every nook of the home.\n\n From our creative studio in the Netherlands, we design collections filled ...",
     "created_at": "2026-11-03T16:00:00.000Z",
@@ -2230,7 +2230,29 @@ export function mergeEventRecords(initial, saved) {
   }
   return initial.map((init) => {
     const override = map.get(init.id);
-    return override ? { ...init, ...override } : init;
+    if (!override) return init;
+
+    // Prefer enriched contact and email from init if override has empty email, placeholder email, or generic desk title
+    const isOverrideValidEmail = override.email && 
+      override.email.trim().length > 0 && 
+      !override.email.includes('sales@company.com') &&
+      !override.email.includes('example.com');
+    const effectiveEmail = isOverrideValidEmail ? override.email : (init.email || '');
+
+    const isOverrideRealContact = override.contact_person && 
+      !override.contact_person.toLowerCase().includes('trade fair desk') && 
+      !override.contact_person.toLowerCase().includes('trade sales desk') &&
+      override.contact_person.trim().length > 0;
+    const effectiveContact = isOverrideRealContact ? override.contact_person : (init.contact_person || override.contact_person || '');
+
+    return {
+      ...init,
+      ...override,
+      email: effectiveEmail,
+      contact_person: effectiveContact,
+      contact_role: (override.contact_role && override.contact_role !== 'Trade Fair Desk') ? override.contact_role : (init.contact_role || override.contact_role || ''),
+      is_enriched: init.is_enriched || override.is_enriched || false
+    };
   });
 }
 

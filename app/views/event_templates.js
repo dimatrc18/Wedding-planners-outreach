@@ -218,7 +218,7 @@ export async function render(el) {
                   <strong>From:</strong> Igor &lt;igor@b2b-dorogo.it&gt;
                 </div>
                 <div style="font-size:11.5px;color:var(--sail-muted)">
-                  <strong>To:</strong> ${esc(selectedExhibitor?.contact_person || 'Trade Sales Desk')} &lt;<span style="color:#2563EB">${esc(selectedExhibitor?.email || 'sales@company.com')}</span>&gt;
+                  <strong>To:</strong> ${selectedExhibitor?.email ? `${esc(selectedExhibitor?.contact_person || 'Trade Fair Team')} &lt;<span style="color:#2563EB;font-weight:600">${esc(selectedExhibitor.email)}</span>&gt;` : `<span class="sail-pill warn" style="font-size:10px;font-weight:700;padding:2px 8px;background:#FEF3C7;color:#92400E;border:1px solid #FCD34D">⚠️ Missing Email (Enrichment Needed)</span>`}
                 </div>
                 <div style="font-size:12px;font-weight:700;color:var(--sail-ink);margin-top:2px">
                   ${esc(rendered.subject)}
@@ -357,6 +357,10 @@ function attachEventListeners(el, templates) {
       const exhibitors = loadStoredEventPartners();
       const p = exhibitors.find((x) => x.id === selectedExhibitorId) || exhibitors[0];
       if (p) {
+        if (!p.email || p.email.includes('sales@company.com')) {
+          toast('⚠️ Cannot queue to Outbox: Please enrich this exhibitor with a verified email first.', 'warn');
+          return;
+        }
         await updateEventPartner(p.id, { status: 'WANT_TO_CONTACT' });
         toast(`✓ ${p.name} moved to Ready to Send (Outbox)!`);
         render(el);
