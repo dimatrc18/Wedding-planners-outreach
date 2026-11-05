@@ -538,7 +538,7 @@ function showMailboxModal(rootEl) {
         </div>
       </div>
     `,
-    onMount(el) {
+    onMount(el, close) {
       const passInput = el.querySelector('#modal-smtp-pass');
       const resBox = el.querySelector('#smtp-test-result');
       const btnTest = el.querySelector('#modal-btn-test-smtp');
@@ -588,7 +588,7 @@ function showMailboxModal(rootEl) {
         const pass = passInput.value.trim();
         setStoredPass(pass);
         toast('Hostinger credentials saved locally');
-        dlg.close();
+        close();
         render(rootEl);
       };
     }
@@ -626,13 +626,13 @@ function showTestSendModal(partner, template) {
         </div>
       </div>
     `,
-    onMount(el) {
+    onMount(el, close) {
       const emailInput = el.querySelector('#test-recipient-email');
       const statusBox = el.querySelector('#test-dispatch-status');
       const btnSend = el.querySelector('#modal-btn-send-test-now');
       const btnCancel = el.querySelector('#modal-btn-cancel-test');
 
-      btnCancel.onclick = () => dlg.close();
+      btnCancel.onclick = () => close();
 
       btnSend.onclick = async () => {
         const toEmail = emailInput.value.trim();
@@ -674,7 +674,7 @@ function showTestSendModal(partner, template) {
             statusBox.style.color = '#166534';
             statusBox.textContent = `✅ Test Email Successfully Sent! Queue ID: ${j.queueId || 'OK'}`;
             toast('Test email delivered!');
-            setTimeout(() => dlg.close(), 2500);
+            setTimeout(() => close(), 2500);
           } else {
             statusBox.style.background = '#FEE2E2';
             statusBox.style.color = '#991B1B';
@@ -717,14 +717,14 @@ function showEditDraftModal(partner, template, rootEl) {
         </div>
       </div>
     `,
-    onMount(el) {
-      el.querySelector('#modal-btn-cancel-edit').onclick = () => dlg.close();
+    onMount(el, close) {
+      el.querySelector('#modal-btn-cancel-edit').onclick = () => close();
       el.querySelector('#modal-btn-save-draft').onclick = async () => {
         const sub = el.querySelector('#edit-draft-subject').value.trim();
         const bdy = el.querySelector('#edit-draft-body').value.trim();
         await updateEventPartner(partner.id, { custom_subject: sub, custom_body: bdy });
         toast(`Draft updated for ${partner.name}`);
-        dlg.close();
+        close();
         render(rootEl);
       };
     }
@@ -834,7 +834,7 @@ function showBatchDispatchModal(targets, template, delayMs, rootEl) {
         </div>
       </div>
     `,
-    onMount(el) {
+    onMount(el, close) {
       const pLabel = el.querySelector('#batch-progress-label');
       const pPct = el.querySelector('#batch-progress-pct');
       const pBar = el.querySelector('#batch-progress-bar');
@@ -859,7 +859,7 @@ function showBatchDispatchModal(targets, template, delayMs, rootEl) {
       };
 
       btnDone.onclick = () => {
-        dlg.close();
+        close();
         render(rootEl);
       };
 
