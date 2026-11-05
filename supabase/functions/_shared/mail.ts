@@ -20,6 +20,9 @@ function imapConfig() {
     host: env('OUTREACH_IMAP_HOST'), port: +env('OUTREACH_IMAP_PORT', '993'), secure: true,
     auth: { user: env('OUTREACH_IMAP_USER') || env('OUTREACH_SMTP_USER'), pass: env('OUTREACH_IMAP_PASS') || env('OUTREACH_SMTP_PASS') },
     logger: false,
+    connectionTimeout: 8000,
+    greetingTimeout: 5000,
+    socketTimeout: 8000,
   };
 }
 
