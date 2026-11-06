@@ -46,6 +46,24 @@ export async function render(el) {
   const selectedExhibitor = exhibitors.find((p) => p.id === selectedExhibitorId) || exhibitors[0];
   const rendered = selectedExhibitor ? renderEventTemplate(currentTemplate, selectedExhibitor) : { subject: '', body: '' };
 
+  const readyList = exhibitors.filter((p) => p.status === 'WANT_TO_CONTACT');
+  const contactedList = exhibitors.filter((p) => p.status === 'CONTACTED' || p.status === 'APPROVED_PARTNER');
+  const toReviewList = exhibitors.filter((p) => p.status !== 'WANT_TO_CONTACT' && p.status !== 'CONTACTED' && p.status !== 'APPROVED_PARTNER');
+
+  function renderOption(p) {
+    let statusLabel = '⏳ Review';
+    if (p.status === 'WANT_TO_CONTACT') {
+      statusLabel = '🚀 Ready';
+    } else if (p.status === 'CONTACTED' || p.status === 'APPROVED_PARTNER') {
+      statusLabel = '✓ Sent';
+    } else if (!p.email) {
+      statusLabel = '⚠️ No Email';
+    }
+    return `<option value="${attr(p.id)}" ${p.id === selectedExhibitorId ? 'selected' : ''}>
+      [${statusLabel}] ${esc(p.flag || '🌍')} ${esc(p.name)} (${esc(p.country)})
+    </option>`;
+  }
+
   el.innerHTML = `
     <div style="display:flex;flex-direction:column;gap:18px">
       <!-- Top Tab Navigation -->
@@ -192,22 +210,32 @@ export async function render(el) {
                   <h2 style="font-size:14px;font-weight:700;color:var(--sail-ink);margin:0">
                     Live Exhibitor Preview
                   </h2>
-                  <span class="sail-pill ${selectedExhibitor?.status === 'WANT_TO_CONTACT' ? 'info' : (selectedExhibitor?.status === 'CONTACTED' ? 'ok' : 'warn')}" style="font-size:10px">
-                    ${selectedExhibitor?.status === 'WANT_TO_CONTACT' ? 'Ready to Send' : (selectedExhibitor?.status === 'CONTACTED' ? 'Contacted' : 'To Review')}
+                  <span class="sail-pill ${selectedExhibitor?.status === 'WANT_TO_CONTACT' ? 'info' : ((selectedExhibitor?.status === 'CONTACTED' || selectedExhibitor?.status === 'APPROVED_PARTNER') ? 'ok' : 'warn')}" style="font-size:10.5px;font-weight:700">
+                    ${selectedExhibitor?.status === 'WANT_TO_CONTACT' ? '🚀 Ready in Outbox' : ((selectedExhibitor?.status === 'CONTACTED' || selectedExhibitor?.status === 'APPROVED_PARTNER') ? '✓ Sent / Contacted' : '⏳ To Review')}
                   </span>
                 </div>
                 <div style="font-size:11px;color:var(--sail-muted);margin-top:2px">
-                  Simulate exact rendered email for any of the ${exhibitors.length} teams
+                  Simulate exact email · <span style="font-weight:600;color:var(--sail-ink)">${readyList.length} Ready</span> · <span style="font-weight:600;color:var(--sail-muted)">${toReviewList.length} To Review</span> · <span style="font-weight:600;color:#059669">${contactedList.length} Sent</span>
                 </div>
               </div>
 
-              <!-- Exhibitor Selector -->
-              <select id="preview-exhibitor-select" style="height:30px;padding:0 8px;border:1px solid var(--sail-line);border-radius:6px;font-size:11.5px;background:#FFF;color:var(--sail-ink);cursor:pointer;max-width:220px">
-                ${exhibitors.map((p) => `
-                  <option value="${attr(p.id)}" ${p.id === selectedExhibitorId ? 'selected' : ''}>
-                    ${esc(p.flag || '🌍')} ${esc(p.name)} (${esc(p.country)})
-                  </option>
-                `).join('')}
+              <!-- Exhibitor Selector with Status Optgroups & Status Badges -->
+              <select id="preview-exhibitor-select" style="height:32px;padding:0 8px;border:1px solid #CBD5E1;border-radius:6px;font-size:11.5px;background:#FFF;color:var(--sail-ink);cursor:pointer;min-width:280px;max-width:380px;font-weight:600">
+                ${readyList.length > 0 ? `
+                  <optgroup label="🚀 Ready to Send / In Outbox (${readyList.length})">
+                    ${readyList.map(renderOption).join('')}
+                  </optgroup>
+                ` : ''}
+                ${toReviewList.length > 0 ? `
+                  <optgroup label="⏳ To Review (${toReviewList.length})">
+                    ${toReviewList.map(renderOption).join('')}
+                  </optgroup>
+                ` : ''}
+                ${contactedList.length > 0 ? `
+                  <optgroup label="✓ Contacted / Already Sent (${contactedList.length})">
+                    ${contactedList.map(renderOption).join('')}
+                  </optgroup>
+                ` : ''}
               </select>
             </div>
 
