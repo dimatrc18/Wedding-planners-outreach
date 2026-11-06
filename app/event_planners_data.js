@@ -2308,7 +2308,7 @@ export const DEFAULT_EVENT_TEMPLATES = [
     step_num: 1,
     offset_days: 0,
         subject: '{{fair_event}} · {{company_name}}',
-    body: `Hi {{first_name}},
+    body: `Hello {{first_name}},
 
 Noticed {{company_name}} is exhibiting at {{fair_event}} this January.
 
@@ -2322,7 +2322,7 @@ Would our 1-page rate card be helpful for your team? Happy to send it over to wh
     step_num: 2,
     offset_days: 4,
     subject: 'Re: {{fair_event}} · {{company_name}}',
-    body: `Hi {{first_name}},
+    body: `Hello {{first_name}},
 
 Following up briefly on ground transport for {{company_name}} during {{fair_event}}.
 
@@ -2390,9 +2390,9 @@ export function cleanBrandName(name = '') {
 export function extractFirstName(contactPerson = '', companyName = '') {
   let raw = String(contactPerson || '').trim();
 
-  // 1. If explicit brand team or desk is specified (e.g. "Baden Collection Team", "Clayre & Eef Team"), return it!
-  if (/team$/i.test(raw) || /team/i.test(raw)) {
-    return raw;
+  // 1. If explicit team or desk is specified, return 'Team'
+  if (/team/i.test(raw) || /desk/i.test(raw)) {
+    return 'Team';
   }
 
   // 2. If slash in contact, clean it
@@ -2414,10 +2414,10 @@ export function extractFirstName(contactPerson = '', companyName = '') {
   if (companyName && companyName.includes('GEA BARCELONA')) return 'Josep';
   if (companyName && companyName.includes('JGS Home')) return 'Mariusz';
 
-  // 4. Reject department/role/company words -> fallback to Brand Team
+  // 4. Reject department/role/company words -> fallback to 'Team'
   const cleanLower = raw.toLowerCase().trim();
   if (!raw || NON_HUMAN_TOKENS.has(cleanLower) || cleanLower.includes('desk') || cleanLower === companyName.toLowerCase()) {
-    return cleanBrandName(companyName) + ' Team';
+    return 'Team';
   }
 
   // 5. Handle dots/underscores like "firstname.lastname"
@@ -2426,12 +2426,12 @@ export function extractFirstName(contactPerson = '', companyName = '') {
     if (parts.length >= 1 && !NON_HUMAN_TOKENS.has(parts[0])) {
       return parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
     }
-    return cleanBrandName(companyName) + ' Team';
+    return 'Team';
   }
 
   // 6. Handle initials (<3 chars or consonant clusters like "lsg", "mk", "sm")
   if (cleanLower.length < 3 || /^[^aeiouy]+$/i.test(cleanLower)) {
-    return cleanBrandName(companyName) + ' Team';
+    return 'Team';
   }
 
   const parts = raw.split(/\s+/).filter(Boolean);
@@ -2440,7 +2440,7 @@ export function extractFirstName(contactPerson = '', companyName = '') {
     first = parts[1];
   }
 
-  if (NON_HUMAN_TOKENS.has(first.toLowerCase())) return cleanBrandName(companyName) + ' Team';
+  if (NON_HUMAN_TOKENS.has(first.toLowerCase())) return 'Team';
 
   return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
 }
