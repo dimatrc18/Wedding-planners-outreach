@@ -208,8 +208,8 @@ export const INITIAL_EVENT_PARTNERS = [
     "agency_type": "foreign_exhibitor",
     "region_group": "dach_benelux",
     "agency_type_label": "🇩🇪 Exhibiting Team · Germany",
-    "contact_person": "Helena Ketz",
-    "contact_role": "Managing Director",
+    "contact_person": "Baden Collection Team",
+    "contact_role": "Trade Fair & Stand Logistics Desk",
     "email": "info@baden-collection.de",
     "phone": "+49 4263 98536",
     "website": "http://www.baden-collection.de",
@@ -234,8 +234,8 @@ export const INITIAL_EVENT_PARTNERS = [
     "agency_type": "foreign_exhibitor",
     "region_group": "france_spain",
     "agency_type_label": "🇪🇸 Exhibiting Team · Spain",
-    "contact_person": "Fabrice Durand",
-    "contact_role": "CEO",
+    "contact_person": "Batela Team",
+    "contact_role": "Trade Fair & Stand Logistics Desk",
     "email": "info@batela.com",
     "phone": "+34 943 140 945",
     "website": "http://www.batela.com",
@@ -364,8 +364,8 @@ export const INITIAL_EVENT_PARTNERS = [
     "agency_type": "foreign_exhibitor",
     "region_group": "dach_benelux",
     "agency_type_label": "🇳🇱 Exhibiting Team · Netherlands",
-    "contact_person": "Eugene Kusters",
-    "contact_role": "Founder & Managing Director",
+    "contact_person": "Clayre & Eef Team",
+    "contact_role": "Trade Fair & Stand Logistics Desk",
     "email": "info@clayre-eef.com",
     "phone": "+31 475 571 722",
     "website": "http://www.clayre-eef.com",
@@ -806,8 +806,8 @@ export const INITIAL_EVENT_PARTNERS = [
     "agency_type": "foreign_exhibitor",
     "region_group": "dach_benelux",
     "agency_type_label": "🇩🇪 Exhibiting Team · Germany",
-    "contact_person": "Maximilian Macrander",
-    "contact_role": "Managing Director",
+    "contact_person": "Gilde Handwerk Team",
+    "contact_role": "International Trade & Stand Logistics Desk",
     "email": "export@gildehandwerk.com",
     "phone": "+49 2871 1880",
     "website": "http://www.gildehandwerk.com",
@@ -858,8 +858,8 @@ export const INITIAL_EVENT_PARTNERS = [
     "agency_type": "foreign_exhibitor",
     "region_group": "france_spain",
     "agency_type_label": "🇪🇸 Exhibiting Team · Spain",
-    "contact_person": "Lino Vila",
-    "contact_role": "Managing Director",
+    "contact_person": "Hega Hogar Team",
+    "contact_role": "Trade Fair & Stand Logistics Desk",
     "email": "info@hegahogar.com",
     "phone": "+34 966 550 452",
     "website": "https://www.hegahogar.com",
@@ -910,8 +910,8 @@ export const INITIAL_EVENT_PARTNERS = [
     "agency_type": "foreign_exhibitor",
     "region_group": "dach_benelux",
     "agency_type_label": "🇩🇪 Exhibiting Team · Germany",
-    "contact_person": "Lars Adler",
-    "contact_role": "Managing Director",
+    "contact_person": "Hoff-Interieur Team",
+    "contact_role": "Trade Fair & Stand Logistics Desk",
     "email": "info@hoff-interieur.de",
     "phone": "+49 911 930600",
     "website": "http://www.hoff-interieur.de",
@@ -962,8 +962,8 @@ export const INITIAL_EVENT_PARTNERS = [
     "agency_type": "tier1_luxury",
     "region_group": "tier1",
     "agency_type_label": "🇩🇪 Exhibiting Team · Germany",
-    "contact_person": "Timo Horl / Event Desk",
-    "contact_role": "Co-Founder & Managing Director",
+    "contact_person": "HORL Team",
+    "contact_role": "Trade Fair & Stand Logistics Desk",
     "email": "info@horl.com",
     "phone": "0049 761 888 723 00",
     "website": "https://www.horl.com",
@@ -1118,8 +1118,8 @@ export const INITIAL_EVENT_PARTNERS = [
     "agency_type": "foreign_exhibitor",
     "region_group": "dach_benelux",
     "agency_type_label": "🇦🇹 Exhibiting Team · Austria",
-    "contact_person": "Andreas Stölzel",
-    "contact_role": "Managing Director",
+    "contact_person": "Kleen-Tex Team",
+    "contact_role": "Trade Fair & Stand Logistics Desk",
     "email": "info@kleen-tex.eu",
     "phone": "+43 5372 61380",
     "website": "https://www.kleen-tex.eu",
@@ -1352,8 +1352,8 @@ export const INITIAL_EVENT_PARTNERS = [
     "agency_type": "foreign_exhibitor",
     "region_group": "uk_north",
     "agency_type_label": "🇸🇪 Exhibiting Team · Sweden",
-    "contact_person": "Trade Fair Desk",
-    "contact_role": "Trade Fair Logistics / Stand Director",
+    "contact_person": "Nääsgränsgården Team",
+    "contact_role": "Trade Fair & Stand Logistics Desk",
     "email": "info@naasgransgarden.se",
     "phone": "0046320787100",
     "website": "http://naasgransgarden.se",
@@ -1404,8 +1404,8 @@ export const INITIAL_EVENT_PARTNERS = [
     "agency_type": "foreign_exhibitor",
     "region_group": "dach_benelux",
     "agency_type_label": "🇩🇪 Exhibiting Team · Germany",
-    "contact_person": "Trade Fair Desk",
-    "contact_role": "Trade Fair Logistics / Stand Director",
+    "contact_person": "Out of the Blue Team",
+    "contact_role": "Trade Fair & Stand Logistics Desk",
     "email": "info@ootb.de",
     "phone": "00494298935335",
     "website": "http://www.ootb.de",
@@ -1664,8 +1664,8 @@ export const INITIAL_EVENT_PARTNERS = [
     "agency_type": "tier1_luxury",
     "region_group": "tier1",
     "agency_type_label": "🇧🇪 Exhibiting Team · Belgium",
-    "contact_person": "Axel Van Den Bossche",
-    "contact_role": "CEO & Founder",
+    "contact_person": "Serax Team",
+    "contact_role": "Trade Fair & Stand Logistics Desk",
     "email": "info@serax.com",
     "phone": "003234580582",
     "website": "http://www.serax.com",
@@ -1846,8 +1846,8 @@ export const INITIAL_EVENT_PARTNERS = [
     "agency_type": "foreign_exhibitor",
     "region_group": "dach_benelux",
     "agency_type_label": "🇧🇪 Exhibiting Team · Belgium",
-    "contact_person": "Trade Fair Desk",
-    "contact_role": "Trade Fair Logistics / Stand Director",
+    "contact_person": "Timstor Team",
+    "contact_role": "Trade Fair & Stand Logistics Desk",
     "email": "info@timstor.com",
     "phone": "0032 1 4673461",
     "website": "http://www.timstor.com",
@@ -2054,8 +2054,8 @@ export const INITIAL_EVENT_PARTNERS = [
     "agency_type": "foreign_exhibitor",
     "region_group": "uk_north",
     "agency_type_label": "🇸🇪 Exhibiting Team · Sweden",
-    "contact_person": "Trade Fair Desk",
-    "contact_role": "Trade Fair Logistics / Stand Director",
+    "contact_person": "Water & Wines Team",
+    "contact_role": "Trade Fair & Stand Logistics Desk",
     "email": "hello@waterandwines.com",
     "phone": "0046 0725383874",
     "website": "https://www.waterandwines.com/",
@@ -2158,8 +2158,8 @@ export const INITIAL_EVENT_PARTNERS = [
     "agency_type": "foreign_exhibitor",
     "region_group": "uk_north",
     "agency_type_label": "🇬🇧 Exhibiting Team · United Kingdom",
-    "contact_person": "Trade Fair Desk",
-    "contact_role": "Trade Fair Logistics / Stand Director",
+    "contact_person": "Wrendale Designs Team",
+    "contact_role": "Trade Fair & Stand Logistics Desk",
     "email": "info@wrendaledesigns.co.uk",
     "phone": "0044 1652680253",
     "website": "https://www.wrendaledesigns.co.uk/",
@@ -2184,8 +2184,8 @@ export const INITIAL_EVENT_PARTNERS = [
     "agency_type": "foreign_exhibitor",
     "region_group": "france_spain",
     "agency_type_label": "🇫🇷 Exhibiting Team · France",
-    "contact_person": "Trade Fair Desk",
-    "contact_role": "Trade Fair Logistics / Stand Director",
+    "contact_person": "Yliades Team",
+    "contact_role": "Trade Fair & Stand Logistics Desk",
     "email": "info@yliades.fr",
     "phone": "0033 556696894",
     "website": "https://www.yliades.com/",
@@ -2243,7 +2243,13 @@ export function mergeEventRecords(initial, saved) {
       !override.contact_person.toLowerCase().includes('trade fair desk') && 
       !override.contact_person.toLowerCase().includes('trade sales desk') &&
       override.contact_person.trim().length > 0;
-    const effectiveContact = isOverrideRealContact ? override.contact_person : (init.contact_person || override.contact_person || '');
+    let effectiveContact = isOverrideRealContact ? override.contact_person : (init.contact_person || override.contact_person || '');
+    
+    // If init has a dedicated team-based contact for an info@ / generic inbox, prefer it over stale scraped names
+    const isGenericInbox = /^(info|export|sales|amministrazione|marketing|office|hello)@/i.test(effectiveEmail);
+    if (isGenericInbox && init.contact_person && init.contact_person.toLowerCase().includes('team')) {
+      effectiveContact = init.contact_person;
+    }
 
     return {
       ...init,
@@ -2368,10 +2374,28 @@ const NON_HUMAN_TOKENS = new Set([
   'christmas', 'digitalitalia', 'eservice', 'su', 'tmucchiani'
 ]);
 
+export function cleanBrandName(name = '') {
+  let clean = String(name || '')
+    .replace(/&amp;/g, '&')
+    .replace(/\s+(gmbh & co\. kg|gmbh &amp; co\. kg|gmbh|ltd|s\.l\.|sl|s\.a\.|sa|b\.v\.|bv|nv|srl|s\.r\.l\.|co\. kg|kg|aps|as|lda|sas|spa|s\.p\.a\.)(\s+.*)?$/i, '')
+    .replace(/\s*,\s*since\s+\d+.*$/i, '')
+    .replace(/\s+1991.*$/i, '')
+    .trim();
+  if (clean === clean.toUpperCase() && clean.length > 3) {
+    clean = clean.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+  }
+  return clean || 'Trade Fair';
+}
+
 export function extractFirstName(contactPerson = '', companyName = '') {
   let raw = String(contactPerson || '').trim();
 
-  // 1. If slash in contact, clean it
+  // 1. If explicit brand team or desk is specified (e.g. "Baden Collection Team", "Clayre & Eef Team"), return it!
+  if (/team$/i.test(raw) || /team/i.test(raw)) {
+    return raw;
+  }
+
+  // 2. If slash in contact, clean it
   if (raw.includes('/')) {
     const parts = raw.split('/');
     if (parts[0].trim() && !/desk|team|delegation|logistics|stand|fair|sales|admin|support|contact|director|manager/i.test(parts[0])) {
@@ -2381,7 +2405,7 @@ export function extractFirstName(contactPerson = '', companyName = '') {
     }
   }
 
-  // 2. Explicit verified overrides
+  // 3. Explicit verified overrides
   if (companyName && companyName.includes('ADDISON ROSS')) return 'Henry';
   if (companyName && companyName.includes('CORSTON')) return 'Brian';
   if (companyName && companyName.includes('WERNER VOSS')) return 'David';
@@ -2390,24 +2414,24 @@ export function extractFirstName(contactPerson = '', companyName = '') {
   if (companyName && companyName.includes('GEA BARCELONA')) return 'Josep';
   if (companyName && companyName.includes('JGS Home')) return 'Mariusz';
 
-  // 3. Reject department/role/company words
+  // 4. Reject department/role/company words -> fallback to Brand Team
   const cleanLower = raw.toLowerCase().trim();
-  if (!raw || NON_HUMAN_TOKENS.has(cleanLower) || cleanLower.includes('desk') || cleanLower.includes('team') || cleanLower === companyName.toLowerCase()) {
-    return 'Team';
+  if (!raw || NON_HUMAN_TOKENS.has(cleanLower) || cleanLower.includes('desk') || cleanLower === companyName.toLowerCase()) {
+    return cleanBrandName(companyName) + ' Team';
   }
 
-  // 4. Handle dots/underscores like "firstname.lastname"
+  // 5. Handle dots/underscores like "firstname.lastname"
   if (cleanLower.includes('.') || cleanLower.includes('_')) {
     const parts = cleanLower.split(/[._]/).filter(p => p.length > 2);
     if (parts.length >= 1 && !NON_HUMAN_TOKENS.has(parts[0])) {
       return parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
     }
-    return 'Team';
+    return cleanBrandName(companyName) + ' Team';
   }
 
-  // 5. Handle initials (<3 chars or consonant clusters like "lsg", "mk", "sm")
+  // 6. Handle initials (<3 chars or consonant clusters like "lsg", "mk", "sm")
   if (cleanLower.length < 3 || /^[^aeiouy]+$/i.test(cleanLower)) {
-    return 'Team';
+    return cleanBrandName(companyName) + ' Team';
   }
 
   const parts = raw.split(/\s+/).filter(Boolean);
@@ -2416,7 +2440,7 @@ export function extractFirstName(contactPerson = '', companyName = '') {
     first = parts[1];
   }
 
-  if (NON_HUMAN_TOKENS.has(first.toLowerCase())) return 'Team';
+  if (NON_HUMAN_TOKENS.has(first.toLowerCase())) return cleanBrandName(companyName) + ' Team';
 
   return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
 }
