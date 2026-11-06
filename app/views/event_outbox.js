@@ -15,6 +15,34 @@ let activeOutboxTab = 'queue'; // 'queue' | 'contacted'
 let selectedPartnerIds = new Set();
 let isDispatching = false;
 let stopRequested = false;
+let throttleDelayMs = 90000; // 90 seconds (Recommended B2B delay)
+let scheduleMode = 'now'; // 'now' | 'planned'
+let plannedSendTime = '15:00'; // Default planned send time
+
+function getPlannedDate(timeStr) {
+  const d = new Date();
+  if (!timeStr) return d;
+  const [h, m] = timeStr.split(':').map(Number);
+  d.setHours(h || 0, m || 0, 0, 0);
+  return d;
+}
+
+function formatTimeSlot(baseDate, index, delayMs) {
+  const d = new Date(baseDate.getTime() + index * delayMs);
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function getCountdownSummary(targetDate) {
+  const diffMs = targetDate.getTime() - Date.now();
+  if (diffMs <= 0) return '⚡ Scheduled for now';
+  const totalSecs = Math.floor(diffMs / 1000);
+  const hrs = Math.floor(totalSecs / 3600);
+  const mins = Math.floor((totalSecs % 3600) / 60);
+  const secs = totalSecs % 60;
+  if (hrs > 0) return `⏳ Starts in ${hrs}h ${mins}m`;
+  if (mins > 0) return `⏳ Starts in ${mins}m ${secs}s`;
+  return `⏳ Starts in ${secs}s`;
+}
 
 // Saved password storage key
 const SMTP_PASS_KEY = 'dorogo_event_hostinger_pass';
@@ -191,14 +219,24 @@ function renderQueueView(readyPartners, t1, savedPass) {
         </div>
       </div>
 
-      <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid #E2E8F0;padding-top:12px;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid #E2E8F0;padding-top:12px;flex-wrap:wrap;gap:12px">
         <!-- Quick Volume Chips -->
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
           <span style="font-size:11.5px;font-weight:600;color:var(--sail-ink)">Batch Volume:</span>
           <button class="sail-btn default btn-select-qty" data-qty="5" style="font-size:11px;padding:3px 8px">Next 5</button>
+          <button class="sail-btn default btn-select-qty" data-qty="8" style="font-size:11px;padding:3px 8px">Next 8 (Day 2 Target)</button>
           <button class="sail-btn default btn-select-qty" data-qty="10" style="font-size:11px;padding:3px 8px">Next 10</button>
-          <button class="sail-btn default btn-select-qty" data-qty="20" style="font-size:11px;padding:3px 8px">Next 20</button>
           <button class="sail-btn default btn-select-qty" data-qty="all" style="font-size:11px;padding:3px 8px">All Ready (${readyPartners.length})</button>
+        </div>
+
+        <!-- Schedule Mode & Planned Time -->
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#FFF;padding:4px 10px;border-radius:6px;border:1px solid #CBD5E1">
+          <span style="font-size:11.5px;font-weight:600;color:var(--sail-ink)">🕒 Planned Start:</span>
+          <select id="select-schedule-mode" style="height:26px;font-size:11.5px;padding:0 6px;border:1px solid #CBD5E1;border-radius:4px;background:#F8FAFC">
+            <option value="now" ${scheduleMode === 'now' ? 'selected' : ''}>⚡ Send Immediately (Now)</option>
+            <option value="planned" ${scheduleMode === 'planned' ? 'selected' : ''}>📅 Specific Planned Time</option>
+          </select>
+          <input type="time" id="input-planned-time" value="${plannedSendTime}" style="height:26px;font-size:11.5px;padding:0 6px;border:1px solid #CBD5E1;border-radius:4px;background:#FFF;${scheduleMode === 'planned' ? '' : 'display:none'}" />
         </div>
 
         <!-- Throttling & Selection -->
@@ -206,10 +244,11 @@ function renderQueueView(readyPartners, t1, savedPass) {
           <div style="display:flex;align-items:center;gap:6px">
             <span style="font-size:11.5px;color:var(--sail-muted)">Cooldown Delay:</span>
             <select id="select-throttle-delay" style="height:26px;font-size:11.5px;padding:0 6px;border:1px solid #CBD5E1;border-radius:4px;background:#FFF">
-              <option value="5000">5 seconds</option>
-              <option value="8000" selected>8 seconds (Recommended)</option>
-              <option value="12000">12 seconds</option>
-              <option value="15000">15 seconds</option>
+              <option value="45000" ${throttleDelayMs === 45000 ? 'selected' : ''}>45 seconds (Fast)</option>
+              <option value="60000" ${throttleDelayMs === 60000 ? 'selected' : ''}>60 seconds (1 min)</option>
+              <option value="90000" ${throttleDelayMs === 90000 ? 'selected' : ''}>90 seconds (1.5 min - Recommended)</option>
+              <option value="120000" ${throttleDelayMs === 120000 ? 'selected' : ''}>120 seconds (2 min - Stealth)</option>
+              <option value="180000" ${throttleDelayMs === 180000 ? 'selected' : ''}>180 seconds (3 min - Safe Warm-up)</option>
             </select>
           </div>
 
@@ -226,6 +265,23 @@ function renderQueueView(readyPartners, t1, savedPass) {
           </div>
         </div>
       </div>
+
+      <!-- Interactive Planned Timeline Preview -->
+      ${selectedCount > 0 ? `
+        <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;padding:10px 14px;font-size:12px;color:#1E40AF;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+          <div>
+            <strong>📅 Planned Staggered Sequence:</strong>
+            ${scheduleMode === 'planned' 
+              ? `First email (#1) at <strong>${formatTimeSlot(getPlannedDate(plannedSendTime), 0, throttleDelayMs)}</strong> · Last email (#${selectedCount}) at <strong>${formatTimeSlot(getPlannedDate(plannedSendTime), selectedCount - 1, throttleDelayMs)}</strong>`
+              : `First email <strong>Immediate</strong> · Last email (#${selectedCount}) in <strong>${Math.round(((selectedCount - 1) * throttleDelayMs) / 60000 * 10) / 10} minutes</strong>`
+            }
+            <span style="font-size:11px;color:#3B82F6;margin-left:6px">(${Math.round(throttleDelayMs / 1000)}s cooldown between deliveries)</span>
+          </div>
+          <div style="font-weight:700;font-size:11.5px;background:#DBEAFE;color:#1E3A8A;padding:4px 12px;border-radius:12px">
+            ${scheduleMode === 'planned' ? getCountdownSummary(getPlannedDate(plannedSendTime)) : '⚡ Ready for instant dispatch'}
+          </div>
+        </div>
+      ` : ''}
     </div>
 
     <!-- Ready Draft Cards -->
@@ -243,6 +299,13 @@ function renderQueueView(readyPartners, t1, savedPass) {
         ${readyPartners.map((p, idx) => {
           const draft = renderEventTemplate(t1, p);
           const isSelected = selectedPartnerIds.has(p.id);
+          const selectedList = readyPartners.filter(x => selectedPartnerIds.has(x.id));
+          const selectedIdx = selectedList.findIndex(x => x.id === p.id);
+          const plannedDate = getPlannedDate(plannedSendTime);
+          const slotTime = selectedIdx >= 0
+            ? (scheduleMode === 'planned' ? formatTimeSlot(plannedDate, selectedIdx, throttleDelayMs) : (selectedIdx === 0 ? 'Now (Slot #1)' : `+${Math.round((selectedIdx * throttleDelayMs) / 1000)}s`))
+            : null;
+
           return `
             <div class="sail-card" style="padding:16px;display:flex;flex-direction:column;gap:12px;border:1px solid ${isSelected ? '#3B82F6' : 'var(--sail-line)'};background:#FFF;box-shadow:${isSelected ? '0 0 0 1px #3B82F6' : 'none'}">
               <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
@@ -255,6 +318,11 @@ function renderQueueView(readyPartners, t1, savedPass) {
                     <span style="font-size:11.5px;color:var(--sail-muted);margin-left:6px">
                       (${esc(p.country)} · ✈️ ${esc((p.origin_hub || 'MXP').split(' ')[0])} · Pavilion ${esc(p.stand || '1-4')})
                     </span>
+                    ${slotTime ? `
+                      <span class="sail-pill info" style="font-size:10.5px;font-weight:700;margin-left:8px;background:#DBEAFE;color:#1E40AF;border:1px solid #93C5FD;padding:2px 8px">
+                        🕒 Planned Slot #${selectedIdx + 1}: ${slotTime}
+                      </span>
+                    ` : ''}
                   </div>
                 </div>
 
@@ -484,17 +552,37 @@ function attachEventListeners(el, readyPartners, t1) {
     };
   });
 
+  // Cooldown delay change listener
+  el.querySelector('#select-throttle-delay')?.addEventListener('change', (e) => {
+    throttleDelayMs = parseInt(e.target.value, 10) || 90000;
+    render(el);
+  });
+
+  // Schedule mode change listener
+  el.querySelector('#select-schedule-mode')?.addEventListener('change', (e) => {
+    scheduleMode = e.target.value;
+    render(el);
+  });
+
+  // Planned time change listener
+  el.querySelector('#input-planned-time')?.addEventListener('change', (e) => {
+    plannedSendTime = e.target.value || '15:00';
+    render(el);
+  });
+
   // Batch Send Launch
   const btnBatch = el.querySelector('#btn-batch-send');
   if (btnBatch) {
     btnBatch.onclick = () => {
-      const delayMs = parseInt(el.querySelector('#select-throttle-delay')?.value, 10) || 8000;
+      const delayMs = parseInt(el.querySelector('#select-throttle-delay')?.value, 10) || throttleDelayMs;
+      const mode = el.querySelector('#select-schedule-mode')?.value || scheduleMode;
+      const timeVal = el.querySelector('#input-planned-time')?.value || plannedSendTime;
       const targets = readyPartners.filter((p) => selectedPartnerIds.has(p.id));
       if (targets.length === 0) {
         toast('No exhibitors selected for batch', 'error');
         return;
       }
-      showBatchDispatchModal(targets, t1, delayMs, el);
+      showBatchDispatchModal(targets, t1, delayMs, mode, timeVal, el);
     };
   }
 
@@ -783,7 +871,7 @@ async function executeSingleSend(partner, template, btn, rootEl) {
   }
 }
 
-function showBatchDispatchModal(targets, template, delayMs, rootEl) {
+function showBatchDispatchModal(targets, template, delayMs, mode = 'now', plannedTimeStr = '15:00', rootEl) {
   const pass = getStoredPass();
   if (!pass) {
     toast('Please set Hostinger password in Mailbox Settings first', 'error');
@@ -793,21 +881,36 @@ function showBatchDispatchModal(targets, template, delayMs, rootEl) {
 
   stopRequested = false;
   isDispatching = true;
+  const plannedDate = getPlannedDate(plannedTimeStr);
+  const isScheduled = mode === 'planned' && plannedDate.getTime() > Date.now();
 
   const dlg = dialog({
-    title: '🚀 Live Batch Sending Engine',
+    title: isScheduled ? '🕒 Scheduled Batch Sending Engine' : '🚀 Live Batch Sending Engine',
     wide: true,
     body: `
       <div style="display:flex;flex-direction:column;gap:14px;font-size:12.5px">
-        <div>
-          Dispatching <strong>${targets.length} emails</strong> via Hostinger SMTP (<code>igor@b2b-dorogo.it</code>).
-          Anti-spam delay: <strong>${Math.round(delayMs / 1000)}s</strong> between deliveries.
+        <div style="background:#F8FAFC;padding:10px 14px;border-radius:6px;border:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <div>
+            Batch: <strong>${targets.length} emails</strong> via Hostinger SMTP (<code>igor@b2b-dorogo.it</code>).<br>
+            Anti-spam delay: <strong>${Math.round(delayMs / 1000)}s</strong> between deliveries.
+          </div>
+          <div style="text-align:right">
+            ${isScheduled ? `
+              <span class="sail-pill info" style="font-size:11.5px;font-weight:700;background:#DBEAFE;color:#1E40AF">
+                🕒 Planned Start: ${formatTimeSlot(plannedDate, 0, delayMs)}
+              </span>
+            ` : `
+              <span class="sail-pill success" style="font-size:11.5px;font-weight:700;background:#D1FAE5;color:#065F46">
+                ⚡ Immediate Dispatch Mode
+              </span>
+            `}
+          </div>
         </div>
 
         <!-- Progress Bar -->
         <div style="display:flex;flex-direction:column;gap:6px">
           <div style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:600">
-            <span id="batch-progress-label">Preparing dispatch...</span>
+            <span id="batch-progress-label">${isScheduled ? `Armed: Waiting for ${formatTimeSlot(plannedDate, 0, delayMs)}...` : 'Preparing dispatch...'}</span>
             <span id="batch-progress-pct">0%</span>
           </div>
           <div style="background:#E2E8F0;height:10px;border-radius:5px;overflow:hidden">
@@ -817,13 +920,20 @@ function showBatchDispatchModal(targets, template, delayMs, rootEl) {
 
         <!-- Real-time Console Log -->
         <div id="batch-console-log" style="background:#0F172A;color:#E2E8F0;font-family:monospace;font-size:11px;padding:12px;border-radius:6px;height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:4px">
-          <div>[INFO] Initializing batch dispatch for ${targets.length} exhibitors...</div>
+          <div>[INFO] Initialized batch for ${targets.length} exhibitors...</div>
+          ${isScheduled ? `<div>[SCHEDULE] Target start: ${plannedDate.toLocaleTimeString()} (${getCountdownSummary(plannedDate)})</div>` : ''}
         </div>
 
         <!-- Modal Controls -->
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-          <span id="batch-status-sub" style="font-size:11.5px;color:var(--sail-muted)">Do not close this window during dispatch.</span>
-          <div style="display:flex;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;flex-wrap:wrap;gap:8px">
+          <span id="batch-status-sub" style="font-size:11.5px;color:var(--sail-muted)">Keep this tab open while scheduled dispatch is armed.</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button id="modal-btn-skip-wait" class="sail-btn primary" style="font-size:11.5px;padding:5px 12px;background:#2563EB;${isScheduled ? '' : 'display:none'}">
+              ⚡ Launch Now (Skip Countdown)
+            </button>
+            <button id="modal-btn-skip-cooldown" class="sail-btn default" style="font-size:11.5px;padding:5px 12px;color:#2563EB;display:none">
+              ⏩ Skip Cooldown (Send Next)
+            </button>
             <button id="modal-btn-stop-batch" class="sail-btn default" style="font-size:12px;padding:6px 12px;color:#DC2626">
               ⏹️ Stop Batch
             </button>
@@ -841,6 +951,11 @@ function showBatchDispatchModal(targets, template, delayMs, rootEl) {
       const logBox = el.querySelector('#batch-console-log');
       const btnStop = el.querySelector('#modal-btn-stop-batch');
       const btnDone = el.querySelector('#modal-btn-done-batch');
+      const btnSkipWait = el.querySelector('#modal-btn-skip-wait');
+      const btnSkipCooldown = el.querySelector('#modal-btn-skip-cooldown');
+
+      let skipWaitTriggered = false;
+      let skipCooldownTriggered = false;
 
       function appendLog(msg, color = '#E2E8F0') {
         const time = new Date().toLocaleTimeString();
@@ -851,11 +966,22 @@ function showBatchDispatchModal(targets, template, delayMs, rootEl) {
         logBox.scrollTop = logBox.scrollHeight;
       }
 
+      btnSkipWait.onclick = () => {
+        skipWaitTriggered = true;
+        btnSkipWait.style.display = 'none';
+        appendLog('⚡ Operator skipped countdown. Starting immediate dispatch...', '#3B82F6');
+      };
+
+      btnSkipCooldown.onclick = () => {
+        skipCooldownTriggered = true;
+        appendLog('⏩ Operator skipped cooldown delay.', '#3B82F6');
+      };
+
       btnStop.onclick = () => {
         stopRequested = true;
         btnStop.disabled = true;
         btnStop.textContent = 'Stopping...';
-        appendLog('Stopping requested by user. Waiting for current dispatch to finish...', '#F59E0B');
+        appendLog('⏹️ Stopping requested by user. Waiting for current dispatch to finish...', '#F59E0B');
       };
 
       btnDone.onclick = () => {
@@ -868,6 +994,25 @@ function showBatchDispatchModal(targets, template, delayMs, rootEl) {
         let sentCount = 0;
         let failCount = 0;
 
+        // Phase 1: Pre-dispatch Scheduled Countdown (if planned time is in future)
+        if (isScheduled) {
+          appendLog(`🕒 Scheduled countdown armed for ${formatTimeSlot(plannedDate, 0, delayMs)}...`, '#60A5FA');
+          while (Date.now() < plannedDate.getTime() && !skipWaitTriggered && !stopRequested) {
+            const remainSec = Math.ceil((plannedDate.getTime() - Date.now()) / 1000);
+            const h = Math.floor(remainSec / 3600);
+            const m = Math.floor((remainSec % 3600) / 60);
+            const s = remainSec % 60;
+            const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            pLabel.textContent = `⏳ Scheduled start at ${plannedDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} (starts in ${timeStr})...`;
+            await new Promise((r) => setTimeout(r, 1000));
+          }
+          btnSkipWait.style.display = 'none';
+          if (!stopRequested) {
+            appendLog(`🚀 Planned start time reached (${new Date().toLocaleTimeString()}). Commencing staggered dispatch!`, '#10B981');
+          }
+        }
+
+        // Phase 2: Dispatch Loop
         for (let i = 0; i < targets.length; i++) {
           if (stopRequested) {
             appendLog('Batch stopped by operator.', '#F59E0B');
@@ -919,10 +1064,20 @@ function showBatchDispatchModal(targets, template, delayMs, rootEl) {
             appendLog(`❌ Network error for ${partner.name}: ${e.message}`, '#EF4444');
           }
 
-          // Anti-spam throttling cooldown between sends
+          // Anti-spam throttling cooldown between sends with live countdown
           if (i < targets.length - 1 && !stopRequested) {
-            appendLog(`⏳ Anti-spam throttling: waiting ${Math.round(delayMs / 1000)}s before next send...`, '#94A3B8');
-            await new Promise((res) => setTimeout(res, delayMs));
+            skipCooldownTriggered = false;
+            btnSkipCooldown.style.display = 'inline-block';
+            const cooldownSecs = Math.round(delayMs / 1000);
+            const nextTarget = targets[i + 1];
+            appendLog(`⏳ Anti-spam cooldown: waiting ${cooldownSecs}s before next send (Next: ${nextTarget.name})...`, '#94A3B8');
+
+            for (let c = cooldownSecs; c > 0; c--) {
+              if (stopRequested || skipCooldownTriggered) break;
+              pLabel.textContent = `Cooling down (${c}s remaining before next send: ${nextTarget.name})...`;
+              await new Promise((res) => setTimeout(res, 1000));
+            }
+            btnSkipCooldown.style.display = 'none';
           }
         }
 
@@ -932,6 +1087,8 @@ function showBatchDispatchModal(targets, template, delayMs, rootEl) {
         pBar.style.background = failCount > 0 ? '#F59E0B' : '#10B981';
 
         btnStop.style.display = 'none';
+        btnSkipWait.style.display = 'none';
+        btnSkipCooldown.style.display = 'none';
         btnDone.style.display = 'inline-block';
         appendLog(`🎉 Batch run finished: ${sentCount} successfully delivered, ${failCount} errors.`, '#10B981');
         toast(`Batch finished: ${sentCount} delivered!`);
