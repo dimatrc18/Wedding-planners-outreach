@@ -89,7 +89,9 @@ export const DEFAULT_SETTINGS = {
   optimal_send_slots: ['12:00', '15:00', '17:00'],
   window_start: '09:00',
   window_end: '11:30',
-  daily_cap: 12,
+  daily_cap: 25,
+  daily_t1_cap: 15,
+  daily_followup_cap: 10,
   warmup: { enabled: true, start: 6, weekly_increment: 3 },
   jitter_min: 4, // minutes between two sends, minimum
   jitter_max: 11,

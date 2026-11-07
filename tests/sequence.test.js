@@ -151,10 +151,46 @@ test('effectiveCap: warm-up grows weekly, season halves, paused is zero', () => 
   const first = rome(2026, 10, 6);
   assert.equal(effectiveCap(S, first, first), 6);
   assert.equal(effectiveCap(S, rome(2026, 10, 14), first), 9);
-  assert.equal(effectiveCap(S, rome(2026, 11, 20), first), 12, 'never above daily_cap');
-  assert.equal(effectiveCap({ ...S, season_mode: 'auto', warmup: { enabled: false } }, rome(2027, 7, 6)), 6, 'July: half speed');
-  assert.equal(effectiveCap({ ...S, season_mode: 'auto', warmup: { enabled: false } }, rome(2027, 1, 12)), 12, 'January: full speed');
+  assert.equal(effectiveCap(S, rome(2026, 11, 20), first), 24, 'warm-up week 6 reaches 24');
+  assert.equal(effectiveCap(S, rome(2026, 12, 1), first), 25, 'never above daily_cap of 25');
+  assert.equal(effectiveCap({ ...S, daily_cap: 12 }, rome(2026, 11, 20), first), 12, 'respects explicit daily_cap of 12');
+  assert.equal(effectiveCap({ ...S, season_mode: 'auto', warmup: { enabled: false } }, rome(2027, 7, 6)), 13, 'July: half speed of 25');
+  assert.equal(effectiveCap({ ...S, season_mode: 'auto', warmup: { enabled: false } }, rome(2027, 1, 12)), 25, 'January: full speed');
   assert.equal(effectiveCap({ ...S, season_mode: 'paused' }, first), 0);
+});
+
+test('canSend and nextSendSlot enforce 15 T1 / 10 follow-up quota split with 25 daily cap', () => {
+  const SFull = { ...S, warmup: { enabled: false } };
+  const tue10 = rome(2026, 10, 6, 10, 0);
+  const t1 = { step_name: 'T1_intro', channel: 'email', state: 'approved', scheduled_at: tue10.toISOString() };
+  const t3 = { step_name: 'T3_followup', channel: 'email', state: 'approved', scheduled_at: tue10.toISOString() };
+
+  // When T1 limit of 15 is hit, T1 is blocked with daily_t1_cap, but follow-up is still permitted
+  assert.equal(canSend(t1, P(), [], SFull, { now: tue10, sentToday: 15, sentTodayT1: 15, sentTodayFollowup: 0 }).reason, 'daily_t1_cap');
+  assert.equal(canSend(t3, P(), [], SFull, { now: tue10, sentToday: 15, sentTodayT1: 15, sentTodayFollowup: 0 }).ok, true);
+
+  // When follow-up limit of 10 is hit, follow-up is blocked with daily_followup_cap, but T1 is still permitted
+  assert.equal(canSend(t3, P(), [], SFull, { now: tue10, sentToday: 10, sentTodayT1: 0, sentTodayFollowup: 10 }).reason, 'daily_followup_cap');
+  assert.equal(canSend(t1, P(), [], SFull, { now: tue10, sentToday: 10, sentTodayT1: 0, sentTodayFollowup: 10 }).ok, true);
+
+  // When overall daily cap is hit, both are blocked
+  assert.equal(canSend(t1, P(), [], SFull, { now: tue10, sentToday: 25, sentTodayT1: 15, sentTodayFollowup: 10 }).reason, 'daily_cap');
+  assert.equal(canSend(t3, P(), [], SFull, { now: tue10, sentToday: 25, sentTodayT1: 15, sentTodayFollowup: 10 }).reason, 'daily_cap');
+
+  // nextSendSlot spills follow-ups to Wednesday when 10 follow-ups are already scheduled on Tuesday
+  const rng = () => 0.5;
+  const mon = rome(2026, 10, 5, 8, 0);
+  const tenFollowups = Array.from({ length: 10 }, (_, i) => {
+    const d = new Date(tue10.getTime() + i * 60000);
+    d.step_name = 'T3_followup';
+    return d;
+  });
+  const nextFollowup = nextSendSlot(mon, SFull, tenFollowups, { rng, stepName: 'T3_followup' });
+  assert.equal(localParts(nextFollowup, 'Europe/Rome').dow, 3, '11th follow-up spills to Wednesday');
+
+  // But a T1 intro can still take a Tuesday slot because T1 quota (15) is open
+  const nextT1 = nextSendSlot(mon, SFull, tenFollowups, { rng, stepName: 'T1_intro' });
+  assert.equal(localParts(nextT1, 'Europe/Rome').dow, 2, 'T1 intro lands on Tuesday without being starved by follow-ups');
 });
 
 test('time zone and holidays', () => {

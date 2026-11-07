@@ -246,6 +246,8 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
   const today = core.localDateKey(now, settings.timezone);
   const coldSent = touches.filter((t: any) => t.direction === 'out' && t.state === 'sent' && t.channel === 'email' && core.COLD_STEPS.includes(t.step_name));
   let sentToday = coldSent.filter((t: any) => t.sent_at && core.localDateKey(new Date(t.sent_at), settings.timezone) === today).length;
+  let sentTodayT1 = coldSent.filter((t: any) => t.step_name === 'T1_intro' && t.sent_at && core.localDateKey(new Date(t.sent_at), settings.timezone) === today).length;
+  let sentTodayFollowup = coldSent.filter((t: any) => t.step_name !== 'T1_intro' && t.sent_at && core.localDateKey(new Date(t.sent_at), settings.timezone) === today).length;
   const emailsSent = touches.filter((t: any) => t.direction === 'out' && t.state === 'sent' && t.channel === 'email')
     .sort((a: any, b: any) => new Date(b.sent_at || b.created_at).getTime() - new Date(a.sent_at || a.created_at).getTime());
   const windowSent = emailsSent.slice(0, 100);
@@ -271,12 +273,13 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
   const sentProspectsThisRun = new Set<string>();
   let sent = 0;
   let attempts = 0;
+  const maxBatch = Math.max(25, settings.daily_cap || 25);
   for (const t of due) {
-    if (attempts >= 15) break;
+    if (attempts >= maxBatch) break;
     const p: any = pmap.get(t.prospect_id);
     if (!p) continue;
     const list = touches.filter((x: any) => x.prospect_id === p.id);
-    let gate: any = core.canSend(t, p, list, settings, { now, sentToday, firstSendAt, sentTotal, bouncedTotal });
+    let gate: any = core.canSend(t, p, list, settings, { now, sentToday, sentTodayT1, sentTodayFollowup, firstSendAt, sentTotal, bouncedTotal });
     if (!gate.ok && gate.reason === 'not_due' && onlyTouchId) gate = { ok: true }; // "Send now" overrides the slot, nothing else
     if (!gate.ok) {
       results.push({ id: t.id, reason: gate.reason });
@@ -392,6 +395,11 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
       if (sentRaw) appendToSent(sentRaw).catch((e) => console.error('append to Sent failed', e.message));
       if (core.COLD_STEPS.includes(t.step_name)) {
         sentToday++;
+        if (t.step_name === 'T1_intro') {
+          sentTodayT1++;
+        } else {
+          sentTodayFollowup++;
+        }
         sentRecipientsThisRun.add(targetToNorm);
         sentProspectsThisRun.add(p.id);
       }
@@ -413,6 +421,12 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
           }).eq('id', t.id);
         } catch (_) {}
         if (core.COLD_STEPS.includes(t.step_name)) {
+          sentToday++;
+          if (t.step_name === 'T1_intro') {
+            sentTodayT1++;
+          } else {
+            sentTodayFollowup++;
+          }
           sentRecipientsThisRun.add(targetToNorm);
           sentProspectsThisRun.add(p.id);
         }

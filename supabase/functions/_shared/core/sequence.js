@@ -13,6 +13,8 @@ export const withDefaults = (s) => {
   const rawSteps = Array.isArray(s?.steps) && s.steps.length ? s.steps : DEFAULT_STEPS;
   merged.steps = rawSteps.filter((st) => st && st.key !== 'T2_ig_dm' && st.channel !== 'instagram_dm');
   if (!merged.steps.length) merged.steps = DEFAULT_STEPS;
+  if (merged.daily_t1_cap === undefined) merged.daily_t1_cap = 15;
+  if (merged.daily_followup_cap === undefined) merged.daily_followup_cap = 10;
   return merged;
 };
 
@@ -118,7 +120,7 @@ export function inSendWindow(date, settings, tz) {
  * Earliest allowed send time at or after `after`.
  * `taken` = times of sends already scheduled or sent (any prospect); used for caps and spacing.
  */
-export function nextSendSlot(after, settings, taken = [], { tz, rng = Math.random, firstSendAt = null, maxDays = 120 } = {}) {
+export function nextSendSlot(after, settings, taken = [], { tz, rng = Math.random, firstSendAt = null, maxDays = 120, stepName = null } = {}) {
   const s = withDefaults(settings);
   tz = tz || s.timezone;
   const minutes = (n) => n * 60000;
@@ -131,8 +133,23 @@ export function nextSendSlot(after, settings, taken = [], { tz, rng = Math.rando
     if (!s.send_days.includes(p.dow) || isItalianHoliday(ymd(p))) { cursor = nextDay(); continue; }
     const capKey = localDateKey(cursor, s.timezone);
     const cap = effectiveCap(s, cursor, firstSendAt);
-    const sameDay = taken.map((t) => new Date(t)).filter((t) => localDateKey(t, s.timezone) === capKey);
+    const sameDay = taken
+      .map((t) => (t instanceof Date ? t : (t?.date ? Object.assign(new Date(t.date), { step_name: t.step_name }) : new Date(t))))
+      .filter((t) => localDateKey(t, s.timezone) === capKey);
     if (sameDay.length >= cap) { cursor = nextDay(); continue; }
+
+    const isT1 = stepName === 'T1_intro';
+    const isFollowup = stepName && stepName !== 'T1_intro';
+    const t1Cap = s.daily_t1_cap !== undefined ? s.daily_t1_cap : 15;
+    const followupCap = s.daily_followup_cap !== undefined ? s.daily_followup_cap : 10;
+
+    if (isT1) {
+      const sameDayT1 = sameDay.filter((t) => t.step_name === 'T1_intro');
+      if (sameDayT1.length >= t1Cap) { cursor = nextDay(); continue; }
+    } else if (isFollowup) {
+      const sameDayFollowup = sameDay.filter((t) => t.step_name && t.step_name !== 'T1_intro');
+      if (sameDayFollowup.length >= followupCap) { cursor = nextDay(); continue; }
+    }
 
     if (waves) {
       let chosenSlot = null;
@@ -245,6 +262,18 @@ export function canSend(touch, prospect, touches, settings, ctx = {}) {
   const tz = prospect.timezone || prospectTimezone(prospect.market || inferMarket(prospect), s.timezone);
   if (!inSendWindow(now, s, tz)) return { ok: false, reason: 'outside_window' };
   if ((ctx.sentToday || 0) >= cap) return { ok: false, reason: 'daily_cap' };
+
+  // Dedicated Quota Split (15 T1 intros / 10 follow-ups with overall cap)
+  const isT1 = touch.step_name === 'T1_intro';
+  const t1Cap = s.daily_t1_cap !== undefined ? s.daily_t1_cap : 15;
+  const followupCap = s.daily_followup_cap !== undefined ? s.daily_followup_cap : 10;
+  if (isT1 && ctx.sentTodayT1 !== undefined && ctx.sentTodayT1 >= t1Cap) {
+    return { ok: false, reason: 'daily_t1_cap' };
+  }
+  if (!isT1 && ctx.sentTodayFollowup !== undefined && ctx.sentTodayFollowup >= followupCap) {
+    return { ok: false, reason: 'daily_followup_cap' };
+  }
+
   return { ok: true };
 }
 
@@ -270,6 +299,8 @@ export const BLOCK_REASONS = {
   not_due: 'Scheduled for later',
   outside_window: 'Outside the send window',
   daily_cap: 'Daily cap reached',
+  daily_t1_cap: 'Daily T1 intro limit reached',
+  daily_followup_cap: 'Daily follow-up limit reached',
   step_already_sent: 'Cadence step has already been sent to this prospect',
   recipient_cooldown: 'Recipient was contacted within the last 24 hours (anti-flood active)',
   touch_already_sent: 'This message has already been sent',
@@ -294,7 +325,7 @@ export function scheduleApproved(touch, prospect, settings, taken = [], { now = 
   if (!COLD_STEPS.includes(touch.step_name)) return now;
   const s = withDefaults(settings);
   const tz = prospect.timezone || prospectTimezone(prospect.market || inferMarket(prospect), s.timezone);
-  return nextSendSlot(now, s, taken, { tz, firstSendAt, rng });
+  return nextSendSlot(now, s, taken, { tz, firstSendAt, rng, stepName: touch.step_name });
 }
 
 // Cold email send times already used (scheduled or sent), the input nextSendSlot needs.
@@ -302,7 +333,11 @@ export function takenSlots(touches, now = new Date()) {
   const from = now.getTime() - 2 * 86400000;
   return touches.filter((t) => t.direction === 'out' && t.channel === 'email' && COLD_STEPS.includes(t.step_name) &&
     ((t.state === 'sent' && t.sent_at) || (t.state === 'approved' && t.scheduled_at)))
-    .map((t) => new Date(t.state === 'sent' ? t.sent_at : t.scheduled_at)).filter((d) => d.getTime() >= from);
+    .map((t) => {
+      const d = new Date(t.state === 'sent' ? t.sent_at : t.scheduled_at);
+      d.step_name = t.step_name;
+      return d;
+    }).filter((d) => d.getTime() >= from);
 }
 
 export function firstColdSend(touches) {
