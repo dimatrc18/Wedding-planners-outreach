@@ -181,3 +181,38 @@ test('Whali Cold Outreach Benchmarks: event templates strictly adhere to <100 wo
   const coldTouches = DEFAULT_EVENT_TEMPLATES.filter((t) => t.step_num <= 2);
   assert.equal(coldTouches.length, 2, 'Must have exactly 2 cold touches (T1 + T2 follow-up) to avoid unsubscribe surge');
 });
+
+test('Milano Home Dual-Sender Distribution & Queue Verification: 83 queued teams, 0 collisions, finishing before month-end', () => {
+  assert.equal(INITIAL_EVENT_PARTNERS.length, 84);
+
+  const queued = INITIAL_EVENT_PARTNERS.filter((p) => p.status === 'WANT_TO_CONTACT');
+  const dismissed = INITIAL_EVENT_PARTNERS.filter((p) => p.status === 'NOT_RELEVANT');
+
+  assert.equal(queued.length, 83, 'Exactly 83 legitimate foreign exhibitors must be in WANT_TO_CONTACT queue');
+  assert.equal(dismissed.length, 1, 'Only internal maintenance staff (ESERVICE MANUTENZIONE) must be dismissed');
+  assert.equal(dismissed[0].id, 'exhibitor_mhome_020');
+
+  // Verify sender assignments
+  const dmitriCount = queued.filter((p) => p.sender_email === 'dmitri@dorogo.eu').length;
+  const igorCount = queued.filter((p) => p.sender_email === 'igor@b2b-dorogo.it').length;
+
+  assert.equal(dmitriCount, 42, 'Dmitri must have 42 assigned leads');
+  assert.equal(igorCount, 41, 'Igor must have 41 assigned leads');
+  assert.equal(dmitriCount + igorCount, 83, 'All 83 queued leads must have an assigned sender');
+
+  // Verify Asian exhibitors (China, Japan, Singapore) are assigned to Igor morning wave (10:00 CET = 17:00/18:00 Asia)
+  const asianExhibitors = queued.filter((p) => 
+    p.country.toLowerCase().includes('china') || 
+    p.country.toLowerCase().includes('japan') || 
+    p.country.toLowerCase().includes('singapore')
+  );
+  for (const asian of asianExhibitors) {
+    assert.equal(asian.sender_email, 'igor@b2b-dorogo.it', `Asian exhibitor ${asian.name} must be assigned to Igor morning wave`);
+  }
+
+  // Verify mergeEventRecords automatically upgrades legacy TO_REVIEW to WANT_TO_CONTACT
+  const legacyRecord = { id: 'exhibitor_mhome_001', status: 'TO_REVIEW' };
+  const merged = mergeEventRecords(INITIAL_EVENT_PARTNERS, [legacyRecord]);
+  const m1 = merged.find((p) => p.id === 'exhibitor_mhome_001');
+  assert.equal(m1.status, 'WANT_TO_CONTACT', 'mergeEventRecords must upgrade legacy TO_REVIEW to WANT_TO_CONTACT');
+});

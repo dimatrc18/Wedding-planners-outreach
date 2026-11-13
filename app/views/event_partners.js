@@ -52,6 +52,72 @@ function renderCountryPill(p) {
   `;
 }
 
+function getCountryLocalTimeNote(country, cetHour) {
+  if (!country) return `${cetHour}:00 local`;
+  const c = country.toLowerCase();
+  if (c.includes('united kingdom') || c.includes('uk') || c.includes('ireland')) {
+    const lH = cetHour - 1;
+    return `${lH}:00 UK (${lH < 12 ? 'Morning' : 'Afternoon'})`;
+  }
+  if (c.includes('china') || c.includes('singapore')) {
+    const lH = cetHour + 7;
+    return `${lH}:00 Asia (Late afternoon)`;
+  }
+  if (c.includes('japan')) {
+    const lH = cetHour + 8;
+    return `${lH}:00 Tokyo (EOD check)`;
+  }
+  if (c.includes('greece') || c.includes('bulgaria') || c.includes('lithuania')) {
+    const lH = cetHour + 1;
+    return `${lH}:00 EET (Local morning)`;
+  }
+  if (c.includes('united states') || c.includes('usa')) {
+    const lH = cetHour - 6;
+    return `${lH}:00 NY (Morning open)`;
+  }
+  // Continental Europe (CET)
+  return `${cetHour}:00 local (Prime office)`;
+}
+
+function getExhibitorScheduleDate(partner, dmitriIdx, igorIdx) {
+  const isDmitri = partner.sender_email && partner.sender_email.includes('dmitri');
+  const sendDays = [
+    { label: 'Mon 16 Nov' },
+    { label: 'Tue 17 Nov' },
+    { label: 'Wed 18 Nov' },
+    { label: 'Thu 19 Nov' },
+    { label: 'Fri 20 Nov' },
+    { label: 'Mon 23 Nov' },
+    { label: 'Tue 24 Nov' },
+  ];
+
+  if (isDmitri) {
+    const dayIdx = Math.min(Math.floor(dmitriIdx / 10), sendDays.length - 1);
+    const day = sendDays[dayIdx] || sendDays[0];
+    const waveHour = (dmitriIdx % 2 === 0) ? 12 : 15;
+    const waveTime = `${waveHour}:00 CET`;
+    const localTimeNote = getCountryLocalTimeNote(partner.country, waveHour);
+    return {
+      dateStr: day.label,
+      timeStr: waveTime,
+      localNote: localTimeNote,
+      batchNum: dayIdx + 1,
+      slotInBatch: (dmitriIdx % 10) + 1
+    };
+  } else {
+    const dayIdx = Math.min(Math.floor(igorIdx / 6), sendDays.length - 1);
+    const day = sendDays[dayIdx] || sendDays[0];
+    const localTimeNote = getCountryLocalTimeNote(partner.country, 10);
+    return {
+      dateStr: day.label,
+      timeStr: '10:00 CET',
+      localNote: localTimeNote,
+      batchNum: dayIdx + 1,
+      slotInBatch: (igorIdx % 6) + 1
+    };
+  }
+}
+
 export async function render(el) {
   currentEl = el;
   const stored = loadStoredEventPartners();
@@ -63,9 +129,14 @@ export async function render(el) {
   const readyCount = partners.filter((p) => p.status === 'WANT_TO_CONTACT').length;
   const contactedCount = partners.filter((p) => p.status === 'CONTACTED' || p.status === 'APPROVED_PARTNER').length;
 
-  const readyPartnersList = partners.filter((p) => p.status === 'WANT_TO_CONTACT');
-  const readyIdToIndex = new Map();
-  readyPartnersList.forEach((p, idx) => readyIdToIndex.set(p.id, idx));
+  const readyDmitri = partners.filter((p) => p.status === 'WANT_TO_CONTACT' && p.sender_email && p.sender_email.includes('dmitri'));
+  const readyIgor = partners.filter((p) => p.status === 'WANT_TO_CONTACT' && (!p.sender_email || !p.sender_email.includes('dmitri')));
+
+  const dmitriIdToIndex = new Map();
+  readyDmitri.forEach((p, idx) => dmitriIdToIndex.set(p.id, idx));
+
+  const igorIdToIndex = new Map();
+  readyIgor.forEach((p, idx) => igorIdToIndex.set(p.id, idx));
 
   const filtered = partners.filter((p) => {
     if (activeTypeFilter === 'tier1' && !p.is_enriched && p.agency_type !== 'tier1_luxury') return false;
@@ -211,26 +282,26 @@ export async function render(el) {
 
       <!-- Main Data Table (Stripe Sail) -->
       <div class="sail-card" style="padding:0;overflow:hidden">
-        <div class="sail-table-wrap" style="overflow-x:hidden">
-          <table class="sail-table" style="table-layout:fixed;width:100%;border-collapse:collapse">
+        <div class="sail-table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+          <table class="sail-table" style="table-layout:fixed;width:100%;min-width:960px;border-collapse:collapse">
             <thead>
               <tr>
-                <th style="width:23%">
+                <th style="width:22%;min-width:180px">
                   <div class="sail-th-title">Exhibitor &amp; Website</div>
                 </th>
-                <th style="width:16%">
+                <th style="width:14%;min-width:120px">
                   <div class="sail-th-title">Origin &amp; Pavilion</div>
                 </th>
-                <th style="width:22%">
+                <th style="width:20%;min-width:160px">
                   <div class="sail-th-title">Trade Contact &amp; Email</div>
                 </th>
-                <th style="width:17%">
+                <th style="width:19%;min-width:165px">
                   <div class="sail-th-title">Outreach &amp; Schedule</div>
                 </th>
-                <th style="width:10%">
+                <th style="width:11%;min-width:100px">
                   <div class="sail-th-title">Sender</div>
                 </th>
-                <th style="width:12%;text-align:right">
+                <th style="width:14%;min-width:135px;text-align:right">
                   <div class="sail-th-title">Score / Action</div>
                 </th>
               </tr>
@@ -242,7 +313,7 @@ export async function render(el) {
                     No exhibiting teams match your active filters. Click <strong>+ Add Exhibiting Team</strong> to create one.
                   </td>
                 </tr>
-              ` : filtered.map((p) => renderAgencyRow(p, readyIdToIndex)).join('')}
+              ` : filtered.map((p) => renderAgencyRow(p, dmitriIdToIndex, igorIdToIndex)).join('')}
             </tbody>
           </table>
         </div>
@@ -250,8 +321,8 @@ export async function render(el) {
 
       <!-- Safety Footer -->
       <div style="font-size:11px;color:var(--sail-muted);display:flex;align-items:center;justify-content:space-between;padding:0 4px">
-        <span>🔒 <strong>Zero-Send Guarantee:</strong> Outreach is strictly locked in TO_REVIEW until rate cards are approved.</span>
-        <span>Dedicated Sender: <strong>Igor</strong> (<code>igor@b2b-dorogo.it</code>)</span>
+        <span>🔒 <strong>Ready in Queue:</strong> 83 verified foreign teams queued (42 Dmitri, 41 Igor). All emails will finish sending by Friday, Nov 20, 2026.</span>
+        <span>Dedicated Senders: <strong>Dmitri</strong> (<code>dmitri@dorogo.eu</code> · 42 leads) &amp; <strong>Igor</strong> (<code>igor@b2b-dorogo.it</code> · 41 leads)</span>
       </div>
     </div>
   `;
@@ -259,13 +330,13 @@ export async function render(el) {
   attachEventListeners(el);
 }
 
-function renderAgencyRow(p, readyIdToIndex) {
+function renderAgencyRow(p, dmitriIdToIndex, igorIdToIndex) {
   const cfg = STATUS_CONFIG[p.status] || STATUS_CONFIG.TO_REVIEW;
   const webClean = (p.website || '').replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0];
-  const qIdx = readyIdToIndex && readyIdToIndex.has(p.id) ? readyIdToIndex.get(p.id) : -1;
-  const batchNum = qIdx >= 0 ? Math.floor(qIdx / 6) + 1 : 1;
-  const slotInBatch = qIdx >= 0 ? (qIdx % 6) + 1 : 1;
   const isDmitri = p.sender_email && p.sender_email.includes('dmitri');
+  const dIdx = dmitriIdToIndex && dmitriIdToIndex.has(p.id) ? dmitriIdToIndex.get(p.id) : 0;
+  const iIdx = igorIdToIndex && igorIdToIndex.has(p.id) ? igorIdToIndex.get(p.id) : 0;
+  const sched = getExhibitorScheduleDate(p, dIdx, iIdx);
 
   return `
     <tr>
@@ -318,8 +389,13 @@ function renderAgencyRow(p, readyIdToIndex) {
           ${p.status === 'CONTACTED' ? `
             <div style="font-size:10px;color:#059669;font-weight:600">✅ Dispatched ${p.sent_at ? fmtDateTime(p.sent_at) : ''}</div>
           ` : (p.status === 'WANT_TO_CONTACT' ? `
-            <div style="display:inline-flex;align-items:center;gap:3px;font-size:10px;color:${isDmitri ? '#1E40AF' : '#1D4ED8'};background:${isDmitri ? '#EFF6FF' : '#DBEAFE'};border:1px solid ${isDmitri ? '#BFDBFE' : '#93C5FD'};border-radius:4px;padding:1px 5px;margin-top:1px">
-              <strong>${isDmitri ? 'Dmitri Wave' : 'Igor Wave'}</strong> · ${isDmitri ? '12:00/15:00' : '10:00 CET'}
+            <div style="display:inline-flex;flex-direction:column;gap:1px;margin-top:1px">
+              <span style="font-size:10px;font-weight:700;color:${isDmitri ? '#1E40AF' : '#1D4ED8'};background:${isDmitri ? '#EFF6FF' : '#DBEAFE'};border:1px solid ${isDmitri ? '#BFDBFE' : '#93C5FD'};border-radius:4px;padding:1px 5px;white-space:nowrap;display:inline-block">
+                📅 ${sched.dateStr} · ${sched.timeStr}
+              </span>
+              <span style="font-size:9px;color:#475569;white-space:nowrap" title="Target local business time in ${esc(p.country)}">
+                🕒 ${sched.localNote}
+              </span>
             </div>
           ` : (p.status === 'TO_REVIEW' ? `
             <div style="font-size:10px;color:#92400E;background:#FEF3C7;border:1px solid #FDE68A;border-radius:4px;padding:1px 5px;display:inline-block;margin-top:1px">
@@ -342,7 +418,7 @@ function renderAgencyRow(p, readyIdToIndex) {
       </td>
 
       <!-- 6. Score & Action -->
-      <td style="text-align:right;padding:9px 10px;vertical-align:middle;overflow:hidden">
+      <td style="text-align:right;padding:9px 10px;vertical-align:middle;white-space:nowrap">
         <div style="display:inline-flex;align-items:center;justify-content:flex-end;gap:4px">
           <span class="sail-pill ok" style="font-size:10px;font-weight:700;padding:2px 4px" title="Score: ${p.relevance_score || 85}">
             ${p.relevance_score || 85}

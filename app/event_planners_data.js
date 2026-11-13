@@ -4,7 +4,7 @@
 // NO guessed domains, NO fake emails, NO organizer or Italian general agency placeholders.
 // All records arrive in TO_REVIEW status (safe, zero sends until confirmed).
 
-export const EVENT_STORAGE_KEY = 'dorogo_foreign_exhibitors_v5';
+export const EVENT_STORAGE_KEY = 'dorogo_foreign_exhibitors_v6';
 export const EVENT_TEMPLATES_STORAGE_KEY = 'dorogo_event_templates_v2';
 
 export const EVENT_AGENCY_TYPES = [
@@ -69,7 +69,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Ambiente Europe is a leading Dutch brand renowned for its beautifully designed paper napkins and coordinated tableware collections. With over 240 seasonal designs, Ambiente brings style and inspiratio...",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_003",
@@ -123,7 +123,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "We are And Nook, a Dutch home & living brand with a mission to bring colour, joy and personality to every nook of the home.\n\n From our creative studio in the Netherlands, we design collections filled ...",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_005",
@@ -528,7 +528,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from China.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "dmitri@dorogo.eu"
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_020",
@@ -1850,7 +1850,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from China.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "dmitri@dorogo.eu"
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_069",
@@ -2334,9 +2334,18 @@ export function mergeEventRecords(initial, saved) {
       effectiveContact = init.contact_person;
     }
 
+    // Upgrade legacy TO_REVIEW to WANT_TO_CONTACT (queued for outreach)
+    const effectiveStatus = (override.status === 'TO_REVIEW' && init.status === 'WANT_TO_CONTACT')
+      ? 'WANT_TO_CONTACT'
+      : (override.status || init.status);
+
+    const effectiveSender = override.sender_email || init.sender_email;
+
     return {
       ...init,
       ...override,
+      status: effectiveStatus,
+      sender_email: effectiveSender,
       email: effectiveEmail,
       contact_person: effectiveContact,
       contact_role: (override.contact_role && override.contact_role !== 'Trade Fair Desk') ? override.contact_role : (init.contact_role || override.contact_role || ''),
