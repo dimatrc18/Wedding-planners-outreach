@@ -7,7 +7,16 @@ import { simpleParser } from 'npm:mailparser@3.7.2';
 import { env } from './server.ts';
 import { renderDorogoLuxuryHtmlEmail } from './core/drafts.js';
 
-export function smtpConfig() {
+export function smtpConfig(account = 'default') {
+  if (account === 'events' || account === 'igor@b2b-dorogo.it') {
+    const port = +env('EVENTS_SMTP_PORT', '465');
+    return {
+      host: env('EVENTS_SMTP_HOST', 'smtp.hostinger.com'),
+      port,
+      secure: port === 465,
+      auth: { user: env('EVENTS_SMTP_USER', 'igor@b2b-dorogo.it'), pass: env('EVENTS_SMTP_PASS') },
+    };
+  }
   const port = +env('OUTREACH_SMTP_PORT', '465');
   return {
     host: env('OUTREACH_SMTP_HOST'), port, secure: port === 465,
@@ -15,7 +24,19 @@ export function smtpConfig() {
   };
 }
 
-function imapConfig() {
+export function imapConfig(account = 'default') {
+  if (account === 'events' || account === 'igor@b2b-dorogo.it') {
+    return {
+      host: env('EVENTS_IMAP_HOST', 'imap.hostinger.com'),
+      port: +env('EVENTS_IMAP_PORT', '993'),
+      secure: true,
+      auth: { user: env('EVENTS_IMAP_USER', 'igor@b2b-dorogo.it'), pass: env('EVENTS_IMAP_PASS') },
+      logger: false,
+      connectionTimeout: 8000,
+      greetingTimeout: 5000,
+      socketTimeout: 8000,
+    };
+  }
   return {
     host: env('OUTREACH_IMAP_HOST'), port: +env('OUTREACH_IMAP_PORT', '993'), secure: true,
     auth: { user: env('OUTREACH_IMAP_USER') || env('OUTREACH_SMTP_USER'), pass: env('OUTREACH_IMAP_PASS') || env('OUTREACH_SMTP_PASS') },
@@ -26,8 +47,8 @@ function imapConfig() {
   };
 }
 
-export async function verifySmtp() {
-  const t = nodemailer.createTransport(smtpConfig());
+export async function verifySmtp(account = 'default') {
+  const t = nodemailer.createTransport(smtpConfig(account));
   await t.verify();
   return true;
 }
@@ -53,13 +74,42 @@ export async function sendMail(opts: any) {
 
   const envelopeRecipients = [...toList, ...ccList];
 
+  const isEvent = String(opts.fromEmail || '').toLowerCase().includes('b2b-dorogo.it') || String(opts.fromEmail || '').toLowerCase().startsWith('igor@');
+  const account = isEvent ? 'events' : 'default';
+
+  const igorHtmlSig = `
+<div style="margin: 24px 0 0 0; color: #71717A; font-size: 13px; line-height: 1.5;">
+  <p style="margin: 0 0 8px 0; color: #71717A;">―</p>
+  <p style="margin: 0 0 2px 0;"><strong style="color: #18181B;">Igor</strong></p>
+  <p style="margin: 0 0 16px 0; color: #71717A;">Trade & Event Logistics</p>
+  <p style="margin: 0 0 4px 0;"><strong style="color: #18181B;">DOROGO | PRIVATE TRANSPORTATION</strong></p>
+  <p style="margin: 0 0 2px 0; color: #71717A;">WhatsApp: +39 378 094 0554</p>
+  <p style="margin: 0 0 2px 0; color: #71717A;">Email: <a href="mailto:igor@b2b-dorogo.it" style="color: #18181B; text-decoration: none !important;">igor@b2b-dorogo.it</a></p>
+  <p style="margin: 0; color: #71717A;">Web: <a href="https://dorogo.eu" style="color: #18181B; text-decoration: none !important;">dorogo.eu</a></p>
+</div>`;
+
+  let renderedHtml = opts.html;
+  if (!renderedHtml) {
+    if (isEvent) {
+      const bodyHtmlEscaped = String(opts.text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n\n/g, '</p><p style="margin: 0 0 16px 0;">')
+        .replace(/\n/g, '<br>');
+      renderedHtml = `<!DOCTYPE html><html><body style="margin:0;padding:24px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.6;color:#18181B;"><div style="margin-bottom:16px;"><p style="margin:0 0 16px 0;">${bodyHtmlEscaped}</p></div>${igorHtmlSig}</body></html>`;
+    } else {
+      renderedHtml = renderDorogoLuxuryHtmlEmail(opts.text, { fromEmail: opts.fromEmail, pixelUrl: opts.pixelUrl, footerStyle: opts.footerStyle || 'wordmark' });
+    }
+  }
+
   const mail: any = {
     from: { name: opts.fromName, address: opts.fromEmail },
     to: toList.join(', '),
     replyTo: opts.replyTo || opts.fromEmail,
     subject: opts.subject,
     text: opts.text,
-    html: opts.html || renderDorogoLuxuryHtmlEmail(opts.text, { fromEmail: opts.fromEmail, pixelUrl: opts.pixelUrl, footerStyle: opts.footerStyle || 'wordmark' }),
+    html: renderedHtml,
     messageId,
     headers: { 'List-Unsubscribe': `<mailto:${opts.fromEmail}?subject=unsubscribe>` },
     attachments: opts.attachments || [],
@@ -71,16 +121,18 @@ export async function sendMail(opts: any) {
   if (opts.references?.length) mail.references = opts.references;
   const raw: Uint8Array = await new Promise((resolve, reject) =>
     new MailComposer(mail).compile().build((err: Error, msg: Uint8Array) => (err ? reject(err) : resolve(msg))));
-  const t = nodemailer.createTransport(smtpConfig());
+  const t = nodemailer.createTransport(smtpConfig(account));
   await t.sendMail({ envelope: { from: opts.fromEmail, to: envelopeRecipients }, raw });
   return { messageId, raw };
 }
 
-// Put a copy in the mailbox's Sent folder so Dmitri sees outreach in his normal mail client.
-export async function appendToSent(raw: Uint8Array) {
-  const folder = env('OUTREACH_IMAP_SENT_FOLDER');
-  if (!folder || !env('OUTREACH_IMAP_HOST')) return false;
-  const client = new ImapFlow(imapConfig());
+// Put a copy in the mailbox's Sent folder so sender sees outreach in their normal mail client.
+export async function appendToSent(raw: Uint8Array, fromEmail = 'dmitri@dorogo.eu') {
+  const isEvent = String(fromEmail || '').toLowerCase().includes('b2b-dorogo.it') || String(fromEmail || '').toLowerCase().startsWith('igor@');
+  const folder = isEvent ? env('EVENTS_IMAP_SENT_FOLDER', 'Sent') : env('OUTREACH_IMAP_SENT_FOLDER', 'Sent');
+  const imapHost = isEvent ? env('EVENTS_IMAP_HOST', 'imap.hostinger.com') : env('OUTREACH_IMAP_HOST');
+  if (!folder || !imapHost) return false;
+  const client = new ImapFlow(imapConfig(isEvent ? 'events' : 'default'));
   await client.connect();
   try { await client.append(folder, raw, ['\\Seen']); } finally { await client.logout(); }
   return true;
@@ -112,8 +164,8 @@ function htmlToPlainText(html: string): string {
  * Returns { messages, lastUid }.
  * Only metadata and text are kept; attachments are ignored.
  */
-export async function fetchNewMessages(lastUid: number | null, maxMessages = 50) {
-  const client = new ImapFlow(imapConfig());
+export async function fetchNewMessages(lastUid: number | null, maxMessages = 50, account = 'default') {
+  const client = new ImapFlow(imapConfig(account));
   await client.connect();
   const out: any[] = [];
   let newest = lastUid || 0;

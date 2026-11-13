@@ -12,6 +12,7 @@ import {
   findUnansweredReplies,
   SIGNATURE,
   generateBulletproofHook,
+  formatRateCardFactsForAi,
 } from '../supabase/functions/_shared/core/index.js';
 
 test('2+1 thread split: T1 and T3 are in the same thread, T4 breakup starts a separate fresh thread', () => {
@@ -399,6 +400,36 @@ test('Zero-Hallucination Portfolio Guardrails: prevents phantom venue claims on 
     fakeManualDraft.lint.errors.some((e) => e.includes('Unverified venue claim')),
     'Linter must block unverified venue claim'
   );
+});
+
+test('Rate Card AI Facts: zero provider leaks, 7–8p Sprinter Area C exclusion, >=25% markup, 35% half-8h rule, and 8h/150km bus blocks', () => {
+  const facts = formatRateCardFactsForAi();
+  assert.doesNotMatch(
+    facts,
+    /\b(avantgarde|guizzetti|perletti|moveolux|italeurobus|milanocab|castano|comobus|savino|vipbus|lombardi|vincenzo|cristian|salvatore|melissa|giacomo)\b/i,
+    'Outward AI rate facts must never leak internal transport provider or contact names'
+  );
+  assert.match(facts, /Sedans & V-Class \(<=7p\) enter Milan Area C & Como ZTL free/);
+  assert.doesNotMatch(facts, /Sedans & Vans \(<=8p\)/);
+  assert.match(facts, /7–8p VIP Sprinters and all Buses \(>7p\) EXCLUDE weekday Mon–Fri Milan Area C passes/);
+  assert.doesNotMatch(
+    facts,
+    /Lake Como Minibus|16p Ford White|12–16p/i,
+    'Overpriced 12–16p Como Driver minibus tier must be excluded from outward AI rate facts'
+  );
+  for (const expected of [
+    '10h / 200 km Full Day',
+    '8h / 150 km Full Day on ALL buses',
+    'MB Sprinter VIP Black (7–8p', '€135/h (4h min €540)', 'Full Day 8h/150km €1,000',
+    'MB Sprinter Top Luxury (7–8p', 'Min €480', '€200/h (4h min €800)', 'Full Day 8h/150km €1,500',
+    'Touring Minibus Std (16–20p', 'Min €570', 'Full Day 8h/150km €880',
+    'Minibus Black VIP (20p', 'MXP↔Como €690', 'Min €630', '€220/h (4h min €880)', 'Full Day 8h/150km €1,190',
+    'Touring Midibus Std (28–30p', 'MXP↔Como €750', 'Min €690', '€220/h (4h min €880)', 'Full Day 8h/150km €1,130',
+    'Coach Black VIP (30p', 'MXP↔Como €780', 'Min €690', '€235/h (4h min €940)', 'Full Day 8h/150km €1,500',
+    'Grand Turismo Coach (50–55p', 'MXP↔Como €880', 'Min €750', '€225/h (4h min €900)', 'Full Day 8h/150km €1,150',
+  ]) {
+    assert.ok(facts.includes(expected), `Expected rate card fact to include "${expected}"`);
+  }
 });
 
 

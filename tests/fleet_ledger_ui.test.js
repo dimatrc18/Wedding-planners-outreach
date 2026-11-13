@@ -102,14 +102,14 @@ test('Fleet Showcase Data: Separated Sprinter variants (Red, Black, Top VIP)', (
   assert.equal(redSprinter.photos.length, 4, 'Must have exactly 4 red photos');
   assert.ok(redSprinter.photos.every((p) => p.src.includes('sprinter_7p_red')));
 
-  // Black Interior Sprinter 8 Pax
+  // Yacht Edition Two-Tone Silver/Navy Sprinter 8 Pax
   const bwSprinter = FLEET_LEDGER_ROWS.find((r) => r.id === 'avantgarde_sprinter_8_bw');
-  assert.ok(bwSprinter, 'Black interior Sprinter must exist as separate vehicle');
+  assert.ok(bwSprinter, 'Yacht Edition 8p Sprinter must exist as separate vehicle');
   assert.equal(bwSprinter.pax, 8);
   assert.equal(bwSprinter.standby.dispo_8h.net, 800);
   assert.equal(bwSprinter.transfers.mxp_milano.net, 250);
   assert.equal(bwSprinter.transfers.mxp_como.net, 380);
-  assert.equal(bwSprinter.photos.length, 4, 'Must have exactly 4 black & white photos');
+  assert.equal(bwSprinter.photos.length, 4, 'Must have exactly 4 Yacht Edition 8p photos');
   assert.ok(bwSprinter.photos.every((p) => p.src.includes('sprinter_8p_bw')));
 
   // Top VIP Sprinter 8 Pax
@@ -260,8 +260,8 @@ test('formatPriceWithUnit & formatEur: Renders "?" when price is 0, null, or und
   assert.equal(formatPriceWithUnit(140), '€140');
 });
 
-test('Fleet Showcase Size Filter: SIZE_GROUPS comprehensively and mutually exclusively groups all 18 vehicles', () => {
-  assert.equal(FLEET_LEDGER_ROWS.length, 18);
+test('Fleet Showcase Size Filter: SIZE_GROUPS comprehensively and mutually exclusively groups all 22 vehicles', () => {
+  assert.equal(FLEET_LEDGER_ROWS.length, 22);
   
   // Verify each vehicle belongs to exactly one group
   const groupCounts = {};
@@ -271,16 +271,16 @@ test('Fleet Showcase Size Filter: SIZE_GROUPS comprehensively and mutually exclu
     groupCounts[grp.key] = (groupCounts[grp.key] || 0) + 1;
   });
 
-  // Expected counts across the 18-vehicle fleet
-  assert.equal(groupCounts['group:7_8'], 5, 'Must have 5 vehicles in 7–8 seats (V-Class & Sprinters)');
+  // Expected counts across the 22-vehicle fleet
+  assert.equal(groupCounts['group:7_8'], 6, 'Must have 6 vehicles in 7–8 seats (V-Class & Sprinters)');
   assert.equal(groupCounts['group:12_16'], 2, 'Must have 2 vehicles in 12–16 seats (Sprinter 12 & Transit 16)');
-  assert.equal(groupCounts['group:19_20'], 4, 'Must have 4 vehicles in 19–20 seats (Minibus GT, Indcar, Gran Capri, MB 20)');
-  assert.equal(groupCounts['group:28_30'], 4, 'Must have 4 vehicles in 28–30 seats (Iveco Midibuses & Executive 30)');
-  assert.equal(groupCounts['group:50_plus'], 3, 'Must have 3 vehicles in 50+ seats (Tourismo & Setra)');
+  assert.equal(groupCounts['group:19_20'], 4, 'Must have 4 vehicles in 19–20 seats (Minibus GT, Sprinter 19+1, Gran Capri)');
+  assert.equal(groupCounts['group:28_30'], 4, 'Must have 4 vehicles in 28–30 seats (Iveco Midibuses, Temsa #115, Wing/Mago 2)');
+  assert.equal(groupCounts['group:50_plus'], 6, 'Must have 6 vehicles in 50+ seats (50p/52p GT, 64p MaxiBus, 66p Van Hool, 83p Double-Decker)');
 
-  // Sum of all groups must be exactly 18
+  // Sum of all groups must be exactly 22
   const totalMapped = Object.values(groupCounts).reduce((a, b) => a + b, 0);
-  assert.equal(totalMapped, 18);
+  assert.equal(totalMapped, 22);
 });
 
 test('Fleet Showcase Size Filter: matchesSizeFilter correctly filters groups, ranges, and exact seat counts', () => {
@@ -345,7 +345,7 @@ test('Fleet Showcase UI Template: Contains vehicle size filter controls and grou
 
 test('Fleet Showcase Pending Rows: English explanations and grey muted styling for pending vehicles', () => {
   const pendingVehicles = FLEET_LEDGER_ROWS.filter((r) => r.status === 'pending');
-  assert.equal(pendingVehicles.length, 2, 'Must have exactly 2 pending vehicles');
+  assert.equal(pendingVehicles.length, 6, 'Must have exactly 6 pending vehicles');
 
   // Verify Guizzetti Sprinter 8+1 notes are in English
   const guizzetti = pendingVehicles.find((r) => r.id === 'guizzetti_sprinter_8');
@@ -358,6 +358,12 @@ test('Fleet Showcase Pending Rows: English explanations and grey muted styling f
   assert.ok(comoLimo, 'Como Limo Lux V-Class must be present');
   assert.ok(comoLimo.transferNote.includes('Mercedes V-Class'));
   assert.ok(comoLimo.standbyNote.includes('Awaiting 4h & 8h standby rates'));
+
+  // Verify Perletti 7p & 64p, Guizzetti 83p, and Italeurobus 66p pending rows
+  assert.ok(pendingVehicles.some((r) => r.id === 'perletti_vclass_7'), 'Perletti 7p V-Class pending row must exist');
+  assert.ok(pendingVehicles.some((r) => r.id === 'perletti_maxibus_64'), 'Perletti 64p MaxiBus pending row must exist');
+  assert.ok(pendingVehicles.some((r) => r.id === 'guizzetti_double_83'), 'Guizzetti 83p Double-Decker pending row must exist');
+  assert.ok(pendingVehicles.some((r) => r.id === 'italeurobus_coach_66'), 'Italeurobus 66p Double-Decker pending row must exist');
 
   // Verify showcase file has pending muted styling
   const showcaseFile = fs.readFileSync(path.join(rootDir, 'app/views/fleet_showcase.js'), 'utf8');
@@ -398,4 +404,130 @@ test('Fleet Showcase Rates: Only existing routes with positive prices are displa
     }
   });
 });
+
+test('Fleet Showcase Asset Integrity & Visual Pairing: Zero missing files, zero 31KB placeholders, accurate vehicle mapping', () => {
+  const partners = JSON.parse(fs.readFileSync(path.join(rootDir, 'data/bus_partners.json'), 'utf8'));
+
+  // 1. Every asset referenced in FLEET_LEDGER_ROWS exists and is not a <40KB placeholder
+  FLEET_LEDGER_ROWS.forEach((row) => {
+    if (row.ratePdf) {
+      assert.ok(fs.existsSync(path.join(rootDir, row.ratePdf)), `Missing rate PDF ${row.ratePdf}`);
+    }
+    (row.photos || []).forEach((ph) => {
+      const fullPath = path.join(rootDir, ph.src);
+      assert.ok(fs.existsSync(fullPath), `Missing media file ${ph.src} on vehicle ${row.id}`);
+      const size = fs.statSync(fullPath).size;
+      assert.ok(size > 40000, `Asset ${ph.src} on ${row.id} is suspiciously small (${size} bytes) — placeholder check failed`);
+    });
+  });
+
+  // 2. Every fleet_photos entry in data/bus_partners.json exists and is >40KB
+  partners.forEach((p) => {
+    (p.score_breakdown?.partner_card?.fleet_photos || []).forEach((ph) => {
+      const fullPath = path.join(rootDir, ph.src);
+      assert.ok(fs.existsSync(fullPath), `Missing CRM partner photo ${ph.src} on ${p.name}`);
+      const size = fs.statSync(fullPath).size;
+      assert.ok(size > 40000, `CRM photo ${ph.src} on ${p.name} is suspiciously small (${size} bytes)`);
+    });
+  });
+
+  // 3. Guizzetti pairing regression check (#103 3-axle -> 50+, #115/#121 -> 30p, Sprinter 19+1 -> 19p, Tourismo -> 50+, 83p -> 83p)
+  const g19 = FLEET_LEDGER_ROWS.find((r) => r.id === 'guizzetti_minibus_19');
+  assert.ok(g19.photos.every((p) => p.src.includes('sprinter_19_luxury_')));
+  const g30 = FLEET_LEDGER_ROWS.find((r) => r.id === 'guizzetti_midibus_30');
+  assert.equal(g30.photos.length, 4);
+  assert.ok(g30.photos.some((p) => p.src.includes('temsa_115_')));
+  assert.ok(g30.photos.some((p) => p.src.includes('iveco_121_')));
+  const g50 = FLEET_LEDGER_ROWS.find((r) => r.id === 'guizzetti_coach_50');
+  assert.equal(g50.photos.length, 8);
+  assert.ok(g50.photos.some((p) => p.src.includes('tourismo_new_')));
+  assert.ok(g50.photos.some((p) => p.src.includes('irizar_103_3axle_')));
+  const g83 = FLEET_LEDGER_ROWS.find((r) => r.id === 'guizzetti_double_83');
+  assert.equal(g83.pax, 83);
+  assert.equal(g83.photos.length, 1);
+
+  // 4. Perletti 64p 3-axle Tourismo must sit on perletti_maxibus_64, NOT perletti_coach_52
+  const p52 = FLEET_LEDGER_ROWS.find((r) => r.id === 'perletti_coach_52');
+  const p64 = FLEET_LEDGER_ROWS.find((r) => r.id === 'perletti_maxibus_64');
+  assert.ok(p52.photos.every((p) => !p.src.includes('perletti_tourismo_52.png')));
+  assert.ok(p64.photos.some((p) => p.src.includes('perletti_tourismo_52.png')));
+
+  // 5. Italeurobus reply & 66p Van Hool double-decker synced in both Fleet Ledger and CRM JSON
+  const italRow = FLEET_LEDGER_ROWS.find((r) => r.id === 'italeurobus_coach_66');
+  const italCrm = partners.find((p) => p.id === 'partner_1793031479651_15_fgcv');
+  assert.ok(italRow && italRow.photos.length === 2);
+  assert.equal(italCrm.outreach_stage, 'replied');
+  assert.equal(italCrm.contact_person, 'Giacomo Chiari');
+  assert.equal(italCrm.score_breakdown?.partner_card?.fleet_photos?.length, 2);
+});
+
+test('Fleet Showcase UI: Renders full visible partner email in table rows and includes email in ledger search', () => {
+  const showcaseFile = fs.readFileSync(path.join(rootDir, 'app/views/fleet_showcase.js'), 'utf8');
+
+  // 1. #ledger-search haystack must include r.email so table search matches emails
+  assert.ok(showcaseFile.includes('${r.email || \'\'}'), 'Ledger search haystack must include r.email');
+  assert.ok(!showcaseFile.includes('title="${attr(row.email)}">Email</a>'),
+    'Table cell must render the actual email address rather than generic "Email" anchor text');
+
+  // 2. Every Fleet Ledger row with an email must render that email visibly in anchor text
+  FLEET_LEDGER_ROWS.forEach((row, idx) => {
+    assert.ok(row.email && row.email.includes('@'), `Row ${row.id} must have a valid email address`);
+    const html = renderLedgerRow(row, idx);
+    assert.ok(
+      html.includes(`>${row.email}</a>`),
+      `Rendered table row for ${row.id} must visibly contain "${row.email}" as text for Cmd+F / Ctrl+F search`
+    );
+    assert.ok(
+      html.includes('overflow-wrap:anywhere'),
+      `Rendered email link for ${row.id} must wrap cleanly inside fixed-width column`
+    );
+  });
+});
+
+test('Fleet Showcase Calculator: excludes Como Driver 12–16p minibuses (overpriced) from price calculations and selection', () => {
+  const excludedIds = ['como_sprinter_12', 'como_transit_16'];
+  for (const id of excludedIds) {
+    const row = FLEET_LEDGER_ROWS.find((r) => r.id === id);
+    assert.ok(row, `Row ${id} should remain in ledger for reference`);
+    assert.equal(row.excludedFromPricing, true, `${id} must be flagged excludedFromPricing: true`);
+    assert.equal(selectSpecificVehicle(id), null, `selectSpecificVehicle("${id}") must refuse excluded vehicle`);
+
+    const html = renderLedgerRow(row, 0);
+    assert.ok(html.includes('Excluded · Overpriced'), `${id} table row must display Excluded · Overpriced badge`);
+    assert.ok(!html.includes(`data-quote-veh="${id}"`), `${id} table row must not enable calculator Quote button`);
+  }
+
+  // getMatchingVehicles and calculateTripQuote must never return or quote excluded vehicles even if passed vehicleId
+  const stateAll = {
+    serviceType: 'transfer',
+    routeKey: 'mxp_como',
+    transportCategory: 'all',
+    tierFilter: 'all',
+    passengerCount: 12,
+    vehicleId: null,
+    standbyHours: 8,
+    tripDirection: 'one_way',
+    extraHours: 0,
+    extraWaitHours: 0,
+    includeZtl: false,
+    nightWindow: false,
+    includeVat: false,
+    clientMarkupPct: 25
+  };
+  const matches = getMatchingVehicles(stateAll);
+  assert.ok(matches.every((m) => !excludedIds.includes(m.id)), 'Excluded vehicles must never appear in getMatchingVehicles()');
+
+  const forcedState = { ...stateAll, vehicleId: 'como_sprinter_12' };
+  assert.ok(
+    getMatchingVehicles(forcedState).every((m) => !excludedIds.includes(m.id)),
+    'Excluded vehicleId must not force-match itself'
+  );
+  const quote = calculateTripQuote(forcedState);
+  assert.ok(!excludedIds.includes(quote.veh?.id), 'calculateTripQuote must fall back to non-excluded vehicle');
+
+  // getTransportCategories must omit minibus_12_16 when all vehicles in that category are excluded
+  const cats = getTransportCategories(FLEET_LEDGER_ROWS);
+  assert.ok(!cats.some((c) => c.key === 'minibus_12_16'), 'Excluded minibus_12_16 category must not appear in calculator categories');
+});
+
 

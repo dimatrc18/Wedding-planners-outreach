@@ -65,6 +65,66 @@ function setStoredPass(pass) {
   } catch (_) {}
 }
 
+async function sendEventEmailViaApi(payload) {
+  if (window.APP_CONFIG && window.APP_CONFIG.MODE === 'live' && window.APP_CONFIG.SUPABASE_URL) {
+    try {
+      const res = await fetch(`${window.APP_CONFIG.SUPABASE_URL}/functions/v1/outreach-api`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': window.APP_CONFIG.SUPABASE_KEY
+        },
+        body: JSON.stringify({
+          action: 'send_event_email',
+          ...payload
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) return data;
+      if (data.error) throw new Error(data.error);
+    } catch (err) {
+      console.warn('Supabase edge dispatch error, trying fallback to local:', err);
+    }
+  }
+
+  const r = await fetch('/api/send-email', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  return await r.json();
+}
+
+async function testEventsSmtpViaApi(pass) {
+  if (window.APP_CONFIG && window.APP_CONFIG.MODE === 'live' && window.APP_CONFIG.SUPABASE_URL) {
+    try {
+      const res = await fetch(`${window.APP_CONFIG.SUPABASE_URL}/functions/v1/outreach-api`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': window.APP_CONFIG.SUPABASE_KEY
+        },
+        body: JSON.stringify({
+          action: 'test_events_smtp',
+          hostingerPass: pass
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) return data;
+      if (data.error) throw new Error(data.error);
+    } catch (err) {
+      console.warn('Supabase SMTP test error, trying fallback to local:', err);
+    }
+  }
+
+  const r = await fetch('/api/test-smtp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ hostingerPass: pass, email: 'igor@b2b-dorogo.it' })
+  });
+  return await r.json();
+}
+
 export async function render(el) {
   currentEl = el;
   const stored = loadStoredEventPartners();
@@ -347,9 +407,12 @@ function renderQueueView(readyPartners, t1, savedPass) {
 
               <!-- Recipient & Subject Header -->
               <div style="background:#F8FAFC;padding:10px 12px;border-radius:6px;font-size:11.5px;display:flex;flex-direction:column;gap:4px;border:1px solid #E2E8F0">
-                <div style="display:flex;justify-content:space-between;align-items:center">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
                   <div><strong>To:</strong> ${esc(p.contact_person)} &lt;<span style="color:#2563EB;font-weight:600">${esc(p.email)}</span>&gt;</div>
-                  <span class="sail-pill ok" style="font-size:10px">Deliverable</span>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <span class="sail-badge" style="font-size:10.5px;background:#EDE9FE;color:#5B21B6;border:1px solid #DDD6FE;border-radius:4px;padding:1px 6px">👤 From: igor@b2b-dorogo.it</span>
+                    <span class="sail-pill ok" style="font-size:10px">Deliverable</span>
+                  </div>
                 </div>
                 <div><strong>Subject:</strong> ${esc(draft.subject)}</div>
               </div>
@@ -392,6 +455,7 @@ function renderContactedView(contactedPartners) {
               <tr>
                 <th>Exhibitor Name</th>
                 <th>Country</th>
+                <th>Sender Account</th>
                 <th>Contact &amp; Email</th>
                 <th>Dispatched At</th>
                 <th>Hostinger Delivery ID</th>
@@ -403,6 +467,11 @@ function renderContactedView(contactedPartners) {
                 <tr>
                   <td><strong>${esc(p.name)}</strong></td>
                   <td>${esc(p.flag || '🌍')} ${esc(p.country)}</td>
+                  <td>
+                    <span class="sail-badge" style="font-size:11px;background:#EDE9FE;color:#5B21B6;border:1px solid #DDD6FE;border-radius:4px;padding:2px 6px">
+                      👤 ${esc(p.sender_email || 'igor@b2b-dorogo.it')}
+                    </span>
+                  </td>
                   <td>${esc(p.contact_person)} &lt;${esc(p.email)}&gt;</td>
                   <td><span style="font-size:11px;color:var(--sail-muted)">${p.sent_at ? fmtDateTime(p.sent_at) : 'Recent'}</span></td>
                   <td>
@@ -646,12 +715,7 @@ function showMailboxModal(rootEl) {
         resBox.textContent = 'Connecting to smtp.hostinger.com:465...';
 
         try {
-          const r = await fetch('/api/test-smtp', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ hostingerPass: pass, email: 'igor@b2b-dorogo.it' })
-          });
-          const j = await r.json();
+          const j = await testEventsSmtpViaApi(pass);
           if (j.ok) {
             resBox.style.background = '#DCFCE7';
             resBox.style.color = '#166534';
@@ -743,20 +807,15 @@ function showTestSendModal(partner, template) {
         statusBox.textContent = `Connecting to Hostinger SMTP and sending to ${toEmail}...`;
 
         try {
-          const r = await fetch('/api/send-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              to: toEmail,
-              toName: 'Test Recipient',
-              subject: draft.subject,
-              body: draft.body,
-              hostingerPass: pass,
-              fromEmail: 'igor@b2b-dorogo.it',
-              fromName: 'Igor'
-            })
+          const j = await sendEventEmailViaApi({
+            to: toEmail,
+            toName: 'Test Recipient',
+            subject: draft.subject,
+            body: draft.body,
+            hostingerPass: pass,
+            fromEmail: 'igor@b2b-dorogo.it',
+            fromName: 'Igor'
           });
-          const j = await r.json();
           if (j.ok) {
             statusBox.style.background = '#DCFCE7';
             statusBox.style.color = '#166534';
@@ -836,24 +895,20 @@ async function executeSingleSend(partner, template, btn, rootEl) {
   btn.textContent = 'Sending...';
 
   try {
-    const r = await fetch('/api/send-email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        to: partner.email,
-        toName: partner.contact_person,
-        subject: partner.custom_subject || draft.subject,
-        body: partner.custom_body || draft.body,
-        hostingerPass: pass,
-        fromEmail: 'igor@b2b-dorogo.it',
-        fromName: 'Igor'
-      })
+    const j = await sendEventEmailViaApi({
+      to: partner.email,
+      toName: partner.contact_person,
+      subject: partner.custom_subject || draft.subject,
+      body: partner.custom_body || draft.body,
+      hostingerPass: pass,
+      fromEmail: 'igor@b2b-dorogo.it',
+      fromName: 'Igor'
     });
-    const j = await r.json();
     if (j.ok) {
       await updateEventPartner(partner.id, {
         status: 'CONTACTED',
         sent_at: new Date().toISOString(),
+        sender_email: 'igor@b2b-dorogo.it',
         queue_id: j.queueId || 'OK'
       });
       selectedPartnerIds.delete(partner.id);
@@ -1031,20 +1086,15 @@ function showBatchDispatchModal(targets, template, delayMs, mode = 'now', planne
           appendLog(`🛫 [${currentNum}/${totalNum}] Dispatching to ${partner.contact_person} (${partner.name}) <${partner.email}>...`);
 
           try {
-            const r = await fetch('/api/send-email', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                to: partner.email,
-                toName: partner.contact_person,
-                subject: partner.custom_subject || draft.subject,
-                body: partner.custom_body || draft.body,
-                hostingerPass: pass,
-                fromEmail: 'igor@b2b-dorogo.it',
-                fromName: 'Igor'
-              })
+            const j = await sendEventEmailViaApi({
+              to: partner.email,
+              toName: partner.contact_person,
+              subject: partner.custom_subject || draft.subject,
+              body: partner.custom_body || draft.body,
+              hostingerPass: pass,
+              fromEmail: 'igor@b2b-dorogo.it',
+              fromName: 'Igor'
             });
-            const j = await r.json();
 
             if (j.ok) {
               sentCount++;
@@ -1052,6 +1102,7 @@ function showBatchDispatchModal(targets, template, delayMs, mode = 'now', planne
               await updateEventPartner(partner.id, {
                 status: 'CONTACTED',
                 sent_at: new Date().toISOString(),
+                sender_email: 'igor@b2b-dorogo.it',
                 queue_id: j.queueId || 'OK'
               });
               selectedPartnerIds.delete(partner.id);

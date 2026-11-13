@@ -2648,9 +2648,14 @@ export function render(el) {
 
               const rawWa = (p.whatsapp || p.phone || '').replace(/[^\d+]/g, '');
               const waHref = rawWa ? `https://wa.me/${rawWa.replace(/^\+/, '')}?text=${encodeURIComponent(core.buildBusOutreachDraft(p, 'WA_pitch').body)}` : '';
-              const hasRates = Boolean(p.rate_hourly || p.rate_standby);
+              const rateHourly = p.rate_hourly || p.score_breakdown?.partner_card?.rate_hourly || '';
+              const rateStandby = p.rate_standby || p.score_breakdown?.partner_card?.rate_standby || '';
+              const hasRates = Boolean(rateHourly || rateStandby);
               const photoCount = p.score_breakdown?.partner_card?.fleet_photos?.length || (p.id === 'partner_1792765279097_26hr' ? 7 : 0);
               const hasRatePdf = Boolean(p.rate_document || p.score_breakdown?.partner_card?.rate_document || p.id === 'partner_1792765279097_26hr');
+              const mediaBadgeText = photoCount > 0
+                ? (hasRatePdf ? `${photoCount} Photos & PDF Rates` : (hasRates ? `${photoCount} Photos & Rates` : `${photoCount} ${photoCount === 1 ? 'Photo' : 'Photos'}`))
+                : 'PDF Rates';
 
               const rowStyle = isBounced
                 ? 'background:#FEF2F2;border-left:3px solid #DC2626;'
@@ -2738,13 +2743,13 @@ export function render(el) {
                     ${(photoCount > 0 || hasRatePdf) ? `
                       <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
                         <a href="#fleet_showcase" class="sail-pill green" style="font-size:10.5px;text-decoration:none" onclick="event.stopPropagation()" title="Open verified photos & rate table in Fleet Ledger">
-                          <span class="dot"></span>${photoCount} Photos &amp; PDF Rates ↗
+                          <span class="dot"></span>${esc(mediaBadgeText)} ↗
                         </a>
                       </div>
                     ` : ''}
                     ${hasRates ? `
                       <div class="num" style="font-size:11.5px;font-weight:600;color:#0A2540;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-                        ${esc([p.rate_hourly, p.rate_standby].filter(Boolean).join(' · '))}
+                        ${esc([rateHourly, rateStandby].filter(Boolean).join(' · '))}
                       </div>
                     ` : ''}
                     ${p.client_notes ? (isBounced || /^bounced/i.test(p.client_notes) ? `

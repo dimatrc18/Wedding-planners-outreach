@@ -134,7 +134,7 @@ export function inferCategoryLabel(cat, pax) {
 }
 
 export function getTransportCategories(rows = FLEET_LEDGER_ROWS) {
-  const allRows = Array.isArray(rows) && rows.length > 0 ? rows : FLEET_LEDGER_ROWS;
+  const allRows = (Array.isArray(rows) && rows.length > 0 ? rows : FLEET_LEDGER_ROWS).filter((r) => !r.excludedFromPricing);
   const paxes = allRows.map((r) => r.pax || 8).filter(Boolean);
   const minPax = paxes.length > 0 ? Math.min(...paxes) : 7;
   const maxPax = paxes.length > 0 ? Math.max(...paxes) : 30;
@@ -169,9 +169,8 @@ export function getTransportCategories(rows = FLEET_LEDGER_ROWS) {
 }
 
 export const TRANSPORT_CATEGORIES = [
-  { key: 'all', label: 'All Transport Types (7–30 pax)', paxRange: '7–30 pax' },
+  { key: 'all', label: 'All Transport Types (7–55 pax)', paxRange: '7–55 pax' },
   { key: 'minivan_7_8', label: 'VIP Minivan (7–8 Pax)', paxRange: '7–8 pax', desc: 'Mercedes Sprinter VIP (Avantgarde)' },
-  { key: 'minibus_12_16', label: 'Executive Minibus (12–16 Pax)', paxRange: '12–16 pax', desc: 'Mercedes Sprinter & Ford Transit (Como Driver)' },
   { key: 'minibus_20', label: 'Touring Minibus (20 Pax)', paxRange: '20 pax', desc: 'Mercedes Minibus 20 Pax (Avantgarde)' },
   { key: 'coach_30', label: 'Touring Midibus / Coach (30 Pax)', paxRange: '30 pax', desc: 'Executive Midibus 30 Pax (Avantgarde)' }
 ];
@@ -180,7 +179,7 @@ export function getAllTransferRoutes(rows = FLEET_LEDGER_ROWS) {
   const routes = [...ROUTE_CATALOG.transfers];
   const keys = new Set(routes.map((r) => r.key));
 
-  (rows || []).forEach((v) => {
+  (rows || []).filter((v) => !v.excludedFromPricing).forEach((v) => {
     if (v.transfers && typeof v.transfers === 'object') {
       Object.entries(v.transfers).forEach(([k, t]) => {
         if (!keys.has(k) && t && t.net !== null && t.net !== undefined && Number(t.net) > 0) {
@@ -205,7 +204,7 @@ let calcState = {
   transportCategory: 'all', // 'all' | any category
   tierFilter: 'all', // 'all' | 'luxury' | 'standard'
   passengerCount: 8,
-  vehicleId: 'como_sprinter_12',
+  vehicleId: 'avantgarde_sprinter_8_bw',
   standbyHours: 8, // custom hourly standby duration
   tripDirection: 'one_way', // 'one_way' | 'round_trip' (2x)
   extraHours: 0,
@@ -218,7 +217,7 @@ let calcState = {
 
 export function selectSpecificVehicle(vehicleId, rows = FLEET_LEDGER_ROWS) {
   const allRows = Array.isArray(rows) && rows.length > 0 ? rows : FLEET_LEDGER_ROWS;
-  const veh = allRows.find((r) => r.id === vehicleId);
+  const veh = allRows.find((r) => r.id === vehicleId && !r.excludedFromPricing);
   if (!veh) return null;
   calcState.vehicleId = veh.id;
   if (veh.category) calcState.transportCategory = veh.category;
@@ -272,6 +271,8 @@ export const FLEET_LEDGER_ROWS = [
     email: 'info@comodriver.com',
     website: 'https://www.comodriver.com',
     status: 'confirmed',
+    excludedFromPricing: true,
+    excludedReason: 'Excluded from price calculations (overpriced vs 19–20p touring minibuses)',
     statusLabel: 'Rates & 4 photos verified',
     repliedAt: '28 Oct 2026 · 09:22',
     ratePdf: PDF_COMO_DRIVER,
@@ -347,6 +348,8 @@ export const FLEET_LEDGER_ROWS = [
     email: 'info@comodriver.com',
     website: 'https://www.comodriver.com',
     status: 'confirmed',
+    excludedFromPricing: true,
+    excludedReason: 'Excluded from price calculations (overpriced vs 19–20p touring minibuses)',
     statusLabel: 'Rates & 3 photos verified',
     repliedAt: '28 Oct 2026 · 09:22',
     ratePdf: PDF_COMO_DRIVER,
@@ -471,15 +474,15 @@ export const FLEET_LEDGER_ROWS = [
   {
     id: 'avantgarde_sprinter_8_bw',
     partnerId: 'partner_1792765279535_l9ei',
-    vehicleModel: 'Mercedes-Benz Sprinter (Black Interior)',
+    vehicleModel: 'Mercedes-Benz Sprinter VIP (Yacht Edition)',
     paxLabel: '8 pax',
-    coachbuilder: 'Executive Black & White Leather with Multimedia Partition',
+    coachbuilder: 'Two-Tone Silver & Navy Exterior · Yacht Pinstripe Leather & TV Partition',
     pax: 8,
     category: 'minivan_7_8',
     categoryLabel: 'VIP Minivan (8 Pax)',
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: 'Conference club armchairs · TV bulkhead partition · Center console tables',
+    tierSpec: 'Silver hood/roof over metallic navy body (GL-995RH) · Navy quilted leather & blue/white pinstripe console w/ TV',
     partnerName: 'Avantgarde Limousine Service (Milano Cab)',
     baseCity: 'Milano (Via Calatafimi 12)',
     contactPerson: 'Vincenzo Lombardi',
@@ -514,29 +517,29 @@ export const FLEET_LEDGER_ROWS = [
         id: 'avantgarde_8p_bw_ext_1',
         src: 'assets/partner_fleet/avantgarde/sprinter_8p_bw_ext_1.jpg',
         file: 'sprinter_8p_bw_ext_1.jpg',
-        title: 'Exterior — Mercedes Sprinter 8 Pax Executive (Side View)',
-        caption: 'High-roof total black Sprinter (8 passenger seats + driver).'
+        title: 'Exterior — Mercedes Sprinter 8 Pax Two-Tone Silver & Navy (Side View)',
+        caption: 'Two-tone Maybach-style silver upper over deep metallic navy lower body (8 passenger seats + driver, plate GL-995RH).'
       },
       {
         id: 'avantgarde_8p_bw_ext_2',
         src: 'assets/partner_fleet/avantgarde/sprinter_8p_bw_ext_2.jpg',
         file: 'sprinter_8p_bw_ext_2.jpg',
-        title: 'Exterior — Mercedes Sprinter 8 Pax (Front Quarter)',
-        caption: 'Discreet unbranded black exterior suitable for VIP weddings and diplomatic delegations.'
+        title: 'Exterior — Mercedes Sprinter 8 Pax Two-Tone (Front Quarter)',
+        caption: 'Unbranded two-tone silver & metallic navy Sprinter with Panamericana grille, discreet for VIP weddings and executive delegations.'
       },
       {
         id: 'avantgarde_8p_bw_int_tv',
         src: 'assets/partner_fleet/avantgarde/sprinter_8p_bw_int_tv.jpg',
         file: 'sprinter_8p_bw_int_tv.jpg',
-        title: 'Interior — Black & White Two-Tone Leather with TV Partition',
-        caption: 'Forward cabin bulkhead with multimedia flat screen TV and soundbar.'
+        title: 'Interior — Navy Diamond Leather & Yacht Pinstripe w/ TV Partition',
+        caption: 'Forward cabin bulkhead with large smart TV screen, blue/white yacht-pinstripe console, and starlight LED ceiling.'
       },
       {
         id: 'avantgarde_8p_bw_int_2',
         src: 'assets/partner_fleet/avantgarde/sprinter_8p_bw_int_2.jpg',
         file: 'sprinter_8p_bw_int_2.jpg',
-        title: 'Interior — Conference Armchairs with Executive Tables',
-        caption: 'Conference club seating facing center console table with cup holders.'
+        title: 'Interior — Navy Conference Armchairs & Rear Bench',
+        caption: 'Club seating in navy diamond-quilted leather facing center pinstripe consoles plus 3-seat rear bench.'
       }
     ]
   },
@@ -545,13 +548,13 @@ export const FLEET_LEDGER_ROWS = [
     partnerId: 'partner_1792765279535_l9ei',
     vehicleModel: 'Mercedes-Benz Sprinter Top VIP',
     paxLabel: '8 pax',
-    coachbuilder: 'Top Luxury Custom VIP (Allestimento Speciale · Video Verified)',
+    coachbuilder: 'Charcoal Grey Metallic · Cognac Diamond Maybach Seats (Video Verified)',
     pax: 8,
     category: 'minivan_7_8',
     categoryLabel: 'VIP Minivan (8 Pax Top)',
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: 'Top VIP allestimento speciale · Video walkthrough · €140/h + IVA (8h €1,200 + IVA)',
+    tierSpec: 'Metallic charcoal grey w/ Panamericana grille & chrome mirrors · Saddle cognac leather & mahogany tables · €140/h + IVA (8h €1,200 + IVA)',
     partnerName: 'Avantgarde Limousine Service (Milano Cab)',
     baseCity: 'Milano (Via Calatafimi 12)',
     contactPerson: 'Vincenzo Lombardi',
@@ -588,8 +591,8 @@ export const FLEET_LEDGER_ROWS = [
         id: 'avantgarde_8p_top_vip_video',
         src: 'assets/partner_fleet/avantgarde/top_8_pax.mp4',
         file: 'top 8 pax.mp4',
-        title: 'Video Walkthrough — Sprinter Top 8 VIP (Allestimento Speciale)',
-        caption: 'Full HD video walkthrough of the Mercedes-Benz Sprinter Top 8 VIP trim (€140/h + IVA · €1,200 / 8h + IVA).'
+        title: 'Video Walkthrough — Charcoal Grey Sprinter Top 8 VIP (Cognac Leather)',
+        caption: 'Video walkthrough of charcoal grey Mercedes Sprinter Top 8 VIP with saddle cognac electric seats and mahogany tables (€140/h + IVA · €1,200 / 8h + IVA).'
       }
     ]
   },
@@ -661,15 +664,15 @@ export const FLEET_LEDGER_ROWS = [
   {
     id: 'avantgarde_coach_30',
     partnerId: 'partner_1792765279535_l9ei',
-    vehicleModel: 'Executive Midibus',
+    vehicleModel: 'Iveco Executive Midibus',
     paxLabel: '30 pax',
-    coachbuilder: 'Touring Coach (WA Ext + Int Verified)',
+    coachbuilder: 'Matte Satin Black Touring Midibus (WA Ext + Int Verified)',
     pax: 30,
     category: 'coach_30',
     categoryLabel: 'Touring Midibus / Coach (30 Pax)',
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: 'Panoramic touring glass · High-back reclining seats · Reversing camera & AC',
+    tierSpec: 'Matte black unbranded exterior (cyan hood stripe & tricolore accent) · Black/red piped seats · Reversing camera & AC',
     partnerName: 'Avantgarde Limousine Service (Milano Cab)',
     baseCity: 'Milano (Via Calatafimi 12)',
     contactPerson: 'Vincenzo Lombardi',
@@ -705,43 +708,43 @@ export const FLEET_LEDGER_ROWS = [
         id: 'avantgarde_30_ext_side',
         src: 'assets/partner_fleet/avantgarde/coach_30p_ext_side.jpg',
         file: 'coach_30p_ext_side.jpg',
-        title: 'Exterior — Executive Touring Midibus 30 Pax (Side Profile)',
-        caption: 'Total black executive midibus with deep tinted panoramic side windows.'
+        title: 'Exterior — Matte Black Iveco Midibus 30 Pax (Side Profile)',
+        caption: 'Matte satin black unbranded Iveco midibus with deep tinted panoramic windows, cyan hood stripe, and tricolore window accent.'
       },
       {
         id: 'avantgarde_30_ext_back',
         src: 'assets/partner_fleet/avantgarde/coach_30p_ext_back.jpg',
         file: 'coach_30p_ext_back.jpg',
-        title: 'Exterior — 30 Pax Coach (Rear Luggage Boot)',
-        caption: 'Large rear luggage compartment for heavy guest suitcases and wedding equipment.'
+        title: 'Exterior — 30 Pax Matte Black Midibus (Rear Luggage Boot)',
+        caption: 'Matte black rear elevation with large luggage compartment boot and reversing camera.'
       },
       {
         id: 'avantgarde_30_int_1',
         src: 'assets/partner_fleet/avantgarde/coach_30p_int_1.jpg',
         file: 'coach_30p_int_1.jpg',
-        title: 'Interior — 30 Passenger Reclining Seats & Center Aisle',
-        caption: 'High-back touring seats with armrests, cup holders, and durable commercial fabric/leatherette.'
+        title: 'Interior — Forward View Toward Cockpit & Windshield',
+        caption: 'Forward cabin view showing center aisle toward driver cockpit, black seats with burgundy piping, and red curtains.'
       },
       {
         id: 'avantgarde_30_int_2',
         src: 'assets/partner_fleet/avantgarde/coach_30p_int_2.jpg',
         file: 'coach_30p_int_2.jpg',
-        title: 'Interior — Cockpit & Forward Panoramic Windshield',
-        caption: 'Clean driver cockpit with microphone for tour leader/guide and panoramic front visibility.'
+        title: 'Interior — Right-Side Reclining Seats Looking Rearward',
+        caption: 'Contoured black leather/cloth touring seats with burgundy red trim, 3-point seatbelts, and red curtains toward rear exit.'
       },
       {
         id: 'avantgarde_30_int_3',
         src: 'assets/partner_fleet/avantgarde/coach_30p_int_3.jpg',
         file: 'coach_30p_int_3.jpg',
-        title: 'Interior — Overhead AC Vents & Reading Lights',
-        caption: 'Individual passenger climate control vents and individual reading spots.'
+        title: 'Interior — Left-Side Reclining Seats & Overhead AC Ducts',
+        caption: 'Left-hand 2+2 seating rows looking toward rear bench with warm overhead LED strips and individual reading spots.'
       },
       {
         id: 'avantgarde_30_int_4',
         src: 'assets/partner_fleet/avantgarde/coach_30p_int_4.jpg',
         file: 'coach_30p_int_4.jpg',
-        title: 'Interior — Wide Aisle & Rear Cabin Seating',
-        caption: 'View toward rear cabin showing deep legroom and overhead parcel storage.'
+        title: 'Interior — Full-Length Aisle & Rear Bench View',
+        caption: 'Symmetrical view down illuminated center aisle toward rear 5-seat bench and overhead luggage racks.'
       }
     ]
   },
@@ -837,7 +840,7 @@ export const FLEET_LEDGER_ROWS = [
     categoryLabel: 'Executive Midibus / Coach (30 Pax)',
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: '100% Luxury fitted · Clean unbranded sides (small rear logo only)',
+    tierSpec: '100% Luxury fitted · Clean unbranded body sides (small Landway logo & contact text on lower glass entry door)',
     partnerName: 'Landway Tourism',
     baseCity: 'Como / Milano',
     contactPerson: 'Melissa (Emergency: Massimo Rossi)',
@@ -874,7 +877,7 @@ export const FLEET_LEDGER_ROWS = [
         src: 'assets/partner_fleet/landway/29_posti_2.jpeg',
         file: '29 posti 2.jpeg',
         title: 'Exterior & Cabin Entrance — Iveco Midibus 29 Pax',
-        caption: 'Total black 29-seater touring midibus with open entry showing luxury grey leather seating.'
+        caption: 'Total black 29-seater touring midibus with open entry showing grey/black leather seats and small Landway logo/phone on lower door glass.'
       },
       {
         id: 'landway_midibus_29_int_1',
@@ -888,7 +891,7 @@ export const FLEET_LEDGER_ROWS = [
         src: 'assets/partner_fleet/landway/29_posti_5.jpeg',
         file: '29 posti 5.jpeg',
         title: 'Interior Cabin Aisle — High Panoramic Ceiling',
-        caption: 'Aisle perspective toward rear showing full passenger cabin, overhead parcel racks, and AC vents.'
+        caption: 'Aisle perspective toward rear showing full passenger cabin, red curtains, overhead parcel racks, and AC vents.'
       }
     ]
   },
@@ -960,13 +963,54 @@ export const FLEET_LEDGER_ROWS = [
         id: 'landway_coach_50_int_2',
         src: 'assets/partner_fleet/landway/50_posti_interni_GN150.jpeg',
         file: '50 posti interni GN150.jpeg',
-        title: 'Interior Passenger Cabin — Overhead Parcel Racks & Lighting',
-        caption: 'Forward passenger cabin perspective showing climate control nozzles, reading lights, and premium upholstery.'
+        title: 'Interior Passenger Cabin — Overhead Racks & Reading Lights (GN150)',
+        caption: 'Forward passenger cabin perspective (GN150 depot shot) showing climate control nozzles, reading lights, and touring upholstery.'
       }
     ]
   },
 
   // --- PERLETTI AUTOSERVIZI (TOP CLASS LINE) ---
+  {
+    id: 'perletti_vclass_7',
+    partnerId: 'partner_perletti_topclass',
+    vehicleModel: 'Mercedes-Benz V-Class (2x Units)',
+    paxLabel: '7 pax',
+    coachbuilder: 'Luxury Minivan · Perletti Auto Division',
+    pax: 7,
+    category: 'minivan_7_8',
+    categoryLabel: 'VIP Minivan (7 Pax)',
+    tier: 'luxury',
+    tierLabel: 'Luxury VIP',
+    tierSpec: '2x Classe V confirmed in 02 Nov email · Black 100% unbranded exterior on perlettibus.it · Interior photos & V-Class rates pending',
+    partnerName: 'Perletti Autoservizi',
+    baseCity: 'Bergamo / Milano',
+    contactPerson: 'Andrea',
+    phone: '+39 338 666 8249',
+    email: 'info@perlettibus.it',
+    website: 'https://www.perlettibus.it/perlettibus/parco-mezzi/auto/',
+    status: 'pending',
+    statusLabel: 'Confirmed in email · 1 site ext photo · Rates & interior pending',
+    repliedAt: '02 Nov 2026 · 17:10',
+    ratePdf: null,
+    ratePdfName: null,
+    transfers: null,
+    transferNote: 'Andrea confirmed 2x Mercedes Classe V (7 pax) on 02 Nov ("se ha esigenze particolari ci chiede"); bespoke transfer quote on request.',
+    standby: null,
+    standbyNote: 'Awaiting V-Class 4h/8h net tariff & interior cabin photos (not published on perlettibus.it).',
+    terms: {
+      vat: 'Prezzi IVA 10% esclusa',
+      cancellation: '30% fino a 48h · 50% nelle 48h · 100% nelle 24h'
+    },
+    photos: [
+      {
+        id: 'perletti_vclass_7_ext_1',
+        src: 'assets/partner_fleet/perletti/perletti_vclass_7p.jpg',
+        file: 'perletti-auto-mercedes-classe-V-2025-im1.jpg',
+        title: 'Exterior — Mercedes-Benz Classe V (Unbranded Black · perlettibus.it)',
+        caption: 'Unbranded black Mercedes-Benz Classe V from perlettibus.it/parco-mezzi/auto/ (referenced by Andrea in 02 Nov email). Interior photos pending.'
+      }
+    ]
+  },
   {
     id: 'perletti_minibus_20',
     partnerId: 'partner_perletti_topclass',
@@ -978,15 +1022,15 @@ export const FLEET_LEDGER_ROWS = [
     categoryLabel: 'Touring Minibus (18–22 Pax)',
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: 'Top Class Line · Discreet livery pending interior leather photos',
+    tierSpec: 'Modern black Gran Capri has small PERLETTI AUTOSERVIZI door text only (older Sprinter unit has side swoosh); interiors not published on site',
     partnerName: 'Perletti Autoservizi',
     baseCity: 'Bergamo / Milano',
     contactPerson: 'Andrea',
     phone: '+39 338 666 8249',
     email: 'info@perlettibus.it',
-    website: 'https://www.perlettibus.it',
+    website: 'https://www.perlettibus.it/perlettibus/parco-mezzi/mini-bus/',
     status: 'confirmed',
-    statusLabel: 'Rates verified · Photos pending',
+    statusLabel: 'Rates & 2 website exteriors verified · Interiors pending',
     repliedAt: '02 Nov 2026 · 17:10',
     ratePdf: null,
     ratePdfName: null,
@@ -1005,18 +1049,25 @@ export const FLEET_LEDGER_ROWS = [
     },
     photos: [
       {
+        id: 'perletti_minibus_ext_capri',
+        src: 'assets/partner_fleet/perletti/perletti_gran_capri_20p.jpg',
+        file: 'image0-scaled-800x507-1.jpg',
+        title: 'Exterior — Mercedes Gran Capri (2023 · Discreet Door Text)',
+        caption: 'Modern black Mercedes Gran Capri minibus on perlettibus.it/mini-bus/ with small PERLETTI AUTOSERVIZI text below front door only. Interior photo pending.'
+      },
+      {
         id: 'perletti_minibus_ext_1',
         src: 'assets/partner_fleet/perletti/perletti_sprinter_minibus.png',
         file: 'perletti_sprinter_minibus.png',
-        title: 'Exterior — Mercedes Sprinter Minibus (black)',
-        caption: 'Black Mercedes Sprinter minibus at the Perletti depot. Side has the Perletti name and a thin silver stripe. Source: perlettibus.it/parco-mezzi'
+        title: 'Exterior — Earlier Mercedes Sprinter Minibus (Swoosh Livery)',
+        caption: 'Older black Sprinter at Perletti depot carrying cursive Perletti branding and silver side swoosh. Interior photo pending.'
       }
     ]
   },
   {
     id: 'perletti_midibus_30',
     partnerId: 'partner_perletti_topclass',
-    vehicleModel: 'Iveco Wing / Mago 2 Midibus',
+    vehicleModel: 'Iveco Wing & Mago 2 Midibus',
     paxLabel: '28–30 pax',
     coachbuilder: 'Executive Midibus · Top Class Line',
     pax: 30,
@@ -1024,15 +1075,15 @@ export const FLEET_LEDGER_ROWS = [
     categoryLabel: 'Executive Midibus / Coach (30 Pax)',
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: 'Top Class Line · Midibus 28–30 posti',
+    tierSpec: 'Iveco Wing GH-467MB (cursive Perletti side script) & Iveco Mago 2 (large silver swirl graphic) — request Wing if low-branding matters; interiors pending',
     partnerName: 'Perletti Autoservizi',
     baseCity: 'Bergamo / Milano',
     contactPerson: 'Andrea',
     phone: '+39 338 666 8249',
     email: 'info@perlettibus.it',
-    website: 'https://www.perlettibus.it',
+    website: 'https://www.perlettibus.it/perlettibus/parco-mezzi/mini-bus/',
     status: 'confirmed',
-    statusLabel: 'Rates verified · Photos pending',
+    statusLabel: 'Rates & 2 website exteriors verified · Interiors pending',
     repliedAt: '02 Nov 2026 · 17:10',
     ratePdf: null,
     ratePdfName: null,
@@ -1049,28 +1100,43 @@ export const FLEET_LEDGER_ROWS = [
       included: 'Quotazioni di riferimento; parcheggi e ZTL esclusi',
       cancellation: '30% fino a 48h · 50% nelle 48h · 100% nelle 24h'
     },
-    photos: []
+    photos: [
+      {
+        id: 'perletti_midibus_wing_ext',
+        src: 'assets/partner_fleet/perletti/perletti_iveco_wing_28p.jpg',
+        file: 'GH467MB-esterno-800x507-1.jpg',
+        title: 'Exterior — Iveco Wing Midibus 28 Pax (Plate GH-467MB)',
+        caption: 'Black Iveco Wing 28-seater on perlettibus.it/mini-bus/ with cursive Perletti lettering on side. Interior photo pending.'
+      },
+      {
+        id: 'perletti_midibus_mago2_ext',
+        src: 'assets/partner_fleet/perletti/perletti_iveco_mago2_30p.jpg',
+        file: 'minibus-008-a.jpg',
+        title: 'Exterior — Iveco Mago 2 Midibus 28–30 Pax (Swirl Livery)',
+        caption: 'Black Iveco Mago 2 on perlettibus.it/mini-bus/ with Perletti script and decorative pearl/silver graphic. Interior photo pending.'
+      }
+    ]
   },
   {
     id: 'perletti_coach_52',
     partnerId: 'partner_perletti_topclass',
-    vehicleModel: 'Mercedes Tourismo & Setra GT Coach',
+    vehicleModel: 'Setra S 515 HD, Tourismo & Neoplan GT',
     paxLabel: '52 pax',
-    coachbuilder: 'Gran Turismo Coach',
+    coachbuilder: 'Gran Turismo 2-Axle Coaches (51–55 pax)',
     pax: 52,
     category: 'coach_50',
     categoryLabel: 'Full-Size GT Coach (50+ Pax)',
     tier: 'standard',
     tierLabel: 'Grand Tourismo Coach',
-    tierSpec: 'Autobus Gran Turismo da 52 posti',
+    tierSpec: '2023–2026 black Neoplan/Setra/Tourismo units have discreet front-door text only; older fleet units have silver side graphics; interiors missing',
     partnerName: 'Perletti Autoservizi',
     baseCity: 'Bergamo / Milano',
     contactPerson: 'Andrea',
     phone: '+39 338 666 8249',
     email: 'info@perlettibus.it',
-    website: 'https://www.perlettibus.it',
+    website: 'https://www.perlettibus.it/perlettibus/parco-mezzi/bus/',
     status: 'confirmed',
-    statusLabel: 'Rates & 2 photos verified',
+    statusLabel: 'Rates & 7 GT exteriors verified · Interiors pending',
     repliedAt: '04 Nov 2026 · 11:00',
     ratePdf: null,
     ratePdfName: null,
@@ -1089,18 +1155,94 @@ export const FLEET_LEDGER_ROWS = [
     },
     photos: [
       {
-        id: 'perletti_coach_52_ext_1',
-        src: 'assets/partner_fleet/perletti/perletti_tourismo_52.png',
-        file: 'perletti_tourismo_52.png',
-        title: 'Exterior — Mercedes Tourismo GT Coach (52 pax)',
-        caption: 'Black Mercedes Tourismo with the Perletti name and a large decorative swirl graphic on the side. Source: perlettibus.it/parco-mezzi'
+        id: 'perletti_coach_52_setra_blk',
+        src: 'assets/partner_fleet/perletti/perletti_setra_515_black_52p.jpg',
+        file: 'perletti-bus-setra-515-2023-im1.jpg',
+        title: 'Exterior — Setra S 515 HD Restyling (Clean Black · Minimal Branding)',
+        caption: 'Late-model black Setra S 515 HD from perlettibus.it/bus/ with tiny white front-corner company text only (matches 04 Nov email).'
+      },
+      {
+        id: 'perletti_coach_52_tourismo_2025',
+        src: 'assets/partner_fleet/perletti/perletti_tourismo_2025_52p.jpg',
+        file: 'perletti-bus-mercedes-tourismo-2025-im1.jpg',
+        title: 'Exterior — Mercedes-Benz Tourismo (2025 · Minimal Branding)',
+        caption: '2025 black Mercedes Tourismo from perlettibus.it/bus/ with discreet Perletti name by front entry door only.'
+      },
+      {
+        id: 'perletti_coach_52_neoplan_2026',
+        src: 'assets/partner_fleet/perletti/perletti_neoplan_2026_52p.jpg',
+        file: 'HD565XR.jpg',
+        title: 'Exterior — Neoplan Tourliner (2026 · Plate HD-565XR)',
+        caption: 'Newest 2026 black Neoplan Tourliner from perlettibus.it/bus/ with clean unbranded body panels and small front-door lettering.'
+      },
+      {
+        id: 'perletti_coach_52_neoplan_2025',
+        src: 'assets/partner_fleet/perletti/perletti_neoplan_2025_52p.jpg',
+        file: 'perletti-bus-neoplan-tourliner-2025-im1.jpg',
+        title: 'Exterior — Neoplan Tourliner (2025 · Minimal Branding)',
+        caption: '2025 black Neoplan Tourliner from perlettibus.it/bus/ with discreet door name only.'
+      },
+      {
+        id: 'perletti_coach_52_tourismo_fk902wg',
+        src: 'assets/partner_fleet/perletti/perletti_tourismo_fk902wg_52p.jpg',
+        file: 'FK902WG.jpg',
+        title: 'Exterior — Mercedes Tourismo MB E 15 RHD (Plate FK-902WG)',
+        caption: 'Clean black Mercedes Tourismo 15 RHD from perlettibus.it/bus/ with discreet white door text.'
+      },
+      {
+        id: 'perletti_coach_52_setra_grey',
+        src: 'assets/partner_fleet/perletti/perletti_setra_515_grey_52p.jpg',
+        file: 'Setra-515-grigio.jpg',
+        title: 'Exterior — Setra S 515 HD Metallic Grey (Clean Livery)',
+        caption: 'Metallic silver-grey Setra S 515 HD from perlettibus.it/bus/ without side swirl graphics.'
       },
       {
         id: 'perletti_coach_52_ext_2',
         src: 'assets/partner_fleet/perletti/perletti_gt_fleet_lineup.jpg',
         file: 'perletti_gt_fleet_lineup.jpg',
-        title: 'Exterior — GT Fleet Lineup (Setra + Irizar)',
-        caption: 'Three black GT coaches at the depot. Perletti branding on the front and sides, plus the website on the windscreen header. Source: perlettibus.it/parco-mezzi'
+        title: 'Exterior — Earlier GT Lineup (Setra + Irizar i6)',
+        caption: 'Older GT coaches at Perletti depot showing website windscreen banners and side branding. Interior photos missing.'
+      }
+    ]
+  },
+  {
+    id: 'perletti_maxibus_64',
+    partnerId: 'partner_perletti_topclass',
+    vehicleModel: 'Mercedes-Benz Tourismo RHD-L 3-Axle',
+    paxLabel: '64 pax',
+    coachbuilder: 'MaxiBus 3-Axle Coach · Older Swirl Livery',
+    pax: 64,
+    category: 'coach_50',
+    categoryLabel: 'Full-Size GT Coach (50+ Pax)',
+    tier: 'standard',
+    tierLabel: 'MaxiBus 64 Pax',
+    tierSpec: '3-axle 64-seat MaxiBus from perlettibus.it/maxi-bus/ (previously mislabeled under 52 pax) · Large silver swirl graphic & Perletti script',
+    partnerName: 'Perletti Autoservizi',
+    baseCity: 'Bergamo / Milano',
+    contactPerson: 'Andrea',
+    phone: '+39 338 666 8249',
+    email: 'info@perlettibus.it',
+    website: 'https://www.perlettibus.it/perlettibus/parco-mezzi/maxi-bus/',
+    status: 'pending',
+    statusLabel: 'On site · Differential 64p rate & interior pending',
+    repliedAt: '04 Nov 2026 · 11:00',
+    ratePdf: null,
+    ratePdfName: null,
+    transfers: null,
+    transferNote: 'Andrea quoted 52-pax coaches on 04 Nov (MXP €600, Como €700); confirm whether 64-pax 3-axle Tourismo carries a surcharge.',
+    standby: null,
+    standbyNote: 'Awaiting 64-pax standby quote & cabin interior photos (photo re-matched from mislabeled 52p slot).',
+    terms: {
+      vat: 'Prezzi IVA 10% esclusa',
+      cancellation: '30% fino a 48h · 50% nelle 48h · 100% nelle 24h'
+    },
+    photos: [
+      {
+        id: 'perletti_maxibus_64_ext_1',
+        src: 'assets/partner_fleet/perletti/perletti_tourismo_52.png',
+        file: 'TOUR_007.png',
+        title: 'Exterior — Mercedes Tourismo RHD-L 3-Axle MaxiBus (64 pax)',
+        caption: 'Black 3-axle Tourismo RHD-L 64-seater from perlettibus.it/maxi-bus/ featuring Perletti script and large silver swirl graphic.'
       }
     ]
   },
@@ -1141,15 +1283,15 @@ export const FLEET_LEDGER_ROWS = [
   {
     id: 'guizzetti_minibus_19',
     partnerId: 'partner_1793030996221_7t9y',
-    vehicleModel: 'Spica / Indcar Wing Minibus',
+    vehicleModel: 'Mercedes-Benz Sprinter Luxury (19+1)',
     paxLabel: '19 pax',
-    coachbuilder: 'Minibus Gran Turismo · 19+1',
+    coachbuilder: 'Total Black Extended High-Roof · 2+1 Quilted Leather',
     pax: 19,
     category: 'minibus_20',
     categoryLabel: 'Touring Minibus (18–22 Pax)',
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: 'Sobria livrea priva di scritte sulle fiancate · 100% unbranded',
+    tierSpec: '100% unbranded Total Black exterior · 2+1 luxury quilted black leather w/ red piping (5x3 + 4 rear = 19 seats)',
     partnerName: 'Autoservizi Guizzetti',
     baseCity: 'Sovere (Bergamo / Brescia)',
     contactPerson: 'Cristian (Cell: 335 747 1244 · Ufficio: 035 982277)',
@@ -1158,8 +1300,8 @@ export const FLEET_LEDGER_ROWS = [
     email: 'info@autoserviziguizzetti.com',
     website: 'https://www.autoserviziguizzetti.com',
     status: 'confirmed',
-    statusLabel: 'Rates & 2 photos verified · Fleet #103',
-    repliedAt: '31 Oct 2026 · 17:49',
+    statusLabel: 'Rates & 2 real email photos verified',
+    repliedAt: '03 Nov 2026 · 06:37',
     ratePdf: null,
     ratePdfName: null,
     transfers: {
@@ -1171,36 +1313,36 @@ export const FLEET_LEDGER_ROWS = [
     },
     terms: {
       vat: 'Prezzi IVA 10% esclusa',
-      included: '+ €30 parcheggio Malpensa; eventuale Area C Milano da aggiungere',
+      included: '+ €30 parcheggio Malpensa; eventuale Area C Milano da aggiungere; Spica 19+1 nuovo in arrivo 2027',
       cancellation: 'In attesa di policy formale da Cristian'
     },
     photos: [
       {
-        src: 'assets/partner_fleet/guizzetti/103_laterale.jpeg',
-        file: '103 – laterale.jpeg',
-        title: 'Fleet #103 — Spica / Indcar Wing Minibus (19 pax) · Exterior',
-        caption: 'Verified exterior shot from Guizzetti. Unbranded discreet livery without decals.'
+        src: 'assets/partner_fleet/guizzetti/sprinter_19_luxury_ext.jpg',
+        file: 'esterno.jpg',
+        title: 'Mercedes Sprinter Luxury 19+1 · Exterior (100% Unbranded)',
+        caption: 'Total-black extended high-roof Mercedes Sprinter (pre-delivery plate 34 G 82377) sent in Email #42. Zero branding.'
       },
       {
-        src: 'assets/partner_fleet/guizzetti/interno_103.jpg',
-        file: 'interno 103.jpg',
-        title: 'Fleet #103 — Spica / Indcar Wing Minibus (19 pax) · Interior',
-        caption: 'Verified interior shot received 03 Nov 2026. Leather upholstery and executive aisle.'
+        src: 'assets/partner_fleet/guizzetti/sprinter_19_luxury_int.jpg',
+        file: 'interno.jpg',
+        title: 'Mercedes Sprinter Luxury 19+1 · VIP 2+1 Leather Cabin',
+        caption: '2+1 diamond-quilted black leather seats with red piping (5 rows of 3 + 4 rear bench = 19 seats) & blue ambient LED strip.'
       }
     ]
   },
   {
     id: 'guizzetti_midibus_30',
     partnerId: 'partner_1793030996221_7t9y',
-    vehicleModel: 'Iveco Midibus GT',
-    paxLabel: '30 pax',
-    coachbuilder: 'Executive Midibus · 30 posti',
+    vehicleModel: 'Temsa Midibus #115 & Iveco Wing #121',
+    paxLabel: '28–33 pax',
+    coachbuilder: 'Midibus GT (Temsa CY-923SE & Iveco Indcar Wing #121)',
     pax: 30,
     category: 'coach_30',
     categoryLabel: 'Executive Midibus / Coach (30 Pax)',
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: 'Sobria livrea priva di scritte sulle fiancate · 100% unbranded',
+    tierSpec: 'Temsa #115 (CY-923SE) is 100% unbranded · Iveco #121 has small door logo, rear Guizzetti script & French Angles Morts sticker',
     partnerName: 'Autoservizi Guizzetti',
     baseCity: 'Sovere (Bergamo / Brescia)',
     contactPerson: 'Cristian (Cell: 335 747 1244 · Ufficio: 035 982277)',
@@ -1209,8 +1351,8 @@ export const FLEET_LEDGER_ROWS = [
     email: 'info@autoserviziguizzetti.com',
     website: 'https://www.autoserviziguizzetti.com',
     status: 'confirmed',
-    statusLabel: 'Rates & 2 photos verified · Fleet #104',
-    repliedAt: '31 Oct 2026 · 17:49',
+    statusLabel: 'Rates & 4 real email photos verified (#115 & #121)',
+    repliedAt: '03 Nov 2026 · 06:37',
     ratePdf: null,
     ratePdfName: null,
     transfers: {
@@ -1227,31 +1369,43 @@ export const FLEET_LEDGER_ROWS = [
     },
     photos: [
       {
-        src: 'assets/partner_fleet/guizzetti/104_esterno_3.jpg',
-        file: '104 – Esterno 3.jpg',
-        title: 'Fleet #104 — Iveco Midibus GT (30 pax) · Exterior',
-        caption: 'Verified exterior shot from Guizzetti. 30 passenger midibus with unbranded livery.'
+        src: 'assets/partner_fleet/guizzetti/temsa_115_midibus_ext.jpg',
+        file: '115- ESTERNO.jpg',
+        title: 'Fleet #115 — Temsa Midibus GT (CY-923SE) · Unbranded Exterior',
+        caption: 'Metallic charcoal grey Temsa midibus #115 photographed at EMSA dealer — 100% clean unbranded body panels.'
       },
       {
-        src: 'assets/partner_fleet/guizzetti/104_interno_2.jpg',
-        file: '104 – Interno 2.jpg',
-        title: 'Fleet #104 — Iveco Midibus GT (30 pax) · Interior',
-        caption: 'Verified interior shot received 03 Nov 2026. Executive passenger seating.'
+        src: 'assets/partner_fleet/guizzetti/temsa_115_midibus_int.jpg',
+        file: '115- INTERNO.jpg',
+        title: 'Fleet #115 — Temsa Midibus GT · Interior (2+2)',
+        caption: 'Verified interior of Fleet #115 showing 2+2 touring seating in blue-grey patterned upholstery.'
+      },
+      {
+        src: 'assets/partner_fleet/guizzetti/iveco_121_midibus_ext.jpeg',
+        file: '121 - lato.jpeg',
+        title: 'Fleet #121 — Iveco Indcar Wing Midibus · Exterior',
+        caption: 'Metallic grey/black Iveco midibus #121 with small round door emblem, rear window Guizzetti script, and Angles Morts sticker.'
+      },
+      {
+        src: 'assets/partner_fleet/guizzetti/iveco_121_midibus_int.jpeg',
+        file: '121 interno.jpeg',
+        title: 'Fleet #121 — Iveco Indcar Wing Midibus · Interior (2+2)',
+        caption: 'Verified interior of Fleet #121 showing 2+2 charcoal/red touring seats.'
       }
     ]
   },
   {
     id: 'guizzetti_coach_50',
     partnerId: 'partner_1793030996221_7t9y',
-    vehicleModel: 'Setra 515 HD / Mercedes-Benz Travego',
-    paxLabel: '50–55 pax',
-    coachbuilder: 'Gran Turismo Luxury Coach',
+    vehicleModel: 'Mercedes-Benz Tourismo & Irizar i6S GT',
+    paxLabel: '50–60 pax',
+    coachbuilder: 'Gran Turismo Euro 6 Coaches (#103, #104, GX-382AE & 2x Tourismo)',
     pax: 50,
     category: 'coach_50',
     categoryLabel: 'Full-Size GT Coach (50+ Pax)',
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: 'Sobria livrea priva di scritte sulle fiancate · 100% unbranded',
+    tierSpec: '2x new Tourismo (HE-710JW/HE-709JW) 100% unbranded · Irizar i6S (#103 3-axle, #104, GX-382AE) small door logo + roof/rear script',
     partnerName: 'Autoservizi Guizzetti',
     baseCity: 'Sovere (Bergamo / Brescia)',
     contactPerson: 'Cristian (Cell: 335 747 1244 · Ufficio: 035 982277)',
@@ -1260,8 +1414,8 @@ export const FLEET_LEDGER_ROWS = [
     email: 'info@autoserviziguizzetti.com',
     website: 'https://www.autoserviziguizzetti.com',
     status: 'confirmed',
-    statusLabel: 'Rates & 6 photos verified · Fleet #115, #121, etc.',
-    repliedAt: '31 Oct 2026 · 17:49',
+    statusLabel: 'Rates & 8 real email photos verified (4 GT pairs)',
+    repliedAt: '03 Nov 2026 · 06:37',
     ratePdf: null,
     ratePdfName: null,
     transfers: {
@@ -1273,45 +1427,145 @@ export const FLEET_LEDGER_ROWS = [
     },
     terms: {
       vat: 'Prezzi IVA 10% esclusa',
-      included: '+ €30 parcheggio Malpensa; eventuale Area C Milano da aggiungere',
+      included: '+ €30 parcheggio Malpensa; eventuale Area C Milano da aggiungere; nuovi Tourismo 65p / Setra 51p / Irizar i8 / Scania in arrivo',
       cancellation: 'In attesa di policy formale da Cristian'
     },
     photos: [
       {
-        src: 'assets/partner_fleet/guizzetti/coach_50_ext.jpg',
-        file: 'esterno.jpg',
-        title: 'GT Coach (50–55 pax) · Exterior',
-        caption: 'Verified exterior shot from Guizzetti. Gran Turismo full-size coach.'
+        src: 'assets/partner_fleet/guizzetti/tourismo_new_ext.jpeg',
+        file: 'fronte + lato.jpeg',
+        title: 'Mercedes-Benz Tourismo GT (HE-710JW & HE-709JW) · 100% Unbranded',
+        caption: 'Pair of brand-new anthracite metallic Mercedes Tourismo coaches — 100% unbranded bodywork (missing from previous dataset).'
       },
       {
-        src: 'assets/partner_fleet/guizzetti/coach_50_int.jpg',
-        file: 'interno.jpg',
-        title: 'GT Coach (50–55 pax) · Interior',
-        caption: 'Verified interior shot received 03 Nov 2026. Full-cabin passenger view.'
+        src: 'assets/partner_fleet/guizzetti/tourismo_new_int.jpeg',
+        file: 'interno.jpeg (8)',
+        title: 'New Mercedes-Benz Tourismo GT · Interior',
+        caption: 'Brand-new Mercedes Tourismo cabin interior with two-tone brown/charcoal touring seats and tan headrests.'
       },
       {
-        src: 'assets/partner_fleet/guizzetti/coach_50_laterale_dx.jpeg',
+        src: 'assets/partner_fleet/guizzetti/irizar_104_ext.jpg',
+        file: '104 - Esterno 3.jpg',
+        title: 'Fleet #104 — Irizar i6S GT 2-Axle · Exterior',
+        caption: 'Black/silver Irizar i6S GT coach #104 with small door logo and discreet Guizzetti script on roof rail/rear (previously misassigned to 30 pax).'
+      },
+      {
+        src: 'assets/partner_fleet/guizzetti/irizar_104_int.jpg',
+        file: '104 - Interno 2.jpg',
+        title: 'Fleet #104 — Irizar i6S GT · Interior',
+        caption: 'Verified interior of Coach #104 with contoured two-tone seats and red window curtains.'
+      },
+      {
+        src: 'assets/partner_fleet/guizzetti/irizar_gx382ae_ext.jpeg',
         file: 'laterale dx.jpeg',
-        title: 'GT Coach (50–55 pax) · Right Side Exterior',
-        caption: 'Verified side profile exterior shot from Guizzetti.'
+        title: 'Irizar i6S GT (GX-382AE) · Right-Side Exterior',
+        caption: 'Anthracite/silver 2-axle Irizar i6S GT (GX-382AE) with small front-door emblem and roof/rear script.'
       },
       {
-        src: 'assets/partner_fleet/guizzetti/coach_50_interno.jpeg',
-        file: 'interno.jpeg',
-        title: 'GT Coach (50–55 pax) · Interior View 2',
-        caption: 'Verified interior cabin view received 03 Nov 2026.'
+        src: 'assets/partner_fleet/guizzetti/irizar_gx382ae_int.jpeg',
+        file: 'interno.jpeg (4)',
+        title: 'Irizar i6S GT (GX-382AE) · Interior',
+        caption: 'Verified cabin interior of GX-382AE showing Irizar touring recliners.'
       },
       {
-        src: 'assets/partner_fleet/guizzetti/115_interno.jpg',
-        file: '115– INTERNO.jpg',
-        title: 'Fleet #115 Setra 515 HD / Travego · Interior',
-        caption: 'Verified interior shot of Fleet #115 received 03 Nov 2026.'
+        src: 'assets/partner_fleet/guizzetti/irizar_103_3axle_ext.jpeg',
+        file: '103 - laterale.jpeg',
+        title: 'Fleet #103 — Irizar i6S GT 3-Axle (~55–60+ pax) · Exterior',
+        caption: 'Full-size 3-axle Irizar i6S GT coach #103 (previously misassigned to 19-pax minibus slot).'
       },
       {
-        src: 'assets/partner_fleet/guizzetti/121_interno.jpeg',
-        file: '121 interno.jpeg',
-        title: 'Fleet #121 Touring Coach · Interior',
-        caption: 'Verified interior shot of Fleet #121 received 03 Nov 2026.'
+        src: 'assets/partner_fleet/guizzetti/irizar_103_3axle_int.jpg',
+        file: 'interno 103.jpg',
+        title: 'Fleet #103 — Irizar i6S GT 3-Axle · Interior',
+        caption: 'Verified interior of 3-axle Coach #103 with tan headrests, Irizar logos, and dark green curtains.'
+      }
+    ]
+  },
+  {
+    id: 'guizzetti_double_83',
+    partnerId: 'partner_1793030996221_7t9y',
+    vehicleModel: 'Double-Decker 3-Axle Coach',
+    paxLabel: '83 pax',
+    coachbuilder: 'High-Capacity 83-Seat Double-Decker',
+    pax: 83,
+    category: 'coach_50',
+    categoryLabel: 'Full-Size GT Coach (50+ Pax)',
+    tier: 'standard',
+    tierLabel: 'Heavily Branded (83p)',
+    tierSpec: 'WARNING: Giant Viking ship mural & huge Guizzetti script on sides — unsuitable for unbranded VIP weddings; interior & 83p rates missing',
+    partnerName: 'Autoservizi Guizzetti',
+    baseCity: 'Sovere (Bergamo / Brescia)',
+    contactPerson: 'Cristian (Cell: 335 747 1244 · Ufficio: 035 982277)',
+    phone: '+39 335 747 1244',
+    secondaryPhone: '+39 035 982277',
+    email: 'info@autoserviziguizzetti.com',
+    website: 'https://www.autoserviziguizzetti.com',
+    status: 'pending',
+    statusLabel: 'Exterior verified · 83p quote & interior pending',
+    repliedAt: '03 Nov 2026 · 06:37',
+    ratePdf: null,
+    ratePdfName: null,
+    transfers: null,
+    transferNote: 'Cristian confirmed fleet goes up to 83 seats & attached exterior #6 in Email #42, but quoted only up to 50–55p.',
+    standby: null,
+    standbyNote: 'Awaiting 83-pax net rates and interior photos (double-decker interior was skipped in Email #45).',
+    terms: {
+      vat: 'Prezzi IVA 10% esclusa',
+      cancellation: 'In attesa di quotazione dedicata e policy'
+    },
+    photos: [
+      {
+        src: 'assets/partner_fleet/guizzetti/doubledecker_83_ext.jpg',
+        file: 'laterale dx.JPG',
+        title: 'Double-Decker 83 Pax · Exterior (Viking Livery — Branded)',
+        caption: '3-axle 83-seat double-decker sent in Email #42 (#6). Features large Guizzetti lettering & Viking ship graphic. Interior photo missing.'
+      }
+    ]
+  },
+  {
+    id: 'italeurobus_coach_66',
+    partnerId: 'partner_1793031479651_15_fgcv',
+    vehicleModel: 'Van Hool Astromega Platinum (Double-Decker)',
+    paxLabel: '66 pax',
+    coachbuilder: 'Luxury 66-Seat Lounge · Wide Leather Recliners & Calf Rests',
+    pax: 66,
+    category: 'coach_50',
+    categoryLabel: 'Full-Size GT Coach (50+ Pax)',
+    tier: 'luxury',
+    tierLabel: 'Platinum Lounge (Branded Ext)',
+    tierSpec: 'Replied 29 Oct (20–80p Euro 6 + Sprinter 8+1) · Wide cream/red leather armchairs w/ calf rests · Exterior has Italeurobus & Brembo graphics',
+    partnerName: 'Italeurobus',
+    baseCity: 'Carobbio degli Angeli (BG) / Brescia',
+    contactPerson: 'Giacomo Chiari',
+    phone: '+39 349 842 9000',
+    email: 'info@italeurobus.it',
+    website: 'https://italeurobus.it',
+    status: 'pending',
+    statusLabel: 'Replied 29 Oct · Custom quote per itinerary',
+    repliedAt: '29 Oct 2026 · 14:43',
+    ratePdf: null,
+    ratePdfName: null,
+    transfers: null,
+    transferNote: 'Giacomo replied 29 Oct offering Euro 6 fleet (cars, Sprinter 8+1, 20–80p) & requested exact itineraries to quote net B2B rates.',
+    standby: null,
+    standbyNote: 'Cancellation policy: 10d before 30% · 5d before 50% · <5d 100%. Note: italeurobus.it uses stock photos; only 66p real photos sent.',
+    terms: {
+      cancellation: '10 giorni prima: 30% · 5 giorni prima: 50% · < 5 giorni: 100% (da firma email 29 Ott)'
+    },
+    photos: [
+      {
+        id: 'italeurobus_66_ext',
+        src: 'assets/partner_fleet/italeurobus/66_posti_esterni.jpg',
+        file: '66 posti esterni1.jpg',
+        title: 'Van Hool Astromega 66 Pax Platinum · Exterior (Branded)',
+        caption: 'Sent by Giacomo Chiari on 29 Oct 2026. White/red/blue/orange Van Hool double-decker with Italeurobus & Brembo graphics.'
+      },
+      {
+        id: 'italeurobus_66_int',
+        src: 'assets/partner_fleet/italeurobus/66_posti_interni.jpg',
+        file: '66 posti interni.jpg',
+        title: 'Van Hool Astromega 66 Pax Platinum · Leather Lounge w/ Calf Rests',
+        caption: 'Wide cream/red leather reclining armchairs with extendable calf rests & center headrest monitors (sent 29 Oct 2026).'
       }
     ]
   },
@@ -1322,6 +1576,8 @@ export const FLEET_LEDGER_ROWS = [
     paxLabel: '7 pax',
     coachbuilder: 'Mercedes-Benz V-Class · 7 Pax Luxury Minivan',
     pax: 7,
+    category: 'minivan_7_8',
+    categoryLabel: 'VIP Minivan (7 Pax)',
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
     tierSpec: 'Total Black Mercedes V-Class · Chauffeur service for Lake Como transfers & standby',
@@ -1520,14 +1776,14 @@ export async function render(el) {
     if (!matchesSizeFilter(r.pax, sizeFilter)) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
-      const hay = `${r.vehicleModel} ${r.coachbuilder} ${r.partnerName} ${r.baseCity} ${r.contactPerson} ${r.tierLabel} ${r.tierSpec} ${r.pax} ${r.paxLabel || ''}`.toLowerCase();
+      const hay = `${r.vehicleModel || ''} ${r.coachbuilder || ''} ${r.partnerName || ''} ${r.baseCity || ''} ${r.contactPerson || ''} ${r.email || ''} ${r.phone || ''} ${r.secondaryPhone || ''} ${r.tierLabel || ''} ${r.tierSpec || ''} ${r.pax || ''} ${r.paxLabel || ''}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
   });
 
   // 4. Counts for header telemetry stats
-  const confirmedCount = FLEET_LEDGER_ROWS.filter((r) => r.status === 'confirmed').length;
+  const confirmedCount = FLEET_LEDGER_ROWS.filter((r) => r.status === 'confirmed' && !r.excludedFromPricing).length;
   const luxCount = FLEET_LEDGER_ROWS.filter((r) => r.tier === 'luxury').length;
   const stdCount = FLEET_LEDGER_ROWS.filter((r) => r.tier === 'standard').length;
   const pendingCount = FLEET_LEDGER_ROWS.filter((r) => r.status === 'pending').length;
@@ -1538,11 +1794,13 @@ export async function render(el) {
   const avantgardePhotos = FLEET_LEDGER_ROWS.filter(r => r.partnerId === 'partner_1792765279535_l9ei').reduce((acc, r) => acc + (r.photos ? r.photos.filter(p => !p.src.endsWith('.mp4')).length : 0), 0);
   const landwayPhotos = FLEET_LEDGER_ROWS.filter(r => r.partnerId === 'partner_1792761170109_96nx').reduce((acc, r) => acc + (r.photos?.length || 0), 0);
   const guizzettiPhotos = FLEET_LEDGER_ROWS.filter(r => r.partnerId === 'partner_1793030996221_7t9y').reduce((acc, r) => acc + (r.photos?.length || 0), 0);
+  const perlettiPhotos = FLEET_LEDGER_ROWS.filter(r => r.partnerId === 'partner_perletti_topclass').reduce((acc, r) => acc + (r.photos?.length || 0), 0);
+  const italeurobusPhotos = FLEET_LEDGER_ROWS.filter(r => r.partnerId === 'partner_1793031479651_15_fgcv').reduce((acc, r) => acc + (r.photos?.length || 0), 0);
 
-  const sprinterMxp = calculateAdjustedPrice(350, pricingMode);
-  const transitMxp = calculateAdjustedPrice(400, pricingMode);
-  const dispo4h = calculateAdjustedPrice(500, pricingMode);
-  const dispo8h = calculateAdjustedPrice(900, pricingMode);
+  const activeMxpLow = calculateAdjustedPrice(380, pricingMode);
+  const activeMxpHigh = calculateAdjustedPrice(500, pricingMode);
+  const dispo4h = calculateAdjustedPrice(400, pricingMode);
+  const dispo8h = calculateAdjustedPrice(700, pricingMode);
 
   // 5. Table Rows generation (Grouped by size or Flat)
   let tableBodyHtml = '';
@@ -1661,8 +1919,8 @@ export async function render(el) {
             <span>Priced Vehicles</span>
             <span class="sail-pill ok" style="padding:1px 6px;font-size:10.5px"><span class="sail-pill-dot"></span>Active</span>
           </div>
-          <div class="sail-stat-val">${confirmedCount} <span style="font-size:13px;font-weight:500;color:var(--sail-muted)">/ ${FLEET_LEDGER_ROWS.length} replied</span></div>
-          <div class="sail-stat-meta">Como Driver (12 &amp; 16p) · Avantgarde (7, 8, 20 &amp; 30p)</div>
+          <div class="sail-stat-val">${confirmedCount} <span style="font-size:13px;font-weight:500;color:var(--sail-muted)">/ ${FLEET_LEDGER_ROWS.length} total (2 Como Driver excluded)</span></div>
+          <div class="sail-stat-meta">Avantgarde · Landway · Perletti · Guizzetti · Italeurobus</div>
         </div>
 
         <div class="sail-stat-cell">
@@ -1670,26 +1928,26 @@ export async function render(el) {
             <span>Malpensa (MXP) ⇄ Como</span>
             <span style="font-size:11px;color:var(--sail-accent);font-weight:600">${esc(modeBadgeText(pricingMode))}</span>
           </div>
-          <div class="sail-stat-val">${formatEur(sprinterMxp)} <span style="font-size:14px;font-weight:500;color:var(--sail-muted)">– ${formatEur(transitMxp)}</span></div>
-          <div class="sail-stat-meta">Como Driver: €350–€400 · Avantgarde: €380–€500</div>
+          <div class="sail-stat-val">${formatEur(activeMxpLow)} <span style="font-size:14px;font-weight:500;color:var(--sail-muted)">– ${formatEur(activeMxpHigh)}</span></div>
+          <div class="sail-stat-meta">Avantgarde VIP 7–8p &amp; 20p · Como Driver excluded (overpriced)</div>
         </div>
 
         <div class="sail-stat-cell">
           <div class="sail-stat-label">
             <span>Standby (4h / 8h Disposizione)</span>
-            <span style="font-size:11px;color:var(--sail-muted)">Como &amp; Milan Depots</span>
+            <span style="font-size:11px;color:var(--sail-muted)">Active Minibus &amp; VIP Fleet</span>
           </div>
           <div class="sail-stat-val">${formatEur(dispo4h)} <span style="font-size:14px;font-weight:500;color:var(--sail-muted)">/ ${formatEur(dispo8h)}</span></div>
-          <div class="sail-stat-meta">Como Driver: €500 / €900 · Avantgarde: €550–€600 / €800–€1,200</div>
+          <div class="sail-stat-meta">Landway 19p: €400 / €700 · Avantgarde: €560 / €800–€1,200</div>
         </div>
 
         <div class="sail-stat-cell">
           <div class="sail-stat-label">
             <span>Verified Fleet Media</span>
-            <span class="sail-pill info" style="padding:1px 6px;font-size:10.5px">OEM &amp; WhatsApp</span>
+            <span class="sail-pill info" style="padding:1px 6px;font-size:10.5px">Email, WA &amp; Site</span>
           </div>
-          <div class="sail-stat-val">${totalPhotos + totalVideos} files <span style="font-size:14px;font-weight:500;color:var(--sail-muted)">· ${totalPhotos} photos + ${totalVideos} video</span></div>
-          <div class="sail-stat-meta">Como Driver (${comoPhotos}) · Avantgarde (${avantgardePhotos} + ${totalVideos} vid) · Landway (${landwayPhotos}) · Guizzetti (${guizzettiPhotos})</div>
+          <div class="sail-stat-val">${totalPhotos + totalVideos} files <span style="font-size:14px;font-weight:500;color:var(--sail-muted)">· ${totalPhotos} photos + ${totalVideos} vid</span></div>
+          <div class="sail-stat-meta">Como (${comoPhotos}) · Avantgarde (${avantgardePhotos}+${totalVideos}v) · Landway (${landwayPhotos}) · Guizzetti (${guizzettiPhotos}) · Perletti (${perlettiPhotos}) · Italeurobus (${italeurobusPhotos})</div>
         </div>
       </div>
 
@@ -1716,7 +1974,7 @@ export async function render(el) {
           </div>
 
           <div class="row" style="gap:8px;padding-bottom:8px;align-items:center">
-            <input type="text" id="ledger-search" placeholder="Filter by model, partner, city..." value="${attr(searchQuery)}" style="height:30px;padding:0 10px;border:1px solid var(--sail-line);border-radius:6px;font-size:12.5px;width:220px;background:#F8FAFC;color:var(--sail-ink)">
+            <input type="text" id="ledger-search" placeholder="Filter by model, partner, email, city..." value="${attr(searchQuery)}" style="height:30px;padding:0 10px;border:1px solid var(--sail-line);border-radius:6px;font-size:12.5px;width:245px;background:#F8FAFC;color:var(--sail-ink)">
           </div>
         </div>
 
@@ -1959,17 +2217,19 @@ export function renderLedgerRow(row, idx = 0) {
     `;
   }
 
-  const isActiveInCalc = calcState.vehicleId === row.id;
+  const isExcluded = Boolean(row.excludedFromPricing);
+  const isActiveInCalc = !isExcluded && calcState.vehicleId === row.id;
 
   return `
-    <tr class="${isActiveInCalc ? 'sail-table-row-active' : ''} ${isPending ? 'sail-row-pending' : ''}">
-      <td style="text-align:center;font-weight:600;color:${isPending ? '#94A3B8' : 'var(--sail-muted)'};font-size:12px;vertical-align:top;padding-top:14px;font-variant-numeric:tabular-nums">
+    <tr class="${isActiveInCalc ? 'sail-table-row-active' : ''} ${(isPending || isExcluded) ? 'sail-row-pending' : ''}">
+      <td style="text-align:center;font-weight:600;color:${(isPending || isExcluded) ? '#94A3B8' : 'var(--sail-muted)'};font-size:12px;vertical-align:top;padding-top:14px;font-variant-numeric:tabular-nums">
         ${idx + 1}
       </td>
       <td>
-        <div style="font-weight:600;color:${isPending ? '#64748B' : 'var(--sail-ink)'};font-size:12.5px;line-height:1.25">${esc(row.vehicleModel)}</div>
+        <div style="font-weight:600;color:${(isPending || isExcluded) ? '#64748B' : 'var(--sail-ink)'};font-size:12.5px;line-height:1.25">${esc(row.vehicleModel)}</div>
         <div style="margin-top:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
           <span class="sail-pill info" data-filter-exact-pax="${row.pax}" style="font-size:10.5px;padding:1px 6px;font-variant-numeric:tabular-nums;cursor:pointer" title="Click to filter by ${row.pax} seats"><strong>${esc(row.paxLabel || `${row.pax} pax`)}</strong></span>
+          ${isExcluded ? `<span class="sail-pill missing" style="font-size:10px;padding:1px 5px" title="${attr(row.excludedReason || 'Excluded from price calculations (overpriced)')}">Excluded · Overpriced</span>` : ''}
           ${isActiveInCalc ? `<span class="sail-pill ok" style="font-size:10px;padding:1px 5px">Active in Calc</span>` : ''}
           <details style="font-size:11px;color:var(--sail-muted)">
             <summary style="cursor:pointer;user-select:none;font-weight:500;color:var(--sail-body)">Specs</summary>
@@ -1980,9 +2240,15 @@ export function renderLedgerRow(row, idx = 0) {
           </details>
         </div>
         <div style="margin-top:5px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-          <button class="sail-btn xs ${isActiveInCalc ? 'primary' : ''}" data-quote-veh="${attr(row.id)}" style="padding:0 7px;height:22px;font-size:11px;font-weight:600;white-space:nowrap;${isPending ? 'color:#94A3B8;border-color:#E2E8F0;background:#F8FAFC' : ''}" title="${isPending ? 'Rates pending partner submission' : 'Calculate trip quote for this exact vehicle'}">
-            ${isPending ? '⏳ Rates Pending' : (isActiveInCalc ? '✓ In Calculator' : '⚡ Quote')}
-          </button>
+          ${isExcluded ? `
+            <button class="sail-btn xs" disabled style="padding:0 7px;height:22px;font-size:11px;font-weight:600;white-space:nowrap;color:#94A3B8;border-color:#E2E8F0;background:#F8FAFC;cursor:not-allowed" title="${attr(row.excludedReason || 'Excluded from price calculations (overpriced)')}">
+              🚫 Excluded from Calc
+            </button>
+          ` : `
+            <button class="sail-btn xs ${isActiveInCalc ? 'primary' : ''}" data-quote-veh="${attr(row.id)}" style="padding:0 7px;height:22px;font-size:11px;font-weight:600;white-space:nowrap;${isPending ? 'color:#94A3B8;border-color:#E2E8F0;background:#F8FAFC' : ''}" title="${isPending ? 'Rates pending partner submission' : 'Calculate trip quote for this exact vehicle'}">
+              ${isPending ? '⏳ Rates Pending' : (isActiveInCalc ? '✓ In Calculator' : '⚡ Quote')}
+            </button>
+          `}
           ${row.isCustom ? `
             <button class="sail-btn xs" data-delete-custom-veh="${attr(row.id)}" style="padding:0 5px;height:22px;font-size:10px;color:#B91C1C;border-color:#FCA5A5" title="Remove custom vehicle from table">
               ✕
@@ -2013,15 +2279,20 @@ export function renderLedgerRow(row, idx = 0) {
           </div>
         ` : ''}
         <div style="font-size:11px;color:var(--sail-body);margin-top:2px">${esc(row.baseCity)} · ${esc(row.contactPerson)}</div>
-        <div class="row" style="gap:4px;margin-top:4px;font-size:11px;flex-wrap:wrap">
-          <a href="https://wa.me/${rawWa.replace(/^\+/, '')}" target="_blank" rel="noopener" style="color:var(--sail-accent);font-weight:600">WhatsApp</a>
-          <span style="color:#CBD5E1">·</span>
-          <a href="mailto:${attr(row.email)}" style="color:var(--sail-body)" title="${attr(row.email)}">Email</a>
-          ${row.secondaryPhone ? `
-            <span style="color:#CBD5E1">·</span>
-            <a href="tel:${attr(row.secondaryPhone)}" style="color:var(--sail-muted)" title="Ufficio: ${attr(row.secondaryPhone)}">Ufficio</a>
-          ` : ''}
-        </div>
+        ${row.email ? `
+          <div style="margin-top:3px;font-size:11px;line-height:1.3">
+            <a href="mailto:${attr(row.email)}" style="color:var(--sail-ink);font-weight:500;text-decoration:none;border-bottom:1px dotted #CBD5E1;overflow-wrap:anywhere;word-break:break-word;display:inline-block;max-width:100%" title="Email ${attr(row.email)}">${esc(row.email)}</a>
+          </div>
+        ` : ''}
+        ${(rawWa || row.secondaryPhone) ? `
+          <div class="row" style="gap:4px;margin-top:3px;font-size:11px;flex-wrap:wrap">
+            ${rawWa ? `<a href="https://wa.me/${rawWa.replace(/^\+/, '')}" target="_blank" rel="noopener" style="color:var(--sail-accent);font-weight:600">WhatsApp</a>` : ''}
+            ${(rawWa && row.secondaryPhone) ? `<span style="color:#CBD5E1">·</span>` : ''}
+            ${row.secondaryPhone ? `
+              <a href="tel:${attr(row.secondaryPhone)}" style="color:var(--sail-muted)" title="Ufficio: ${attr(row.secondaryPhone)}">Ufficio</a>
+            ` : ''}
+          </div>
+        ` : ''}
       </td>
 
       <td>${transferHtml}</td>
@@ -2034,6 +2305,8 @@ export function renderLedgerRow(row, idx = 0) {
 export function getMatchingVehicles(state, rows = FLEET_LEDGER_ROWS) {
   const allRows = Array.isArray(rows) && rows.length > 0 ? rows : FLEET_LEDGER_ROWS;
   return allRows.filter((v) => {
+    if (v.excludedFromPricing) return false;
+
     // If a specific vehicle is explicitly chosen by the user, ALWAYS keep it matched
     if (state.vehicleId && v.id === state.vehicleId) return true;
 
@@ -2059,7 +2332,7 @@ export function getMatchingVehicles(state, rows = FLEET_LEDGER_ROWS) {
 export function calculateTripQuote(state, rows = FLEET_LEDGER_ROWS) {
   const allRows = Array.isArray(rows) && rows.length > 0 ? rows : FLEET_LEDGER_ROWS;
   const matching = getMatchingVehicles(state, allRows);
-  let veh = allRows.find((r) => r.id === state.vehicleId);
+  let veh = allRows.find((r) => r.id === state.vehicleId && !r.excludedFromPricing);
   if (!veh && matching.length > 0) {
     veh = matching[0];
     state.vehicleId = veh.id;
@@ -2247,14 +2520,14 @@ function renderPriceCalculatorCard() {
               <select id="calc-specific-veh" class="sail-calc-input" style="font-weight:600;color:var(--sail-ink);flex:1">
                 <option value="auto" ${!calcState.vehicleId ? 'selected' : ''}>⚡ Auto-match by filters below</option>
                 <optgroup label="✨ Luxury VIP Vehicles">
-                  ${allRows.filter((r) => r.tier === 'luxury').map((r) => `
+                  ${allRows.filter((r) => !r.excludedFromPricing && r.tier === 'luxury').map((r) => `
                     <option value="${attr(r.id)}" ${calcState.vehicleId === r.id ? 'selected' : ''}>
                       ${esc(r.vehicleModel)} (${esc(r.paxLabel || `${r.pax} pax`)}) — ${esc(r.partnerName)} (${esc(r.baseCity)})
                     </option>
                   `).join('')}
                 </optgroup>
                 <optgroup label="🚌 Standard Fleet">
-                  ${allRows.filter((r) => r.tier !== 'luxury').map((r) => `
+                  ${allRows.filter((r) => !r.excludedFromPricing && r.tier !== 'luxury').map((r) => `
                     <option value="${attr(r.id)}" ${calcState.vehicleId === r.id ? 'selected' : ''}>
                       ${esc(r.vehicleModel)} (${esc(r.paxLabel || `${r.pax} pax`)}) — ${esc(r.partnerName)} (${esc(r.baseCity)})
                     </option>
@@ -2969,7 +3242,7 @@ function attachLedgerListeners(el) {
         transportCategory: 'all',
         tierFilter: 'all',
         passengerCount: 8,
-        vehicleId: 'como_sprinter_12',
+        vehicleId: 'avantgarde_sprinter_8_bw',
         standbyHours: 8,
         tripDirection: 'one_way',
         extraHours: 0,
@@ -2989,7 +3262,11 @@ function attachLedgerListeners(el) {
   el.querySelectorAll('[data-quote-veh]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const vehId = btn.dataset.quoteVeh;
-      selectSpecificVehicle(vehId);
+      const veh = selectSpecificVehicle(vehId);
+      if (!veh) {
+        toast('This vehicle is excluded from price calculations');
+        return;
+      }
       render(el);
       const calcEl = el.querySelector('#trip-calculator');
       if (calcEl) {
@@ -2997,8 +3274,7 @@ function attachLedgerListeners(el) {
         calcEl.classList.add('sail-calc-glow');
         setTimeout(() => calcEl.classList.remove('sail-calc-glow'), 1800);
       }
-      const veh = FLEET_LEDGER_ROWS.find((r) => r.id === vehId);
-      toast(`${veh?.vehicleModel || 'Vehicle'} selected in Trip Calculator`);
+      toast(`${veh.vehicleModel || 'Vehicle'} selected in Trip Calculator`);
     });
   });
 
@@ -3106,7 +3382,7 @@ function openAddVehicleModal(el) {
           </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div>
             <label class="sail-calc-label">Class Tier *</label>
             <select id="new-veh-tier" class="sail-calc-input">
@@ -3124,6 +3400,10 @@ function openAddVehicleModal(el) {
           <div>
             <label class="sail-calc-label">Contact Phone / WhatsApp</label>
             <input type="text" id="new-veh-phone" class="sail-calc-input" placeholder="+39 ...">
+          </div>
+          <div>
+            <label class="sail-calc-label">Contact Email</label>
+            <input type="email" id="new-veh-email" class="sail-calc-input" placeholder="info@partner.it">
           </div>
         </div>
 
@@ -3181,6 +3461,7 @@ function openAddVehicleModal(el) {
         const tier = box.querySelector('#new-veh-tier').value;
         const status = box.querySelector('#new-veh-status').value;
         const phone = box.querySelector('#new-veh-phone').value.trim();
+        const email = box.querySelector('#new-veh-email')?.value.trim() || '';
         const specs = box.querySelector('#new-veh-specs').value.trim() || 'Executive luxury conversion';
 
         const mxpComo = Number(box.querySelector('#new-rate-mxp-como').value);
@@ -3217,7 +3498,7 @@ function openAddVehicleModal(el) {
           baseCity: city,
           contactPerson: 'Operations Desk',
           phone: phone,
-          email: '',
+          email: email,
           website: '',
           status: status,
           statusLabel: status === 'confirmed' ? 'Rates Verified in Table' : 'Pending Rate Sheet',

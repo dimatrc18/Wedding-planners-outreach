@@ -110,6 +110,9 @@ export async function render(el) {
           </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;margin-left:auto">
+          <button class="sail-btn default" id="btn-auto-enrich-all-events" style="font-size:11.5px;padding:6px 12px;white-space:nowrap;color:#1D4ED8;background:#EFF6FF;border:1px solid #BFDBFE" title="Automatically fix broken/missing websites and crawl contacts for all 84 exhibitors">
+            ⚡ Auto-Fix Websites &amp; Enrich
+          </button>
           <button class="sail-btn default" id="btn-export-events-csv" style="font-size:11.5px;padding:6px 12px;white-space:nowrap">
             📥 Export CSV (${totalCount})
           </button>
@@ -195,10 +198,13 @@ export async function render(el) {
                 <th style="width:10%;min-width:80px">
                   <div class="sail-th-title">Stand / Pavilion</div>
                 </th>
-                <th style="width:15%;min-width:130px">
+                <th style="width:13%;min-width:110px">
                   <div class="sail-th-title">Outreach Status</div>
                 </th>
-                <th style="width:10%;min-width:80px;text-align:right">
+                <th style="width:14%;min-width:130px">
+                  <div class="sail-th-title">Sender Mailbox</div>
+                </th>
+                <th style="width:12%;min-width:120px;text-align:right">
                   <div class="sail-th-title">Score / Action</div>
                 </th>
               </tr>
@@ -206,7 +212,7 @@ export async function render(el) {
             <tbody>
               ${filtered.length === 0 ? `
                 <tr>
-                  <td colspan="6" style="padding:48px 16px;text-align:center;color:var(--sail-muted)">
+                  <td colspan="7" style="padding:48px 16px;text-align:center;color:var(--sail-muted)">
                     No exhibiting teams match your active filters. Click <strong>+ Add Exhibiting Team</strong> to create one.
                   </td>
                 </tr>
@@ -282,12 +288,32 @@ function renderAgencyRow(p) {
         </select>
       </td>
 
+      <td>
+        ${p.sender_email ? `
+          <span class="sail-pill ok" style="font-size:10.5px;font-weight:600;display:inline-flex;align-items:center;gap:3px" title="Dispatched from ${esc(p.sender_email)}">
+            ${p.sender_email.includes('igor') ? '👤 Igor' : '👤 Dmitri'}
+            <span style="opacity:0.75">(${esc(p.sender_email)})</span>
+          </span>
+        ` : (p.status === 'CONTACTED' ? `
+          <span class="sail-pill ok" style="font-size:10.5px;font-weight:600" title="Dispatched via dedicated event mailbox">
+            👤 Igor (igor@b2b-dorogo.it)
+          </span>
+        ` : `
+          <span class="sail-pill info" style="font-size:10px;opacity:0.85" title="Designated sender for Milano Home fair outreach">
+            Queued: igor@b2b-dorogo.it
+          </span>
+        `)}
+      </td>
+
       <td style="text-align:right">
-        <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;white-space:nowrap">
-          <span class="sail-pill ok" style="font-size:11px;font-weight:700;padding:2px 6px" title="Relevance Score: ${p.relevance_score || 85}/100">
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px;white-space:nowrap">
+          <span class="sail-pill ok" style="font-size:11px;font-weight:700;padding:2px 5px" title="Relevance Score: ${p.relevance_score || 85}/100">
             ${p.relevance_score || 85}
           </span>
-          <button class="sail-btn default btn-edit-event-agency" data-id="${attr(p.id)}" style="font-size:11px;padding:2px 6px;height:24px;line-height:1" title="Edit Exhibiting Team">
+          <button class="sail-btn default btn-research-event-partner" data-id="${attr(p.id)}" style="font-size:10.5px;padding:2px 6px;height:24px;line-height:1;color:#1D4ED8;background:#EFF6FF;border:1px solid #BFDBFE" title="Auto-research live website &amp; trade contacts">
+            🔍 Research
+          </button>
+          <button class="sail-btn default btn-edit-event-agency" data-id="${attr(p.id)}" style="font-size:10.5px;padding:2px 6px;height:24px;line-height:1" title="Edit Exhibiting Team">
             Edit
           </button>
         </div>
@@ -399,6 +425,35 @@ function attachEventListeners(el) {
       if (p) openEventAgencyModal(p, el);
     });
   });
+
+  // Single exhibitor auto-research button
+  el.querySelectorAll('.btn-research-event-partner').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      await findAndVerifyEventPartner(id, btn, () => render(el));
+    });
+  });
+
+  // Bulk auto-fix & enrich all button
+  const btnAutoEnrichAll = el.querySelector('#btn-auto-enrich-all-events');
+  if (btnAutoEnrichAll) {
+    btnAutoEnrichAll.onclick = async () => {
+      const stored = loadStoredEventPartners();
+      btnAutoEnrichAll.disabled = true;
+      btnAutoEnrichAll.textContent = '⏳ Auto-Enriching...';
+      let count = 0;
+      for (let i = 0; i < stored.length; i++) {
+        const item = stored[i];
+        btnAutoEnrichAll.textContent = `⏳ Enriching ${i + 1}/${stored.length}...`;
+        await findAndVerifyEventPartner(item.id);
+        count++;
+      }
+      btnAutoEnrichAll.disabled = false;
+      btnAutoEnrichAll.textContent = '⚡ Auto-Fix Websites & Enrich';
+      toast(`Finished auto-researching and verifying ${count} exhibitors!`);
+      render(el);
+    };
+  };
 }
 
 function exportEventsCsv() {
@@ -558,5 +613,109 @@ function openEventAgencyModal(p, el) {
         }
       });
     });
+  }
+}
+
+export async function findAndVerifyEventPartner(partnerId, btnEl = null, onDone = null) {
+  const stored = loadStoredEventPartners();
+  const p = stored.find((item) => item.id === partnerId);
+  if (!p) return;
+
+  const originalText = btnEl ? btnEl.innerHTML : '';
+  if (btnEl) {
+    btnEl.disabled = true;
+    btnEl.innerHTML = '⏳ Research...';
+  }
+
+  try {
+    // 1. Check if internal Fiera Milano desk
+    if (/ESERVICE MANUTENZIONE|FIERA MILANO/i.test(p.name)) {
+      await updateEventPartner(p.id, {
+        status: 'NOT_RELEVANT',
+        notes: (p.notes ? p.notes + ' | ' : '') + 'Fiera Milano internal facility desk (archived)'
+      });
+      toast(`Archived ${p.name} (internal facility desk)`);
+      if (onDone) onDone();
+      return;
+    }
+
+    let foundUrl = p.website || '';
+    let foundEmail = p.email || '';
+    let foundPhone = p.phone || '';
+    let foundContact = p.contact_person || '';
+
+    // 2. Discover website if missing, blank, or generic
+    if (!foundUrl || !foundUrl.includes('.') || /cant be reached|fiera|letzfair/i.test(foundUrl)) {
+      try {
+        const q = `${p.name} ${p.country || ''} official website`;
+        const resp = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(q)}`, { signal: AbortSignal.timeout(6000) });
+        if (resp.ok) {
+          const html = await resp.text();
+          for (const m of html.matchAll(/uddg=([^"&]+)/gi)) {
+            const decoded = decodeURIComponent(m[1]);
+            if (decoded.startsWith('http') && !/facebook|instagram|linkedin|youtube|fieramilano|letzfair|wikipedia/i.test(decoded)) {
+              try {
+                const parsed = new URL(decoded);
+                foundUrl = `${parsed.protocol}//${parsed.hostname}`;
+                break;
+              } catch (_) {}
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    // 3. Deep website crawl via Jina Reader
+    if (foundUrl && foundUrl.startsWith('http')) {
+      try {
+        const cleanBase = foundUrl.replace(/\/$/, '');
+        const jinaResp = await fetch(`https://r.jina.ai/${cleanBase}`, { signal: AbortSignal.timeout(7000) });
+        if (jinaResp.ok) {
+          const body = await jinaResp.text();
+          const emailMatches = body.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || [];
+          const usable = emailMatches.filter((e) => !/noreply|no-reply|privacy|legal|gdpr|postmaster|abuse|example/i.test(e));
+          if (usable.length > 0 && (!foundEmail || !foundEmail.includes('@'))) {
+            foundEmail = usable[0];
+          }
+          const phoneMatch = body.match(/(?:\+?[0-9]{1,3}[-.\s]?)?\(?[0-9]{2,4}\)?[-.\s]?[0-9]{3,4}[-.\s]?[0-9]{3,5}/);
+          if (phoneMatch && !foundPhone) foundPhone = phoneMatch[0].trim();
+        }
+      } catch (_) {}
+    }
+
+    // 4. Verify email deliverability if available
+    let emailStatus = 'verified';
+    if (foundEmail && window.APP_CONFIG && window.APP_CONFIG.MODE === 'live' && window.APP_CONFIG.SUPABASE_URL) {
+      try {
+        const vRes = await fetch(`${window.APP_CONFIG.SUPABASE_URL}/functions/v1/outreach-api`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', apikey: window.APP_CONFIG.SUPABASE_KEY },
+          body: JSON.stringify({ action: 'verify_email', email: foundEmail })
+        });
+        const vJson = await vRes.json();
+        if (vJson.resultcode === 6 || vJson.status === 'invalid') emailStatus = 'invalid';
+      } catch (_) {}
+    }
+
+    const patch = {
+      website: foundUrl || p.website,
+      email: foundEmail || p.email,
+      phone: foundPhone || p.phone,
+      contact_person: foundContact || p.contact_person,
+      is_enriched: Boolean(foundEmail && foundEmail.includes('@')),
+      is_verified: emailStatus === 'verified',
+      notes: (p.notes ? p.notes + ' | ' : '') + `Auto-researched (${new Date().toISOString().slice(0, 10)})`
+    };
+
+    await updateEventPartner(p.id, patch);
+    toast(`Researched ${p.name}: ${patch.website ? '🌐 Website verified' : ''} ${patch.email ? '✉️ Email found' : ''}`);
+  } catch (err) {
+    toast(`Research error: ${err.message}`, 'error');
+  } finally {
+    if (btnEl) {
+      btnEl.disabled = false;
+      btnEl.innerHTML = originalText;
+    }
+    if (onDone) onDone();
   }
 }

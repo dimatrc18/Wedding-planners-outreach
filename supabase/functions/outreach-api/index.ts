@@ -2,11 +2,11 @@
 // GET ?open=<touch id> is the optional open-tracking pixel (only used when settings.track_opens is on).
 import * as core from '../_shared/core/index.js';
 import { handle, json, requireAllowedUser, loadSettings, integrations, getState, admin, HttpError, logEvent } from '../_shared/server.ts';
-import { verifySmtp, sendMail } from '../_shared/mail.ts';
+import { verifySmtp, sendMail, appendToSent } from '../_shared/mail.ts';
 import { tgSend } from '../_shared/telegram.ts';
 import { gemini, checkHook } from '../_shared/ai.ts';
 import { verifyEmailUnified, getZeroBounceBalance, getDebounceBalance, getMillionVerifierBalance, checkAndSendMonthlyVerificationAudit } from '../_shared/verify.ts';
-import { draftDueSteps, sendDue, syncInbox, sendDigest, approveTouch, fetchJinaSignals, autoResearchPending, loadAll, classifyInboundMessage, applyInbound, formatThreadHistory, verifyDnsMx, sendDueBusPartners } from '../_shared/jobs.ts';
+import { draftDueSteps, sendDue, syncInbox, sendDigest, approveTouch, fetchJinaSignals, autoResearchPending, loadAll, classifyInboundMessage, applyInbound, formatThreadHistory, verifyDnsMx, sendDueBusPartners, sendDueEvents } from '../_shared/jobs.ts';
 
 const GIF = Uint8Array.from(atob('R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=='), (c) => c.charCodeAt(0));
 const UA = 'Mozilla/5.0 (compatible; DOROGO-partner-research/1.0; +https://dorogo.eu)';
@@ -408,6 +408,75 @@ Deno.serve((req) => handle(req, async () => {
 
         queued++;
         results.push({ id: p.id, name: p.name, email: p.email, email_status: emailStatus, scheduled_at: isBad ? null : slot.toISOString() });
+      }
+
+      return json({ ok: true, queued, results });
+    }
+    case 'test_events_smtp': {
+      await verifySmtp('events');
+      return json({ ok: true, message: 'Events SMTP (igor@b2b-dorogo.it) verified successfully' });
+    }
+    case 'send_event_email': {
+      const fromEmail = body.fromEmail || 'igor@b2b-dorogo.it';
+      const fromName = body.fromName || 'Igor';
+      const to = body.to;
+      if (!to || !body.subject || !body.body) throw new HttpError(400, 'Missing to, subject, or body');
+
+      const res = await sendMail({
+        fromName,
+        fromEmail,
+        replyTo: fromEmail,
+        to,
+        subject: body.subject,
+        text: body.body,
+      });
+
+      await appendToSent(res.raw, fromEmail).catch(() => {});
+
+      if (body.partner_id) {
+        await db.from('event_planners').update({
+          status: 'CONTACTED',
+          notes: `Sent via ${fromEmail} (${now.toISOString().slice(0, 10)})`,
+          updated_at: now.toISOString(),
+        }).eq('id', body.partner_id);
+      }
+
+      await logEvent(db, 'event_outreach_sent', {
+        to,
+        from: fromEmail,
+        subject: body.subject,
+        partner_id: body.partner_id || null,
+        messageId: res.messageId,
+      }, null, user?.email || 'app').catch(() => {});
+
+      return json({ ok: true, queueId: res.messageId, messageId: res.messageId });
+    }
+    case 'send_event_partner': {
+      const { partner_id } = body;
+      const res = await sendDueEvents(db, settings, now, { actor: user.email, onlyEventId: partner_id });
+      return json(res);
+    }
+    case 'queue_event_partners': {
+      const { partner_ids = [] } = body;
+      const { data: partners, error } = await db.from('event_planners').select('*').in('id', partner_ids);
+      if (error || !partners) throw new HttpError(400, 'Failed to fetch event partners');
+
+      let queued = 0;
+      const results = [];
+
+      for (const p of partners) {
+        const ver = await verifyEmailUnified(p.email, { db });
+        const isBad = ver.resultcode === 6 || ver.resultcode === 5 || ver.status === 'invalid';
+        const newStatus = isBad ? 'NOT_RELEVANT' : 'WANT_TO_CONTACT';
+
+        await db.from('event_planners').update({
+          status: newStatus,
+          notes: (p.notes ? p.notes + ' | ' : '') + (isBad ? `Verification failed: ${ver.status}` : 'Queued for outreach via igor@b2b-dorogo.it'),
+          updated_at: now.toISOString(),
+        }).eq('id', p.id);
+
+        queued++;
+        results.push({ id: p.id, name: p.name, email: p.email, status: newStatus, verified: !isBad });
       }
 
       return json({ ok: true, queued, results });

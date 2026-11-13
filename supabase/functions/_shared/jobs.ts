@@ -372,7 +372,8 @@ export async function sendDue(db: any, settings: any, now = new Date(), { onlyTo
     let sentRaw: string | null = null;
     try {
       const prospectLang = p.language || t.language || 'en';
-      const audience = t.rate_card_audience || (p.commercial_model === 'referral_5' || p.referral_mode === 'direct' ? 'client' : 'partner');
+      // Only the B2B Partner Rate Card edition is active (Direct Client edition archived).
+      const audience = 'partner';
       const rcAtt = t.attach_rate_card ? await rateCardAttachment(db, settings, prospectLang, audience) : null;
       const attachments = rcAtt ? [rcAtt] : [];
       const pixelUrl = settings.track_opens ? `${env('SUPABASE_URL')}/functions/v1/outreach-api?open=${t.id}` : null;
@@ -611,16 +612,28 @@ export async function sendDueBusPartners(db: any, settings: any, now = new Date(
   return { sent, due: due.length };
 }
 
+function extractFirstName(contactPerson = '', agencyName = '') {
+  const raw = String(contactPerson || '').trim();
+  if (!raw) return 'Team';
+  const parts = raw.split(/\s+/);
+  let first = parts[0] || '';
+  if (/^(mr|mrs|ms|dr|prof)\.?$/i.test(first) && parts[1]) first = parts[1];
+  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+}
+
 /**
  * Sends due B2B event outreach messages to queued Event Planners & Corporate Agencies.
  * 100% ISOLATED:
  * - Queries ONLY event_planners table (never prospects, never bus_partners).
- * - Enforces dedicated sender mailbox (EVENTS_SMTP_USER, e.g. events@dorogo-events.eu).
+ * - Enforces dedicated sender mailbox (EVENTS_SMTP_USER, igor@b2b-dorogo.it).
+ * - Strictly respects warm-up pacing (default 6 emails/day Week 1).
+ * - Runs 3-tier deliverability verification before dispatch.
+ * - Appends sent email to Hostinger IMAP Sent folder.
  * - HARD BLOCKS any attempt to send event outreach from dmitri@dorogo.eu to prevent domain collision.
  */
 export async function sendDueEvents(db: any, settings: any, now = new Date(), { actor = 'cron', onlyEventId = null as string | null } = {}) {
-  const eventsSender = env('EVENTS_SMTP_USER');
-  if (!eventsSender) {
+  const eventsSender = env('EVENTS_SMTP_USER') || 'igor@b2b-dorogo.it';
+  if (!eventsSender || !env('EVENTS_SMTP_PASS')) {
     return { sent: 0, skipped: 'events_smtp_not_configured', note: 'Configure EVENTS_SMTP_USER & EVENTS_SMTP_PASS in Supabase secrets' };
   }
 
@@ -630,11 +643,21 @@ export async function sendDueEvents(db: any, settings: any, now = new Date(), { 
     throw new Error('Isolation Violation: Event outreach MUST NOT use primary wedding mailbox (dmitri@dorogo.eu). Set dedicated EVENTS_SMTP_USER.');
   }
 
+  // Check warm-up cap
+  const warmupCap = Number(settings?.event_warmup?.daily_cap || 6);
+  const todayYmd = core.localDateKey(now, settings?.timezone || 'Europe/Rome');
+  const { data: sentToday } = await db.from('event_planners').select('id, updated_at').eq('status', 'CONTACTED').gte('updated_at', `${todayYmd}T00:00:00Z`);
+  const sentCount = (sentToday || []).length;
+
+  if (!onlyEventId && sentCount >= warmupCap) {
+    return { sent: 0, skipped: 'warmup_cap_reached', sent_today: sentCount, cap: warmupCap };
+  }
+
   let query = db.from('event_planners').select('*');
   if (onlyEventId) {
     query = query.eq('id', onlyEventId);
   } else {
-    query = query.in('status', ['WANT_TO_CONTACT']);
+    query = query.in('status', ['WANT_TO_CONTACT']).order('relevance_score', { ascending: false });
   }
 
   const { data: planners, error } = await query;
@@ -643,20 +666,66 @@ export async function sendDueEvents(db: any, settings: any, now = new Date(), { 
   let sent = 0;
   for (const p of planners) {
     if (!p.email) continue;
-    // Live deliverability verification
+    if (!onlyEventId && (sentCount + sent) >= warmupCap) break;
+
+    // Live deliverability verification (ZeroBounce / DeBounce / MillionVerifier)
     const ver = await verifyEmailUnified(p.email, { db });
     if (ver.resultcode === 6 || ver.resultcode === 5 || ver.status === 'invalid') {
-      await db.from('event_planners').update({ status: 'NOT_RELEVANT', updated_at: now.toISOString() }).eq('id', p.id);
+      await db.from('event_planners').update({
+        status: 'NOT_RELEVANT',
+        notes: (p.notes ? p.notes + ' | ' : '') + `Verification failed (${ver.status || 'invalid'})`,
+        updated_at: now.toISOString()
+      }).eq('id', p.id);
       continue;
     }
 
-    // Mark contacted
-    const sentAt = now.toISOString();
-    await db.from('event_planners').update({ status: 'CONTACTED', updated_at: sentAt }).eq('id', p.id);
-    await logEvent(db, 'event_planner_contacted', { planner_id: p.id, name: p.name, email: p.email, sender: eventsSender }, null, actor).catch(() => {});
-    sent++;
+    const firstName = extractFirstName(p.contact_person, p.name);
+    const fairEvent = p.fair_event || 'Milano Home 2027';
+    const subject = p.custom_subject || `${fairEvent} · ${p.name}`;
+    const defaultBody = `Hello ${firstName},
+
+Noticed ${p.name} is exhibiting at ${fairEvent} this January.
+
+Dorogo provides unbranded Mercedes-Benz V-Class, S-Class, and E-Class transfers between Milan hotels and Fiera Milano Rho, including direct airport meet & greet (MXP/LIN).
+
+Would our 1-page rate card be helpful for your team? Happy to send it over to whoever coordinates your travel.`;
+    const textBody = p.custom_body || defaultBody;
+
+    try {
+      const mailRes = await sendMail({
+        fromName: 'Igor',
+        fromEmail: eventsSender,
+        replyTo: eventsSender,
+        to: p.email,
+        subject,
+        text: textBody,
+      });
+
+      await appendToSent(mailRes.raw, eventsSender).catch(() => {});
+
+      const sentAt = now.toISOString();
+      await db.from('event_planners').update({
+        status: 'CONTACTED',
+        notes: (p.notes ? p.notes + ' | ' : '') + `Sent via ${eventsSender} (${sentAt.slice(0, 10)})`,
+        updated_at: sentAt,
+      }).eq('id', p.id);
+
+      await logEvent(db, 'event_planner_contacted', {
+        planner_id: p.id,
+        name: p.name,
+        email: p.email,
+        sender: eventsSender,
+        message_id: mailRes.messageId,
+      }, null, actor).catch(() => {});
+
+      sent++;
+    } catch (err) {
+      console.error(`Failed to send event outreach to ${p.email}:`, (err as Error).message);
+      await logEvent(db, 'event_planner_send_error', { planner_id: p.id, email: p.email, error: (err as Error).message }, null, actor).catch(() => {});
+    }
   }
-  return { sent, total: planners.length };
+
+  return { sent, total: planners.length, cap: warmupCap, remaining_quota: Math.max(0, warmupCap - (sentCount + sent)) };
 }
 
 // ---------------- Inbox & Conversational AI ----------------
@@ -873,15 +942,31 @@ export async function applyInbound(
 export async function syncInbox(db: any, settings: any, now = new Date()) {
   if (!integrations().imap) return { skipped: 'imap_not_configured' };
   const state: any = await getState(db, 'imap');
-  let fetched: any;
+  let fetched: any = { messages: [] };
   try {
-    fetched = await fetchNewMessages(state.last_uid || null);
+    fetched = await fetchNewMessages(state.last_uid || null, 50, 'default');
   } catch (e) {
     await setState(db, 'imap', { ...state, last_error: (e as Error).message, last_attempt_at: now.toISOString() });
     throw e;
   }
+
+  // Fetch from events mailbox (igor@b2b-dorogo.it) if configured
+  if (env('EVENTS_IMAP_USER')) {
+    try {
+      const eventsState: any = await getState(db, 'imap_events');
+      const eventsFetched = await fetchNewMessages(eventsState?.last_uid || null, 50, 'events');
+      fetched.messages = [...(fetched.messages || []), ...(eventsFetched.messages || [])];
+      if (eventsFetched.lastUid) {
+        await setState(db, 'imap_events', { last_uid: eventsFetched.lastUid, last_check_at: now.toISOString() });
+      }
+    } catch (err) {
+      console.warn('Events IMAP sync warning:', (err as Error).message);
+    }
+  }
+
   const { prospects, touches, templates } = await loadAll(db);
   const { data: busPartners } = await db.from('bus_partners').select('*');
+  const { data: eventPlanners } = await db.from('event_planners').select('*');
   const stripSubjectPrefix = (s = '') => String(s || '').replace(/^(\s*(re|fwd|fw|r|rif|ответ|на)\s*:\s*)+/i, '').trim().toLowerCase();
   const PUBLIC_DOMAINS = new Set(['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'me.com', 'mail.ru', 'yandex.ru', 'bk.ru']);
   const byEmail = new Map();
@@ -954,6 +1039,29 @@ export async function syncInbox(db: any, settings: any, now = new Date()) {
               `Type: ${bounce.hard ? 'Hard bounce' : 'Soft bounce'}\n` +
               `Status: Moved back to To Review.`,
             );
+            bounces++;
+            continue;
+          }
+
+          const epBounce = (eventPlanners || []).find((ep: any) => ep.email && failed && ep.email.toLowerCase() === failed.toLowerCase());
+          if (epBounce) {
+            const bounceNote = `Bounced (${now.toISOString().slice(0, 10)}): ${failed} rejected (${m.subject || 'Returned mail'}).`;
+            const updatedNotes = (epBounce.notes || '').includes(failed) ? epBounce.notes : ((epBounce.notes ? epBounce.notes + ' | ' : '') + bounceNote);
+            await db.from('event_planners').update({
+              status: 'NOT_RELEVANT',
+              notes: updatedNotes,
+              updated_at: now.toISOString(),
+            }).eq('id', epBounce.id);
+            await logEvent(db, 'event_planner_bounce', { planner_id: epBounce.id, name: epBounce.name, failed, subject: m.subject }, null, 'imap');
+            if (integrations().telegram) {
+              await tgSend(
+                `⚠️ <b>Milano Home Exhibitor Email Bounced</b>\n\n` +
+                `Company: <b>${tgEscape(epBounce.name)}</b>\n` +
+                `Recipient: <code>${failed}</code>\n` +
+                `Sender: <code>igor@b2b-dorogo.it</code>\n` +
+                `Status: Marked NOT_RELEVANT to protect domain reputation.`,
+              );
+            }
             bounces++;
             continue;
           }
@@ -1065,6 +1173,46 @@ export async function syncInbox(db: any, settings: any, now = new Date()) {
           (parsed.whatsapp ? `📱 <b>Direct WA:</b> ${tgEscape(parsed.whatsapp)}\n` : '') +
           `Target: Save standby/hourly rates for Lake Como dispatch file.`,
         );
+
+        stored++;
+        continue;
+      }
+
+      // Check Milano Home / Event Exhibiting Teams replies
+      const epMatch = (eventPlanners || []).find((ep: any) => {
+        if (ep.email && m.from && ep.email.toLowerCase() === m.from.toLowerCase()) return true;
+        return false;
+      });
+
+      if (epMatch) {
+        const replySnippet = (core.stripQuoted(m.text || '') || m.text || '').slice(0, 500);
+        await db.from('event_planners').update({
+          status: 'APPROVED_PARTNER',
+          notes: (epMatch.notes ? epMatch.notes + ' | ' : '') + `Replied (${now.toISOString().slice(0, 10)}): ${replySnippet.slice(0, 150)}`,
+          updated_at: now.toISOString(),
+        }).eq('id', epMatch.id);
+
+        await logEvent(db, 'event_planner_replied', {
+          planner_id: epMatch.id,
+          name: epMatch.name,
+          email: epMatch.email,
+          from: m.from,
+          subject: m.subject,
+          snippet: replySnippet,
+        }, null, 'imap');
+
+        if (integrations().telegram) {
+          await tgSend(
+            `🏛️ <b>Milano Home Exhibitor Replied!</b>\n\n` +
+            `Company: <b>${tgEscape(epMatch.name)}</b> (${tgEscape(epMatch.country || 'International')})\n` +
+            `From: <code>${tgEscape(m.from)}</code> (${tgEscape(epMatch.contact_person || 'Team')})\n` +
+            `Subject: <i>${tgEscape(m.subject)}</i>\n\n` +
+            `💬 <i>"${tgEscape(replySnippet)}"</i>\n\n` +
+            `Sender: <code>igor@b2b-dorogo.it</code>\n` +
+            `Action: Send 1-page rate card or confirm vehicle allocation.`,
+            [[{ text: 'Open Dashboard', url: appUrl('event_partners') }]]
+          );
+        }
 
         stored++;
         continue;
@@ -1275,6 +1423,7 @@ export async function approveTouch(db: any, touchId: string, settings: any, acto
 // ---------------- Daily digest ----------------
 export async function buildDigest(db: any, settings: any, now = new Date()) {
   const { prospects, touches, opps } = await loadAll(db);
+  const { data: eventPlanners } = await db.from('event_planners').select('id, name, status, email');
   const by = group(touches);
   const pmap = new Map(prospects.map((p: any) => [p.id, p]));
   const drafts = touches.filter((t: any) => t.direction === 'out' && t.state === 'draft');
@@ -1283,13 +1432,25 @@ export async function buildDigest(db: any, settings: any, now = new Date()) {
   const quotes = opps.filter((o: any) => o.stage === 'quote_sent' && o.quote_sent_at && core.daysBetween(o.quote_sent_at, now) >= 3);
   const nurture = prospects.filter((p: any) => p.status === 'nurture' && p.nurture_until && new Date(p.nurture_until) <= now);
   const name = (id: string) => tgEscape((pmap.get(id) as any)?.agency_name || '?');
+
+  const epReady = (eventPlanners || []).filter((ep: any) => ep.status === 'WANT_TO_CONTACT').length;
+  const epContacted = (eventPlanners || []).filter((ep: any) => ep.status === 'CONTACTED').length;
+  const epWon = (eventPlanners || []).filter((ep: any) => ep.status === 'APPROVED_PARTNER').length;
+
   const lines = [
-    `<b>DOROGO outreach · ${core.localDateKey(now, settings.timezone)}</b>`,
+    `<b>📊 DOROGO Outreach Briefing · ${core.localDateKey(now, settings.timezone)}</b>`,
     settings.kill_switch ? '⛔ Kill switch is ON. Nothing is sending.' : '',
-    `✍️ ${drafts.length} draft${drafts.length === 1 ? '' : 's'} to approve`,
-    `💬 ${waiting.length} repl${waiting.length === 1 ? 'y' : 'ies'} waiting${late.length ? ` (${late.length} over 24 h: ${late.slice(0, 4).map((t: any) => name(t.prospect_id)).join(', ')})` : ''}`,
-    quotes.length ? `📄 ${quotes.length} quote${quotes.length === 1 ? '' : 's'} awaiting an answer` : '',
-    nurture.length ? `🌱 ${nurture.length} nurture lead${nurture.length === 1 ? '' : 's'} due again: ${nurture.slice(0, 4).map((p: any) => tgEscape(p.agency_name)).join(', ')}` : '',
+    '',
+    `<b>💍 Dmitri (Wedding Desk · 24/day)</b>`,
+    `• ✍️ ${drafts.length} draft${drafts.length === 1 ? '' : 's'} to approve`,
+    `• 💬 ${waiting.length} repl${waiting.length === 1 ? 'y' : 'ies'} waiting${late.length ? ` (${late.length} over 24 h: ${late.slice(0, 4).map((t: any) => name(t.prospect_id)).join(', ')})` : ''}`,
+    quotes.length ? `• 📄 ${quotes.length} quote${quotes.length === 1 ? '' : 's'} awaiting answer` : '',
+    nurture.length ? `• 🌱 ${nurture.length} nurture lead${nurture.length === 1 ? '' : 's'} due: ${nurture.slice(0, 4).map((p: any) => tgEscape(p.agency_name)).join(', ')}` : '',
+    '',
+    `<b>🏛️ Igor (Milano Home Warm-Up · 6/day)</b>`,
+    `• 📥 ${epReady} exhibiting teams queued`,
+    `• 📤 ${epContacted} teams contacted`,
+    epWon ? `• 🌟 ${epWon} exhibitor conversations active` : '',
   ].filter(Boolean);
   return { text: lines.join('\n'), drafts: drafts.slice(0, 8), pmap };
 }

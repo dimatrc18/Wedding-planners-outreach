@@ -16,7 +16,7 @@
 
   @page {
     size: A4 portrait;
-    margin: 8mm 10mm 7mm 10mm;
+    margin: 7.5mm 9.5mm 8mm 9.5mm;
   }
   * {
     box-sizing: border-box;
@@ -29,25 +29,30 @@
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     color: #09090b;
     background: #ffffff;
-    font-size: 8.5px;
-    line-height: 1.35;
+    font-size: 8.0px;
+    line-height: 1.30;
   }
   .sheet {
     background: #ffffff;
     width: 100%;
     max-width: 100%;
+    min-height: 268mm;
     padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
   }
   .header {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    padding-bottom: 11px;
+    gap: 12px;
+    padding-bottom: 7px;
     border-bottom: 1.5px solid #09090b;
   }
   .brand-logo {
     font-family: 'Amelaryas', Georgia, serif;
-    font-size: 29px;
+    font-size: 24px;
     line-height: 1.0;
     color: #09090b;
     letter-spacing: 0.10em;
@@ -55,53 +60,55 @@
     font-weight: 400;
   }
   .brand-sub {
-    font-size: 7.8px;
+    font-size: 6.6px;
     color: #71717a;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    margin-top: 3px;
+    margin-top: 2px;
     font-weight: 600;
+    white-space: nowrap;
   }
   .header-right {
     text-align: right;
   }
   .doc-title {
     font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 19px;
+    font-size: 15.0px;
     font-weight: 700;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.05em;
     color: #09090b;
     text-transform: uppercase;
     line-height: 1;
+    white-space: nowrap;
   }
   .doc-sub {
-    font-size: 7.8px;
+    font-size: 7.0px;
     color: #71717a;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    margin-top: 3px;
+    margin-top: 2px;
     font-weight: 600;
   }
   .section-label {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    margin-top: 15px;
-    margin-bottom: 6px;
-    padding-bottom: 3px;
+    margin-top: 7px;
+    margin-bottom: 3.5px;
+    padding-bottom: 2px;
     border-bottom: 1px solid #f4f4f5;
   }
   .section-title {
-    font-size: 8.5px;
+    font-size: 7.8px;
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: #09090b;
   }
   .section-hint {
-    font-size: 7.8px;
-    color: #a1a1aa;
-    letter-spacing: 0.05em;
+    font-size: 6.9px;
+    color: #71717a;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
   }
 
@@ -109,56 +116,57 @@
   .collab-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 8px;
   }
   .collab-card {
     background: #fafafa;
     border: 1px solid #e4e4e7;
     border-radius: 3px;
-    padding: 9px 12px;
+    padding: 5.5px 9px;
   }
   .collab-head {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
     border-bottom: 1.5px solid #09090b;
-    padding-bottom: 4px;
-    margin-bottom: 5px;
+    padding-bottom: 2.5px;
+    margin-bottom: 3px;
   }
   .collab-title {
-    font-size: 8.8px;
+    font-size: 8.0px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     color: #09090b;
   }
   .collab-tag {
-    font-size: 7.5px;
+    font-size: 6.8px;
     font-weight: 700;
     color: #09090b;
     background: #f4f4f5;
     border: 1px solid #e4e4e7;
-    padding: 1.5px 6px;
+    padding: 1px 5px;
     border-radius: 2px;
+    white-space: nowrap;
   }
   .collab-desc {
-    font-size: 8px;
+    font-size: 7.2px;
     color: #52525b;
-    line-height: 1.4;
+    line-height: 1.3;
   }
 
   /* 3 B2B Bonuses */
   .bonus-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 9px;
+    gap: 8px;
   }
   .bonus-card {
     background: #fafafa;
     border: 1px solid #e4e4e7;
     border-top: 2px solid #9B7B4B;
     border-radius: 3px;
-    padding: 7px 10px;
+    padding: 5px 8px;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -167,42 +175,43 @@
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    margin-bottom: 4px;
-    padding-bottom: 3px;
+    margin-bottom: 2.5px;
+    padding-bottom: 2px;
     border-bottom: 1px solid #f4f4f5;
   }
   .bonus-title {
-    font-size: 8.5px;
+    font-size: 7.8px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
     color: #09090b;
   }
   .bonus-tag {
-    font-size: 7.2px;
+    font-size: 6.8px;
     font-weight: 700;
     color: #9B7B4B;
     white-space: nowrap;
   }
   .bonus-body {
-    font-size: 7.8px;
+    font-size: 7.1px;
     color: #52525b;
-    line-height: 1.36;
+    line-height: 1.28;
   }
 
   /* Fleet Table */
   table.fleet-table {
     width: 100%;
+    table-layout: fixed;
     border-collapse: collapse;
-    margin-top: 4px;
+    margin-top: 2px;
   }
   table.fleet-table th {
-    font-size: 7.5px;
+    font-size: 6.8px;
     font-weight: 700;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: #71717a;
-    padding: 7px 8px;
+    padding: 4.5px 5px;
     text-align: left;
     border-bottom: 1.5px solid #09090b;
     background: transparent;
@@ -212,77 +221,81 @@
     text-align: right;
   }
   table.fleet-table td {
-    padding: 9.5px 8px;
+    padding: 4.5px 5px;
     border-bottom: 1px solid #f4f4f5;
     vertical-align: middle;
-    font-size: 8.2px;
-    line-height: 1.35;
+    font-size: 7.3px;
+    line-height: 1.25;
   }
   table.fleet-table tr:last-child td {
     border-bottom: 1.5px solid #09090b;
   }
   .car-name {
-    font-size: 10.5px;
+    font-size: 8.8px;
     font-weight: 700;
     color: #09090b;
     letter-spacing: -0.01em;
+    white-space: nowrap;
   }
   .car-sub {
-    font-size: 7.5px;
+    font-size: 6.6px;
     color: #71717a;
     display: block;
-    margin-top: 1.5px;
+    margin-top: 0.5px;
   }
   .price-bold {
-    font-size: 11.5px;
+    font-size: 9.2px;
     font-weight: 700;
     color: #09090b;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
   .price-note {
-    font-size: 7.5px;
+    font-size: 6.5px;
     color: #71717a;
     display: block;
-    margin-top: 1.5px;
+    margin-top: 0.5px;
+    line-height: 1.18;
   }
 
   /* Bottom 3 Panels */
   .panels-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 9px;
-    margin-top: 15px;
+    gap: 8px;
+    margin-top: 7px;
   }
   .panel {
     background: #fafafa;
     border: 1px solid #e4e4e7;
     border-radius: 3px;
-    padding: 10px 10px;
+    padding: 7.5px 9px;
   }
   .panel-header {
-    padding-bottom: 5px;
-    margin-bottom: 6px;
+    padding-bottom: 3.5px;
+    margin-bottom: 4.5px;
     border-bottom: 1.5px solid #09090b;
   }
   .panel-title {
-    font-size: 8.4px;
+    font-size: 7.6px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     color: #09090b;
   }
   .kv-list {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 4px;
   }
   .kv-row {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    font-size: 7.8px;
-    padding-bottom: 2.5px;
+    font-size: 7.1px;
+    padding-bottom: 2.2px;
     border-bottom: 1px solid #f4f4f5;
+    gap: 4px;
   }
   .kv-row:last-child {
     border-bottom: none;
@@ -300,11 +313,11 @@
     white-space: nowrap;
   }
   .footer {
-    margin-top: 16px;
-    padding-top: 6px;
+    margin-top: 5px;
+    padding-top: 4px;
     border-top: 1px solid #f4f4f5;
     text-align: center;
-    font-size: 7.6px;
+    font-size: 7.0px;
     color: #a1a1aa;
     letter-spacing: 0.04em;
   }
@@ -323,10 +336,10 @@
   .feedback-minimal {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-top: 14px;
-    margin-bottom: 12px;
-    padding-top: 9px;
+    gap: 14px;
+    margin-top: 6px;
+    margin-bottom: 5px;
+    padding-top: 5px;
     border-top: 1px solid #e4e4e7;
   }
   .feedback-col {
@@ -335,17 +348,17 @@
     justify-content: space-between;
   }
   .feedback-quote {
-    font-size: 7.4px;
-    line-height: 1.4;
+    font-size: 6.8px;
+    line-height: 1.3;
     color: #3f3f46;
     font-style: italic;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
   .feedback-meta {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 6.8px;
+    font-size: 6.4px;
     color: #71717a;
     font-weight: 500;
   }
@@ -355,7 +368,7 @@
   .feedback-stars {
     color: #9B7B4B;
     font-weight: 700;
-    font-size: 7.2px;
+    font-size: 6.8px;
     letter-spacing: 0.5px;
   }
 
@@ -366,11 +379,11 @@
   <div class="header">
     <div>
       <div class="brand-logo">DOROGO</div>
-      <div class="brand-sub">Private Chauffeur &amp; Group Mobility • Milan &amp; Lake Como</div>
+      <div class="brand-sub">Noleggio con Conducente &amp; Mobilità Gruppi &bull; Milano &amp; Lago di Como</div>
     </div>
     <div class="header-right">
-      <div class="doc-title">Tariffe e Logistica</div>
-      <div class="doc-sub">Stagione 2026 / 2027</div>
+      <div class="doc-title">Group Mobility Audit &amp; Tariffe B2B</div>
+      <div class="doc-sub">Stagione 2026 / 2027 &bull; Tariffe Nette Riservate (IVA 10% Esclusa)</div>
     </div>
   </div>
 
@@ -383,20 +396,20 @@
   <div class="collab-grid">
     <div class="collab-card">
       <div class="collab-head">
-        <span class="collab-title">01. White-Label (Operiamo sotto il vostro brand)</span>
-        <span class="collab-tag">Vostro ricarico</span>
+        <span class="collab-title">Opzione A. White-Label (Sotto il Vostro Brand)</span>
+        <span class="collab-tag">Vostro Ricarico</span>
       </div>
       <div class="collab-desc">
-        Comunicate al cliente il prezzo finale con il vostro ricarico agenziale — forniamo tariffe Net wholesale riservate e gestiamo il 100% di coordinamento ospiti, voli e bagagli sotto il vostro brand (White-label). Protezione clienti al 100%.
+        Preventivate al cliente il prezzo finale con il vostro margine sopra le tariffe nette riservate. Gestiamo il 100% di coordinamento ospiti, radar voli e bagagli sotto il vostro brand con protezione cliente al 100%.
       </div>
     </div>
     <div class="collab-card">
       <div class="collab-head">
-        <span class="collab-title">02. Segnalazione Lead (Referral)</span>
-        <span class="collab-tag">Provvigione % TBD</span>
+        <span class="collab-title">Opzione B. Segnalazione Lead (Referral)</span>
+        <span class="collab-tag">Provvigione 5%</span>
       </div>
       <div class="collab-desc">
-        Ci trasmettete il contatto e i dettagli logistici: gestiamo noi preventivazione, contratti e assistenza ospiti. All'agenzia viene riconosciuta una provvigione concordata <strong>(% TBD)</strong> sul valore totale del servizio.
+        Trasmettete il contatto e i dettagli logistici: DOROGO gestisce preventivazione, fatturazione ufficiale e operativa a terra. All&rsquo;agenzia spetta una <strong>provvigione fissa del 5%</strong> a saldo dell&rsquo;ordine.
       </div>
     </div>
   </div>
@@ -411,97 +424,137 @@
     <div class="bonus-card">
       <div class="bonus-head">
         <span class="bonus-title">01. Audit Varchi e Ville</span>
-        <span class="bonus-tag">Valore €350 • Incluso Gratis</span>
+        <span class="bonus-tag">Valore &euro;350 &bull; Gratis</span>
       </div>
       <div class="bonus-body">
-        Sopralluogo tecnico per verificare larghezza cancelli e raggi di curvatura della villa (Balbianello, Pizzo, Erba, d’Este). Perizia scritta sul transito di bus da 50 posti o navette Classe V gratuite.
+        Sopralluogo tecnico di cancelli, raggi di curvatura e pontili di sbarco per la vostra villa (d&rsquo;Este, Pizzo, Balbiano, Erba). Perizia scritta sul transito bus o raccordo con navette Classe V.
       </div>
     </div>
     <div class="bonus-card">
       <div class="bonus-head">
         <span class="bonus-title">02. Dispatch Room WhatsApp</span>
-        <span class="bonus-tag">Live 24/7 • Incluso Gratis</span>
+        <span class="bonus-tag">Live H24 &bull; Gratis</span>
       </div>
       <div class="bonus-body">
-        Gruppo operativo dedicato con il Capo Disponente 24/7 per il team di coordinatori nei giorni di allestimento e nozze. Contatti diretti di tutti gli autisti comunicati con 24h di anticipo.
+        Gruppo operativo dedicato H24 con il Capo Disponente per il team di coordinatori nei giorni di allestimento ed evento. Contatti diretti di tutti gli autisti inviati 24h prima.
       </div>
     </div>
     <div class="bonus-card">
       <div class="bonus-head">
         <span class="bonus-title">03. Flight Delay Shield</span>
-        <span class="bonus-tag">60 Min Attesa • Gratis</span>
+        <span class="bonus-tag">60 Min Attesa &bull; Gratis</span>
       </div>
       <div class="bonus-body">
-        Monitoraggio radar in tempo reale dei voli a Malpensa e Linate senza penali per i primi 60 minuti di attesa. In caso di ritardo o riprogrammazione, il dispatch adegua i pick-up automaticamente.
+        Monitoraggio radar in tempo reale su MXP, LIN e BGY senza penali per i primi 60 minuti dall&rsquo;atterraggio. In caso di ritardo volo, la centrale riprogramma i pick-up in automatico.
       </div>
     </div>
   </div>
 
   <!-- Section 3: Fleet Table -->
   <div class="section-label">
-    <span class="section-title">Griglia Tariffaria B2B</span>
-    <span class="section-hint">Flotta Total Black NCC • Senza Scritte • Tutti i prezzi sono finali e includono IVA 10%</span>
+    <span class="section-title">Griglia Unificata Flotta B2B (Auto 10h/200 km &bull; Bus 8h/150 km)</span>
+    <span class="section-hint">Flotta Multi-Brand Reale &bull; Tariffe Nette Riservate &bull; IVA 10% Esclusa</span>
   </div>
 
   <table class="fleet-table">
+    <colgroup>
+      <col style="width: 23.0%;">
+      <col style="width: 12.0%;">
+      <col style="width: 15.5%;">
+      <col style="width: 13.5%;">
+      <col style="width: 15.0%;">
+      <col style="width: 21.0%;">
+    </colgroup>
     <thead>
       <tr>
-        <th style="width: 21%;">Classe e Modello</th>
-        <th style="width: 13%;">Capacità</th>
-        <th style="width: 15%;" class="num">Disposizione Oraria</th>
-        <th style="width: 15%;" class="num">Intera Giornata (10h)</th>
-        <th style="width: 15%;" class="num">Transfer MXP</th>
-        <th style="width: 21%;">Ruolo Operativo</th>
+        <th>Classe &amp; Modello</th>
+        <th>Posti &amp; Bagagli</th>
+        <th class="num">Oraria (Min 4h)</th>
+        <th class="num">Giornata (10h/8h)</th>
+        <th class="num">MXP &harr; Como (~50km)</th>
+        <th>Ruolo Operativo</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td><span class="car-name">Mercedes-Benz Classe E</span><span class="car-sub">Berlina Executive</span></td>
-        <td>2 VIP (max 3)<br><span style="color:#71717a;">2 Bagagli</span></td>
-        <td class="num"><span class="price-bold">€90 / ora</span><span class="price-note">Minimo 3 ore</span></td>
-        <td class="num"><span class="price-bold">€900 / giorno</span><span class="price-note">10 ore / 200 km</span></td>
-        <td class="num"><span class="price-bold">€180.00</span><span class="price-note">Base €1.45/km (min. €120)</span></td>
-        <td><strong>Supporto tattico VIP:</strong> truccatori, fotografi, celebrante e ospiti singoli. Accesso libero a ZTL Como e Milano.</td>
+        <td><span class="car-name">Mercedes-Benz Classe E</span><span class="car-sub">Berlina Executive &bull; Nero</span></td>
+        <td>1&ndash;3 Posti<br><span style="color:#71717a;">2 Valigie Grandi</span></td>
+        <td class="num"><span class="price-bold">&euro;100 / ora</span><span class="price-note">4h min: &euro;400 &bull; +20% notte</span></td>
+        <td class="num"><span class="price-bold">&euro;900 / giorno</span><span class="price-note">10h &bull; 200 km incl.</span></td>
+        <td class="num"><span class="price-bold">&euro;150.00</span><span class="price-note">&euro;3.00/km (min &euro;100)</span></td>
+        <td><strong>VIP &amp; Fornitori:</strong> Foto, stylist, ospiti singoli. Accesso gratuito ZTL Milano e Como.</td>
       </tr>
       <tr>
-        <td><span class="car-name">Mercedes-Benz Classe V</span><span class="car-sub">Van 6–7 posti (1 anteriore)</span></td>
-        <td>5–6 VIP (max 7)<br><span style="color:#71717a;">6–7 Bagagli</span></td>
-        <td class="num"><span class="price-bold">€95 / ora</span><span class="price-note">Minimo 3 ore</span></td>
-        <td class="num"><span class="price-bold">€950 / giorno</span><span class="price-note">10 ore / 200 km</span></td>
-        <td class="num"><span class="price-bold">€230.00</span><span class="price-note">Base €1.60/km (min. €120)</span></td>
-        <td><strong>Navetta chiave Como:</strong> transita nei cancelli storici delle ville (Pizzo, Balbiano). Spole notturne fino alle 04:00.</td>
+        <td><span class="car-name">Mercedes-Benz Classe V</span><span class="car-sub">Navetta Ville &bull; Nero</span></td>
+        <td>6&ndash;7 Posti<br><span style="color:#71717a;">7 Bagagli</span></td>
+        <td class="num"><span class="price-bold">&euro;105 / ora</span><span class="price-note">4h min: &euro;420 &bull; +20% notte</span></td>
+        <td class="num"><span class="price-bold">&euro;950 / giorno</span><span class="price-note">10h &bull; 200 km incl.</span></td>
+        <td class="num"><span class="price-bold">&euro;180.00</span><span class="price-note">&euro;3.60/km (min &euro;120)</span></td>
+        <td><strong>Navetta Chiave Ville:</strong> Passa nei varchi storici; spole notturne continue fino alle 04:00.</td>
       </tr>
       <tr>
-        <td><span class="car-name">Mercedes-Benz Classe S</span><span class="car-sub">Ammiraglia di lusso</span></td>
-        <td>2 VIP (max 3)<br><span style="color:#71717a;">2 Bagagli</span></td>
-        <td class="num"><span class="price-bold">€180 / ora</span><span class="price-note">Minimo 3 ore</span></td>
-        <td class="num"><span class="price-bold">€1.800 / giorno</span><span class="price-note">10 ore / 200 km</span></td>
-        <td class="num"><span class="price-bold">€290.00</span><span class="price-note">Base €2.70/km (min. €180)</span></td>
-        <td><strong>Ammiraglia sposi:</strong> massimo spazio per abito nuziale con strascico, uscita trionfale e photo-shooting di lusso.</td>
+        <td><span class="car-name">Mercedes-Benz Classe S</span><span class="car-sub">Ammiraglia Sposi &bull; Nero</span></td>
+        <td>1&ndash;3 Posti<br><span style="color:#71717a;">2 Bagagli</span></td>
+        <td class="num"><span class="price-bold">&euro;200 / ora</span><span class="price-note">4h min: &euro;800 &bull; +20% notte</span></td>
+        <td class="num"><span class="price-bold">&euro;1,800 / giorno</span><span class="price-note">10h &bull; 200 km incl.</span></td>
+        <td class="num"><span class="price-bold">&euro;250.00</span><span class="price-note">&euro;5.00/km (min &euro;180)</span></td>
+        <td><strong>Ammiraglia Sposi:</strong> Ingresso cerimoniale e shooting con ampio spazio per l&rsquo;abito.</td>
       </tr>
       <tr>
-        <td><span class="car-name">Mercedes Sprinter Executive</span><span class="car-sub">Minibus 16–20 posti</span></td>
-        <td>16–20 Posti<br><span style="color:#71717a;">16 Bagagli</span></td>
-        <td class="num"><span class="price-bold">€115 / ora</span><span class="price-note">Minimo 6 ore</span></td>
-        <td class="num"><span class="price-bold">€1.150 / giorno</span><span class="price-note">10 ore (8h: €1.050)</span></td>
-        <td class="num"><span class="price-bold">€540.00</span><span class="price-note">+ sosta MXP €30 / ora</span></td>
-        <td><strong>Tornanti e vie strette:</strong> passo corto (&lt;7.5m) per vicoli storici e ingressi hotel preclusi ai pullman da 50 pax.</td>
+        <td><span class="car-name">MB Sprinter VIP Black</span><span class="car-sub">Total Black No Loghi &bull; Pelle/TV</span></td>
+        <td>7&ndash;8 Posti<br><span style="color:#71717a;">8 Bagagli</span></td>
+        <td class="num"><span class="price-bold">&euro;135 / ora</span><span class="price-note">4h min: &euro;540 &bull; +20% notte</span></td>
+        <td class="num"><span class="price-bold">&euro;1,000 / giorno</span><span class="price-note">8h &bull; 150 km incl.</span></td>
+        <td class="num"><span class="price-bold">&euro;520.00</span><span class="price-note">&euro;10.40/km (min &euro;350)<br>+ &euro;30 stallo MXP</span></td>
+        <td><strong>Piccoli Gruppi VIP:</strong> Salotto Sprinter nero integrale per famiglia sposi e ospiti d&rsquo;onore.</td>
       </tr>
       <tr>
-        <td><span class="car-name">Mercedes Sprinter XL</span><span class="car-sub">Minibus 24 posti</span></td>
-        <td>24 Posti<br><span style="color:#71717a;">20 Bagagli</span></td>
-        <td class="num"><span class="price-bold">€120 / ora</span><span class="price-note">Minimo 6 ore</span></td>
-        <td class="num"><span class="price-bold">€1.200 / giorno</span><span class="price-note">10 ore (8h: €1.100)</span></td>
-        <td class="num"><span class="price-bold">€560.00</span><span class="price-note">+ sosta MXP €30 / ora</span></td>
-        <td><strong>Aeroporti e Welcome Dinner:</strong> vano bagagli maxi per 20+ valigie da MXP, ideali per gruppi volo senza dividersi in van.</td>
+        <td><span class="car-name">MB Sprinter Top Luxury</span><span class="car-sub">Allestimento VIP Lounge &bull; Black</span></td>
+        <td>7&ndash;8 Posti<br><span style="color:#71717a;">8 Bagagli</span></td>
+        <td class="num"><span class="price-bold">&euro;200 / ora</span><span class="price-note">4h min: &euro;800 &bull; +20% notte</span></td>
+        <td class="num"><span class="price-bold">&euro;1,500 / giorno</span><span class="price-note">8h &bull; 150 km incl.</span></td>
+        <td class="num"><span class="price-bold">&euro;550.00</span><span class="price-note">&euro;11.00/km (min &euro;480)<br>+ &euro;30 stallo MXP</span></td>
+        <td><strong>Lounge Privata Top:</strong> Poltrone club reclinabili tipo private-jet per ospiti VVIP.</td>
       </tr>
       <tr>
-        <td><span class="car-name">Pullman Gran Turismo</span><span class="car-sub">Bus 50–54 posti</span></td>
-        <td>50–54 Posti<br><span style="color:#71717a;">50 Bagagli</span></td>
-        <td class="num"><span class="price-bold">€170 / ora</span><span class="price-note">Min. servizio 4h (€880)</span></td>
-        <td class="num"><span class="price-bold">€1.705 / giorno</span><span class="price-note">10 ore (12h: €1.980)</span></td>
-        <td class="num"><span class="price-bold">€880.00</span><span class="price-note">+ sosta MXP €30 / ora</span></td>
-        <td><strong>Express autostradale:</strong> trasporto massivo di tutti gli ospiti da Milano centro a hotel e moli d'imbarco di Como.</td>
+        <td><span class="car-name">Minibus Touring Std</span><span class="car-sub">MB Sprinter / Indcar Wing</span></td>
+        <td>16&ndash;20 Posti<br><span style="color:#71717a;">12 Stiva (19 Cab.)</span></td>
+        <td class="num"><span class="price-bold">&euro;155 / ora</span><span class="price-note">4h min: &euro;620 &bull; +20% notte</span></td>
+        <td class="num"><span class="price-bold">&euro;880 / giorno</span><span class="price-note">8h &bull; 150 km incl.</span></td>
+        <td class="num"><span class="price-bold">&euro;650.00</span><span class="price-note">&euro;13.00/km (min &euro;570)<br>+ &euro;30 stallo MXP</span></td>
+        <td><strong>Shuttle Gruppi Smart:</strong> Cene pre-wedding e navette hotel (&lt;8m per strade strette).</td>
+      </tr>
+      <tr>
+        <td><span class="car-name">Minibus Black VIP</span><span class="car-sub">MB Exec Coach &bull; Total Black</span></td>
+        <td>20 Posti<br><span style="color:#71717a;">14 Stiva</span></td>
+        <td class="num"><span class="price-bold">&euro;220 / ora</span><span class="price-note">4h min: &euro;880 &bull; +20% notte</span></td>
+        <td class="num"><span class="price-bold">&euro;1,190 / giorno</span><span class="price-note">8h &bull; 150 km incl.</span></td>
+        <td class="num"><span class="price-bold">&euro;690.00</span><span class="price-note">&euro;13.80/km (min &euro;630)<br>+ &euro;30 stallo MXP</span></td>
+        <td><strong>Livrea Nera Garantita:</strong> Total black senza scritte e interni in pelle per arrivi di gala.</td>
+      </tr>
+      <tr>
+        <td><span class="car-name">Midibus Touring Std</span><span class="car-sub">Iveco GT / Wing (Multi-brand)</span></td>
+        <td>28&ndash;30 Posti<br><span style="color:#71717a;">13 Stiva (27 Cab.)</span></td>
+        <td class="num"><span class="price-bold">&euro;220 / ora</span><span class="price-note">4h min: &euro;880 &bull; +20% notte</span></td>
+        <td class="num"><span class="price-bold">&euro;1,130 / giorno</span><span class="price-note">8h &bull; 150 km incl.</span></td>
+        <td class="num"><span class="price-bold">&euro;750.00</span><span class="price-note">&euro;15.00/km (min &euro;690)<br>+ &euro;30 stallo MXP</span></td>
+        <td><strong>Gruppi Medi (20&ndash;30p):</strong> Collegamenti hotel&ndash;pontile e cerimonie. Livrea multi-brand.</td>
+      </tr>
+      <tr>
+        <td><span class="car-name">Coach Black VIP</span><span class="car-sub">Pullman Total Black VIP</span></td>
+        <td>30 Posti<br><span style="color:#71717a;">25+ Stiva</span></td>
+        <td class="num"><span class="price-bold">&euro;235 / ora</span><span class="price-note">4h min: &euro;940 &bull; +20% notte</span></td>
+        <td class="num"><span class="price-bold">&euro;1,500 / giorno</span><span class="price-note">8h &bull; 150 km incl.</span></td>
+        <td class="num"><span class="price-bold">&euro;780.00</span><span class="price-note">&euro;15.60/km (min &euro;690)<br>+ &euro;30 stallo MXP</span></td>
+        <td><strong>30 Posti Total Black:</strong> Carrozzeria nera integrale e ampia stiva posteriore per gala.</td>
+      </tr>
+      <tr>
+        <td><span class="car-name">Grand Turismo Coach</span><span class="car-sub">Setra / MB Tourismo / Irizar</span></td>
+        <td>50&ndash;55 Posti<br><span style="color:#71717a;">50 Stiva</span></td>
+        <td class="num"><span class="price-bold">&euro;225 / ora</span><span class="price-note">4h min: &euro;900 &bull; +20% notte</span></td>
+        <td class="num"><span class="price-bold">&euro;1,150 / giorno</span><span class="price-note">8h &bull; 150 km incl.</span></td>
+        <td class="num"><span class="price-bold">&euro;880.00</span><span class="price-note">&euro;17.60/km (min &euro;750)<br>+ &euro;30 stallo MXP</span></td>
+        <td><strong>Linee Principali 50+:</strong> Da Milano/MXP ai moli di Como (possibile logo discreto).</td>
       </tr>
     </tbody>
   </table>
@@ -511,63 +564,61 @@
     <div class="panel">
       <div class="panel-header"><span class="panel-title">Accesso Area C (Milano)</span></div>
       <div class="kv-list">
-        <div class="kv-row"><span class="kv-key">Berline e Van (fino a 8 pax)</span><span class="kv-val">Gratuito</span></div>
-        <div class="kv-row"><span class="kv-key">Minibus ≤8m (Lun–Ven)</span><span class="kv-val">€60.00 / giorno</span></div>
-        <div class="kv-row"><span class="kv-key">Midibus 8–10.5m (Lun–Ven)</span><span class="kv-val">€97.50 / giorno</span></div>
-        <div class="kv-row"><span class="kv-key">Pullman GT &gt;10.5m (Lun–Ven)</span><span class="kv-val">€150.00 / giorno</span></div>
-        <div class="kv-row"><span class="kv-key">Weekend e festivi (tutti i bus)</span><span class="kv-val">Gratuito</span></div>
+        <div class="kv-row"><span class="kv-key">Berline e Classe V (&le;7 pax)</span><span class="kv-val">Gratuito</span></div>
+        <div class="kv-row"><span class="kv-key">Minibus &le;8m (Lun&ndash;Ven, escl.)</span><span class="kv-val">&euro;60.00 / giorno</span></div>
+        <div class="kv-row"><span class="kv-key">Sprinter 7&ndash;8p &amp; Bus 8&ndash;10.5m</span><span class="kv-val">&euro;97.50 &ndash; &euro;100 / gg</span></div>
+        <div class="kv-row"><span class="kv-key">Pullman GT &gt;10.5m (Lun&ndash;Ven, escl.)</span><span class="kv-val">&euro;150.00 / giorno</span></div>
+        <div class="kv-row"><span class="kv-key">Weekend e festivi (tutti)</span><span class="kv-val">Gratuito</span></div>
       </div>
     </div>
 
     <div class="panel">
       <div class="panel-header"><span class="panel-title">Pagamento e Cancellazione</span></div>
       <div class="kv-list">
-        <div class="kv-row"><span class="kv-key">Acconto alla conferma</span><span class="kv-val">40%</span></div>
-        <div class="kv-row"><span class="kv-key">Saldo finale</span><span class="kv-val">60% a 14 giorni</span></div>
-        <div class="kv-row"><span class="kv-key">Cancellazione &gt;30 giorni</span><span class="kv-val">100% rimborso</span></div>
-        <div class="kv-row"><span class="kv-key">Cancellazione 15–29 giorni</span><span class="kv-val">50% rimborso</span></div>
-        <div class="kv-row"><span class="kv-key">Cancellazione &lt;14 giorni</span><span class="kv-val">0% (trattenuto)</span></div>
-        <div class="kv-row"><span class="kv-key">Attesa MXP &amp; radar voli</span><span class="kv-val">60 min gratuiti</span></div>
+        <div class="kv-row"><span class="kv-key">Acconto &amp; saldo finale</span><span class="kv-val">40% / 60% a 14 gg</span></div>
+        <div class="kv-row"><span class="kv-key">Modifica data (&gt;14 giorni)</span><span class="kv-val">Riprogrammazione gratis</span></div>
+        <div class="kv-row"><span class="kv-key">Cancellazione (&lt;14 giorni)</span><span class="kv-val">Penale 100%</span></div>
+        <div class="kv-row"><span class="kv-key">Radar voli &amp; attesa (auto)</span><span class="kv-val">60 min gratuiti</span></div>
+        <div class="kv-row"><span class="kv-key">Stalli bus aeroporti</span><span class="kv-val">MXP &euro;30 &bull; BGY &euro;15 &bull; LIN &euro;20</span></div>
       </div>
     </div>
 
     <div class="panel">
       <div class="panel-header"><span class="panel-title">Franchigie ed Extra</span></div>
       <div class="kv-list">
-        <div class="kv-row"><span class="kv-key">Franchigia km inclusa (giorno)</span><span class="kv-val">200 km (25 km/h)</span></div>
-        <div class="kv-row"><span class="kv-key">Ora supplementare (Overtime)</span><span class="kv-val">€95 – €120 / ora</span></div>
-        <div class="kv-row"><span class="kv-key">Km eccedenti (Extra km)</span><span class="kv-val">€1.60 – €2.50 / km</span></div>
-        <div class="kv-row"><span class="kv-key">Aliquota IVA (NCC)</span><span class="kv-val">10% (Inclusa nei prezzi)</span></div>
-        <div class="kv-row"><span class="kv-key">Periodi di picco (MFW, F1, Salone)</span><span class="kv-val">+10% – 20%</span></div>
+        <div class="kv-row"><span class="kv-key">Giornata (Auto vs. Bus)</span><span class="kv-val">Auto 10h/200km &bull; Bus 8h/150km</span></div>
+        <div class="kv-row"><span class="kv-key">Oraria &amp; notte (22&ndash;06 +20%)</span><span class="kv-val">&euro;100 &ndash; &euro;235 / ora (4h)</span></div>
+        <div class="kv-row"><span class="kv-key">Km eccedenti (Extra km)</span><span class="kv-val">&euro;2.50 auto &bull; &euro;3.00&ndash;3.50 bus</span></div>
+        <div class="kv-row"><span class="kv-key">Aliquota IVA (NCC Italia)</span><span class="kv-val">IVA 10% Esclusa (Net)</span></div>
+        <div class="kv-row"><span class="kv-key">Periodi di picco (MFW, F1, Salone)</span><span class="kv-val">+10% &ndash; 20%</span></div>
       </div>
     </div>
   </div>
 
-  
   <!-- Minimalist Boxless Social Proof -->
   <div class="feedback-minimal">
     <div class="feedback-col">
       <div class="feedback-quote">
-        “DOROGO ha gestito il trasporto dei nostri ospiti per tutti i 3 giorni delle nozze a Como. Nemmeno un messaggio di disorientamento. Quando il volo di mia madre è stato cancellato, hanno riorganizzato il transfer all'istante senza disturbarci.”
+        &ldquo;DOROGO ha gestito il trasporto dei nostri ospiti per tutti i 3 giorni delle nozze a Como. Nemmeno un messaggio di disorientamento. Quando il volo di mia madre &egrave; stato cancellato, hanno riorganizzato il transfer all&rsquo;istante senza disturbarci.&rdquo;
       </div>
       <div class="feedback-meta">
-        <span class="feedback-author">Cocrzt • Matrimonio 3 giorni (Coppia FR)</span>
-        <span class="feedback-stars">★★★★★ Trustpilot 5.0</span>
+        <span class="feedback-author">Cocrzt &bull; Matrimonio 3 giorni (Coppia FR)</span>
+        <span class="feedback-stars">&#9733;&#9733;&#9733;&#9733;&#9733; Trustpilot 5.0</span>
       </div>
     </div>
     <div class="feedback-col">
       <div class="feedback-quote">
-        “Un ringraziamento enorme agli autisti e coordinatori DOROGO a Como. 70 ospiti dall'estero, 12 van Mercedes Classe V per 2 giorni a totale disposizione. 5/5 per organizzazione impeccabile, professionalità e massima flessibilità.”
+        &ldquo;Un ringraziamento enorme agli autisti e coordinatori DOROGO a Como. 70 ospiti dall&rsquo;estero, 12 van Mercedes Classe V per 2 giorni a totale disposizione. 5/5 per organizzazione impeccabile, professionalit&agrave; e massima flessibilit&agrave;.&rdquo;
       </div>
       <div class="feedback-meta">
-        <span class="feedback-author">Claudia C. • Matrimonio Lago di Como (70 ospiti)</span>
-        <span class="feedback-stars">★★★★★ Trustpilot 5.0</span>
+        <span class="feedback-author">Claudia C. &bull; Matrimonio Lago di Como (70 ospiti)</span>
+        <span class="feedback-stars">&#9733;&#9733;&#9733;&#9733;&#9733; Trustpilot 5.0</span>
       </div>
     </div>
   </div>
 
   <div class="footer">
-    <strong>DOROGO Private Transportation</strong> • NCC Licenza Ufficiale • booking@dorogo.eu
+    <strong>DOROGO Private Transportation</strong> &bull; NCC Licenza Ufficiale &bull; dmitri@dorogo.eu &bull; booking@dorogo.eu &bull; Tariffe Nette IVA 10% Esclusa
   </div>
 </div>
 </body>

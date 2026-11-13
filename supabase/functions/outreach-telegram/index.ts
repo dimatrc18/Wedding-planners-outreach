@@ -1,7 +1,7 @@
 // Telegram webhook: Approve / Skip buttons from the digest, and /today for an on-demand digest.
 // Only the configured chat is obeyed, and Telegram must send the secret token set with setWebhook.
 import { handle, json, env, admin, loadSettings, logEvent } from '../_shared/server.ts';
-import { approveTouch, sendDigest } from '../_shared/jobs.ts';
+import { approveTouch, sendDigest, sendDueEvents } from '../_shared/jobs.ts';
 import { tg } from '../_shared/telegram.ts';
 
 Deno.serve((req) => handle(req, async () => {
@@ -40,6 +40,17 @@ Deno.serve((req) => handle(req, async () => {
       await db.from('touches').update({ state: 'skipped' }).eq('id', id).eq('state', 'draft');
       await logEvent(db, 'draft_skipped', { touch_id: id, via: 'telegram' }, null, 'telegram');
       text = 'Skipped.';
+    } else if (action === 'approve_event') {
+      const { data: ep } = await db.from('event_planners').select('*').eq('id', id).maybeSingle();
+      if (ep) {
+        await sendDueEvents(db, settings, new Date(), { actor: 'telegram', onlyEventId: id });
+        text = `✅ Approved & sent to ${ep.name}!`;
+      } else {
+        text = 'Event lead not found.';
+      }
+    } else if (action === 'skip_event') {
+      await db.from('event_planners').update({ status: 'NOT_RELEVANT' }).eq('id', id);
+      text = 'Skipped event lead.';
     }
     await tg('answerCallbackQuery', { callback_query_id: update.callback_query.id, text });
     await tg('editMessageReplyMarkup', { chat_id: chatId, message_id: update.callback_query.message.message_id, reply_markup: { inline_keyboard: [[{ text, callback_data: 'noop' }]] } });
