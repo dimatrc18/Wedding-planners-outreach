@@ -4,7 +4,7 @@
 // NO guessed domains, NO fake emails, NO organizer or Italian general agency placeholders.
 // All records arrive in TO_REVIEW status (safe, zero sends until confirmed).
 
-export const EVENT_STORAGE_KEY = 'dorogo_foreign_exhibitors_v3';
+export const EVENT_STORAGE_KEY = 'dorogo_foreign_exhibitors_v4';
 export const EVENT_TEMPLATES_STORAGE_KEY = 'dorogo_event_templates_v2';
 
 export const EVENT_AGENCY_TYPES = [
@@ -34,14 +34,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "WOOLER INDUSTRIAL ESTATE BERWICK RD WOOLER, NORTHUMBERLAND, United Kingdom of Great Britain and Northern Ireland",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000TAGvIAO",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 95,
     "priority_tier": "Tier 1 (Luxury)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Addison Ross is a family-owned and run business with a commitment to quality at its core. Each product is designed to give a timeless feel and last a lifetime. The brand’s mission is to help customers...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_002",
@@ -60,14 +61,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "Beugen, Netherlands",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000TvkTIAS",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 94,
     "priority_tier": "Tier 1 (High Priority)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Ambiente Europe is a leading Dutch brand renowned for its beautifully designed paper napkins and coordinated tableware collections. With over 240 seasonal designs, Ambiente brings style and inspiratio...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_003",
@@ -86,14 +88,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "Berlin, Germany",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000Vd1tIAC",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 90,
     "priority_tier": "Tier 1 (High Priority)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Ame González Papeterie is a Berlin-based stationary brand. My creations are carefully designed by hand with paint, giving them a unique and beautiful quality. I use symbols, but no words to communicat...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_004",
@@ -112,14 +115,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "Zutphen, Netherlands",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000YqU1IAK",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 92,
     "priority_tier": "Tier 1 (High Priority)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "We are And Nook, a Dutch home & living brand with a mission to bring colour, joy and personality to every nook of the home.\n\n From our creative studio in the Netherlands, we design collections filled ...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_005",
@@ -138,14 +142,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "AVENIDA AZAGADOR DE LA TORRE 67B, VALENCIA, Spain",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000TcRhIAK",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_006",
@@ -164,14 +169,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "POLIGONO INDUSTRIAL CALLE 6, PARCELA 93, ALCALA' DE GUADAIRA SEVILLA, Spain",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000ZrsfIAC",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_007",
@@ -190,14 +196,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "Nettetal, Germany",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000WdPdIAK",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 93,
     "priority_tier": "Tier 1 (High Priority)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Germany.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_008",
@@ -216,14 +223,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "Scheeßel, Germany",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000TvR8IAK",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 91,
     "priority_tier": "Tier 1 (High Priority)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Germany.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_009",
@@ -242,14 +250,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "Getaria, Gipuzkoa, Spain",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000TvnhIAC",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 91,
     "priority_tier": "Tier 1 (High Priority)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_010",
@@ -268,14 +277,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "29 RUE DES RÉLIS NAMURWÈS, NAMUR, Belgium",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000Tw8fIAC",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Belgium.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_011",
@@ -294,14 +304,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "72 CHEMIN DE BOUGAINVILLE, LES PORTES EN RE, France",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000TAgjIAG",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from France.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_012",
@@ -320,14 +331,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "2-13-9 ASAKUSABASHI TAITO-KU, TOKYO, Japan",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000VbBNIA0",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "CANDLE WAND is a brand born with the concept of a “magic wand” that makes the moment you light a candle a special time.\n\n From a lighter that you keep in a drawer to a lighter that can be used as an i...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_013",
@@ -346,14 +358,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "C/ BUFALI 32 APDO. 104, ALBAIDA VALENCIA, Spain",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000TAwrIAG",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_014",
@@ -372,14 +385,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "Haelen, Netherlands",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000YrgDIAS",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 95,
     "priority_tier": "Tier 1 (High Priority)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Netherlands.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_015",
@@ -398,14 +412,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "4 RUE DE LA BONNETERIE, BRIATEXTE, France",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000ZVIfIAO",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from France.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_016",
@@ -424,14 +439,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "BREMHILL HOUSE, BREMHILL, CALNE WILTSHIRE, United Kingdom of Great Britain and Northern Ireland",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000YPlZIAW",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 95,
     "priority_tier": "Tier 1 (Luxury)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from United Kingdom.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_017",
@@ -450,14 +466,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "Paris, France",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000WfsrIAC",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 92,
     "priority_tier": "Tier 1 (High Priority)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from France.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_018",
@@ -476,14 +493,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "1-32-16-307, SENAGAWA, AOI-KU, SHIZUOKA CITY, Japan",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000XqcXIAS",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Japan.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_019",
@@ -502,14 +520,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "1/F, NO.53, NANLING ROAD, NANA VILL. GROUP,YOUGANPU VILL., FENGGANG TOWN, DONGGUAN, GUANGDONG, China",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000UpI1IAK",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": false,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from China.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_020",
@@ -528,12 +547,12 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "SS DEL SEMPIONE, NEW YORK, United States of America",
     "fair_event": "Milano Home 2027",
     "hall_booth": "Hall 6 - a4bTk000000SkRJIA0",
-    "status": "TO_REVIEW",
+    "status": "NOT_RELEVANT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": false,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
-    "notes": "Account ad uso esclusivo dell'ufficio eservice. Non utilizzare....",
+    "notes": "Internal Fiera Milano service maintenance staff. Not an international exhibiting team.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z"
   },
@@ -554,14 +573,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "BERGSOESVEJ 23, SILKEBORG, Denmark",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000T9uLIAS",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 95,
     "priority_tier": "Tier 1 (Luxury)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Denmark.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_022",
@@ -580,14 +600,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "PARODOS ANAGENNISEOS & KALYPSO,  THESSI NTRASSARIAS, ASPROPYRGOS, Greece",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000ZZ1JIAW",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Greece.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_023",
@@ -600,20 +621,21 @@ export const INITIAL_EVENT_PARTNERS = [
     "agency_type_label": "🇪🇸 Exhibiting Team · Spain",
     "contact_person": "Trade Fair Desk",
     "contact_role": "Trade Fair Logistics / Stand Director",
-    "email": "",
+    "email": "fuenlabrada@zhyt0218.com",
     "phone": "",
     "website": "",
     "base_city": "CALLE RIO TORMES 11, MADRID, Spain",
     "fair_event": "Milano Home 2027",
     "hall_booth": "Hall 6 - a4bTk000000YH6TIAW",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
-    "is_enriched": false,
+    "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_024",
@@ -632,14 +654,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "4 RUE FRANCOIS COLI, BLANQUEFORT, France",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000TxJFIA0",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from France.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_025",
@@ -658,14 +681,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "CROM 25, CORNELLÁ DE LLOBREGAT, BARCELONA,, BARCELONA, Spain",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000ZiXdIAK",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_026",
@@ -684,14 +708,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "Gigean, France",
     "fair_event": "Milano Home 2027",
     "hall_booth": "Hall 6 - a4bTk000000ZRi5IAG",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 90,
     "priority_tier": "Tier 1 (High Priority)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from France.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_027",
@@ -710,14 +735,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "CALLE CARPINTEROS 12, GETAFE MADRID, Spain",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000UIvZIAW",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": false,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_028",
@@ -736,14 +762,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "Talavera de la Reina, Toledo, Spain",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000ZYzhIAG",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 90,
     "priority_tier": "Tier 1 (High Priority)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_029",
@@ -762,14 +789,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "CARRER DEL COBALT 74, L'HOSPITALET DE LLOBREGAT, Spain",
     "fair_event": "Milano Home 2027",
     "hall_booth": "Hall 6 - a4bTk000000X0hBIAS",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Gea Barcelona is a leading wholesale supplier in the international distribution of high-quality minerals, crystals, and fossils. From our facilities in Barcelona, we offer an exclusive and carefully c...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_030",
@@ -788,14 +816,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "BRAUKWEG 28, ESLOHE, Germany",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000Tc6jIAC",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 95,
     "priority_tier": "Tier 1 (Luxury)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Brands provide orientation, create identity and set welcome markers which consumers can trust in the storm of communication experienced in an increasingly digitised world.\n\nThis applies to the GEFU br...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_031",
@@ -814,14 +843,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "Bocholt, Germany",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000ZK2HIAW",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 94,
     "priority_tier": "Tier 1 (High Priority)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Germany.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_032",
@@ -840,14 +870,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "SOGADE 16, RINGSTED, Denmark",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000TtPJIA0",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "At Gry & Sif, the magic unfolds through our felted creations, handcrafted by skilled Nepalese artisans. We celebrate thoughtful craftsmanship and cherish the unique charm born from the hands of true m...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_033",
@@ -866,14 +897,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "Ibi, Alicante, Spain",
     "fair_event": "Milano Home 2027",
     "hall_booth": "Hall 6 - a4bTk000000Toe9IAC",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 90,
     "priority_tier": "Tier 1 (High Priority)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "HEGA HOGAR: Functional Design for Your Everyday Life\n\n At HEGA HOGAR, we mould plastic with innovation and style to create modern kitchenware, storage and cleaning items that transform your home. Our ...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_034",
@@ -892,14 +924,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "VIA GUARDA DEL CONSIGLIO 31, SERRAVALLE, San Marino",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000TsRdIAK",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Il marchio Henriette nasce nel 1996 ereditando la decennale tradizione del comparto produttivo di un’azienda sammarinese leader nella decorazione artistica della porcellana.\n Grazie all’esperienza e l...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_035",
@@ -918,14 +951,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "Nürnberg, Germany",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000TGhKIAW",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 92,
     "priority_tier": "Tier 1 (High Priority)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Germany.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_036",
@@ -944,14 +978,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "1E POELLAAN 6, LISSE, Netherlands",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000URqnIAG",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Netherlands.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_037",
@@ -970,14 +1005,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "ZOLLHALLENSTR. 13, FREIBURG IM BREISGAU, Germany",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000TAjxIAG",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 95,
     "priority_tier": "Tier 1 (Luxury)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "MORE POSSIBILITIES. MORE SHARPNESS.\nThe HORL®2 sharpener offers maximum versatility to satisfy individual requirements. With interchangeable grinding wheels, a 15° grinding angle for filigree and 20° ...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_038",
@@ -996,14 +1032,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "CALLE TORENO 46, FUENLABRADA, Spain",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000W1VdIAK",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": false,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_039",
@@ -1022,14 +1059,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "SIPPENBROEK 32, ZUTPHEN, Netherlands",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000TzmTIAS",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Imbarro is an unique Dutch brand for interior and fashion accessories. Several times a year and with love and care, Imbarro surprises their clients with new collections of home and fashion accessories...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_040",
@@ -1048,14 +1086,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "UL. JAWOROWA 13, MILEJOWICE, Poland",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000XxirIAC",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Poland.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_041",
@@ -1074,14 +1113,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "NO. 373, JIHUA ROAD, YONGJI ECONOMIC DEVELOPMENT ZONE, JILIN, China",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000ZJpNIAW",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from China.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_042",
@@ -1100,14 +1140,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "PO BOX 30240, ROTTERDAM, Netherlands",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000T6A5IAK",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 95,
     "priority_tier": "Tier 1 (Luxury)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Netherlands.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_043",
@@ -1126,14 +1167,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "Ebbs, Austria",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000URsPIAW",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 90,
     "priority_tier": "Tier 1 (High Priority)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Kleen-Tex Industries GmbH is a worldwide renowned mat manufacturer and is one of the leading companies in Europe. This leading position has been gained by means of our three plants located in Austria,...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_044",
@@ -1152,14 +1194,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "JÄRNVÄGSGATAN 21, KLIPPAN, Sweden",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000Xn5BIAS",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Sweden.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_045",
@@ -1178,14 +1221,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "NARCIS MONTURIOL 17-19, POL. IND. FOINVASA, MONTCADA I REIXAC, Spain",
     "fair_event": "Milano Home 2027",
     "hall_booth": "Hall 6 - a4bTk000000UefxIAC",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Llinares Import – Carla World: Over 35 Years of Innovation with Tradition\n\n At Llinares Import, S.L., we have been importing and distributing minerals, fashion jewelry, decoration, textiles, souvenirs...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_046",
@@ -1204,14 +1248,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "ENERGIESTRAAT 9, NAARDEN, Netherlands",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000TAbtIAG",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Looplabb Opens your eyes\n\n Choose your style, choose glasses and open your eyes with Looplabb. Looplabb is an innovative eyewear brand. Specializing in handmade, optician-quality, ready-made reading a...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_047",
@@ -1230,14 +1275,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "ZONA INDUSTRIAL DOS MATINHOS PAV 6. E 7, Lousã, Portugal",
     "fair_event": "Milano Home 2027",
     "hall_booth": "Hall 6 - a4bTk000000ZR29IAG",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": false,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Portugal.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_048",
@@ -1256,14 +1302,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "GARTNERSTR. 16A, HAMBURG, Denmark",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000VMqfIAG",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 95,
     "priority_tier": "Tier 1 (Luxury)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Denmark.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_049",
@@ -1282,14 +1329,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "PIAZZA GRANDE 10, RIVA S. VITALE, Switzerland",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000TwtRIAS",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Majordomo was born in the Swiss mountains, where precision, discretion, and attention to detail are part of the culture. But it is not a closed brand: it grows thanks to dialogue with international pa...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_050",
@@ -1308,14 +1356,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "ENERGETIKU G. 8,, KAUNAS, Lithuania",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000ZSELIA4",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Lithuania.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_051",
@@ -1334,14 +1383,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "VIA PENATE 16, MENDRISIO, Switzerland",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000W5mBIAS",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "MuiT by Tiziana Mucchiani: Sculpture as an Emotional Journey Through Form, Material, and Identity\n\n Swiss-Italian artist Tiziana Mucchiani explores the connection between form and inner life through a...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_052",
@@ -1360,14 +1410,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "GOTEBORGSVAGEN 10A, BORAS, Sweden",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000T9XlIAK",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "-We look forward to creating many wonderful moments and memories together with you — big and small alike....",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_053",
@@ -1386,14 +1437,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "ZA LA GARRONNETTE, SAINTE MAXIME, France",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000TyIYIA0",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from France.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_054",
@@ -1412,14 +1464,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "BEIM NEUEN DAMM 28, LILIENTHAL, Germany",
     "fair_event": "Milano Home 2027",
     "hall_booth": "Hall 6 - a4bTk000000Zf6jIAC",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Germany.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_055",
@@ -1438,14 +1491,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "VIA RIO CERBIANO 20, FIORENTINO, San Marino",
     "fair_event": "Milano Home 2027",
     "hall_booth": "Hall 6 - a4bTk000000WF5ZIAW",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "P. & G. SRL, based in the Republic of San Marino, specializes in the wholesale distribution of historical weapon replicas, swords, katanas, daggers, medieval, fantasy and collectible items. Its extens...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_056",
@@ -1458,20 +1512,21 @@ export const INITIAL_EVENT_PARTNERS = [
     "agency_type_label": "🇪🇸 Exhibiting Team · Spain",
     "contact_person": "Trade Fair Desk",
     "contact_role": "Trade Fair Logistics / Stand Director",
-    "email": "",
+    "email": "info@pritech.eu",
     "phone": "",
-    "website": "",
+    "website": "https://www.pritech.eu",
     "base_city": "CALLE VOLTA, GETAFE, Spain",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000WVwjIAG",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
-    "is_enriched": false,
+    "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_057",
@@ -1490,14 +1545,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "CALLE ZURBANO 66, MADRID, Spain",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000ToxVIAS",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "With more than 10 years of experience in the industry, we are importers, manufacturers, and wholesale distributors of costumes and accessories for all types of parties: Carnival, Halloween, Christmas,...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_058",
@@ -1516,14 +1572,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "OTTO-HAHN-STR 36, DREIEICH, Germany",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000ZcvFIAS",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Germany.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_059",
@@ -1542,14 +1599,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "VIA DEGLI ANGARIARI 8, ROVERETA DI FALCIANO, San Marino",
     "fair_event": "Milano Home 2027",
     "hall_booth": "Hall 6 - a4bTk000000UqfVIAS",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": false,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Scopri il nostro vasto assortimento di peluche, giocattoli e articoli da regalo. Offriamo tutti i brand più iconici e continuiamo ad arricchire la nostra vetrina con novità esclusive....",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_060",
@@ -1568,14 +1626,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "VIA FOSSO DELLA RUPE 20, FIORENTINO, San Marino",
     "fair_event": "Milano Home 2027",
     "hall_booth": "Hall 6 - a4bTk000000WMILIA4",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from San Marino.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_061",
@@ -1594,14 +1653,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "HAVNEGADE 100 E, ODENSE C, Denmark",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000T6ejIAC",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Denmark.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_062",
@@ -1614,20 +1674,21 @@ export const INITIAL_EVENT_PARTNERS = [
     "agency_type_label": "🇧🇬 Exhibiting Team · Bulgaria",
     "contact_person": "Trade Fair Desk",
     "contact_role": "Trade Fair Logistics / Stand Director",
-    "email": "",
+    "email": "eu@robotime.com",
     "phone": "0086 18260108612",
-    "website": "http://www.robotime.eu/",
+    "website": "https://www.robotime.eu",
     "base_city": "KOSTANTIN SHTARKELOV 12, SOFIA, Bulgaria",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000T6IAIA0",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
-    "is_enriched": false,
+    "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "-...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_063",
@@ -1646,14 +1707,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "50 LA SANGLE, NORT-SUR-ERDRE, France",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000Tdh7IAC",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "For over 50 years, Moulin Roty has been creating toys designed in France to accompany childhood, imbued with tenderness, poetry and craftsmanship....",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_064",
@@ -1672,14 +1734,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "VELDKANT 21, ANTWERPEN, Belgium",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000ZZKfIAO",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 95,
     "priority_tier": "Tier 1 (Luxury)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Serax is a Belgian design brand, creating contemporary homeware n collaboration with leading international designers and makers. From dinnerware, home accessories, lighting, pottery and furniture, the...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_065",
@@ -1698,14 +1761,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "PI I MARGALL 98-100, ESC B, 5-1, BARCELONA, Spain",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000VOajIAG",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_066",
@@ -1724,14 +1788,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "Langøvej 7, Vordingborg, Denmark",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000Tx38IAC",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Denmark.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_067",
@@ -1750,14 +1815,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "114 ROUTE DE PERNIN, NEYDENS, France",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000TxzBIAS",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from France.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_068",
@@ -1776,14 +1842,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "BUILDING 1, DONGHUAN BUILDING 2-6 FLOORS, JIANGSHU, China",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000ZkUbIAK",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from China.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_069",
@@ -1802,14 +1869,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "VADENSJOVAGEN 302, LANDSKRONA, Sweden",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000ZZqvIAG",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Sweden.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_070",
@@ -1828,14 +1896,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "CALLE ROBLE 114, SEGOVIA, VALVERDE DEL MAJANO, Spain",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000ZwdpIAC",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_071",
@@ -1854,14 +1923,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "HOGE MAUW 1040, ARENDONK ANVERSA, Belgium",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000WE1RIAW",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Timstor has been a leading Christmas decorations wholesale specialist for over 30 years. \n Our villages are still of the utmost importance, but more and more new product groups are being added to our ...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_072",
@@ -1880,14 +1950,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "BOULEVARD CLEMENCEAU 4 BIS, SAINT-TROPEZ, France",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000Ts0DIAS",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": false,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from France.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_073",
@@ -1906,14 +1977,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "SAN ROMULO 19 LOCAL 2A, GRANADA, Spain",
     "fair_event": "Milano Home 2027",
     "hall_booth": "Hall 6 - a4bTk000000aNPVIA2",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Empresa dedicada a la elaboración de diseños personalizados para artículos de regalo y souvenirs...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_074",
@@ -1932,14 +2004,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "MARTA-FRAENKEL STR. 1, DRESDEN, Germany",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000ZoJhIAK",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Germany.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_075",
@@ -1958,14 +2031,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "3 FRASER STREET - 03-23A DUO TOWER, SINGAPORE, Singapore",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000VxNBIA0",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "ULULINA is born from the union of creativity and a deep love for animals.\n We focus on the design and production of high-quality silicone pet toys and accessories, defined by original shapes, modern c...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_076",
@@ -1984,14 +2058,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "AV. ESPIOCA, 100, SILLA, Spain",
     "fair_event": "Milano Home 2027",
     "hall_booth": "Hall 6 - a4bTk000000ZcX3IAK",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": false,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "USE FAMILY is a family-run company founded in 1996 in Valencia, Spain. We’ve spent the last 30 years dedicated to creating plastic household products, and we love to think that our items are part of t...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_077",
@@ -2010,14 +2085,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "EUROLAAN 4, TEMSE, Belgium",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000YwSzIAK",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 95,
     "priority_tier": "Tier 1 (Luxury)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Belgium.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_078",
@@ -2036,14 +2112,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "CARRETERA BILBAO-GALDACANO 32, BILBAO, Spain",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000VS6TIAW",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 95,
     "priority_tier": "Tier 1 (Luxury)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_079",
@@ -2062,14 +2139,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "SKÄLBYVÄGEN 21 BV, JÄRFÄLLA, Sweden",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000ZO5tIAG",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Sweden.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_080",
@@ -2088,14 +2166,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "FELDSTIEGE 60, MUENSTER, Germany",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000TAs1IAG",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 95,
     "priority_tier": "Tier 1 (Luxury)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "WERNS® is an award-winning German design brand founded by the designer David Voß and designer & architect Alexandra Gördes in 2021. The name WERNS is based on the nickname of David’s father Werner, wh...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_081",
@@ -2114,14 +2193,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "WIDA IMPORT  66 AVENUE DES CHAMPS ELYSÉES, PARIS, France",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000TvpKIAS",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from France.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_082",
@@ -2140,14 +2220,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "ANGELHOMSVAGEN 263, BASTAD, Sweden",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000WQLxIAO",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from Sweden.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_083",
@@ -2166,14 +2247,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "UNIT 6 STATION ROAD, BRIGG, United Kingdom of Great Britain and Northern Ireland",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000T5ltIAC",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Inspired by a love for wildlife, craftsmanship, and sustainability, Wrendale Designs creates award-winning greeting cards, stationery and gifts, featuring artist Hannah Dale's characterful watercolour...",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   },
   {
     "id": "exhibitor_mhome_084",
@@ -2192,14 +2274,15 @@ export const INITIAL_EVENT_PARTNERS = [
     "base_city": "RUE RADIO LONDRES, BEGLES GIRONDE, France",
     "fair_event": "Milano Home 2027",
     "hall_booth": "a4bTk000000TvirIAC",
-    "status": "TO_REVIEW",
+    "status": "WANT_TO_CONTACT",
     "relevance_score": 85,
     "priority_tier": "Tier 2 (Standard)",
     "is_enriched": true,
     "recommended_vehicle": "Mercedes-Benz V-Class Extra-Long",
     "notes": "Verified Fiera Milano foreign exhibiting team from France.",
     "created_at": "2026-11-03T16:00:00.000Z",
-    "updated_at": "2026-11-03T16:00:00.000Z"
+    "updated_at": "2026-11-03T16:00:00.000Z",
+    "sender_email": "igor@b2b-dorogo.it"
   }
 ];
 

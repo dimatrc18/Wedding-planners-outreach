@@ -211,32 +211,26 @@ export async function render(el) {
 
       <!-- Main Data Table (Stripe Sail) -->
       <div class="sail-card" style="padding:0;overflow:hidden">
-        <div class="sail-table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
-          <table class="sail-table" style="width:100%;min-width:1180px;border-collapse:collapse">
+        <div class="sail-table-wrap" style="overflow-x:hidden">
+          <table class="sail-table" style="table-layout:fixed;width:100%;border-collapse:collapse">
             <thead>
               <tr>
-                <th style="width:17%;min-width:175px">
+                <th style="width:23%">
                   <div class="sail-th-title">Exhibitor &amp; Website</div>
                 </th>
-                <th style="width:12%;min-width:120px">
-                  <div class="sail-th-title">Origin &amp; Country</div>
+                <th style="width:16%">
+                  <div class="sail-th-title">Origin &amp; Pavilion</div>
                 </th>
-                <th style="width:17%;min-width:170px">
+                <th style="width:22%">
                   <div class="sail-th-title">Trade Contact &amp; Email</div>
                 </th>
-                <th style="width:8%;min-width:85px">
-                  <div class="sail-th-title">Stand</div>
+                <th style="width:17%">
+                  <div class="sail-th-title">Outreach &amp; Schedule</div>
                 </th>
-                <th style="width:12%;min-width:125px">
-                  <div class="sail-th-title">Outreach Status</div>
+                <th style="width:10%">
+                  <div class="sail-th-title">Sender</div>
                 </th>
-                <th style="width:12%;min-width:145px">
-                  <div class="sail-th-title">Sender Account</div>
-                </th>
-                <th style="width:12%;min-width:145px">
-                  <div class="sail-th-title">Scheduled Window</div>
-                </th>
-                <th style="width:10%;min-width:120px;text-align:right">
+                <th style="width:12%;text-align:right">
                   <div class="sail-th-title">Score / Action</div>
                 </th>
               </tr>
@@ -244,7 +238,7 @@ export async function render(el) {
             <tbody>
               ${filtered.length === 0 ? `
                 <tr>
-                  <td colspan="8" style="padding:48px 16px;text-align:center;color:var(--sail-muted)">
+                  <td colspan="6" style="padding:48px 16px;text-align:center;color:var(--sail-muted)">
                     No exhibiting teams match your active filters. Click <strong>+ Add Exhibiting Team</strong> to create one.
                   </td>
                 </tr>
@@ -274,112 +268,88 @@ function renderAgencyRow(p, readyIdToIndex) {
 
   return `
     <tr>
-      <td>
+      <!-- 1. Exhibitor & Website -->
+      <td style="padding:9px 10px;vertical-align:middle;overflow:hidden">
         <div style="font-weight:600;font-size:13px;color:var(--sail-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(p.name)}">
           ${esc(p.name)}
         </div>
         ${p.website ? `
           <div style="margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-            <a href="${attr(p.website)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--sail-primary);text-decoration:none;display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis" title="Visit ${attr(p.website)}">
+            <a href="${attr(p.website)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--sail-primary);text-decoration:none" title="Visit ${attr(p.website)}">
               🌐 ${esc(webClean)} ↗
             </a>
           </div>
         ` : '<div style="font-size:11px;color:var(--sail-muted);margin-top:2px">Milano Home Exhibitor</div>'}
       </td>
 
-      <td>
-        ${renderCountryPill(p)}
+      <!-- 2. Origin & Pavilion -->
+      <td style="padding:9px 10px;vertical-align:middle;overflow:hidden">
+        <div>${renderCountryPill(p)}</div>
+        <div style="font-size:10.5px;color:var(--sail-muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(p.hall_booth || 'Fiera Milano Rho')}">
+          📍 ${esc(p.hall_booth || 'Pavilion Assigned')}
+        </div>
       </td>
 
-      <td>
+      <!-- 3. Trade Contact & Email -->
+      <td style="padding:9px 10px;vertical-align:middle;overflow:hidden">
         <div style="font-size:12px;font-weight:500;color:var(--sail-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(p.contact_person || 'Trade Sales Desk')}">
           ${esc(p.contact_person || 'Trade Sales Desk')}
         </div>
         ${p.email ? `
           <div style="margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-            <a href="mailto:${attr(p.email)}" style="font-size:11.5px;color:var(--sail-primary);font-weight:500;text-decoration:none;display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis" title="Email: ${attr(p.email)}">
+            <a href="mailto:${attr(p.email)}" style="font-size:11px;color:var(--sail-primary);font-weight:500;text-decoration:none" title="Email: ${attr(p.email)}">
               ✉️ ${esc(p.email)}
             </a>
           </div>
         ` : `<span class="sail-pill missing" style="font-size:10px">Pending enrichment</span>`}
       </td>
 
-      <td>
-        <div style="font-size:12px;font-weight:600;color:var(--sail-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${attr(p.hall_booth || 'Fiera Milano Rho')}">
-          📍 ${esc(p.hall_booth || 'Pavilion Assigned')}
-        </div>
-        <div style="font-size:10.5px;color:var(--sail-muted);margin-top:2px">
-          Fiera Milano Rho
-        </div>
-      </td>
-
-      <td>
-        <select class="sail-status-select" data-id="${attr(p.id)}" style="height:28px;line-height:26px;padding:2px 6px;border-radius:6px;font-size:11.5px;width:100%;max-width:138px;box-sizing:border-box;cursor:pointer;outline:none;${getEventStatusBadgeStyle(p.status)}">
+      <!-- 4. Outreach Status & Schedule -->
+      <td style="padding:9px 10px;vertical-align:middle;overflow:hidden">
+        <select class="sail-status-select" data-id="${attr(p.id)}" style="height:26px;line-height:24px;padding:2px 6px;border-radius:5px;font-size:11px;width:100%;max-width:130px;box-sizing:border-box;cursor:pointer;outline:none;${getEventStatusBadgeStyle(p.status)}">
           <option value="TO_REVIEW" ${p.status === 'TO_REVIEW' ? 'selected' : ''} style="background:#FFF;color:#0A2540;font-weight:normal">To Review</option>
           <option value="WANT_TO_CONTACT" ${p.status === 'WANT_TO_CONTACT' ? 'selected' : ''} style="background:#FFF;color:#0A2540;font-weight:normal">Ready to Contact</option>
           <option value="CONTACTED" ${p.status === 'CONTACTED' ? 'selected' : ''} style="background:#FFF;color:#0A2540;font-weight:normal">Contacted</option>
           <option value="APPROVED_PARTNER" ${p.status === 'APPROVED_PARTNER' ? 'selected' : ''} style="background:#FFF;color:#0A2540;font-weight:normal">Partner Won</option>
           <option value="NOT_RELEVANT" ${p.status === 'NOT_RELEVANT' ? 'selected' : ''} style="background:#FFF;color:#0A2540;font-weight:normal">Archive / Dismiss</option>
         </select>
+        <div style="margin-top:3px">
+          ${p.status === 'CONTACTED' ? `
+            <div style="font-size:10px;color:#059669;font-weight:600">✅ Dispatched ${p.sent_at ? fmtDateTime(p.sent_at) : ''}</div>
+          ` : (p.status === 'WANT_TO_CONTACT' ? `
+            <div style="display:inline-flex;align-items:center;gap:3px;font-size:10px;color:#1D4ED8;background:#DBEAFE;border:1px solid #BFDBFE;border-radius:4px;padding:1px 5px;margin-top:1px">
+              <strong>Batch #${batchNum}</strong> (Slot ${slotInBatch}/6) · 10:00 CET
+            </div>
+          ` : (p.status === 'TO_REVIEW' ? `
+            <div style="font-size:10px;color:#92400E;background:#FEF3C7;border:1px solid #FDE68A;border-radius:4px;padding:1px 5px;display:inline-block;margin-top:1px">
+              ⏸️ Held in Review (Safe)
+            </div>
+          ` : (p.status === 'APPROVED_PARTNER' ? `
+            <div style="font-size:10px;color:#059669;font-weight:600">🤝 Partner Won</div>
+          ` : `
+            <div style="font-size:10px;color:var(--sail-muted)">🚫 Dismissed</div>
+          `)))}
+        </div>
       </td>
 
-      <td style="padding:10px 12px;vertical-align:middle;white-space:nowrap">
-        ${p.sender_email ? `
-          <div style="display:inline-flex;align-items:center;gap:4px;background:#EDE9FE;border:1px solid #DDD6FE;border-radius:5px;padding:2px 7px" title="Dispatched from ${esc(p.sender_email)}">
-            <span style="font-weight:700;font-size:11px;color:#5B21B6">${p.sender_email.includes('igor') ? '👤 Igor' : '👤 Dmitri'}</span>
-            <span style="font-size:10px;color:#6D28D9;opacity:0.85">${esc(p.sender_email)}</span>
-          </div>
-        ` : (p.status === 'CONTACTED' ? `
-          <div style="display:inline-flex;align-items:center;gap:4px;background:#EDE9FE;border:1px solid #DDD6FE;border-radius:5px;padding:2px 7px" title="Dispatched via dedicated event mailbox">
-            <span style="font-weight:700;font-size:11px;color:#5B21B6">👤 Igor</span>
-            <span style="font-size:10px;color:#6D28D9;opacity:0.85">igor@b2b-dorogo.it</span>
-          </div>
-        ` : `
-          <div style="display:inline-flex;align-items:center;gap:4px;background:#F5F3FF;border:1px solid #DDD6FE;border-radius:5px;padding:2px 7px" title="Dedicated trade fair sender: igor@b2b-dorogo.it">
-            <span style="font-weight:700;font-size:11px;color:#6D28D9">👤 Igor</span>
-            <span style="font-size:9.5px;color:#7C3AED;opacity:0.85">igor@b2b-dorogo.it</span>
-          </div>
-        `)}
+      <!-- 5. Sender Account -->
+      <td style="padding:9px 10px;vertical-align:middle;overflow:hidden">
+        <div style="display:inline-flex;flex-direction:column;gap:1px;background:#F5F3FF;border:1px solid #DDD6FE;border-radius:5px;padding:2px 6px">
+          <span style="font-weight:700;font-size:10.5px;color:#6D28D9">${p.sender_email && p.sender_email.includes('dmitri') ? '👤 Dmitri' : '👤 Igor'}</span>
+          <span style="font-size:9.5px;color:#7C3AED;opacity:0.85">${p.sender_email && p.sender_email.includes('dmitri') ? 'dorogo.eu' : 'b2b-dorogo.it'}</span>
+        </div>
       </td>
 
-      <td style="padding:10px 12px;vertical-align:middle;white-space:nowrap">
-        ${p.status === 'CONTACTED' ? `
-          <div style="display:inline-flex;flex-direction:column;gap:1px">
-            <span class="sail-pill ok" style="font-size:9.5px;font-weight:700">✅ Dispatched</span>
-            <span style="font-size:10px;color:var(--sail-muted)">${p.sent_at ? fmtDateTime(p.sent_at) : 'Sent'}</span>
-          </div>
-        ` : (p.status === 'WANT_TO_CONTACT' ? `
-          <div style="display:inline-flex;flex-direction:column;gap:2px">
-            <span style="font-size:10px;font-weight:700;color:#1D4ED8;background:#DBEAFE;border:1px solid #93C5FD;border-radius:4px;padding:1px 6px;white-space:nowrap">
-              📅 Batch #${batchNum} · Slot ${slotInBatch}/6
-            </span>
-            <span style="font-size:9.5px;color:#475569;white-space:nowrap">
-              🕒 10:00 CET (Morning Wave)
-            </span>
-          </div>
-        ` : (p.status === 'TO_REVIEW' ? `
-          <div style="display:inline-flex;flex-direction:column;gap:1px">
-            <span style="font-size:10px;color:#92400E;background:#FEF3C7;border:1px solid #FDE68A;border-radius:4px;padding:1px 6px;white-space:nowrap">
-              ⏸️ Held in Review
-            </span>
-            <span style="font-size:9.5px;color:var(--sail-muted);white-space:nowrap">Zero sends (Safe)</span>
-          </div>
-        ` : (p.status === 'APPROVED_PARTNER' ? `
-          <span class="sail-pill ok" style="font-size:10px;font-weight:700">🤝 Partner Won</span>
-        ` : `
-          <span style="font-size:10px;color:var(--sail-muted);background:#F1F5F9;padding:2px 6px;border-radius:4px">🚫 Dismissed</span>
-        `)))}
-      </td>
-
-      <td style="text-align:right;padding:10px 12px;vertical-align:middle;white-space:nowrap">
-        <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px;white-space:nowrap">
-          <span class="sail-pill ok" style="font-size:10.5px;font-weight:700;padding:2px 5px" title="Relevance Score: ${p.relevance_score || 85}/100">
+      <!-- 6. Score & Action -->
+      <td style="text-align:right;padding:9px 10px;vertical-align:middle;overflow:hidden">
+        <div style="display:inline-flex;align-items:center;justify-content:flex-end;gap:4px">
+          <span class="sail-pill ok" style="font-size:10px;font-weight:700;padding:2px 4px" title="Score: ${p.relevance_score || 85}">
             ${p.relevance_score || 85}
           </span>
-          <button class="sail-btn default btn-research-event-partner" data-id="${attr(p.id)}" style="font-size:10.5px;padding:2px 6px;height:24px;line-height:1;color:#1D4ED8;background:#EFF6FF;border:1px solid #BFDBFE" title="Auto-research live website &amp; trade contacts">
+          <button class="sail-btn default btn-research-event-partner" data-id="${attr(p.id)}" style="font-size:10px;padding:2px 5px;height:24px;line-height:1;color:#1D4ED8;background:#EFF6FF;border:1px solid #BFDBFE" title="Auto-research website &amp; email">
             🔍 Research
           </button>
-          <button class="sail-btn default btn-edit-event-agency" data-id="${attr(p.id)}" style="font-size:10.5px;padding:2px 6px;height:24px;line-height:1" title="Edit Exhibiting Team">
+          <button class="sail-btn default btn-edit-event-agency" data-id="${attr(p.id)}" style="font-size:10px;padding:2px 5px;height:24px;line-height:1" title="Edit">
             Edit
           </button>
         </div>
