@@ -3,7 +3,7 @@
 // Stripe Sail Design System: responsive data table, KPI stats, zero horizontal scroll.
 
 import { S, updateEventPartner, addEventPartner, removeEventPartner } from '../store.js?v=20261103_v7';
-import { esc, attr, icon, toast, dialog, confirmDialog } from '../ui.js';
+import { esc, attr, icon, toast, fmtDateTime, dialog, confirmDialog } from '../ui.js';
 import { EVENT_AGENCY_TYPES, loadStoredEventPartners } from '../event_planners_data.js?v=20261103_v7';
 
 let activeTypeFilter = 'all'; // all | tier1 | uk_north | dach_benelux | france_spain
@@ -62,6 +62,10 @@ export async function render(el) {
   const toReviewCount = partners.filter((p) => p.status === 'TO_REVIEW').length;
   const readyCount = partners.filter((p) => p.status === 'WANT_TO_CONTACT').length;
   const contactedCount = partners.filter((p) => p.status === 'CONTACTED' || p.status === 'APPROVED_PARTNER').length;
+
+  const readyPartnersList = partners.filter((p) => p.status === 'WANT_TO_CONTACT');
+  const readyIdToIndex = new Map();
+  readyPartnersList.forEach((p, idx) => readyIdToIndex.set(p.id, idx));
 
   const filtered = partners.filter((p) => {
     if (activeTypeFilter === 'tier1' && !p.is_enriched && p.agency_type !== 'tier1_luxury') return false;
@@ -180,31 +184,59 @@ export async function render(el) {
         </div>
       </div>
 
+      <!-- Outreach Schedule & Account Isolation Matrix -->
+      <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:10px;height:10px;border-radius:50%;background:#8B5CF6"></div>
+            <div>
+              <div style="font-size:11.5px;font-weight:700;color:#18181B">🏛️ Igor (igor@b2b-dorogo.it) · Milano Home Fair</div>
+              <div style="font-size:10.5px;color:#71717A">Schedule: <strong>Morning Wave 10:00 – 11:30 CET</strong> · Cap: <strong>6/day</strong> · Spacing: <strong>8-15 min</strong></div>
+            </div>
+          </div>
+          <div style="height:24px;width:1px;background:#CBD5E1"></div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:10px;height:10px;border-radius:50%;background:#3B82F6"></div>
+            <div>
+              <div style="font-size:11.5px;font-weight:700;color:#18181B">💍 Dmitri (dmitri@dorogo.eu) · Wedding &amp; Bus Desk</div>
+              <div style="font-size:10.5px;color:#71717A">Schedule: <strong>Waves 12:00, 15:00, 17:00 CET</strong> · Cap: <strong>24/day</strong> · Spacing: <strong>5-12 min</strong></div>
+            </div>
+          </div>
+        </div>
+        <div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#065F46;display:flex;align-items:center;gap:5px">
+          <span>🛡️ Zero Time Overlap</span>
+          <span style="font-weight:normal;color:#047857">· 100% Domain &amp; Rate-Limit Isolated</span>
+        </div>
+      </div>
+
       <!-- Main Data Table (Stripe Sail) -->
       <div class="sail-card" style="padding:0;overflow:hidden">
         <div class="sail-table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
-          <table class="sail-table" style="table-layout:fixed;width:100%;min-width:760px">
+          <table class="sail-table" style="width:100%;min-width:1180px;border-collapse:collapse">
             <thead>
               <tr>
-                <th style="width:24%;min-width:160px">
+                <th style="width:17%;min-width:175px">
                   <div class="sail-th-title">Exhibitor &amp; Website</div>
                 </th>
-                <th style="width:18%;min-width:130px">
+                <th style="width:12%;min-width:120px">
                   <div class="sail-th-title">Origin &amp; Country</div>
                 </th>
-                <th style="width:23%;min-width:160px">
+                <th style="width:17%;min-width:170px">
                   <div class="sail-th-title">Trade Contact &amp; Email</div>
                 </th>
-                <th style="width:10%;min-width:80px">
-                  <div class="sail-th-title">Stand / Pavilion</div>
+                <th style="width:8%;min-width:85px">
+                  <div class="sail-th-title">Stand</div>
                 </th>
-                <th style="width:13%;min-width:110px">
+                <th style="width:12%;min-width:125px">
                   <div class="sail-th-title">Outreach Status</div>
                 </th>
-                <th style="width:14%;min-width:130px">
-                  <div class="sail-th-title">Sender Mailbox</div>
+                <th style="width:12%;min-width:145px">
+                  <div class="sail-th-title">Sender Account</div>
                 </th>
-                <th style="width:12%;min-width:120px;text-align:right">
+                <th style="width:12%;min-width:145px">
+                  <div class="sail-th-title">Scheduled Window</div>
+                </th>
+                <th style="width:10%;min-width:120px;text-align:right">
                   <div class="sail-th-title">Score / Action</div>
                 </th>
               </tr>
@@ -212,11 +244,11 @@ export async function render(el) {
             <tbody>
               ${filtered.length === 0 ? `
                 <tr>
-                  <td colspan="7" style="padding:48px 16px;text-align:center;color:var(--sail-muted)">
+                  <td colspan="8" style="padding:48px 16px;text-align:center;color:var(--sail-muted)">
                     No exhibiting teams match your active filters. Click <strong>+ Add Exhibiting Team</strong> to create one.
                   </td>
                 </tr>
-              ` : filtered.map((p) => renderAgencyRow(p)).join('')}
+              ` : filtered.map((p) => renderAgencyRow(p, readyIdToIndex)).join('')}
             </tbody>
           </table>
         </div>
@@ -233,9 +265,12 @@ export async function render(el) {
   attachEventListeners(el);
 }
 
-function renderAgencyRow(p) {
+function renderAgencyRow(p, readyIdToIndex) {
   const cfg = STATUS_CONFIG[p.status] || STATUS_CONFIG.TO_REVIEW;
   const webClean = (p.website || '').replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0];
+  const qIdx = readyIdToIndex && readyIdToIndex.has(p.id) ? readyIdToIndex.get(p.id) : -1;
+  const batchNum = qIdx >= 0 ? Math.floor(qIdx / 6) + 1 : 1;
+  const slotInBatch = qIdx >= 0 ? (qIdx % 6) + 1 : 1;
 
   return `
     <tr>
@@ -288,26 +323,57 @@ function renderAgencyRow(p) {
         </select>
       </td>
 
-      <td>
+      <td style="padding:10px 12px;vertical-align:middle;white-space:nowrap">
         ${p.sender_email ? `
-          <span class="sail-pill ok" style="font-size:10.5px;font-weight:600;display:inline-flex;align-items:center;gap:3px" title="Dispatched from ${esc(p.sender_email)}">
-            ${p.sender_email.includes('igor') ? '👤 Igor' : '👤 Dmitri'}
-            <span style="opacity:0.75">(${esc(p.sender_email)})</span>
-          </span>
+          <div style="display:inline-flex;align-items:center;gap:4px;background:#EDE9FE;border:1px solid #DDD6FE;border-radius:5px;padding:2px 7px" title="Dispatched from ${esc(p.sender_email)}">
+            <span style="font-weight:700;font-size:11px;color:#5B21B6">${p.sender_email.includes('igor') ? '👤 Igor' : '👤 Dmitri'}</span>
+            <span style="font-size:10px;color:#6D28D9;opacity:0.85">${esc(p.sender_email)}</span>
+          </div>
         ` : (p.status === 'CONTACTED' ? `
-          <span class="sail-pill ok" style="font-size:10.5px;font-weight:600" title="Dispatched via dedicated event mailbox">
-            👤 Igor (igor@b2b-dorogo.it)
-          </span>
+          <div style="display:inline-flex;align-items:center;gap:4px;background:#EDE9FE;border:1px solid #DDD6FE;border-radius:5px;padding:2px 7px" title="Dispatched via dedicated event mailbox">
+            <span style="font-weight:700;font-size:11px;color:#5B21B6">👤 Igor</span>
+            <span style="font-size:10px;color:#6D28D9;opacity:0.85">igor@b2b-dorogo.it</span>
+          </div>
         ` : `
-          <span class="sail-pill info" style="font-size:10px;opacity:0.85" title="Designated sender for Milano Home fair outreach">
-            Queued: igor@b2b-dorogo.it
-          </span>
+          <div style="display:inline-flex;align-items:center;gap:4px;background:#F5F3FF;border:1px solid #DDD6FE;border-radius:5px;padding:2px 7px" title="Dedicated trade fair sender: igor@b2b-dorogo.it">
+            <span style="font-weight:700;font-size:11px;color:#6D28D9">👤 Igor</span>
+            <span style="font-size:9.5px;color:#7C3AED;opacity:0.85">igor@b2b-dorogo.it</span>
+          </div>
         `)}
       </td>
 
-      <td style="text-align:right">
+      <td style="padding:10px 12px;vertical-align:middle;white-space:nowrap">
+        ${p.status === 'CONTACTED' ? `
+          <div style="display:inline-flex;flex-direction:column;gap:1px">
+            <span class="sail-pill ok" style="font-size:9.5px;font-weight:700">✅ Dispatched</span>
+            <span style="font-size:10px;color:var(--sail-muted)">${p.sent_at ? fmtDateTime(p.sent_at) : 'Sent'}</span>
+          </div>
+        ` : (p.status === 'WANT_TO_CONTACT' ? `
+          <div style="display:inline-flex;flex-direction:column;gap:2px">
+            <span style="font-size:10px;font-weight:700;color:#1D4ED8;background:#DBEAFE;border:1px solid #93C5FD;border-radius:4px;padding:1px 6px;white-space:nowrap">
+              📅 Batch #${batchNum} · Slot ${slotInBatch}/6
+            </span>
+            <span style="font-size:9.5px;color:#475569;white-space:nowrap">
+              🕒 10:00 CET (Morning Wave)
+            </span>
+          </div>
+        ` : (p.status === 'TO_REVIEW' ? `
+          <div style="display:inline-flex;flex-direction:column;gap:1px">
+            <span style="font-size:10px;color:#92400E;background:#FEF3C7;border:1px solid #FDE68A;border-radius:4px;padding:1px 6px;white-space:nowrap">
+              ⏸️ Held in Review
+            </span>
+            <span style="font-size:9.5px;color:var(--sail-muted);white-space:nowrap">Zero sends (Safe)</span>
+          </div>
+        ` : (p.status === 'APPROVED_PARTNER' ? `
+          <span class="sail-pill ok" style="font-size:10px;font-weight:700">🤝 Partner Won</span>
+        ` : `
+          <span style="font-size:10px;color:var(--sail-muted);background:#F1F5F9;padding:2px 6px;border-radius:4px">🚫 Dismissed</span>
+        `)))}
+      </td>
+
+      <td style="text-align:right;padding:10px 12px;vertical-align:middle;white-space:nowrap">
         <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px;white-space:nowrap">
-          <span class="sail-pill ok" style="font-size:11px;font-weight:700;padding:2px 5px" title="Relevance Score: ${p.relevance_score || 85}/100">
+          <span class="sail-pill ok" style="font-size:10.5px;font-weight:700;padding:2px 5px" title="Relevance Score: ${p.relevance_score || 85}/100">
             ${p.relevance_score || 85}
           </span>
           <button class="sail-btn default btn-research-event-partner" data-id="${attr(p.id)}" style="font-size:10.5px;padding:2px 6px;height:24px;line-height:1;color:#1D4ED8;background:#EFF6FF;border:1px solid #BFDBFE" title="Auto-research live website &amp; trade contacts">
