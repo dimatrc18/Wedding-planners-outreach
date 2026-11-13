@@ -265,6 +265,7 @@ function renderAgencyRow(p, readyIdToIndex) {
   const qIdx = readyIdToIndex && readyIdToIndex.has(p.id) ? readyIdToIndex.get(p.id) : -1;
   const batchNum = qIdx >= 0 ? Math.floor(qIdx / 6) + 1 : 1;
   const slotInBatch = qIdx >= 0 ? (qIdx % 6) + 1 : 1;
+  const isDmitri = p.sender_email && p.sender_email.includes('dmitri');
 
   return `
     <tr>
@@ -317,8 +318,8 @@ function renderAgencyRow(p, readyIdToIndex) {
           ${p.status === 'CONTACTED' ? `
             <div style="font-size:10px;color:#059669;font-weight:600">✅ Dispatched ${p.sent_at ? fmtDateTime(p.sent_at) : ''}</div>
           ` : (p.status === 'WANT_TO_CONTACT' ? `
-            <div style="display:inline-flex;align-items:center;gap:3px;font-size:10px;color:#1D4ED8;background:#DBEAFE;border:1px solid #BFDBFE;border-radius:4px;padding:1px 5px;margin-top:1px">
-              <strong>Batch #${batchNum}</strong> (Slot ${slotInBatch}/6) · 10:00 CET
+            <div style="display:inline-flex;align-items:center;gap:3px;font-size:10px;color:${isDmitri ? '#1E40AF' : '#1D4ED8'};background:${isDmitri ? '#EFF6FF' : '#DBEAFE'};border:1px solid ${isDmitri ? '#BFDBFE' : '#93C5FD'};border-radius:4px;padding:1px 5px;margin-top:1px">
+              <strong>${isDmitri ? 'Dmitri Wave' : 'Igor Wave'}</strong> · ${isDmitri ? '12:00/15:00' : '10:00 CET'}
             </div>
           ` : (p.status === 'TO_REVIEW' ? `
             <div style="font-size:10px;color:#92400E;background:#FEF3C7;border:1px solid #FDE68A;border-radius:4px;padding:1px 5px;display:inline-block;margin-top:1px">
@@ -334,10 +335,10 @@ function renderAgencyRow(p, readyIdToIndex) {
 
       <!-- 5. Sender Account -->
       <td style="padding:9px 10px;vertical-align:middle;overflow:hidden">
-        <div style="display:inline-flex;flex-direction:column;gap:1px;background:#F5F3FF;border:1px solid #DDD6FE;border-radius:5px;padding:2px 6px">
-          <span style="font-weight:700;font-size:10.5px;color:#6D28D9">${p.sender_email && p.sender_email.includes('dmitri') ? '👤 Dmitri' : '👤 Igor'}</span>
-          <span style="font-size:9.5px;color:#7C3AED;opacity:0.85">${p.sender_email && p.sender_email.includes('dmitri') ? 'dorogo.eu' : 'b2b-dorogo.it'}</span>
-        </div>
+        <select class="sail-sender-select" data-id="${attr(p.id)}" style="height:24px;font-size:10px;padding:0 3px;border:1px solid ${isDmitri ? '#BFDBFE' : '#DDD6FE'};border-radius:4px;background:${isDmitri ? '#EFF6FF' : '#F5F3FF'};color:${isDmitri ? '#1E40AF' : '#5B21B6'};font-weight:600;cursor:pointer;width:100%;max-width:105px;box-sizing:border-box">
+          <option value="dmitri@dorogo.eu" ${isDmitri ? 'selected' : ''}>👤 Dmitri</option>
+          <option value="igor@b2b-dorogo.it" ${!isDmitri ? 'selected' : ''}>👤 Igor</option>
+        </select>
       </td>
 
       <!-- 6. Score & Action -->
@@ -448,6 +449,21 @@ function attachEventListeners(el) {
       } catch (err) {
         toast(`Failed to update status: ${err.message}`, 'error');
         sel.setAttribute('style', prevStyle);
+      }
+    });
+  });
+
+  // Sender dropdown changes on table rows
+  el.querySelectorAll('.sail-sender-select').forEach((sel) => {
+    sel.addEventListener('change', async (e) => {
+      const id = sel.dataset.id;
+      const newSender = sel.value;
+      try {
+        await updateEventPartner(id, { sender_email: newSender });
+        toast(`Sender updated to ${newSender.includes('dmitri') ? 'Dmitri (dorogo.eu)' : 'Igor (b2b-dorogo.it)'}`);
+        render(el);
+      } catch (err) {
+        toast(`Failed to update sender: ${err.message}`, 'error');
       }
     });
   });

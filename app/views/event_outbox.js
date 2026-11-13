@@ -237,7 +237,22 @@ export async function render(el) {
 }
 
 
-function renderSignatureHtml() {
+function renderSignatureHtml(senderEmail = 'igor@b2b-dorogo.it') {
+  if (senderEmail && senderEmail.includes('dmitri')) {
+    return `
+      <div style="margin-top:14px;padding-top:10px;border-top:1px solid #E2E8F0;font-size:11px;color:#71717A;font-family:-apple-system, BlinkMacSystemFont, sans-serif">
+        <div style="font-weight:600;color:#18181B;font-size:12.5px">Dmitri</div>
+        <div style="color:#71717A;font-size:11px;margin-top:1px">Executive Director</div>
+        <div style="font-family:Cinzel, Georgia, serif;font-size:13px;letter-spacing:2.5px;color:#18181B;margin-top:6px;font-weight:500">DOROGO</div>
+        <div style="font-size:9px;letter-spacing:1px;color:#71717A;text-transform:uppercase">PRIVATE TRANSPORTATION</div>
+        <div style="margin-top:6px;font-size:11px;display:flex;flex-direction:column;gap:2px">
+          <div><span style="color:#71717A">WhatsApp:</span> <a href="https://wa.me/393780940554" style="color:#18181B;text-decoration:none !important;font-weight:500">+39 378 094 0554</a></div>
+          <div><span style="color:#71717A">Email:</span> <a href="mailto:dmitri@dorogo.eu" style="color:#18181B;text-decoration:none !important">dmitri@dorogo.eu</a></div>
+          <div><span style="color:#71717A">Web:</span> <a href="https://dorogo.eu/" target="_blank" rel="noopener noreferrer" style="color:#18181B;text-decoration:none !important">dorogo.eu</a></div>
+        </div>
+      </div>
+    `;
+  }
   return `
     <div style="margin-top:14px;padding-top:10px;border-top:1px solid #E2E8F0;font-size:11px;color:#71717A;font-family:-apple-system, BlinkMacSystemFont, sans-serif">
       <div style="font-weight:600;color:#18181B;font-size:12.5px">Igor</div>
@@ -410,7 +425,9 @@ function renderQueueView(readyPartners, t1, savedPass) {
                 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
                   <div><strong>To:</strong> ${esc(p.contact_person)} &lt;<span style="color:#2563EB;font-weight:600">${esc(p.email)}</span>&gt;</div>
                   <div style="display:flex;align-items:center;gap:6px">
-                    <span class="sail-badge" style="font-size:10.5px;background:#EDE9FE;color:#5B21B6;border:1px solid #DDD6FE;border-radius:4px;padding:1px 6px">👤 From: igor@b2b-dorogo.it</span>
+                    <span class="sail-badge" style="font-size:10.5px;background:${p.sender_email && p.sender_email.includes('dmitri') ? '#EFF6FF' : '#EDE9FE'};color:${p.sender_email && p.sender_email.includes('dmitri') ? '#1E40AF' : '#5B21B6'};border:1px solid ${p.sender_email && p.sender_email.includes('dmitri') ? '#BFDBFE' : '#DDD6FE'};border-radius:4px;padding:1px 6px">
+                      👤 From: ${esc(p.sender_email || 'igor@b2b-dorogo.it')}
+                    </span>
                     <span class="sail-pill ok" style="font-size:10px">Deliverable</span>
                   </div>
                 </div>
@@ -420,7 +437,7 @@ function renderQueueView(readyPartners, t1, savedPass) {
               <!-- Email Body Preview -->
               <div id="body-preview-${attr(p.id)}" style="font-size:12px;line-height:1.6;color:var(--sail-body);background:#FAFAFA;padding:12px;border-radius:6px;border:1px solid #F1F5F9;max-height:220px;overflow-y:auto">
                 <div style="white-space:pre-wrap">${esc(draft.body)}</div>
-                ${renderSignatureHtml()}
+                ${renderSignatureHtml(p.sender_email)}
               </div>
             </div>
           `;
@@ -895,20 +912,22 @@ async function executeSingleSend(partner, template, btn, rootEl) {
   btn.textContent = 'Sending...';
 
   try {
+    const senderEmail = partner.sender_email || 'igor@b2b-dorogo.it';
+    const senderName = senderEmail.includes('dmitri') ? 'Dmitri' : 'Igor';
     const j = await sendEventEmailViaApi({
       to: partner.email,
       toName: partner.contact_person,
       subject: partner.custom_subject || draft.subject,
       body: partner.custom_body || draft.body,
       hostingerPass: pass,
-      fromEmail: 'igor@b2b-dorogo.it',
-      fromName: 'Igor'
+      fromEmail: senderEmail,
+      fromName: senderName
     });
     if (j.ok) {
       await updateEventPartner(partner.id, {
         status: 'CONTACTED',
         sent_at: new Date().toISOString(),
-        sender_email: 'igor@b2b-dorogo.it',
+        sender_email: senderEmail,
         queue_id: j.queueId || 'OK'
       });
       selectedPartnerIds.delete(partner.id);
@@ -1086,14 +1105,16 @@ function showBatchDispatchModal(targets, template, delayMs, mode = 'now', planne
           appendLog(`🛫 [${currentNum}/${totalNum}] Dispatching to ${partner.contact_person} (${partner.name}) <${partner.email}>...`);
 
           try {
+            const senderEmail = partner.sender_email || 'igor@b2b-dorogo.it';
+            const senderName = senderEmail.includes('dmitri') ? 'Dmitri' : 'Igor';
             const j = await sendEventEmailViaApi({
               to: partner.email,
               toName: partner.contact_person,
               subject: partner.custom_subject || draft.subject,
               body: partner.custom_body || draft.body,
               hostingerPass: pass,
-              fromEmail: 'igor@b2b-dorogo.it',
-              fromName: 'Igor'
+              fromEmail: senderEmail,
+              fromName: senderName
             });
 
             if (j.ok) {
@@ -1102,7 +1123,7 @@ function showBatchDispatchModal(targets, template, delayMs, mode = 'now', planne
               await updateEventPartner(partner.id, {
                 status: 'CONTACTED',
                 sent_at: new Date().toISOString(),
-                sender_email: 'igor@b2b-dorogo.it',
+                sender_email: senderEmail,
                 queue_id: j.queueId || 'OK'
               });
               selectedPartnerIds.delete(partner.id);

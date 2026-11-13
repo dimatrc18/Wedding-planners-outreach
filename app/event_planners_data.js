@@ -4,7 +4,7 @@
 // NO guessed domains, NO fake emails, NO organizer or Italian general agency placeholders.
 // All records arrive in TO_REVIEW status (safe, zero sends until confirmed).
 
-export const EVENT_STORAGE_KEY = 'dorogo_foreign_exhibitors_v4';
+export const EVENT_STORAGE_KEY = 'dorogo_foreign_exhibitors_v5';
 export const EVENT_TEMPLATES_STORAGE_KEY = 'dorogo_event_templates_v2';
 
 export const EVENT_AGENCY_TYPES = [
@@ -42,7 +42,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Addison Ross is a family-owned and run business with a commitment to quality at its core. Each product is designed to give a timeless feel and last a lifetime. The brand’s mission is to help customers...",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_002",
@@ -96,7 +96,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Ame González Papeterie is a Berlin-based stationary brand. My creations are carefully designed by hand with paint, giving them a unique and beautiful quality. I use symbols, but no words to communicat...",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_004",
@@ -150,7 +150,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_006",
@@ -204,7 +204,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Germany.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_008",
@@ -258,7 +258,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_010",
@@ -312,7 +312,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from France.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_012",
@@ -366,7 +366,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_014",
@@ -420,7 +420,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from France.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_016",
@@ -474,7 +474,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from France.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_018",
@@ -528,7 +528,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from China.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_020",
@@ -608,7 +608,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Greece.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_023",
@@ -662,7 +662,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from France.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_025",
@@ -716,7 +716,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from France.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_027",
@@ -770,7 +770,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_029",
@@ -824,7 +824,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Brands provide orientation, create identity and set welcome markers which consumers can trust in the storm of communication experienced in an increasingly digitised world.\n\nThis applies to the GEFU br...",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_031",
@@ -878,7 +878,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "At Gry & Sif, the magic unfolds through our felted creations, handcrafted by skilled Nepalese artisans. We celebrate thoughtful craftsmanship and cherish the unique charm born from the hands of true m...",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_033",
@@ -932,7 +932,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Il marchio Henriette nasce nel 1996 ereditando la decennale tradizione del comparto produttivo di un’azienda sammarinese leader nella decorazione artistica della porcellana.\n Grazie all’esperienza e l...",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_035",
@@ -986,7 +986,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Netherlands.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_037",
@@ -1040,7 +1040,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_039",
@@ -1094,7 +1094,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Poland.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_041",
@@ -1148,7 +1148,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Netherlands.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_043",
@@ -1202,7 +1202,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Sweden.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_045",
@@ -1256,7 +1256,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Looplabb Opens your eyes\n\n Choose your style, choose glasses and open your eyes with Looplabb. Looplabb is an innovative eyewear brand. Specializing in handmade, optician-quality, ready-made reading a...",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_047",
@@ -1310,7 +1310,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Denmark.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_049",
@@ -1364,7 +1364,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Lithuania.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_051",
@@ -1418,7 +1418,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "-We look forward to creating many wonderful moments and memories together with you — big and small alike....",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_053",
@@ -1472,7 +1472,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Germany.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_055",
@@ -1526,7 +1526,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_057",
@@ -1580,7 +1580,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Germany.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_059",
@@ -1634,7 +1634,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from San Marino.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_061",
@@ -1688,7 +1688,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "-...",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_063",
@@ -1742,7 +1742,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Serax is a Belgian design brand, creating contemporary homeware n collaboration with leading international designers and makers. From dinnerware, home accessories, lighting, pottery and furniture, the...",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_065",
@@ -1796,7 +1796,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Denmark.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_067",
@@ -1850,7 +1850,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from China.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_069",
@@ -1904,7 +1904,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_071",
@@ -1958,7 +1958,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from France.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_073",
@@ -2012,7 +2012,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Germany.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_075",
@@ -2066,7 +2066,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "USE FAMILY is a family-run company founded in 1996 in Valencia, Spain. We’ve spent the last 30 years dedicated to creating plastic household products, and we love to think that our items are part of t...",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_077",
@@ -2120,7 +2120,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_079",
@@ -2174,7 +2174,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "WERNS® is an award-winning German design brand founded by the designer David Voß and designer & architect Alexandra Gördes in 2021. The name WERNS is based on the nickname of David’s father Werner, wh...",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_081",
@@ -2228,7 +2228,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Sweden.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_083",
@@ -2282,7 +2282,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from France.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   }
 ];
 
