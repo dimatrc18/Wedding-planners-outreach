@@ -4,7 +4,7 @@
 // NO guessed domains, NO fake emails, NO organizer or Italian general agency placeholders.
 // All records arrive in TO_REVIEW status (safe, zero sends until confirmed).
 
-export const EVENT_STORAGE_KEY = 'dorogo_foreign_exhibitors_v6';
+export const EVENT_STORAGE_KEY = 'dorogo_foreign_exhibitors_v7';
 export const EVENT_TEMPLATES_STORAGE_KEY = 'dorogo_event_templates_v2';
 
 export const EVENT_AGENCY_TYPES = [
@@ -177,7 +177,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_007",
@@ -231,7 +231,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Germany.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_009",
@@ -285,7 +285,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Belgium.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_011",
@@ -393,7 +393,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Netherlands.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_015",
@@ -447,7 +447,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from United Kingdom.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_017",
@@ -581,7 +581,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Denmark.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_022",
@@ -635,7 +635,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_024",
@@ -689,7 +689,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_026",
@@ -743,7 +743,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Spain.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_028",
@@ -797,7 +797,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Gea Barcelona is a leading wholesale supplier in the international distribution of high-quality minerals, crystals, and fossils. From our facilities in Barcelona, we offer an exclusive and carefully c...",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_030",
@@ -851,7 +851,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Germany.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_032",
@@ -905,7 +905,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "HEGA HOGAR: Functional Design for Your Everyday Life\n\n At HEGA HOGAR, we mould plastic with innovation and style to create modern kitchenware, storage and cleaning items that transform your home. Our ...",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_034",
@@ -959,7 +959,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Verified Fiera Milano foreign exhibiting team from Germany.",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_036",
@@ -1013,7 +1013,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "MORE POSSIBILITIES. MORE SHARPNESS.\nThe HORL®2 sharpener offers maximum versatility to satisfy individual requirements. With interchangeable grinding wheels, a 15° grinding angle for filigree and 20° ...",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_038",
@@ -1067,7 +1067,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Imbarro is an unique Dutch brand for interior and fashion accessories. Several times a year and with love and care, Imbarro surprises their clients with new collections of home and fashion accessories...",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_040",
@@ -1175,7 +1175,7 @@ export const INITIAL_EVENT_PARTNERS = [
     "notes": "Kleen-Tex Industries GmbH is a worldwide renowned mat manufacturer and is one of the leading companies in Europe. This leading position has been gained by means of our three plants located in Austria,...",
     "created_at": "2026-11-03T16:00:00.000Z",
     "updated_at": "2026-11-03T16:00:00.000Z",
-    "sender_email": "igor@b2b-dorogo.it"
+    "sender_email": "dmitri@dorogo.eu"
   },
   {
     "id": "exhibitor_mhome_044",

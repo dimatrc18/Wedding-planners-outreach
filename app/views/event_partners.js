@@ -112,7 +112,7 @@ function getExhibitorScheduleDate(partner, dmitriIdx, igorIdx) {
   };
 
   if (isDmitri) {
-    const dayIdx = Math.min(Math.floor(dmitriIdx / 7), sendDays.length - 1);
+    const dayIdx = Math.min(Math.floor(dmitriIdx / 20), sendDays.length - 1);
     const day = sendDays[dayIdx] || sendDays[0];
     const followupDateStr = followupDays[day.label] || 'Tue 24 Nov';
     
@@ -136,7 +136,7 @@ function getExhibitorScheduleDate(partner, dmitriIdx, igorIdx) {
         localNote: '12:00 EST (Wave 1 — Midday Lunch Check)',
         followupDateStr: followupDateStr,
         batchNum: dayIdx + 1,
-        slotInBatch: (dmitriIdx % 7) + 1
+        slotInBatch: (dmitriIdx % 20) + 1
       };
     } else if (c.includes('greece') || c.includes('bulgaria') || c.includes('lithuania')) {
       // EET is CET + 1. To land at targetLocalHour EET, send at targetLocalHour - 1 CET.
@@ -150,10 +150,10 @@ function getExhibitorScheduleDate(partner, dmitriIdx, igorIdx) {
       localNote: `${targetLocalHour}:00 ${tzName} (${waveName})`,
       followupDateStr: followupDateStr,
       batchNum: dayIdx + 1,
-      slotInBatch: (dmitriIdx % 7) + 1
+      slotInBatch: (dmitriIdx % 20) + 1
     };
   } else {
-    const dayIdx = Math.min(Math.floor(igorIdx / 7), sendDays.length - 1);
+    const dayIdx = Math.min(Math.floor(igorIdx / 8), sendDays.length - 1);
     const day = sendDays[dayIdx] || sendDays[0];
     const followupDateStr = followupDays[day.label] || 'Tue 24 Nov';
 
@@ -166,7 +166,7 @@ function getExhibitorScheduleDate(partner, dmitriIdx, igorIdx) {
         localNote: '17:00 Asia (Wave 3 — End-of-Day Review)',
         followupDateStr: followupDateStr,
         batchNum: dayIdx + 1,
-        slotInBatch: (igorIdx % 7) + 1
+        slotInBatch: (igorIdx % 8) + 1
       };
     }
     if (c.includes('japan')) {
@@ -177,7 +177,7 @@ function getExhibitorScheduleDate(partner, dmitriIdx, igorIdx) {
         localNote: '17:00 Tokyo (Wave 3 — End-of-Day Review)',
         followupDateStr: followupDateStr,
         batchNum: dayIdx + 1,
-        slotInBatch: (igorIdx % 7) + 1
+        slotInBatch: (igorIdx % 8) + 1
       };
     }
     if (c.includes('united kingdom') || c.includes('uk') || c.includes('ireland') || c.includes('portugal')) {
@@ -188,7 +188,7 @@ function getExhibitorScheduleDate(partner, dmitriIdx, igorIdx) {
         localNote: '12:00 GMT (Wave 1 — Midday Lunch Check)',
         followupDateStr: followupDateStr,
         batchNum: dayIdx + 1,
-        slotInBatch: (igorIdx % 7) + 1
+        slotInBatch: (igorIdx % 8) + 1
       };
     }
     if (c.includes('greece') || c.includes('bulgaria') || c.includes('lithuania')) {
@@ -199,7 +199,7 @@ function getExhibitorScheduleDate(partner, dmitriIdx, igorIdx) {
         localNote: '12:00 EET (Wave 1 — Midday Lunch Check)',
         followupDateStr: followupDateStr,
         batchNum: dayIdx + 1,
-        slotInBatch: (igorIdx % 7) + 1
+        slotInBatch: (igorIdx % 8) + 1
       };
     }
 
@@ -210,7 +210,7 @@ function getExhibitorScheduleDate(partner, dmitriIdx, igorIdx) {
       localNote: '12:00 CET (Wave 1 — Midday Lunch Check)',
       followupDateStr: followupDateStr,
       batchNum: dayIdx + 1,
-      slotInBatch: (igorIdx % 7) + 1
+      slotInBatch: (igorIdx % 8) + 1
     };
   }
 }
@@ -356,24 +356,24 @@ export async function render(el) {
       <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
         <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
           <div style="display:flex;align-items:center;gap:8px">
-            <div style="width:10px;height:10px;border-radius:50%;background:#8B5CF6"></div>
+            <div style="width:10px;height:10px;border-radius:50%;background:#3B82F6"></div>
             <div>
-              <div style="font-size:11.5px;font-weight:700;color:#18181B">🏛️ Igor (igor@b2b-dorogo.it) · Milano Home Fair</div>
-              <div style="font-size:10.5px;color:#71717A">Schedule: <strong>Tue–Thu · Wave 1 (12:00 Local Lunch Check)</strong> · Cap: <strong>7/day</strong> · Spacing: <strong>8-15 min</strong></div>
+              <div style="font-size:11.5px;font-weight:700;color:#18181B">💍 Dmitri (dmitri@dorogo.eu) · Primary Established Mailbox</div>
+              <div style="font-size:10.5px;color:#71717A">Schedule: <strong>Tue–Thu · Waves 2 &amp; 3 (15:00 &amp; 17:00 Local)</strong> · Cap: <strong>20/day</strong> (58 leads) · Spacing: <strong>5-10 min</strong></div>
             </div>
           </div>
           <div style="height:24px;width:1px;background:#CBD5E1"></div>
           <div style="display:flex;align-items:center;gap:8px">
-            <div style="width:10px;height:10px;border-radius:50%;background:#3B82F6"></div>
+            <div style="width:10px;height:10px;border-radius:50%;background:#8B5CF6"></div>
             <div>
-              <div style="font-size:11.5px;font-weight:700;color:#18181B">💍 Dmitri (dmitri@dorogo.eu) · Wedding &amp; Bus Desk</div>
-              <div style="font-size:10.5px;color:#71717A">Schedule: <strong>Tue–Thu · Waves 2 &amp; 3 (15:00 &amp; 17:00 Local)</strong> · Cap: <strong>7/day</strong> · Spacing: <strong>8-15 min</strong></div>
+              <div style="font-size:11.5px;font-weight:700;color:#18181B">🏛️ Igor (igor@b2b-dorogo.it) · Warm-Up Mailbox</div>
+              <div style="font-size:10.5px;color:#71717A">Schedule: <strong>Tue–Thu · Wave 1 (12:00 Local Lunch Check)</strong> · Cap: <strong>8/day</strong> (25 leads) · Spacing: <strong>10-15 min</strong></div>
             </div>
           </div>
         </div>
         <div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#065F46;display:flex;align-items:center;gap:5px">
           <span>🛡️ 3 Local Waves Only: [12, 15, 17]</span>
-          <span style="font-weight:normal;color:#047857">· Tue–Thu Only · Zero Overlap</span>
+          <span style="font-weight:normal;color:#047857">· ⚡ 28/day (Dmitri 20/day · Igor 8/day) · Tue–Thu Only · Zero Overlap</span>
         </div>
       </div>
 

@@ -196,8 +196,8 @@ test('Milano Home Dual-Sender Distribution & Queue Verification: 83 queued teams
   const dmitriCount = queued.filter((p) => p.sender_email === 'dmitri@dorogo.eu').length;
   const igorCount = queued.filter((p) => p.sender_email === 'igor@b2b-dorogo.it').length;
 
-  assert.equal(dmitriCount, 42, 'Dmitri must have 42 assigned leads');
-  assert.equal(igorCount, 41, 'Igor must have 41 assigned leads');
+  assert.equal(dmitriCount, 58, 'Dmitri must have 58 assigned leads (high-volume established mailbox, 20/day)');
+  assert.equal(igorCount, 25, 'Igor must have 25 assigned leads (warm-up mailbox, 8/day)');
   assert.equal(dmitriCount + igorCount, 83, 'All 83 queued leads must have an assigned sender');
 
   // Verify Asian exhibitors (China, Japan, Singapore) are assigned to Igor morning wave (10:00 CET = 17:00/18:00 Asia)
