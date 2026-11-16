@@ -52,31 +52,41 @@ function renderCountryPill(p) {
   `;
 }
 
-function getCountryLocalTimeNote(country, cetHour) {
-  if (!country) return `${cetHour}:00 local`;
+function getCountryLocalTime(country, cetHour) {
+  if (!country) return { localHour: cetHour, tzName: 'CET', waveLabel: 'Office hours' };
   const c = country.toLowerCase();
-  if (c.includes('united kingdom') || c.includes('uk') || c.includes('ireland')) {
+  if (c.includes('united kingdom') || c.includes('uk') || c.includes('ireland') || c.includes('portugal')) {
     const lH = cetHour - 1;
-    return `${lH}:00 UK (${lH < 12 ? 'Morning' : 'Afternoon'})`;
+    return { localHour: lH, tzName: 'GMT', waveLabel: lH < 12 ? 'Morning opening' : (lH === 12 ? 'Midday wave' : 'Afternoon wave') };
   }
   if (c.includes('china') || c.includes('singapore')) {
-    const lH = cetHour + 7;
-    return `${lH}:00 Asia (Late afternoon)`;
+    const lH = (cetHour + 7) % 24;
+    return { localHour: lH, tzName: 'Asia', waveLabel: 'EOD executive check' };
   }
   if (c.includes('japan')) {
-    const lH = cetHour + 8;
-    return `${lH}:00 Tokyo (EOD check)`;
+    const lH = (cetHour + 8) % 24;
+    return { localHour: lH, tzName: 'Tokyo', waveLabel: 'EOD executive check' };
   }
   if (c.includes('greece') || c.includes('bulgaria') || c.includes('lithuania')) {
     const lH = cetHour + 1;
-    return `${lH}:00 EET (Local morning)`;
+    return { localHour: lH, tzName: 'EET', waveLabel: lH < 12 ? 'Morning opening' : (lH === 12 ? 'Midday wave' : 'Afternoon wave') };
   }
   if (c.includes('united states') || c.includes('usa')) {
     const lH = cetHour - 6;
-    return `${lH}:00 NY (Morning open)`;
+    return { localHour: lH, tzName: 'EST', waveLabel: lH < 12 ? 'Morning opening' : 'Midday wave' };
   }
-  // Continental Europe (CET)
-  return `${cetHour}:00 local (Prime office)`;
+  // Continental Europe (CET, UTC+1)
+  return { 
+    localHour: cetHour, 
+    tzName: 'CET', 
+    waveLabel: cetHour <= 10 ? 'Morning opening' : (cetHour === 12 ? 'Midday wave' : 'Afternoon focus') 
+  };
+}
+
+function getCountryLocalTimeNote(country, cetHour) {
+  const { localHour, tzName, waveLabel } = getCountryLocalTime(country, cetHour);
+  const formattedHour = String(localHour).padStart(2, '0');
+  return `${formattedHour}:00 ${tzName} (${waveLabel})`;
 }
 
 function getExhibitorScheduleDate(partner, dmitriIdx, igorIdx) {
