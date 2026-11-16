@@ -81,18 +81,18 @@ function getCountryLocalTimeNote(country, cetHour) {
 
 function getExhibitorScheduleDate(partner, dmitriIdx, igorIdx) {
   const isDmitri = partner.sender_email && partner.sender_email.includes('dmitri');
+  // Strictly Tuesday to Thursday only (Mondays and Fridays are blocked)
   const sendDays = [
-    { label: 'Mon 16 Nov' },
     { label: 'Tue 17 Nov' },
     { label: 'Wed 18 Nov' },
     { label: 'Thu 19 Nov' },
-    { label: 'Fri 20 Nov' },
-    { label: 'Mon 23 Nov' },
     { label: 'Tue 24 Nov' },
+    { label: 'Wed 25 Nov' },
+    { label: 'Thu 26 Nov' },
   ];
 
   if (isDmitri) {
-    const dayIdx = Math.min(Math.floor(dmitriIdx / 10), sendDays.length - 1);
+    const dayIdx = Math.min(Math.floor(dmitriIdx / 7), sendDays.length - 1);
     const day = sendDays[dayIdx] || sendDays[0];
     const waveHour = (dmitriIdx % 2 === 0) ? 12 : 15;
     const waveTime = `${waveHour}:00 CET`;
@@ -102,10 +102,10 @@ function getExhibitorScheduleDate(partner, dmitriIdx, igorIdx) {
       timeStr: waveTime,
       localNote: localTimeNote,
       batchNum: dayIdx + 1,
-      slotInBatch: (dmitriIdx % 10) + 1
+      slotInBatch: (dmitriIdx % 7) + 1
     };
   } else {
-    const dayIdx = Math.min(Math.floor(igorIdx / 6), sendDays.length - 1);
+    const dayIdx = Math.min(Math.floor(igorIdx / 7), sendDays.length - 1);
     const day = sendDays[dayIdx] || sendDays[0];
     const localTimeNote = getCountryLocalTimeNote(partner.country, 10);
     return {
@@ -113,7 +113,7 @@ function getExhibitorScheduleDate(partner, dmitriIdx, igorIdx) {
       timeStr: '10:00 CET',
       localNote: localTimeNote,
       batchNum: dayIdx + 1,
-      slotInBatch: (igorIdx % 6) + 1
+      slotInBatch: (igorIdx % 7) + 1
     };
   }
 }
@@ -262,7 +262,7 @@ export async function render(el) {
             <div style="width:10px;height:10px;border-radius:50%;background:#8B5CF6"></div>
             <div>
               <div style="font-size:11.5px;font-weight:700;color:#18181B">🏛️ Igor (igor@b2b-dorogo.it) · Milano Home Fair</div>
-              <div style="font-size:10.5px;color:#71717A">Schedule: <strong>Morning Wave 10:00 – 11:30 CET</strong> · Cap: <strong>6/day</strong> · Spacing: <strong>8-15 min</strong></div>
+              <div style="font-size:10.5px;color:#71717A">Schedule: <strong>Tue–Thu · Morning Wave 10:00 – 11:30 CET</strong> · Cap: <strong>7/day</strong> · Spacing: <strong>8-15 min</strong></div>
             </div>
           </div>
           <div style="height:24px;width:1px;background:#CBD5E1"></div>
@@ -270,13 +270,13 @@ export async function render(el) {
             <div style="width:10px;height:10px;border-radius:50%;background:#3B82F6"></div>
             <div>
               <div style="font-size:11.5px;font-weight:700;color:#18181B">💍 Dmitri (dmitri@dorogo.eu) · Wedding &amp; Bus Desk</div>
-              <div style="font-size:10.5px;color:#71717A">Schedule: <strong>Waves 12:00, 15:00, 17:00 CET</strong> · Cap: <strong>24/day</strong> · Spacing: <strong>5-12 min</strong></div>
+              <div style="font-size:10.5px;color:#71717A">Schedule: <strong>Tue–Thu · Waves 12:00 &amp; 15:00 CET</strong> · Cap: <strong>7/day</strong> · Spacing: <strong>8-15 min</strong></div>
             </div>
           </div>
         </div>
         <div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#065F46;display:flex;align-items:center;gap:5px">
-          <span>🛡️ Zero Time Overlap</span>
-          <span style="font-weight:normal;color:#047857">· 100% Domain &amp; Rate-Limit Isolated</span>
+          <span>🛡️ Tue–Thu Window Only</span>
+          <span style="font-weight:normal;color:#047857">· Mondays &amp; Fridays Blocked · Zero Overlap</span>
         </div>
       </div>
 
@@ -321,7 +321,7 @@ export async function render(el) {
 
       <!-- Safety Footer -->
       <div style="font-size:11px;color:var(--sail-muted);display:flex;align-items:center;justify-content:space-between;padding:0 4px">
-        <span>🔒 <strong>Ready in Queue:</strong> 83 verified foreign teams queued (42 Dmitri, 41 Igor). All emails will finish sending by Friday, Nov 20, 2026.</span>
+        <span>🔒 <strong>Tue–Thu Outreach Window:</strong> Strictly Tuesday to Thursday only (Mondays &amp; Fridays blocked). All 83 emails complete by Thu 26 Nov.</span>
         <span>Dedicated Senders: <strong>Dmitri</strong> (<code>dmitri@dorogo.eu</code> · 42 leads) &amp; <strong>Igor</strong> (<code>igor@b2b-dorogo.it</code> · 41 leads)</span>
       </div>
     </div>

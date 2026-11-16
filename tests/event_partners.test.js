@@ -216,3 +216,18 @@ test('Milano Home Dual-Sender Distribution & Queue Verification: 83 queued teams
   const m1 = merged.find((p) => p.id === 'exhibitor_mhome_001');
   assert.equal(m1.status, 'WANT_TO_CONTACT', 'mergeEventRecords must upgrade legacy TO_REVIEW to WANT_TO_CONTACT');
 });
+
+test('Milano Home Outreach Schedule: Strictly limited to Tuesday through Thursday (Mondays and Fridays blocked)', () => {
+  // Check jobs.ts implementation
+  const jobsCode = fs.readFileSync(path.join(rootDir, 'supabase/functions/_shared/jobs.ts'), 'utf8');
+  assert.ok(jobsCode.includes("skipped: 'outside_send_days'"), 'jobs.ts must block sends outside send_days');
+  assert.ok(jobsCode.includes('allowedDays.includes(p.dow)'), 'jobs.ts must check dow against allowedDays');
+
+  // Check event_partners.js implementation
+  const viewCode = fs.readFileSync(path.join(rootDir, 'app/views/event_partners.js'), 'utf8');
+  assert.ok(!viewCode.includes("'Mon 16 Nov'"), 'Mon 16 Nov must NOT be in sendDays');
+  assert.ok(!viewCode.includes("'Fri 20 Nov'"), 'Fri 20 Nov must NOT be in sendDays');
+  assert.ok(!viewCode.includes("'Mon 23 Nov'"), 'Mon 23 Nov must NOT be in sendDays');
+  assert.ok(viewCode.includes("'Tue 17 Nov'"), 'Tue 17 Nov must be in sendDays');
+  assert.ok(viewCode.includes("'Thu 26 Nov'"), 'Thu 26 Nov must be in sendDays');
+});

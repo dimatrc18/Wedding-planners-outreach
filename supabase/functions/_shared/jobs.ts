@@ -643,6 +643,18 @@ export async function sendDueEvents(db: any, settings: any, now = new Date(), { 
     throw new Error('Isolation Violation: Event outreach MUST NOT use primary wedding mailbox (dmitri@dorogo.eu). Set dedicated EVENTS_SMTP_USER.');
   }
 
+  // Strict send window check: Only Tuesday (2), Wednesday (3), Thursday (4)
+  const p = core.localParts(now, settings?.timezone || 'Europe/Rome');
+  const allowedDays = settings?.send_days || [2, 3, 4];
+  if (!onlyEventId && !allowedDays.includes(p.dow)) {
+    const dayNames = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    return {
+      sent: 0,
+      skipped: 'outside_send_days',
+      note: `Event outreach is strictly limited to Tue–Thu (today is ${dayNames[p.dow] || p.dow})`
+    };
+  }
+
   // Check warm-up cap
   const warmupCap = Number(settings?.event_warmup?.daily_cap || 6);
   const todayYmd = core.localDateKey(now, settings?.timezone || 'Europe/Rome');
