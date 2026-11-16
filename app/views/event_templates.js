@@ -97,12 +97,12 @@ export async function render(el) {
             <div><strong>6x higher reply rate</strong> than 200-300 words. Reads as a peer question, not a pitch.</div>
           </div>
           <div style="background:#FFF;padding:10px 12px;border-radius:6px;border:1px solid var(--sail-line)">
-            <div style="font-weight:700;color:#0A2540;margin-bottom:3px">📅 Send: Tue &amp; Wed</div>
-            <div><strong>Wed 79.4% / Tue 78.3%</strong>. Thu &amp; Fri under 70%. Best slots: <strong>12pm, 3pm, 5pm</strong>.</div>
+            <div style="font-weight:700;color:#0A2540;margin-bottom:3px">📅 Send Window: Tue–Thu Only</div>
+            <div>Strictly Tue, Wed &amp; Thu (Mondays, Fridays &amp; weekends blocked for both T1 &amp; follow-ups).</div>
           </div>
           <div style="background:#FFF;padding:10px 12px;border-radius:6px;border:1px solid var(--sail-line)">
-            <div style="font-weight:700;color:#0A2540;margin-bottom:3px">🔁 1 Follow-Up (+60% Lift)</div>
-            <div>One follow-up lifts replies 60%+. Max 2 cold touches (stops unsubscribe surge).</div>
+            <div style="font-weight:700;color:#0A2540;margin-bottom:3px">🕒 3 Local Waves: [12, 15, 17]</div>
+            <div>Both T1 and follow-up deliver at strictly <strong>12:00, 15:00, or 17:00 local time</strong> (+60% reply lift).</div>
           </div>
         </div>
       </div>

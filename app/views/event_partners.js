@@ -102,10 +102,19 @@ function getExhibitorScheduleDate(partner, dmitriIdx, igorIdx) {
   ];
 
   const c = (partner.country || '').toLowerCase();
+  const followupDays = {
+    'Tue 17 Nov': 'Tue 24 Nov',
+    'Wed 18 Nov': 'Wed 25 Nov',
+    'Thu 19 Nov': 'Thu 26 Nov',
+    'Tue 24 Nov': 'Tue 01 Dec',
+    'Wed 25 Nov': 'Wed 02 Dec',
+    'Thu 26 Nov': 'Thu 03 Dec',
+  };
 
   if (isDmitri) {
     const dayIdx = Math.min(Math.floor(dmitriIdx / 7), sendDays.length - 1);
     const day = sendDays[dayIdx] || sendDays[0];
+    const followupDateStr = followupDays[day.label] || 'Tue 24 Nov';
     
     // Dmitri handles Wave 2 (15:00 Local) and Wave 3 (17:00 Local)
     const isWave2 = (dmitriIdx % 2 === 0);
@@ -125,6 +134,7 @@ function getExhibitorScheduleDate(partner, dmitriIdx, igorIdx) {
         dateStr: day.label,
         timeStr: '18:00 CET',
         localNote: '12:00 EST (Wave 1 — Midday Lunch Check)',
+        followupDateStr: followupDateStr,
         batchNum: dayIdx + 1,
         slotInBatch: (dmitriIdx % 7) + 1
       };
@@ -138,12 +148,14 @@ function getExhibitorScheduleDate(partner, dmitriIdx, igorIdx) {
       dateStr: day.label,
       timeStr: `${cetHour}:00 CET`,
       localNote: `${targetLocalHour}:00 ${tzName} (${waveName})`,
+      followupDateStr: followupDateStr,
       batchNum: dayIdx + 1,
       slotInBatch: (dmitriIdx % 7) + 1
     };
   } else {
     const dayIdx = Math.min(Math.floor(igorIdx / 7), sendDays.length - 1);
     const day = sendDays[dayIdx] || sendDays[0];
+    const followupDateStr = followupDays[day.label] || 'Tue 24 Nov';
 
     // Igor handles Wave 1 (12:00 Local) for Europe, and Wave 3 (17:00 Local) for Asia
     if (c.includes('china') || c.includes('singapore')) {
@@ -152,6 +164,7 @@ function getExhibitorScheduleDate(partner, dmitriIdx, igorIdx) {
         dateStr: day.label,
         timeStr: '10:00 CET',
         localNote: '17:00 Asia (Wave 3 — End-of-Day Review)',
+        followupDateStr: followupDateStr,
         batchNum: dayIdx + 1,
         slotInBatch: (igorIdx % 7) + 1
       };
@@ -162,6 +175,7 @@ function getExhibitorScheduleDate(partner, dmitriIdx, igorIdx) {
         dateStr: day.label,
         timeStr: '09:00 CET',
         localNote: '17:00 Tokyo (Wave 3 — End-of-Day Review)',
+        followupDateStr: followupDateStr,
         batchNum: dayIdx + 1,
         slotInBatch: (igorIdx % 7) + 1
       };
@@ -172,6 +186,7 @@ function getExhibitorScheduleDate(partner, dmitriIdx, igorIdx) {
         dateStr: day.label,
         timeStr: '13:00 CET',
         localNote: '12:00 GMT (Wave 1 — Midday Lunch Check)',
+        followupDateStr: followupDateStr,
         batchNum: dayIdx + 1,
         slotInBatch: (igorIdx % 7) + 1
       };
@@ -182,6 +197,7 @@ function getExhibitorScheduleDate(partner, dmitriIdx, igorIdx) {
         dateStr: day.label,
         timeStr: '11:00 CET',
         localNote: '12:00 EET (Wave 1 — Midday Lunch Check)',
+        followupDateStr: followupDateStr,
         batchNum: dayIdx + 1,
         slotInBatch: (igorIdx % 7) + 1
       };
@@ -192,6 +208,7 @@ function getExhibitorScheduleDate(partner, dmitriIdx, igorIdx) {
       dateStr: day.label,
       timeStr: '12:00 CET',
       localNote: '12:00 CET (Wave 1 — Midday Lunch Check)',
+      followupDateStr: followupDateStr,
       batchNum: dayIdx + 1,
       slotInBatch: (igorIdx % 7) + 1
     };
@@ -467,7 +484,12 @@ function renderAgencyRow(p, dmitriIdToIndex, igorIdToIndex) {
         </select>
         <div style="margin-top:3px">
           ${p.status === 'CONTACTED' ? `
-            <div style="font-size:10px;color:#059669;font-weight:600">✅ Dispatched ${p.sent_at ? fmtDateTime(p.sent_at) : ''}</div>
+            <div style="display:inline-flex;flex-direction:column;gap:1px">
+              <div style="font-size:10px;color:#059669;font-weight:600">✅ Dispatched ${p.sent_at ? fmtDateTime(p.sent_at) : ''}</div>
+              <div style="font-size:8.5px;color:#2563EB;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:3px;padding:1px 4px;white-space:nowrap" title="Touch 2 Follow-up scheduled strictly on Tue-Thu at the same local wave if no reply after 4 business days">
+                🔁 Follow-up: ${sched.followupDateStr} · ${sched.localNote.split('(')[0].trim()}
+              </div>
+            </div>
           ` : (p.status === 'WANT_TO_CONTACT' ? `
             <div style="display:inline-flex;flex-direction:column;gap:1px;margin-top:1px">
               <span style="font-size:10px;font-weight:700;color:${isDmitri ? '#1E40AF' : '#1D4ED8'};background:${isDmitri ? '#EFF6FF' : '#DBEAFE'};border:1px solid ${isDmitri ? '#BFDBFE' : '#93C5FD'};border-radius:4px;padding:1px 5px;white-space:nowrap;display:inline-block">
@@ -475,6 +497,9 @@ function renderAgencyRow(p, dmitriIdToIndex, igorIdToIndex) {
               </span>
               <span style="font-size:9px;color:#475569;white-space:nowrap" title="Target local business time in ${esc(p.country)}">
                 🕒 ${sched.localNote}
+              </span>
+              <span style="font-size:8.5px;color:#64748B;white-space:nowrap" title="Touch 2 Follow-up scheduled strictly on Tue-Thu at the same local wave if no reply after 4 business days">
+                🔁 T2: ${sched.followupDateStr} · ${sched.localNote.split('(')[0].trim()}
               </span>
             </div>
           ` : (p.status === 'TO_REVIEW' ? `

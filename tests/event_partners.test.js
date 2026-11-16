@@ -239,3 +239,16 @@ test('Milano Home Send Waves: Strictly enforces 3 local waves [12:00, 15:00, 17:
   assert.ok(viewCode.includes('Wave 3 — End-of-Day Review'));
   assert.ok(viewCode.includes('🛡️ 3 Local Waves Only: [12, 15, 17]'));
 });
+
+test('Milano Home Follow-up Schedule: Follow-ups strictly enforce Tue-Thu window and local send waves [12, 15, 17]', () => {
+  const viewCode = fs.readFileSync(path.join(rootDir, 'app/views/event_partners.js'), 'utf8');
+  assert.ok(viewCode.includes('followupDateStr'), 'event_partners.js must compute followupDateStr');
+  assert.ok(viewCode.includes('🔁 T2:'), 'event_partners.js must render T2 follow-up indicator');
+  assert.ok(viewCode.includes("'Tue 17 Nov': 'Tue 24 Nov'"), 'Follow-up from Tue 17 must be Tue 24');
+  assert.ok(viewCode.includes("'Wed 18 Nov': 'Wed 25 Nov'"), 'Follow-up from Wed 18 must be Wed 25');
+  assert.ok(viewCode.includes("'Thu 19 Nov': 'Thu 26 Nov'"), 'Follow-up from Thu 19 must be Thu 26');
+
+  const tplCode = fs.readFileSync(path.join(rootDir, 'app/views/event_templates.js'), 'utf8');
+  assert.ok(tplCode.includes('Send Window: Tue–Thu Only'));
+  assert.ok(tplCode.includes('3 Local Waves: [12, 15, 17]'));
+});
