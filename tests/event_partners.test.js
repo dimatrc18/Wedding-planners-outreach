@@ -231,3 +231,11 @@ test('Milano Home Outreach Schedule: Strictly limited to Tuesday through Thursda
   assert.ok(viewCode.includes("'Tue 17 Nov'"), 'Tue 17 Nov must be in sendDays');
   assert.ok(viewCode.includes("'Thu 26 Nov'"), 'Thu 26 Nov must be in sendDays');
 });
+
+test('Milano Home Send Waves: Strictly enforces 3 local waves [12:00, 15:00, 17:00] across all exhibitors', () => {
+  const viewCode = fs.readFileSync(path.join(rootDir, 'app/views/event_partners.js'), 'utf8');
+  assert.ok(viewCode.includes('Wave 1 — Midday Lunch Check'));
+  assert.ok(viewCode.includes('Wave 2 — Afternoon Focus'));
+  assert.ok(viewCode.includes('Wave 3 — End-of-Day Review'));
+  assert.ok(viewCode.includes('🛡️ 3 Local Waves Only: [12, 15, 17]'));
+});

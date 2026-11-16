@@ -101,27 +101,97 @@ function getExhibitorScheduleDate(partner, dmitriIdx, igorIdx) {
     { label: 'Thu 26 Nov' },
   ];
 
+  const c = (partner.country || '').toLowerCase();
+
   if (isDmitri) {
     const dayIdx = Math.min(Math.floor(dmitriIdx / 7), sendDays.length - 1);
     const day = sendDays[dayIdx] || sendDays[0];
-    const waveHour = (dmitriIdx % 2 === 0) ? 12 : 15;
-    const waveTime = `${waveHour}:00 CET`;
-    const localTimeNote = getCountryLocalTimeNote(partner.country, waveHour);
+    
+    // Dmitri handles Wave 2 (15:00 Local) and Wave 3 (17:00 Local)
+    const isWave2 = (dmitriIdx % 2 === 0);
+    const targetLocalHour = isWave2 ? 15 : 17;
+    const waveName = isWave2 ? 'Wave 2 — Afternoon Focus' : 'Wave 3 — End-of-Day Review';
+
+    let cetHour = targetLocalHour;
+    let tzName = 'CET';
+
+    if (c.includes('united kingdom') || c.includes('uk') || c.includes('ireland') || c.includes('portugal')) {
+      // UK is GMT (CET - 1). To land at targetLocalHour GMT, send at targetLocalHour + 1 CET.
+      cetHour = targetLocalHour + 1;
+      tzName = 'GMT';
+    } else if (c.includes('united states') || c.includes('usa')) {
+      // US is EST (CET - 6). To land at 12:00 EST (Midday wave), send at 18:00 CET.
+      return {
+        dateStr: day.label,
+        timeStr: '18:00 CET',
+        localNote: '12:00 EST (Wave 1 — Midday Lunch Check)',
+        batchNum: dayIdx + 1,
+        slotInBatch: (dmitriIdx % 7) + 1
+      };
+    } else if (c.includes('greece') || c.includes('bulgaria') || c.includes('lithuania')) {
+      // EET is CET + 1. To land at targetLocalHour EET, send at targetLocalHour - 1 CET.
+      cetHour = targetLocalHour - 1;
+      tzName = 'EET';
+    }
+
     return {
       dateStr: day.label,
-      timeStr: waveTime,
-      localNote: localTimeNote,
+      timeStr: `${cetHour}:00 CET`,
+      localNote: `${targetLocalHour}:00 ${tzName} (${waveName})`,
       batchNum: dayIdx + 1,
       slotInBatch: (dmitriIdx % 7) + 1
     };
   } else {
     const dayIdx = Math.min(Math.floor(igorIdx / 7), sendDays.length - 1);
     const day = sendDays[dayIdx] || sendDays[0];
-    const localTimeNote = getCountryLocalTimeNote(partner.country, 10);
+
+    // Igor handles Wave 1 (12:00 Local) for Europe, and Wave 3 (17:00 Local) for Asia
+    if (c.includes('china') || c.includes('singapore')) {
+      // Asia CST/SGT is CET + 7. To land at 17:00 local (Wave 3 - EOD), send at 10:00 CET.
+      return {
+        dateStr: day.label,
+        timeStr: '10:00 CET',
+        localNote: '17:00 Asia (Wave 3 — End-of-Day Review)',
+        batchNum: dayIdx + 1,
+        slotInBatch: (igorIdx % 7) + 1
+      };
+    }
+    if (c.includes('japan')) {
+      // Tokyo JST is CET + 8. To land at 17:00 local (Wave 3 - EOD), send at 09:00 CET.
+      return {
+        dateStr: day.label,
+        timeStr: '09:00 CET',
+        localNote: '17:00 Tokyo (Wave 3 — End-of-Day Review)',
+        batchNum: dayIdx + 1,
+        slotInBatch: (igorIdx % 7) + 1
+      };
+    }
+    if (c.includes('united kingdom') || c.includes('uk') || c.includes('ireland') || c.includes('portugal')) {
+      // To land at 12:00 GMT (Wave 1 - Lunch), send at 13:00 CET.
+      return {
+        dateStr: day.label,
+        timeStr: '13:00 CET',
+        localNote: '12:00 GMT (Wave 1 — Midday Lunch Check)',
+        batchNum: dayIdx + 1,
+        slotInBatch: (igorIdx % 7) + 1
+      };
+    }
+    if (c.includes('greece') || c.includes('bulgaria') || c.includes('lithuania')) {
+      // To land at 12:00 EET (Wave 1 - Lunch), send at 11:00 CET.
+      return {
+        dateStr: day.label,
+        timeStr: '11:00 CET',
+        localNote: '12:00 EET (Wave 1 — Midday Lunch Check)',
+        batchNum: dayIdx + 1,
+        slotInBatch: (igorIdx % 7) + 1
+      };
+    }
+
+    // Standard Continental Europe: 12:00 Local = 12:00 CET
     return {
       dateStr: day.label,
-      timeStr: '10:00 CET',
-      localNote: localTimeNote,
+      timeStr: '12:00 CET',
+      localNote: '12:00 CET (Wave 1 — Midday Lunch Check)',
       batchNum: dayIdx + 1,
       slotInBatch: (igorIdx % 7) + 1
     };
@@ -272,7 +342,7 @@ export async function render(el) {
             <div style="width:10px;height:10px;border-radius:50%;background:#8B5CF6"></div>
             <div>
               <div style="font-size:11.5px;font-weight:700;color:#18181B">🏛️ Igor (igor@b2b-dorogo.it) · Milano Home Fair</div>
-              <div style="font-size:10.5px;color:#71717A">Schedule: <strong>Tue–Thu · Morning Wave 10:00 – 11:30 CET</strong> · Cap: <strong>7/day</strong> · Spacing: <strong>8-15 min</strong></div>
+              <div style="font-size:10.5px;color:#71717A">Schedule: <strong>Tue–Thu · Wave 1 (12:00 Local Lunch Check)</strong> · Cap: <strong>7/day</strong> · Spacing: <strong>8-15 min</strong></div>
             </div>
           </div>
           <div style="height:24px;width:1px;background:#CBD5E1"></div>
@@ -280,13 +350,13 @@ export async function render(el) {
             <div style="width:10px;height:10px;border-radius:50%;background:#3B82F6"></div>
             <div>
               <div style="font-size:11.5px;font-weight:700;color:#18181B">💍 Dmitri (dmitri@dorogo.eu) · Wedding &amp; Bus Desk</div>
-              <div style="font-size:10.5px;color:#71717A">Schedule: <strong>Tue–Thu · Waves 12:00 &amp; 15:00 CET</strong> · Cap: <strong>7/day</strong> · Spacing: <strong>8-15 min</strong></div>
+              <div style="font-size:10.5px;color:#71717A">Schedule: <strong>Tue–Thu · Waves 2 &amp; 3 (15:00 &amp; 17:00 Local)</strong> · Cap: <strong>7/day</strong> · Spacing: <strong>8-15 min</strong></div>
             </div>
           </div>
         </div>
         <div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#065F46;display:flex;align-items:center;gap:5px">
-          <span>🛡️ Tue–Thu Window Only</span>
-          <span style="font-weight:normal;color:#047857">· Mondays &amp; Fridays Blocked · Zero Overlap</span>
+          <span>🛡️ 3 Local Waves Only: [12, 15, 17]</span>
+          <span style="font-weight:normal;color:#047857">· Tue–Thu Only · Zero Overlap</span>
         </div>
       </div>
 
@@ -331,7 +401,7 @@ export async function render(el) {
 
       <!-- Safety Footer -->
       <div style="font-size:11px;color:var(--sail-muted);display:flex;align-items:center;justify-content:space-between;padding:0 4px">
-        <span>🔒 <strong>Tue–Thu Outreach Window:</strong> Strictly Tuesday to Thursday only (Mondays &amp; Fridays blocked). All 83 emails complete by Thu 26 Nov.</span>
+        <span>🔒 <strong>Local Send Waves [12, 15, 17]:</strong> All outreach delivers at strictly 12:00, 15:00, or 17:00 in each exhibitor's local time (Tue–Thu only).</span>
         <span>Dedicated Senders: <strong>Dmitri</strong> (<code>dmitri@dorogo.eu</code> · 42 leads) &amp; <strong>Igor</strong> (<code>igor@b2b-dorogo.it</code> · 41 leads)</span>
       </div>
     </div>
