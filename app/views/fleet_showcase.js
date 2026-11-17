@@ -1266,7 +1266,8 @@ export const FLEET_LEDGER_ROWS = [
     email: 'info@autoserviziguizzetti.com',
     website: 'https://www.autoserviziguizzetti.com',
     status: 'pending',
-    statusLabel: 'Arriving Jan/Feb 2027 · Rates & photos pending',
+    statusBadge: 'Contact Jan/Feb 2027',
+    statusLabel: 'Arriving Jan/Feb 2027 · Contact mid-Jan / Feb 2027',
     repliedAt: '03 Nov 2026 · 06:37',
     ratePdf: null,
     ratePdfName: null,
@@ -2571,8 +2572,8 @@ export function renderLedgerRow(row, idx = 0) {
             <option value="luxury" ${row.tier === 'luxury' ? 'selected' : ''}>Luxury VIP</option>
             <option value="standard" ${row.tier === 'standard' ? 'selected' : ''}>Standard Shuttle</option>
           </select>
-          <span class="sail-pill ${row.status === 'confirmed' ? 'ok' : 'info'}" style="font-size:10px;padding:1px 5px">
-            ${esc(row.status === 'confirmed' ? 'Verified' : 'Pending')}
+          <span class="sail-pill ${row.status === 'confirmed' ? 'ok' : 'info'}" style="font-size:10px;padding:1px 5px" title="${attr(row.statusLabel || '')}">
+            ${esc(row.status === 'confirmed' ? 'Verified' : (row.statusBadge || 'Pending'))}
           </span>
         </div>
       </td>
