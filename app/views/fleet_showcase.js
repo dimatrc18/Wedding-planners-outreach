@@ -1804,9 +1804,14 @@ export function applyLocalOverridesAndArchives() {
   const overrides = loadJsonMap(STORAGE_KEY_FLEET_OVERRIDES);
   const archivedMap = loadJsonMap(STORAGE_KEY_FLEET_ARCHIVED);
 
-  // Merge overrides into active FLEET_LEDGER_ROWS
+  // Merge overrides into active FLEET_LEDGER_ROWS (and strip legacy broken private-bucket URLs)
   Object.entries(overrides).forEach(([id, data]) => {
     if (!data || archivedMap[id]) return;
+    if (Array.isArray(data.photos)) {
+      data.photos = data.photos.filter(
+        (ph) => ph && ph.src && !String(ph.src).includes('/storage/v1/object/public/outreach/fleet-photos/')
+      );
+    }
     const idx = FLEET_LEDGER_ROWS.findIndex((r) => r.id === id);
     if (idx >= 0) {
       FLEET_LEDGER_ROWS[idx] = { ...FLEET_LEDGER_ROWS[idx], ...data, id };
@@ -4071,35 +4076,9 @@ async function processUploadedImageFile(file, vehId) {
         ctx.drawImage(img, 0, 0, width, height);
 
         const dataUrl = canvas.toDataURL('image/jpeg', 0.78);
-        let finalSrc = dataUrl;
-
-        const sb = getSb();
-        if (sb && typeof canvas.toBlob === 'function') {
-          try {
-            const blob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.78));
-            if (blob) {
-              const safeName = `${vehId}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}.jpg`;
-              const storagePath = `fleet-photos/${safeName}`;
-              const { error } = await sb.storage.from('outreach').upload(storagePath, blob, {
-                upsert: true,
-                contentType: 'image/jpeg'
-              });
-              if (!error) {
-                const { data: pub } = sb.storage.from('outreach').getPublicUrl(storagePath);
-                if (pub?.publicUrl) {
-                  // Only use publicUrl if the bucket is actually publicly readable; otherwise keep dataUrl
-                  try {
-                    const checkRes = await fetch(pub.publicUrl, { method: 'HEAD' });
-                    if (checkRes.ok) finalSrc = pub.publicUrl;
-                  } catch (_) {}
-                }
-              }
-            }
-          } catch (_) {}
-        }
 
         resolve({
-          src: finalSrc,
+          src: dataUrl,
           file: file.name,
           title: file.name.replace(/\.[^.]+$/, ''),
           caption: `Uploaded ${new Date().toLocaleDateString()}`
