@@ -266,8 +266,8 @@ test('formatPriceWithUnit & formatEur: Renders "?" when price is 0, null, or und
   assert.equal(formatPriceWithUnit(140), '€140');
 });
 
-test('Fleet Showcase Size Filter: SIZE_GROUPS comprehensively and mutually exclusively groups all 22 vehicles', () => {
-  assert.equal(FLEET_LEDGER_ROWS.length, 22);
+test('Fleet Showcase Size Filter: SIZE_GROUPS comprehensively and mutually exclusively groups all 24 vehicles', () => {
+  assert.equal(FLEET_LEDGER_ROWS.length, 24);
   
   // Verify each vehicle belongs to exactly one group
   const groupCounts = {};
@@ -277,16 +277,16 @@ test('Fleet Showcase Size Filter: SIZE_GROUPS comprehensively and mutually exclu
     groupCounts[grp.key] = (groupCounts[grp.key] || 0) + 1;
   });
 
-  // Expected counts across the 22-vehicle fleet
+  // Expected counts across the 24-vehicle fleet
   assert.equal(groupCounts['group:7_8'], 6, 'Must have 6 vehicles in 7–8 seats (V-Class & Sprinters)');
   assert.equal(groupCounts['group:12_16'], 2, 'Must have 2 vehicles in 12–16 seats (Sprinter 12 & Transit 16)');
   assert.equal(groupCounts['group:19_20'], 4, 'Must have 4 vehicles in 19–20 seats (Minibus GT, Sprinter 19+1, Gran Capri)');
-  assert.equal(groupCounts['group:28_30'], 4, 'Must have 4 vehicles in 28–30 seats (Iveco Midibuses, Temsa #115, Wing/Mago 2)');
+  assert.equal(groupCounts['group:28_30'], 6, 'Must have 6 vehicles in 28–30 seats (Iveco Midibuses, Temsa #115, Iveco Wing #121, Perletti Wing & Mago 2)');
   assert.equal(groupCounts['group:50_plus'], 6, 'Must have 6 vehicles in 50+ seats (50p/52p GT, 64p MaxiBus, 66p Van Hool, 83p Double-Decker)');
 
-  // Sum of all groups must be exactly 22
+  // Sum of all groups must be exactly 24
   const totalMapped = Object.values(groupCounts).reduce((a, b) => a + b, 0);
-  assert.equal(totalMapped, 22);
+  assert.equal(totalMapped, 24);
 });
 
 test('Fleet Showcase Size Filter: matchesSizeFilter correctly filters groups, ranges, and exact seat counts', () => {
@@ -441,9 +441,11 @@ test('Fleet Showcase Asset Integrity & Visual Pairing: Zero missing files, zero 
   const g19 = FLEET_LEDGER_ROWS.find((r) => r.id === 'guizzetti_minibus_19');
   assert.ok(g19.photos.every((p) => p.src.includes('sprinter_19_luxury_')));
   const g30 = FLEET_LEDGER_ROWS.find((r) => r.id === 'guizzetti_midibus_30');
-  assert.equal(g30.photos.length, 4);
-  assert.ok(g30.photos.some((p) => p.src.includes('temsa_115_')));
-  assert.ok(g30.photos.some((p) => p.src.includes('iveco_121_')));
+  assert.equal(g30.photos.length, 2);
+  assert.ok(g30.photos.every((p) => p.src.includes('temsa_115_')));
+  const g121 = FLEET_LEDGER_ROWS.find((r) => r.id === 'guizzetti_iveco_121_30');
+  assert.equal(g121.photos.length, 2);
+  assert.ok(g121.photos.every((p) => p.src.includes('iveco_121_')));
   const g50 = FLEET_LEDGER_ROWS.find((r) => r.id === 'guizzetti_coach_50');
   assert.equal(g50.photos.length, 8);
   assert.ok(g50.photos.some((p) => p.src.includes('tourismo_new_')));

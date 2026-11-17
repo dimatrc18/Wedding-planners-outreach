@@ -1067,15 +1067,15 @@ export const FLEET_LEDGER_ROWS = [
   {
     id: 'perletti_midibus_30',
     partnerId: 'partner_perletti_topclass',
-    vehicleModel: 'Iveco Wing & Mago 2 Midibus',
-    paxLabel: '28–30 pax',
-    coachbuilder: 'Executive Midibus · Top Class Line',
-    pax: 30,
+    vehicleModel: 'Iveco Wing Midibus (GH-467MB)',
+    paxLabel: '28 pax',
+    coachbuilder: 'Executive Midibus · Top Class Line (Iveco Indcar Wing)',
+    pax: 28,
     category: 'coach_30',
-    categoryLabel: 'Executive Midibus / Coach (30 Pax)',
+    categoryLabel: 'Executive Midibus / Coach (28–30 Pax)',
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: 'Iveco Wing GH-467MB (cursive Perletti side script) & Iveco Mago 2 (large silver swirl graphic) — request Wing if low-branding matters; interiors pending',
+    tierSpec: 'Black Iveco Wing GH-467MB with cursive Perletti side script (lower-branding option vs Mago 2); interior pending',
     partnerName: 'Perletti Autoservizi',
     baseCity: 'Bergamo / Milano',
     contactPerson: 'Andrea',
@@ -1083,7 +1083,7 @@ export const FLEET_LEDGER_ROWS = [
     email: 'info@perlettibus.it',
     website: 'https://www.perlettibus.it/perlettibus/parco-mezzi/mini-bus/',
     status: 'confirmed',
-    statusLabel: 'Rates & 2 website exteriors verified · Interiors pending',
+    statusLabel: 'Rates & exterior photo verified · Interior pending',
     repliedAt: '02 Nov 2026 · 17:10',
     ratePdf: null,
     ratePdfName: null,
@@ -1107,7 +1107,46 @@ export const FLEET_LEDGER_ROWS = [
         file: 'GH467MB-esterno-800x507-1.jpg',
         title: 'Exterior — Iveco Wing Midibus 28 Pax (Plate GH-467MB)',
         caption: 'Black Iveco Wing 28-seater on perlettibus.it/mini-bus/ with cursive Perletti lettering on side. Interior photo pending.'
-      },
+      }
+    ]
+  },
+  {
+    id: 'perletti_mago2_30',
+    partnerId: 'partner_perletti_topclass',
+    vehicleModel: 'Iveco Mago 2 Midibus',
+    paxLabel: '30 pax',
+    coachbuilder: 'Executive Midibus · Top Class Line (Iveco Indcar Mago 2)',
+    pax: 30,
+    category: 'coach_30',
+    categoryLabel: 'Executive Midibus / Coach (28–30 Pax)',
+    tier: 'luxury',
+    tierLabel: 'Luxury VIP',
+    tierSpec: 'Black Iveco Mago 2 with decorative pearl/silver swirl graphic & Perletti script; interior pending',
+    partnerName: 'Perletti Autoservizi',
+    baseCity: 'Bergamo / Milano',
+    contactPerson: 'Andrea',
+    phone: '+39 338 666 8249',
+    email: 'info@perlettibus.it',
+    website: 'https://www.perlettibus.it/perlettibus/parco-mezzi/mini-bus/',
+    status: 'confirmed',
+    statusLabel: 'Rates & exterior photo verified · Interior pending',
+    repliedAt: '02 Nov 2026 · 17:10',
+    ratePdf: null,
+    ratePdfName: null,
+    transfers: {
+      mxp_milano: { label: 'Milano Centro ⇄ Malpensa MXP', net: 550 },
+      milano_como: { label: 'Milano Centro ⇄ Como', net: 600 }
+    },
+    standby: {
+      dispo_4h: { label: 'Disposizione 4h', net: 700 },
+      dispo_8h: { label: 'Disposizione 8h', net: 900 }
+    },
+    terms: {
+      vat: 'Prezzi IVA 10% esclusa',
+      included: 'Quotazioni di riferimento; parcheggi e ZTL esclusi',
+      cancellation: '30% fino a 48h · 50% nelle 48h · 100% nelle 24h'
+    },
+    photos: [
       {
         id: 'perletti_midibus_mago2_ext',
         src: 'assets/partner_fleet/perletti/perletti_iveco_mago2_30p.jpg',
@@ -1335,15 +1374,15 @@ export const FLEET_LEDGER_ROWS = [
   {
     id: 'guizzetti_midibus_30',
     partnerId: 'partner_1793030996221_7t9y',
-    vehicleModel: 'Temsa Midibus #115 & Iveco Wing #121',
+    vehicleModel: 'Temsa Midibus #115 (CY-923SE)',
     paxLabel: '28–33 pax',
-    coachbuilder: 'Midibus GT (Temsa CY-923SE & Iveco Indcar Wing #121)',
+    coachbuilder: 'Midibus GT (Temsa CY-923SE)',
     pax: 30,
     category: 'coach_30',
     categoryLabel: 'Executive Midibus / Coach (30 Pax)',
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: 'Temsa #115 (CY-923SE) is 100% unbranded · Iveco #121 has small door logo, rear Guizzetti script & French Angles Morts sticker',
+    tierSpec: 'Temsa #115 (CY-923SE) — 100% unbranded metallic charcoal grey body panels',
     partnerName: 'Autoservizi Guizzetti',
     baseCity: 'Sovere (Bergamo / Brescia)',
     contactPerson: 'Cristian (Cell: 335 747 1244 · Ufficio: 035 982277)',
@@ -1352,7 +1391,7 @@ export const FLEET_LEDGER_ROWS = [
     email: 'info@autoserviziguizzetti.com',
     website: 'https://www.autoserviziguizzetti.com',
     status: 'confirmed',
-    statusLabel: 'Rates & 4 real email photos verified (#115 & #121)',
+    statusLabel: 'Rates & 2 real email photos verified (#115)',
     repliedAt: '03 Nov 2026 · 06:37',
     ratePdf: null,
     ratePdfName: null,
@@ -1380,7 +1419,46 @@ export const FLEET_LEDGER_ROWS = [
         file: '115- INTERNO.jpg',
         title: 'Fleet #115 — Temsa Midibus GT · Interior (2+2)',
         caption: 'Verified interior of Fleet #115 showing 2+2 touring seating in blue-grey patterned upholstery.'
-      },
+      }
+    ]
+  },
+  {
+    id: 'guizzetti_iveco_121_30',
+    partnerId: 'partner_1793030996221_7t9y',
+    vehicleModel: 'Iveco Indcar Wing Midibus #121',
+    paxLabel: '28–33 pax',
+    coachbuilder: 'Midibus GT (Iveco Indcar Wing #121)',
+    pax: 30,
+    category: 'coach_30',
+    categoryLabel: 'Executive Midibus / Coach (30 Pax)',
+    tier: 'luxury',
+    tierLabel: 'Luxury VIP',
+    tierSpec: 'Iveco #121 — small door logo, rear Guizzetti script & French Angles Morts sticker',
+    partnerName: 'Autoservizi Guizzetti',
+    baseCity: 'Sovere (Bergamo / Brescia)',
+    contactPerson: 'Cristian (Cell: 335 747 1244 · Ufficio: 035 982277)',
+    phone: '+39 335 747 1244',
+    secondaryPhone: '+39 035 982277',
+    email: 'info@autoserviziguizzetti.com',
+    website: 'https://www.autoserviziguizzetti.com',
+    status: 'confirmed',
+    statusLabel: 'Rates & 2 real email photos verified (#121)',
+    repliedAt: '03 Nov 2026 · 06:37',
+    ratePdf: null,
+    ratePdfName: null,
+    transfers: {
+      mxp_milano: { label: 'Milano Centro ⇄ Malpensa MXP', net: 380 }
+    },
+    standby: {
+      dispo_4h: { label: 'Disposizione 4h Milano', net: 500 },
+      dispo_8h: { label: 'Disposizione 8h Milano', net: 720 }
+    },
+    terms: {
+      vat: 'Prezzi IVA 10% esclusa',
+      included: '+ €30 parcheggio Malpensa; eventuale Area C Milano da aggiungere',
+      cancellation: 'In attesa di policy formale da Cristian'
+    },
+    photos: [
       {
         src: 'assets/partner_fleet/guizzetti/iveco_121_midibus_ext.jpeg',
         file: '121 - lato.jpeg',
