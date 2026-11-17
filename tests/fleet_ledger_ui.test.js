@@ -602,4 +602,11 @@ test('Fleet Showcase UI: Confirmation modal markup exists before archiving provi
   assert.ok(src.includes('btn-confirm-archive-veh'), 'Explicit confirmation click button must exist');
 });
 
+test('Fleet Showcase UI: Overpriced/excluded vehicles are separated into their own tab folder away from main table', () => {
+  const src = fs.readFileSync(path.join(rootDir, 'app/views/fleet_showcase.js'), 'utf8');
+  assert.ok(src.includes('const activeFleetRows = FLEET_LEDGER_ROWS.filter((r) => !r.excludedFromPricing);'), 'Main table must exclude excludedFromPricing rows');
+  assert.ok(src.includes('data-ledger-tab="excluded"'), 'Separate Overpriced / Excluded tab must exist');
+  assert.ok(src.includes('Overpriced / Excluded'), 'Tab label Overpriced / Excluded must exist');
+});
+
 

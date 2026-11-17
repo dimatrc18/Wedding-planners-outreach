@@ -2018,8 +2018,13 @@ export async function render(el) {
   applySavedTierOverrides();
   hydrateFleetFromRemoteDb(el);
 
-  // 1. Tab-eligible rows
-  const tabRows = FLEET_LEDGER_ROWS.filter((r) => {
+  // 1. Separate active fleet vs. excluded/overpriced folder
+  const activeFleetRows = FLEET_LEDGER_ROWS.filter((r) => !r.excludedFromPricing);
+  const excludedFleetRows = FLEET_LEDGER_ROWS.filter((r) => Boolean(r.excludedFromPricing));
+
+  // Tab-eligible rows
+  const tabRows = (activeTab === 'excluded' ? excludedFleetRows : activeFleetRows).filter((r) => {
+    if (activeTab === 'excluded') return true;
     if (activeTab === 'confirmed' && r.status !== 'confirmed') return false;
     if (activeTab === 'luxury' && r.tier !== 'luxury') return false;
     if (activeTab === 'standard' && r.tier !== 'standard') return false;
@@ -2041,13 +2046,15 @@ export async function render(el) {
     exactCounts[r.pax] = (exactCounts[r.pax] || 0) + 1;
   });
 
-  // Groups that exist in the overall fleet
+  const scopeRows = activeTab === 'excluded' ? excludedFleetRows : activeFleetRows;
+
+  // Groups that exist in the current scope
   const availableGroups = SIZE_GROUPS.filter((grp) => {
-    return FLEET_LEDGER_ROWS.some((r) => grp.matcher(r.pax));
+    return scopeRows.some((r) => grp.matcher(r.pax));
   });
 
   // Distinct seat counts sorted ascending
-  const distinctPaxes = Array.from(new Set(FLEET_LEDGER_ROWS.map((r) => r.pax).filter(Boolean))).sort((a, b) => a - b);
+  const distinctPaxes = Array.from(new Set(scopeRows.map((r) => r.pax).filter(Boolean))).sort((a, b) => a - b);
 
   // 3. Filtered rows by sizeFilter and searchQuery
   const filteredRows = tabRows.filter((r) => {
@@ -2061,10 +2068,11 @@ export async function render(el) {
   });
 
   // 4. Counts for header telemetry stats
-  const confirmedCount = FLEET_LEDGER_ROWS.filter((r) => r.status === 'confirmed' && !r.excludedFromPricing).length;
-  const luxCount = FLEET_LEDGER_ROWS.filter((r) => r.tier === 'luxury').length;
-  const stdCount = FLEET_LEDGER_ROWS.filter((r) => r.tier === 'standard').length;
-  const pendingCount = FLEET_LEDGER_ROWS.filter((r) => r.status === 'pending').length;
+  const confirmedCount = activeFleetRows.filter((r) => r.status === 'confirmed').length;
+  const luxCount = activeFleetRows.filter((r) => r.tier === 'luxury').length;
+  const stdCount = activeFleetRows.filter((r) => r.tier === 'standard').length;
+  const pendingCount = activeFleetRows.filter((r) => r.status === 'pending').length;
+  const excludedCount = excludedFleetRows.length;
 
   const totalPhotos = FLEET_LEDGER_ROWS.reduce((acc, r) => acc + (r.photos ? r.photos.filter((p) => !p.src.endsWith('.mp4')).length : 0), 0);
   const totalVideos = FLEET_LEDGER_ROWS.reduce((acc, r) => acc + (r.photos ? r.photos.filter((p) => p.src.endsWith('.mp4')).length : 0), 0);
@@ -2238,7 +2246,7 @@ export async function render(el) {
         <div class="sail-card-head" style="padding-bottom:0;border-bottom:1px solid var(--sail-line)">
           <div class="sail-tabs" role="tablist">
             <button class="sail-tab ${activeTab === 'all' ? 'active' : ''}" data-ledger-tab="all">
-              All Replied Fleet <span class="sail-tab-count">${FLEET_LEDGER_ROWS.length}</span>
+              All Replied Fleet <span class="sail-tab-count">${activeFleetRows.length}</span>
             </button>
             <button class="sail-tab ${activeTab === 'confirmed' ? 'active' : ''}" data-ledger-tab="confirmed">
               Confirmed Rates &amp; Photos <span class="sail-tab-count">${confirmedCount}</span>
@@ -2252,6 +2260,11 @@ export async function render(el) {
             <button class="sail-tab ${activeTab === 'pending' ? 'active' : ''}" data-ledger-tab="pending">
               Awaiting Rate Sheet <span class="sail-tab-count">${pendingCount}</span>
             </button>
+            ${excludedCount > 0 ? `
+              <button class="sail-tab ${activeTab === 'excluded' ? 'active' : ''}" data-ledger-tab="excluded" title="Separate folder for overpriced / excluded vehicles">
+                Overpriced / Excluded <span class="sail-tab-count">${excludedCount}</span>
+              </button>
+            ` : ''}
           </div>
 
           <div class="row" style="gap:8px;padding-bottom:8px;align-items:center">
@@ -2309,7 +2322,7 @@ export async function render(el) {
               ${groupBySize ? '✓ Grouped by Size' : 'Group by Size'}
             </button>
             <span style="font-size:11.5px;color:var(--sail-muted);font-variant-numeric:tabular-nums">
-              Showing <strong>${filteredRows.length}</strong> of ${FLEET_LEDGER_ROWS.length}
+              Showing <strong>${filteredRows.length}</strong> of ${scopeRows.length}
             </span>
             ${(sizeFilter !== 'all' || searchQuery.trim() !== '') ? `
               <button class="sail-btn xs" id="btn-reset-ledger-filter" style="font-size:11px;padding:2px 8px;height:24px;color:#B91C1C;border-color:#FCA5A5" title="Clear size and search filters">
