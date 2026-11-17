@@ -3975,7 +3975,7 @@ async function processUploadedImageFile(file, vehId) {
       const img = new Image();
       img.onerror = () => reject(new Error('Invalid image file'));
       img.onload = async () => {
-        const maxDim = 1280;
+        const maxDim = 960;
         let { width, height } = img;
         if (width > maxDim || height > maxDim) {
           if (width >= height) {
@@ -3992,13 +3992,13 @@ async function processUploadedImageFile(file, vehId) {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
 
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.78);
         let finalSrc = dataUrl;
 
         const sb = getSb();
         if (sb && typeof canvas.toBlob === 'function') {
           try {
-            const blob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.82));
+            const blob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.78));
             if (blob) {
               const safeName = `${vehId}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}.jpg`;
               const storagePath = `fleet-photos/${safeName}`;
@@ -4008,7 +4008,13 @@ async function processUploadedImageFile(file, vehId) {
               });
               if (!error) {
                 const { data: pub } = sb.storage.from('outreach').getPublicUrl(storagePath);
-                if (pub?.publicUrl) finalSrc = pub.publicUrl;
+                if (pub?.publicUrl) {
+                  // Only use publicUrl if the bucket is actually publicly readable; otherwise keep dataUrl
+                  try {
+                    const checkRes = await fetch(pub.publicUrl, { method: 'HEAD' });
+                    if (checkRes.ok) finalSrc = pub.publicUrl;
+                  } catch (_) {}
+                }
               }
             }
           } catch (_) {}
