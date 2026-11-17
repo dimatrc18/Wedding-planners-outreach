@@ -671,27 +671,47 @@ export async function sendDueEvents(db: any, settings: any, now = new Date(), { 
 
   const DMITRI_CAP = 20;
   const IGOR_CAP = 8;
+  const DMITRI_MIN_SPACING_MS = 6 * 60 * 1000; // Minimum 6 min between Dmitri sends
+  const IGOR_MIN_SPACING_MS = 10 * 60 * 1000;  // Minimum 10 min between Igor sends
   const todayYmd = core.localDateKey(now, tz);
 
-  // Count how many emails each mailbox has already sent today (Touch 1 or Touch 2)
+  // Count how many emails each mailbox has already sent today, track last send timestamp, and collect contacted emails
   const { data: allContacted } = await db
     .from('event_planners')
-    .select('id, sender_email, sent_at, followup_sent_at, updated_at')
+    .select('id, email, sender_email, sent_at, followup_sent_at, updated_at')
     .in('status', ['CONTACTED', 'APPROVED_PARTNER']);
 
   let dmitriSentToday = 0;
   let igorSentToday = 0;
+  let dmitriLastSentMs = 0;
+  let igorLastSentMs = 0;
+  const contactedEmailsT1 = new Set<string>();
+
   for (const row of allContacted || []) {
-    const t1Day = row.sent_at ? core.localDateKey(new Date(row.sent_at), tz) : (row.updated_at ? core.localDateKey(new Date(row.updated_at), tz) : '');
-    const t2Day = row.followup_sent_at ? core.localDateKey(new Date(row.followup_sent_at), tz) : '';
+    if (row.email) contactedEmailsT1.add(String(row.email).toLowerCase().trim());
+    const t1Ts = row.sent_at ? new Date(row.sent_at).getTime() : (row.updated_at ? new Date(row.updated_at).getTime() : 0);
+    const t2Ts = row.followup_sent_at ? new Date(row.followup_sent_at).getTime() : 0;
+    const t1Day = t1Ts ? core.localDateKey(new Date(t1Ts), tz) : '';
+    const t2Day = t2Ts ? core.localDateKey(new Date(t2Ts), tz) : '';
     const isDmitriRow = String(row.sender_email || '').toLowerCase().includes('dmitri');
+
     if (t1Day === todayYmd) {
-      if (isDmitriRow) dmitriSentToday++;
-      else igorSentToday++;
+      if (isDmitriRow) {
+        dmitriSentToday++;
+        if (t1Ts > dmitriLastSentMs) dmitriLastSentMs = t1Ts;
+      } else {
+        igorSentToday++;
+        if (t1Ts > igorLastSentMs) igorLastSentMs = t1Ts;
+      }
     }
     if (t2Day === todayYmd) {
-      if (isDmitriRow) dmitriSentToday++;
-      else igorSentToday++;
+      if (isDmitriRow) {
+        dmitriSentToday++;
+        if (t2Ts > dmitriLastSentMs) dmitriLastSentMs = t2Ts;
+      } else {
+        igorSentToday++;
+        if (t2Ts > igorLastSentMs) igorLastSentMs = t2Ts;
+      }
     }
   }
 
@@ -706,15 +726,17 @@ export async function sendDueEvents(db: any, settings: any, now = new Date(), { 
   if (error || !planners || !planners.length) return { sent: 0, checked: 0 };
 
   let sent = 0;
-  const MAX_PER_RUN = 2; // Stay well within Edge Function CPU/memory limits; pg_cron runs every 2 minutes
+  let dmitriSentThisRun = 0;
+  let igorSentThisRun = 0;
   let dmitriSlotIdx = 0;
   let igorSlotIdx = 0;
   const sixDaysMs = 6 * 24 * 3600 * 1000;
 
   for (const p of planners) {
-    if (!onlyEventId && sent >= MAX_PER_RUN) break;
+    if (!onlyEventId && dmitriSentThisRun >= 1 && igorSentThisRun >= 1) break;
     if (!p.email) continue;
 
+    const cleanEmail = String(p.email).toLowerCase().trim();
     const senderEmail = String(p.sender_email || 'igor@b2b-dorogo.it').toLowerCase().trim();
     const isDmitri = senderEmail.includes('dmitri');
     const slotIdx = isDmitri ? dmitriSlotIdx++ : igorSlotIdx++;
@@ -729,13 +751,25 @@ export async function sendDueEvents(db: any, settings: any, now = new Date(), { 
 
     if (!onlyEventId && !isTouch1 && !isTouch2Due) continue;
 
-    // Enforce mailbox credentials & daily cap
+    // Duplicate-email guard: never send Touch 1 to an email address already contacted
+    if (isTouch1 && contactedEmailsT1.has(cleanEmail)) {
+      await db.from('event_planners').update({
+        status: 'NOT_RELEVANT',
+        notes: (p.notes ? p.notes + ' | ' : '') + 'Skipped duplicate email address',
+        updated_at: now.toISOString(),
+      }).eq('id', p.id).eq('status', 'WANT_TO_CONTACT');
+      continue;
+    }
+
+    // Enforce mailbox credentials, daily cap, per-tick cap (1 per mailbox), and strict spacing
     if (isDmitri) {
       if (!dmitriConfigured) continue;
-      if (!onlyEventId && dmitriSentToday >= DMITRI_CAP) continue;
+      if (!onlyEventId && (dmitriSentToday >= DMITRI_CAP || dmitriSentThisRun >= 1)) continue;
+      if (!onlyEventId && dmitriLastSentMs && (now.getTime() - dmitriLastSentMs) < DMITRI_MIN_SPACING_MS) continue;
     } else {
       if (!igorConfigured) continue;
-      if (!onlyEventId && igorSentToday >= IGOR_CAP) continue;
+      if (!onlyEventId && (igorSentToday >= IGOR_CAP || igorSentThisRun >= 1)) continue;
+      if (!onlyEventId && igorLastSentMs && (now.getTime() - igorLastSentMs) < IGOR_MIN_SPACING_MS) continue;
     }
 
     // Enforce 3 local send waves [12, 15, 17] in recipient's timezone (via CET equivalent)
@@ -755,6 +789,27 @@ export async function sendDueEvents(db: any, settings: any, now = new Date(), { 
         }).eq('id', p.id);
         continue;
       }
+    }
+
+    // ATOMIC CLAIM before SMTP send: prevents concurrent cron/manual runs from ever double-sending
+    const sentAtIso = now.toISOString();
+    if (isTouch2Due) {
+      const { data: claimed } = await db
+        .from('event_planners')
+        .update({ followup_sent_at: sentAtIso, updated_at: sentAtIso })
+        .eq('id', p.id)
+        .eq('status', 'CONTACTED')
+        .is('followup_sent_at', null)
+        .select('id');
+      if (!claimed || !claimed.length) continue;
+    } else {
+      const { data: claimed } = await db
+        .from('event_planners')
+        .update({ status: 'CONTACTED', sent_at: sentAtIso, updated_at: sentAtIso })
+        .eq('id', p.id)
+        .eq('status', 'WANT_TO_CONTACT')
+        .select('id');
+      if (!claimed || !claimed.length) continue;
     }
 
     const firstName = extractFirstName(p.contact_person, p.name);
@@ -792,20 +847,14 @@ Happy to send our 1-page corporate rate card for MXP/LIN and Fiera Milano Rho tr
 
       await appendToSent(mailRes.raw, senderEmail).catch(() => {});
 
-      const sentAtIso = now.toISOString();
       if (isTouch2Due) {
         await db.from('event_planners').update({
-          followup_sent_at: sentAtIso,
           notes: (p.notes ? p.notes + ' | ' : '') + `T2 Follow-up sent via ${senderEmail} (${sentAtIso.slice(0, 10)})`,
-          updated_at: sentAtIso,
         }).eq('id', p.id);
       } else {
         await db.from('event_planners').update({
-          status: 'CONTACTED',
-          sent_at: sentAtIso,
           sent_message_id: mailRes.messageId,
           notes: (p.notes ? p.notes + ' | ' : '') + `T1 sent via ${senderEmail} (${sentAtIso.slice(0, 10)})`,
-          updated_at: sentAtIso,
         }).eq('id', p.id);
       }
 
@@ -819,9 +868,23 @@ Happy to send our 1-page corporate rate card for MXP/LIN and Fiera Milano Rho tr
       }, null, actor).catch(() => {});
 
       sent++;
-      if (isDmitri) dmitriSentToday++;
-      else igorSentToday++;
+      if (isTouch1) contactedEmailsT1.add(cleanEmail);
+      if (isDmitri) {
+        dmitriSentToday++;
+        dmitriSentThisRun++;
+        dmitriLastSentMs = now.getTime();
+      } else {
+        igorSentToday++;
+        igorSentThisRun++;
+        igorLastSentMs = now.getTime();
+      }
     } catch (err) {
+      // Revert atomic claim if SMTP failed before transmission
+      if (isTouch2Due) {
+        await db.from('event_planners').update({ followup_sent_at: null }).eq('id', p.id);
+      } else {
+        await db.from('event_planners').update({ status: 'WANT_TO_CONTACT', sent_at: null }).eq('id', p.id);
+      }
       console.error(`Failed to send event outreach to ${p.email}:`, (err as Error).message);
       await logEvent(db, 'event_planner_send_error', { planner_id: p.id, email: p.email, sender: senderEmail, error: (err as Error).message }, null, actor).catch(() => {});
     }
