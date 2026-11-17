@@ -778,7 +778,7 @@ export async function sendDueEvents(db: any, settings: any, now = new Date(), { 
       if (lp.hh < targetCetHour || lp.hh >= 20) continue;
     }
 
-    // Live deliverability verification before Touch 1
+    // Live deliverability verification before Touch 1 (strict fail-closed: only send if verified or catch_all)
     if (isTouch1) {
       const ver = await verifyEmailUnified(p.email, { db });
       if (ver.resultcode === 6 || ver.resultcode === 5 || ver.status === 'invalid') {
@@ -787,6 +787,17 @@ export async function sendDueEvents(db: any, settings: any, now = new Date(), { 
           notes: (p.notes ? p.notes + ' | ' : '') + `Verification failed (${ver.status || 'invalid'})`,
           updated_at: now.toISOString(),
         }).eq('id', p.id);
+        continue;
+      }
+      if (ver.status !== 'verified' && ver.status !== 'catch_all') {
+        // Do NOT fail open on 'unknown' or 'error'/timeout — skip sending to protect bounce rate
+        if (ver.status === 'unknown') {
+          await db.from('event_planners').update({
+            status: 'TO_REVIEW',
+            notes: (p.notes ? p.notes + ' | ' : '') + `Held for review: verification returned ${ver.status} (${ver.subresult || 'unconfirmed'})`,
+            updated_at: now.toISOString(),
+          }).eq('id', p.id);
+        }
         continue;
       }
     }
