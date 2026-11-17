@@ -611,4 +611,12 @@ test('Fleet Showcase UI: Overpriced/excluded vehicles are separated into their o
   assert.ok(src.includes('Overpriced / Excluded'), 'Tab label Overpriced / Excluded must exist');
 });
 
+test('Fleet Showcase UI: Left-column review flag dropdown highlights row and persists', async () => {
+  const row = { ...FLEET_LEDGER_ROWS[0], reviewFlag: 'check_images' };
+  const html = renderLedgerRow(row, 0);
+  assert.ok(html.includes(`data-review-flag="${row.id}"`), 'Must render review flag dropdown in # column');
+  assert.ok(html.includes('#FEF9C3'), 'Highlighted row must have colored background tint');
+  assert.ok(html.includes('Check Images'), 'Highlighted row must show review flag badge');
+});
+
 

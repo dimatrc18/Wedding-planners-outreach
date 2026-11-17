@@ -2183,6 +2183,7 @@ export async function render(el) {
   // Tab-eligible rows
   const tabRows = (activeTab === 'excluded' ? excludedFleetRows : activeFleetRows).filter((r) => {
     if (activeTab === 'excluded') return true;
+    if (activeTab === 'flagged') return Boolean(r.reviewFlag);
     if (activeTab === 'confirmed' && r.status !== 'confirmed') return false;
     if (activeTab === 'luxury' && r.tier !== 'luxury') return false;
     if (activeTab === 'standard' && r.tier !== 'standard') return false;
@@ -2230,6 +2231,7 @@ export async function render(el) {
   const luxCount = activeFleetRows.filter((r) => r.tier === 'luxury').length;
   const stdCount = activeFleetRows.filter((r) => r.tier === 'standard').length;
   const pendingCount = activeFleetRows.filter((r) => r.status === 'pending').length;
+  const flaggedCount = activeFleetRows.filter((r) => Boolean(r.reviewFlag)).length;
   const excludedCount = excludedFleetRows.length;
 
   const totalPhotos = FLEET_LEDGER_ROWS.reduce((acc, r) => acc + (r.photos ? r.photos.filter((p) => !p.src.endsWith('.mp4')).length : 0), 0);
@@ -2417,6 +2419,9 @@ export async function render(el) {
             </button>
             <button class="sail-tab ${activeTab === 'pending' ? 'active' : ''}" data-ledger-tab="pending">
               Awaiting Rate Sheet <span class="sail-tab-count">${pendingCount}</span>
+            </button>
+            <button class="sail-tab ${activeTab === 'flagged' ? 'active' : ''}" data-ledger-tab="flagged" title="Vehicles highlighted to check images, prices, or issues">
+              Flagged <span class="sail-tab-count">${flaggedCount}</span>
             </button>
             ${excludedCount > 0 ? `
               <button class="sail-tab ${activeTab === 'excluded' ? 'active' : ''}" data-ledger-tab="excluded" title="Separate folder for overpriced / excluded vehicles">
@@ -2685,13 +2690,34 @@ export function renderLedgerRow(row, idx = 0) {
   const isExcluded = Boolean(row.excludedFromPricing);
   const isActiveInCalc = !isExcluded && calcState.vehicleId === row.id;
 
+  const FLAG_META = {
+    check_images: { label: '📷 Check Images', bg: '#FEF9C3', border: '#D97706', pillBg: '#FEF3C7', pillColor: '#92400E' },
+    check_prices: { label: '💶 Check Prices', bg: '#EFF6FF', border: '#2563EB', pillBg: '#DBEAFE', pillColor: '#1E40AF' },
+    issue: { label: '⚠ Issue / Don\'t Like', bg: '#FEF2F2', border: '#DC2626', pillBg: '#FEE2E2', pillColor: '#991B1B' },
+    follow_up: { label: '🔖 Check Later', bg: '#F5F3FF', border: '#7C3AED', pillBg: '#EDE9FE', pillColor: '#5B21B6' }
+  };
+  const flagInfo = row.reviewFlag ? FLAG_META[row.reviewFlag] : null;
+  const rowStyle = flagInfo
+    ? `background:${flagInfo.bg};box-shadow:inset 4px 0 0 ${flagInfo.border};`
+    : '';
+
   return `
-    <tr class="${isActiveInCalc ? 'sail-table-row-active' : ''} ${(isPending || isExcluded) ? 'sail-row-pending' : ''}">
-      <td style="text-align:center;font-weight:600;color:${(isPending || isExcluded) ? '#94A3B8' : 'var(--sail-muted)'};font-size:12px;vertical-align:top;padding-top:14px;font-variant-numeric:tabular-nums">
-        ${idx + 1}
+    <tr class="${isActiveInCalc ? 'sail-table-row-active' : ''} ${(isPending || isExcluded) ? 'sail-row-pending' : ''}" style="${rowStyle}">
+      <td style="text-align:center;font-weight:600;color:${(isPending || isExcluded) ? '#94A3B8' : 'var(--sail-muted)'};font-size:12px;vertical-align:top;padding-top:12px;font-variant-numeric:tabular-nums">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span>${idx + 1}</span>
+          <select data-review-flag="${attr(row.id)}" title="Highlight this vehicle to check later" style="width:42px;height:20px;font-size:10px;padding:0 2px;border-radius:4px;border:1px solid ${flagInfo ? flagInfo.border : '#CBD5E1'};background:${flagInfo ? flagInfo.pillBg : '#FFFFFF'};color:${flagInfo ? flagInfo.pillColor : '#64748B'};cursor:pointer">
+            <option value="" ${!row.reviewFlag ? 'selected' : ''}>—</option>
+            <option value="check_images" ${row.reviewFlag === 'check_images' ? 'selected' : ''}>📷 Check Images</option>
+            <option value="check_prices" ${row.reviewFlag === 'check_prices' ? 'selected' : ''}>💶 Check Prices</option>
+            <option value="issue" ${row.reviewFlag === 'issue' ? 'selected' : ''}>⚠ Issue / Don't Like</option>
+            <option value="follow_up" ${row.reviewFlag === 'follow_up' ? 'selected' : ''}>🔖 Check Later</option>
+          </select>
+        </div>
       </td>
       <td>
         <div style="font-weight:600;color:${(isPending || isExcluded) ? '#64748B' : 'var(--sail-ink)'};font-size:12.5px;line-height:1.25">${esc(row.vehicleModel)}</div>
+        ${flagInfo ? `<div style="margin-top:3px"><span class="sail-pill" style="font-size:10px;padding:1px 6px;background:${flagInfo.pillBg};color:${flagInfo.pillColor};border:1px solid ${flagInfo.border}40">${esc(flagInfo.label)}</span></div>` : ''}
         <div style="margin-top:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
           <span class="sail-pill info" data-filter-exact-pax="${row.pax}" style="font-size:10.5px;padding:2px 6px;font-variant-numeric:tabular-nums;cursor:pointer;white-space:normal;max-width:100%;line-height:1.25;text-align:left" title="Click to filter by ${row.pax} seats"><strong>${esc(row.paxLabel || `${row.pax} pax`)}</strong></span>
           ${isExcluded ? `<span class="sail-pill missing" style="font-size:10px;padding:1px 5px" title="${attr(row.excludedReason || 'Excluded from price calculations (overpriced)')}">Excluded · Overpriced</span>` : ''}
@@ -3410,6 +3436,22 @@ function attachLedgerListeners(el) {
         await updateFleetVehicle(vehId, { tier: newTier });
         toast(`${veh.vehicleModel} set to ${newTier === 'luxury' ? 'Luxury VIP' : 'Standard Shuttle'} (saved)`);
         render(el);
+      }
+    });
+  });
+
+  // Left-column Review Flag dropdown (highlight row to check images, prices, or issues later)
+  el.querySelectorAll('[data-review-flag]').forEach((sel) => {
+    sel.addEventListener('change', async (e) => {
+      const prevY = window.scrollY;
+      const vehId = sel.dataset.reviewFlag;
+      const flag = e.target.value || null;
+      const veh = FLEET_LEDGER_ROWS.find((r) => r.id === vehId);
+      if (veh) {
+        await updateFleetVehicle(vehId, { reviewFlag: flag });
+        toast(flag ? `Highlighted "${veh.vehicleModel}" (${e.target.options[e.target.selectedIndex].text})` : `Cleared highlight on "${veh.vehicleModel}"`);
+        render(el);
+        window.scrollTo(0, prevY);
       }
     });
   });
