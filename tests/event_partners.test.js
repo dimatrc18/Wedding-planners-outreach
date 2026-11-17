@@ -74,7 +74,7 @@ test('Event Outreach Isolation Principle: CRUD operations NEVER mutate Wedding P
   assert.equal(S.busPartners.length, initialBusCount, 'Bus partners count MUST remain intact after delete');
 });
 
-test('Event Outreach Sending Safeguards: jobs.ts strictly enforces EVENTS_SMTP_USER and prevents using dmitri@dorogo.eu', () => {
+test('Event Outreach Sending Safeguards: jobs.ts enforces dual-mailbox caps, Tue-Thu window, and event_planners isolation', () => {
   const jobsCode = fs.readFileSync(path.join(rootDir, 'supabase/functions/_shared/jobs.ts'), 'utf8');
   const cronCode = fs.readFileSync(path.join(rootDir, 'supabase/functions/outreach-cron/index.ts'), 'utf8');
 
@@ -84,18 +84,17 @@ test('Event Outreach Sending Safeguards: jobs.ts strictly enforces EVENTS_SMTP_U
   // Extract sendDueEvents function body
   const fnStart = jobsCode.indexOf('export async function sendDueEvents');
   const fnEnd = jobsCode.indexOf('// ---------------- Inbox & Conversational AI ----------------', fnStart);
-  const sendDueEventsBody = jobsCode.slice(fnStart, fnEnd > fnStart ? fnEnd : fnStart + 1500);
+  const sendDueEventsBody = jobsCode.slice(fnStart, fnEnd > fnStart ? fnEnd : fnStart + 3500);
 
   // Verify it queries ONLY event_planners table
   assert.ok(sendDueEventsBody.includes("db.from('event_planners')"), "sendDueEvents must query event_planners table");
   assert.ok(!sendDueEventsBody.includes("db.from('prospects')"), "sendDueEvents must NEVER query prospects");
   assert.ok(!sendDueEventsBody.includes("db.from('bus_partners')"), "sendDueEvents must NEVER query bus_partners");
 
-  // Verify dedicated sender environment variable check
-  assert.ok(sendDueEventsBody.includes("env('EVENTS_SMTP_USER')"), "sendDueEvents must enforce EVENTS_SMTP_USER");
-
-  // Verify hard isolation error if anyone attempts to use primary wedding mailbox
-  assert.ok(sendDueEventsBody.includes('Isolation Violation: Event outreach MUST NOT use primary wedding mailbox'), 'Must throw isolation violation error if dmitri@dorogo.eu is used');
+  // Verify dual-mailbox caps (Dmitri 20/day, Igor 8/day)
+  assert.ok(sendDueEventsBody.includes('DMITRI_CAP = 20'), 'sendDueEvents must enforce Dmitri 20/day cap');
+  assert.ok(sendDueEventsBody.includes('IGOR_CAP = 8'), 'sendDueEvents must enforce Igor 8/day warm-up cap');
+  assert.ok(sendDueEventsBody.includes("env('OUTREACH_SMTP_PASS')") && sendDueEventsBody.includes("env('EVENTS_SMTP_PASS')"), 'sendDueEvents must check SMTP secrets for both mailboxes');
 
   // Verify cron integration
   assert.ok(cronCode.includes("job === 'events_send'"), 'outreach-cron must have isolated events_send job');
@@ -221,7 +220,7 @@ test('Milano Home Outreach Schedule: Strictly limited to Tuesday through Thursda
   // Check jobs.ts implementation
   const jobsCode = fs.readFileSync(path.join(rootDir, 'supabase/functions/_shared/jobs.ts'), 'utf8');
   assert.ok(jobsCode.includes("skipped: 'outside_send_days'"), 'jobs.ts must block sends outside send_days');
-  assert.ok(jobsCode.includes('allowedDays.includes(p.dow)'), 'jobs.ts must check dow against allowedDays');
+  assert.ok(jobsCode.includes('allowedDays.includes(lp.dow)'), 'jobs.ts must check dow against allowedDays');
 
   // Check event_partners.js implementation
   const viewCode = fs.readFileSync(path.join(rootDir, 'app/views/event_partners.js'), 'utf8');

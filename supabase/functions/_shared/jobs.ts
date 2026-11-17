@@ -622,122 +622,219 @@ function extractFirstName(contactPerson = '', agencyName = '') {
 }
 
 /**
- * Sends due B2B event outreach messages to queued Event Planners & Corporate Agencies.
+ * Sends due B2B event outreach messages (Touch 1 & Touch 2 follow-ups) to queued Milano Home exhibitors.
  * 100% ISOLATED:
  * - Queries ONLY event_planners table (never prospects, never bus_partners).
- * - Enforces dedicated sender mailbox (EVENTS_SMTP_USER, igor@b2b-dorogo.it).
- * - Strictly respects warm-up pacing (default 6 emails/day Week 1).
- * - Runs 3-tier deliverability verification before dispatch.
- * - Appends sent email to Hostinger IMAP Sent folder.
- * - HARD BLOCKS any attempt to send event outreach from dmitri@dorogo.eu to prevent domain collision.
+ * - Dual-mailbox routing:
+ *   - dmitri@dorogo.eu: Established mailbox, cap 20/day, Waves 2 & 3 (15:00 & 17:00 Local) + US (12:00 EST)
+ *   - igor@b2b-dorogo.it: Warm-up mailbox, cap 8/day, Wave 1 (12:00 Local) + Asia Morning (09:00/10:00 CET)
+ * - Strictly respects Tue-Thu send window (send_days = [2, 3, 4]) and 3 local send waves [12, 15, 17].
+ * - Runs 3-tier deliverability verification before Touch 1 dispatch.
+ * - Appends sent email to the corresponding Hostinger IMAP Sent folder.
  */
+function getEventWaveCetHour(planner: any, slotIndex: number, isDmitri: boolean): number {
+  const c = String(planner.country || '').toLowerCase();
+  if (isDmitri) {
+    if (c.includes('united states') || c.includes('usa')) return 18; // 12:00 EST (Wave 1)
+    const isWave2 = slotIndex % 2 === 0;
+    if (c.includes('greece') || c.includes('bulgaria') || c.includes('lithuania')) return isWave2 ? 14 : 16; // 15:00/17:00 EET
+    if (c.includes('united kingdom') || c.includes('uk') || c.includes('ireland') || c.includes('portugal')) return isWave2 ? 16 : 18; // 15:00/17:00 GMT
+    return isWave2 ? 15 : 17; // 15:00/17:00 CET
+  } else {
+    if (c.includes('china') || c.includes('hong kong') || c.includes('singapore')) return 10; // 17:00 Asia (Wave 3)
+    if (c.includes('japan')) return 9; // 17:00 Tokyo (Wave 3)
+    if (c.includes('united kingdom') || c.includes('uk') || c.includes('ireland') || c.includes('portugal')) return 13; // 12:00 GMT (Wave 1)
+    if (c.includes('greece') || c.includes('bulgaria') || c.includes('lithuania')) return 11; // 12:00 EET (Wave 1)
+    return 12; // 12:00 CET (Wave 1)
+  }
+}
+
 export async function sendDueEvents(db: any, settings: any, now = new Date(), { actor = 'cron', onlyEventId = null as string | null } = {}) {
-  const eventsSender = env('EVENTS_SMTP_USER') || 'igor@b2b-dorogo.it';
-  if (!eventsSender || !env('EVENTS_SMTP_PASS')) {
-    return { sent: 0, skipped: 'events_smtp_not_configured', note: 'Configure EVENTS_SMTP_USER & EVENTS_SMTP_PASS in Supabase secrets' };
-  }
-
-  // Strict domain safeguard: NEVER permit event outreach to use Dmitri's primary wedding mailbox
-  const sysWeddingSender = String(env('OUTREACH_FROM_EMAIL') || 'dmitri@dorogo.eu').toLowerCase().trim();
-  if (eventsSender.toLowerCase().trim() === sysWeddingSender) {
-    throw new Error('Isolation Violation: Event outreach MUST NOT use primary wedding mailbox (dmitri@dorogo.eu). Set dedicated EVENTS_SMTP_USER.');
-  }
-
-  // Strict send window check: Only Tuesday (2), Wednesday (3), Thursday (4)
-  const p = core.localParts(now, settings?.timezone || 'Europe/Rome');
+  const tz = settings?.timezone || 'Europe/Rome';
+  const lp = core.localParts(now, tz);
   const allowedDays = settings?.send_days || [2, 3, 4];
-  if (!onlyEventId && !allowedDays.includes(p.dow)) {
+
+  if (!onlyEventId && !allowedDays.includes(lp.dow)) {
     const dayNames = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     return {
       sent: 0,
       skipped: 'outside_send_days',
-      note: `Event outreach is strictly limited to Tue–Thu (today is ${dayNames[p.dow] || p.dow})`
+      note: `Event outreach is strictly limited to Tue–Thu (today is ${dayNames[lp.dow] || lp.dow})`,
     };
   }
 
-  // Check warm-up cap
-  const warmupCap = Number(settings?.event_warmup?.daily_cap || 6);
-  const todayYmd = core.localDateKey(now, settings?.timezone || 'Europe/Rome');
-  const { data: sentToday } = await db.from('event_planners').select('id, updated_at').eq('status', 'CONTACTED').gte('updated_at', `${todayYmd}T00:00:00Z`);
-  const sentCount = (sentToday || []).length;
+  const dmitriConfigured = !!env('OUTREACH_SMTP_PASS');
+  const igorConfigured = !!env('EVENTS_SMTP_PASS');
+  if (!dmitriConfigured && !igorConfigured) {
+    return { sent: 0, skipped: 'events_smtp_not_configured', note: 'Configure OUTREACH_SMTP_PASS and/or EVENTS_SMTP_PASS in Supabase secrets' };
+  }
 
-  if (!onlyEventId && sentCount >= warmupCap) {
-    return { sent: 0, skipped: 'warmup_cap_reached', sent_today: sentCount, cap: warmupCap };
+  const DMITRI_CAP = 20;
+  const IGOR_CAP = 8;
+  const todayYmd = core.localDateKey(now, tz);
+
+  // Count how many emails each mailbox has already sent today (Touch 1 or Touch 2)
+  const { data: allContacted } = await db
+    .from('event_planners')
+    .select('id, sender_email, sent_at, followup_sent_at, updated_at')
+    .in('status', ['CONTACTED', 'APPROVED_PARTNER']);
+
+  let dmitriSentToday = 0;
+  let igorSentToday = 0;
+  for (const row of allContacted || []) {
+    const t1Day = row.sent_at ? core.localDateKey(new Date(row.sent_at), tz) : (row.updated_at ? core.localDateKey(new Date(row.updated_at), tz) : '');
+    const t2Day = row.followup_sent_at ? core.localDateKey(new Date(row.followup_sent_at), tz) : '';
+    const isDmitriRow = String(row.sender_email || '').toLowerCase().includes('dmitri');
+    if (t1Day === todayYmd) {
+      if (isDmitriRow) dmitriSentToday++;
+      else igorSentToday++;
+    }
+    if (t2Day === todayYmd) {
+      if (isDmitriRow) dmitriSentToday++;
+      else igorSentToday++;
+    }
   }
 
   let query = db.from('event_planners').select('*');
   if (onlyEventId) {
     query = query.eq('id', onlyEventId);
   } else {
-    query = query.in('status', ['WANT_TO_CONTACT']).order('relevance_score', { ascending: false });
+    query = query.in('status', ['WANT_TO_CONTACT', 'CONTACTED']).order('id', { ascending: true });
   }
 
   const { data: planners, error } = await query;
   if (error || !planners || !planners.length) return { sent: 0, checked: 0 };
 
   let sent = 0;
-  for (const p of planners) {
-    if (!p.email) continue;
-    if (!onlyEventId && (sentCount + sent) >= warmupCap) break;
+  const MAX_PER_RUN = 2; // Stay well within Edge Function CPU/memory limits; pg_cron runs every 2 minutes
+  let dmitriSlotIdx = 0;
+  let igorSlotIdx = 0;
+  const sixDaysMs = 6 * 24 * 3600 * 1000;
 
-    // Live deliverability verification (ZeroBounce / DeBounce / MillionVerifier)
-    const ver = await verifyEmailUnified(p.email, { db });
-    if (ver.resultcode === 6 || ver.resultcode === 5 || ver.status === 'invalid') {
-      await db.from('event_planners').update({
-        status: 'NOT_RELEVANT',
-        notes: (p.notes ? p.notes + ' | ' : '') + `Verification failed (${ver.status || 'invalid'})`,
-        updated_at: now.toISOString()
-      }).eq('id', p.id);
-      continue;
+  for (const p of planners) {
+    if (!onlyEventId && sent >= MAX_PER_RUN) break;
+    if (!p.email) continue;
+
+    const senderEmail = String(p.sender_email || 'igor@b2b-dorogo.it').toLowerCase().trim();
+    const isDmitri = senderEmail.includes('dmitri');
+    const slotIdx = isDmitri ? dmitriSlotIdx++ : igorSlotIdx++;
+
+    // Determine if this is Touch 1 or Touch 2 (Follow-up)
+    const isTouch1 = p.status === 'WANT_TO_CONTACT';
+    const isTouch2Due =
+      p.status === 'CONTACTED' &&
+      !p.followup_sent_at &&
+      p.sent_at &&
+      (now.getTime() - new Date(p.sent_at).getTime()) >= sixDaysMs;
+
+    if (!onlyEventId && !isTouch1 && !isTouch2Due) continue;
+
+    // Enforce mailbox credentials & daily cap
+    if (isDmitri) {
+      if (!dmitriConfigured) continue;
+      if (!onlyEventId && dmitriSentToday >= DMITRI_CAP) continue;
+    } else {
+      if (!igorConfigured) continue;
+      if (!onlyEventId && igorSentToday >= IGOR_CAP) continue;
+    }
+
+    // Enforce 3 local send waves [12, 15, 17] in recipient's timezone (via CET equivalent)
+    if (!onlyEventId) {
+      const targetCetHour = getEventWaveCetHour(p, slotIdx, isDmitri);
+      if (lp.hh < targetCetHour || lp.hh >= 20) continue;
+    }
+
+    // Live deliverability verification before Touch 1
+    if (isTouch1) {
+      const ver = await verifyEmailUnified(p.email, { db });
+      if (ver.resultcode === 6 || ver.resultcode === 5 || ver.status === 'invalid') {
+        await db.from('event_planners').update({
+          status: 'NOT_RELEVANT',
+          notes: (p.notes ? p.notes + ' | ' : '') + `Verification failed (${ver.status || 'invalid'})`,
+          updated_at: now.toISOString(),
+        }).eq('id', p.id);
+        continue;
+      }
     }
 
     const firstName = extractFirstName(p.contact_person, p.name);
     const fairEvent = p.fair_event || 'Milano Home 2027';
-    const subject = p.custom_subject || `${fairEvent} · ${p.name}`;
-    const defaultBody = `Hello ${firstName},
+    const baseSubject = p.custom_subject || `${fairEvent} · ${p.name}`;
+    const subject = isTouch2Due ? `Re: ${baseSubject}` : baseSubject;
+
+    const defaultT1Body = `Hello ${firstName},
 
 Noticed ${p.name} is exhibiting at ${fairEvent} this January.
 
 Dorogo provides unbranded Mercedes-Benz V-Class, S-Class, and E-Class transfers between Milan hotels and Fiera Milano Rho, including direct airport meet & greet (MXP/LIN).
 
 Would our 1-page rate card be helpful for your team? Happy to send it over to whoever coordinates your travel.`;
-    const textBody = p.custom_body || defaultBody;
+
+    const defaultT2Body = `Hello ${firstName},
+
+Just floating this back up in case your team is finalizing travel logistics for ${fairEvent}.
+
+Happy to send our 1-page corporate rate card for MXP/LIN and Fiera Milano Rho transfers if useful.`;
+
+    const textBody = isTouch2Due ? defaultT2Body : (p.custom_body || defaultT1Body);
+    const fromName = isDmitri ? 'Dmitri' : 'Igor';
 
     try {
       const mailRes = await sendMail({
-        fromName: 'Igor',
-        fromEmail: eventsSender,
-        replyTo: eventsSender,
+        fromName,
+        fromEmail: senderEmail,
+        replyTo: senderEmail,
         to: p.email,
         subject,
         text: textBody,
+        ...(isTouch2Due && p.sent_message_id ? { inReplyTo: p.sent_message_id, references: [p.sent_message_id] } : {}),
       });
 
-      await appendToSent(mailRes.raw, eventsSender).catch(() => {});
+      await appendToSent(mailRes.raw, senderEmail).catch(() => {});
 
-      const sentAt = now.toISOString();
-      await db.from('event_planners').update({
-        status: 'CONTACTED',
-        notes: (p.notes ? p.notes + ' | ' : '') + `Sent via ${eventsSender} (${sentAt.slice(0, 10)})`,
-        updated_at: sentAt,
-      }).eq('id', p.id);
+      const sentAtIso = now.toISOString();
+      if (isTouch2Due) {
+        await db.from('event_planners').update({
+          followup_sent_at: sentAtIso,
+          notes: (p.notes ? p.notes + ' | ' : '') + `T2 Follow-up sent via ${senderEmail} (${sentAtIso.slice(0, 10)})`,
+          updated_at: sentAtIso,
+        }).eq('id', p.id);
+      } else {
+        await db.from('event_planners').update({
+          status: 'CONTACTED',
+          sent_at: sentAtIso,
+          sent_message_id: mailRes.messageId,
+          notes: (p.notes ? p.notes + ' | ' : '') + `T1 sent via ${senderEmail} (${sentAtIso.slice(0, 10)})`,
+          updated_at: sentAtIso,
+        }).eq('id', p.id);
+      }
 
-      await logEvent(db, 'event_planner_contacted', {
+      await logEvent(db, isTouch2Due ? 'event_planner_followup_sent' : 'event_planner_contacted', {
         planner_id: p.id,
         name: p.name,
         email: p.email,
-        sender: eventsSender,
+        sender: senderEmail,
+        touch: isTouch2Due ? 2 : 1,
         message_id: mailRes.messageId,
       }, null, actor).catch(() => {});
 
       sent++;
+      if (isDmitri) dmitriSentToday++;
+      else igorSentToday++;
     } catch (err) {
       console.error(`Failed to send event outreach to ${p.email}:`, (err as Error).message);
-      await logEvent(db, 'event_planner_send_error', { planner_id: p.id, email: p.email, error: (err as Error).message }, null, actor).catch(() => {});
+      await logEvent(db, 'event_planner_send_error', { planner_id: p.id, email: p.email, sender: senderEmail, error: (err as Error).message }, null, actor).catch(() => {});
     }
   }
 
-  return { sent, total: planners.length, cap: warmupCap, remaining_quota: Math.max(0, warmupCap - (sentCount + sent)) };
+  return {
+    sent,
+    total: planners.length,
+    dmitri_sent_today: dmitriSentToday,
+    dmitri_cap: DMITRI_CAP,
+    igor_sent_today: igorSentToday,
+    igor_cap: IGOR_CAP,
+  };
 }
 
 // ---------------- Inbox & Conversational AI ----------------

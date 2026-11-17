@@ -95,7 +95,7 @@ function liveBackend() {
       try {
         const { data, error } = await sb.from('event_planners').select('*').order('relevance_score', { ascending: false });
         if (!error && data && data.length) {
-          eventPartners = data;
+          eventPartners = data.filter((r) => r.source === 'milano_home_2027' || String(r.id || '').startsWith('exhibitor_mhome_'));
           saveStoredEventPartners(eventPartners);
         }
       } catch (_) {}
