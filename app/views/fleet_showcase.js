@@ -2536,7 +2536,7 @@ export function renderLedgerRow(row, idx = 0) {
       <td>
         <div style="font-weight:600;color:${(isPending || isExcluded) ? '#64748B' : 'var(--sail-ink)'};font-size:12.5px;line-height:1.25">${esc(row.vehicleModel)}</div>
         <div style="margin-top:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-          <span class="sail-pill info" data-filter-exact-pax="${row.pax}" style="font-size:10.5px;padding:1px 6px;font-variant-numeric:tabular-nums;cursor:pointer" title="Click to filter by ${row.pax} seats"><strong>${esc(row.paxLabel || `${row.pax} pax`)}</strong></span>
+          <span class="sail-pill info" data-filter-exact-pax="${row.pax}" style="font-size:10.5px;padding:2px 6px;font-variant-numeric:tabular-nums;cursor:pointer;white-space:normal;max-width:100%;line-height:1.25;text-align:left" title="Click to filter by ${row.pax} seats"><strong>${esc(row.paxLabel || `${row.pax} pax`)}</strong></span>
           ${isExcluded ? `<span class="sail-pill missing" style="font-size:10px;padding:1px 5px" title="${attr(row.excludedReason || 'Excluded from price calculations (overpriced)')}">Excluded · Overpriced</span>` : ''}
           ${isActiveInCalc ? `<span class="sail-pill ok" style="font-size:10px;padding:1px 5px">Active in Calc</span>` : ''}
           <details style="font-size:11px;color:var(--sail-muted)">
