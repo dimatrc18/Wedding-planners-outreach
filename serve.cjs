@@ -313,6 +313,19 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    if (reqPath === '/api/fleet-ledger' && req.method === 'GET') {
+      const ledgerPath = path.join(baseDir, 'data', 'fleet_ledger.json');
+      if (fs.existsSync(ledgerPath)) {
+        const raw = fs.readFileSync(ledgerPath, 'utf8');
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(raw);
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, overrides: {}, archived: {} }));
+      }
+      return;
+    }
+
     if (req.method === 'POST') {
       let bodyData = '';
       req.on('data', chunk => { bodyData += chunk; });
@@ -359,6 +372,22 @@ const server = http.createServer(async (req, res) => {
 
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ ok: true, queueId: result.queueId }));
+            return;
+          }
+
+          if (reqPath === '/api/fleet-ledger') {
+            const ledgerDir = path.join(baseDir, 'data');
+            if (!fs.existsSync(ledgerDir)) fs.mkdirSync(ledgerDir, { recursive: true });
+            const ledgerPath = path.join(ledgerDir, 'fleet_ledger.json');
+            const state = {
+              ok: true,
+              updatedAt: new Date().toISOString(),
+              overrides: payload.overrides || {},
+              archived: payload.archived || {}
+            };
+            fs.writeFileSync(ledgerPath, JSON.stringify(state, null, 2), 'utf8');
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ ok: true, updatedAt: state.updatedAt }));
             return;
           }
 

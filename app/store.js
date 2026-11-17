@@ -190,8 +190,11 @@ export async function init() {
   const cfg = window.APP_CONFIG || {};
   if (window.supabase && cfg.SUPABASE_URL) {
     sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_KEY);
+    if (typeof globalThis !== 'undefined') globalThis.__DOROGO_SB__ = sb;
     const { data } = await sb.auth.getSession();
+    if (typeof globalThis !== 'undefined') globalThis.__DOROGO_USER_EMAIL__ = data?.session?.user?.email || null;
     sb.auth.onAuthStateChange((evt, session) => {
+      if (typeof globalThis !== 'undefined') globalThis.__DOROGO_USER_EMAIL__ = session?.user?.email || null;
       if (evt === 'SIGNED_IN' && session?.user) {
         if (isUserAuthorized(session.user)) {
           if (S.mode !== 'live') startLive(session.user);
@@ -614,6 +617,14 @@ export async function removeManyEventPartners(ids) {
   }
   emit('event_partners:deleted');
   return toRemove;
+}
+
+export function getSupabaseClient() {
+  return sb || null;
+}
+
+export function getCurrentUserEmail() {
+  return S.user?.email || null;
 }
 
 export { loadExcludedBusPartners, saveExcludedBusPartners, isBusPartnerExcluded, addExcludedBusPartner, removeExcludedBusPartner, loadStoredEventPartners, saveStoredEventPartners };

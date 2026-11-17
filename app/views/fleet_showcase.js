@@ -1687,6 +1687,283 @@ export function addVehicleToFleet(veh) {
 // Ensure custom vehicles are synced into FLEET_LEDGER_ROWS
 syncFleetLedgerRows();
 
+// Persistent Overrides, Media Edits & Backup Archive (Supabase + Local API + localStorage)
+const STORAGE_KEY_FLEET_OVERRIDES = 'dorogo_fleet_ledger_overrides_v1';
+const STORAGE_KEY_FLEET_ARCHIVED = 'dorogo_fleet_ledger_archived_v1';
+
+export const ARCHIVED_FLEET_ROWS = [];
+const INITIAL_FLEET_SEED_MAP = new Map(
+  FLEET_LEDGER_ROWS.map((r) => [r.id, JSON.parse(JSON.stringify(r))])
+);
+
+function getSb() {
+  return (typeof globalThis !== 'undefined' && globalThis.__DOROGO_SB__) || null;
+}
+
+function getActorEmail() {
+  return (typeof globalThis !== 'undefined' && globalThis.__DOROGO_USER_EMAIL__) || 'app';
+}
+
+function loadJsonMap(key) {
+  if (typeof localStorage === 'undefined') return {};
+  try {
+    const parsed = JSON.parse(localStorage.getItem(key) || '{}');
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function saveJsonMap(key, map) {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    localStorage.setItem(key, JSON.stringify(map || {}));
+  } catch (_) {}
+}
+
+export function applyLocalOverridesAndArchives() {
+  const overrides = loadJsonMap(STORAGE_KEY_FLEET_OVERRIDES);
+  const archivedMap = loadJsonMap(STORAGE_KEY_FLEET_ARCHIVED);
+
+  // Merge overrides into active FLEET_LEDGER_ROWS
+  Object.entries(overrides).forEach(([id, data]) => {
+    if (!data || archivedMap[id]) return;
+    const idx = FLEET_LEDGER_ROWS.findIndex((r) => r.id === id);
+    if (idx >= 0) {
+      FLEET_LEDGER_ROWS[idx] = { ...FLEET_LEDGER_ROWS[idx], ...data, id };
+    } else {
+      FLEET_LEDGER_ROWS.unshift({ ...data, id });
+    }
+  });
+
+  // Move archived rows out of FLEET_LEDGER_ROWS into ARCHIVED_FLEET_ROWS
+  Object.entries(archivedMap).forEach(([id, archivedInfo]) => {
+    const idx = FLEET_LEDGER_ROWS.findIndex((r) => r.id === id);
+    let veh = null;
+    if (idx >= 0) {
+      veh = FLEET_LEDGER_ROWS.splice(idx, 1)[0];
+    } else if (overrides[id]) {
+      veh = { ...overrides[id], id };
+    } else if (archivedInfo && typeof archivedInfo === 'object' && archivedInfo.vehicleModel) {
+      veh = { ...archivedInfo, id };
+    } else if (INITIAL_FLEET_SEED_MAP.has(id)) {
+      veh = JSON.parse(JSON.stringify(INITIAL_FLEET_SEED_MAP.get(id)));
+    }
+    if (veh) {
+      veh.archived = true;
+      veh.archivedAt = (archivedInfo && archivedInfo.archivedAt) || veh.archivedAt || new Date().toISOString();
+      if (!ARCHIVED_FLEET_ROWS.some((a) => a.id === id)) {
+        ARCHIVED_FLEET_ROWS.push(veh);
+      }
+    }
+  });
+
+  if (calcState && calcState.vehicleId && !FLEET_LEDGER_ROWS.some((r) => r.id === calcState.vehicleId)) {
+    calcState.vehicleId = FLEET_LEDGER_ROWS[0]?.id || null;
+  }
+}
+
+applyLocalOverridesAndArchives();
+
+async function persistFleetStateToLocalServer() {
+  if (typeof fetch === 'undefined' || typeof window === 'undefined') return;
+  try {
+    const host = window.location?.hostname || '';
+    if (host !== 'localhost' && host !== '127.0.0.1') return;
+    await fetch('/api/fleet-ledger', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        overrides: loadJsonMap(STORAGE_KEY_FLEET_OVERRIDES),
+        archived: loadJsonMap(STORAGE_KEY_FLEET_ARCHIVED)
+      })
+    });
+  } catch (_) {}
+}
+
+export async function persistVehicleToDatabase(veh, isArchived = false) {
+  const overrides = loadJsonMap(STORAGE_KEY_FLEET_OVERRIDES);
+  const archivedMap = loadJsonMap(STORAGE_KEY_FLEET_ARCHIVED);
+
+  overrides[veh.id] = veh;
+  if (isArchived) {
+    archivedMap[veh.id] = { ...veh, archived: true, archivedAt: veh.archivedAt || new Date().toISOString() };
+  } else {
+    delete archivedMap[veh.id];
+  }
+  saveJsonMap(STORAGE_KEY_FLEET_OVERRIDES, overrides);
+  saveJsonMap(STORAGE_KEY_FLEET_ARCHIVED, archivedMap);
+
+  if (veh.isCustom && !isArchived) {
+    saveCustomVehicle(veh);
+  }
+
+  let savedToSupabase = false;
+  const sb = getSb();
+  if (sb) {
+    try {
+      const { error } = await sb.from('fleet_ledger_vehicles').upsert({
+        id: veh.id,
+        data: veh,
+        is_archived: Boolean(isArchived),
+        archived_at: isArchived ? (veh.archivedAt || new Date().toISOString()) : null,
+        updated_at: new Date().toISOString(),
+        updated_by: getActorEmail()
+      }, { onConflict: 'id' });
+      if (!error) savedToSupabase = true;
+    } catch (_) {}
+  }
+
+  await persistFleetStateToLocalServer();
+  return { ok: true, savedToSupabase };
+}
+
+let remoteHydrated = false;
+async function hydrateFleetFromRemoteDb(el) {
+  if (remoteHydrated) return;
+  remoteHydrated = true;
+  let changed = false;
+  const overrides = loadJsonMap(STORAGE_KEY_FLEET_OVERRIDES);
+  const archivedMap = loadJsonMap(STORAGE_KEY_FLEET_ARCHIVED);
+
+  // 1. Try Supabase
+  const sb = getSb();
+  if (sb) {
+    try {
+      const { data, error } = await sb.from('fleet_ledger_vehicles').select('*');
+      if (!error && Array.isArray(data) && data.length > 0) {
+        data.forEach((rec) => {
+          if (!rec || !rec.id || !rec.data) return;
+          overrides[rec.id] = { ...rec.data, id: rec.id };
+          if (rec.is_archived) {
+            archivedMap[rec.id] = { ...rec.data, id: rec.id, archived: true, archivedAt: rec.archived_at || new Date().toISOString() };
+          } else {
+            delete archivedMap[rec.id];
+          }
+          changed = true;
+        });
+      }
+    } catch (_) {}
+  }
+
+  // 2. Try local server /api/fleet-ledger if running on localhost
+  if (typeof fetch !== 'undefined' && typeof window !== 'undefined') {
+    const host = window.location?.hostname || '';
+    if (host === 'localhost' || host === '127.0.0.1') {
+      try {
+        const res = await fetch('/api/fleet-ledger');
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.overrides) {
+            Object.entries(json.overrides).forEach(([id, data]) => {
+              if (!overrides[id]) { overrides[id] = data; changed = true; }
+            });
+          }
+          if (json && json.archived) {
+            Object.entries(json.archived).forEach(([id, data]) => {
+              if (!archivedMap[id]) { archivedMap[id] = data; changed = true; }
+            });
+          }
+        }
+      } catch (_) {}
+    }
+  }
+
+  if (changed) {
+    saveJsonMap(STORAGE_KEY_FLEET_OVERRIDES, overrides);
+    saveJsonMap(STORAGE_KEY_FLEET_ARCHIVED, archivedMap);
+    applyLocalOverridesAndArchives();
+    if (el) render(el);
+  }
+}
+
+export async function updateFleetVehicle(vehId, patch) {
+  const idx = FLEET_LEDGER_ROWS.findIndex((r) => r.id === vehId);
+  if (idx < 0) return null;
+  const current = FLEET_LEDGER_ROWS[idx];
+  const nextPax = Number(patch.pax ?? current.pax) || 8;
+  const nextTier = patch.tier ?? current.tier ?? 'luxury';
+  const nextStatus = patch.status ?? current.status ?? 'confirmed';
+  const nextCat = patch.category || inferCategoryFromPax(nextPax);
+  const updated = {
+    ...current,
+    ...patch,
+    id: current.id,
+    pax: nextPax,
+    paxLabel: `${nextPax} pax`,
+    category: nextCat,
+    categoryLabel: inferCategoryLabel(nextCat, nextPax),
+    tier: nextTier,
+    tierLabel: nextTier === 'luxury' ? 'Luxury VIP' : 'Standard Shuttle',
+    status: nextStatus,
+    statusLabel: nextStatus === 'confirmed' ? 'Rates Verified in Table' : 'Pending Rate Sheet',
+    updatedAt: new Date().toISOString()
+  };
+  FLEET_LEDGER_ROWS[idx] = updated;
+  if (patch.tier === 'luxury' || patch.tier === 'standard') {
+    saveTierOverride(vehId, patch.tier);
+  }
+  await persistVehicleToDatabase(updated, false);
+  return updated;
+}
+
+export async function archiveFleetVehicle(vehId) {
+  const idx = FLEET_LEDGER_ROWS.findIndex((r) => r.id === vehId);
+  if (idx < 0) return null;
+  const [removed] = FLEET_LEDGER_ROWS.splice(idx, 1);
+  const archivedVeh = {
+    ...removed,
+    archived: true,
+    archivedAt: new Date().toISOString()
+  };
+  const archIdx = ARCHIVED_FLEET_ROWS.findIndex((a) => a.id === vehId);
+  if (archIdx >= 0) {
+    ARCHIVED_FLEET_ROWS[archIdx] = archivedVeh;
+  } else {
+    ARCHIVED_FLEET_ROWS.unshift(archivedVeh);
+  }
+  if (calcState.vehicleId === vehId) {
+    calcState.vehicleId = FLEET_LEDGER_ROWS[0]?.id || null;
+  }
+  await persistVehicleToDatabase(archivedVeh, true);
+  return archivedVeh;
+}
+
+export async function restoreFleetVehicle(vehId) {
+  const archIdx = ARCHIVED_FLEET_ROWS.findIndex((a) => a.id === vehId);
+  if (archIdx < 0) return null;
+  const [restored] = ARCHIVED_FLEET_ROWS.splice(archIdx, 1);
+  const activeVeh = {
+    ...restored,
+    archived: false,
+    archivedAt: null
+  };
+  if (!FLEET_LEDGER_ROWS.some((r) => r.id === vehId)) {
+    FLEET_LEDGER_ROWS.unshift(activeVeh);
+  }
+  await persistVehicleToDatabase(activeVeh, false);
+  return activeVeh;
+}
+
+export async function addPhotoToVehicle(vehId, photoObj) {
+  const row = FLEET_LEDGER_ROWS.find((r) => r.id === vehId);
+  if (!row || !photoObj || !photoObj.src) return null;
+  const nextPhotos = [...(Array.isArray(row.photos) ? row.photos : []), {
+    src: photoObj.src,
+    file: photoObj.file || 'uploaded-photo.jpg',
+    title: photoObj.title || row.vehicleModel || 'Vehicle Photo',
+    caption: photoObj.caption || `${row.partnerName || ''} · Added ${new Date().toLocaleDateString()}`
+  }];
+  return updateFleetVehicle(vehId, { photos: nextPhotos });
+}
+
+export async function removePhotoFromVehicle(vehId, photoIdx) {
+  const row = FLEET_LEDGER_ROWS.find((r) => r.id === vehId);
+  if (!row || !Array.isArray(row.photos)) return null;
+  const nextPhotos = row.photos.filter((_, i) => i !== photoIdx);
+  return updateFleetVehicle(vehId, { photos: nextPhotos });
+}
+
 const TIER_OVERRIDES_STORAGE_KEY = 'dorogo_fleet_tier_overrides_v1';
 
 function loadTierOverrides() {
@@ -1739,6 +2016,7 @@ function modeBadgeText(mode) {
 
 export async function render(el) {
   applySavedTierOverrides();
+  hydrateFleetFromRemoteDb(el);
 
   // 1. Tab-eligible rows
   const tabRows = FLEET_LEDGER_ROWS.filter((r) => {
@@ -1901,6 +2179,9 @@ export async function render(el) {
           <button class="sail-btn primary" id="btn-open-add-vehicle" style="gap:5px;font-weight:600">
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v12M2 8h12"/></svg>
             Add Vehicle to Table
+          </button>
+          <button class="sail-btn" id="btn-open-backup-archive" style="gap:5px" title="View deleted/archived providers &amp; vehicles in Backup">
+            🗄 Backup${ARCHIVED_FLEET_ROWS.length > 0 ? ` (${ARCHIVED_FLEET_ROWS.length})` : ''}
           </button>
           <a class="sail-btn" href="${attr(PDF_COMO_DRIVER)}" target="_blank" rel="noopener">
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 1.5H4a1.5 1.5 0 0 0-1.5 1.5v10A1.5 1.5 0 0 0 4 14.5h8a1.5 1.5 0 0 0 1.5-1.5V6L9 1.5Z"/><path d="M9 1.5V6h4.5"/></svg>
@@ -2204,15 +2485,28 @@ export function renderLedgerRow(row, idx = 0) {
                 PDF ↗
               </a>
             ` : ''}
+            <button class="sail-btn xs" data-edit-photos="${attr(row.id)}" style="padding:0 6px;height:23px;font-size:11px" title="Add or delete vehicle photos">
+              + Photos
+            </button>
           </div>
-        ` : `<span class="sail-pill missing" style="font-size:10px">No photos</span>`}
+        ` : `
+          <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
+            <span class="sail-pill missing" style="font-size:10px">No photos</span>
+            <button class="sail-btn xs" data-edit-photos="${attr(row.id)}" style="padding:0 6px;height:22px;font-size:10.5px" title="Add vehicle photos">
+              + Add Photos
+            </button>
+          </div>
+        `}
       </div>
     `;
   } else {
     mediaHtml = `
-      <div style="display:flex;flex-direction:column;gap:3px">
+      <div style="display:flex;flex-direction:column;gap:4px">
         <span class="sail-pill missing" style="width:fit-content;font-size:10px">No photos provided</span>
         <span style="font-size:11px;color:${isPending ? '#94A3B8' : 'var(--sail-muted)'}">Rate sheet PDF not provided</span>
+        <button class="sail-btn xs" data-edit-photos="${attr(row.id)}" style="width:fit-content;padding:0 6px;height:22px;font-size:10.5px;margin-top:2px" title="Add vehicle photos">
+          + Add Photos
+        </button>
       </div>
     `;
   }
@@ -2249,11 +2543,12 @@ export function renderLedgerRow(row, idx = 0) {
               ${isPending ? '⏳ Rates Pending' : (isActiveInCalc ? '✓ In Calculator' : '⚡ Quote')}
             </button>
           `}
-          ${row.isCustom ? `
-            <button class="sail-btn xs" data-delete-custom-veh="${attr(row.id)}" style="padding:0 5px;height:22px;font-size:10px;color:#B91C1C;border-color:#FCA5A5" title="Remove custom vehicle from table">
-              ✕
-            </button>
-          ` : ''}
+          <button class="sail-btn xs" data-edit-veh="${attr(row.id)}" style="padding:0 6px;height:22px;font-size:10.5px" title="Edit vehicle, partner, rates &amp; photos">
+            ✎ Edit
+          </button>
+          <button class="sail-btn xs" data-archive-veh="${attr(row.id)}" style="padding:0 6px;height:22px;font-size:10.5px;color:#B91C1C;border-color:#FCA5A5" title="Remove provider/vehicle from main table (moves to Backup)">
+            🗑
+          </button>
         </div>
       </td>
 
@@ -2936,15 +3231,13 @@ function attachLedgerListeners(el) {
 
   // Class Tier dropdown switcher (Luxury VIP vs Standard Shuttle)
   el.querySelectorAll('[data-tier-select]').forEach((sel) => {
-    sel.addEventListener('change', (e) => {
+    sel.addEventListener('change', async (e) => {
       const vehId = sel.dataset.tierSelect;
       const newTier = e.target.value === 'standard' ? 'standard' : 'luxury';
       const veh = FLEET_LEDGER_ROWS.find((r) => r.id === vehId);
       if (veh) {
-        veh.tier = newTier;
-        veh.tierLabel = newTier === 'luxury' ? 'Luxury VIP' : 'Standard Shuttle';
-        saveTierOverride(vehId, newTier);
-        toast(`${veh.vehicleModel} set to ${veh.tierLabel}`);
+        await updateFleetVehicle(vehId, { tier: newTier });
+        toast(`${veh.vehicleModel} set to ${newTier === 'luxury' ? 'Luxury VIP' : 'Standard Shuttle'} (saved)`);
         render(el);
       }
     });
@@ -3278,19 +3571,39 @@ function attachLedgerListeners(el) {
     });
   });
 
-  // Delete Custom Vehicle from Table
-  el.querySelectorAll('[data-delete-custom-veh]').forEach((btn) => {
+  // Edit Vehicle / Rates / Photos Modal
+  el.querySelectorAll('[data-edit-veh]').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const vehId = btn.dataset.deleteCustomVeh;
-      const veh = FLEET_LEDGER_ROWS.find((r) => r.id === vehId);
-      if (confirm(`Remove custom vehicle "${veh?.vehicleModel || vehId}" from table?`)) {
-        deleteCustomVehicle(vehId);
-        render(el);
-        toast('Custom vehicle removed from table');
-      }
+      const veh = FLEET_LEDGER_ROWS.find((r) => r.id === btn.dataset.editVeh);
+      if (veh) openEditVehicleModal(el, veh, 'details');
     });
   });
+
+  el.querySelectorAll('[data-edit-photos]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const veh = FLEET_LEDGER_ROWS.find((r) => r.id === btn.dataset.editPhotos);
+      if (veh) openEditVehicleModal(el, veh, 'photos');
+    });
+  });
+
+  // Archive / Delete Provider/Vehicle to Backup (with Confirmation)
+  el.querySelectorAll('[data-archive-veh]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const veh = FLEET_LEDGER_ROWS.find((r) => r.id === btn.dataset.archiveVeh);
+      if (veh) openArchiveConfirmModal(el, veh);
+    });
+  });
+
+  // Backup / Archive Drawer Button
+  const btnBackup = el.querySelector('#btn-open-backup-archive');
+  if (btnBackup) {
+    btnBackup.addEventListener('click', () => {
+      openBackupArchiveModal(el);
+    });
+  }
 
   // Add Vehicle to Table Button
   const btnAddVeh = el.querySelector('#btn-open-add-vehicle');
@@ -3345,7 +3658,7 @@ function attachLedgerListeners(el) {
       const startIdx = Number(trigger.dataset.photoIdx) || 0;
       const veh = FLEET_LEDGER_ROWS.find((r) => r.id === vehId);
       if (!veh || !veh.photos?.length) return;
-      openPhotoLightbox(veh, startIdx);
+      openPhotoLightbox(veh, startIdx, el);
     });
   });
 }
@@ -3536,7 +3849,7 @@ function openAddVehicleModal(el) {
   });
 }
 
-function openPhotoLightbox(veh, initialIndex = 0) {
+function openPhotoLightbox(veh, initialIndex = 0, parentEl = null) {
   let idx = initialIndex;
 
   dialog({
@@ -3546,6 +3859,20 @@ function openPhotoLightbox(veh, initialIndex = 0) {
     onMount: (box) => {
       const root = box.querySelector('#sail-lightbox-root');
       const paintSlide = () => {
+        if (!veh.photos || veh.photos.length === 0) {
+          root.innerHTML = `
+            <div style="padding:36px;text-align:center;color:#425466">
+              <div style="font-size:14px;font-weight:600;color:#0A2540;margin-bottom:6px">No photos remaining for this vehicle</div>
+              <button class="sail-btn primary xs" id="lb-manage-photos">+ Add Photos</button>
+            </div>
+          `;
+          root.querySelector('#lb-manage-photos')?.addEventListener('click', () => {
+            box.querySelector('[data-close]')?.click();
+            if (parentEl) openEditVehicleModal(parentEl, veh, 'photos');
+          });
+          return;
+        }
+        if (idx >= veh.photos.length) idx = veh.photos.length - 1;
         const ph = veh.photos[idx];
         const isVid = ph.src && ph.src.endsWith('.mp4');
         root.innerHTML = `
@@ -3567,9 +3894,11 @@ function openPhotoLightbox(veh, initialIndex = 0) {
                 <div style="font-size:12.5px;color:#425466;margin-top:2px">${esc(ph.caption)}</div>
               </div>
 
-              <div class="row" style="gap:8px">
+              <div class="row" style="gap:8px;flex-wrap:wrap">
                 <button class="sail-btn xs" id="lb-prev" ${veh.photos.length <= 1 ? 'disabled' : ''}>← Previous</button>
                 <button class="sail-btn xs" id="lb-next" ${veh.photos.length <= 1 ? 'disabled' : ''}>Next →</button>
+                <button class="sail-btn xs" id="lb-manage-photos">+ Add / Manage</button>
+                <button class="sail-btn xs" id="lb-delete-photo" style="color:#B91C1C;border-color:#FCA5A5">🗑 Delete Photo</button>
                 <a class="sail-btn xs primary" href="${attr(ph.src)}" target="_blank" rel="noopener">Open ${isVid ? 'Video' : 'Full Resolution'} ↗</a>
               </div>
             </div>
@@ -3597,6 +3926,20 @@ function openPhotoLightbox(veh, initialIndex = 0) {
           idx = (idx + 1) % veh.photos.length;
           paintSlide();
         });
+        root.querySelector('#lb-manage-photos')?.addEventListener('click', () => {
+          box.querySelector('[data-close]')?.click();
+          if (parentEl) openEditVehicleModal(parentEl, veh, 'photos');
+        });
+        root.querySelector('#lb-delete-photo')?.addEventListener('click', async () => {
+          if (!confirm(`Delete "${ph.title || ph.file || 'this photo'}" from ${veh.vehicleModel}?`)) return;
+          const updated = await removePhotoFromVehicle(veh.id, idx);
+          if (updated) {
+            veh.photos = updated.photos;
+            if (parentEl) render(parentEl);
+            toast('Photo deleted & saved to database');
+            paintSlide();
+          }
+        });
         root.querySelectorAll('[data-lb-idx]').forEach((tEl) => {
           tEl.addEventListener('click', () => {
             idx = Number(tEl.dataset.lbIdx) || 0;
@@ -3606,6 +3949,444 @@ function openPhotoLightbox(veh, initialIndex = 0) {
       };
 
       paintSlide();
+    }
+  });
+}
+
+async function processUploadedImageFile(file, vehId) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Failed to read image file'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Invalid image file'));
+      img.onload = async () => {
+        const maxDim = 1280;
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width >= height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+        let finalSrc = dataUrl;
+
+        const sb = getSb();
+        if (sb && typeof canvas.toBlob === 'function') {
+          try {
+            const blob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.82));
+            if (blob) {
+              const safeName = `${vehId}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}.jpg`;
+              const storagePath = `fleet-photos/${safeName}`;
+              const { error } = await sb.storage.from('outreach').upload(storagePath, blob, {
+                upsert: true,
+                contentType: 'image/jpeg'
+              });
+              if (!error) {
+                const { data: pub } = sb.storage.from('outreach').getPublicUrl(storagePath);
+                if (pub?.publicUrl) finalSrc = pub.publicUrl;
+              }
+            }
+          } catch (_) {}
+        }
+
+        resolve({
+          src: finalSrc,
+          file: file.name,
+          title: file.name.replace(/\.[^.]+$/, ''),
+          caption: `Uploaded ${new Date().toLocaleDateString()}`
+        });
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function openEditVehicleModal(el, veh, focusSection = 'details') {
+  const workingPhotos = Array.isArray(veh.photos) ? veh.photos.map((p) => ({ ...p })) : [];
+  const workingTransfers = veh.transfers
+    ? Object.entries(veh.transfers).map(([key, val]) => ({ key, label: val.label || key, net: val.net || '' }))
+    : [];
+
+  const renderTransfersList = (container) => {
+    container.innerHTML = workingTransfers.length
+      ? workingTransfers.map((tr, i) => `
+          <div style="display:grid;grid-template-columns:1fr 110px 32px;gap:8px;align-items:center">
+            <input type="text" class="sail-calc-input" data-tr-label="${i}" value="${attr(tr.label)}" placeholder="Route label (e.g. Malpensa ⇄ Como)">
+            <input type="number" class="sail-calc-input" data-tr-net="${i}" value="${attr(tr.net)}" placeholder="€ Net">
+            <button type="button" class="sail-btn xs" data-tr-del="${i}" style="color:#B91C1C;border-color:#FCA5A5;height:30px" title="Remove route">✕</button>
+          </div>
+        `).join('')
+      : `<div style="font-size:12px;color:var(--sail-muted)">No transfer routes set yet. Add one below.</div>`;
+
+    container.querySelectorAll('[data-tr-label]').forEach((inp) => {
+      inp.addEventListener('input', () => {
+        workingTransfers[Number(inp.dataset.trLabel)].label = inp.value;
+      });
+    });
+    container.querySelectorAll('[data-tr-net]').forEach((inp) => {
+      inp.addEventListener('input', () => {
+        workingTransfers[Number(inp.dataset.trNet)].net = inp.value;
+      });
+    });
+    container.querySelectorAll('[data-tr-del]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        workingTransfers.splice(Number(btn.dataset.trDel), 1);
+        renderTransfersList(container);
+      });
+    });
+  };
+
+  const renderPhotosGrid = (container) => {
+    container.innerHTML = workingPhotos.length
+      ? workingPhotos.map((ph, i) => {
+          const isVid = ph.src && ph.src.endsWith('.mp4');
+          return `
+            <div style="border:1px solid var(--sail-line);border-radius:6px;padding:6px;background:#FFF;display:flex;flex-direction:column;gap:5px;position:relative">
+              ${isVid ? `
+                <div style="height:76px;background:#0A2540;color:#FFF;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">▶ Video</div>
+              ` : `
+                <img src="${attr(ph.src)}" alt="${attr(ph.title || 'Photo')}" style="width:100%;height:76px;object-fit:cover;border-radius:4px;background:#F1F5F9" />
+              `}
+              <input type="text" class="sail-calc-input" data-ph-title="${i}" value="${attr(ph.title || '')}" placeholder="Photo title" style="height:24px;font-size:11px;padding:0 6px">
+              <button type="button" class="sail-btn xs" data-ph-del="${i}" style="color:#B91C1C;border-color:#FCA5A5;width:100%;justify-content:center;font-size:10.5px">🗑 Delete</button>
+            </div>
+          `;
+        }).join('')
+      : `<div style="grid-column:1/-1;padding:16px;text-align:center;color:var(--sail-muted);font-size:12px;border:1px dashed var(--sail-line);border-radius:6px">No photos yet. Upload images or paste an image URL below.</div>`;
+
+    container.querySelectorAll('[data-ph-title]').forEach((inp) => {
+      inp.addEventListener('input', () => {
+        workingPhotos[Number(inp.dataset.phTitle)].title = inp.value;
+      });
+    });
+    container.querySelectorAll('[data-ph-del]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.phDel);
+        workingPhotos.splice(idx, 1);
+        renderPhotosGrid(container);
+      });
+    });
+  };
+
+  dialog({
+    wide: true,
+    title: `Edit Vehicle & Media — ${veh.vehicleModel}`,
+    body: `
+      <form id="form-edit-fleet-vehicle" style="display:flex;flex-direction:column;gap:14px;padding:4px 0;max-height:76vh;overflow-y:auto">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label class="sail-calc-label">Vehicle Model *</label>
+            <input type="text" id="edit-veh-model" class="sail-calc-input" value="${attr(veh.vehicleModel || '')}" required>
+          </div>
+          <div>
+            <label class="sail-calc-label">Passenger Capacity (Seats) *</label>
+            <input type="number" id="edit-veh-pax" min="1" max="80" class="sail-calc-input" value="${attr(veh.pax || 8)}" required>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label class="sail-calc-label">Partner / Provider Name *</label>
+            <input type="text" id="edit-veh-partner" class="sail-calc-input" value="${attr(veh.partnerName || '')}" required>
+          </div>
+          <div>
+            <label class="sail-calc-label">Base City</label>
+            <input type="text" id="edit-veh-city" class="sail-calc-input" value="${attr(veh.baseCity || '')}">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          <div>
+            <label class="sail-calc-label">Contact Person</label>
+            <input type="text" id="edit-veh-contact" class="sail-calc-input" value="${attr(veh.contactPerson || '')}">
+          </div>
+          <div>
+            <label class="sail-calc-label">Email</label>
+            <input type="email" id="edit-veh-email" class="sail-calc-input" value="${attr(veh.email || '')}">
+          </div>
+          <div>
+            <label class="sail-calc-label">Phone / WhatsApp</label>
+            <input type="text" id="edit-veh-phone" class="sail-calc-input" value="${attr(veh.phone || '')}">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          <div>
+            <label class="sail-calc-label">Class Tier</label>
+            <select id="edit-veh-tier" class="sail-calc-input">
+              <option value="luxury" ${veh.tier === 'luxury' ? 'selected' : ''}>Luxury VIP</option>
+              <option value="standard" ${veh.tier === 'standard' ? 'selected' : ''}>Standard Shuttle</option>
+            </select>
+          </div>
+          <div>
+            <label class="sail-calc-label">Status</label>
+            <select id="edit-veh-status" class="sail-calc-input">
+              <option value="confirmed" ${veh.status === 'confirmed' ? 'selected' : ''}>Verified</option>
+              <option value="pending" ${veh.status === 'pending' ? 'selected' : ''}>Pending</option>
+            </select>
+          </div>
+          <div>
+            <label class="sail-calc-label">Website</label>
+            <input type="text" id="edit-veh-website" class="sail-calc-input" value="${attr(veh.website || '')}" placeholder="https://...">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label class="sail-calc-label">Coachbuilder / Edition</label>
+            <input type="text" id="edit-veh-coachbuilder" class="sail-calc-input" value="${attr(veh.coachbuilder || '')}">
+          </div>
+          <div>
+            <label class="sail-calc-label">Specs / Interior Notes</label>
+            <input type="text" id="edit-veh-specs" class="sail-calc-input" value="${attr(veh.tierSpec || '')}">
+          </div>
+        </div>
+
+        <!-- Transfer Rates -->
+        <div style="background:#F8FAFC;border:1px solid var(--sail-line);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:8px">
+          <div class="row between" style="align-items:center">
+            <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--sail-ink)">
+              Transfer Routes (Net B2B €)
+            </div>
+            <button type="button" class="sail-btn xs" id="btn-add-transfer-route">+ Add Route</button>
+          </div>
+          <div id="edit-transfers-list" style="display:flex;flex-direction:column;gap:6px"></div>
+        </div>
+
+        <!-- Standby Rates -->
+        <div style="background:#F8FAFC;border:1px solid var(--sail-line);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--sail-ink)">
+            Standby / Disposizione Rates (Net B2B €)
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:8px">
+            <div>
+              <label class="sail-calc-label">4h Standby (€)</label>
+              <input type="number" id="edit-standby-4h" class="sail-calc-input" value="${attr(veh.standby?.dispo_4h?.net ?? '')}">
+            </div>
+            <div>
+              <label class="sail-calc-label">8h Standby (€)</label>
+              <input type="number" id="edit-standby-8h" class="sail-calc-input" value="${attr(veh.standby?.dispo_8h?.net ?? '')}">
+            </div>
+            <div>
+              <label class="sail-calc-label">Extra Hour (€/h)</label>
+              <input type="number" id="edit-standby-exh" class="sail-calc-input" value="${attr(veh.standby?.extra_hour?.net ?? '')}">
+            </div>
+            <div>
+              <label class="sail-calc-label">Extra Wait (€)</label>
+              <input type="number" id="edit-standby-exw" class="sail-calc-input" value="${attr(veh.standby?.extra_wait?.net ?? '')}">
+            </div>
+          </div>
+        </div>
+
+        <!-- Photos & Rate Sheet -->
+        <div id="edit-photos-section" style="background:#F8FAFC;border:1px solid var(--sail-line);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:10px">
+          <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--sail-ink)">
+            Photos &amp; Rate Sheet (Add or Delete)
+          </div>
+          <div id="edit-photos-grid" style="display:grid;grid-template-columns:repeat(4, 1fr);gap:8px"></div>
+
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-top:6px;border-top:1px solid var(--sail-line-soft)">
+            <label class="sail-btn xs primary" style="cursor:pointer">
+              📷 Upload Image(s)
+              <input type="file" id="edit-photo-upload" accept="image/*" multiple style="display:none">
+            </label>
+            <input type="text" id="edit-photo-url" class="sail-calc-input" placeholder="Or paste image URL (https://... or ./assets/...)" style="flex:1;min-width:180px;height:28px;font-size:12px">
+            <button type="button" class="sail-btn xs" id="btn-add-photo-url">+ Add URL</button>
+          </div>
+          <div>
+            <label class="sail-calc-label">Rate Sheet PDF URL</label>
+            <input type="text" id="edit-rate-pdf" class="sail-calc-input" value="${attr(veh.ratePdf || '')}" placeholder="./assets/...">
+          </div>
+        </div>
+
+        <div class="row between" style="align-items:center;padding-top:10px;border-top:1px solid var(--sail-line-soft)">
+          <button type="button" class="sail-btn" data-close>Cancel</button>
+          <button type="submit" class="sail-btn primary" style="font-weight:600">✓ Save Changes to Database</button>
+        </div>
+      </form>
+    `,
+    onMount: (box) => {
+      const transfersContainer = box.querySelector('#edit-transfers-list');
+      const photosContainer = box.querySelector('#edit-photos-grid');
+      renderTransfersList(transfersContainer);
+      renderPhotosGrid(photosContainer);
+
+      if (focusSection === 'photos') {
+        setTimeout(() => box.querySelector('#edit-photos-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 80);
+      }
+
+      box.querySelector('#btn-add-transfer-route')?.addEventListener('click', () => {
+        workingTransfers.push({ key: `route_${Date.now()}`, label: 'Malpensa (MXP) ⇄ Como', net: '' });
+        renderTransfersList(transfersContainer);
+      });
+
+      box.querySelector('#edit-photo-upload')?.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files || []);
+        if (!files.length) return;
+        toast(`Processing ${files.length} image(s)...`);
+        for (const f of files) {
+          try {
+            const ph = await processUploadedImageFile(f, veh.id);
+            workingPhotos.push(ph);
+          } catch (err) {
+            toast(`Failed to add ${f.name}: ${err.message}`);
+          }
+        }
+        renderPhotosGrid(photosContainer);
+        e.target.value = '';
+      });
+
+      box.querySelector('#btn-add-photo-url')?.addEventListener('click', () => {
+        const urlInp = box.querySelector('#edit-photo-url');
+        const url = (urlInp?.value || '').trim();
+        if (!url) return;
+        workingPhotos.push({
+          src: url,
+          file: url.split('/').pop() || 'image.jpg',
+          title: veh.vehicleModel || 'Vehicle Photo',
+          caption: `${veh.partnerName || ''} · Added ${new Date().toLocaleDateString()}`
+        });
+        urlInp.value = '';
+        renderPhotosGrid(photosContainer);
+      });
+
+      box.querySelector('#form-edit-fleet-vehicle')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const nextTransfers = {};
+        workingTransfers.forEach((tr, i) => {
+          const netVal = Number(tr.net);
+          if (tr.label.trim() && netVal > 0) {
+            const key = tr.key || `route_${i}_${Date.now()}`;
+            nextTransfers[key] = { label: tr.label.trim(), net: netVal };
+          }
+        });
+
+        const s4 = Number(box.querySelector('#edit-standby-4h').value);
+        const s8 = Number(box.querySelector('#edit-standby-8h').value);
+        const exH = Number(box.querySelector('#edit-standby-exh').value);
+        const exW = Number(box.querySelector('#edit-standby-exw').value);
+        const nextStandby = { ...(veh.standby || {}) };
+        if (s4 > 0) nextStandby.dispo_4h = { label: veh.standby?.dispo_4h?.label || 'Disposizione 4h', net: s4 };
+        else delete nextStandby.dispo_4h;
+        if (s8 > 0) nextStandby.dispo_8h = { label: veh.standby?.dispo_8h?.label || 'Disposizione 8h', net: s8 };
+        else delete nextStandby.dispo_8h;
+        if (exH > 0) nextStandby.extra_hour = { label: veh.standby?.extra_hour?.label || 'Ore Extra', net: exH };
+        else delete nextStandby.extra_hour;
+        if (exW > 0) nextStandby.extra_wait = { label: veh.standby?.extra_wait?.label || 'Attesa extra', net: exW };
+        else delete nextStandby.extra_wait;
+
+        await updateFleetVehicle(veh.id, {
+          vehicleModel: box.querySelector('#edit-veh-model').value.trim(),
+          pax: Number(box.querySelector('#edit-veh-pax').value) || 8,
+          partnerName: box.querySelector('#edit-veh-partner').value.trim(),
+          baseCity: box.querySelector('#edit-veh-city').value.trim(),
+          contactPerson: box.querySelector('#edit-veh-contact').value.trim(),
+          email: box.querySelector('#edit-veh-email').value.trim(),
+          phone: box.querySelector('#edit-veh-phone').value.trim(),
+          tier: box.querySelector('#edit-veh-tier').value,
+          status: box.querySelector('#edit-veh-status').value,
+          website: box.querySelector('#edit-veh-website').value.trim(),
+          coachbuilder: box.querySelector('#edit-veh-coachbuilder').value.trim(),
+          tierSpec: box.querySelector('#edit-veh-specs').value.trim(),
+          transfers: Object.keys(nextTransfers).length > 0 ? nextTransfers : null,
+          standby: Object.keys(nextStandby).length > 0 ? nextStandby : null,
+          photos: workingPhotos,
+          ratePdf: box.querySelector('#edit-rate-pdf').value.trim() || null
+        });
+
+        box.querySelector('[data-close]')?.click();
+        render(el);
+        toast(`Saved "${box.querySelector('#edit-veh-model').value.trim()}" to database`);
+      });
+    }
+  });
+}
+
+function openArchiveConfirmModal(el, veh) {
+  dialog({
+    title: 'Confirm Delete to Backup',
+    body: `
+      <div style="display:flex;flex-direction:column;gap:12px;padding:4px 0">
+        <div style="font-size:13.5px;color:var(--sail-ink);line-height:1.45">
+          Are you sure you want to remove <strong>${esc(veh.vehicleModel)}</strong> (${esc(veh.partnerName)}) from the main table?
+        </div>
+        <div style="font-size:12.5px;color:var(--sail-muted);background:#F8FAFC;border:1px solid var(--sail-line);border-radius:6px;padding:10px">
+          It will no longer appear in the main Fleet &amp; Rate Ledger or Trip Calculator, and will be moved safely to <strong>Backup</strong> where you can restore it anytime.
+        </div>
+        <div class="row between" style="padding-top:8px;border-top:1px solid var(--sail-line-soft)">
+          <button type="button" class="sail-btn" data-close>Cancel</button>
+          <button type="button" class="sail-btn" id="btn-confirm-archive-veh" style="background:#DC2626;color:#FFF;border-color:#DC2626;font-weight:600">
+            Yes, Remove &amp; Move to Backup
+          </button>
+        </div>
+      </div>
+    `,
+    onMount: (box) => {
+      box.querySelector('#btn-confirm-archive-veh')?.addEventListener('click', async () => {
+        await archiveFleetVehicle(veh.id);
+        box.querySelector('[data-close]')?.click();
+        render(el);
+        toast(`"${veh.vehicleModel}" moved to Backup`);
+      });
+    }
+  });
+}
+
+function openBackupArchiveModal(el) {
+  dialog({
+    wide: true,
+    title: `Backup / Archived Providers & Vehicles (${ARCHIVED_FLEET_ROWS.length})`,
+    body: `<div id="sail-backup-list-root"></div>`,
+    onMount: (box) => {
+      const root = box.querySelector('#sail-backup-list-root');
+      const paintList = () => {
+        if (!ARCHIVED_FLEET_ROWS.length) {
+          root.innerHTML = `
+            <div style="padding:28px;text-align:center;color:var(--sail-muted);font-size:13px">
+              Backup is empty. Any provider or vehicle you delete from the main table will appear here.
+            </div>
+          `;
+          return;
+        }
+        root.innerHTML = `
+          <div style="display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow-y:auto">
+            ${ARCHIVED_FLEET_ROWS.map((item) => `
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid var(--sail-line);border-radius:6px;background:#F8FAFC">
+                <div>
+                  <div style="font-weight:600;color:var(--sail-ink);font-size:13px">${esc(item.vehicleModel)} (${esc(item.paxLabel || `${item.pax} pax`)})</div>
+                  <div style="font-size:12px;color:var(--sail-muted)">${esc(item.partnerName)} · ${esc(item.baseCity || '')}</div>
+                </div>
+                <button type="button" class="sail-btn xs primary" data-restore-veh="${attr(item.id)}">
+                  ↩ Restore to Main Table
+                </button>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        root.querySelectorAll('[data-restore-veh]').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const restored = await restoreFleetVehicle(btn.dataset.restoreVeh);
+            if (restored) {
+              toast(`Restored "${restored.vehicleModel}" to main table`);
+              render(el);
+              paintList();
+            }
+          });
+        });
+      };
+      paintList();
     }
   });
 }

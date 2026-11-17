@@ -18,7 +18,13 @@ import {
   SIZE_GROUPS,
   getVehicleSizeGroup,
   matchesSizeFilter,
-  renderLedgerRow
+  renderLedgerRow,
+  ARCHIVED_FLEET_ROWS,
+  updateFleetVehicle,
+  archiveFleetVehicle,
+  restoreFleetVehicle,
+  addPhotoToVehicle,
+  removePhotoFromVehicle
 } from '../app/views/fleet_showcase.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -528,6 +534,72 @@ test('Fleet Showcase Calculator: excludes Como Driver 12–16p minibuses (overpr
   // getTransportCategories must omit minibus_12_16 when all vehicles in that category are excluded
   const cats = getTransportCategories(FLEET_LEDGER_ROWS);
   assert.ok(!cats.some((c) => c.key === 'minibus_12_16'), 'Excluded minibus_12_16 category must not appear in calculator categories');
+});
+
+test('Fleet Showcase CRUD, Photos & Backup Archive: edits, adds/deletes photos, archives with confirmation, and restores cleanly', async () => {
+  const upserts = [];
+  const prevSb = globalThis.__DOROGO_SB__;
+  globalThis.__DOROGO_SB__ = {
+    from(tbl) {
+      return {
+        upsert: async (row) => {
+          upserts.push({ tbl, row });
+          return { error: null };
+        }
+      };
+    }
+  };
+
+  try {
+    const target = FLEET_LEDGER_ROWS[0];
+    assert.ok(target, 'Expected at least one vehicle in FLEET_LEDGER_ROWS');
+    const originalCity = target.baseCity;
+    const originalPhotos = [...(target.photos || [])];
+
+    // 1. Render includes Edit, Archive/Delete, and + Photos buttons
+    const html = renderLedgerRow(target, 0);
+    assert.ok(html.includes(`data-edit-veh="${target.id}"`), 'Row must render Edit button');
+    assert.ok(html.includes(`data-archive-veh="${target.id}"`), 'Row must render Archive/Delete button');
+    assert.ok(html.includes(`data-edit-photos="${target.id}"`), 'Row must render + Photos button');
+
+    // 2. Edit vehicle persists to DB mock
+    const updated = await updateFleetVehicle(target.id, { baseCity: 'Como Test City' });
+    assert.equal(updated.baseCity, 'Como Test City');
+    assert.ok(upserts.some((u) => u.tbl === 'fleet_ledger_vehicles' && u.row.id === target.id && u.row.is_archived === false));
+
+    // 3. Add and remove photo
+    const afterAdd = await addPhotoToVehicle(target.id, { src: 'https://example.com/test.jpg', title: 'Test Photo' });
+    assert.equal(afterAdd.photos.length, originalPhotos.length + 1);
+    const afterRemove = await removePhotoFromVehicle(target.id, afterAdd.photos.length - 1);
+    assert.equal(afterRemove.photos.length, originalPhotos.length);
+
+    // 4. Archive to Backup removes from main list and places in ARCHIVED_FLEET_ROWS
+    const initialLen = FLEET_LEDGER_ROWS.length;
+    const archived = await archiveFleetVehicle(target.id);
+    assert.ok(archived && archived.archived === true);
+    assert.equal(FLEET_LEDGER_ROWS.length, initialLen - 1);
+    assert.ok(!FLEET_LEDGER_ROWS.some((r) => r.id === target.id), 'Archived vehicle must not appear in main FLEET_LEDGER_ROWS');
+    assert.ok(ARCHIVED_FLEET_ROWS.some((r) => r.id === target.id), 'Archived vehicle must appear in ARCHIVED_FLEET_ROWS backup');
+    assert.ok(upserts.some((u) => u.row.id === target.id && u.row.is_archived === true));
+
+    // 5. Restore from Backup returns it to main list
+    const restored = await restoreFleetVehicle(target.id);
+    assert.ok(restored && restored.archived === false);
+    assert.ok(FLEET_LEDGER_ROWS.some((r) => r.id === target.id), 'Restored vehicle must return to FLEET_LEDGER_ROWS');
+    assert.ok(!ARCHIVED_FLEET_ROWS.some((r) => r.id === target.id), 'Restored vehicle must be removed from ARCHIVED_FLEET_ROWS');
+
+    // Restore original city
+    await updateFleetVehicle(target.id, { baseCity: originalCity, photos: originalPhotos });
+  } finally {
+    globalThis.__DOROGO_SB__ = prevSb;
+  }
+});
+
+test('Fleet Showcase UI: Confirmation modal markup exists before archiving provider/vehicle', () => {
+  const src = fs.readFileSync(path.join(rootDir, 'app/views/fleet_showcase.js'), 'utf8');
+  assert.ok(src.includes('openArchiveConfirmModal'), 'Confirmation modal function must exist');
+  assert.ok(src.includes('Confirm Delete to Backup'), 'Confirmation modal title must be explicit');
+  assert.ok(src.includes('btn-confirm-archive-veh'), 'Explicit confirmation click button must exist');
 });
 
 
