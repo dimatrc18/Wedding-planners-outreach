@@ -266,8 +266,8 @@ test('formatPriceWithUnit & formatEur: Renders "?" when price is 0, null, or und
   assert.equal(formatPriceWithUnit(140), '€140');
 });
 
-test('Fleet Showcase Size Filter: SIZE_GROUPS comprehensively and mutually exclusively groups all 24 vehicles', () => {
-  assert.equal(FLEET_LEDGER_ROWS.length, 24);
+test('Fleet Showcase Size Filter: SIZE_GROUPS comprehensively and mutually exclusively groups all 25 vehicles', () => {
+  assert.equal(FLEET_LEDGER_ROWS.length, 25);
   
   // Verify each vehicle belongs to exactly one group
   const groupCounts = {};
@@ -277,16 +277,16 @@ test('Fleet Showcase Size Filter: SIZE_GROUPS comprehensively and mutually exclu
     groupCounts[grp.key] = (groupCounts[grp.key] || 0) + 1;
   });
 
-  // Expected counts across the 24-vehicle fleet
+  // Expected counts across the 25-vehicle fleet
   assert.equal(groupCounts['group:7_8'], 6, 'Must have 6 vehicles in 7–8 seats (V-Class & Sprinters)');
   assert.equal(groupCounts['group:12_16'], 2, 'Must have 2 vehicles in 12–16 seats (Sprinter 12 & Transit 16)');
-  assert.equal(groupCounts['group:19_20'], 4, 'Must have 4 vehicles in 19–20 seats (Minibus GT, Sprinter 19+1, Gran Capri)');
+  assert.equal(groupCounts['group:19_20'], 5, 'Must have 5 vehicles in 19–20 seats (Minibus GT, Older Sprinter 19, Sprinter 19+1, Gran Capri)');
   assert.equal(groupCounts['group:28_30'], 6, 'Must have 6 vehicles in 28–30 seats (Iveco Midibuses, Temsa #115, Iveco Wing #121, Perletti Wing & Mago 2)');
   assert.equal(groupCounts['group:50_plus'], 6, 'Must have 6 vehicles in 50+ seats (50p/52p GT, 64p MaxiBus, 66p Van Hool, 83p Double-Decker)');
 
-  // Sum of all groups must be exactly 24
+  // Sum of all groups must be exactly 25
   const totalMapped = Object.values(groupCounts).reduce((a, b) => a + b, 0);
-  assert.equal(totalMapped, 24);
+  assert.equal(totalMapped, 25);
 });
 
 test('Fleet Showcase Size Filter: matchesSizeFilter correctly filters groups, ranges, and exact seat counts', () => {

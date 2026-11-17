@@ -830,6 +830,80 @@ export const FLEET_LEDGER_ROWS = [
     ]
   },
   {
+    id: 'landway_minibus_19_older',
+    partnerId: 'partner_1792761170109_96nx',
+    vehicleModel: 'Mercedes-Benz Sprinter Minibus (Older Version)',
+    paxLabel: '19 pax',
+    coachbuilder: 'Executive Minibus · Older Version (19+1+1)',
+    pax: 19,
+    category: 'minibus_20',
+    categoryLabel: 'Touring Minibus (18–22 Pax)',
+    tier: 'luxury',
+    tierLabel: 'Luxury VIP',
+    tierSpec: 'Older Version · Landway logo on side door · Note: Confirm with Landway that prices are the same as the newer unit',
+    partnerName: 'Landway Tourism',
+    baseCity: 'Como / Milano',
+    contactPerson: 'Melissa (Emergency: Massimo Rossi)',
+    phone: '+39 02 3929 7050',
+    email: 'info@landwaytourism.com',
+    website: 'https://www.landwaytourism.com/flotta/',
+    status: 'confirmed',
+    statusBadge: 'Older Version · Confirm Prices',
+    statusLabel: 'Older Version · Same 2027 rates applied — confirm with Landway that prices are the same',
+    repliedAt: '03 Nov 2026 · 15:07',
+    ratePdf: PDF_LANDWAY,
+    ratePdfName: 'Listino Prezzi 2027 X DOROGO (PDF)',
+    transfers: {
+      mxp_milano: { label: 'Milano Centro ⇄ Malpensa MXP', net: 350 },
+      bgy_milano: { label: 'Milano Centro ⇄ Bergamo BGY', net: 350 },
+      lin_milano: { label: 'Milano Centro ⇄ Linate LIN', net: 300 },
+      stazione_milano: { label: 'Stazione Centrale ⇄ Milano Hotel', net: 300 },
+      mxp_stazione: { label: 'Malpensa MXP ⇄ Stazione Centrale', net: 350 },
+      milano_como: { label: 'Milano Hotel ⇄ Como', net: 450 }
+    },
+    standby: {
+      dispo_4h: { label: 'Disposizione 4h (Half Day)', net: 400 },
+      dispo_8h: { label: 'Disposizione 8h (Full Day)', net: 700 },
+      extra_hour: { label: 'Ore extra / attesa', net: 80 }
+    },
+    terms: {
+      vat: 'Prezzi IVA 10% esclusa',
+      cancellation: '30% >36h · 50% 24–36h · 100% <24h',
+      included: 'Note: Confirm with Landway that rates for this older version match the 2027 listino · Ore extra/attesa €80/h · Ore notturne €100/h (22:00-05:00) · ZTL Milano €60 esente IVA',
+      luggage: 'Capacità: 19 passeggeri + 1 guida + 1 autista (bagno, aria condizionata, tavolini richiudibili, microfono)'
+    },
+    photos: [
+      {
+        id: 'landway_minibus_19_older_1',
+        src: 'assets/partner_fleet/landway/sprinter_19_older_1.jpg',
+        file: 'sprinter_19_older_1.jpg',
+        title: 'Exterior Front-Left 3/4 — Older Version Sprinter 19 Pax',
+        caption: 'Black Mercedes Sprinter (older version) with Landway Tourism logo on lower side door.'
+      },
+      {
+        id: 'landway_minibus_19_older_2',
+        src: 'assets/partner_fleet/landway/sprinter_19_older_2.jpg',
+        file: 'sprinter_19_older_2.jpg',
+        title: 'Exterior Front-Right 3/4 — Older Version Sprinter 19 Pax',
+        caption: 'Front-right exterior profile showing tinted panoramic windows and Landway door emblem.'
+      },
+      {
+        id: 'landway_minibus_19_older_3',
+        src: 'assets/partner_fleet/landway/sprinter_19_older_3.jpg',
+        file: 'sprinter_19_older_3.jpg',
+        title: 'Interior Center Aisle — Black Leather Seats with Tan Piping',
+        caption: 'Executive cabin interior with wood-look aisle, ambient ceiling lighting, and reclining black leather seats.'
+      },
+      {
+        id: 'landway_minibus_19_older_4',
+        src: 'assets/partner_fleet/landway/sprinter_19_older_4.jpg',
+        file: 'sprinter_19_older_4.jpg',
+        title: 'Interior Conference Table — 4-Seat Lounge with Cup Holders',
+        caption: 'Forward lounge table configuration with cup holders, window curtains, and cockpit view.'
+      }
+    ]
+  },
+  {
     id: 'landway_midibus_29',
     partnerId: 'partner_1792761170109_96nx',
     vehicleModel: 'Iveco Midibus GT',
@@ -2655,8 +2729,8 @@ export function renderLedgerRow(row, idx = 0) {
             <option value="luxury" ${row.tier === 'luxury' ? 'selected' : ''}>Luxury VIP</option>
             <option value="standard" ${row.tier === 'standard' ? 'selected' : ''}>Standard Shuttle</option>
           </select>
-          <span class="sail-pill ${row.status === 'confirmed' ? 'ok' : 'info'}" style="font-size:10px;padding:1px 5px" title="${attr(row.statusLabel || '')}">
-            ${esc(row.status === 'confirmed' ? 'Verified' : (row.statusBadge || 'Pending'))}
+          <span class="sail-pill ${row.statusBadge ? 'info' : (row.status === 'confirmed' ? 'ok' : 'info')}" style="font-size:10px;padding:1px 5px;white-space:normal;max-width:100%;line-height:1.25" title="${attr(row.statusLabel || '')}">
+            ${esc(row.statusBadge || (row.status === 'confirmed' ? 'Verified' : 'Pending'))}
           </span>
         </div>
       </td>
