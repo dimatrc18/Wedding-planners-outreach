@@ -612,12 +612,34 @@ export async function sendDueBusPartners(db: any, settings: any, now = new Date(
   return { sent, due: due.length };
 }
 
+function cleanCompanyDisplay(name = '') {
+  return String(name || '')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .trim();
+}
+
 function extractFirstName(contactPerson = '', agencyName = '') {
   const raw = String(contactPerson || '').trim();
   if (!raw) return 'Team';
+  const lower = raw.toLowerCase();
+  const nonHuman = new Set([
+    'team', 'desk', 'info', 'sales', 'office', 'trade', 'export', 'europe',
+    'events', 'event', 'marketing', 'admin', 'support', 'contact', 'exhibitor',
+    'fair', 'italia', 'italy', 'srl', 'gmbh', 'bv', 'sas', 'sl', 'ab', 'ltd',
+    'group', 'studio', 'home', 'service', 'booking', 'logistics', 'travel',
+  ]);
   const parts = raw.split(/\s+/);
   let first = parts[0] || '';
   if (/^(mr|mrs|ms|dr|prof)\.?$/i.test(first) && parts[1]) first = parts[1];
+  const firstClean = first.toLowerCase().replace(/[^a-z0-9à-ÿ]/gi, '');
+  if (!firstClean || firstClean.length < 2 || nonHuman.has(firstClean)) return 'Team';
+  if (parts.some((w) => nonHuman.has(w.toLowerCase().replace(/[^a-z0-9]/gi, '')))) return 'Team';
+  const agencyTokens = cleanCompanyDisplay(agencyName).toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter((t) => t.length >= 3);
+  if (agencyTokens.some((t) => firstClean.includes(t) || t.includes(firstClean) || lower.replace(/[^a-z0-9]/g, '').includes(t))) {
+    return 'Team';
+  }
   return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
 }
 
@@ -823,24 +845,27 @@ export async function sendDueEvents(db: any, settings: any, now = new Date(), { 
       if (!claimed || !claimed.length) continue;
     }
 
-    const firstName = extractFirstName(p.contact_person, p.name);
+    const companyName = cleanCompanyDisplay(p.name);
+    const firstName = extractFirstName(p.contact_person, companyName);
     const fairEvent = p.fair_event || 'Milano Home 2027';
-    const baseSubject = p.custom_subject || `${fairEvent} · ${p.name}`;
+    const legacySubject = `${fairEvent} · ${p.name}`;
+    const sentBeforeCopyUpgrade = isTouch2Due && p.sent_at && new Date(p.sent_at).getTime() < new Date('2026-11-19T12:30:00Z').getTime();
+    const baseSubject = p.custom_subject || (sentBeforeCopyUpgrade ? legacySubject : 'Milano Home transfers');
     const subject = isTouch2Due ? `Re: ${baseSubject}` : baseSubject;
 
     const defaultT1Body = `Hello ${firstName},
 
-Noticed ${p.name} is exhibiting at ${fairEvent} this January.
+I saw ${companyName} is exhibiting at ${fairEvent} this January.
 
-Dorogo provides unbranded Mercedes-Benz V-Class, S-Class, and E-Class transfers between Milan hotels and Fiera Milano Rho, including direct airport meet & greet (MXP/LIN).
+I coordinate executive transport at DOROGO in Milan. We handle MXP and LIN airport pickups, daily hotel to Fiera Milano Rho transfers, and full day standby service with unbranded Mercedes sedans and V Class vans, so your team never waits for taxis between meetings and dinners.
 
-Would our 1-page rate card be helpful for your team? Happy to send it over to whoever coordinates your travel.`;
+If you reply with how many people are coming and your rough schedule, I can lock in a fixed net price for your team.`;
 
     const defaultT2Body = `Hello ${firstName},
 
-Just floating this back up in case your team is finalizing travel logistics for ${fairEvent}.
+Following up in case your team is finalizing travel for Milano Home.
 
-Happy to send our 1-page corporate rate card for MXP/LIN and Fiera Milano Rho transfers if useful.`;
+Even a rough headcount and flight or standby schedule is enough for me to send a fixed net quote for your transfers.`;
 
     const textBody = isTouch2Due ? defaultT2Body : (p.custom_body || defaultT1Body);
     const fromName = isDmitri ? 'Dmitri' : 'Igor';
