@@ -620,6 +620,15 @@ function cleanCompanyDisplay(name = '') {
     .trim();
 }
 
+function formatCountryForHook(country = '') {
+  const c = String(country || '').trim();
+  if (!c) return 'abroad';
+  if (/^netherlands$/i.test(c)) return 'the Netherlands';
+  if (/^united kingdom/i.test(c) || /^uk$/i.test(c)) return 'the UK';
+  if (/^united states/i.test(c) || /^usa$/i.test(c)) return 'the US';
+  return c;
+}
+
 function extractFirstName(contactPerson = '', agencyName = '') {
   const raw = String(contactPerson || '').trim();
   if (!raw) return 'Team';
@@ -846,6 +855,7 @@ export async function sendDueEvents(db: any, settings: any, now = new Date(), { 
     }
 
     const companyName = cleanCompanyDisplay(p.name);
+    const countryLabel = formatCountryForHook(p.country);
     const firstName = extractFirstName(p.contact_person, companyName);
     const fairEvent = p.fair_event || 'Milano Home 2027';
     const legacySubject = `${fairEvent} · ${p.name}`;
@@ -855,17 +865,17 @@ export async function sendDueEvents(db: any, settings: any, now = new Date(), { 
 
     const defaultT1Body = `Hello ${firstName},
 
-I saw ${companyName} is exhibiting at ${fairEvent} this January.
+With your team coming in from ${countryLabel} for Milano Home, I wanted to share our transport option in case you are still organizing logistics.
 
-I coordinate executive transport at DOROGO in Milan. We handle MXP and LIN airport pickups, daily hotel to Fiera Milano Rho transfers, and full day standby service with unbranded Mercedes sedans and V Class vans, so your team never waits for taxis between meetings and dinners.
+I coordinate executive transport at DOROGO in Milan. We handle MXP and LIN airport pickups, daily hotel to Fiera Milano Rho transfers, and full day standby service with unbranded Mercedes sedans and V Class vans.
 
-If you reply with how many people are coming and your rough schedule, I can lock in a fixed net price for your team.`;
+If you send over how many people are coming and your approximate schedule, I can send you a net quote for your team.`;
 
     const defaultT2Body = `Hello ${firstName},
 
-Following up in case your team is finalizing travel for Milano Home.
+Following up in case your team is still finalizing travel for Milano Home.
 
-Even a rough headcount and flight or standby schedule is enough for me to send a fixed net quote for your transfers.`;
+Even a rough headcount and flight or standby schedule is enough for me to send over a net quote for your transfers.`;
 
     const textBody = isTouch2Due ? defaultT2Body : (p.custom_body || defaultT1Body);
     const fromName = isDmitri ? 'Dmitri' : 'Igor';
