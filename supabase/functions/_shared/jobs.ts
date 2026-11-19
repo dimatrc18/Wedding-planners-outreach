@@ -865,9 +865,9 @@ export async function sendDueEvents(db: any, settings: any, now = new Date(), { 
 
     const defaultT1Body = `Hello ${firstName},
 
-With your team coming in from ${countryLabel} for Milano Home, I wanted to share our transport option in case you are still organizing logistics.
+With your team coming in from ${countryLabel} for Milano Home, are you already sorted for getting around Milan?
 
-I coordinate executive transport at DOROGO in Milan. We handle MXP and LIN airport pickups, daily hotel to Fiera Milano Rho transfers, and full day standby service with unbranded Mercedes sedans and V Class vans.
+I run a local fleet of unbranded black Mercedes sedans, V Class vans, and Sprinters in Milan for MXP and LIN airport pickups, hotel to Fiera Milano Rho transfers, and full day standby so your driver waits outside on your schedule.
 
 If you send over how many people are coming and your approximate schedule, I can send you a net quote for your team.`;
 
