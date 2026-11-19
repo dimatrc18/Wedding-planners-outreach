@@ -1,7 +1,7 @@
 // Scheduled by pg_cron. Body: { "job": "all" | "dispatch" | "send" | "bus_send" | "tick" | "inbox" | "digest" | "research" }.
 // Each job is safe to run at any time: drafting is idempotent, sending only takes approved and due mail.
 import { handle, json, requireCronOrUser, loadSettings, setState } from '../_shared/server.ts';
-import { autoResearchPending, draftDueSteps, sendDue, syncInbox, sendDigest, checkUnansweredReplies, sendDueBusPartners, sendDueEvents } from '../_shared/jobs.ts';
+import { autoResearchPending, draftDueSteps, sendDue, syncInbox, sendDigest, checkUnansweredReplies, sendDueBusPartners, sendDueEvents, syncEventInbox } from '../_shared/jobs.ts';
 
 Deno.serve((req) => handle(req, async () => {
   const { db, actor } = await requireCronOrUser(req);
@@ -19,6 +19,12 @@ Deno.serve((req) => handle(req, async () => {
     await run('inbox', () => Promise.race([
       syncInbox(db, settings, now),
       new Promise((_, reject) => setTimeout(() => reject(new Error('inbox_timeout_10s')), 10000))
+    ]));
+  }
+  if (job === 'all' || job === 'inbox' || job === 'dispatch' || job === 'events_inbox') {
+    await run('events_inbox', () => Promise.race([
+      syncEventInbox(db, now),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('events_inbox_timeout_8s')), 8000))
     ]));
   }
 

@@ -911,6 +911,142 @@ Happy to send our 1-page corporate rate card for MXP/LIN and Fiera Milano Rho tr
   };
 }
 
+/**
+ * Polls both dmitri@dorogo.eu ('default') and igor@b2b-dorogo.it ('events') IMAP inboxes
+ * for replies, bounces, and unsubscribes from Milano Home exhibitors (event_planners).
+ * Automatically cancels Touch 2 follow-ups on real replies, bounces, or unsubscribes.
+ */
+export async function syncEventInbox(db: any, now = new Date()) {
+  const { data: planners } = await db
+    .from('event_planners')
+    .select('id, name, email, status, followup_sent_at, notes')
+    .eq('source', 'milano_home_2027');
+
+  if (!planners || !planners.length) return { checked: 0, matched: 0 };
+
+  const byEmail = new Map<string, any>();
+  for (const p of planners) {
+    if (p.email) byEmail.set(String(p.email).toLowerCase().trim(), p);
+  }
+
+  let matched = 0;
+  let replies = 0;
+  let bounces = 0;
+  let unsubs = 0;
+
+  for (const account of ['default', 'events'] as const) {
+    const stateKey = `event_inbox_uid_${account}`;
+    const st = await getState(db, stateKey);
+    const lastUid = st?.last_uid || null;
+
+    let fetched: { messages: any[]; lastUid: number | null } = { messages: [], lastUid };
+    try {
+      fetched = await fetchNewMessages(lastUid, 20, account);
+    } catch (_) {
+      continue;
+    }
+
+    if (fetched.lastUid && fetched.lastUid !== lastUid) {
+      await setState(db, stateKey, { last_uid: fetched.lastUid, updated_at: now.toISOString() });
+    }
+
+    for (const msg of fetched.messages || []) {
+      const fromEmail = String(msg.fromEmail || '').toLowerCase().trim();
+      const subj = String(msg.subject || '');
+      const text = String(msg.text || '');
+      const lowerSubj = subj.toLowerCase();
+      const lowerText = text.toLowerCase();
+
+      const isBounce =
+        fromEmail.includes('mailer-daemon') ||
+        fromEmail.includes('postmaster') ||
+        lowerSubj.includes('undeliverable') ||
+        lowerSubj.includes('returned mail') ||
+        lowerSubj.includes('delivery status notification');
+
+      let planner = byEmail.get(fromEmail);
+      if (!planner && isBounce) {
+        for (const [em, row] of byEmail.entries()) {
+          if (lowerText.includes(em) || lowerSubj.includes(em)) {
+            planner = row;
+            break;
+          }
+        }
+      }
+      if (!planner) continue;
+      matched++;
+
+      const isUnsub =
+        lowerSubj === 'unsubscribe' ||
+        lowerSubj.includes('unsubscribe') ||
+        lowerText.includes('unsubscribe me') ||
+        lowerText.includes('remove me from');
+
+      const isAutoReply =
+        !isBounce &&
+        !isUnsub &&
+        (lowerSubj.includes('thank you for your email') ||
+          lowerSubj.includes('automatic reply') ||
+          lowerSubj.includes('out of office') ||
+          lowerText.includes('allow us a day or two to get back') ||
+          lowerText.includes('automatic reply') ||
+          lowerText.includes('out of office'));
+
+      if (isBounce || isUnsub) {
+        const tag = isBounce ? 'Auto-detected Bounce' : 'Auto-detected Unsubscribe';
+        await db.from('event_planners').update({
+          status: 'NOT_RELEVANT',
+          followup_sent_at: '2026-11-01T00:00:00Z',
+          notes: (planner.notes ? planner.notes + ' | ' : '') + `${tag} (${now.toISOString().slice(0, 10)})`,
+          updated_at: now.toISOString(),
+        }).eq('id', planner.id);
+        if (isBounce) bounces++;
+        else unsubs++;
+        await logEvent(db, isBounce ? 'event_planner_bounced' : 'event_planner_unsubscribed', {
+          planner_id: planner.id,
+          name: planner.name,
+          email: planner.email,
+          account,
+          subject: subj,
+        }, null, 'imap').catch(() => {});
+      } else if (isAutoReply) {
+        await logEvent(db, 'event_planner_auto_reply', {
+          planner_id: planner.id,
+          name: planner.name,
+          email: planner.email,
+          account,
+          subject: subj,
+        }, null, 'imap').catch(() => {});
+      } else {
+        // Real human reply — stop Touch 2 follow-ups and alert via Telegram
+        const snippet = text.replace(/\s+/g, ' ').trim().slice(0, 160);
+        await db.from('event_planners').update({
+          followup_sent_at: '2026-11-01T00:00:00Z',
+          notes: (planner.notes ? planner.notes + ' | ' : '') + `Replied (${now.toISOString().slice(0, 10)}): "${snippet}"`,
+          updated_at: now.toISOString(),
+        }).eq('id', planner.id);
+        replies++;
+        await logEvent(db, 'event_planner_replied', {
+          planner_id: planner.id,
+          name: planner.name,
+          email: planner.email,
+          account,
+          subject: subj,
+          snippet,
+        }, null, 'imap').catch(() => {});
+        await tgSend(
+          `📩 <b>Milano Home Reply: ${planner.name}</b>\n` +
+          `From: ${planner.email} (via ${account === 'events' ? 'igor@b2b-dorogo.it' : 'dmitri@dorogo.eu'})\n` +
+          `Subject: ${subj}\n` +
+          `<i>${snippet}</i>`
+        ).catch(() => {});
+      }
+    }
+  }
+
+  return { matched, replies, bounces, unsubs };
+}
+
 // ---------------- Inbox & Conversational AI ----------------
 export function formatThreadHistory(list: any[], excludeInboundId: string | null = null) {
   const hasSentOut = list.some((t: any) => t.direction === 'out' && t.state === 'sent');
