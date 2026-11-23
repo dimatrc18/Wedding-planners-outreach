@@ -547,14 +547,14 @@ export const FLEET_LEDGER_ROWS = [
     id: 'avantgarde_sprinter_8_top_vip',
     partnerId: 'partner_1792765279535_l9ei',
     vehicleModel: 'Mercedes-Benz Sprinter Top VIP',
-    paxLabel: '8 pax',
-    coachbuilder: 'Charcoal Grey Metallic · Cognac Diamond Maybach Seats (Video Verified)',
+    paxLabel: '7 pax + 1 front',
+    coachbuilder: 'Charcoal Grey Metallic · Cognac Diamond Maybach Seats (7 rear + 1 front · Video Verified)',
     pax: 8,
     category: 'minivan_7_8',
     categoryLabel: 'VIP Minivan (8 Pax Top)',
     tier: 'luxury',
     tierLabel: 'Luxury VIP',
-    tierSpec: 'Metallic charcoal grey w/ Panamericana grille & chrome mirrors · Saddle cognac leather & mahogany tables · €140/h + IVA (8h €1,200 + IVA)',
+    tierSpec: '7 rear VIP seats + 1 front passenger seat · Metallic charcoal grey w/ Panamericana grille & chrome mirrors · Saddle cognac leather & mahogany tables · €140/h + IVA (8h €1,200 + IVA)',
     partnerName: 'Avantgarde Limousine Service (Milano Cab)',
     baseCity: 'Milano (Via Calatafimi 12)',
     contactPerson: 'Vincenzo Lombardi',
@@ -1879,8 +1879,16 @@ export function applyLocalOverridesAndArchives() {
   const archivedMap = loadJsonMap(STORAGE_KEY_FLEET_ARCHIVED);
 
   // Merge overrides into active FLEET_LEDGER_ROWS (and strip legacy broken private-bucket URLs)
+  const SEED_PAX_UPGRADES = {
+    avantgarde_sprinter_7_red: '6 pax + 1 front',
+    avantgarde_sprinter_8_bw: '7 pax + 1 front',
+    avantgarde_sprinter_8_top_vip: '7 pax + 1 front'
+  };
   Object.entries(overrides).forEach(([id, data]) => {
     if (!data || archivedMap[id]) return;
+    if (SEED_PAX_UPGRADES[id] && (data.paxLabel === '7 pax' || data.paxLabel === '8 pax')) {
+      data.paxLabel = SEED_PAX_UPGRADES[id];
+    }
     if (Array.isArray(data.photos)) {
       data.photos = data.photos.filter(
         (ph) => ph && ph.src && !String(ph.src).includes('/storage/v1/object/public/outreach/fleet-photos/')
@@ -2048,7 +2056,7 @@ export async function updateFleetVehicle(vehId, patch) {
     ...patch,
     id: current.id,
     pax: nextPax,
-    paxLabel: `${nextPax} pax`,
+    paxLabel: patch.paxLabel ?? (patch.pax !== undefined && Number(patch.pax) !== Number(current.pax) ? `${nextPax} pax` : (current.paxLabel || `${nextPax} pax`)),
     category: nextCat,
     categoryLabel: inferCategoryLabel(nextCat, nextPax),
     tier: nextTier,
