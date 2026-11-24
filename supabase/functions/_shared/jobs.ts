@@ -702,8 +702,8 @@ export async function sendDueEvents(db: any, settings: any, now = new Date(), { 
 
   const DMITRI_CAP = 20;
   const IGOR_CAP = 8;
-  const DMITRI_MIN_SPACING_MS = 6 * 60 * 1000; // Minimum 6 min between Dmitri sends
-  const IGOR_MIN_SPACING_MS = 10 * 60 * 1000;  // Minimum 10 min between Igor sends
+  const DMITRI_MIN_SPACING_MS = (6 + Math.floor(Math.random() * 4)) * 60 * 1000; // 6-9 min randomized spacing
+  const IGOR_MIN_SPACING_MS = (10 + Math.floor(Math.random() * 5)) * 60 * 1000;  // 10-14 min randomized spacing
   const todayYmd = core.localDateKey(now, tz);
 
   // Count how many emails each mailbox has already sent today, track last send timestamp, and collect contacted emails
@@ -858,10 +858,10 @@ export async function sendDueEvents(db: any, settings: any, now = new Date(), { 
     const countryLabel = formatCountryForHook(p.country);
     const firstName = extractFirstName(p.contact_person, companyName);
     const fairEvent = p.fair_event || 'Milano Home 2027';
-    const legacySubject = `${fairEvent} · ${p.name}`;
     const sentBeforeCopyUpgrade = isTouch2Due && p.sent_at && new Date(p.sent_at).getTime() < new Date('2026-11-19T12:30:00Z').getTime();
-    const baseSubject = p.custom_subject || (sentBeforeCopyUpgrade ? legacySubject : 'Milano Home transfers');
-    const subject = isTouch2Due ? `Re: ${baseSubject}` : baseSubject;
+    // Drop the old ALL-CAPS subject on remaining Touch 2 follow-ups; use a fresh human subject instead
+    const baseSubject = p.custom_subject || 'Milano Home transfers';
+    const subject = (isTouch2Due && !sentBeforeCopyUpgrade) ? `Re: ${baseSubject}` : baseSubject;
 
     const defaultT1Body = `Hello ${firstName},
 
@@ -888,7 +888,7 @@ Even a rough headcount and flight or standby schedule is enough for me to send o
         to: p.email,
         subject,
         text: textBody,
-        ...(isTouch2Due && p.sent_message_id ? { inReplyTo: p.sent_message_id, references: [p.sent_message_id] } : {}),
+        ...(isTouch2Due && !sentBeforeCopyUpgrade && p.sent_message_id ? { inReplyTo: p.sent_message_id, references: [p.sent_message_id] } : {}),
       });
 
       await appendToSent(mailRes.raw, senderEmail).catch(() => {});
