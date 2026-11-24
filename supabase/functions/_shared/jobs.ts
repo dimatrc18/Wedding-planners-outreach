@@ -869,13 +869,13 @@ With your team coming in from ${countryLabel} for Milano Home, are you already s
 
 I am a coordinator at DOROGO, a local transport company in Milan. We run unbranded black Mercedes sedans, V Class vans, and Sprinters for airport pickups, fair transfers, and full day standby.
 
-If you send over how many people are coming and your approximate schedule, I can send you a net quote for your team. If someone else is coordinating your travel for January, could you forward this to them?`;
+Send over your team size and rough schedule for a net quote, or forward this to whoever handles your travel.`;
 
     const defaultT2Body = `Hello ${firstName},
 
-Following up in case your team is still finalizing travel for Milano Home in January.
+Quick follow up on your Milano Home travel in January.
 
-Even a rough headcount and flight or standby schedule is enough for me to send over a net quote. If someone else is coordinating your team's travel, could you forward this note to them?`;
+Send over your team size and rough schedule and I will quote it, or forward this to whoever handles your travel.`;
 
     const textBody = isTouch2Due ? defaultT2Body : (p.custom_body || defaultT1Body);
     const fromName = isDmitri ? 'Dmitri' : 'Igor';
